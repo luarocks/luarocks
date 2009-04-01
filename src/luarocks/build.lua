@@ -8,6 +8,7 @@ local util = require("luarocks.util")
 local rep = require("luarocks.rep")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
+local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
 local manif = require("luarocks.manif")
 
@@ -38,10 +39,10 @@ local function install_files(files, location)
       for k, file in pairs(files) do
          local dest = location
          if type(k) == "string" then
-            dest = fs.make_path(location, path.module_to_path(k))
+            dest = dir.path(location, path.module_to_path(k))
          end
          fs.make_dir(dest)
-         local ok = fs.copy(fs.make_path(file), dest)
+         local ok = fs.copy(dir.path(file), dest)
          if not ok then
             return nil, "Failed copying "..file
          end
@@ -55,7 +56,7 @@ end
 -- @param files table: The table of files to be written.
 local function extract_from_rockspec(files)
    for name, content in pairs(files) do
-      local fd = io.open(fs.make_path(fs.current_dir(), name), "w+")
+      local fd = io.open(dir.path(fs.current_dir(), name), "w+")
       fd:write(content)
       fd:close()
    end
@@ -76,9 +77,9 @@ function apply_patches(rockspec)
    end
    if build.patches then
       extract_from_rockspec(build.patches)
-      for patch, _ in util.sortedpairs(build.patches) do
+      for patch, patchdata in util.sortedpairs(build.patches) do
          print("Applying patch "..patch.."...")
-         local ok, err = fs.patch(tostring(patch))
+         local ok, err = fs.apply_patch(tostring(patch, patchdata))
          if not ok then
             return nil, "Failed applying patch "..patch
          end
@@ -91,28 +92,28 @@ end
 -- @param rockspec_file string: local or remote filename of a rockspec.
 -- @param need_to_fetch boolean: true if sources need to be fetched,
 -- false if the rockspec was obtained from inside a source rock.
--- @return boolean or (nil, string): True if succeeded or 
--- nil and an error message.
+-- @return boolean or (nil, string, [string]): True if succeeded or 
+-- nil and an error message followed by an error code.
 function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
    assert(type(rockspec_file) == "string")
    assert(type(need_to_fetch) == "boolean")
 
-   local rockspec, err = fetch.load_rockspec(rockspec_file)
+   local rockspec, err, errcode = fetch.load_rockspec(rockspec_file)
    if err then
-      return nil, err
+      return nil, err, errcode
    elseif not rockspec.build then
       return nil, "Rockspec error: build table not specified"
    elseif not rockspec.build.type then
       return nil, "Rockspec error: build type not specified"
    end
 
-   local ok, err = deps.fulfill_dependencies(rockspec)
+   local ok, err, errcode = deps.fulfill_dependencies(rockspec)
    if err then
-      return nil, err
+      return nil, err, errcode
    end
-   ok, err = deps.check_external_deps(rockspec, "build")
+   ok, err, errcode = deps.check_external_deps(rockspec, "build")
    if err then
-      return nil, err
+      return nil, err, errcode
    end
 
    local name, version = rockspec.name, rockspec.version
@@ -121,13 +122,13 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
    end
 
    if not minimal_mode then
-      local _, dir
+      local _, source_dir
       if need_to_fetch then
-         ok, dir = fetch.fetch_sources(rockspec, true)
+         ok, source_dir, errcode = fetch.fetch_sources(rockspec, true)
          if not ok then
-            return nil, dir
+            return nil, source_dir, errcode
          end
-         fs.change_dir(dir)
+         fs.change_dir(source_dir)
       elseif rockspec.source.file then
          local ok, err = fs.unpack_archive(rockspec.source.file)
          if not ok then
@@ -144,8 +145,8 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
       bin = path.bin_dir(name, version),
    }
    
-   for _, dir in pairs(dirs) do
-      fs.make_dir(dir)
+   for _, d in pairs(dirs) do
+      fs.make_dir(d)
    end
    local rollback = util.schedule_function(function()
       fs.delete(path.install_dir(name, version))
@@ -178,8 +179,8 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
    end
 
    if build.install then
-      for id, dir in pairs(dirs) do
-         ok, err = install_files(build.install[id], dir)
+      for id, install_dir in pairs(dirs) do
+         ok, err = install_files(build.install[id], install_dir)
          if not ok then 
             return nil, err
          end
@@ -188,16 +189,16 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
    
    local copy_directories = build.copy_directories or {"doc"}
 
-   for _, dir in pairs(copy_directories) do
-      if fs.is_dir(dir) then
-         local dest = fs.make_path(path.install_dir(name, version), dir)
+   for _, copy_dir in pairs(copy_directories) do
+      if fs.is_dir(copy_dir) then
+         local dest = dir.path(path.install_dir(name, version), copy_dir)
          fs.make_dir(dest)
-         fs.copy_contents(dir, dest)
+         fs.copy_contents(copy_dir, dest)
       end
    end
 
-   for _, dir in pairs(dirs) do
-      fs.remove_dir_if_empty(dir)
+   for _, d in pairs(dirs) do
+      fs.remove_dir_if_empty(d)
    end
 
    fs.pop_dir()
@@ -227,21 +228,21 @@ end
 -- @param rock_file string: local or remote filename of a rock.
 -- @param need_to_fetch boolean: true if sources need to be fetched,
 -- false if the rockspec was obtained from inside a source rock.
--- @return boolean or (nil, string): True if build was successful,
--- or false and an error message.
-local function build_rock(rock_file, need_to_fetch)
+-- @return boolean or (nil, string, [string]): True if build was successful,
+-- or false and an error message and an optional error code.
+function build_rock(rock_file, need_to_fetch)
    assert(type(rock_file) == "string")
    assert(type(need_to_fetch) == "boolean")
   
-   local dir, err = fetch.fetch_and_unpack_rock(rock_file)
-   if not dir then
-      return nil, err
+   local unpack_dir, err, errcode = fetch.fetch_and_unpack_rock(rock_file)
+   if not unpack_dir then
+      return nil, err, errcode
    end
    local rockspec_file = path.rockspec_name_from_rock(rock_file)
-   fs.change_dir(dir)
-   local ok, err = build_rockspec(rockspec_file, need_to_fetch)
+   fs.change_dir(unpack_dir)
+   local ok, err, errcode = build_rockspec(rockspec_file, need_to_fetch)
    fs.pop_dir()
-   return ok, err
+   return ok, err, errcode
 end
 
 --- Driver function for "build" command.
@@ -268,7 +269,7 @@ function run(...)
       return install.install_binary_rock(name)
    elseif name:match("%.rock$") then
       return build_rock(name, true)
-   elseif not name:match(fs.dir_separator) then
+   elseif not name:match(dir.separator) then
       local search = require("luarocks.search")
       return search.act_on_src_or_rockspec(run, name, version)
    end

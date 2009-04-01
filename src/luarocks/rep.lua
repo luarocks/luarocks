@@ -6,6 +6,7 @@ local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
+local dir = require("luarocks.dir")
 
 --- Get all installed versions of a package.
 -- @param name string: a package name.
@@ -14,7 +15,7 @@ local util = require("luarocks.util")
 function get_versions(name)
    assert(type(name) == "string")
    
-   local dirs = fs.dir(path.versions_dir(name))
+   local dirs = fs.list_dir(path.versions_dir(name))
    return (dirs and #dirs > 0) and dirs or nil
 end
 
@@ -41,7 +42,7 @@ function delete_version(name, version)
 
    fs.delete(path.install_dir(name, version))
    if not get_versions(name) then
-      fs.delete(fs.make_path(cfg.rocks_dir, name))
+      fs.delete(dir.path(cfg.rocks_dir, name))
    end
 end
 
@@ -50,7 +51,7 @@ end
 function delete_bin(command)
    assert(type(command) == "string")
 
-   fs.delete(fs.make_path(cfg.scripts_dir, command))
+   fs.delete(dir.path(cfg.scripts_dir, command))
 end
 
 --- Install bin entries in the repository bin dir.
@@ -71,9 +72,9 @@ function install_bins(name, version, single_file)
       if not ok then
          return nil, "Could not create "..cfg.scripts_dir
       end
-      local files = single_file and {single_file} or fs.dir(bindir)
+      local files = single_file and {single_file} or fs.list_dir(bindir)
       for _, file in pairs(files) do
-         local fullname = fs.make_path(bindir, file)
+         local fullname = dir.path(bindir, file)
          local match = file:match("%.lua$")
          local file
          if not match then
@@ -140,7 +141,7 @@ function package_commands(package, version)
    local bins = fs.find(bindir)
    for _, file in ipairs(bins) do
       if file then
-         result[file] = fs.make_path(bindir, file)
+         result[file] = dir.path(bindir, file)
       end
    end
    return result
@@ -159,7 +160,7 @@ function is_binary_rock(name, version)
    end
    if fs.exists(bin_dir) then
       for _, name in pairs(fs.find(bin_dir)) do
-         if fs.is_actual_binary(fs.make_path(bin_dir, name)) then
+         if fs.is_actual_binary(dir.path(bin_dir, name)) then
             return true
          end
       end

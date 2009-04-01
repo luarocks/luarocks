@@ -4,24 +4,21 @@
 module("luarocks.fs.win32", package.seeall)
 
 local cfg = require("luarocks.cfg")
+local dir = require("luarocks.dir")
 
-local fs_base_name,
-      fs_copy,
+local fs_copy,
       fs_current_dir,
       fs_execute,
       fs_execute_string,
       fs_is_dir,
-      fs_make_path,
       fs_Q
 
 function init_fs_functions(impl)
-   fs_base_name = impl.base_name
    fs_copy = impl.copy
    fs_current_dir = impl.current_dir
    fs_execute = impl.execute
    fs_execute_string = impl.execute_string
    fs_is_dir = impl.is_dir
-   fs_make_path = impl.make_path
    fs_Q = impl.Q
 end
 
@@ -39,9 +36,9 @@ function Q(arg)
    return '"' .. arg:gsub('"', '\\"') .. '"'
 end
 
-local function command_at(dir, cmd)
-   local drive = dir:match("^([A-Za-z]:)")
-   cmd = "cd " .. fs_Q(dir) .. " & " .. cmd
+local function command_at(directory, cmd)
+   local drive = directory:match("^([A-Za-z]:)")
+   cmd = "cd " .. fs_Q(directory) .. " & " .. cmd
    if drive then
       cmd = drive .. " & " .. cmd
    end
@@ -78,6 +75,14 @@ function is_dir(file)
    return fs_execute("chdir /D " .. fs_Q(file) .. " 2>NUL 1>NUL")
 end
 
+--- Test is pathname is a regular file.
+-- @param file string: pathname to test
+-- @return boolean: true if it is a regular file, false otherwise.
+function is_dir(file)
+   assert(file)
+   return fs_execute("test -d" .. fs_Q(file) .. " 2>NUL 1>NUL")
+end
+
 --- Test is file/dir is writable.
 -- @param file string: filename to test
 -- @return boolean: true if file exists, false otherwise.
@@ -102,21 +107,21 @@ end
 --- Create a directory if it does not already exist.
 -- If any of the higher levels in the path name does not exist
 -- too, they are created as well.
--- @param dir string: pathname of directory to create.
+-- @param d string: pathname of directory to create.
 -- @return boolean: true on success, false on failure.
-function make_dir(dir)
-   assert(dir)
-   fs_execute("mkdir "..fs_Q(dir).." 1> NUL 2> NUL")
+function make_dir(d)
+   assert(d)
+   fs_execute("mkdir "..fs_Q(d).." 1> NUL 2> NUL")
    return 1
 end
 
 --- Remove a directory if it is empty.
 -- Does not return errors (for example, if directory is not empty or
 -- if already does not exist)
--- @param dir string: pathname of directory to remove.
-function remove_dir_if_empty(dir)
-   assert(dir)
-   fs_execute_string("rmdir "..fs_Q(dir).." 1> NUL 2> NUL")
+-- @param d string: pathname of directory to remove.
+function remove_dir_if_empty(d)
+   assert(d)
+   fs_execute_string("rmdir "..fs_Q(d).." 1> NUL 2> NUL")
 end
 
 --- Copy a file.
@@ -164,7 +169,7 @@ end
 -- directory if none is given).
 -- @return table: an array of strings with the filenames representing
 -- the contents of a directory.
-function dir(at)
+function list_dir(at)
    assert(type(at) == "string" or not at)
    if not at then
       at = fs_current_dir()
@@ -224,16 +229,6 @@ function download(url, filename)
    else
       return fs_execute("wget --quiet --continue ", url)
    end
-end
-
---- Strip the path off a path+filename.
--- @param pathname string: A path+name, such as "/a/b/c".
--- @return string: The filename without its path, such as "c".
-function base_name(pathname)
-   assert(type(pathname) == "string")
-
-   local base = pathname:match(".*[/\\]([^/\\]*)")
-   return base or pathname
 end
 
 --- Strip the last extension of a filename.
@@ -323,7 +318,7 @@ function wrap_script(file, dest)
    assert(type(file) == "string")
    assert(type(dest) == "string")
 
-   local base = fs_base_name(file)
+   local base = dir.base_name(file)
    local wrapname = dest.."/"..base..".bat"
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
@@ -333,7 +328,7 @@ function wrap_script(file, dest)
    wrapper:write("setlocal\n")
    wrapper:write('set LUA_PATH='..package.path..";%LUA_PATH%\n")
    wrapper:write('set LUA_CPATH='..package.cpath..";%LUA_CPATH%\n")
-   wrapper:write('"'..fs_make_path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.require "'..file..'" %*\n')
+   wrapper:write('"'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.require "'..file..'" %*\n')
    wrapper:write("endlocal\n")
    wrapper:close()
    return true
@@ -353,7 +348,7 @@ function copy_binary(filename, dest)
       return nil, err
    end
    local exe_pattern = "%.[Ee][Xx][Ee]$"
-   local base = fs_base_name(filename)
+   local base = dir.base_name(filename)
    if base:match(exe_pattern) then
       base = base:gsub(exe_pattern, ".lua")
       local helpname = dest.."/"..base

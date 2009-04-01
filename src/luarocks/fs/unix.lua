@@ -6,42 +6,39 @@ local assert, type, table, io, package, math, os, ipairs =
 module("luarocks.fs.unix", package.seeall)
 
 local cfg = require("luarocks.cfg")
+local dir = require("luarocks.dir")
 
 math.randomseed(os.time())
 
 dir_stack = {}
 
 local fs_absolute_name,
-      fs_base_name,
       fs_copy,
       fs_current_dir,
       fs_dir_stack,
       fs_execute,
       fs_execute_string,
       fs_is_dir,
+      fs_is_file,
       fs_make_dir,
-      fs_make_path,
       fs_exists,
       fs_find,
       fs_Q
 
 function init_fs_functions(impl)
    fs_absolute_name = impl.absolute_name
-   fs_base_name = impl.base_name
    fs_copy = impl.copy
    fs_current_dir = impl.current_dir
    fs_dir_stack = impl.dir_stack
    fs_execute = impl.execute
    fs_execute_string = impl.execute_string
    fs_is_dir = impl.is_dir
+   fs_is_file = impl.is_file
    fs_make_dir = impl.make_dir
-   fs_make_path = impl.make_path
    fs_exists = impl.exists
    fs_find = impl.find
    fs_Q = impl.Q
 end
-
-dir_separator = "/"
 
 --- Quote argument for shell processing.
 -- Adds single quotes and escapes.
@@ -63,8 +60,8 @@ function current_dir()
       current = pipe:read("*l")
       pipe:close()
    end
-   for _, dir in ipairs(fs_dir_stack) do
-      current = fs_absolute_name(dir, current)
+   for _, d in ipairs(fs_dir_stack) do
+      current = fs_absolute_name(d, current)
    end
    return current
 end
@@ -103,10 +100,10 @@ end
 -- Uses the module's internal dir stack. This does not have exact
 -- semantics of chdir, as it does not handle errors the same way,
 -- but works well for our purposes for now.
--- @param dir string: The directory to switch to.
-function change_dir(dir)
-   assert(type(dir) == "string")
-   table.insert(fs_dir_stack, dir)
+-- @param d string: The directory to switch to.
+function change_dir(d)
+   assert(type(d) == "string")
+   table.insert(fs_dir_stack, d)
 end
 
 --- Change directory to root.
@@ -118,26 +115,27 @@ end
 
 --- Change working directory to the previous in the dir stack.
 function pop_dir()
-   table.remove(fs_dir_stack)
+   local d = table.remove(fs_dir_stack)
+   return d ~= nil
 end
 
 --- Create a directory if it does not already exist.
 -- If any of the higher levels in the path name does not exist
 -- too, they are created as well.
--- @param dir string: pathname of directory to create.
+-- @param d string: pathname of directory to create.
 -- @return boolean: true on success, false on failure.
-function make_dir(dir)
-   assert(dir)
-   return fs_execute("mkdir -p", dir)
+function make_dir(d)
+   assert(d)
+   return fs_execute("mkdir -p", d)
 end
 
 --- Remove a directory if it is empty.
 -- Does not return errors (for example, if directory is not empty or
 -- if already does not exist)
 -- @param dir string: pathname of directory to remove.
-function remove_dir_if_empty(dir)
-   assert(dir)
-   fs_execute_string("rmdir "..fs_Q(dir).." 1> /dev/null 2> /dev/null")
+function remove_dir_if_empty(d)
+   assert(d)
+   fs_execute_string("rmdir "..fs_Q(d).." 1> /dev/null 2> /dev/null")
 end
 
 --- Copy a file.
@@ -183,7 +181,7 @@ end
 -- directory if none is given).
 -- @return table: an array of strings with the filenames representing
 -- the contents of a directory.
-function dir(at)
+function list_dir(at)
    assert(type(at) == "string" or not at)
    if not at then
       at = fs_current_dir()
@@ -263,6 +261,14 @@ function is_dir(file)
    return fs_execute("test -d", file)
 end
 
+--- Test is pathname is a regular file.
+-- @param file string: pathname to test
+-- @return boolean: true if it is a regular file, false otherwise.
+function is_file(file)
+   assert(file)
+   return fs_execute("test -f", file)
+end
+
 --- Download a remote file.
 -- @param url string: URL to be fetched.
 -- @param filename string or nil: this function attempts to detect the
@@ -275,37 +281,15 @@ function download(url, filename)
    assert(type(filename) == "string" or not filename)
 
    if cfg.downloader == "wget" then
-      if filename then   
+      if filename then
          return fs_execute("wget --quiet --continue --output-document ", filename, url)
       else
          return fs_execute("wget --quiet --continue ", url)
       end
    elseif cfg.downloader == "curl" then
-      filename = filename or fs_base_name(url)
+      filename = filename or dir.base_name(url)
       return fs_execute_string("curl "..fs_Q(url).." 2> /dev/null 1> "..fs_Q(filename))
    end
-end
-
---- Strip the path off a path+filename.
--- @param pathname string: A path+name, such as "/a/b/c".
--- @return string: The filename without its path, such as "c".
-function base_name(pathname)
-   assert(type(pathname) == "string")
-
-   local base = pathname:match(".*/([^/]*)")
-   return base or pathname
-end
-
---- Strip the name off a path+filename.
--- @param pathname string: A path+name, such as "/a/b/c".
--- @return string: The filename without its path, such as "/a/b/".
--- For entries such as "/a/b/", "/a/" is returned. If there are
--- no directory separators in input, "" is returned.
-function dir_name(pathname)
-   assert(type(pathname) == "string")
-
-   local dir = pathname:gsub("/*$", ""):match("(.*/)[^/]*")
-   return dir or ""
 end
 
 --- Create a temporary directory.
@@ -315,7 +299,7 @@ end
 function make_temp_dir(name)
    assert(type(name) == "string")
 
-   local temp_dir = (os.getenv("TMP") or "/tmp") .. "/" .. name .. "-" .. tostring(math.floor(math.random() * 10000))
+   local temp_dir = (os.getenv("TMP") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-" .. tostring(math.floor(math.random() * 10000))
    if fs_make_dir(temp_dir) then
       return temp_dir
    else
@@ -323,9 +307,13 @@ function make_temp_dir(name)
    end
 end
 
+function chmod(pathname, mode)
+  return fs_execute("chmod "..mode, pathname)
+end
+
 --- Apply a patch.
 -- @param patchname string: The filename of the patch.
-function patch(patchname)
+function apply_patch(patchname)
    return fs_execute("patch -p1 -f -i ", patchname)
 end
 
@@ -417,27 +405,6 @@ function absolute_name(pathname, relative_to)
    end
 end
 
---- Describe a path in a cross-platform way.
--- Use this function to avoid platform-specific directory
--- separators in other modules. If the first item contains a 
--- protocol descriptor (e.g. "http:"), paths are always constituted
--- with forward slashes.
--- @param ... strings representing directories
--- @return string: a string with a platform-specific representation
--- of the path.
-function make_path(...)
-   local items = {...}
-   local i = 1
-   while items[i] do
-      if items[i] == "" then
-         table.remove(items, i)
-      else
-         i = i + 1
-      end
-   end
-   return table.concat(items, "/")
-end
-
 --- Split protocol and path from an URL or local pathname.
 -- URLs should be in the "protocol://path" format.
 -- For local pathnames, "file" is returned as the protocol.
@@ -466,7 +433,7 @@ function wrap_script(file, dest)
    assert(type(file) == "string")
    assert(type(dest) == "string")
    
-   local base = fs_base_name(file)
+   local base = dir.base_name(file)
    local wrapname = dest.."/"..base
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
@@ -476,7 +443,7 @@ function wrap_script(file, dest)
    wrapper:write('LUA_PATH="'..package.path..';$LUA_PATH"\n')
    wrapper:write('LUA_CPATH="'..package.cpath..';$LUA_CPATH"\n')
    wrapper:write('export LUA_PATH LUA_CPATH\n')
-   wrapper:write('exec "'..fs_make_path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.require "'..file..'" "$@"\n')
+   wrapper:write('exec "'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.require "'..file..'" "$@"\n')
    wrapper:close()
    if fs_execute("chmod +x",wrapname) then
       return true

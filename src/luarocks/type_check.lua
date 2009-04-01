@@ -40,6 +40,7 @@ rockspec_types = {
       dir = "string",
       tag = "string",
       branch = "string",
+      module = "string",
       cvs_tag = "string",
       cvs_module = "string"
    },
@@ -187,7 +188,6 @@ end
 type_check_table = function(tbl, types, context)
    assert(type(tbl) == "table")
    assert(type(types) == "table")
-
    for k, v in pairs(tbl) do
       local t = types[k] or (type(k) == "string" and types["MUST_"..k]) or types.ANY
       if t then 

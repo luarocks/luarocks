@@ -32,7 +32,7 @@ function run(...)
    assert(type(rockspec) == "string" or not rockspec)
    
    if not rockspec then
-      local files = fs.dir(fs.current_dir())
+      local files = fs.list_dir(fs.current_dir())
       for _, file in pairs(files) do
          if file:match(".rockspec$") then
             if rockspec then

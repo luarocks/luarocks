@@ -17,10 +17,11 @@ local rep = require("luarocks.rep")
 local search = require("luarocks.search")
 local install = require("luarocks.install")
 local cfg = require("luarocks.cfg")
-local manif = require("luarocks.manif")
+local manif_core = require("luarocks.manif_core")
 local fs = require("luarocks.fs")
 local fetch = require("luarocks.fetch")
 local path = require("luarocks.path")
+local dir = require("luarocks.dir")
 
 local operators = {
    ["=="] = "==",
@@ -320,7 +321,7 @@ local function match_dep(dep, blacklist)
    if dep.name == "lua" then
       versions = { "5.1" }
    else
-      versions = manif.get_versions(dep.name)
+      versions = manif_core.get_versions(dep.name)
    end
    if not versions then
       return nil
@@ -399,8 +400,9 @@ end
 -- Packages are installed using the LuaRocks "install" command.
 -- Aborts the program if a dependency could not be fulfilled.
 -- @param rockspec table: A rockspec in table format.
--- @return boolean or (nil, string): True if no errors occurred, or
--- nil and an error message if any test failed.
+-- @return boolean or (nil, string, [string]): True if no errors occurred, or
+-- nil and an error message if any test failed, followed by an optional
+-- error code.
 function fulfill_dependencies(rockspec)
 
    if rockspec.supported_platforms then
@@ -469,9 +471,9 @@ function fulfill_dependencies(rockspec)
             if not rock then
                return nil, "Could not find a rock to satisfy dependency: "..show_dep(dep)
             end
-            local ok, err = install.run(rock)
+            local ok, err, errcode = install.run(rock)
             if not ok then
-               return nil, "Failed installing dependency: "..rock.." - "..err
+               return nil, "Failed installing dependency: "..rock.." - "..err, errcode
             end
          end
       end
@@ -521,7 +523,7 @@ function check_external_deps(rockspec, mode)
                prefix = extdir
             end
             for dirname, dirdata in pairs(dirs) do
-               dirdata.dir = vars[name.."_"..dirname] or fs.make_path(prefix, dirdata.subdir)
+               dirdata.dir = vars[name.."_"..dirname] or dir.path(prefix, dirdata.subdir)
                local file = files[dirdata.testfile]
                if file then
                   local files = {}
@@ -535,10 +537,11 @@ function check_external_deps(rockspec, mode)
                   local found = false
                   failed_file = nil
                   for _, f in pairs(files) do
+                     -- small convenience hack
                      if f:match("%.so$") or f:match("%.dylib$") or f:match("%.dll$") then
                         f = f:gsub("%.[^.]+$", "."..cfg.external_lib_extension)
                      end
-                     local testfile = fs.make_path(dirdata.dir, f)
+                     local testfile = dir.path(dirdata.dir, f)
                      if fs.exists(testfile) then
                         found = true
                         break
@@ -565,7 +568,7 @@ function check_external_deps(rockspec, mode)
             end
          end
          if not ok then
-            return nil, "Could not find expected file "..failed_file.." for "..name.." -- you may have to install "..name.." in your system and/or set the "..name.."_DIR variable"
+            return nil, "Could not find expected file "..failed_file.." for "..name.." -- you may have to install "..name.." in your system and/or set the "..name.."_DIR variable", "dependency"
          end
       end
    end

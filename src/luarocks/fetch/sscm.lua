@@ -3,6 +3,7 @@
 module("luarocks.fetch.sscm", package.seeall)
 
 local fs = require("luarocks.fs")
+local dir = require("luarocks.dir")
 
 --- Download sources via Surround SCM Server for building a rock.
 -- @param rockspec table: The rockspec table
@@ -15,7 +16,7 @@ function get_sources(rockspec, extract, dest_dir)
    assert(type(rockspec) == "table")
    assert(type(dest_dir) == "string" or not dest_dir)
 
-   local module = rockspec.source.module or fs.base_name(rockspec.source.url)
+   local module = rockspec.source.module or dir.base_name(rockspec.source.url)
    local branch, repository = string.match(rockspec.source.pathname, "^([^/]*)/(.*)")
    if not branch or not repository then
       return nil, "Error retrieving branch and repository from rockspec."

@@ -4,7 +4,7 @@
 -- point where the layout of the local installation is defined in LuaRocks.
 module("luarocks.path", package.seeall)
 
-local fs = require("luarocks.fs")
+local dir = require("luarocks.dir")
 local cfg = require("luarocks.cfg")
 
 --- Infer rockspec filename from a rock filename.
@@ -12,7 +12,7 @@ local cfg = require("luarocks.cfg")
 -- @return string: Filename of the rockspec, without path.
 function rockspec_name_from_rock(rock_name)
    assert(type(rock_name) == "string")
-   local base_name = fs.base_name(rock_name)
+   local base_name = dir.base_name(rock_name)
    return base_name:match("(.*)%.[^.]*.rock") .. ".rockspec"
 end
 
@@ -25,7 +25,7 @@ function versions_dir(name, repo)
    assert(type(name) == "string")
    assert(not repo or type(repo) == "string")
    
-   return fs.make_path(repo or cfg.rocks_dir, name)
+   return dir.path(repo or cfg.rocks_dir, name)
 end
 
 --- Get the local installation directory (prefix) for a package.
@@ -39,7 +39,7 @@ function install_dir(name, version, repo)
    assert(type(version) == "string")
    assert(not repo or type(repo) == "string")
    
-   return fs.make_path(repo or cfg.rocks_dir, name, version)
+   return dir.path(repo or cfg.rocks_dir, name, version)
 end
 
 --- Get the local filename of the rockspec of an installed rock.
@@ -53,7 +53,7 @@ function rockspec_file(name, version, repo)
    assert(type(version) == "string")
    assert(not repo or type(repo) == "string")
    
-   return fs.make_path(repo or cfg.rocks_dir, name, version, name.."-"..version..".rockspec")
+   return dir.path(repo or cfg.rocks_dir, name, version, name.."-"..version..".rockspec")
 end
 
 --- Get the local installation directory for C libraries of a package.
@@ -67,7 +67,7 @@ function lib_dir(name, version, repo)
    assert(type(version) == "string")
    assert(not repo or type(repo) == "string")
    
-   return fs.make_path(repo or cfg.rocks_dir, name, version, "lib")
+   return dir.path(repo or cfg.rocks_dir, name, version, "lib")
 end
 
 --- Get the local installation directory for Lua modules of a package.
@@ -81,7 +81,7 @@ function lua_dir(name, version, repo)
    assert(type(version) == "string")
    assert(not repo or type(repo) == "string")
 
-   return fs.make_path(repo or cfg.rocks_dir, name, version, "lua")
+   return dir.path(repo or cfg.rocks_dir, name, version, "lua")
 end
 
 --- Get the local installation directory for documentation of a package.
@@ -95,7 +95,7 @@ function doc_dir(name, version, repo)
    assert(type(version) == "string")
    assert(not repo or type(repo) == "string")
 
-   return fs.make_path(repo or cfg.rocks_dir, name, version, "doc")
+   return dir.path(repo or cfg.rocks_dir, name, version, "doc")
 end
 
 --- Get the local installation directory for configuration files of a package.
@@ -109,7 +109,7 @@ function conf_dir(name, version, repo)
    assert(type(version) == "string")
    assert(not repo or type(repo) == "string")
    
-   return fs.make_path(repo or cfg.rocks_dir, name, version, "conf")
+   return dir.path(repo or cfg.rocks_dir, name, version, "conf")
 end
 
 --- Get the local installation directory for command-line scripts
@@ -124,7 +124,7 @@ function bin_dir(name, version, repo)
    assert(type(version) == "string")
    assert(not repo or type(repo) == "string")
    
-   return fs.make_path(repo or cfg.rocks_dir, name, version, "bin")
+   return dir.path(repo or cfg.rocks_dir, name, version, "bin")
 end
 
 --- Extract name, version and arch of a rock filename.
@@ -133,7 +133,7 @@ end
 -- of rock, or nil if name could not be parsed
 function parse_rock_name(rock_file)
    assert(type(rock_file) == "string")
-   return fs.base_name(rock_file):match("(.*)-([^-]+-%d+)%.([^.]+)%.rock$")
+   return dir.base_name(rock_file):match("(.*)-([^-]+-%d+)%.([^.]+)%.rock$")
 end
 
 --- Extract name and version of a rockspec filename.
@@ -142,7 +142,7 @@ end
 -- of rockspec, or nil if name could not be parsed
 function parse_rockspec_name(rockspec_file)
    assert(type(rockspec_file) == "string")
-   return fs.base_name(rockspec_file):match("(.*)-([^-]+-%d+)%.(rockspec)")
+   return dir.base_name(rockspec_file):match("(.*)-([^-]+-%d+)%.(rockspec)")
 end
 
 --- Make a rockspec or rock URL.
@@ -159,13 +159,13 @@ function make_url(pathname, name, version, arch)
 
    local filename = name.."-"..version
    if arch == "installed" then
-      filename = fs.make_path(name, version, filename..".rockspec")
+      filename = dir.path(name, version, filename..".rockspec")
    elseif arch == "rockspec" then
       filename = filename..".rockspec"
    else
       filename = filename.."."..arch..".rock"
    end
-   return fs.make_path(pathname, filename)
+   return dir.path(pathname, filename)
 end
 
 --- Convert a pathname to a module identifier.
@@ -180,7 +180,7 @@ function path_to_module(file)
 
    local name = file:match("(.*)%."..cfg.lua_extension.."$")
    if name then
-      name = name:gsub(fs.dir_separator, ".")
+      name = name:gsub(dir.separator, ".")
       local init = name:match("(.*)%.init$")
       if init then
          name = init
@@ -188,7 +188,7 @@ function path_to_module(file)
    else
       name = file:match("(.*)%."..cfg.lib_extension.."$")
       if name then
-         name = name:gsub(fs.dir_separator, ".")
+         name = name:gsub(dir.separator, ".")
       end
    end
    return name
@@ -200,7 +200,7 @@ end
 -- @return string: A directory name using the platform's separator.
 function module_to_path(mod)
    assert(type(mod) == "string")
-   return (mod:gsub("[^.]*$", ""):gsub("%.", fs.dir_separator))
+   return (mod:gsub("[^.]*$", ""):gsub("%.", dir.separator))
 end
 
 --- Set up path-related variables for a given rock.

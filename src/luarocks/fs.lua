@@ -21,14 +21,12 @@ for _, platform in ipairs(cfg.platforms) do
    end
 end
 
+local fs_lua = require("luarocks.fs.lua")
 local fs_unix = require("luarocks.fs.unix")
 
 local fs_mt = {
    __index = function(t, k)
-      local impl = fs_impl and fs_impl[k]
-      if not impl then
-         impl = fs_unix[k]
-      end
+      local impl = fs_lua[k] or fs_impl[k] or fs_unix[k]
       rawset(t, k, impl)
       return impl
    end
@@ -36,6 +34,7 @@ local fs_mt = {
 
 setmetatable(luarocks.fs, fs_mt)
 
+fs_lua.init_fs_functions(luarocks.fs)
 fs_unix.init_fs_functions(luarocks.fs)
 if fs_impl then
    fs_impl.init_fs_functions(luarocks.fs)

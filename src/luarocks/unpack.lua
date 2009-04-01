@@ -7,6 +7,7 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local build = require("luarocks.build")
+local dir = require("luarocks.dir")
 
 help_summary = "Unpack the contents of a rock."
 help_arguments = "{<rock>|<name> [<version>]}"
@@ -50,9 +51,9 @@ local function unpack_rock(rock_file, dir_name, kind)
    assert(type(rock_file) == "string")
    assert(type(dir_name) == "string")
    
-   local ok, err = fetch.fetch_and_unpack_rock(rock_file, dir_name)
+   local ok, err, errcode = fetch.fetch_and_unpack_rock(rock_file, dir_name)
    if not ok then
-      return nil, "Failed unzipping rock "..rock_file
+      return nil, "Failed unzipping rock "..rock_file, errcode
    end
    fs.change_dir(dir_name)
    local rockspec_file = dir_name..".rockspec"
@@ -83,7 +84,7 @@ end
 local function run_unpacker(file)
    assert(type(file) == "string")
    
-   local base_name = fs.base_name(file)
+   local base_name = dir.base_name(file)
    local dir_name, kind, extension = base_name:match("(.*)%.([^.]+)%.(rock)$")
    if not extension then
       dir_name, extension = base_name:match("(.*)%.(rockspec)$")
@@ -117,7 +118,7 @@ local function run_unpacker(file)
       end
       print()   
       print("Done. You may now enter directory ")
-      print(fs.make_path(dir_name, rockspec.source.dir))
+      print(dir.path(dir_name, rockspec.source.dir))
       print("and type 'luarocks make' to build.")
    end
    util.remove_scheduled_function(rollback)

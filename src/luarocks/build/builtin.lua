@@ -6,6 +6,7 @@ local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
+local dir = require("luarocks.dir")
 
 --- Check if platform was detected
 -- @param query string: The platform name to check.
@@ -62,13 +63,13 @@ function run(rockspec)
          local extras = { unpack(objects) }
          add_flags(extras, "-libpath:%s", libdirs)
          add_flags(extras, "%s.lib", libraries)
-         local basename = fs.base_name(library):gsub(".[^.]*$", "")
+         local basename = dir.base_name(library):gsub(".[^.]*$", "")
          local deffile = basename .. ".def"
-         local def = io.open(fs.make_path(fs.current_dir(), deffile), "w+")
+         local def = io.open(dir.path(fs.current_dir(), deffile), "w+")
          def:write("EXPORTS\n")
          def:write("luaopen_"..name:gsub("%.", "_").."\n")
          def:close()
-         local ok = execute(variables.LD, "-dll", "-def:"..deffile, "-out:"..library, fs.make_path(variables.LUA_LIBDIR, "lua5.1.lib"), unpack(extras))
+         local ok = execute(variables.LD, "-dll", "-def:"..deffile, "-out:"..library, dir.path(variables.LUA_LIBDIR, "lua5.1.lib"), unpack(extras))
          local manifestfile = basename..".dll.manifest"
          if ok and fs.exists(manifestfile) then
             ok = execute(variables.MT, "-manifest", manifestfile, "-outputresource:"..basename..".dll;2")
@@ -103,7 +104,7 @@ function run(rockspec)
       if type(info) == "string" then
          local ext = info:match(".([^.]+)$")
          if ext == "lua" then
-            local dest = fs.make_path(luadir, moddir)
+            local dest = dir.path(luadir, moddir)
             built_modules[info] = dest
          else
             info = {info}
@@ -124,11 +125,11 @@ function run(rockspec)
             table.insert(objects, object)
          end
          if not ok then break end
-         local module_name = fs.make_path(moddir, name:match("([^.]*)$").."."..cfg.lib_extension):gsub("//", "/")
+         local module_name = dir.path(moddir, name:match("([^.]*)$").."."..cfg.lib_extension):gsub("//", "/")
          if moddir ~= "" then
             fs.make_dir(moddir)
          end
-         local dest = fs.make_path(libdir, moddir)
+         local dest = dir.path(libdir, moddir)
          built_modules[module_name] = dest
          ok = compile_library(module_name, objects, info.libraries, info.libdirs, name)
          if not ok then break end
@@ -141,7 +142,7 @@ function run(rockspec)
    end
    if ok then
       if fs.is_dir("lua") then
-         fs.copy_contents("lua", luadir)
+         ok = fs.copy_contents("lua", luadir)
       end
    end
    if ok then

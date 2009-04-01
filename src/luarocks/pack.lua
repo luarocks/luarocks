@@ -9,6 +9,7 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
+local dir = require("luarocks.dir")
 
 help_summary = "Create a rock, packing sources or binaries."
 help_arguments = "{<rockspec>|<name> [<version>]}"
@@ -38,15 +39,15 @@ local function pack_source_rock(rockspec_file)
    local name_version = rockspec.name .. "-" .. rockspec.version
    local rock_file = fs.absolute_name(name_version .. ".src.rock")
 
-   local source_file, dir = fetch.fetch_sources(rockspec, false)
+   local source_file, source_dir = fetch.fetch_sources(rockspec, false)
    if not source_file then
-      return nil, dir
+      return nil, source_dir
    end
-   fs.change_dir(dir)
+   fs.change_dir(source_dir)
 
    fs.delete(rock_file)
-   fs.copy(rockspec_file, dir)
-   if not fs.zip(rock_file, fs.base_name(rockspec_file), fs.base_name(source_file)) then
+   fs.copy(rockspec_file, source_dir)
+   if not fs.zip(rock_file, dir.base_name(rockspec_file), dir.base_name(source_file)) then
       return nil, "Failed packing "..rock_file
    end
    fs.pop_dir()
@@ -87,7 +88,7 @@ local function pack_binary_rock(name, version)
       rock_file = rock_file:gsub("%."..cfg.arch:gsub("%-","%%-").."%.", ".all.")
    end
    fs.delete(rock_file)
-   if not fs.zip(rock_file, unpack(fs.dir())) then
+   if not fs.zip(rock_file, unpack(fs.list_dir())) then
       return nil, "Failed packing "..rock_file
    end
    fs.pop_dir()

@@ -4,6 +4,7 @@
 module("luarocks.search", package.seeall)
 
 local fs = require("luarocks.fs")
+local dir = require("luarocks.dir")
 local path = require("luarocks.path")
 local manif = require("luarocks.manif")
 local deps = require("luarocks.deps")
@@ -133,14 +134,14 @@ function disk_search(repo, query, results)
    end
    query_arch_as_table(query)
    
-   for _, name in pairs(fs.dir(repo)) do
-      local pathname = fs.make_path(repo, name)
+   for _, name in pairs(fs.list_dir(repo)) do
+      local pathname = dir.path(repo, name)
       local rname, rversion, rarch = path.parse_rock_name(name)
       if not rname then
          rname, rversion, rarch = path.parse_rockspec_name(name)
       end
       if fs.is_dir(pathname) then
-         for _, version in pairs(fs.dir(pathname)) do
+         for _, version in pairs(fs.list_dir(pathname)) do
             if version:match("-%d+$") then
                store_if_match(results, repo, name, version, "installed", query)
             end

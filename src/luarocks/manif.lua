@@ -10,98 +10,35 @@ local deps = require("luarocks.deps")
 local cfg = require("luarocks.cfg")
 local persist = require("luarocks.persist")
 local fetch = require("luarocks.fetch")
-local type_check = require("luarocks.type_check")
-
-manifest_cache = {}
-
---- Get all versions of a package listed in a manifest file.
--- @param name string: a package name.
--- @param manifest table or nil: a manifest table; if not given, the
--- default local manifest table is used.
--- @return table: An array of strings listing installed
--- versions of a package.
-function get_versions(name, manifest)
-   assert(type(name) == "string")
-   assert(type(manifest) == "table" or not manifest)
-   
-   if not manifest then
-      manifest = load_local_manifest(cfg.rocks_dir)
-      if not manifest then
-         return {}
-      end
-   end
-   
-   local item = manifest.repository[name]
-   if item then
-      return util.keys(item)
-   end
-   return {}
-end
-
---- Back-end function that actually loads the manifest
--- and stores it in the manifest cache.
--- @param file string: The local filename of the manifest file.
--- @param repo_url string: The repository identifier.
-local function manifest_loader(file, repo_url, quick)
-   local manifest = persist.load_into_table(file)
-   if not manifest then
-      return nil, "Failed loading manifest for "..repo_url
-   end
-   if not quick then
-      local ok, err = type_check.type_check_manifest(manifest)
-      if not ok then
-         return nil, "Error checking manifest: "..err
-      end
-   end
-
-   manifest_cache[repo_url] = manifest
-   return manifest
-end
+local dir = require("luarocks.dir")
+local manif_core = require("luarocks.manif_core")
 
 --- Load a local or remote manifest describing a repository.
 -- All functions that use manifest tables assume they were obtained
 -- through either this function or load_local_manifest.
 -- @param repo_url string: URL or pathname for the repository.
--- @return table or (nil, string): A table representing the manifest,
--- or nil followed by an error message.
+-- @return table or (nil, string, [string]): A table representing the manifest,
+-- or nil followed by an error message and an optional error code.
 function load_manifest(repo_url)
    assert(type(repo_url) == "string")
    
-   if manifest_cache[repo_url] then
-      return manifest_cache[repo_url]
+   if manif_core.manifest_cache[repo_url] then
+      return manif_core.manifest_cache[repo_url]
    end
 
    local protocol, pathname = fs.split_url(repo_url)
    if protocol == "file" then
-      pathname = fs.make_path(pathname, "manifest")
+      pathname = dir.path(pathname, "manifest")
    else
-      local url = fs.make_path(repo_url, "manifest")
+      local url = dir.path(repo_url, "manifest")
       local name = repo_url:gsub("[/:]","_")
-      local file, dir = fetch.fetch_url_at_temp_dir(url, "luarocks-manifest-"..name)
+      local file, err, errcode = fetch.fetch_url_at_temp_dir(url, "luarocks-manifest-"..name)
       if not file then
-         return nil, "Failed fetching manifest for "..repo_url
+         return nil, "Failed fetching manifest for "..repo_url, errcode
       end
       pathname = file
    end
-   return manifest_loader(pathname, repo_url)
-end
-
---- Load a local manifest describing a repository.
--- All functions that use manifest tables assume they were obtained
--- through either this function or load_manifest.
--- @param repo_url string: URL or pathname for the repository.
--- @return table or (nil, string): A table representing the manifest,
--- or nil followed by an error message.
-function load_local_manifest(repo_url)
-   assert(type(repo_url) == "string")
-
-   if manifest_cache[repo_url] then
-      return manifest_cache[repo_url]
-   end
-
-   local pathname = fs.make_path(repo_url, "manifest")
-
-   return manifest_loader(pathname, repo_url, true)
+   return manif_core.manifest_loader(pathname, repo_url)
 end
 
 --- Sort function for ordering rock identifiers in a manifest's
@@ -183,7 +120,7 @@ local function save_manifest(repo, manifest)
    assert(type(repo) == "string")
    assert(type(manifest) == "table")
 
-   local filename = fs.make_path(repo, "manifest")
+   local filename = dir.path(repo, "manifest")
    return persist.save_from_table(filename, manifest)
 end
 
@@ -302,7 +239,7 @@ function make_manifest(repo)
    local results = search.disk_search(repo, query)
 
    local manifest = { repository = {}, modules = {}, commands = {} }
-   manifest_cache[repo] = manifest
+   manif_core.manifest_cache[repo] = manifest
    store_results(results, manifest)
    return save_manifest(repo, manifest)
 end
@@ -388,7 +325,7 @@ function make_index(repo)
    end
    local manifest = load_manifest(repo)
    files = fs.find(repo)
-   local out = io.open(fs.make_path(repo, "index.html"), "w")
+   local out = io.open(dir.path(repo, "index.html"), "w")
    out:write(index_header)
    for package, version_list in util.sortedpairs(manifest.repository) do
       local latest_rockspec = nil
@@ -414,7 +351,7 @@ function make_index(repo)
       end
       output = output .. index_package_end
       if latest_rockspec then
-         local rockspec = persist.load_into_table(fs.make_path(repo, latest_rockspec))
+         local rockspec = persist.load_into_table(dir.path(repo, latest_rockspec))
          local vars = {
             anchor = package,
             package = rockspec.package,

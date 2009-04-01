@@ -23,15 +23,17 @@ or a filename of a locally available rock.
 
 --- Install a binary rock.
 -- @param rock_file string: local or remote filename of a rock.
--- @return boolean or (nil, string): True if succeeded or 
--- nil and an error message.
+-- @return boolean or (nil, string, [string]): True if succeeded or 
+-- nil and an error message and an optional error code.
 function install_binary_rock(rock_file)
+   assert(type(rock_file) == "string")
+
    local name, version, arch = path.parse_rock_name(rock_file)
    if not name then
       return nil, "Filename "..rock_file.." does not match format 'name-version-revision.arch.rock'."
    end
    if arch ~= "all" and arch ~= cfg.arch then
-      return nil, "Incompatible architecture "..arch
+      return nil, "Incompatible architecture "..arch, "arch"
    end
    if rep.is_installed(name, version) then
       rep.delete_version(name, version)
@@ -40,23 +42,23 @@ function install_binary_rock(rock_file)
       fs.delete(path.install_dir(name, version))
       fs.remove_dir_if_empty(path.versions_dir(name))
    end)
-   local ok, err = fetch.fetch_and_unpack_rock(rock_file, path.install_dir(name, version))
-   if not ok then return nil, err end
+   local ok, err, errcode = fetch.fetch_and_unpack_rock(rock_file, path.install_dir(name, version))
+   if not ok then return nil, err, errcode end
    ok, err = rep.install_bins(name, version)
 
-   local rockspec, err = fetch.load_rockspec(path.rockspec_file(name, version))
+   local rockspec, err, errcode = fetch.load_rockspec(path.rockspec_file(name, version))
    if err then
-      return nil, "Failed loading rockspec for installed package: "..err
+      return nil, "Failed loading rockspec for installed package: "..err, errcode
    end
 
-   ok, err = deps.check_external_deps(rockspec, "install")
+   ok, err, errcode = deps.check_external_deps(rockspec, "install")
    if err then
-      return nil, err
+      return nil, err, errcode
    end
 
-   ok, err = deps.fulfill_dependencies(rockspec)
+   ok, err, errcode = deps.fulfill_dependencies(rockspec)
    if err then
-      return nil, err
+      return nil, err, errcode
    end
 
    ok, err = rep.run_hook(rockspec, "post_install")
