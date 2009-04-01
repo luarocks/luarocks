@@ -1,0 +1,68 @@
+#!/bin/sh
+
+cvslist() {
+   if [ "$1" ]
+   then local prefix="$1/"
+   fi   
+   cvs list $1 | grep -v "^?" | while read line
+   do
+      local path="$prefix$line"
+      echo "$path"
+      if [ -d "$path" ]
+      then
+         cvslist "$path"
+      fi
+   done
+}
+
+if ! [ "$1" ]
+then
+   echo "usage: $0 <version>"
+   exit 1
+fi
+
+cvs list > /dev/null 2> /dev/null
+if [ $? != 0 ]
+then
+   echo "Your version of CVS may be too old. At least 1.12 is needed."
+   exit 1
+fi
+
+make clean
+
+out="luarocks-$1"
+rm -rf "$out"
+mkdir "$out"
+list=`cvslist`
+rm -f missing_ref
+echo "$list" | while read i
+do
+   if [ -f "$i" ]
+   then
+      dir=`dirname $i`
+      mkdir -p "$out/$dir"
+      cp "$i" "$out/$dir"
+      if echo "$i" | grep -q "^src/"
+      then
+         grep -qw `basename "$i"` Makefile || { 
+            echo "Missing ref in makefile: $i"
+            touch missing_ref
+            exit 1
+         }
+      fi
+   fi
+done
+if [ -e missing_ref ]
+then
+   rm -f missing_ref
+   exit 1
+fi
+rm -f "$out-win32.zip" "$out.tar.gz"
+rm "$out/makedist"
+rm "$out/install.bat"
+tar czvpf "$out.tar.gz" "$out"
+cp install.bat "$out"
+cp -a win32/bin "$out"
+cp -a win32/lua5.1 "$out"
+zip -r "$out-win32.zip" "$out"
+rm -rf "$out"

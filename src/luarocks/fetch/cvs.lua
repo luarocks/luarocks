@@ -1,0 +1,43 @@
+
+--- Fetch back-end for retrieving sources from CVS.
+module("luarocks.fetch.cvs", package.seeall)
+
+local fs = require("luarocks.fs")
+local util = require("luarocks.util")
+
+--- Download sources for building a rock, using CVS.
+-- @param rockspec table: The rockspec table
+-- @param extract boolean: Unused in this module (required for API purposes.)
+-- @param dest_dir string or nil: If set, will extract to the given directory.
+-- @return (string, string) or (nil, string): The absolute pathname of
+-- the fetched source tarball and the temporary directory created to
+-- store it; or nil and an error message.
+function get_sources(rockspec, extract, dest_dir)
+   assert(type(rockspec) == "table")
+   assert(type(dest_dir) == "string" or not dest_dir)
+
+   local name_version = rockspec.name .. "-" .. rockspec.version
+   local module = rockspec.source.module or fs.base_name(rockspec.source.url)
+   local command = {"cvs", "-d"..rockspec.source.pathname, "export", module}
+   if rockspec.source.tag then
+      table.insert(command, 4, "-r")
+      table.insert(command, 5, rockspec.source.tag)
+   end
+   local dir
+   if not dest_dir then
+      dir = fs.make_temp_dir(name_version)
+      if not dir then
+         return nil, "Failed creating temporary directory."
+      end
+      util.schedule_function(fs.delete, dir)
+   else
+      dir = dest_dir
+   end
+   fs.change_dir(dir)
+   if not fs.execute(unpack(command)) then
+      return nil, "Failed fetching files from CVS."
+   end
+   fs.pop_dir()
+   return module, dir
+end
+
