@@ -1,5 +1,5 @@
 
-program_version = "1.0"
+program_version = "1.0.1"
 
 --- Functions for command-line scripts.
 module("luarocks.command_line", package.seeall)

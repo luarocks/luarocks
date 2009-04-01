@@ -161,7 +161,7 @@ end
 -- plus an error message.
 function copy_contents(src, dest)
    assert(src and dest)
-   if fs_execute_string("cp -a "..fs_Q(src).."/* "..fs_Q(dest).." 1> /dev/null 2>/dev/null") then
+   if fs_execute_string("cp -pPR "..fs_Q(src).."/* "..fs_Q(dest).." 1> /dev/null 2>/dev/null") then
       return true
    else
       return false, "Failed copying "..src.." to "..dest
