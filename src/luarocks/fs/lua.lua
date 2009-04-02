@@ -64,36 +64,6 @@ function Q(arg)
    return "'" .. arg:gsub("\\", "\\\\"):gsub("'", "'\\''") .. "'"
 end
 
---- Run the given command.
--- The command is executed in the current directory in the dir stack.
--- @param cmd string: No quoting/escaping is applied to the command.
--- @return boolean: true if command succeeds (status code 0), false
--- otherwise.
-function execute_string(cmd)
-   if os.execute(cmd) == 0 then
-      return true
-   else
-      return false
-   end
-end
-
---- Run the given command, quoting its arguments.
--- The command is executed in the current directory in the dir stack.
--- @param command string: The command to be executed. No quoting/escaping
--- is applied.
--- @param ... Strings containing additional arguments, which are quoted.
--- @return boolean: true if command succeeds (status code 0), false
--- otherwise.
-function execute(command, ...)
-   assert(type(command) == "string")
-   
-   for _, arg in ipairs({...}) do
-      assert(type(arg) == "string")
-      command = command .. " " .. fs_Q(arg)
-   end
-   return fs_execute_string(command)
-end
-
 --- Test is file/dir is writable.
 -- Warning: testing if a file/dir is writable does not guarantee
 -- that it will remain writable and therefore it is no replacement
@@ -174,6 +144,36 @@ end
 ---------------------------------------------------------------------
 
 if lfs_ok then
+
+--- Run the given command.
+-- The command is executed in the current directory in the dir stack.
+-- @param cmd string: No quoting/escaping is applied to the command.
+-- @return boolean: true if command succeeds (status code 0), false
+-- otherwise.
+function execute_string(cmd)
+   if os.execute(cmd) == 0 then
+      return true
+   else
+      return false
+   end
+end
+
+--- Run the given command, quoting its arguments.
+-- The command is executed in the current directory in the dir stack.
+-- @param command string: The command to be executed. No quoting/escaping
+-- is applied.
+-- @param ... Strings containing additional arguments, which are quoted.
+-- @return boolean: true if command succeeds (status code 0), false
+-- otherwise.
+function execute(command, ...)
+   assert(type(command) == "string")
+   
+   for _, arg in ipairs({...}) do
+      assert(type(arg) == "string")
+      command = command .. " " .. fs_Q(arg)
+   end
+   return fs_execute_string(command)
+end
 
 --- Obtain current directory.
 -- Uses the module's internal dir stack.

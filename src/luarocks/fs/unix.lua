@@ -457,7 +457,10 @@ end
 -- @param filename string: the file name with full path.
 -- @return boolean: returns true if file is an actual binary
 -- (or if it couldn't check) or false if it is a Lua wrapper.
-local function is_actual_binary(filename)
+function is_actual_binary(filename)
+   if filename:match("%.lua$") then
+      return false
+   end
    local file = io.open(filename)
    if file then
       local found = false
