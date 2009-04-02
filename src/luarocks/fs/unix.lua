@@ -464,7 +464,10 @@ function is_actual_binary(filename)
    local file = io.open(filename)
    if file then
       local found = false
-      if file:read():match("#!/bin/sh") then
+      local first = file:read()
+      if first:match("#!.*lua") then
+         found = true
+      elseif first:match("#!/bin/sh") then
          local line = file:read()
          line = file:read()
          if not(line and line:match("LUA_PATH")) then
