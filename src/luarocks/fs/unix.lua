@@ -281,14 +281,15 @@ function download(url, filename)
    assert(type(filename) == "string" or not filename)
 
    if cfg.downloader == "wget" then
+      local wget_cmd = "wget --user-agent="..cfg.user_agent.." --quiet --continue "
       if filename then
-         return fs_execute("wget --quiet --continue --output-document ", filename, url)
+         return fs_execute(wget_cmd.." --output-document ", filename, url)
       else
-         return fs_execute("wget --quiet --continue ", url)
+         return fs_execute(wget_cmd, url)
       end
    elseif cfg.downloader == "curl" then
       filename = filename or dir.base_name(url)
-      return fs_execute_string("curl "..fs_Q(url).." 2> /dev/null 1> "..fs_Q(filename))
+      return fs_execute_string("curl --user-agent "..cfg.user_agent.." "..fs_Q(url).." 2> /dev/null 1> "..fs_Q(filename))
    end
 end
 

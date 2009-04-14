@@ -223,11 +223,12 @@ end
 function download(url, filename)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
+   local wget_cmd = "wget --user-agent="..cfg.user_agent.." --quiet --continue "
 
    if filename then   
-      return fs_execute("wget --quiet --continue --output-document ", filename, url)
+      return fs_execute(wget_cmd.." --output-document ", filename, url)
    else
-      return fs_execute("wget --quiet --continue ", url)
+      return fs_execute(wget_cmd, url)
    end
 end
 

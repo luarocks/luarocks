@@ -240,3 +240,5 @@ if not next(rocks_trees) then
       table.insert(rocks_trees, LUAROCKS_ROCKS_TREE)
    end
 end
+
+user_agent = "LuaRocks/"..program_version
