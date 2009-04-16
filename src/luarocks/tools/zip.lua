@@ -209,9 +209,9 @@ function zip(zipfile, ...)
 
    local ok, err
    for _, file in pairs({...}) do
-      if fs_is_dir(file) then
-         for _, file in pairs(fs_find(file)) do
-            if fs_is_file(file) then
+      if fs.is_dir(file) then
+         for _, file in pairs(fs.find(file)) do
+            if fs.is_file(file) then
                ok, err = add_to_zip(file)
                if not ok then break end
             end

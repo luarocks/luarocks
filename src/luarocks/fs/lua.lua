@@ -6,6 +6,8 @@ local assert, type, table, io, package, math, os, ipairs =
 -- using LuaFileSystem, LZLib, MD5 and LuaCurl.
 module("luarocks.fs.lua", package.seeall)
 
+local fs = require("luarocks.fs")
+
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 
@@ -22,36 +24,6 @@ local dir_stack = {}
 math.randomseed(os.time())
 
 dir_separator = "/"
-
-local fs_absolute_name,
-      fs_copy,
-      fs_current_dir,
-      fs_dir_stack,
-      fs_execute,
-      fs_execute_string,
-      fs_exists,
-      fs_find,
-      fs_is_dir,
-      fs_is_file,
-      fs_make_dir,
-      fs_set_time,
-      fs_Q
-
-function init_fs_functions(impl)
-   fs_absolute_name = impl.absolute_name
-   fs_copy = impl.copy
-   fs_current_dir = impl.current_dir
-   fs_dir_stack = impl.dir_stack
-   fs_execute = impl.execute
-   fs_execute_string = impl.execute_string
-   fs_exists = impl.exists
-   fs_find = impl.find
-   fs_is_dir = impl.is_dir
-   fs_is_file = impl.is_file
-   fs_make_dir = impl.make_dir
-   fs_set_time = impl.set_time
-   fs_Q = impl.Q
-end
 
 --- Quote argument for shell processing.
 -- Adds single quotes and escapes.
@@ -73,7 +45,7 @@ end
 function is_writable(file)
    assert(file)
    local result
-   if fs_is_dir(file) then
+   if fs.is_dir(file) then
       local file2 = file .. '/.tmpluarockstestwritable'
       local fh = io.open(file2, 'w')
       result = fh ~= nil
@@ -95,28 +67,10 @@ function make_temp_dir(name)
    assert(type(name) == "string")
 
    local temp_dir = (os.getenv("TMP") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-" .. tostring(math.floor(math.random() * 10000))
-   if fs_make_dir(temp_dir) then
+   if fs.make_dir(temp_dir) then
       return temp_dir
    else
       return nil
-   end
-end
-
---- Return an absolute pathname from a potentially relative one.
--- @param pathname string: pathname to convert.
--- @param relative_to string or nil: path to prepend when making
--- pathname absolute, or the current dir in the dir stack if
--- not given.
--- @return string: The pathname converted to absolute.
-function absolute_name(pathname, relative_to)
-   assert(type(pathname) == "string")
-   assert(type(relative_to) == "string" or not relative_to)
-
-   relative_to = relative_to or fs_current_dir()
-   if pathname:sub(1,1) == "/" then
-      return pathname
-   else
-      return relative_to .. "/" .. pathname
    end
 end
 
@@ -134,9 +88,26 @@ function split_url(url)
       pathname = url
    end
    if protocol == "file" then
-      pathname = fs_absolute_name(pathname)
+      pathname = fs.absolute_name(pathname)
    end
    return protocol, pathname
+end
+
+--- Run the given command, quoting its arguments.
+-- The command is executed in the current directory in the dir stack.
+-- @param command string: The command to be executed. No quoting/escaping
+-- is applied.
+-- @param ... Strings containing additional arguments, which are quoted.
+-- @return boolean: true if command succeeds (status code 0), false
+-- otherwise.
+function execute(command, ...)
+   assert(type(command) == "string")
+   
+   for _, arg in ipairs({...}) do
+      assert(type(arg) == "string")
+      command = command .. " " .. fs.Q(arg)
+   end
+   return fs.execute_string(command)
 end
 
 ---------------------------------------------------------------------
@@ -158,23 +129,6 @@ function execute_string(cmd)
    end
 end
 
---- Run the given command, quoting its arguments.
--- The command is executed in the current directory in the dir stack.
--- @param command string: The command to be executed. No quoting/escaping
--- is applied.
--- @param ... Strings containing additional arguments, which are quoted.
--- @return boolean: true if command succeeds (status code 0), false
--- otherwise.
-function execute(command, ...)
-   assert(type(command) == "string")
-   
-   for _, arg in ipairs({...}) do
-      assert(type(arg) == "string")
-      command = command .. " " .. fs_Q(arg)
-   end
-   return fs_execute_string(command)
-end
-
 --- Obtain current directory.
 -- Uses the module's internal dir stack.
 -- @return string: the absolute pathname of the current directory.
@@ -190,7 +144,6 @@ end
 function change_dir(d)
    table.insert(dir_stack, lfs.currentdir())
    lfs.chdir(d)
---local x="CHDIR: " for _,d in ipairs(dir_stack) do x=x.." "..d end print(x)
 end
 
 --- Change directory to root.
@@ -200,14 +153,12 @@ function change_dir_to_root()
    table.insert(dir_stack, lfs.currentdir())
    -- TODO Does this work on Windows?
    lfs.chdir("/")
---local x="CHDIR ROOT: " for _,d in ipairs(dir_stack) do x=x.." "..d end print(x)
 end
 
 --- Change working directory to the previous in the dir stack.
 -- @return true if a pop ocurred, false if the stack was empty.
 function pop_dir()
    local d = table.remove(dir_stack)
---local x="POP DIR: " for _,d in ipairs(dir_stack) do x=x.." "..d end print(x)
    if d then
       lfs.chdir(d)
       return true
@@ -280,11 +231,11 @@ local function recursive_copy(src, dest)
    local srcmode = lfs.attributes(src, "mode")
       
    if srcmode == "file" then
-      local ok = fs_copy(src, dest)
+      local ok = fs.copy(src, dest)
       if not ok then return false end
    elseif srcmode == "directory" then
       local subdir = dir.path(dest, dir.base_name(src))
-      fs_make_dir(subdir)
+      fs.make_dir(subdir)
       for file in lfs.dir(src) do
          if file ~= "." and file ~= ".." then
             local ok = recursive_copy(dir.path(src, file), subdir)
@@ -354,9 +305,9 @@ end
 function list_dir(at)
    assert(type(at) == "string" or not at)
    if not at then
-      at = fs_current_dir()
+      at = fs.current_dir()
    end
-   if not fs_is_dir(at) then
+   if not fs.is_dir(at) then
       return {}
    end
    local result = {}
@@ -392,9 +343,9 @@ end
 function find(at)
    assert(type(at) == "string" or not at)
    if not at then
-      at = fs_current_dir()
+      at = fs.current_dir()
    end
-   if not fs_is_dir(at) then
+   if not fs.is_dir(at) then
       return {}
    end
    local result = {}
@@ -448,7 +399,7 @@ end
 function unzip(zipfile)
    assert(zipfile)
    -- FIXME!!!!
-   return fs_execute("unzip", zipfile)
+   return fs.execute("unzip", zipfile)
 end
 
 end
@@ -506,7 +457,7 @@ if md5_ok then
 -- @return boolean: true if the MD5 checksum for 'file' equals 'md5sum', false if not
 -- or if it could not perform the check for any reason.
 function check_md5(file, md5sum)
-   file = fs_absolute_name(file)
+   file = fs.absolute_name(file)
    local file = io.open(file, "r")
    if not file then return false end
    local computed = md5.sumhexa(file:read("*a"))
@@ -545,13 +496,13 @@ function unpack_archive(archive)
 
    local ok
    if archive:match("%.tar%.gz$") or archive:match("%.tgz$") then
-      -- ok = fs_execute("tar zxvpf ", archive)
-      ok = fs_execute_string("gunzip -c "..archive.."|tar -xf -")
+      -- ok = fs.execute("tar zxvpf ", archive)
+      ok = fs.execute_string("gunzip -c "..archive.."|tar -xf -")
    elseif archive:match("%.tar%.bz2$") then
-      -- ok = fs_execute("tar jxvpf ", archive)
-      ok = fs_execute_string("bunzip2 -c "..archive.."|tar -xf -")
+      -- ok = fs.execute("tar jxvpf ", archive)
+      ok = fs.execute_string("bunzip2 -c "..archive.."|tar -xf -")
    elseif archive:match("%.zip$") then
-      ok = fs_execute("unzip ", archive)
+      ok = fs.execute("unzip ", archive)
    elseif archive:match("%.lua$") or archive:match("%.c$") then
       -- Ignore .lua and .c files; they don't need to be extracted.
       return true

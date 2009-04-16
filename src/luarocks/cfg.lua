@@ -1,6 +1,6 @@
 
-local rawset, next, table, pairs, print, require, io, os, setmetatable =
-      rawset, next, table, pairs, print, require, io, os, setmetatable
+local rawset, next, table, pairs, print, require, io, os, setmetatable, program_version =
+      rawset, next, table, pairs, print, require, io, os, setmetatable, program_version
 
 --- Configuration for LuaRocks.
 -- Tries to load the user's configuration file and

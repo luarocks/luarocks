@@ -1,5 +1,6 @@
 
 --- Core functions for querying manifest files.
+-- This module requires no specific 'fs' functionality.
 module("luarocks.manif_core", package.seeall)
 
 local persist = require("luarocks.persist")
