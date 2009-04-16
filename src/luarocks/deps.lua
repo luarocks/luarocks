@@ -18,7 +18,6 @@ local search = require("luarocks.search")
 local install = require("luarocks.install")
 local cfg = require("luarocks.cfg")
 local manif_core = require("luarocks.manif_core")
-local fs = require("luarocks.fs")
 local fetch = require("luarocks.fetch")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
@@ -496,6 +495,8 @@ end
 -- nil and an error message if any test failed.
 function check_external_deps(rockspec, mode)
    assert(type(rockspec) == "table")
+
+   local fs = require("luarocks.fs")
    
    local vars = rockspec.variables
    local patterns = cfg.external_deps_patterns
