@@ -7,6 +7,7 @@
 module("luarocks.help", package.seeall)
 
 local util = require("luarocks.util")
+local cfg = require("luarocks.cfg")
 
 help_summary = "Help on commands."
 
@@ -25,7 +26,7 @@ function run(...)
 
    if not command then
       print([[
-LuaRocks ]]..program_version..[[, a module deployment system for Lua
+LuaRocks ]]..cfg.program_version..[[, a module deployment system for Lua
 
 ]]..program_name..[[ - ]]..program_description..[[
 

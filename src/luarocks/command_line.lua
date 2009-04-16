@@ -1,6 +1,4 @@
 
-program_version = "1.1"
-
 --- Functions for command-line scripts.
 module("luarocks.command_line", package.seeall)
 
@@ -15,7 +13,7 @@ local function die(message)
 
    local ok, err = pcall(util.run_scheduled_functions)
    if not ok then
-      print("\nLuaRocks "..program_version.." internal bug (please report at luarocks-developers@lists.luaforge.net):\n"..err)
+      print("\nLuaRocks "..cfg.program_version.." internal bug (please report at luarocks-developers@lists.luaforge.net):\n"..err)
    end
    print("\nError: "..message)
    os.exit(1)
@@ -92,7 +90,7 @@ function run_command(...)
    local command
    
    if flags["version"] then
-      print(program_name.." "..program_version)
+      print(program_name.." "..cfg.program_version)
       print(program_description)
       print()
       os.exit(0)

@@ -1,6 +1,6 @@
 
-local rawset, next, table, pairs, print, require, io, os, setmetatable, program_version =
-      rawset, next, table, pairs, print, require, io, os, setmetatable, program_version
+local rawset, next, table, pairs, print, require, io, os, setmetatable =
+      rawset, next, table, pairs, print, require, io, os, setmetatable
 
 --- Configuration for LuaRocks.
 -- Tries to load the user's configuration file and
@@ -8,6 +8,8 @@ local rawset, next, table, pairs, print, require, io, os, setmetatable, program_
 -- <a href="http://luarocks.org/en/Config_file_format">config
 -- file format documentation</a> for details.
 module("luarocks.cfg")
+
+program_version = "1.1"
 
 local persist = require("luarocks.persist")
 

@@ -13,7 +13,7 @@ local package, assert, ipairs, pairs, os, print, table, type, next =
 module("luarocks.require")
 
 local path = plain_require("luarocks.path")
-local manif = plain_require("luarocks.manif")
+local manif = plain_require("luarocks.manif_core")
 local deps = plain_require("luarocks.deps")
 local cfg = plain_require("luarocks.cfg")
 
