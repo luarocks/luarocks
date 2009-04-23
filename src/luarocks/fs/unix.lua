@@ -31,25 +31,6 @@ function absolute_name(pathname, relative_to)
    end
 end
 
---- Split protocol and path from an URL or local pathname.
--- URLs should be in the "protocol://path" format.
--- For local pathnames, "file" is returned as the protocol.
--- @param url string: an URL or a local pathname.
--- @return string, string: the protocol, and the absolute pathname without the protocol.
-function split_url(url)
-   assert(type(url) == "string")
-   
-   local protocol, pathname = url:match("^([^:]*)://(.*)")
-   if not protocol then
-      protocol = "file"
-      pathname = url
-   end
-   if protocol == "file" then
-      pathname = fs.absolute_name(pathname)
-   end
-   return protocol, pathname
-end
-
 --- Create a wrapper to make a script executable from the command-line.
 -- @param file string: Pathname of script to be made executable.
 -- @param dest string: Directory where to put the wrapper.

@@ -13,12 +13,8 @@
 -- insights on what these criteria are.
 module("luarocks.deps", package.seeall)
 
-local rep = require("luarocks.rep")
-local search = require("luarocks.search")
-local install = require("luarocks.install")
 local cfg = require("luarocks.cfg")
 local manif_core = require("luarocks.manif_core")
-local fetch = require("luarocks.fetch")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 
@@ -404,6 +400,9 @@ end
 -- error code.
 function fulfill_dependencies(rockspec)
 
+   local search = require("luarocks.search")
+   local install = require("luarocks.install")
+
    if rockspec.supported_platforms then
       if not platforms_set then
          platforms_set = values_set(cfg.platforms)
@@ -587,6 +586,8 @@ function scan_deps(results, missing, manifest, name, version)
    assert(type(missing) == "table")
    assert(type(name) == "string")
    assert(type(version) == "string")
+
+   local fetch = require("luarocks.fetch")
 
    local err
    if results[name] then

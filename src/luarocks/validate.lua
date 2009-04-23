@@ -15,7 +15,7 @@ help = [[
 ]]
 
 local function save_settings(repo)
-   local protocol, path = fs.split_url(repo)
+   local protocol, path = dir.split_url(repo)
    table.insert(cfg.rocks_servers, 1, protocol.."://"..path)
    return {
       root_dir = cfg.root_dir,

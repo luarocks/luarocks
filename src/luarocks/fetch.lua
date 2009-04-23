@@ -26,7 +26,7 @@ function fetch_url(url, filename)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
 
-   local protocol, pathname = fs.split_url(url)
+   local protocol, pathname = dir.split_url(url)
    if protocol == "file" then
       return fs.absolute_name(pathname)
    elseif protocol == "http" or protocol == "ftp" or protocol == "https" then
@@ -57,7 +57,7 @@ function fetch_url_at_temp_dir(url, tmpname, filename)
    assert(type(filename) == "string" or not filename)
    filename = filename or dir.base_name(url)
 
-   local protocol, pathname = fs.split_url(url)
+   local protocol, pathname = dir.split_url(url)
    if protocol == "file" then
       return pathname, dir.dir_name(pathname)
    else
@@ -151,7 +151,7 @@ function load_local_rockspec(filename)
       return nil, "Expected filename in format 'name-version-revision.rockspec'."
    end
 
-   local protocol, pathname = fs.split_url(rockspec.source.url)
+   local protocol, pathname = dir.split_url(rockspec.source.url)
    if protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file" then
       rockspec.source.file = rockspec.source.file or dir.base_name(rockspec.source.url)
    end

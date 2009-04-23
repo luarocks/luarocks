@@ -222,3 +222,4 @@ function configure_paths(rockspec)
    vars.DOCDIR = doc_dir(name, version)
    rockspec.variables = vars
 end
+

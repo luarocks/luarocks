@@ -61,17 +61,16 @@ local function add_context(name, version, manifest)
    for _, dep in ipairs(pkgdeps) do
       local package, constraints = dep.name, dep.constraints
 
-      for _, tree in pairs(rocks_trees) do do
+      for _, tree in pairs(rocks_trees) do
          local entries = tree.manifest.repository[package]
          if entries then
-            break -- continue for
-         end
-         for version, packages in pairs(entries) do
-            if (not constraints) or deps.match_constraints(deps.parse_version(version), constraints) then
-               add_context(package, version, tree.manifest)
+            for version, packages in pairs(entries) do
+               if (not constraints) or deps.match_constraints(deps.parse_version(version), constraints) then
+                  add_context(package, version, tree.manifest)
+               end
             end
          end
-      end end
+      end
    end
 end
 

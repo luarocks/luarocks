@@ -74,25 +74,6 @@ function make_temp_dir(name)
    end
 end
 
---- Split protocol and path from an URL or local pathname.
--- URLs should be in the "protocol://path" format.
--- For local pathnames, "file" is returned as the protocol.
--- @param url string: an URL or a local pathname.
--- @return string, string: the protocol, and the absolute pathname without the protocol.
-function split_url(url)
-   assert(type(url) == "string")
-   
-   local protocol, pathname = url:match("^([^:]*)://(.*)")
-   if not protocol then
-      protocol = "file"
-      pathname = url
-   end
-   if protocol == "file" then
-      pathname = fs.absolute_name(pathname)
-   end
-   return protocol, pathname
-end
-
 --- Run the given command, quoting its arguments.
 -- The command is executed in the current directory in the dir stack.
 -- @param command string: The command to be executed. No quoting/escaping

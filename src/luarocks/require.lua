@@ -13,7 +13,7 @@ local package, assert, ipairs, pairs, os, print, table, type, next =
 module("luarocks.require")
 
 local path = plain_require("luarocks.path")
-local manif = plain_require("luarocks.manif_core")
+local manif_core = plain_require("luarocks.manif_core")
 local deps = plain_require("luarocks.deps")
 local cfg = plain_require("luarocks.cfg")
 
@@ -29,7 +29,7 @@ local function load_rocks_trees()
    local trees = {}
    for _, tree in pairs(cfg.rocks_trees) do
       local rocks_dir = tree .. "/rocks/"
-      local manifest, err = manif.load_local_manifest(rocks_dir)
+      local manifest, err = manif_core.load_local_manifest(rocks_dir)
       if manifest then
          any_ok = true
          table.insert(trees, {rocks_dir=rocks_dir, manifest=manifest})
@@ -115,7 +115,7 @@ function set_context(name, version)
             break
          end
       else
-         local versions = manif.get_versions(name, tree.manifest)
+         local versions = manif_core.get_versions(name, tree.manifest)
          for _, version in ipairs(versions) do
             table.insert(vtables, {version = deps.parse_version(version), manifest = tree.manifest})
          end

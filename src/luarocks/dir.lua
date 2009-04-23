@@ -45,3 +45,19 @@ function path(...)
    end
    return table.concat(items, "/")
 end
+
+--- Split protocol and path from an URL or local pathname.
+-- URLs should be in the "protocol://path" format.
+-- For local pathnames, "file" is returned as the protocol.
+-- @param url string: an URL or a local pathname.
+-- @return string, string: the protocol, and the absolute pathname without the protocol.
+function split_url(url)
+   assert(type(url) == "string")
+   
+   local protocol, pathname = url:match("^([^:]*)://(.*)")
+   if not protocol then
+      protocol = "file"
+      pathname = url
+   end
+   return protocol, pathname
+end

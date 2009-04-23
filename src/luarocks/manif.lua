@@ -26,7 +26,7 @@ function load_manifest(repo_url)
       return manif_core.manifest_cache[repo_url]
    end
 
-   local protocol, pathname = fs.split_url(repo_url)
+   local protocol, pathname = dir.split_url(repo_url)
    if protocol == "file" then
       pathname = dir.path(pathname, "manifest")
    else

@@ -3,7 +3,6 @@
 -- Queries LuaRocks servers.
 module("luarocks.search", package.seeall)
 
-local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local path = require("luarocks.path")
 local manif = require("luarocks.manif")
@@ -129,6 +128,9 @@ function disk_search(repo, query, results)
    assert(type(repo) == "string")
    assert(type(query) == "table")
    assert(type(results) == "table" or not results)
+   
+   local fs = require("luarocks.fs")
+     
    if not results then
       results = {}
    end
@@ -194,7 +196,7 @@ local function search_repos(query)
 
    local results = {}
    for _, repo in ipairs(cfg.rocks_servers) do
-      local protocol, pathname = fs.split_url(repo)
+      local protocol, pathname = dir.split_url(repo)
       if protocol == "file" then
          repo = pathname
       end

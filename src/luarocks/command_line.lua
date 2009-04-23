@@ -76,7 +76,7 @@ function run_command(...)
       if flags["from"] == true then
          die("Argument error: use --from=<url>")
       end
-      local protocol, path = fs.split_url(flags["from"])
+      local protocol, path = dir.split_url(flags["from"])
       table.insert(cfg.rocks_servers, 1, protocol.."://"..path)
    end
    
