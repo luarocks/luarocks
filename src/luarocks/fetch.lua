@@ -59,7 +59,7 @@ function fetch_url_at_temp_dir(url, tmpname, filename)
 
    local protocol, pathname = dir.split_url(url)
    if protocol == "file" then
-      return pathname, dir.dir_name(pathname)
+      return pathname, dir.dir_name(fs.absolute_name(pathname))
    else
       local temp_dir = fs.make_temp_dir(tmpname)
       if not temp_dir then
@@ -122,8 +122,7 @@ end
 -- or nil followed by an error message.
 function load_local_rockspec(filename)
    assert(type(filename) == "string")
-
-   local rockspec, err = persist.load_into_table(filename)
+   local rockspec, err = persist.load_into_table(fs.absolute_name(filename))
    if not rockspec then
       return nil, "Could not load rockspec file "..filename.." ("..err..")"
    end
