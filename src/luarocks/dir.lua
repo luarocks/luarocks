@@ -50,7 +50,7 @@ end
 -- URLs should be in the "protocol://path" format.
 -- For local pathnames, "file" is returned as the protocol.
 -- @param url string: an URL or a local pathname.
--- @return string, string: the protocol, and the absolute pathname without the protocol.
+-- @return string, string: the protocol, and the pathname without the protocol.
 function split_url(url)
    assert(type(url) == "string")
    
