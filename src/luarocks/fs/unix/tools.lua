@@ -6,7 +6,7 @@ local fs = require("luarocks.fs")
 
 local cfg = require("luarocks.cfg")
 
-dir_stack = {}
+local dir_stack = {}
 
 --- Run the given command.
 -- The command is executed in the current directory in the dir stack.
@@ -31,7 +31,7 @@ function current_dir()
       current = pipe:read("*l")
       pipe:close()
    end
-   for _, d in ipairs(fs.dir_stack) do
+   for _, d in ipairs(dir_stack) do
       current = fs.absolute_name(d, current)
    end
    return current
@@ -44,19 +44,19 @@ end
 -- @param d string: The directory to switch to.
 function change_dir(d)
    assert(type(d) == "string")
-   table.insert(fs.dir_stack, d)
+   table.insert(dir_stack, d)
 end
 
 --- Change directory to root.
 -- Allows leaving a directory (e.g. for deleting it) in
 -- a crossplatform way.
 function change_dir_to_root()
-   table.insert(fs.dir_stack, "/")
+   table.insert(dir_stack, "/")
 end
 
 --- Change working directory to the previous in the dir stack.
 function pop_dir()
-   local d = table.remove(fs.dir_stack)
+   local d = table.remove(dir_stack)
    return d ~= nil
 end
 
