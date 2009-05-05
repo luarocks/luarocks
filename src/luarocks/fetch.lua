@@ -122,7 +122,8 @@ end
 -- or nil followed by an error message.
 function load_local_rockspec(filename)
    assert(type(filename) == "string")
-   local rockspec, err = persist.load_into_table(fs.absolute_name(filename))
+   filename = fs.absolute_name(filename)
+   local rockspec, err = persist.load_into_table(filename)
    if not rockspec then
       return nil, "Could not load rockspec file "..filename.." ("..err..")"
    end

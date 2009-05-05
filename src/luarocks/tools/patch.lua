@@ -9,6 +9,8 @@
 
 module("luarocks.tools.patch", package.seeall)
 
+local fs = require("luarocks.fs")
+
 local version = '0.1'
 
 local io = io
@@ -93,11 +95,12 @@ local function string_as_file(s)
       eof = false,
       read = function(self, n)
          if self.eof then return nil end
-         local chunk = self.str:sub(at, at+n)
+         local chunk = self.str:sub(self.at, self.at+n)
          self.at = self.at + n
-         if at > self.len then
+         if self.at > self.len then
             self.eof = true
          end
+         return chunk
       end,
       close = function(self)
          self.eof = true
@@ -187,6 +190,7 @@ function read_patch(filename, data)
     fp = filename == '-' and io.stdin or assert(io.open(filename, "rb"))
   end
   local lineno = 0
+
   for line in file_lines(fp) do
     lineno = lineno + 1
     if state == 'header' then
@@ -470,7 +474,6 @@ local function check_patched(file, hunks)
          error 'nomatch'
       end
       lineno = h.starttgt
-print() for k,v in pairs(h) do print(k,v) end print()
       for _, hline in ipairs(h.text) do
         -- todo: \ No newline at the end of file
         if not startswith(hline, "-") and not startswith(hline, "\\") then
@@ -575,6 +578,7 @@ function apply_patch(patch, strip)
     local f2patch = filename
     if not exists(f2patch) then
       f2patch = strip_dirs(patch.target[fileno], strip)
+      f2patch = fs.absolute_name(f2patch)
       if not exists(f2patch) then  --FIX:if f2patch nil
         warning(format("source/target file does not exist\n--- %s\n+++ %s",
                 filename, f2patch))
