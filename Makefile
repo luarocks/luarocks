@@ -10,6 +10,7 @@ LUA_DIR ?= /usr/local
 LUA_BINDIR ?= $(LUA_DIR)/bin
 
 BIN_FILES = luarocks luarocks-admin
+SRC_FILES = luarocks.lua
 LUAROCKS_FILES = build/cmake.lua build/command.lua build.lua build/make.lua \
 command_line.lua cfg.lua deps.lua fetch.lua fs.lua fs/unix.lua fs/lua.lua \
 fs/win32.lua fs/unix/tools.lua fs/win32/tools.lua help.lua install.lua list.lua persist.lua dir.lua \
@@ -81,7 +82,9 @@ check_makefile:
 	echo $(BIN_FILES) | tr " " "\n" | sort > makefile_list.txt
 	( cd src/bin && ls -d * ) | grep -v "CVS" | sort > luarocks_dir.txt
 	echo $(LUAROCKS_FILES) | tr " " "\n" | sort >> makefile_list.txt
-	( cd src/luarocks && ls -d *.lua ) | sort >> luarocks_dir.txt
+	( cd src/luarocks && find * -name "*.lua" ) | sort >> luarocks_dir.txt
+	echo $(SRC_FILES) | tr " " "\n" | sort >> makefile_list.txt
+	( cd src && ls -d *.lua ) | sort >> luarocks_dir.txt
 	diff makefile_list.txt luarocks_dir.txt
 	rm makefile_list.txt luarocks_dir.txt
 	@echo
@@ -100,6 +103,8 @@ clean:
 install:
 	mkdir -p "$(DESTDIR)$(BINDIR)"
 	cd src/bin && cp $(BIN_FILES) "$(DESTDIR)$(BINDIR)"
+	mkdir -p "$(DESTDIR)$(LUADIR)"
+	cd src && for f in $(SRC_FILES); do cp "$$f" "$$d"; done
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
 	cd src/luarocks && for f in $(LUAROCKS_FILES); do d="$(DESTDIR)$(LUADIR)/luarocks"/`dirname "$$f"`; mkdir -p "$$d"; cp "$$f" "$$d"; done
 	mkdir -p "$(DESTDIR)$(ROCKS_TREE)"
