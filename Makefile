@@ -104,7 +104,7 @@ install:
 	mkdir -p "$(DESTDIR)$(BINDIR)"
 	cd src/bin && cp $(BIN_FILES) "$(DESTDIR)$(BINDIR)"
 	mkdir -p "$(DESTDIR)$(LUADIR)"
-	cd src && for f in $(SRC_FILES); do cp "$$f" "$$d"; done
+	cd src && cp $(SRC_FILES) "$(DESTDIR)$(LUADIR)"
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
 	cd src/luarocks && for f in $(LUAROCKS_FILES); do d="$(DESTDIR)$(LUADIR)/luarocks"/`dirname "$$f"`; mkdir -p "$$d"; cp "$$f" "$$d"; done
 	mkdir -p "$(DESTDIR)$(ROCKS_TREE)"
