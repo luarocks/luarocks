@@ -11,11 +11,11 @@ LUA_BINDIR ?= $(LUA_DIR)/bin
 
 BIN_FILES = luarocks luarocks-admin
 LUAROCKS_FILES = build/cmake.lua build/command.lua build.lua build/make.lua \
-command_line.lua cfg.lua deps.lua fetch.lua fs.lua fs/unix.lua \
-fs/win32.lua help.lua install.lua list.lua persist.lua \
-make_manifest.lua pack.lua path.lua rep.lua require.lua search.lua \
-type_check.lua util.lua remove.lua build/builtin.lua make.lua manif.lua unpack.lua \
-fetch/cvs.lua fetch/sscm.lua fetch/git.lua
+command_line.lua cfg.lua deps.lua fetch.lua fs.lua fs/unix.lua fs/lua.lua \
+fs/win32.lua fs/unix/tools.lua fs/win32/tools.lua help.lua install.lua list.lua persist.lua dir.lua \
+make_manifest.lua pack.lua path.lua rep.lua require.lua search.lua validate.lua \
+type_check.lua util.lua remove.lua build/builtin.lua make.lua manif.lua manif_core.lua unpack.lua \
+fetch/cvs.lua fetch/sscm.lua fetch/git.lua tools/zip.lua tools/tar.lua tools/patch.lua
 
 CONFIG_FILE = $(SYSCONFDIR)/config.lua
 
