@@ -79,7 +79,7 @@ function apply_patches(rockspec)
       extract_from_rockspec(build.patches)
       for patch, patchdata in util.sortedpairs(build.patches) do
          print("Applying patch "..patch.."...")
-         local ok, err = fs.apply_patch(tostring(patch, patchdata))
+         local ok, err = fs.apply_patch(tostring(patch), patchdata)
          if not ok then
             return nil, "Failed applying patch "..patch
          end
