@@ -1,6 +1,6 @@
 
-local rawset, next, table, pairs, print, require, io, os, setmetatable =
-      rawset, next, table, pairs, print, require, io, os, setmetatable
+local rawset, next, table, pairs, print, require, io, os, setmetatable, pcall =
+      rawset, next, table, pairs, print, require, io, os, setmetatable, pcall
 
 --- Configuration for LuaRocks.
 -- Tries to load the user's configuration file and
@@ -12,6 +12,17 @@ module("luarocks.cfg")
 program_version = "1.1"
 
 local persist = require("luarocks.persist")
+
+local popen_ok, popen_result = pcall(io.popen, "")
+if popen_ok then
+   if popen_result then
+      result:close()
+   end
+else
+   print("Your version of Lua does not support io.popen,")
+   print("which is required by LuaRocks. Please check your Lua installation.")
+   os.exit(1)
+end
 
 local detected = {}
 local system,proc
