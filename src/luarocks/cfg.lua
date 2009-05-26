@@ -16,7 +16,7 @@ local persist = require("luarocks.persist")
 local popen_ok, popen_result = pcall(io.popen, "")
 if popen_ok then
    if popen_result then
-      result:close()
+      popen_result:close()
    end
 else
    print("Your version of Lua does not support io.popen,")
