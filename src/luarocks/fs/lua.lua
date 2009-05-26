@@ -1,7 +1,4 @@
 
-local assert, type, table, io, package, math, os, ipairs =
-      assert, type, table, io, package, math, os, ipairs
-
 --- Native Lua implementation of filesystem and platform abstractions,
 -- using LuaFileSystem, LZLib, MD5 and LuaCurl.
 module("luarocks.fs.lua", package.seeall)
@@ -13,6 +10,7 @@ local dir = require("luarocks.dir")
 
 local zip_ok, zip = pcall(require, "luarocks.tools.zip")
 local lfs_ok, lfs = pcall(require, "lfs")
+
 local curl_ok, curl = pcall(require, "luacurl")
 local md5_ok, md5 = pcall(require, "md5")
 
@@ -330,7 +328,7 @@ function find(at)
       return {}
    end
    local result = {}
-   recursive_find(lfs.currentdir(), "", result)
+   recursive_find(at, "", result)
    return result
 end
 
