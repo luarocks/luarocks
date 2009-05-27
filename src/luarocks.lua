@@ -182,7 +182,7 @@ local function pick_module(module, constraints)
    for _, tree in pairs(rocks_trees) do
       local entries = tree.manifest.modules[module]
       if entries then
-         for _, entry in pairs(entries) do
+         for entry, _ in pairs(entries) do
             local name, version = entry:match("^([^/]*)/(.*)$")
             if context[name] == version then
                return name, version, tree

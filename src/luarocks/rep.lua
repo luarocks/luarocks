@@ -107,18 +107,14 @@ function package_modules(package, version)
    assert(type(version) == "string")
 
    local result = {}
-   local luas = fs.find(path.lua_dir(package, version))
-   local libs = fs.find(path.lib_dir(package, version))
-   for _, file in ipairs(luas) do
-      local name = path.path_to_module(file)
-      if name then
-         result[name] = file
-      end
-   end
-   for _, file in ipairs(libs) do
-      local name = path.path_to_module(file)
-      if name then
-         result[name] = file
+   for _, pathdir in pairs{ path.lua_dir, path.lib_dir } do
+      local basedir = pathdir(package, version)
+      local files = fs.find(basedir)
+      for _, file in ipairs(files) do
+         local name = path.path_to_module(file)
+         if name then
+            result[name] = dir.path(basedir, file)
+         end
       end
    end
    return result

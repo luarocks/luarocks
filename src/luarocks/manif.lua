@@ -72,14 +72,14 @@ local function store_package_items(itemsfn, pkg, version, tbl)
    assert(type(version) == "string")
    assert(type(tbl) == "table")
 
-   local path = pkg.."/"..version
+   local pkg_version = pkg.."/"..version
    local result = {}
-   for item, _ in pairs(itemsfn(pkg, version)) do
-      table.insert(result, item)
+   for item, path in pairs(itemsfn(pkg, version)) do
+      result[item] = path
       if not tbl[item] then
          tbl[item] = {}
       end
-      table.insert(tbl[item], path)
+      tbl[item][pkg_version] = path
    end
    return result
 end
@@ -237,7 +237,6 @@ function make_manifest(repo)
    query.exact_name = false
    query.arch = "any"
    local results = search.disk_search(repo, query)
-
    local manifest = { repository = {}, modules = {}, commands = {} }
    manif_core.manifest_cache[repo] = manifest
    store_results(results, manifest)
