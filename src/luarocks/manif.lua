@@ -13,6 +13,9 @@ local fetch = require("luarocks.fetch")
 local dir = require("luarocks.dir")
 local manif_core = require("luarocks.manif_core")
 
+local function make_global_lib(repo, manifest)
+end
+
 --- Load a local or remote manifest describing a repository.
 -- All functions that use manifest tables assume they were obtained
 -- through either this function or load_local_manifest.
@@ -163,16 +166,16 @@ local function store_results(results, manifest)
 
    for pkg, versions in pairs(results) do
       local pkgtable = manifest.repository[pkg] or {}
-      for version, repos in pairs(versions) do
+      for version, entries in pairs(versions) do
          local versiontable = {}
-         for _, repo in ipairs(repos) do
-            local repotable = {}
-            repotable.arch = repo.arch
-            if repo.arch == "installed" then
-               repotable.modules = store_package_items(rep.package_modules, pkg, version, manifest.modules)
-               repotable.commands = store_package_items(rep.package_commands, pkg, version, manifest.commands)
+         for _, entry in ipairs(entries) do
+            local entrytable = {}
+            entrytable.arch = entry.arch
+            if entry.arch == "installed" then
+               entrytable.modules = store_package_items(rep.package_modules, pkg, version, manifest.modules)
+               entrytable.commands = store_package_items(rep.package_commands, pkg, version, manifest.commands)
             end
-            table.insert(versiontable, repotable)
+            table.insert(versiontable, entrytable)
          end
          pkgtable[version] = versiontable
       end
@@ -217,6 +220,7 @@ function update_manifest(name, version, repo)
    local results = {[name] = {[version] = {{arch = "installed", repo = repo}}}}
    
    store_results(results, manifest)
+   make_global_lib(repo, manifest)
    return save_manifest(repo, manifest)
 end
 
@@ -240,6 +244,7 @@ function make_manifest(repo)
    local manifest = { repository = {}, modules = {}, commands = {} }
    manif_core.manifest_cache[repo] = manifest
    store_results(results, manifest)
+   make_global_lib(repo, manifest)
    return save_manifest(repo, manifest)
 end
 
