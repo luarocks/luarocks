@@ -298,7 +298,7 @@ IF NOT EXIST "%ROCKS_TREE%" %MKDIR% "%ROCKS_TREE%"
 IF NOT EXIST "%APPDATA%/luarocks" %MKDIR% "%APPDATA%/luarocks"
 
 REM ***********************************************************
-REM Exit handlers
+REM Exit handlers 
 REM ***********************************************************
 
 ECHO LuaRocks is installed!
