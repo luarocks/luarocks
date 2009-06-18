@@ -116,7 +116,7 @@ function run_command(...)
    command = command:gsub("-", "_")
    if commands[command] then
       local xp, ok, err = xpcall(function() return commands[command].run(unpack(args)) end, function(err)
-         die(debug.traceback("LuaRocks "..program_version
+         die(debug.traceback("LuaRocks "..cfg.program_version
             .." bug (please report at luarocks-developers@lists.luaforge.net).\n"
             ..err, 2))
       end)

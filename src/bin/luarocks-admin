@@ -10,5 +10,6 @@ commands = {
 
 commands.help = require("luarocks.help")
 commands.make_manifest = require("luarocks.make_manifest")
+commands.add = require("luarocks.add")
 
 command_line.run_command(...)

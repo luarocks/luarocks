@@ -328,7 +328,6 @@ function make_index(repo)
       return nil, "Cannot access repository at "..repo
    end
    local manifest = load_manifest(repo)
-   files = fs.find(repo)
    local out = io.open(dir.path(repo, "index.html"), "w")
    out:write(index_header)
    for package, version_list in util.sortedpairs(manifest.repository) do
