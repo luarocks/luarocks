@@ -33,22 +33,30 @@ end
 -- are keys (tables are handled recursively).
 -- @param out userdata: a file object, open for writing.
 -- @param tbl table: the table to be written.
-local function write_table(out, tbl)
+local function write_table(out, tbl, level)
    out:write("{")
    local size = table.getn(tbl)
-   local sep = ""
+   local sep = "\n"
+   local indent = true
    local i = 1
    for k, v in pairs(tbl) do
       out:write(sep)
+      if indent then
+         for n = 1,level do out:write("  ") end
+      end
+      sep = ",\n"
+      indent = true
       if type(k) == "number" then
          if k ~= i then
             out:write(tostring(k).."=")
          else
             i = i + 1
          end
+         indent = false
+         sep = ", "
       elseif type(k) == "table" then
          out:write("[")
-         write_table(out, k)
+         write_table(out, k, level + 1)
          out:write("]=")
       else
          if k:match("^[a-z_]+$") then
@@ -57,17 +65,19 @@ local function write_table(out, tbl)
             out:write("['"..k:gsub("'", "\\'").."']=") 
          end
       end
-      local typ = type(v)
-      if typ == "table" then
-         write_table(out, v)
-      elseif typ == "string" then
+      if type(v) == "table" then
+         write_table(out, v, level + 1)
+      elseif type(v) == "string" then
          out:write("'"..v:gsub("'", "\\'").."'")
       else
          out:write(tostring(v))
       end
-      sep = ", "
    end
-   out:write("}\n")
+   if sep ~= "\n" then
+      out:write("\n")
+      for n = 1,level-1 do out:write("  ") end
+   end
+   out:write("}")
 end
 
 --- Save the contents of a table in a file.
@@ -83,7 +93,7 @@ function save_from_table(filename, tbl)
    end
    for k, v in pairs(tbl) do
       out:write(k.." = ")
-      write_table(out, v)
+      write_table(out, v, 1)
       out:write("\n")
    end
    out:close()
