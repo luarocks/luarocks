@@ -307,8 +307,9 @@ local function recursive_find(cwd, prefix, result)
       if file ~= "." and file ~= ".." then
          local item = prefix .. file
          table.insert(result, item)
-         if lfs.attributes(item, "mode") == "directory" then
-            recursive_find(item, item..dir_separator, result)
+         local pathname = dir.path(cwd, file)
+         if lfs.attributes(pathname, "mode") == "directory" then
+            recursive_find(pathname, item..dir_separator, result)
          end
       end
    end
