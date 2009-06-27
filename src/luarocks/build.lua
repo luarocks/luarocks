@@ -137,7 +137,7 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
       end
       fs.change_dir(rockspec.source.dir)
    end
-      
+   
    local dirs = {
       lua = path.lua_dir(name, version),
       lib = path.lib_dir(name, version),
@@ -165,7 +165,10 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
    if build.type ~= "none" then
 
       -- Temporary compatibility
-      if build.type == "module" then build.type = "builtin" end
+      if build.type == "module" then
+         print("Do not use 'module' as a build type. Use 'builtin' instead.")
+         build.type = "builtin"
+      end
 
       ok, build_type = pcall(require, "luarocks.build." .. build.type)
       if not ok or not type(build_type) == "table" then
