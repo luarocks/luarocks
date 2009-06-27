@@ -14,6 +14,24 @@ local dir = require("luarocks.dir")
 local manif_core = require("luarocks.manif_core")
 
 local function make_global_lib(repo, manifest)
+   local lib_dir = dir.path(dir.dir_name(repo), "lib")
+   fs.make_dir(lib_dir)
+   for rock, modules in pairs(manifest.modules) do
+      for module, file in pairs(modules) do
+         local path_in_rock = dir.strip_base_dir(file:sub(#dir.path(repo, module)+2))
+         local module_dir = dir.dir_name(path_in_rock)
+         local dest = dir.path(lib_dir, path_in_rock)
+         if module_dir ~= "" then
+            fs.make_dir(dir.dir_name(dest))
+         end
+         if not fs.exists(dest) then
+            fs.copy(file, dest)
+            manifest.modules[rock][module] = dest
+         else
+            -- TODO
+         end
+      end
+   end
 end
 
 --- Load a local or remote manifest describing a repository.
