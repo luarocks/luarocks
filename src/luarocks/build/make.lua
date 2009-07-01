@@ -58,6 +58,8 @@ function run(rockspec)
       end
    end
 
+   util.warn_if_not_used(build.build_variables, { CFLAGS=true }, "variable %s was not passed in build_variables")
+
    util.variable_substitutions(build.build_variables, rockspec.variables)
    util.variable_substitutions(build.install_variables, rockspec.variables)
    

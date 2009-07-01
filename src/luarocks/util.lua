@@ -122,6 +122,62 @@ function platform_overrides(tbl)
    tbl.platforms = nil
 end
 
+local var_format_pattern = "%$%((%a[%a%d_]+)%)"
+
+--- Display a warning message.
+-- @param msg string: the warning message
+function warning(msg)
+   print()
+   print("Warning: "..msg)
+   print()
+end
+
+--- Create a new shallow copy of a table: a new table with
+-- the same keys and values. Keys point to the same objects as
+-- the original table (ie, does not copy recursively).
+-- @param tbl table: the input table
+-- @return table: a new table with the same contents.
+local function make_shallow_copy(tbl)
+   local copy = {}
+   for k,v in pairs(tbl) do
+      copy[k] = v
+   end
+   return copy
+end
+
+-- Check if a set of needed variables are referenced
+-- somewher in a list of definitions, warning teh user
+-- about any unused ones. Each key in needed_set should
+-- appear as a $(XYZ) variable at least once as a
+-- substring of some value of var_defs.
+-- @param var_defs: a table with string keys and string
+-- values, containing variable definitions.
+-- @param needed_set: a set where keys are the names of
+-- needed variables.
+-- @param msg string: the warning message to display.
+function warn_if_not_used(var_defs, needed_set, msg)
+   needed_set = make_shallow_copy(needed_set)
+   for var,val in pairs(var_defs) do
+      for used in val:gmatch(var_format_pattern) do
+         needed_set[used] = nil
+      end
+   end
+   for var,_ in pairs(needed_set) do
+      warning(msg:format(var))
+   end
+end
+
+-- Output any entries that might remain in $(XYZ) format,
+-- warning the user that substitutions have failed.
+-- @param line string: the input string
+local function warn_failed_matches(line)
+   if line:match(var_format_pattern) then
+      for unmatched in line:gmatch(var_format_pattern) do
+         warning("unmatched variable " .. unmatched)
+      end
+   end
+end
+
 --- Perform make-style variable substitutions on string values of a table.
 -- For every string value tbl.x which contains a substring of the format
 -- "$(XYZ)" will have this substring replaced by vars["XYZ"], if that field
@@ -137,7 +193,8 @@ function variable_substitutions(tbl, vars)
    local updated = {}
    for k, v in pairs(tbl) do
       if type(v) == "string" then
-         updated[k] = v:gsub("%$%((%a[%a%d_]+)%)", vars)
+         updated[k] = v:gsub(var_format_pattern, vars)
+         warn_failed_matches(updated[k])
       end
    end
    for k, v in pairs(updated) do
