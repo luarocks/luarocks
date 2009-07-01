@@ -350,7 +350,7 @@ function act_on_src_or_rockspec(action, name, version)
       print_results(results)
       return nil, "Please narrow your query."
    else
-      return nil, "Could not find a result named "..name.."."
+      return nil, "Could not find a result named "..name..(version and " "..version or "").."."
    end
 end
 
