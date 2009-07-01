@@ -13,22 +13,59 @@ local fetch = require("luarocks.fetch")
 local dir = require("luarocks.dir")
 local manif_core = require("luarocks.manif_core")
 
+local function find_module_at_file(file, modules)
+   for module, location in pairs(modules) do
+      if file == location then
+         return module
+      end
+   end
+end
+
+local function rename_module(file, pkgid)
+   local path = dir.dir_name(file)
+   local name = dir.base_name(file)
+   local pkgid = pkgid:gsub("[/.-]", "_")
+   return dir.path(path, pkgid.."-"..name)
+end
+
 local function make_global_lib(repo, manifest)
    local lib_dir = dir.path(dir.dir_name(repo), "lib")
    fs.make_dir(lib_dir)
    for rock, modules in pairs(manifest.modules) do
       for module, file in pairs(modules) do
-         local path_in_rock = dir.strip_base_dir(file:sub(#dir.path(repo, module)+2))
-         local module_dir = dir.dir_name(path_in_rock)
-         local dest = dir.path(lib_dir, path_in_rock)
-         if module_dir ~= "" then
-            fs.make_dir(dir.dir_name(dest))
-         end
-         if not fs.exists(dest) then
-            fs.copy(file, dest)
-            manifest.modules[rock][module] = dest
+         if not file:match("^"..lib_dir) then
+            local path_in_rock = dir.strip_base_dir(file:sub(#dir.path(repo, module)+2))
+            local module_dir = dir.dir_name(path_in_rock)
+            local dest = dir.path(lib_dir, path_in_rock)
+            if module_dir ~= "" then
+               fs.make_dir(dir.dir_name(dest))
+            end
+            if not fs.exists(dest) then
+               fs.copy(file, dest)
+               manifest.modules[rock][module] = dest
+            else
+               local current = find_module_at_file(dest, modules)
+               if not current then
+                  util.warning("installed file not tracked by LuaRocks: "..dest)
+               else
+                  local newname = rename_module(dest, current)
+                  if fs.exists(newname) then
+                     util.warning("conflict when tracking modules: "..newname.." exists.")
+                  else
+                     local ok, err = fs.move(dest, newname)
+                     if ok then
+                        manifest.modules[rock][current] = newname
+                        fs.copy(file, dest)
+                        manifest.modules[rock][module] = dest
+                     else
+                        util.warning(err)
+                     end
+                  end
+               end
+               -- TODO
+            end
          else
-            -- TODO
+            print("DBG file already in place.")
          end
       end
    end
@@ -262,6 +299,9 @@ function make_manifest(repo)
    local manifest = { repository = {}, modules = {}, commands = {} }
    manif_core.manifest_cache[repo] = manifest
    store_results(results, manifest)
+   local lib_dir = dir.path(dir.dir_name(repo), "lib")
+   -- TODO 
+   fs.delete(lib_dir)
    make_global_lib(repo, manifest)
    return save_manifest(repo, manifest)
 end
