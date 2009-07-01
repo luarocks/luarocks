@@ -454,6 +454,10 @@ end
 
 end
 
+---------------------------------------------------------------------
+-- Other functions
+---------------------------------------------------------------------
+
 --- Apply a patch.
 -- @param patchname string: The filename of the patch.
 function apply_patch(patchname, patchdata)
@@ -465,6 +469,31 @@ function apply_patch(patchname, patchdata)
       return patch.apply_patch(p, 1)
    end
 end
+
+--- Move a file.
+-- @param src string: Pathname of source
+-- @param dest string: Pathname of destination
+-- @return boolean or (boolean, string): true on success, false on failure,
+-- plus an error message.
+function move(src, dest)
+   assert(src and dest)
+   if fs.exists(dest) then
+      return false, "File already exists: "..dest
+   end
+   local ok, err = fs.copy(src, dest)
+   if not ok then
+      return false, err
+   end
+   ok = fs.delete(src)
+   if not ok then
+      return false, "Failed move: could not delete "..src.." after copy."
+   end
+   return true
+end
+
+---------------------------------------------------------------------
+-- TODO These still reference external binaries
+---------------------------------------------------------------------
 
 --- Unpack an archive.
 -- Extract the contents of an archive, detecting its format by
