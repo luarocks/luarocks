@@ -143,17 +143,13 @@ function package_commands(package, version)
    return result
 end
 
---- Check if a rock contains binary parts or if it is pure Lua.
+--- Check if a rock contains binary executables.
 -- @param name string: name of an installed rock
 -- @param version string: version of an installed rock
 -- @return boolean: returns true if rock contains platform-specific
--- binary code, or false if it is a pure-Lua rock.
-function is_binary_rock(name, version)
+-- binary executables, or false if it is a pure-Lua rock.
+function has_binaries(name, version)
    local bin_dir = path.bin_dir(name, version)
-   local lib_dir = path.lib_dir(name, version)
-   if fs.exists(lib_dir) then
-      return true
-   end
    if fs.exists(bin_dir) then
       for _, name in pairs(fs.find(bin_dir)) do
          if fs.is_actual_binary(dir.path(bin_dir, name)) then

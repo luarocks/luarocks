@@ -10,6 +10,7 @@ local rawset, next, table, pairs, print, require, io, os, setmetatable, pcall =
 module("luarocks.cfg")
 
 program_version = "1.1"
+user_agent = "LuaRocks/"..program_version
 
 local persist = require("luarocks.persist")
 
@@ -23,6 +24,8 @@ else
    print("which is required by LuaRocks. Please check your Lua installation.")
    os.exit(1)
 end
+
+-- System detection:
 
 local detected = {}
 local system,proc
@@ -61,6 +64,8 @@ else
    -- Fall back to Unix in unknown systems.
 end
 
+-- Path configuration:
+
 local sys_config_file, home_config_file, home_tree
 if detected.windows then
    home = os.getenv("APPDATA") or "c:"
@@ -88,46 +93,65 @@ if not LUAROCKS_FORCE_CONFIG then
    end
 end
 
+if not next(rocks_trees) then
+   if home_tree then
+      table.insert(rocks_trees, home_tree)
+   end
+   if LUAROCKS_ROCKS_TREE then
+      table.insert(rocks_trees, LUAROCKS_ROCKS_TREE)
+   end
+end
+
+-- Configure defaults:
+
+local root = LUAROCKS_ROCKS_TREE or home_tree
 local defaults = {
+   root_dir = root,
+   rocks_dir = root.."/lib/luarocks/rocks",
+   scripts_dir = root.."/bin/",
+   lua_modules_dir = root.."/share/lua/5.1/",
+   bin_modules_dir = root.."/lib/lua/5.1/",
+
    arch = "unknown",
    lib_extension = "unknown",
    obj_extension = "unknown",
+
    rocks_servers = {
       "http://luarocks.luaforge.net/rocks"
    },
+
    lua_extension = "lua",
    lua_interpreter = LUA_INTERPRETER or "lua",
    downloader = LUAROCKS_DOWNLOADER or "wget",
    md5checker = LUAROCKS_MD5CHECKER or "md5sum",
-   variables = {}
-}
 
-defaults.external_deps_subdirs = {
-   bin = "bin",
-   lib = "lib",
-   include = "include"
+   variables = {},
+   
+   external_deps_subdirs = {
+      bin = "bin",
+      lib = "lib",
+      include = "include"
+   },
+   runtime_external_deps_subdirs = {
+      bin = "bin",
+      lib = "lib",
+      include = "include"
+   },
 }
-defaults.runtime_external_deps_subdirs = defaults.external_deps_subdirs
 
 if detected.windows then
    home_config_file = home_config_file:gsub("\\","/")
+   defaults.arch = "win32-"..proc
+   defaults.platforms = {"win32", "windows" }
    defaults.lib_extension = "dll"
+   defaults.external_lib_extension = "dll"
    defaults.obj_extension = "obj"
-   local rootdir = LUAROCKS_ROCKS_TREE or home_tree
-   defaults.root_dir = rootdir
-   defaults.rocks_dir = rootdir.."/rocks/"
-   defaults.scripts_dir = rootdir.."/bin/"
    defaults.external_deps_dirs = { "c:/external/" }
    defaults.variables.LUA_BINDIR = LUA_BINDIR and LUA_BINDIR:gsub("\\", "/") or "c:/lua5.1/bin"
    defaults.variables.LUA_INCDIR = LUA_INCDIR and LUA_INCDIR:gsub("\\", "/") or "c:/lua5.1/include"
    defaults.variables.LUA_LIBDIR = LUA_LIBDIR and LUA_LIBDIR:gsub("\\", "/") or "c:/lua5.1/lib"
-   defaults.arch = "win32-"..proc
-   defaults.platforms = {"win32", "windows" }
    defaults.cmake_generator = "MinGW Makefiles"
-   -- TODO: Split Windows flavors between mingw and msvc
-   -- defaults.make = "make"
-   -- defaults.makefile = "Makefile"
-   defaults.make = "nmake"
+   defaults.make = "nmake" -- TODO: Split Windows flavors between mingw and msvc
    defaults.makefile = "Makefile.win"
    defaults.variables.CC = "cl"
    defaults.variables.LD = "link"
@@ -148,11 +172,8 @@ end
 
 if detected.unix then
    defaults.lib_extension = "so"
+   defaults.external_lib_extension = "so"
    defaults.obj_extension = "o"
-   local rootdir = LUAROCKS_ROCKS_TREE or home_tree
-   defaults.root_dir = rootdir
-   defaults.rocks_dir = rootdir.."/rocks/"
-   defaults.scripts_dir = rootdir.."/bin/"
    defaults.external_deps_dirs = { "/usr/local", "/usr" }
    defaults.variables.LUA_BINDIR = LUA_BINDIR or "/usr/local/bin"
    defaults.variables.LUA_INCDIR = LUA_INCDIR or "/usr/local/include"
@@ -185,8 +206,6 @@ if detected.cygwin then
    defaults.variables.LD = "echo -llua | xargs gcc"
    defaults.variables.LIBFLAG = "-shared"
 end
-
-defaults.external_lib_extension = defaults.lib_extension
 
 if detected.macosx then
    defaults.external_lib_extension = "dylib"
@@ -224,16 +243,10 @@ defaults.variables.LIB_EXTENSION = defaults.lib_extension
 defaults.variables.OBJ_EXTENSION = defaults.obj_extension
 defaults.variables.LUAROCKS_PREFIX = LUAROCKS_PREFIX
 
-local cfg_mt = {
-   __index = function(t, k)
-      local default = defaults[k]
-      if default then
-         rawset(t, k, default)
-      end
-      return default
-   end
-}
+-- Use defaults:
 
+-- Populate values from 'defaults.variables' in 'variables' if they were not
+-- already set by user.
 if not _M.variables then
    _M.variables = {}
 end
@@ -243,15 +256,14 @@ for k,v in pairs(defaults.variables) do
    end
 end
 
+-- For values not set in the config file, use values from the 'defaults' table.
+local cfg_mt = {
+   __index = function(t, k)
+      local default = defaults[k]
+      if default then
+         rawset(t, k, default)
+      end
+      return default
+   end
+}
 setmetatable(_M, cfg_mt)
-
-if not next(rocks_trees) then
-   if home_tree then
-      table.insert(rocks_trees, home_tree)
-   end
-   if LUAROCKS_ROCKS_TREE then
-      table.insert(rocks_trees, LUAROCKS_ROCKS_TREE)
-   end
-end
-
-user_agent = "LuaRocks/"..program_version

@@ -16,115 +16,135 @@ function rockspec_name_from_rock(rock_name)
    return base_name:match("(.*)%.[^.]*.rock") .. ".rockspec"
 end
 
+function rocks_dir(repo)
+   return dir.path(repo, "lib", "luarocks", "rocks")
+end
+
+function scripts_dir(repo)
+   return dir.path(repo, "bin")
+end
+
+function lua_modules_dir(repo)
+   return dir.path(repo, "share", "lua", "5.1")
+end
+
+function bin_modules_dir(repo)
+   return dir.path(repo, "lib", "lua", "5.1")
+end
+
+function manifest_file(repo)
+   return dir.path(repo, "lib", "luarocks", "rocks", "manifest")
+end
+
 --- Get the repository directory for all versions of a package.
 -- @param name string: The package name. 
 -- @return string: The resulting path -- does not guarantee that
--- @param repo string or nil: If given, specifies the local repository to use.
+-- @param rocks_dir string or nil: If given, specifies the local repository to use.
 -- the package (and by extension, the path) exists.
-function versions_dir(name, repo)
+function versions_dir(name, rocks_dir)
    assert(type(name) == "string")
-   assert(not repo or type(repo) == "string")
+   assert(not rocks_dir or type(rocks_dir) == "string")
    
-   return dir.path(repo or cfg.rocks_dir, name)
+   return dir.path(rocks_dir or cfg.rocks_dir, name)
 end
 
 --- Get the local installation directory (prefix) for a package.
 -- @param name string: The package name. 
 -- @param version string: The package version.
--- @param repo string or nil: If given, specifies the local repository to use.
+-- @param rocks_dir string or nil: If given, specifies the local repository to use.
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
-function install_dir(name, version, repo)
+function install_dir(name, version, rocks_dir)
    assert(type(name) == "string")
    assert(type(version) == "string")
-   assert(not repo or type(repo) == "string")
+   assert(not rocks_dir or type(rocks_dir) == "string")
    
-   return dir.path(repo or cfg.rocks_dir, name, version)
+   return dir.path(rocks_dir or cfg.rocks_dir, name, version)
 end
 
 --- Get the local filename of the rockspec of an installed rock.
 -- @param name string: The package name. 
 -- @param version string: The package version.
--- @param repo string or nil: If given, specifies the local repository to use.
+-- @param rocks_dir string or nil: If given, specifies the local repository to use.
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the file) exists.
-function rockspec_file(name, version, repo)
+function rockspec_file(name, version, rocks_dir)
    assert(type(name) == "string")
    assert(type(version) == "string")
-   assert(not repo or type(repo) == "string")
+   assert(not rocks_dir or type(rocks_dir) == "string")
    
-   return dir.path(repo or cfg.rocks_dir, name, version, name.."-"..version..".rockspec")
+   return dir.path(rocks_dir or cfg.rocks_dir, name, version, name.."-"..version..".rockspec")
 end
 
 --- Get the local installation directory for C libraries of a package.
 -- @param name string: The package name. 
 -- @param version string: The package version.
--- @param repo string or nil: If given, specifies the local repository to use.
+-- @param rocks_dir string or nil: If given, specifies the local repository to use.
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
-function lib_dir(name, version, repo)
+function lib_dir(name, version, rocks_dir)
    assert(type(name) == "string")
    assert(type(version) == "string")
-   assert(not repo or type(repo) == "string")
+   assert(not rocks_dir or type(rocks_dir) == "string")
    
-   return dir.path(repo or cfg.rocks_dir, name, version, "lib")
+   return dir.path(rocks_dir or cfg.rocks_dir, name, version, "lib")
 end
 
 --- Get the local installation directory for Lua modules of a package.
 -- @param name string: The package name. 
 -- @param version string: The package version.
--- @param repo string or nil: If given, specifies the local repository to use.
+-- @param rocks_dir string or nil: If given, specifies the local repository to use.
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
-function lua_dir(name, version, repo)
+function lua_dir(name, version, rocks_dir)
    assert(type(name) == "string")
    assert(type(version) == "string")
-   assert(not repo or type(repo) == "string")
+   assert(not rocks_dir or type(rocks_dir) == "string")
 
-   return dir.path(repo or cfg.rocks_dir, name, version, "lua")
+   return dir.path(rocks_dir or cfg.rocks_dir, name, version, "lua")
 end
 
 --- Get the local installation directory for documentation of a package.
 -- @param name string: The package name. 
 -- @param version string: The package version.
--- @param repo string or nil: If given, specifies the local repository to use.
+-- @param rocks_dir string or nil: If given, specifies the local repository to use.
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
-function doc_dir(name, version, repo)
+function doc_dir(name, version, rocks_dir)
    assert(type(name) == "string")
    assert(type(version) == "string")
-   assert(not repo or type(repo) == "string")
+   assert(not rocks_dir or type(rocks_dir) == "string")
 
-   return dir.path(repo or cfg.rocks_dir, name, version, "doc")
+   return dir.path(rocks_dir or cfg.rocks_dir, name, version, "doc")
 end
 
 --- Get the local installation directory for configuration files of a package.
 -- @param name string: The package name. 
 -- @param version string: The package version.
--- @param repo string or nil: If given, specifies the local repository to use.
+-- @param rocks_dir string or nil: If given, specifies the local repository to use.
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
-function conf_dir(name, version, repo)
+function conf_dir(name, version, rocks_dir)
    assert(type(name) == "string")
    assert(type(version) == "string")
-   assert(not repo or type(repo) == "string")
+   assert(not rocks_dir or type(rocks_dir) == "string")
    
-   return dir.path(repo or cfg.rocks_dir, name, version, "conf")
+   return dir.path(rocks_dir or cfg.rocks_dir, name, version, "conf")
 end
 
 --- Get the local installation directory for command-line scripts
 -- of a package.
 -- @param name string: The package name. 
 -- @param version string: The package version.
--- @param repo string or nil: If given, specifies the local repository to use.
+-- @param rocks_dir string or nil: If given, specifies the local repository to use.
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
-function bin_dir(name, version, repo)
+function bin_dir(name, version, rocks_dir)
    assert(type(name) == "string")
    assert(type(version) == "string")
-   assert(not repo or type(repo) == "string")
+   assert(not rocks_dir or type(rocks_dir) == "string")
    
-   return dir.path(repo or cfg.rocks_dir, name, version, "bin")
+   return dir.path(rocks_dir or cfg.rocks_dir, name, version, "bin")
 end
 
 --- Extract name, version and arch of a rock filename.

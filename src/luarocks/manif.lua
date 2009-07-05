@@ -28,20 +28,31 @@ local function rename_module(file, pkgid)
    return dir.path(path, pkgid.."-"..name)
 end
 
-local function make_global_lib(repo, manifest)
-   local lib_dir = dir.path(dir.dir_name(repo), "lib")
-   fs.make_dir(lib_dir)
+local function update_global_lib(repo, manifest)
+   fs.make_dir(cfg.lua_modules_dir)
+   fs.make_dir(cfg.bin_modules_dir)
    for rock, modules in pairs(manifest.modules) do
       for module, file in pairs(modules) do
-         if not file:match("^"..lib_dir) then
+         local module_type, modules_dir
+         
+         if file:match("%."..cfg.lua_extension.."$") then
+            module_type = "lua"
+            modules_dir = cfg.lua_modules_dir
+         else
+            module_type = "bin"
+            modules_dir = cfg.bin_modules_dir
+         end
+
+         if not file:match("^"..modules_dir) then
             local path_in_rock = dir.strip_base_dir(file:sub(#dir.path(repo, module)+2))
             local module_dir = dir.dir_name(path_in_rock)
-            local dest = dir.path(lib_dir, path_in_rock)
+            local dest = dir.path(modules_dir, path_in_rock)
             if module_dir ~= "" then
                fs.make_dir(dir.dir_name(dest))
             end
             if not fs.exists(dest) then
-               fs.copy(file, dest)
+               fs.move(file, dest)
+               fs.remove_dir_tree_if_empty(dir.dir_name(file))
                manifest.modules[rock][module] = dest
             else
                local current = find_module_at_file(dest, modules)
@@ -55,14 +66,14 @@ local function make_global_lib(repo, manifest)
                      local ok, err = fs.move(dest, newname)
                      if ok then
                         manifest.modules[rock][current] = newname
-                        fs.copy(file, dest)
+                        fs.move(file, dest)
+                        fs.remove_dir_tree_if_empty(dir.dir_name(file))
                         manifest.modules[rock][module] = dest
                      else
                         util.warning(err)
                      end
                   end
                end
-               -- TODO
             end
          else
             print("DBG file already in place.")
@@ -275,7 +286,7 @@ function update_manifest(name, version, repo)
    local results = {[name] = {[version] = {{arch = "installed", repo = repo}}}}
    
    store_results(results, manifest)
-   make_global_lib(repo, manifest)
+   update_global_lib(repo, manifest)
    return save_manifest(repo, manifest)
 end
 
@@ -299,10 +310,7 @@ function make_manifest(repo)
    local manifest = { repository = {}, modules = {}, commands = {} }
    manif_core.manifest_cache[repo] = manifest
    store_results(results, manifest)
-   local lib_dir = dir.path(dir.dir_name(repo), "lib")
-   -- TODO 
-   fs.delete(lib_dir)
-   make_global_lib(repo, manifest)
+   update_global_lib(repo, manifest)
    return save_manifest(repo, manifest)
 end
 

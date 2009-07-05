@@ -6,7 +6,7 @@ module("luarocks.list", package.seeall)
 local search = require("luarocks.search")
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
-local dir = require("luarocks.dir")
+local path = require("luarocks.path")
 
 help_summary = "Lists currently installed rocks."
 
@@ -24,7 +24,7 @@ function run(...)
    local query = search.make_query(filter or "", version)
    query.exact_name = false
    for _, tree in ipairs(cfg.rocks_trees) do
-      search.manifest_search(results, dir.path(tree, "rocks"), query)
+      search.manifest_search(results, path.rocks_dir(tree), query)
    end
    print()
    print("Installed rocks:")

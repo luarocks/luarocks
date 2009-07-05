@@ -10,6 +10,7 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
+local manif = require("luarocks.manif")
 
 help_summary = "Create a rock, packing sources or binaries."
 help_arguments = "{<rockspec>|<name> [<version>]}"
@@ -81,10 +82,37 @@ local function pack_binary_rock(name, version)
    if not fs.exists(prefix) then
       return nil, "'"..name.." "..version.."' does not seem to be an installed rock."
    end
+
    local name_version = name .. "-" .. version
    local rock_file = fs.absolute_name(name_version .. "."..cfg.arch..".rock")
-   fs.change_dir(prefix)
-   if not rep.is_binary_rock(name, version) then
+   
+   local temp_dir = fs.make_temp_dir("pack")
+   fs.copy_contents(prefix, temp_dir)
+
+   local is_binary = false
+   local manifest = manif.load_manifest(cfg.rocks_dir)
+   for module_name, module_data in pairs(manifest.modules) do
+      for package, file in pairs(module_data) do
+         if package == name.."/"..version then
+            local dest
+            if file:match("^"..cfg.lua_modules_dir) then
+               local pathname = file:sub(#cfg.lua_modules_dir + 1)
+               dest = dir.path(temp_dir, "lua", dir.dir_name(pathname))
+            elseif file:match("^"..cfg.bin_modules_dir) then
+               local pathname = file:sub(#cfg.bin_modules_dir + 1)
+               dest = dir.path(temp_dir, "lib", dir.dir_name(pathname))
+               is_binary = true
+            end
+            if dest then
+               fs.make_dir(dest)
+               fs.copy(file, dest)
+            end
+         end
+      end
+   end
+   
+   fs.change_dir(temp_dir)
+   if not is_binary and not rep.has_binaries(name, version) then
       rock_file = rock_file:gsub("%."..cfg.arch:gsub("%-","%%-").."%.", ".all.")
    end
    fs.delete(rock_file)
@@ -92,6 +120,7 @@ local function pack_binary_rock(name, version)
       return nil, "Failed packing "..rock_file
    end
    fs.pop_dir()
+   fs.delete(temp_dir)
    return rock_file
 end
 

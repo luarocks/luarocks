@@ -79,6 +79,15 @@ function remove_dir_if_empty(d)
    fs.execute_string("rmdir "..fs.Q(d).." 1> /dev/null 2> /dev/null")
 end
 
+--- Remove a directory if it is empty.
+-- Does not return errors (for example, if directory is not empty or
+-- if already does not exist)
+-- @param dir string: pathname of directory to remove.
+function remove_dir_tree_if_empty(d)
+   assert(d)
+   fs.execute_string("rmdir -p "..fs.Q(d).." 1> /dev/null 2> /dev/null")
+end
+
 --- Copy a file.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination

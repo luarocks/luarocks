@@ -127,9 +127,7 @@ local var_format_pattern = "%$%((%a[%a%d_]+)%)"
 --- Display a warning message.
 -- @param msg string: the warning message
 function warning(msg)
-   print()
    print("Warning: "..msg)
-   print()
 end
 
 --- Create a new shallow copy of a table: a new table with

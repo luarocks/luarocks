@@ -5,6 +5,7 @@ module("luarocks.command_line", package.seeall)
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 local fs = require("luarocks.fs")
+local path = require("luarocks.path")
 
 --- Display an error message and exit.
 -- @param message string: The error message.
@@ -50,16 +51,20 @@ function run_command(...)
       end
       local root_dir = fs.absolute_name(flags["to"])
       cfg.root_dir = root_dir
-      cfg.rocks_dir = root_dir.."/rocks"
-      cfg.scripts_dir = root_dir.."/bin"
+      cfg.rocks_dir = path.rocks_dir(root_dir)
+      cfg.scripts_dir = path.scripts_dir(root_dir)
+      cfg.lua_modules_dir = path.lua_modules_dir(root_dir)
+      cfg.bin_modules_dir = path.bin_modules_dir(root_dir)
    else
       local trees = cfg.rocks_trees
       for i = #trees, 1, -1 do
          local tree = trees[i]
          if fs.make_dir(tree) and fs.is_writable(tree) then
             cfg.root_dir = tree
-            cfg.rocks_dir = tree.."/rocks"
-            cfg.scripts_dir = rawget(cfg, "scripts_dir") or tree.."/bin"
+            cfg.rocks_dir = path.rocks_dir(tree)
+            cfg.scripts_dir = rawget(cfg, "scripts_dir") or path.scripts_dir(tree)
+            cfg.lua_modules_dir = rawget(cfg, "lua_modules_dir") or path.lua_modules_dir(tree)
+            cfg.bin_modules_dir = rawget(cfg, "bin_modules_dir") or path.bin_modules_dir(tree)
             break
          end
       end
@@ -68,6 +73,8 @@ function run_command(...)
    cfg.root_dir = cfg.root_dir:gsub("/+$", "")
    cfg.rocks_dir = cfg.rocks_dir:gsub("/+$", "")
    cfg.scripts_dir = cfg.scripts_dir:gsub("/+$", "")
+   cfg.lua_modules_dir = cfg.lua_modules_dir:gsub("/+$", "")
+   cfg.bin_modules_dir = cfg.bin_modules_dir:gsub("/+$", "")
    
    cfg.variables.ROCKS_TREE = cfg.root_dir
    cfg.variables.SCRIPTS_DIR = cfg.scripts_dir

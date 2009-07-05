@@ -23,7 +23,7 @@ local function load_rocks_trees()
    local any_ok = false
    local trees = {}
    for _, tree in pairs(cfg.rocks_trees) do
-      local rocks_dir = tree .. "/rocks/"
+      local rocks_dir = path.rocks_dir(tree)
       local manifest, err = manif_core.load_local_manifest(rocks_dir)
       if manifest then
          any_ok = true

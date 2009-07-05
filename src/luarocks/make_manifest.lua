@@ -23,10 +23,10 @@ function run(repo)
   
    print("Making manifest for "..repo)
    
-   ok = manif.make_manifest(repo)
+   ok, err = manif.make_manifest(repo)
    if ok then
       print("Generating index.html for "..repo)
       manif.make_index(repo)
    end
-   return ok
+   return ok, err
 end

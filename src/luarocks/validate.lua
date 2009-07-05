@@ -3,6 +3,7 @@ module("luarocks.validate", package.seeall)
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
+local path = require("luarocks.path")
 local cfg = require("luarocks.cfg")
 local build = require("luarocks.build")
 local install = require("luarocks.install")
@@ -36,7 +37,7 @@ end
 local function prepare_sandbox(file)
    local root_dir = fs.make_temp_dir(file):gsub("/+$", "")
    cfg.root_dir = root_dir
-   cfg.rocks_dir = root_dir.."/rocks"
+   cfg.rocks_dir = path.rocks_dir(root_dir)
    cfg.scripts_dir = root_dir.."/bin"
    cfg.variables.ROCKS_TREE = cfg.root_dir
    cfg.variables.SCRIPTS_DIR = cfg.scripts_dir

@@ -177,6 +177,19 @@ function remove_dir_if_empty(d)
    lfs.rmdir(d)
 end
 
+--- Remove a directory if it is empty.
+-- Does not return errors (for example, if directory is not empty or
+-- if already does not exist)
+-- @param d string: pathname of directory to remove.
+function remove_dir_tree_if_empty(d)
+   assert(d)
+   for i=1,10 do
+      print(d)
+      lfs.rmdir(d)
+      d = dir.dir_name(d)
+   end
+end
+
 --- Copy a file.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination

@@ -101,7 +101,7 @@ local function delete_versions(name, versions)
    return true
 end
 
---- Driver function for the "install" command.
+--- Driver function for the "remove" command.
 -- @param name string: name of a rock. If a version is given, refer to
 -- a specific version; otherwise, try to remove all versions.
 -- @param version string: When passing a package name, a version number
@@ -117,6 +117,8 @@ function run(...)
    local results = {}
    search.manifest_search(results, cfg.rocks_dir, search.make_query(name, version))
    
+   print("remove functionality is currently broken")
+   --[[
    local versions = results[name]
    if not versions then
       return nil, "Could not find rock '"..name..(version and " "..version or "").."' in local tree."
@@ -139,10 +141,11 @@ function run(...)
             print()
          end
          local ok, err1 = delete_versions(name, versions)
-         local ok, err2 = manif.make_manifest(cfg.rocks_dir)
-         if err1 or err2 then
-            return nil, err1 or err2
-         end
+         -- FIXME
+         -- local ok, err2 = manif.make_manifest(cfg.rocks_dir)
+         -- if err1 or err2 then
+         --   return nil, err1 or err2
+         -- end
       else
          if not second then
             print("Will not remove "..name.." "..version..".")
@@ -159,5 +162,6 @@ function run(...)
          return nil, "Failed removing."
       end
    end
+   ]]
    return true
 end
