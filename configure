@@ -9,6 +9,8 @@ PREFIX="/usr/local"
 SYSCONFDIR="$PREFIX/etc/luarocks"
 ROCKS_TREE="$PREFIX/lib/luarocks"
 SCRIPTS_DIR=""
+LUA_MODULES_DIR=""
+BIN_MODULES_DIR=""
 LUA_SUFFIX=""
 LUA_DIR="/usr"
 LUA_BINDIR="/usr/bin"
@@ -32,14 +34,18 @@ Configure LuaRocks.
                             Default is \$PREFIX/etc/luarocks
 --rocks-tree=FILE           Root of the local tree of installed rocks.
                             Default is \$PREFIX/lib/luarocks
---scripts-dir=DIR           Where to install scripts installed by rocks.
-                            Default is \$ROCKS_TREE/bin. Use this if you
-                            want to modify it so that rocks install scripts
-                            somewhere else (possibly somewhere in your \$PATH),
-                            but if you use a system path such as /usr/bin,
-                            beware of clashes between files installed by
-                            LuaRocks and by your system's package manager.
-                            Example: /usr/local/bin
+
+Where to install files installed by rocks, to make the accessible to Lua and
+your \$PATH. Beware of clashes between files installed by LuaRocks and by your
+system's package manager.
+
+--scripts-dir=DIR           Where to install scripts installed by added rocks.
+                            Default is \$LUA_DIR/bin.
+--lua-modules-dir=DIR       Where to install Lua modules installed by rocks.
+                            Default is \$LUA_DIR/share/lua/5.1.
+--bin-modules-dir=DIR       Where to install binary Lua modules.
+                            Default is \$LUA_DIR/lua/lua/5.1.
+
 --lua-suffix=SUFFIX         Versioning suffix to use in Lua filenames.
                             Default is "$LUA_SUFFIX" (lua$LUA_SUFFIX...)
 --with-lua=PREFIX           Use Lua from given prefix.
@@ -161,6 +167,16 @@ do
       [ -n "$value" ] || die "Missing value in flag $key."
       SCRIPTS_DIR="$value"
       SCRIPTS_DIR_SET=yes
+      ;;
+   --lua-modules-dir)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      LUA_MODULES_DIR="$value"
+      LUA_MODULES_DIR_SET=yes
+      ;;
+   --bin-modules-dir)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      BIN_MODULES_DIR="$value"
+      BIN_MODULES_DIR_SET=yes
       ;;
    --force-config)
       FORCE_CONFIG=yes
@@ -338,6 +354,8 @@ PREFIX=$PREFIX
 SYSCONFDIR=$SYSCONFDIR
 ROCKS_TREE=$ROCKS_TREE
 SCRIPTS_DIR=$SCRIPTS_DIR
+LUA_MODULES_DIR=$LUA_MODULES_DIR
+BIN_MODULES_DIR=$BIN_MODULES_DIR
 LUA_SUFFIX=$LUA_SUFFIX
 LUA_DIR=$LUA_DIR
 LUA_INCDIR=$LUA_INCDIR

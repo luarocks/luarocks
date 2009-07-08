@@ -125,4 +125,12 @@ install:
 	   then \
 	      echo "scripts_dir = [[$(SCRIPTS_DIR)]]" >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	   fi ;\
+	   if [ -n "$(LUA_MODULES_DIR)" ] ;\
+	   then \
+	      echo "lua_modules_dir = [[$(LUA_MODULES_DIR)]]" >> "$(DESTDIR)$(CONFIG_FILE)" ;\
+	   fi ;\
+	   if [ -n "$(BIN_MODULES_DIR)" ] ;\
+	   then \
+	      echo "bin_modules_dir = [[$(BIN_MODULES_DIR)]]" >> "$(DESTDIR)$(CONFIG_FILE)" ;\
+	   fi ;\
 	fi
