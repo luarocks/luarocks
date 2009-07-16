@@ -191,7 +191,7 @@ end
 -- and values are tables matching version strings to an array of
 -- rocks servers; if no results are found, an empty table is returned.
 -- In case of errors, nil and and error message are returned.
-local function search_repos(query)
+function search_repos(query)
    assert(type(query) == "table")
 
    local results = {}

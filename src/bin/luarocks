@@ -15,5 +15,6 @@ commands.search = require("luarocks.search")
 commands.list = require("luarocks.list")
 commands.remove = require("luarocks.remove")
 commands.make = require("luarocks.make")
+commands.get_rockspec = require("luarocks.get_rockspec")
 
 command_line.run_command(...)

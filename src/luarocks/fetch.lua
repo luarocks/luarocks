@@ -200,9 +200,11 @@ end
 -- Only the LuaRocks runtime loader should use
 -- load_local_rockspec directly.
 -- @param filename string: Local or remote filename of a rockspec.
+-- @param location string or nil: Where to download. If not given,
+-- a temporary dir is created.
 -- @return table or (nil, string, [string]): A table representing the rockspec
 -- or nil followed by an error message and optional error code.
-function load_rockspec(filename)
+function load_rockspec(filename, location)
    assert(type(filename) == "string")
 
    local name = dir.base_name(filename):match("(.*)%.rockspec")
@@ -210,7 +212,14 @@ function load_rockspec(filename)
       return nil, "Filename '"..filename.."' does not look like a rockspec."
    end
    
-   local filename, err, errcode = fetch_url_at_temp_dir(filename,"luarocks-rockspec-"..name)
+   local err, errcode
+   if location then
+      fs.change_dir(location)
+      filename, err = fetch_url(filename)
+      fs.pop_dir()
+   else
+      filename, err, errcode = fetch_url_at_temp_dir(filename,"luarocks-rockspec-"..name)
+   end
    if not filename then
       return nil, err, errcode
    end
