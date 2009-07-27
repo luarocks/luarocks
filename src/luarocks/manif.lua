@@ -370,7 +370,7 @@ local index_package_start = [[
 <td class="package">
 <p><a name="$anchor"></a><b>$package</b> - $summary<br/>
 </p><blockquote><p>$detailed<br/>
-<font size="-1"><a href="$original">latest sources</a> | <a href="$homepage">project homepage</a> | License: $license</font></p>
+<font size="-1"><a href="$original">latest sources</a> $homepage | License: $license</font></p>
 </blockquote></a></td>
 <td class="version">
 ]]
@@ -428,7 +428,7 @@ function make_index(repo)
             summary = rockspec.description.summary or "",
             detailed = rockspec.description.detailed or "",
             license = rockspec.description.license or "N/A",
-            homepage = rockspec.description.homepage or ""
+            homepage = rockspec.description.homepage and ("| <a href="..rockspec.description.homepage..">project homepage</a>") or ""
          }
          vars.detailed = vars.detailed:gsub("\n\n", "</p><p>"):gsub("%s+", " ")
          output = output:gsub("$(%w+)", vars)
