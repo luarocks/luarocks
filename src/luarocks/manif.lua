@@ -76,7 +76,7 @@ local function update_global_lib(repo, manifest)
                end
             end
          else
-            print("DBG file already in place.")
+            -- print("File already in place.")
          end
       end
    end
@@ -290,7 +290,7 @@ function update_manifest(name, version, repo)
    return save_manifest(repo, manifest)
 end
 
---- Scan a LuaRocks repository and output a manifest file.
+   --- Scan a LuaRocks repository and output a manifest file.
 -- A file called 'manifest' will be written in the root of the given
 -- repository directory.
 -- @param repo A local repository directory.
@@ -309,8 +309,18 @@ function make_manifest(repo)
    local results = search.disk_search(repo, query)
    local manifest = { repository = {}, modules = {}, commands = {} }
    manif_core.manifest_cache[repo] = manifest
+
+   print(util.show_table(results, "results"))
+   print(util.show_table(manifest, "manifest"))
+
    store_results(results, manifest)
+
+   print(util.show_table(manifest, "manifest after store"))
+
    update_global_lib(repo, manifest)
+
+   print(util.show_table(manifest, "manifest after update"))
+
    return save_manifest(repo, manifest)
 end
 

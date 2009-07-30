@@ -37,7 +37,7 @@ local function query_arch_as_table(query)
       query.arch = accept
    elseif format == "string" then
       local accept = {}
-      for a in string.gmatch(query.arch, "[%w_]+") do
+      for a in string.gmatch(query.arch, "[%w_-]+") do
          accept[a] = true
       end
       query.arch = accept
@@ -218,7 +218,7 @@ function make_query(name, version)
       constraints = {}
    }
    if version then
-      table.insert(query.constraints, { op = "~>", version = deps.parse_version(version)})
+      table.insert(query.constraints, { op = "==", version = deps.parse_version(version)})
    end
    return query
 end
