@@ -1,29 +1,28 @@
 
---- Module implementing the luarocks "get_rockspec" command.
--- Download a rockspec from the repository.
-module("luarocks.get_rockspec", package.seeall)
+--- Module implementing the luarocks "download" command.
+-- Download a rock from the repository.
+module("luarocks.download", package.seeall)
 
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 local fetch = require("luarocks.fetch")
 local search = require("luarocks.search")
 
-help_summary = "Download a specific rockspec file from a rocks server."
-help_arguments = "[--all] [<name> [<version>]]"
+help_summary = "Download a specific rock file from a rocks server."
+help_arguments = "[--all] [--source] [--arch=<arch>] [<name> [<version>]]"
 
 help = [[
---all     Download multiple rockspec files if there is more than one match.
+--all          Download multiple rock files if there is more than one match.
+--source       Download .src.rock if available.
+--arch=<arch>  Download rock for a specific architecture.
 ]]
 
-local function get_rockspec(rockspec_file)
-   local rockspec = fetch.load_rockspec(rockspec_file, ".")
-   if not rockspec then
-      return nil, "Failed loading rockspec "..rockspec_file
-   end
-   return true
+local function download(rock_file)
+   local rock = fetch.fetch_url(rock_file)
+   return rock ~= nil
 end
 
---- Driver function for the "get_rockspec" command.
+--- Driver function for the "download" command.
 -- @param name string: a rock name.
 -- @param version string or nil: if the name of a package is given, a
 -- version may also be passed.
@@ -39,17 +38,22 @@ function run(...)
    if not name then name, version = "", "" end
 
    local query = search.make_query(name, version)
-   query.arch = "rockspec"
+   if flags["source"] then
+      query.arch = "src"
+   elseif flags["rockspec"] then
+      query.arch = "rockspec"
+   elseif flags["arch"] then
+      query.arch = flags["arch"]
+   end
    local results, err
    if flags["all"] then
       if name == "" then query.exact_name = false end
       results, err = search.search_repos(query)
-      print(results, err)
    else
       results, err = search.find_suitable_rock(query)
    end
    if type(results) == "string" then
-      return get_rockspec(results)
+      return download(results)
    elseif type(results) == "table" and next(results) then
       if flags["all"] then
          local all_ok = true
@@ -58,7 +62,7 @@ function run(...)
             for version, versions in pairs(result) do
                for _,items in pairs(versions) do
                   local filename = path.make_url(items.repo, name, version, items.arch)
-                  local ok, err = get_rockspec(filename)
+                  local ok, err = download(filename)
                   if not ok then
                      all_ok = false
                      any_err = any_err .. "\n" .. err
@@ -76,6 +80,6 @@ function run(...)
          return nil, "Please narrow your query or use --all."
       end
    else
-      return nil, "Could not find a result named "..name.."."
+      return nil, "Could not find a result named "..name..(version and " "..version or "").."."
    end
 end
