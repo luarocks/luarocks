@@ -11,12 +11,15 @@ LUA_BINDIR ?= $(LUA_DIR)/bin
 
 BIN_FILES = luarocks luarocks-admin
 SRC_FILES = luarocks.lua
-LUAROCKS_FILES = build/cmake.lua build/command.lua build.lua build/make.lua \
-command_line.lua cfg.lua deps.lua fetch.lua fs.lua fs/unix.lua fs/lua.lua \
-fs/win32.lua fs/unix/tools.lua fs/win32/tools.lua help.lua install.lua list.lua persist.lua dir.lua \
-make_manifest.lua pack.lua path.lua rep.lua require.lua search.lua validate.lua \
-type_check.lua util.lua remove.lua build/builtin.lua make.lua manif.lua manif_core.lua unpack.lua \
-fetch/cvs.lua fetch/sscm.lua fetch/git.lua tools/zip.lua tools/tar.lua tools/patch.lua
+LUAROCKS_FILES = fs/unix/tools.lua fs/unix.lua fs/win32/tools.lua fs/win32.lua \
+fs/lua.lua persist.lua list.lua require.lua rep.lua dir.lua make_manifest.lua \
+command_line.lua install.lua build/command.lua build/cmake.lua build/make.lua \
+build/builtin.lua fetch/cvs.lua fetch/git.lua fetch/sscm.lua tools/patch.lua \
+tools/zip.lua tools/tar.lua pack.lua type_check.lua make.lua path.lua \
+remove.lua fs.lua manif.lua add.lua deps.lua build.lua search.lua \
+manif_core.lua fetch.lua unpack.lua validate.lua cfg.lua download.lua \
+help.lua util.lua
+
 
 CONFIG_FILE = $(SYSCONFDIR)/config.lua
 
@@ -134,3 +137,4 @@ install:
 	      echo "bin_modules_dir = [[$(BIN_MODULES_DIR)]]" >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	   fi ;\
 	fi
+
