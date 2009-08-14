@@ -1,6 +1,6 @@
 
-local rawset, next, table, pairs, print, require, io, os, setmetatable, pcall =
-      rawset, next, table, pairs, print, require, io, os, setmetatable, pcall
+local rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, ipairs, package =
+      rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, ipairs, package
 
 --- Configuration for LuaRocks.
 -- Tries to load the user's configuration file and
@@ -109,6 +109,8 @@ local defaults = {
    root_dir = root,
    rocks_dir = root.."/lib/luarocks/rocks",
    scripts_dir = root.."/bin/",
+   lua_modules_path = "/share/lua/5.1/",
+   bin_modules_path = "/lib/lua/5.1/",
    lua_modules_dir = root.."/share/lua/5.1/",
    bin_modules_dir = root.."/lib/lua/5.1/",
 
@@ -269,3 +271,10 @@ local cfg_mt = {
    end
 }
 setmetatable(_M, cfg_mt)
+
+
+for _,tree in ipairs(rocks_trees) do
+   package.path = tree..lua_modules_path.."/?.lua;"..tree..lua_modules_path.."/?/init.lua;"..package.path
+   package.cpath = tree..bin_modules_path.."/?."..lib_extension..";"..package.cpath
+end
+

@@ -10,9 +10,9 @@ local dir = require("luarocks.dir")
 
 local zip_ok, zip = pcall(require, "luarocks.tools.zip")
 local lfs_ok, lfs = pcall(require, "lfs")
-
 local curl_ok, curl = pcall(require, "luacurl")
 local md5_ok, md5 = pcall(require, "md5")
+local posix_ok, posix = pcall(require, "posix")
 
 local tar = require("luarocks.tools.tar")
 local patch = require("luarocks.tools.patch")
@@ -468,6 +468,19 @@ end
 end
 
 ---------------------------------------------------------------------
+-- POSIX functions
+---------------------------------------------------------------------
+
+if posix_ok then
+
+function chmod(file, mode)
+   local err = posix.chmod(file, mode)
+   return err == 0
+end
+
+end
+
+---------------------------------------------------------------------
 -- Other functions
 ---------------------------------------------------------------------
 
@@ -500,40 +513,6 @@ function move(src, dest)
    ok = fs.delete(src)
    if not ok then
       return false, "Failed move: could not delete "..src.." after copy."
-   end
-   return true
-end
-
----------------------------------------------------------------------
--- TODO These still reference external binaries
----------------------------------------------------------------------
-
---- Unpack an archive.
--- Extract the contents of an archive, detecting its format by
--- filename extension.
--- @param archive string: Filename of archive.
--- @return boolean or (boolean, string): true on success, false and an error message on failure.
-function unpack_archive(archive)
-   assert(type(archive) == "string")
-
-   local ok
-   if archive:match("%.tar%.gz$") or archive:match("%.tgz$") then
-      -- ok = fs.execute("tar zxvpf ", archive)
-      ok = fs.execute_string("gunzip -c "..archive.."|tar -xf -")
-   elseif archive:match("%.tar%.bz2$") then
-      -- ok = fs.execute("tar jxvpf ", archive)
-      ok = fs.execute_string("bunzip2 -c "..archive.."|tar -xf -")
-   elseif archive:match("%.zip$") then
-      ok = fs.execute("unzip ", archive)
-   elseif archive:match("%.lua$") or archive:match("%.c$") then
-      -- Ignore .lua and .c files; they don't need to be extracted.
-      return true
-   else
-      local ext = archive:match(".*(%..*)")
-      return false, "Unrecognized filename extension "..(ext or "")
-   end
-   if not ok then
-      return false, "Failed extracting "..archive
    end
    return true
 end
