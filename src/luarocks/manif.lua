@@ -310,16 +310,16 @@ function make_manifest(repo)
    local manifest = { repository = {}, modules = {}, commands = {} }
    manif_core.manifest_cache[repo] = manifest
 
-   print(util.show_table(results, "results"))
-   print(util.show_table(manifest, "manifest"))
+   --print(util.show_table(results, "results"))
+   --print(util.show_table(manifest, "manifest"))
 
    store_results(results, manifest)
 
-   print(util.show_table(manifest, "manifest after store"))
+   --print(util.show_table(manifest, "manifest after store"))
 
    update_global_lib(repo, manifest)
 
-   print(util.show_table(manifest, "manifest after update"))
+   --print(util.show_table(manifest, "manifest after update"))
 
    return save_manifest(repo, manifest)
 end
@@ -405,6 +405,7 @@ function make_index(repo)
    end
    local manifest = load_manifest(repo)
    local out = io.open(dir.path(repo, "index.html"), "w")
+   
    out:write(index_header)
    for package, version_list in util.sortedpairs(manifest.repository) do
       local latest_rockspec = nil

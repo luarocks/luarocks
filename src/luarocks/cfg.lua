@@ -168,6 +168,7 @@ if detected.windows then
       lib = { "?.dll" },
       include = { "?.h" }
    }
+   defaults.local_cache = home.."/cache/luarocks"
 end
 
 if detected.unix then
@@ -195,6 +196,7 @@ if detected.unix then
       lib = { "lib?.so" },
       include = { "?.h" }
    }
+   defaults.local_cache = home.."/.cache/luarocks"
 end
 
 if detected.cygwin then

@@ -19,10 +19,8 @@ If not given, the default server set in the upload_server variable
 from the configuration file is used instead.
 ]]
 
-local function add_file_to_server(rockfile, server)
+local function split_server_url(server, user, password)
    local protocol, server_path = dir.split_url(server)
-   local user = cfg.upload_user
-   local password = cfg.upload_password
    if server_path:match("@") then
       local credentials
       credentials, server_path = server_path:match("([^@]*)@(.*)")
@@ -32,14 +30,18 @@ local function add_file_to_server(rockfile, server)
          user = credentials
       end
    end
-   if not fs.exists(rockfile) then
-      return nil, "Could not find "..rockfile
-   end
-   local rockfile = fs.absolute_name(rockfile)
    local local_cache
    if cfg.local_cache then
       local_cache = cfg.local_cache .. "/" .. server_path
    end
+   return local_cache, protocol, server_path, user, password
+end
+
+local function refresh_local_cache(server, user, password)
+   local local_cache, protocol, server_path, user, password = split_server_url(server, user, password)
+
+   fs.make_dir(cfg.local_cache)
+
    local tmp_cache = false
    if not local_cache then
       local_cache = fs.make_temp_dir("local_cache")
@@ -57,10 +59,29 @@ local function add_file_to_server(rockfile, server)
    if password then login_info = login_info .. " --password="..password end
 
    fs.execute("wget -q -m -nd "..protocol.."://"..server_path..login_info)
-   print("Copying file...")
+   return local_cache, protocol, server_path, user, password
+end
+
+local function add_file_to_server(refresh, rockfile, server)
+   if not fs.exists(rockfile) then
+      return nil, "Could not find "..rockfile
+   end
+
+   local local_cache, protocol, server_path, user, password
+   if refresh then
+      local_cache, protocol, server_path, user, password = refresh_local_cache(server, cfg.upload_user, cfg.upload_password)
+   else
+      local_cache, protocol, server_path, user, password = split_server_url(server, cfg.upload_user, cfg.upload_password)
+   end
+   fs.change_dir(local_cache)
+
+   local rockfile = fs.absolute_name(rockfile)
+   print("Copying file "..rockfile.." to "..local_cache.."...")
    fs.copy(rockfile, local_cache)
-   print("Updating manifest and index.html...")
+
+   print("Updating manifest...")
    manif.make_manifest(local_cache)
+   print("Updating index.html...")
    manif.make_index(local_cache)
 
    local login_info = ""
@@ -70,6 +91,7 @@ local function add_file_to_server(rockfile, server)
       server_path = server_path .. "/"
    end
    fs.execute("curl "..login_info.." -T '{manifest,index.html,"..dir.base_name(rockfile).."}' "..protocol.."://"..server_path)
+
    return true
 end
 
@@ -86,6 +108,6 @@ function run(...)
    if cfg.upload_aliases then
       server = cfg.upload_aliases[server] or server
    end
-   return add_file_to_server(file, server)
+   return add_file_to_server(not flags["no-refresh"], file, server)
 end
 
