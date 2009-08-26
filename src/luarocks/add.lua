@@ -67,6 +67,8 @@ local function add_file_to_server(refresh, rockfile, server)
       return nil, "Could not find "..rockfile
    end
 
+   local rockfile = fs.absolute_name(rockfile)
+
    local local_cache, protocol, server_path, user, password
    if refresh then
       local_cache, protocol, server_path, user, password = refresh_local_cache(server, cfg.upload_user, cfg.upload_password)
@@ -74,8 +76,6 @@ local function add_file_to_server(refresh, rockfile, server)
       local_cache, protocol, server_path, user, password = split_server_url(server, cfg.upload_user, cfg.upload_password)
    end
    fs.change_dir(local_cache)
-
-   local rockfile = fs.absolute_name(rockfile)
    print("Copying file "..rockfile.." to "..local_cache.."...")
    fs.copy(rockfile, local_cache)
 
