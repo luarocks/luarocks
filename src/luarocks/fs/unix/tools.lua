@@ -14,7 +14,8 @@ local dir_stack = {}
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
 function execute_string(cmd)
-   if os.execute("cd " .. fs.Q(fs.current_dir()) .. " && " .. cmd) == 0 then
+   local actual_cmd = "cd " .. fs.Q(fs.current_dir()) .. " && " .. cmd
+   if os.execute(actual_cmd) == 0 then
       return true
    else
       return false

@@ -263,6 +263,9 @@ function get_sources(rockspec, extract, dest_dir)
    if extract then
       fs.change_dir(store_dir)
       fs.unpack_archive(rockspec.source.file)
+      if not fs.exists(rockspec.source.dir) then
+         return nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file
+      end
       fs.pop_dir()
    end
    return source_file, store_dir

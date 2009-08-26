@@ -6,6 +6,7 @@ local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
+local dir = require("luarocks.dir")
 
 --- Display an error message and exit.
 -- @param message string: The error message.
