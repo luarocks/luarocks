@@ -529,7 +529,7 @@ function check_external_deps(rockspec, mode)
                   local files = {}
                   if not file:match("%.") then
                      for _, pattern in ipairs(dirdata.pattern) do
-                        table.insert(files, pattern:gsub("?", file))
+                        table.insert(files, (pattern:gsub("?", file)))
                      end
                   else
                      table.insert(files, file)
