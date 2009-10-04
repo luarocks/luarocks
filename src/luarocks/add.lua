@@ -58,6 +58,7 @@ local function refresh_local_cache(server, user, password)
    if user then login_info = " --user="..user end
    if password then login_info = login_info .. " --password="..password end
 
+   -- TODO abstract away explicit 'wget' call
    fs.execute("wget -q -m -nd "..protocol.."://"..server_path..login_info)
    return local_cache, protocol, server_path, user, password
 end
@@ -90,6 +91,8 @@ local function add_file_to_server(refresh, rockfile, server)
    if not server_path:match("/$") then
       server_path = server_path .. "/"
    end
+
+   -- TODO abstract away explicit 'curl' call
    fs.execute("curl "..login_info.." -T '{manifest,index.html,"..dir.base_name(rockfile).."}' "..protocol.."://"..server_path)
 
    return true
