@@ -1,3 +1,5 @@
+--- Install a custom LuaRocks loader.
+-- TODO use new tree format.
 
 local global_env = _G
 local plain_package_path = package.path
