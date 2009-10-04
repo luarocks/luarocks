@@ -95,11 +95,12 @@ local function pack_binary_rock(name, version)
       for package, file in pairs(module_data) do
          if package == name.."/"..version then
             local dest
-            if file:match("^"..cfg.lua_modules_dir) then
-               local pathname = file:sub(#cfg.lua_modules_dir + 1)
+            print("TODO LR2 do this based on rock_manifest")
+            if file:match("^"..cfg.deploy_lua_dir) then
+               local pathname = file:sub(#cfg.deploy_lua_dir + 1)
                dest = dir.path(temp_dir, "lua", dir.dir_name(pathname))
-            elseif file:match("^"..cfg.bin_modules_dir) then
-               local pathname = file:sub(#cfg.bin_modules_dir + 1)
+            elseif file:match("^"..cfg.deploy_lib_dir) then
+               local pathname = file:sub(#cfg.deploy_lib_dir + 1)
                dest = dir.path(temp_dir, "lib", dir.dir_name(pathname))
                is_binary = true
             end

@@ -1,85 +1,77 @@
 
---- Functions for querying and manipulating manifest files.
 module("luarocks.manif", package.seeall)
 
-local util = require("luarocks.util")
-local fs = require("luarocks.fs")
-local search = require("luarocks.search")
-local rep = require("luarocks.rep")
-local deps = require("luarocks.deps")
-local cfg = require("luarocks.cfg")
+local manif_core = require("luarocks.manif_core")
 local persist = require("luarocks.persist")
 local fetch = require("luarocks.fetch")
 local dir = require("luarocks.dir")
-local manif_core = require("luarocks.manif_core")
+local fs = require("luarocks.fs")
+local search = require("luarocks.search")
+local util = require("luarocks.util")
+local cfg = require("luarocks.cfg")
+local path = require("luarocks.path")
+local rep = require("luarocks.rep")
+local deps = require("luarocks.deps")
 
-local function find_module_at_file(file, modules)
-   for module, location in pairs(modules) do
-      if file == location then
-         return module
-      end
-   end
+rock_manifest_cache = {}
+
+--- Commit a table to disk in given local path.
+-- @param where string: The directory where the table should be saved.
+-- @param name string: The filename.
+-- @param tbl table: The table to be saved.
+-- @return boolean or (nil, string): true if successful, or nil and a
+-- message in case of errors.
+local function save_table(where, name, tbl)
+   assert(type(where) == "string")
+   assert(type(name) == "string")
+   assert(type(tbl) == "table")
+
+   local filename = dir.path(where, name)
+   return persist.save_from_table(filename, tbl)
 end
 
-local function rename_module(file, pkgid)
-   local path = dir.dir_name(file)
-   local name = dir.base_name(file)
-   local pkgid = pkgid:gsub("[/.-]", "_")
-   return dir.path(path, pkgid.."-"..name)
+function load_rock_manifest(name, version)
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+
+   local name_version = name.."/"..version
+   if rock_manifest_cache[name_version] then
+      return rock_manifest_cache[name_version].rock_manifest
+   end
+   local install_dir = path.install_dir(name, version)
+   local pathname = dir.path(install_dir, "rock_manifest")
+   local rock_manifest = persist.load_into_table(pathname)
+   if not rock_manifest then return nil end
+   rock_manifest_cache[name_version] = rock_manifest
+   return rock_manifest.rock_manifest
 end
 
-local function update_global_lib(repo, manifest)
-   fs.make_dir(cfg.lua_modules_dir)
-   fs.make_dir(cfg.bin_modules_dir)
-   for rock, modules in pairs(manifest.modules) do
-      for module, file in pairs(modules) do
-         local module_type, modules_dir
-         
-         if file:match("%."..cfg.lua_extension.."$") then
-            module_type = "lua"
-            modules_dir = cfg.lua_modules_dir
-         else
-            module_type = "bin"
-            modules_dir = cfg.bin_modules_dir
+function make_rock_manifest(name, version)
+   local install_dir = path.install_dir(name, version)
+   local rock_manifest = dir.path(install_dir, "rock_manifest")
+   local tree = {}
+   for _, file in ipairs(fs.find(install_dir)) do
+      local full_path = dir.path(install_dir, file)
+      local walk = tree
+      local last
+      local last_name
+      for name in file:gmatch("[^/]+") do
+         local next = walk[name]
+         if not next then 
+            next = {}
+            walk[name] = next
          end
-
-         if not file:match("^"..modules_dir) then
-            local path_in_rock = dir.strip_base_dir(file:sub(#dir.path(repo, module)+2))
-            local module_dir = dir.dir_name(path_in_rock)
-            local dest = dir.path(modules_dir, path_in_rock)
-            if module_dir ~= "" then
-               fs.make_dir(dir.dir_name(dest))
-            end
-            if not fs.exists(dest) then
-               fs.move(file, dest)
-               fs.remove_dir_tree_if_empty(dir.dir_name(file))
-               manifest.modules[rock][module] = dest
-            else
-               local current = find_module_at_file(dest, modules)
-               if not current then
-                  util.warning("installed file not tracked by LuaRocks: "..dest)
-               else
-                  local newname = rename_module(dest, current)
-                  if fs.exists(newname) then
-                     util.warning("conflict when tracking modules: "..newname.." exists.")
-                  else
-                     local ok, err = fs.move(dest, newname)
-                     if ok then
-                        manifest.modules[rock][current] = newname
-                        fs.move(file, dest)
-                        fs.remove_dir_tree_if_empty(dir.dir_name(file))
-                        manifest.modules[rock][module] = dest
-                     else
-                        util.warning(err)
-                     end
-                  end
-               end
-            end
-         else
-            -- print("File already in place.")
-         end
+         last = walk
+         last_name = name
+         walk = next
+      end
+      if fs.is_file(full_path) then
+         last[last_name] = fs.get_md5(full_path)
       end
    end
+   local rock_manifest = { rock_manifest=tree }
+   rock_manifest_cache[name.."/"..version] = rock_manifest
+   save_table(install_dir, "rock_manifest", rock_manifest )
 end
 
 --- Load a local or remote manifest describing a repository.
@@ -110,23 +102,6 @@ function load_manifest(repo_url)
    return manif_core.manifest_loader(pathname, repo_url)
 end
 
---- Sort function for ordering rock identifiers in a manifest's
--- modules table. Rocks are ordered alphabetically by name, and then
--- by version which greater first.
--- @param a string: Version to compare.
--- @param b string: Version to compare.
--- @return boolean: The comparison result, according to the
--- rule outlined above.
-local function sort_pkgs(a, b)
-   assert(type(a) == "string")
-   assert(type(b) == "string")
-
-   local na, va = a:match("(.*)/(.*)$")
-   local nb, vb = b:match("(.*)/(.*)$")
-   
-   return (na == nb) and deps.compare_versions(va, vb) or na < nb
-end
-
 --- Output a table listing items of a package.
 -- @param itemsfn function: a function for obtaining items of a package.
 -- pkg and version will be passed to it; it should return a table with
@@ -143,14 +118,32 @@ local function store_package_items(itemsfn, pkg, version, tbl)
 
    local pkg_version = pkg.."/"..version
    local result = {}
+
    for item, path in pairs(itemsfn(pkg, version)) do
       result[item] = path
       if not tbl[item] then
          tbl[item] = {}
       end
-      tbl[item][pkg_version] = path
+      table.insert(tbl[item], pkg_version)
    end
    return result
+end
+
+--- Sort function for ordering rock identifiers in a manifest's
+-- modules table. Rocks are ordered alphabetically by name, and then
+-- by version which greater first.
+-- @param a string: Version to compare.
+-- @param b string: Version to compare.
+-- @return boolean: The comparison result, according to the
+-- rule outlined above.
+local function sort_pkgs(a, b)
+   assert(type(a) == "string")
+   assert(type(b) == "string")
+
+   local na, va = a:match("(.*)/(.*)$")
+   local nb, vb = b:match("(.*)/(.*)$")
+   
+   return (na == nb) and deps.compare_versions(va, vb) or na < nb
 end
 
 --- Sort items of a package matching table by version number (higher versions first).
@@ -178,19 +171,6 @@ local function sort_package_matching_table(tbl)
          end
       end
    end
-end
-
---- Commit manifest to disk in given local repository.
--- @param repo string: The directory of the local repository.
--- @param manifest table: The manifest table
--- @return boolean or (nil, string): true if successful, or nil and a
--- message in case of errors.
-local function save_manifest(repo, manifest)
-   assert(type(repo) == "string")
-   assert(type(manifest) == "table")
-
-   local filename = dir.path(repo, "manifest")
-   return persist.save_from_table(filename, manifest)
 end
 
 --- Process the dependencies of a package to determine its dependency
@@ -252,6 +232,34 @@ local function store_results(results, manifest)
    sort_package_matching_table(manifest.commands)
 end
 
+--- Scan a LuaRocks repository and output a manifest file.
+-- A file called 'manifest' will be written in the root of the given
+-- repository directory.
+-- @param repo A local repository directory.
+-- @return boolean or (nil, string): True if manifest was generated,
+-- or nil and an error message.
+function make_manifest(repo)
+   assert(type(repo) == "string")
+
+   if not fs.is_dir(repo) then
+      return nil, "Cannot access repository at "..repo
+   end
+
+   local query = search.make_query("")
+   query.exact_name = false
+   query.arch = "any"
+   local results = search.disk_search(repo, query)
+   local manifest = { repository = {}, modules = {}, commands = {} }
+   manif_core.manifest_cache[repo] = manifest
+
+   print(util.show_table(results, "results"))
+   print(util.show_table(manifest, "manifest"))
+
+   store_results(results, manifest)
+
+   return save_table(repo, "manifest", manifest)
+end
+
 --- Load a manifest file from a local repository and add to the repository
 -- information with regard to the given name and version.
 -- A file called 'manifest' will be written in the root of the given
@@ -284,173 +292,10 @@ function update_manifest(name, version, repo)
    end
 
    local results = {[name] = {[version] = {{arch = "installed", repo = repo}}}}
-   
-   store_results(results, manifest)
-   update_global_lib(repo, manifest)
-   return save_manifest(repo, manifest)
-end
 
-   --- Scan a LuaRocks repository and output a manifest file.
--- A file called 'manifest' will be written in the root of the given
--- repository directory.
--- @param repo A local repository directory.
--- @return boolean or (nil, string): True if manifest was generated,
--- or nil and an error message.
-function make_manifest(repo)
-   assert(type(repo) == "string")
-
-   if not fs.is_dir(repo) then
-      return nil, "Cannot access repository at "..repo
-   end
-
-   local query = search.make_query("")
-   query.exact_name = false
-   query.arch = "any"
-   local results = search.disk_search(repo, query)
-   local manifest = { repository = {}, modules = {}, commands = {} }
-   manif_core.manifest_cache[repo] = manifest
-
-   --print(util.show_table(results, "results"))
-   --print(util.show_table(manifest, "manifest"))
+   print("TODO LR2 update manifest")   
 
    store_results(results, manifest)
-
-   --print(util.show_table(manifest, "manifest after store"))
-
-   update_global_lib(repo, manifest)
-
-   --print(util.show_table(manifest, "manifest after update"))
-
-   return save_manifest(repo, manifest)
-end
-
-local index_header = [[
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<title>Available rocks</title>
-<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
-<style>
-body {
-   background-color: white;
-   font-family: "bitstream vera sans", "verdana", "sans";
-   font-size: 14px;
-}
-a {
-   color: #0000c0;
-   text-decoration: none;
-}
-a:hover {
-   text-decoration: underline;
-}
-td.main {
-   border-style: none;
-}
-blockquote {
-   font-size: 12px;
-}
-td.package {
-   background-color: #f0f0f0;
-   vertical-align: top;
-}
-td.spacer {
-   height: 5px;
-}
-td.version {
-   background-color: #d0d0d0;
-   vertical-align: top;
-   text-align: left;
-   padding: 5px;
-   width: 100px;
-}
-p.manifest {
-   font-size: 8px;
-}
-</style>
-</head>
-<body>
-<h1>Available rocks</h1>
-<p>
-Lua modules avaliable from this location for use with <a href="http://www.luarocks.org">LuaRocks</a>:
-</p>
-<table class="main">
-]]
-
-local index_package_start = [[
-<td class="package">
-<p><a name="$anchor"></a><b>$package</b> - $summary<br/>
-</p><blockquote><p>$detailed<br/>
-<font size="-1"><a href="$original">latest sources</a> $homepage | License: $license</font></p>
-</blockquote></a></td>
-<td class="version">
-]]
-
-local index_package_end = [[
-</td></tr>
-<tr><td colspan="2" class="spacer"></td></tr>
-]]
-
-local index_footer = [[
-</table>
-<p class="manifest">
-<a href="manifest">manifest file</a>
-</p>
-</body>
-</html>
-]]
-
-function make_index(repo)
-   if not fs.is_dir(repo) then
-      return nil, "Cannot access repository at "..repo
-   end
-   local manifest = load_manifest(repo)
-   local out = io.open(dir.path(repo, "index.html"), "w")
    
-   out:write(index_header)
-   for package, version_list in util.sortedpairs(manifest.repository) do
-      local latest_rockspec = nil
-      local output = index_package_start
-      for version, data in util.sortedpairs(version_list, deps.compare_versions) do
-         local out_versions = {}
-         local arches = 0
-         output = output..version
-         local sep = ':&nbsp;'
-         for _, item in ipairs(data) do
-            output = output .. sep .. '<a href="$url">'..item.arch..'</a>'
-            sep = ',&nbsp;'
-            if item.arch == 'rockspec' then
-               local rs = ("%s-%s.rockspec"):format(package, version)
-               if not latest_rockspec then latest_rockspec = rs end
-               output = output:gsub("$url", rs)
-            else
-               output = output:gsub("$url", ("%s-%s.%s.rock"):format(package, version, item.arch))
-            end
-         end
-         output = output .. '<br/>'
-         output = output:gsub("$na", arches)
-      end
-      output = output .. index_package_end
-      if latest_rockspec then
-         local rockspec = persist.load_into_table(dir.path(repo, latest_rockspec))
-         local vars = {
-            anchor = package,
-            package = rockspec.package,
-            original = rockspec.source.url,
-            summary = rockspec.description.summary or "",
-            detailed = rockspec.description.detailed or "",
-            license = rockspec.description.license or "N/A",
-            homepage = rockspec.description.homepage and ("| <a href="..rockspec.description.homepage..">project homepage</a>") or ""
-         }
-         vars.detailed = vars.detailed:gsub("\n\n", "</p><p>"):gsub("%s+", " ")
-         output = output:gsub("$(%w+)", vars)
-      else
-         output = output:gsub("$anchor", package)
-         output = output:gsub("$package", package)
-         output = output:gsub("$(%w+)", "")
-      end
-      out:write(output)
-   end
-   out:write(index_footer)
-   out:close()
+   return save_table(repo, "manifest", manifest)
 end
-

@@ -38,38 +38,35 @@ function install_binary_rock(rock_file)
    if rep.is_installed(name, version) then
       rep.delete_version(name, version)
    end
+   
    local rollback = util.schedule_function(function()
       fs.delete(path.install_dir(name, version))
       fs.remove_dir_if_empty(path.versions_dir(name))
    end)
+   
    local ok, err, errcode = fetch.fetch_and_unpack_rock(rock_file, path.install_dir(name, version))
    if not ok then return nil, err, errcode end
-   ok, err = rep.install_bins(name, version)
-
+   
    local rockspec, err, errcode = fetch.load_rockspec(path.rockspec_file(name, version))
    if err then
       return nil, "Failed loading rockspec for installed package: "..err, errcode
    end
 
    ok, err, errcode = deps.check_external_deps(rockspec, "install")
-   if err then
-      return nil, err, errcode
-   end
+   if err then return nil, err, errcode end
 
    ok, err, errcode = deps.fulfill_dependencies(rockspec)
-   if err then
-      return nil, err, errcode
-   end
+   if err then return nil, err, errcode end
 
    ok, err = rep.run_hook(rockspec, "post_install")
-   if err then
-      return nil, err
-   end
+   if err then return nil, err end
+
+   ok, err = rep.deploy_files(name, version)
+   if err then return nil, err end
    
    ok, err = manif.update_manifest(name, version)
-   if err then
-      return nil, err
-   end
+   if err then return nil, err end
+   
    util.remove_scheduled_function(rollback)
    return true
 end

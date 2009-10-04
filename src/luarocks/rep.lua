@@ -7,6 +7,7 @@ local path = require("luarocks.path")
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
+local manif = require("luarocks.manif")
 
 --- Get all installed versions of a package.
 -- @param name string: a package name.
@@ -41,19 +42,13 @@ function delete_version(name, version)
    assert(type(version) == "string")
 
    fs.delete(path.install_dir(name, version))
+   print("TODO LR2 remove deployed files based on rock_manifest")
    if not get_versions(name) then
       fs.delete(dir.path(cfg.rocks_dir, name))
    end
 end
 
---- Delete a command-line item from the bin directory.
--- @param command string: name of script
-function delete_bin(command)
-   assert(type(command) == "string")
-
-   fs.delete(dir.path(cfg.scripts_dir, command))
-end
-
+--[[
 --- Install bin entries in the repository bin dir.
 -- @param name string: name of package
 -- @param version string: package version in string format
@@ -68,9 +63,9 @@ function install_bins(name, version, single_file)
 
    local bindir = path.bin_dir(name, version)
    if fs.exists(bindir) then
-      local ok, err = fs.make_dir(cfg.scripts_dir)
+      local ok, err = fs.make_dir(cfg.deploy_bin_dir)
       if not ok then
-         return nil, "Could not create "..cfg.scripts_dir
+         return nil, "Could not create "..cfg.deploy_bin_dir
       end
       local files = single_file and {single_file} or fs.list_dir(bindir)
       for _, file in pairs(files) do
@@ -81,9 +76,9 @@ function install_bins(name, version, single_file)
             file = io.open(fullname)
          end
          if match or (file and file:read():match("#!.*lua.*")) then
-            ok, err = fs.wrap_script(fullname, cfg.scripts_dir)
+            ok, err = fs.wrap_script(fullname, cfg.deploy_bin_dir)
          else
-            ok, err = fs.copy_binary(fullname, cfg.scripts_dir)
+            ok, err = fs.copy_binary(fullname, cfg.deploy_bin_dir)
          end
          if file then file:close() end
          if not ok then
@@ -92,6 +87,23 @@ function install_bins(name, version, single_file)
       end
    end
    return true
+end
+]]
+
+local function store_package_data(result, name, sub, prefix)
+   assert(type(result) == "table")
+   assert(type(name) == "string")
+   assert(type(sub) == "table" or type(sub) == "string")
+   assert(type(prefix) == "string")
+
+   if type(sub) == "table" then
+      for sname, ssub in pairs(sub) do
+         store_package_data(result, sname, ssub, prefix..name.."/")
+      end
+   elseif type(sub) == "string" then
+      local pathname = prefix..name
+      result[path.path_to_module(pathname)] = pathname
+   end
 end
 
 --- Obtain a list of modules within an installed package.
@@ -107,14 +119,18 @@ function package_modules(package, version)
    assert(type(version) == "string")
 
    local result = {}
-   for _, pathdir in pairs{ path.lua_dir, path.lib_dir } do
-      local basedir = pathdir(package, version)
-      local files = fs.find(basedir)
-      for _, file in ipairs(files) do
-         local name = path.path_to_module(file)
-         if name then
-            result[name] = dir.path(basedir, file)
-         end
+   local rock_manifest = manif.load_rock_manifest(package, version)
+
+   print(pkg, version, util.show_table(rock_manifest))
+
+   if rock_manifest.lib then
+      for name,sub in pairs(rock_manifest.lib) do
+         store_package_data(result, name, sub, "", "")
+      end
+   end
+   if rock_manifest.lua then
+      for name,sub in pairs(rock_manifest.lua) do
+         store_package_data(result, name, sub, "", "")
       end
    end
    return result
@@ -133,15 +149,15 @@ function package_commands(package, version)
    assert(type(version) == "string")
 
    local result = {}
-   local bindir = path.bin_dir(package, version)
-   local bins = fs.find(bindir)
-   for _, file in ipairs(bins) do
-      if file then
-         result[file] = dir.path(bindir, file)
+   local rock_manifest = manif.load_rock_manifest(package, version)
+   if rock_manifest.bin then
+      for name,sub in pairs(rock_manifest.bin) do
+         store_package_data(result, name, sub, "", "")
       end
    end
    return result
 end
+
 
 --- Check if a rock contains binary executables.
 -- @param name string: name of an installed rock
@@ -149,10 +165,14 @@ end
 -- @return boolean: returns true if rock contains platform-specific
 -- binary executables, or false if it is a pure-Lua rock.
 function has_binaries(name, version)
-   local bin_dir = path.bin_dir(name, version)
-   if fs.exists(bin_dir) then
-      for _, name in pairs(fs.find(bin_dir)) do
-         if fs.is_actual_binary(dir.path(bin_dir, name)) then
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+
+   local rock_manifest = manif.load_rock_manifest(name, version)
+   if rock_manifest.bin then
+      for name, md5 in pairs(rock_manifest.bin) do
+         -- TODO verify that it is the same file. If it isn't, find the actual command.
+         if fs.is_actual_binary(dir.path(cfg.deploy_bin_dir, name)) then
             return true
          end
       end
@@ -161,6 +181,9 @@ function has_binaries(name, version)
 end
 
 function run_hook(rockspec, hook_name)
+   assert(type(rockspec) == "table")
+   assert(type(hook_name) == "string")
+
    local hooks = rockspec.hooks
    if not hooks then
       return true
@@ -177,4 +200,71 @@ function run_hook(rockspec, hook_name)
       end
    end
    return true
+end
+
+local function deploy_file_tree(file_tree, source_dir, deploy_dir, move_fn)
+   assert(type(file_tree) == "table")
+   assert(type(source_dir) == "string")
+   assert(type(deploy_dir) == "string")
+   assert(type(move_fn) == "function" or not move_fn)
+   
+   print("TODO LR2 actually fs.move")
+   if not move_fn then move_fn = fs.copy end
+
+   local ok, err = fs.make_dir(deploy_dir)
+   if not ok then
+      return nil, "Could not create "..deploy_dir
+   end
+   for file, sub in pairs(file_tree) do
+      if type(sub) == "table" then
+         ok, err = deploy_file_tree(sub, dir.path(source_dir, file), dir.path(deploy_dir, file))
+         if not ok then return nil, err end
+      else
+         local target = dir.path(deploy_dir, file)
+         if fs.exists(target) then
+            print("TODO LR2 make_way_for_new_version(target)")
+         end
+         local source = dir.path(source_dir, file)
+         ok, err = move_fn(source, deploy_dir)
+         if not ok then return nil, err end
+      end
+   end
+end
+
+local function install_binary(source, target)
+   assert(type(source) == "string")
+   assert(type(target) == "string")
+
+   local match = source:match("%.lua$")
+   local file, ok, err
+   if not match then
+      file = io.open(source)
+   end
+   if match or (file and file:read():match("^#!.*lua.*")) then
+      ok, err = fs.wrap_script(source, target)
+   else
+      ok, err = fs.copy_binary(source, target)
+   end
+   if file then file:close() end
+   return ok, err
+end
+
+function deploy_files(name, version)
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+   
+   local rock_manifest = manif.load_rock_manifest(name, version)
+   
+   if rock_manifest.bin then
+      local ok, err = deploy_file_tree(rock_manifest.bin, path_bin_dir(name, version), cfg.deploy_bin_dir, install_binary)
+      if err then return nil, err end
+   end
+   if rock_manifest.lua then
+      local ok, err = deploy_file_tree(rock_manifest.lua, path.lua_dir(name, version), cfg.deploy_lua_dir)
+      if err then return nil, err end
+   end
+   if rock_manifest.lib then
+      local ok, err = deploy_file_tree(rock_manifest.lib, path.lib_dir(name, version), cfg.deploy_lib_dir)
+      if err then return nil, err end
+   end
 end

@@ -211,18 +211,18 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
       fs.pop_dir()
    end
 
-   ok, err = rep.install_bins(name, version)
-   if not ok then return nil, err end
+   ok, err = manif.make_rock_manifest(name, version)
+   if err then return nil, err end
+
+   ok, err = rep.deploy_files(name, version)
+   if err then return nil, err end
 
    ok, err = rep.run_hook(rockspec, "post_install")
-   if err then
-      return nil, err
-   end
+   if err then return nil, err end
 
    ok, err = manif.update_manifest(name, version)
-   if err then
-      return nil, err
-   end
+   if err then return nil, err end
+
    util.remove_scheduled_function(rollback)
    return true
 end

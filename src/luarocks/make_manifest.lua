@@ -4,6 +4,7 @@
 module("luarocks.make_manifest", package.seeall)
 
 local manif = require("luarocks.manif")
+local index = require("luarocks.index")
 local cfg = require("luarocks.cfg")
 
 help_summary = "Compile a manifest file for a repository."
@@ -26,7 +27,7 @@ function run(repo)
    ok, err = manif.make_manifest(repo)
    if ok then
       print("Generating index.html for "..repo)
-      manif.make_index(repo)
+      index.make_index(repo)
    end
    return ok, err
 end
