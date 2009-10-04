@@ -20,8 +20,7 @@ function load_into_table(filename, tbl)
    if not chunk then
       return nil, err
    end
-   local result = {}
-   if tbl then result = tbl end
+   local result = tbl or {}
    setfenv(chunk, result)
    chunk()
    return result
