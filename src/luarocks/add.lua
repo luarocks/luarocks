@@ -8,6 +8,7 @@ local util = require("luarocks.util")
 local fetch = require("luarocks.fetch")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
+local index = require("luarocks.index")
 local fs = require("luarocks.fs")
 
 help_summary = "Add a rock or rockpec to a rocks server."
@@ -83,7 +84,7 @@ local function add_file_to_server(refresh, rockfile, server)
    print("Updating manifest...")
    manif.make_manifest(local_cache)
    print("Updating index.html...")
-   manif.make_index(local_cache)
+   index.make_index(local_cache)
 
    local login_info = ""
    if user then login_info = " -u "..user end
