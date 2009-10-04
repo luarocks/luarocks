@@ -7,7 +7,7 @@ local plain_package_cpath = package.cpath
 local package, require, assert, ipairs, pairs, os, print, table, type, next, unpack =
       package, require, assert, ipairs, pairs, os, print, table, type, next, unpack
 
-module("luarocks")
+module("luarocks.loader")
 
 local path = require("luarocks.path")
 local manif_core = require("luarocks.manif_core")
