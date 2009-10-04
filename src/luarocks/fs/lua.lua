@@ -89,6 +89,23 @@ function execute(command, ...)
    return fs.execute_string(command)
 end
 
+--- Check the MD5 checksum for a file.
+-- @param file string: The file to be checked.
+-- @param md5sum string: The string with the expected MD5 checksum.
+-- @return boolean: true if the MD5 checksum for 'file' equals 'md5sum', false if not
+-- or if it could not perform the check for any reason.
+function check_md5(file, md5sum)
+   local computed = fs.get_md5(file)
+   if not computed then
+      return false
+   end
+   if computed:match("^"..md5sum) then
+      return true
+   else
+      return false
+   end
+end
+
 ---------------------------------------------------------------------
 -- LuaFileSystem functions
 ---------------------------------------------------------------------
@@ -444,25 +461,16 @@ end
 
 if md5_ok then
 
---- Check the MD5 checksum for a file.
--- @param file string: The file to be checked.
--- @param md5sum string: The string with the expected MD5 checksum.
--- @return boolean: true if the MD5 checksum for 'file' equals 'md5sum', false if not
--- or if it could not perform the check for any reason.
-function check_md5(file, md5sum)
+--- Get the MD5 checksum for a file.
+-- @param file string: The file to be computed.
+-- @return string: The MD5 checksum
+function get_md5(file)
    file = fs.absolute_name(file)
    local file = io.open(file, "r")
    if not file then return false end
    local computed = md5.sumhexa(file:read("*a"))
    file:close()
-   if not computed then
-      return false
-   end
-   if computed:match("^"..md5sum) then
-      return true
-   else
-      return false
-   end
+   return computed
 end
 
 end
