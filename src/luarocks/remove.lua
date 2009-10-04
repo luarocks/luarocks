@@ -59,40 +59,6 @@ end
 -- @return boolean or (nil, string): true on success or nil and an error message.
 local function delete_versions(name, versions) 
 
-   local manifest, err = manif.load_manifest(cfg.rocks_dir)
-   if not manifest then
-      return nil, err
-   end
-
-   local commands = {}
-   for version, data in pairs(versions) do
-      for _, command in pairs(manifest.repository[name][version][1].commands) do
-         if not commands[command] then commands[command] = {} end
-         table.insert(commands[command], name.."/"..version)
-      end
-   end
-   
-   if next(commands) then
-      for command, users in pairs(commands) do
-         local providers_of_command = manifest.commands[command]
-         for _, user in ipairs(users) do
-            for i, value in ipairs(providers_of_command) do
-               if providers_of_command[i] == user then
-                  table.remove(providers_of_command, i)
-                  break
-               end
-            end
-         end
-         local remaining = next(providers_of_command)
-         if remaining then
-            local name, version = remaining:match("^([^/]*)/(.*)$")
-            rep.install_bins(name, version, command)
-         else
-            rep.delete_bin(command)
-         end
-      end
-   end
-
    for version, _ in pairs(versions) do
       print("Removing "..name.." "..version.."...")
       rep.delete_version(name, version)
@@ -116,9 +82,7 @@ function run(...)
    end
    local results = {}
    search.manifest_search(results, cfg.rocks_dir, search.make_query(name, version))
-   
-   print("remove functionality is currently broken")
-   --[[
+
    local versions = results[name]
    if not versions then
       return nil, "Could not find rock '"..name..(version and " "..version or "").."' in local tree."
@@ -141,11 +105,10 @@ function run(...)
             print()
          end
          local ok, err1 = delete_versions(name, versions)
-         -- FIXME
-         -- local ok, err2 = manif.make_manifest(cfg.rocks_dir)
-         -- if err1 or err2 then
-         --   return nil, err1 or err2
-         -- end
+         local ok, err2 = manif.make_manifest(cfg.rocks_dir)
+         if err1 or err2 then
+            return nil, err1 or err2
+         end
       else
          if not second then
             print("Will not remove "..name.." "..version..".")
@@ -162,6 +125,5 @@ function run(...)
          return nil, "Failed removing."
       end
    end
-   ]]
    return true
 end
