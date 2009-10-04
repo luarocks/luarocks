@@ -17,22 +17,27 @@ function rockspec_name_from_rock(rock_name)
 end
 
 function rocks_dir(repo)
+   assert(type(repo) == "string")
    return dir.path(repo, "lib", "luarocks", "rocks")
 end
 
-function scripts_dir(repo)
+function deploy_bin_dir(repo)
+   assert(type(repo) == "string")
    return dir.path(repo, "bin")
 end
 
-function lua_modules_dir(repo)
+function deploy_lua_dir(repo)
+   assert(type(repo) == "string")
    return dir.path(repo, "share", "lua", "5.1")
 end
 
-function bin_modules_dir(repo)
+function deploy_lib_dir(repo)
+   assert(type(repo) == "string")
    return dir.path(repo, "lib", "lua", "5.1")
 end
 
 function manifest_file(repo)
+   assert(type(repo) == "string")
    return dir.path(repo, "lib", "luarocks", "rocks", "manifest")
 end
 
@@ -242,4 +247,3 @@ function configure_paths(rockspec)
    vars.DOCDIR = doc_dir(name, version)
    rockspec.variables = vars
 end
-

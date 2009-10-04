@@ -21,16 +21,20 @@ local function save_settings(repo)
    return {
       root_dir = cfg.root_dir,
       rocks_dir = cfg.rocks_dir,
-      scripts_dir = cfg.scripts_dir,
+      deploy_bin_dir = cfg.deploy_bin_dir,
+      deploy_lua_dir = cfg.deploy_lua_dir,
+      deploy_lib_dir = cfg.deploy_lib_dir,
    }
 end
 
 local function restore_settings(settings)
    cfg.root_dir = settings.root_dir
    cfg.rocks_dir = settings.rocks_dir
-   cfg.scripts_dir = settings.scripts_dir
+   cfg.deploy_bin_dir = settings.deploy_bin_dir
+   cfg.deploy_lua_dir = settings.deploy_lua_dir
+   cfg.deploy_lib_dir = settings.deploy_lib_dir
    cfg.variables.ROCKS_TREE = settings.root_dir
-   cfg.variables.SCRIPTS_DIR = settings.scripts_dir
+   cfg.variables.SCRIPTS_DIR = settings.deploy_bin_dir
    table.remove(cfg.rocks_servers, 1)
 end
 
@@ -38,9 +42,9 @@ local function prepare_sandbox(file)
    local root_dir = fs.make_temp_dir(file):gsub("/+$", "")
    cfg.root_dir = root_dir
    cfg.rocks_dir = path.rocks_dir(root_dir)
-   cfg.scripts_dir = root_dir.."/bin"
+   cfg.deploy_bin_dir = path.deploy_bin_dir(root_dir)
    cfg.variables.ROCKS_TREE = cfg.root_dir
-   cfg.variables.SCRIPTS_DIR = cfg.scripts_dir
+   cfg.variables.SCRIPTS_DIR = cfg.deploy_bin_dir
    return root_dir
 end
 

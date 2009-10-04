@@ -108,11 +108,11 @@ local root = LUAROCKS_ROCKS_TREE or home_tree
 local defaults = {
    root_dir = root,
    rocks_dir = root.."/lib/luarocks/rocks",
-   scripts_dir = root.."/bin/",
    lua_modules_path = "/share/lua/5.1/",
-   bin_modules_path = "/lib/lua/5.1/",
-   lua_modules_dir = root.."/share/lua/5.1/",
-   bin_modules_dir = root.."/lib/lua/5.1/",
+   lib_modules_path = "/lib/lua/5.1/",
+   deploy_bin_dir = root.."/bin/",
+   deploy_lua_dir = root.."/share/lua/5.1/",
+   deploy_lib_dir = root.."/lib/lua/5.1/",
 
    arch = "unknown",
    lib_extension = "unknown",
@@ -275,6 +275,6 @@ setmetatable(_M, cfg_mt)
 
 for _,tree in ipairs(rocks_trees) do
    package.path = tree..lua_modules_path.."/?.lua;"..tree..lua_modules_path.."/?/init.lua;"..package.path
-   package.cpath = tree..bin_modules_path.."/?."..lib_extension..";"..package.cpath
+   package.cpath = tree..lib_modules_path.."/?."..lib_extension..";"..package.cpath
 end
 
