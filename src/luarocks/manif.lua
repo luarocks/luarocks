@@ -293,9 +293,41 @@ function update_manifest(name, version, repo)
 
    local results = {[name] = {[version] = {{arch = "installed", repo = repo}}}}
 
-   print("TODO LR2 update manifest")   
-
    store_results(results, manifest)
    
    return save_table(repo, "manifest", manifest)
+end
+
+--- Given a path of a deployed file, figure out which rock name and version
+-- correspond to it in the tree manifest.
+-- @param file string: The full path of a deployed file.
+-- @param root string or nil: A local root dir for a rocks tree. If not given, the default is used.
+-- @return string, string: name and version of the provider rock.
+function find_current_provider(file, root)
+   assert(type(file) == "string")
+   assert(type(root) == "string" or not root)
+   root = root or cfg.root_dir
+
+   local manifest = manif_core.load_local_manifest(path.rocks_dir(root))
+   local deploy_bin = path.deploy_bin_dir(root)
+   local deploy_lua = path.deploy_lua_dir(root)
+   local deploy_lib = path.deploy_lib_dir(root)
+   local key, manifest_tbl
+
+   if file:match("^"..deploy_bin) then
+      manifest_tbl = manifest.commands
+      key = file:sub(#deploy_bin+1)
+   elseif file:match("^"..deploy_lua) then
+      manifest_tbl = manifest.modules
+      key = path.path_to_module(file:sub(#deploy_lua+1))
+   elseif file:match("^"..deploy_lib) then
+      manifest_tbl = manifest.modules
+      key = path.path_to_module(file:sub(#deploy_lib+1))
+   end
+
+   local providers = manifest_tbl[key]
+   if not providers then
+      return nil, "File "..file.." is not tracked by LuaRocks."
+   end
+   return providers[1]:match("([^/]*)/([^/]*)")
 end

@@ -216,6 +216,7 @@ function path_to_module(file)
          name = name:gsub(dir.separator, ".")
       end
    end
+   name = name:gsub("^%.+", ""):gsub("%.+$", "")
    return name
 end
 
@@ -246,4 +247,20 @@ function configure_paths(rockspec)
    vars.BINDIR = bin_dir(name, version)
    vars.DOCDIR = doc_dir(name, version)
    rockspec.variables = vars
+end
+
+function versioned_name(file, name, version)
+   assert(type(file) == "string")
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+
+   name = name:gsub("%-", "_")
+   version = version:gsub("%-", "_")
+   return dir.path(dir.dir_name(file), name.."_"..version.."-"..dir.base_name(file))
+end
+
+function unversioned_name(file)
+   assert(type(file) == "string")
+
+   return dir.path(dir.dir_name(file), dir.base_name(file):match("^[^-]+-(.*)"))
 end

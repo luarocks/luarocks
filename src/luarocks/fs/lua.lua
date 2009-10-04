@@ -511,7 +511,7 @@ end
 -- plus an error message.
 function move(src, dest)
    assert(src and dest)
-   if fs.exists(dest) then
+   if fs.exists(dest) and not fs.is_dir(dest) then
       return false, "File already exists: "..dest
    end
    local ok, err = fs.copy(src, dest)
