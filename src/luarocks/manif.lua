@@ -210,26 +210,31 @@ local function store_results(results, manifest)
    assert(type(results) == "table")
    assert(type(manifest) == "table")
 
-   for pkg, versions in pairs(results) do
-      local pkgtable = manifest.repository[pkg] or {}
+   for name, versions in pairs(results) do
+      local pkgtable = manifest.repository[name] or {}
       for version, entries in pairs(versions) do
          local versiontable = {}
          for _, entry in ipairs(entries) do
             local entrytable = {}
             entrytable.arch = entry.arch
             if entry.arch == "installed" then
-               entrytable.modules = store_package_items(rep.package_modules, pkg, version, manifest.modules)
-               entrytable.commands = store_package_items(rep.package_commands, pkg, version, manifest.commands)
+               local rock_manifest = load_rock_manifest(name, version)
+               if not rock_manifest then
+                  return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks 2 tree?"
+               end
+               entrytable.modules = store_package_items(rep.package_modules, name, version, manifest.modules)
+               entrytable.commands = store_package_items(rep.package_commands, name, version, manifest.commands)
             end
             table.insert(versiontable, entrytable)
          end
          pkgtable[version] = versiontable
       end
-      manifest.repository[pkg] = pkgtable
+      manifest.repository[name] = pkgtable
    end
    update_dependencies(manifest)
    sort_package_matching_table(manifest.modules)
    sort_package_matching_table(manifest.commands)
+   return true
 end
 
 --- Scan a LuaRocks repository and output a manifest file.
@@ -252,10 +257,8 @@ function make_manifest(repo)
    local manifest = { repository = {}, modules = {}, commands = {} }
    manif_core.manifest_cache[repo] = manifest
 
-   print(util.show_table(results, "results"))
-   print(util.show_table(manifest, "manifest"))
-
-   store_results(results, manifest)
+   local ok, err = store_results(results, manifest)
+   if not ok then return nil, err end
 
    return save_table(repo, "manifest", manifest)
 end
@@ -293,7 +296,8 @@ function update_manifest(name, version, repo)
 
    local results = {[name] = {[version] = {{arch = "installed", repo = repo}}}}
 
-   store_results(results, manifest)
+   local ok, err = store_results(results, manifest)
+   if not ok then return nil, err end
    
    return save_table(repo, "manifest", manifest)
 end
