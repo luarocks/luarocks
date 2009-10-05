@@ -61,7 +61,8 @@ local function delete_versions(name, versions)
 
    for version, _ in pairs(versions) do
       print("Removing "..name.." "..version.."...")
-      rep.delete_version(name, version)
+      local ok, err = rep.delete_version(name, version)
+      if not ok then return nil, err end
    end
    
    return true
@@ -104,11 +105,10 @@ function run(...)
             end
             print()
          end
-         local ok, err1 = delete_versions(name, versions)
-         local ok, err2 = manif.make_manifest(cfg.rocks_dir)
-         if err1 or err2 then
-            return nil, err1 or err2
-         end
+         local ok, err = delete_versions(name, versions)
+         if not ok then return nil, err end
+         ok, err = manif.make_manifest(cfg.rocks_dir)
+         if not ok then return nil, err end
       else
          if not second then
             print("Will not remove "..name.." "..version..".")
