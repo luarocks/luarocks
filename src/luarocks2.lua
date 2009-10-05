@@ -3,7 +3,7 @@ local global_env = _G
 local package, require, assert, ipairs, pairs, os, print, table, type, next, unpack =
       package, require, assert, ipairs, pairs, os, print, table, type, next, unpack
 
-module("luarocks")
+module("luarocks2")
 
 local path = require("luarocks.path")
 local manif_core = require("luarocks.manif_core")
@@ -20,12 +20,14 @@ rocks_trees = nil
 local function load_rocks_trees() 
    local any_ok = false
    local trees = {}
-   
-   -- FIXME select correctly file to be fetched
-   local persist = require("luarocks.persist")
-   table.insert(trees, { manifest = persist.load_into_table("manifest2") } )
-   any_ok = true
-
+   for _, tree in pairs(cfg.rocks_trees) do
+      local rocks_dir = path.rocks_dir(tree)
+      local manifest, err = manif_core.load_local_manifest(rocks_dir)
+      if manifest then
+         any_ok = true
+         table.insert(trees, {rocks_dir=rocks_dir, manifest=manifest})
+      end
+   end
    if not any_ok then
       rocks_trees = false
       return false
@@ -40,7 +42,7 @@ end
 -- @parse version string: The version of the rock, in string format
 -- @parse manifest table: The local manifest table where this rock
 -- is installed.
-local function add_context(name, version)
+function add_context(name, version)
    -- assert(type(name) == "string")
    -- assert(type(version) == "string")
    -- assert(type(manifest) == "table")
@@ -49,27 +51,34 @@ local function add_context(name, version)
       return
    end
    context[name] = version
-   --[[
 
-   local pkgdeps = manifest.dependencies and manifest.dependencies[name][version]
-   if not pkgdeps then
-      return
+   if not rocks_trees and not load_rocks_trees() then
+      return nil
    end
-   for _, dep in ipairs(pkgdeps) do
-      local package, constraints = dep.name, dep.constraints
 
-      for _, tree in pairs(rocks_trees) do
-         local entries = tree.manifest.repository[package]
-         if entries then
-            for version, packages in pairs(entries) do
-               if (not constraints) or deps.match_constraints(deps.parse_version(version), constraints) then
-                  add_context(package, version, tree.manifest)
+   local providers = {}
+   for _, tree in pairs(rocks_trees) do
+      local manifest = tree.manifest
+
+      local pkgdeps = manifest.dependencies and manifest.dependencies[name][version]
+      if not pkgdeps then
+         return
+      end
+      for _, dep in ipairs(pkgdeps) do
+         local package, constraints = dep.name, dep.constraints
+   
+         for _, tree in pairs(rocks_trees) do
+            local entries = tree.manifest.repository[package]
+            if entries then
+               for version, packages in pairs(entries) do
+                  if (not constraints) or deps.match_constraints(deps.parse_version(version), constraints) then
+                     add_context(package, version, tree.manifest)
+                  end
                end
             end
          end
       end
    end
-   ]]
 end
 
 --- Internal sorting function.
@@ -82,8 +91,7 @@ end
 
 local function call_other_loaders(module, name, version, file)
    
-   local actual_module = file:match("(.*)%.[^.]+$")
-   
+   local actual_module = file:match(".*/(.*)%.[^.]+$")
    for i, loader in pairs(package.loaders) do
       if loader ~= luarocks_loader then
          local results = { loader(actual_module) }
@@ -106,8 +114,20 @@ local function pick_module(module)
    for _, tree in pairs(rocks_trees) do
       local entries = tree.manifest.modules[module]
       if entries then
-         for entry, file in pairs(entries) do
+         for i, entry in ipairs(entries) do
             local name, version = entry:match("^([^/]*)/(.*)$")
+            local file = tree.manifest.repository[name][version][1].modules[module]
+            local deploy_dir
+            if file:match(cfg.lua_extension.."$") then
+               deploy_dir = cfg.deploy_lua_dir
+            else
+               deploy_dir = cfg.deploy_bin_dir
+            end
+            if i == 1 then
+               file = deploy_dir.."/"..file
+            else
+               file = path.versioned_name(deploy_dir.."/"..file, name, version)
+            end
             if context[name] == version then
                return name, version, file
             end
