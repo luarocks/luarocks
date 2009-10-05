@@ -210,11 +210,9 @@ local function resolve_conflict(name, version, target)
       return nil, cversion
    end
    if name ~= cname or deps.compare_versions(version, cversion) then
-print("MOVE EXISTING, MAKE WAY FOR NEW")
       fs.move(target, path.versioned_name(target, cname, cversion))
       return target
    else
-print("INSTALL NEW WITH DIFFERENT NAME")
       return path.versioned_name(target, name, version)
    end
 end
@@ -236,17 +234,17 @@ function deploy_files(name, version)
          return nil, "Could not create "..deploy_dir
       end
       for file, sub in pairs(file_tree) do
+         local source = dir.path(source_dir, file)
          local target = dir.path(deploy_dir, file)
          if type(sub) == "table" then
-            ok, err = deploy_file_tree(sub, dir.path(source_dir, file), dir.path(deploy_dir, file))
+            ok, err = deploy_file_tree(sub, source, target)
             if not ok then return nil, err end
-            fs.remove_dir_if_empty(target)
+            fs.remove_dir_if_empty(source)
          else
             if fs.exists(target) then
                target, err = resolve_conflict(name, version, target)
                if err then return nil, err.." Cannot install new version." end
             end
-            local source = dir.path(source_dir, file)
             ok, err = move_fn(source, target)
             if not ok then return nil, err end
          end
@@ -281,7 +279,7 @@ function delete_version(name, version)
       for file, sub in pairs(file_tree) do
          local target = dir.path(deploy_dir, file)
          if type(sub) == "table" then
-            local ok, err = delete_deployed_file_tree(sub, dir.path(deploy_dir, file))
+            local ok, err = delete_deployed_file_tree(sub, target)
             fs.remove_dir_if_empty(target)
          else
             local versioned = path.versioned_name(target, name, version)
