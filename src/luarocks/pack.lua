@@ -56,6 +56,25 @@ local function pack_source_rock(rockspec_file)
    return rock_file
 end
 
+local function copy_back_files(name, version, file_tree, deploy_dir, pack_dir)
+   fs.make_dir(pack_dir)
+   for file, sub in pairs(file_tree) do
+      local source = dir.path(deploy_dir, file)
+      local target = dir.path(pack_dir, file)
+      if type(sub) == "table" then
+         local ok, err = copy_back_files(name, version, sub, source, target)
+      else
+         local versioned = path.versioned_name(source, name, version)
+         if fs.exists(versioned) then
+            fs.copy(versioned, target)
+         else
+            fs.copy(source, target)
+         end
+      end
+   end
+   return true
+end
+
 -- @param name string: Name of package to pack.
 -- @param version string or nil: A version number may also be passed.
 -- @return string or (nil, string): The filename of the resulting
@@ -83,33 +102,23 @@ local function pack_binary_rock(name, version)
       return nil, "'"..name.." "..version.."' does not seem to be an installed rock."
    end
 
+   local rock_manifest = manif.load_rock_manifest(name, version)
+   if not rock_manifest then
+      return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks 2 tree?"
+   end
+
    local name_version = name .. "-" .. version
    local rock_file = fs.absolute_name(name_version .. "."..cfg.arch..".rock")
    
    local temp_dir = fs.make_temp_dir("pack")
    fs.copy_contents(prefix, temp_dir)
 
-   local is_binary = false
-   local manifest = manif.load_manifest(cfg.rocks_dir)
-   for module_name, module_data in pairs(manifest.modules) do
-      for package, file in pairs(module_data) do
-         if package == name.."/"..version then
-            local dest
-            print("TODO LR2 do this based on rock_manifest")
-            if file:match("^"..cfg.deploy_lua_dir) then
-               local pathname = file:sub(#cfg.deploy_lua_dir + 1)
-               dest = dir.path(temp_dir, "lua", dir.dir_name(pathname))
-            elseif file:match("^"..cfg.deploy_lib_dir) then
-               local pathname = file:sub(#cfg.deploy_lib_dir + 1)
-               dest = dir.path(temp_dir, "lib", dir.dir_name(pathname))
-               is_binary = true
-            end
-            if dest then
-               fs.make_dir(dest)
-               fs.copy(file, dest)
-            end
-         end
-      end
+   if rock_manifest.lib then
+      copy_back_files(name, version, rock_manifest.lib, cfg.deploy_lib_dir, dir.path(temp_dir, "lib"))
+      is_binary = true
+   end
+   if rock_manifest.lua then
+      copy_back_files(name, version, rock_manifest.lua, cfg.deploy_lua_dir, dir.path(temp_dir, "lua"))
    end
    
    fs.change_dir(temp_dir)
