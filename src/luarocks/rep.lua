@@ -280,6 +280,7 @@ function delete_version(name, version)
          local target = dir.path(deploy_dir, file)
          if type(sub) == "table" then
             local ok, err = delete_deployed_file_tree(sub, target)
+            if not ok then return nil, err end
             fs.remove_dir_if_empty(target)
          else
             local versioned = path.versioned_name(target, name, version)
@@ -294,6 +295,10 @@ function delete_version(name, version)
    end
 
    local rock_manifest = manif.load_rock_manifest(name, version)
+   if not rock_manifest then
+      return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks 2 tree?"
+   end
+   
    local ok, err = true
    if rock_manifest.bin then
       ok, err = delete_deployed_file_tree(rock_manifest.bin, cfg.deploy_bin_dir)
