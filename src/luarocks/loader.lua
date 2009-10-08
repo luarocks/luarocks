@@ -3,7 +3,7 @@ local global_env = _G
 local package, require, assert, ipairs, pairs, os, print, table, type, next, unpack =
       package, require, assert, ipairs, pairs, os, print, table, type, next, unpack
 
-module("luarocks2")
+module("luarocks.loader")
 
 local path = require("luarocks.path")
 local manif_core = require("luarocks.manif_core")
