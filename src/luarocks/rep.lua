@@ -34,47 +34,24 @@ function is_installed(name, version)
    return fs.is_dir(path.install_dir(name, version))
 end
 
---[[
---- Install bin entries in the repository bin dir.
--- @param name string: name of package
--- @param version string: package version in string format
--- @param single_file string or nil: optional parameter, indicating the name
--- of a single file to install; if not given, all bin files from the package
--- are installed.
--- @return boolean or (nil, string): True if succeeded or nil and
--- and error message.
-function install_bins(name, version, single_file)
-   assert(type(name) == "string")
-   assert(type(version) == "string")
-
-   local bindir = path.bin_dir(name, version)
-   if fs.exists(bindir) then
-      local ok, err = fs.make_dir(cfg.deploy_bin_dir)
-      if not ok then
-         return nil, "Could not create "..cfg.deploy_bin_dir
-      end
-      local files = single_file and {single_file} or fs.list_dir(bindir)
-      for _, file in pairs(files) do
-         local fullname = dir.path(bindir, file)
-         local match = file:match("%.lua$")
-         local file
-         if not match then
-            file = io.open(fullname)
-         end
-         if match or (file and file:read():match("#!.*lua.*")) then
-            ok, err = fs.wrap_script(fullname, cfg.deploy_bin_dir)
+local function recurse_rock_manifest_tree(file_tree, action) 
+   assert(type(file_tree) == "table")
+   assert(type(action) == "function")
+   local function do_recurse_rock_manifest_tree(tree, parent_path, parent_module)
+      
+      for file, sub in pairs(tree) do
+         if type(sub) == "table" then
+            local ok, err = recurse_rock_manifest_tree(sub, parent_path..file.."/", parent_module..file..".", action)
+            if not ok then return nil, err end
          else
-            ok, err = fs.copy_binary(fullname, cfg.deploy_bin_dir)
-         end
-         if file then file:close() end
-         if not ok then
-            return nil, err
+            local ok, err = action(parent_path, parent_module, file)
+            if not ok then return nil, err end
          end
       end
+      return true
    end
-   return true
+   return do_recurse_rock_manifest_tree(file_tree, "", "", action)
 end
-]]
 
 local function store_package_data(result, name, sub, prefix)
    assert(type(result) == "table")
@@ -221,6 +198,37 @@ function deploy_files(name, version)
    assert(type(name) == "string")
    assert(type(version) == "string")
 
+   local function deploy_file_tree(file_tree, deploy_dir, source_dir, move_fn)
+      return recurse_rock_manifest_tree(file_tree, 
+         function(name, version, deploy_dir, parent_path, parent_module, file)
+         
+            local versioned = path.versioned_name(dir.path(deploy_dir, file), name, version)
+            if fs.exists(versioned) then
+               fs.delete(versioned)
+            else
+               fs.delete(target)
+            end
+            return true
+
+            local source = dir.path(source_dir, file)
+            local target = dir.path(deploy_dir, file)
+            if type(sub) == "table" then
+               ok, err = deploy_file_tree(sub, source, target)
+               if not ok then return nil, err end
+               fs.remove_dir_if_empty(source)
+            else
+               if fs.exists(target) then
+                  target, err = resolve_conflict(name, version, target)
+                  if err then return nil, err.." Cannot install new version." end
+               end
+               ok, err = move_fn(source, target)
+               if not ok then return nil, err end
+            end
+            
+         end
+      )
+   end
+
    local function deploy_file_tree(file_tree, source_dir, deploy_dir, move_fn)
       assert(type(file_tree) == "table")
       assert(type(source_dir) == "string")
@@ -275,23 +283,20 @@ function delete_version(name, version)
    assert(type(name) == "string")
    assert(type(version) == "string")
 
-   local function delete_deployed_file_tree(file_tree, deploy_dir)
-      for file, sub in pairs(file_tree) do
-         local target = dir.path(deploy_dir, file)
-         if type(sub) == "table" then
-            local ok, err = delete_deployed_file_tree(sub, target)
-            if not ok then return nil, err end
-            fs.remove_dir_if_empty(target)
-         else
-            local versioned = path.versioned_name(target, name, version)
+   local function delete_deployed_file_tree(name, version, file_tree, deploy_dir)
+      return recurse_rock_manifest_tree(name, version, file_tree, deploy_dir, "", "", 
+         function(name, version, deploy_dir, parent_path, parent_module, file)
+         
+            local versioned = path.versioned_name(dir.path(deploy_dir, file), name, version)
             if fs.exists(versioned) then
                fs.delete(versioned)
             else
                fs.delete(target)
             end
+            return true
+            
          end
-      end
-      return true
+      )
    end
 
    local rock_manifest = manif.load_rock_manifest(name, version)
@@ -301,13 +306,13 @@ function delete_version(name, version)
    
    local ok, err = true
    if rock_manifest.bin then
-      ok, err = delete_deployed_file_tree(rock_manifest.bin, cfg.deploy_bin_dir)
+      ok, err = delete_deployed_file_tree(name, version, rock_manifest.bin, cfg.deploy_bin_dir)
    end
    if ok and rock_manifest.lua then
-      ok, err = delete_deployed_file_tree(rock_manifest.lua, cfg.deploy_lua_dir)
+      ok, err = delete_deployed_file_tree(name, version, rock_manifest.lua, cfg.deploy_lua_dir)
    end
    if ok and rock_manifest.lib then
-      ok, err = delete_deployed_file_tree(rock_manifest.lib, cfg.deploy_lib_dir)
+      ok, err = delete_deployed_file_tree(name, version, rock_manifest.lib, cfg.deploy_lib_dir)
    end
    if err then return nil, err end
 
