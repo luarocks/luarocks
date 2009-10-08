@@ -58,6 +58,12 @@ function install_binary_rock(rock_file)
    ok, err, errcode = deps.fulfill_dependencies(rockspec)
    if err then return nil, err, errcode end
 
+   -- For compatibility with .rock files built with LuaRocks 1
+   if not fs.exists(path.rock_manifest_file(name, version)) then
+      ok, err = manif.make_rock_manifest(name, version)
+      if err then return nil, err end
+   end
+
    ok, err = rep.run_hook(rockspec, "post_install")
    if err then return nil, err end
 

@@ -38,8 +38,7 @@ function load_rock_manifest(name, version)
    if rock_manifest_cache[name_version] then
       return rock_manifest_cache[name_version].rock_manifest
    end
-   local install_dir = path.install_dir(name, version)
-   local pathname = dir.path(install_dir, "rock_manifest")
+   local pathname = dir.rock_manifest_file(name, version)
    local rock_manifest = persist.load_into_table(pathname)
    if not rock_manifest then return nil end
    rock_manifest_cache[name_version] = rock_manifest
@@ -48,7 +47,7 @@ end
 
 function make_rock_manifest(name, version)
    local install_dir = path.install_dir(name, version)
-   local rock_manifest = dir.path(install_dir, "rock_manifest")
+   local rock_manifest = path.rock_manifest_file(name, version)
    local tree = {}
    for _, file in ipairs(fs.find(install_dir)) do
       local full_path = dir.path(install_dir, file)
