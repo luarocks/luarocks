@@ -81,6 +81,20 @@ function rockspec_file(name, version, rocks_dir)
    return dir.path(rocks_dir or cfg.rocks_dir, name, version, name.."-"..version..".rockspec")
 end
 
+--- Get the local filename of the rock_manifest file of an installed rock.
+-- @param name string: The package name. 
+-- @param version string: The package version.
+-- @param rocks_dir string or nil: If given, specifies the local repository to use.
+-- @return string: The resulting path -- does not guarantee that
+-- the package (and by extension, the file) exists.
+function rock_manifest_file(name, version, rocks_dir)
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+   assert(not rocks_dir or type(rocks_dir) == "string")
+   
+   return dir.path(rocks_dir or cfg.rocks_dir, name, version, "rock_manifest")
+end
+
 --- Get the local installation directory for C libraries of a package.
 -- @param name string: The package name. 
 -- @param version string: The package version.
