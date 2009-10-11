@@ -61,7 +61,8 @@ function wrap_script(file, dest)
    assert(type(dest) == "string")
 
    local base = dir.base_name(file)
-   local wrapname = dest.."/"..base..".bat"
+   local wrapname = fs.is_dir(dest) and dest.."/"..base or dest
+   wrapname = wrapname..".bat"
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
       return nil, "Could not open "..wrapname.." for writing."
