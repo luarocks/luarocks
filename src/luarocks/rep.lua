@@ -213,6 +213,7 @@ function deploy_files(name, version)
             end
             fs.make_dir(dir.dir_name(target))
             ok, err = move_fn(source, target)
+            fs.remove_dir_tree_if_empty(dir.dir_name(source))
             if not ok then return nil, err end
             return true
          end
