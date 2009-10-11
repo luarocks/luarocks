@@ -31,6 +31,8 @@ all:
 	   cat src/bin/$$f.bak >> src/bin/$$f ;\
 	   rm src/bin/$$f.bak ;\
 	done
+	sed -i.bak "/^local LUA/d" src/luarocks/cfg.lua
+	rm src/luarocks/cfg.lua.bak
 	cp src/luarocks/cfg.lua src/luarocks/cfg.lua.bak
 	rm src/luarocks/cfg.lua
 	if [ -n "$(PREFIX)" ] ;\

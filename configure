@@ -7,7 +7,7 @@
 
 PREFIX="/usr/local"
 SYSCONFDIR="$PREFIX/etc/luarocks"
-ROCKS_TREE="$PREFIX/lib/luarocks"
+ROCKS_TREE="$PREFIX"
 SCRIPTS_DIR=""
 LUA_MODULES_DIR=""
 BIN_MODULES_DIR=""
@@ -33,7 +33,7 @@ Configure LuaRocks.
 --sysconfdir=DIR            Location where the config file should be installed.
                             Default is \$PREFIX/etc/luarocks
 --rocks-tree=FILE           Root of the local tree of installed rocks.
-                            Default is \$PREFIX/lib/luarocks
+                            Default is \$PREFIX
 
 Where to install files installed by rocks, to make the accessible to Lua and
 your \$PATH. Beware of clashes between files installed by LuaRocks and by your

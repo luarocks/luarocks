@@ -4,7 +4,7 @@ cvslist() {
    if [ "$1" ]
    then local prefix="$1/"
    fi   
-   cvs list $1 | grep -v "^?" | while read line
+   svn list $1 | grep -v "^?" | while read line
    do
       local path="$prefix$line"
       echo "$path"
@@ -21,10 +21,10 @@ then
    exit 1
 fi
 
-cvs list > /dev/null 2> /dev/null
+svn list > /dev/null 2> /dev/null
 if [ $? != 0 ]
 then
-   echo "Your version of CVS may be too old. At least 1.12 is needed."
+   echo "Your version of svn may be too old."
    exit 1
 fi
 
