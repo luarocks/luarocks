@@ -119,7 +119,7 @@ local defaults = {
    obj_extension = "unknown",
 
    rocks_servers = {
-      "http://luarocks.luaforge.net/rocks"
+      "http://www.luarocks.org/repositories/rocks"
    },
 
    lua_extension = "lua",
