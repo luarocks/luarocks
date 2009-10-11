@@ -273,15 +273,15 @@ function show_table(t, name, indent)
          local info = debug.getinfo(o, "S")
          -- info.name is nil because o is not a calling level
          if info.what == "C" then
-            return string.format("%q", so .. ", C function")
+            return ("%q"):format(so .. ", C function")
          else 
             -- the information is defined through lines
-            return string.format("%q", so .. ", defined in (" .. info.linedefined .. "-" .. info.lastlinedefined .. ")" .. info.source)
+            return ("%q"):format(so .. ", defined in (" .. info.linedefined .. "-" .. info.lastlinedefined .. ")" .. info.source)
          end
       elseif type(o) == "number" then
          return so
       else
-         return string.format("%q", so)
+         return ("%q"):format(so)
       end
    end
    
@@ -307,8 +307,8 @@ function show_table(t, name, indent)
                cart = cart .. " = {\n"
                for k, v in pairs(value) do
                   k = basicSerialize(k)
-                  local fname = string.format("%s[%s]", name, k)
-                  field = string.format("[%s]", k)
+                  local fname = ("%s[%s]"):format(name, k)
+                  field = ("[%s]"):format(k)
                   -- three spaces between levels
                   addtocart(v, fname, indent .. "   ", saved, field)
                end

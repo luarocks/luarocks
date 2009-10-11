@@ -113,6 +113,7 @@ local function pack_binary_rock(name, version)
    local temp_dir = fs.make_temp_dir("pack")
    fs.copy_contents(prefix, temp_dir)
 
+   local is_binary = false
    if rock_manifest.lib then
       copy_back_files(name, version, rock_manifest.lib, cfg.deploy_lib_dir, dir.path(temp_dir, "lib"))
       is_binary = true

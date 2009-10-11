@@ -37,7 +37,7 @@ local function query_arch_as_table(query)
       query.arch = accept
    elseif format == "string" then
       local accept = {}
-      for a in string.gmatch(query.arch, "[%w_-]+") do
+      for a in query.arch:gmatch("[%w_-]+") do
          accept[a] = true
       end
       query.arch = accept

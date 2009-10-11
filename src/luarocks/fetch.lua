@@ -285,7 +285,7 @@ function fetch_sources(rockspec, extract, dest_dir)
    assert(type(dest_dir) == "string" or not dest_dir)
 
    local protocol = rockspec.source.protocol
-   local proto
+   local ok, proto
    if protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file" then
       proto = require("luarocks.fetch")
    else
