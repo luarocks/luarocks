@@ -95,8 +95,8 @@ function package_modules(package, version)
    local result = {}
    local rock_manifest = manif.load_rock_manifest(package, version)
 
-   store_package_data(result, name, rock_manifest.lib)
-   store_package_data(result, name, rock_manifest.lua)
+   store_package_data(result, package, rock_manifest.lib)
+   store_package_data(result, package, rock_manifest.lua)
    return result
 end
 
@@ -211,6 +211,7 @@ function deploy_files(name, version)
          function(parent_path, parent_module, file)
             local source = dir.path(source_dir, parent_path, file)
             local target = dir.path(deploy_dir, parent_path, file)
+            local ok, err
             if fs.exists(target) then
                target, err = resolve_conflict(target, deploy_dir, name, version)
                if err then return nil, err.." Cannot install new version." end
