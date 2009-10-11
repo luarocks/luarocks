@@ -230,6 +230,7 @@ function path_to_module(file)
          name = name:gsub(dir.separator, ".")
       end
    end
+   if not name then name = file end
    name = name:gsub("^%.+", ""):gsub("%.+$", "")
    return name
 end

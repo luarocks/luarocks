@@ -94,7 +94,6 @@ function package_modules(package, version)
 
    local result = {}
    local rock_manifest = manif.load_rock_manifest(package, version)
-
    store_package_data(result, package, rock_manifest.lib)
    store_package_data(result, package, rock_manifest.lua)
    return result
@@ -114,11 +113,7 @@ function package_commands(package, version)
 
    local result = {}
    local rock_manifest = manif.load_rock_manifest(package, version)
-   if rock_manifest.bin then
-      for name,sub in pairs(rock_manifest.bin) do
-         store_package_data(result, name, sub, "", "")
-      end
-   end
+   store_package_data(result, package, rock_manifest.bin)
    return result
 end
 
