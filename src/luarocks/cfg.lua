@@ -9,7 +9,7 @@ local rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, i
 -- file format documentation</a> for details.
 module("luarocks.cfg")
 
-program_version = "1.1"
+program_version = "2.0"
 user_agent = "LuaRocks/"..program_version
 
 local persist = require("luarocks.persist")
