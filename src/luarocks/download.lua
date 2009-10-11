@@ -76,7 +76,7 @@ function run(...)
          print()
          print("Search results:")
          print("---------------")
-         print_results(results)
+         search.print_results(results)
          return nil, "Please narrow your query or use --all."
       end
    else
