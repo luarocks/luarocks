@@ -12,7 +12,7 @@ local index = require("luarocks.index")
 local fs = require("luarocks.fs")
 local cache = require("luarocks.cache")
 
-help_summary = "Add a rock or rockpec to a rocks server."
+help_summary = "Add a rock or rockspec to a rocks server."
 help_arguments = "[--to=<server>] {<rockspec>|<rock>]}"
 help = [[
 Argument may be a local rockspec or rock file.
