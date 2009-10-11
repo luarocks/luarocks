@@ -38,7 +38,7 @@ function load_rock_manifest(name, version)
    if rock_manifest_cache[name_version] then
       return rock_manifest_cache[name_version].rock_manifest
    end
-   local pathname = dir.rock_manifest_file(name, version)
+   local pathname = path.rock_manifest_file(name, version)
    local rock_manifest = persist.load_into_table(pathname)
    if not rock_manifest then return nil end
    rock_manifest_cache[name_version] = rock_manifest
@@ -301,17 +301,15 @@ function update_manifest(name, version, repo)
    return save_table(repo, "manifest", manifest)
 end
 
---- Given a path of a deployed file, figure out which rock name and version
--- correspond to it in the tree manifest.
--- @param file string: The full path of a deployed file.
--- @param root string or nil: A local root dir for a rocks tree. If not given, the default is used.
--- @return string, string: name and version of the provider rock.
-function find_current_provider(file, root)
+local function find_providers(file, root)
    assert(type(file) == "string")
    assert(type(root) == "string" or not root)
    root = root or cfg.root_dir
 
    local manifest = manif_core.load_local_manifest(path.rocks_dir(root))
+   if not manifest then
+      return nil, "manifest file is missing. Corrupted local rocks tree?"
+   end
    local deploy_bin = path.deploy_bin_dir(root)
    local deploy_lua = path.deploy_lua_dir(root)
    local deploy_lib = path.deploy_lib_dir(root)
@@ -326,11 +324,34 @@ function find_current_provider(file, root)
    elseif file:match("^"..deploy_lib) then
       manifest_tbl = manifest.modules
       key = path.path_to_module(file:sub(#deploy_lib+1))
+   else
+      assert(false, "Assertion failed: find_current_provider must operate on a deployed file.")
    end
 
    local providers = manifest_tbl[key]
    if not providers then
       return nil, "File "..file.." is not tracked by LuaRocks."
    end
+   return providers
+end
+
+--- Given a path of a deployed file, figure out which rock name and version
+-- correspond to it in the tree manifest.
+-- @param file string: The full path of a deployed file.
+-- @param root string or nil: A local root dir for a rocks tree. If not given, the default is used.
+-- @return string, string: name and version of the provider rock.
+function find_current_provider(file, root)
+   local providers, err = find_providers(file, root)
+   if not providers then return nil, err end
    return providers[1]:match("([^/]*)/([^/]*)")
+end
+
+function find_next_provider(file, root)
+   local providers, err = find_providers(file, root)
+   if not providers then return nil, err end
+   if providers[2] then
+      return providers[2]:match("([^/]*)/([^/]*)")
+   else
+      return nil
+   end
 end

@@ -89,12 +89,11 @@ local function sort_versions(a,b)
    return a.version > b.version
 end
 
-local function call_other_loaders(module, name, version, file)
+local function call_other_loaders(module, name, version, module_name)
    
-   local actual_module = file:match(".*/(.*)%.[^.]+$")
    for i, loader in pairs(package.loaders) do
       if loader ~= luarocks_loader then
-         local results = { loader(actual_module) }
+         local results = { loader(module_name) }
          if type(results[1]) == "function" then
             return unpack(results)
          end
@@ -116,23 +115,16 @@ local function pick_module(module)
       if entries then
          for i, entry in ipairs(entries) do
             local name, version = entry:match("^([^/]*)/(.*)$")
-            local file = tree.manifest.repository[name][version][1].modules[module]
-            local deploy_dir
-            if file:match(cfg.lua_extension.."$") then
-               deploy_dir = cfg.deploy_lua_dir
-            else
-               deploy_dir = cfg.deploy_bin_dir
+            local module_name = tree.manifest.repository[name][version][1].modules[module]
+            if i > 1 then
+               module_name = path.versioned_name(module_name, "", name, version)
             end
-            if i == 1 then
-               file = deploy_dir.."/"..file
-            else
-               file = path.versioned_name(deploy_dir.."/"..file, name, version)
-            end
+            module_name = path.path_to_module(module_name)
             if context[name] == version then
-               return name, version, file
+               return name, version, module_name
             end
             version = deps.parse_version(version)
-            table.insert(providers, {name = name, version = version, file = file})
+            table.insert(providers, {name = name, version = version, module_name = module_name})
          end
       end
    end
@@ -140,7 +132,7 @@ local function pick_module(module)
    if next(providers) then
       table.sort(providers, sort_versions)
       local first = providers[1]
-      return first.name, first.version.string, first.file
+      return first.name, first.version.string, first.module_name
    end
 end
 
@@ -155,12 +147,12 @@ end
 -- in the Lua reference manual for details.
 
 function luarocks_loader(module)
-   local name, version, file = pick_module(module)
+   local name, version, module_name = pick_module(module)
    if not name then
       return nil, "No LuaRocks module found for "..module
    else
       add_context(name, version)
-      return call_other_loaders(module, name, version, file)
+      return call_other_loaders(module, name, version, module_name)
    end
 end
 
