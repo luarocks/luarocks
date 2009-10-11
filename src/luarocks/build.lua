@@ -217,6 +217,11 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
 
    ok, err = rep.deploy_files(name, version)
    if err then return nil, err end
+   
+   util.remove_scheduled_function(rollback)
+   rollback = util.schedule_function(function()
+      rep.delete_version(name, version)
+   end)
 
    ok, err = rep.run_hook(rockspec, "post_install")
    if err then return nil, err end

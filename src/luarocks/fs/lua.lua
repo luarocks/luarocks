@@ -201,7 +201,6 @@ end
 function remove_dir_tree_if_empty(d)
    assert(d)
    for i=1,10 do
-      print(d)
       lfs.rmdir(d)
       d = dir.dir_name(d)
    end
