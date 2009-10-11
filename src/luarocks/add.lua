@@ -10,6 +10,7 @@ local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local index = require("luarocks.index")
 local fs = require("luarocks.fs")
+local cache = require("luarocks.cache")
 
 help_summary = "Add a rock or rockpec to a rocks server."
 help_arguments = "[--to=<server>] {<rockspec>|<rock>]}"
@@ -20,50 +21,6 @@ If not given, the default server set in the upload_server variable
 from the configuration file is used instead.
 ]]
 
-local function split_server_url(server, user, password)
-   local protocol, server_path = dir.split_url(server)
-   if server_path:match("@") then
-      local credentials
-      credentials, server_path = server_path:match("([^@]*)@(.*)")
-      if credentials:match(":") then
-         user, password = credentials:match("([^:]*):(.*)")
-      else
-         user = credentials
-      end
-   end
-   local local_cache
-   if cfg.local_cache then
-      local_cache = cfg.local_cache .. "/" .. server_path
-   end
-   return local_cache, protocol, server_path, user, password
-end
-
-local function refresh_local_cache(server, user, password)
-   local local_cache, protocol, server_path, user, password = split_server_url(server, user, password)
-
-   fs.make_dir(cfg.local_cache)
-
-   local tmp_cache = false
-   if not local_cache then
-      local_cache = fs.make_temp_dir("local_cache")
-      tmp_cache = true
-   end
-   local ok = fs.make_dir(local_cache)
-   if not ok then
-      return nil, "Failed creating local cache dir."
-   end
-   fs.change_dir(local_cache)
-   print("Refreshing cache "..local_cache.."...")
-
-   local login_info = ""
-   if user then login_info = " --user="..user end
-   if password then login_info = login_info .. " --password="..password end
-
-   -- TODO abstract away explicit 'wget' call
-   fs.execute("wget -q -m -nd "..protocol.."://"..server_path..login_info)
-   return local_cache, protocol, server_path, user, password
-end
-
 local function add_file_to_server(refresh, rockfile, server)
    if not fs.exists(rockfile) then
       return nil, "Could not find "..rockfile
@@ -73,9 +30,9 @@ local function add_file_to_server(refresh, rockfile, server)
 
    local local_cache, protocol, server_path, user, password
    if refresh then
-      local_cache, protocol, server_path, user, password = refresh_local_cache(server, cfg.upload_user, cfg.upload_password)
+      local_cache, protocol, server_path, user, password = cache.refresh_local_cache(server, cfg.upload_user, cfg.upload_password)
    else
-      local_cache, protocol, server_path, user, password = split_server_url(server, cfg.upload_user, cfg.upload_password)
+      local_cache, protocol, server_path, user, password = cache.split_server_url(server, cfg.upload_user, cfg.upload_password)
    end
    fs.change_dir(local_cache)
    print("Copying file "..rockfile.." to "..local_cache.."...")
