@@ -227,7 +227,7 @@ function deploy_files(name, version)
    
    local ok, err = true
    if rock_manifest.bin then
-      ok, err = deploy_file_tree(rock_manifest.bin, path_bin_dir(name, version), cfg.deploy_bin_dir, install_binary)
+      ok, err = deploy_file_tree(rock_manifest.bin, path.bin_dir(name, version), cfg.deploy_bin_dir, install_binary)
    end
    if ok and rock_manifest.lua then
       ok, err = deploy_file_tree(rock_manifest.lua, path.lua_dir(name, version), cfg.deploy_lua_dir)
