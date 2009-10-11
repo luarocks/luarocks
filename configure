@@ -237,7 +237,7 @@ fi
 
 if [ "$PREFIX_SET" = "yes" -a ! "$ROCKS_TREE_SET" = "yes" ]
 then
-   ROCKS_TREE=$PREFIX/lib/luarocks
+   ROCKS_TREE=$PREFIX
 fi
 
 if [ "$LUA_SUFFIX_SET" != "yes" ]
