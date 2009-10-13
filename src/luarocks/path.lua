@@ -269,7 +269,7 @@ function versioned_name(file, prefix, name, version)
    assert(type(name) == "string")
    assert(type(version) == "string")
 
-   local rest = file:gsub("^"..prefix.."/*", "")
+   local rest = file:sub(#prefix+1):gsub("^/*", "")
    local name_version = (name.."_"..version):gsub("%-", "_"):gsub("%.", "_")
    return dir.path(prefix, name_version.."-"..rest)
 end
