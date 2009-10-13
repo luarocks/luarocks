@@ -22,7 +22,9 @@ help.lua util.lua index.lua cache.lua add.lua refresh_cache.lua loader.lua
 
 CONFIG_FILE = $(SYSCONFDIR)/config.lua
 
-all:
+all: built
+
+built:
 	for f in $(BIN_FILES) ;\
 	do \
 	   sed "1d" src/bin/$$f >> src/bin/$$f.bak ;\
@@ -73,6 +75,7 @@ all:
 	echo "local LUAROCKS_MD5CHECKER=[[$(LUAROCKS_MD5CHECKER)]]" >> src/luarocks/cfg.lua
 	cat src/luarocks/cfg.lua.bak >> src/luarocks/cfg.lua
 	rm src/luarocks/cfg.lua.bak
+	touch built
 	@echo
 	@echo "Done. Type 'make install' to install into $(PREFIX)."
 	@echo
@@ -102,7 +105,7 @@ clean:
 	sed -i.bak "/^local LUA/d" src/luarocks/cfg.lua
 	rm src/luarocks/cfg.lua.bak
 
-install:
+install: built
 	mkdir -p "$(DESTDIR)$(BINDIR)"
 	cd src/bin && cp $(BIN_FILES) "$(DESTDIR)$(BINDIR)"
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
