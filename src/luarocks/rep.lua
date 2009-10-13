@@ -250,6 +250,7 @@ function delete_version(name, version)
             local versioned = path.versioned_name(target, deploy_dir, name, version)
             if fs.exists(versioned) then
                fs.delete(versioned)
+               fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
             else
                fs.delete(target)
                local next_name, next_version = manif.find_next_provider(target)
@@ -258,6 +259,7 @@ function delete_version(name, version)
                   fs.move(versioned, target)
                   fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
                end
+               fs.remove_dir_tree_if_empty(dir.dir_name(target))
             end
             return true
          end
