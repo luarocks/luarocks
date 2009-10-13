@@ -21,11 +21,10 @@ local function load_rocks_trees()
    local any_ok = false
    local trees = {}
    for _, tree in pairs(cfg.rocks_trees) do
-      local rocks_dir = path.rocks_dir(tree)
-      local manifest, err = manif_core.load_local_manifest(rocks_dir)
+      local manifest, err = manif_core.load_local_manifest(path.rocks_dir(tree))
       if manifest then
          any_ok = true
-         table.insert(trees, {rocks_dir=rocks_dir, manifest=manifest})
+         table.insert(trees, {tree=tree, manifest=manifest})
       end
    end
    if not any_ok then
@@ -40,12 +39,9 @@ end
 -- chain for loading modules.
 -- @parse name string: The name of an installed rock.
 -- @parse version string: The version of the rock, in string format
--- @parse manifest table: The local manifest table where this rock
--- is installed.
 function add_context(name, version)
    -- assert(type(name) == "string")
    -- assert(type(version) == "string")
-   -- assert(type(manifest) == "table")
 
    if context[name] then
       return
@@ -72,7 +68,7 @@ function add_context(name, version)
             if entries then
                for version, packages in pairs(entries) do
                   if (not constraints) or deps.match_constraints(deps.parse_version(version), constraints) then
-                     add_context(package, version, tree.manifest)
+                     add_context(package, version)
                   end
                end
             end
@@ -102,8 +98,9 @@ local function call_other_loaders(module, name, version, module_name)
    return nil, "Failed loading module "..module.." in LuaRocks rock "..name.." "..version
 end
 
-local function pick_module(module)
+local function select_module(module, filter_module_name)
    --assert(type(module) == "string")
+   --assert(type(filter_module_name) == "function")
 
    if not rocks_trees and not load_rocks_trees() then
       return nil
@@ -116,10 +113,7 @@ local function pick_module(module)
          for i, entry in ipairs(entries) do
             local name, version = entry:match("^([^/]*)/(.*)$")
             local module_name = tree.manifest.repository[name][version][1].modules[module]
-            if i > 1 then
-               module_name = path.versioned_name(module_name, "", name, version)
-            end
-            module_name = path.path_to_module(module_name)
+            module_name = filter_module_name(module_name, name, version, tree.tree, i)
             if context[name] == version then
                return name, version, module_name
             end
@@ -134,6 +128,33 @@ local function pick_module(module)
       local first = providers[1]
       return first.name, first.version.string, first.module_name
    end
+end
+
+local function pick_module(module)
+   return
+      select_module(module, function(module_name, name, version, tree, i)
+         if i > 1 then
+            module_name = path.versioned_name(module_name, "", name, version)
+         end
+         module_name = path.path_to_module(module_name)
+         return module_name
+      end)
+end
+
+function which(module)
+   local name, version, module_name = 
+      select_module(module, function(module_name, name, version, tree, i)
+         if module_name:match("%.lua$") then
+            module_name = path.deploy_lua_dir(tree).."/"..module_name
+         else
+            module_name = path.deploy_lib_dir(tree).."/"..module_name
+         end
+         if i > 1 then
+            module_name = path.versioned_name(module_name, tree, name, version)
+         end
+         return module_name
+      end)
+   return module_name
 end
 
 --- Package loader for LuaRocks support.
