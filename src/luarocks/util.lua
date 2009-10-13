@@ -169,11 +169,14 @@ end
 -- warning the user that substitutions have failed.
 -- @param line string: the input string
 local function warn_failed_matches(line)
+   local any_failed = false
    if line:match(var_format_pattern) then
       for unmatched in line:gmatch(var_format_pattern) do
          warning("unmatched variable " .. unmatched)
+         any_failed = true
       end
    end
+   return any_failed
 end
 
 --- Perform make-style variable substitutions on string values of a table.
@@ -192,7 +195,9 @@ function variable_substitutions(tbl, vars)
    for k, v in pairs(tbl) do
       if type(v) == "string" then
          updated[k] = v:gsub(var_format_pattern, vars)
-         warn_failed_matches(updated[k])
+         if warn_failed_matches(updated[k]) then
+            updated[k] = updated[k]:gsub(var_format_pattern, "")
+         end
       end
    end
    for k, v in pairs(updated) do
