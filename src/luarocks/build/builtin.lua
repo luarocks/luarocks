@@ -90,7 +90,7 @@ function run(rockspec)
          if is_platform("cygwin") then
             add_flags(extras, "-l%s", {"lua"})
          end
-         return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, "-L", variables.LUA_LIBDIR, unpack(extras))
+         return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, "-L"..variables.LUA_LIBDIR, unpack(extras))
       end
    end
 
