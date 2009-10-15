@@ -144,13 +144,16 @@ end
 function which(module)
    local name, version, module_name = 
       select_module(module, function(module_name, name, version, tree, i)
+         local deploy_dir
          if module_name:match("%.lua$") then
-            module_name = path.deploy_lua_dir(tree).."/"..module_name
+            deploy_dir = path.deploy_lua_dir(tree)
+            module_name = deploy_dir.."/"..module_name
          else
-            module_name = path.deploy_lib_dir(tree).."/"..module_name
+            deploy_dir = path.deploy_lib_dir(tree)
+            module_name = deploy_dir.."/"..module_name
          end
          if i > 1 then
-            module_name = path.versioned_name(module_name, tree, name, version)
+            module_name = path.versioned_name(module_name, deploy_dir, name, version)
          end
          return module_name
       end)
