@@ -3,7 +3,7 @@
 module("luarocks.fs.unix.tools", package.seeall)
 
 local fs = require("luarocks.fs")
-
+local dir = require("luarocks.dir")
 local cfg = require("luarocks.cfg")
 
 local dir_stack = {}
