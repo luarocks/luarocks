@@ -16,7 +16,7 @@ if [ ! -d ../rocks ]
 then
    echo "Downloading entire rocks repository for tests"
    cd ..
-   wget -r -nH -np -R"index.*" http://luarocks.luaforge.net/rocks/
+   wget -r -nH -np -R"index.*" http://luarocks.org/repositories/rocks/
    cd src
 fi
 

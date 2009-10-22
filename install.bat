@@ -276,7 +276,7 @@ SET CONFIG_FILE=%SYSCONFDIR%\config.lua
 IF NOT EXIST "%SYSCONFDIR%" %MKDIR% "%SYSCONFDIR%"
 IF NOT EXIST "%CONFIG_FILE%" (
    ECHO rocks_servers = {>> "%CONFIG_FILE%"
-   ECHO    [[http://luarocks.luaforge.net/rocks]]>> "%CONFIG_FILE%"
+   ECHO    [[http://luarocks.org/repositories/rocks]]>> "%CONFIG_FILE%"
    ECHO }>> "%CONFIG_FILE%"
    ECHO rocks_trees = {>> "%CONFIG_FILE%"
    IF [%FORCE_CONFIG%]==[] ECHO    home..[[/luarocks]],>> "%CONFIG_FILE%"
