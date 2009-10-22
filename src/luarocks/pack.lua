@@ -64,7 +64,7 @@ local function copy_back_files(name, version, file_tree, deploy_dir, pack_dir)
       if type(sub) == "table" then
          local ok, err = copy_back_files(name, version, sub, source, target)
       else
-         local versioned = path.versioned_name(source, name, version)
+         local versioned = path.versioned_name(source, deploy_dir, name, version)
          if fs.exists(versioned) then
             fs.copy(versioned, target)
          else
