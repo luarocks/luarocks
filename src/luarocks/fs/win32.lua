@@ -71,7 +71,7 @@ function wrap_script(file, dest)
    wrapper:write("setlocal\n")
    wrapper:write('set LUA_PATH='..package.path..";%LUA_PATH%\n")
    wrapper:write('set LUA_CPATH='..package.cpath..";%LUA_CPATH%\n")
-   wrapper:write('"'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.require "'..file..'" %*\n')
+   wrapper:write('"'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.loader "'..file..'" %*\n')
    wrapper:write("endlocal\n")
    wrapper:close()
    return true

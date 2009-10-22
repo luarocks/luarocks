@@ -50,7 +50,7 @@ function wrap_script(file, dest)
    wrapper:write('LUA_PATH="'..package.path..';$LUA_PATH"\n')
    wrapper:write('LUA_CPATH="'..package.cpath..';$LUA_CPATH"\n')
    wrapper:write('export LUA_PATH LUA_CPATH\n')
-   wrapper:write('exec "'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.require "'..file..'" "$@"\n')
+   wrapper:write('exec "'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.loader "'..file..'" "$@"\n')
    wrapper:close()
    if fs.execute("chmod +x",wrapname) then
       return true
