@@ -256,20 +256,20 @@ IF ERRORLEVEL 1 GOTO ERROR
 XCOPY /S src\luarocks\*.* "%LUADIR%\luarocks" >NUL
 IF ERRORLEVEL 1 GOTO ERROR
 
-RENAME "%LUADIR%\luarocks\cfg.lua" "cfg.lua.bak"
-ECHO local LUA_INCDIR=[[%LUA_INCDIR%]]>> "%LUADIR%\luarocks\cfg.lua" 
-ECHO local LUA_LIBDIR=[[%LUA_LIBDIR%]]>> "%LUADIR%\luarocks\cfg.lua" 
-ECHO local LUA_BINDIR=[[%LUA_BINDIR%]]>> "%LUADIR%\luarocks\cfg.lua" 
-ECHO local LUA_INTERPRETER=[[%LUA_INTERPRETER%]]>> "%LUADIR%\luarocks\cfg.lua" 
-ECHO local LUAROCKS_UNAME_S=[[WindowsNT]]>> "%LUADIR%\luarocks\cfg.lua" 
-ECHO local LUAROCKS_UNAME_M=[[x86]]>> "%LUADIR%\luarocks\cfg.lua" 
-ECHO local LUAROCKS_SYSCONFIG=[[%SYSCONFDIR%/config.lua]]>> "%LUADIR%\luarocks\cfg.lua" 
-ECHO local LUAROCKS_ROCKS_TREE=[[%ROCKS_TREE%]]>> "%LUADIR%\luarocks\cfg.lua" 
-ECHO local LUAROCKS_PREFIX=[[%PREFIX%]]>> "%LUADIR%\luarocks\cfg.lua" 
-IF NOT [%FORCE_CONFIG%]==[] ECHO local LUAROCKS_FORCE_CONFIG=true>> "%LUADIR%\luarocks\cfg.lua"
-TYPE "%LUADIR%\luarocks\cfg.lua.bak">> "%LUADIR%\luarocks\cfg.lua" 
+RENAME "%LUADIR%\luarocks\config.lua" "config.lua.bak"
+ECHO local LUA_INCDIR=[[%LUA_INCDIR%]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO local LUA_LIBDIR=[[%LUA_LIBDIR%]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO local LUA_BINDIR=[[%LUA_BINDIR%]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO local LUA_INTERPRETER=[[%LUA_INTERPRETER%]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO local LUAROCKS_UNAME_S=[[WindowsNT]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO local LUAROCKS_UNAME_M=[[x86]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO local LUAROCKS_SYSCONFIG=[[%SYSCONFDIR%/config.lua]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO local LUAROCKS_ROCKS_TREE=[[%ROCKS_TREE%]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO local LUAROCKS_PREFIX=[[%PREFIX%]]>> "%LUADIR%\luarocks\config.lua" 
+IF NOT [%FORCE_CONFIG%]==[] ECHO local LUAROCKS_FORCE_CONFIG=true>> "%LUADIR%\luarocks\config.lua"
+TYPE "%LUADIR%\luarocks\config.lua.bak">> "%LUADIR%\luarocks\config.lua" 
 
-DEL /F /Q "%LUADIR%\luarocks\cfg.lua.bak" 
+DEL /F /Q "%LUADIR%\luarocks\config.lua.bak" 
 
 SET CONFIG_FILE=%SYSCONFDIR%\config.lua
 

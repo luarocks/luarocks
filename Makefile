@@ -4,6 +4,7 @@ include config.unix
 
 DESTDIR =
 PREFIX ?= /usr/local
+SYSCONFDIR ?= $(PREFIX)/etc/luarocks
 BINDIR ?= $(PREFIX)/bin
 LUADIR ?= $(PREFIX)/share/lua/5.1/
 LUA_DIR ?= /usr/local
@@ -19,12 +20,51 @@ remove.lua fs.lua manif.lua add.lua deps.lua build.lua search.lua \
 manif_core.lua fetch.lua unpack.lua validate.lua cfg.lua download.lua \
 help.lua util.lua index.lua cache.lua add.lua refresh_cache.lua loader.lua
 
-
 CONFIG_FILE = $(SYSCONFDIR)/config.lua
 
 all: built
 
-built:
+src/luarocks/config.lua: config.unix
+	rm -f src/luarocks/config.lua
+	echo 'module("luarocks.config")' >> src/luarocks/config.lua
+	if [ -n "$(PREFIX)" ] ;\
+	then \
+	   echo "LUAROCKS_PREFIX=[[$(PREFIX)]]" >> src/luarocks/config.lua ;\
+	fi
+	if [ -n "$(LUA_INCDIR)" ] ;\
+	then \
+	   echo "LUA_INCDIR=[[$(LUA_INCDIR)]]" >> src/luarocks/config.lua ;\
+	fi
+	if [ -n "$(LUA_LIBDIR)" ] ;\
+	then \
+	   echo "LUA_LIBDIR=[[$(LUA_LIBDIR)]]" >> src/luarocks/config.lua ;\
+	fi
+	if [ -n "$(LUA_BINDIR)" ] ;\
+	then \
+	   echo "LUA_BINDIR=[[$(LUA_BINDIR)]]" >> src/luarocks/config.lua ;\
+	fi
+	if [ -n "$(LUA_SUFFIX)" ] ;\
+	then \
+	   echo "LUA_INTERPRETER=[[lua$(LUA_SUFFIX)]]" >> src/luarocks/config.lua ;\
+	fi
+	if [ -n "$(SYSCONFDIR)" ] ;\
+	then \
+	   echo "LUAROCKS_SYSCONFIG=[[$(SYSCONFDIR)/config.lua]]" >> src/luarocks/config.lua ;\
+	fi
+	if [ -n "$(ROCKS_TREE)" ] ;\
+	then \
+	   echo "LUAROCKS_ROCKS_TREE=[[$(ROCKS_TREE)]]" >> src/luarocks/config.lua ;\
+	fi
+	if [ -n "$(FORCE_CONFIG)" ] ;\
+	then \
+	   echo "LUAROCKS_FORCE_CONFIG=true" >> src/luarocks/config.lua ;\
+	fi
+	echo "LUAROCKS_UNAME_S=[[$(LUAROCKS_UNAME_S)]]" >> src/luarocks/config.lua
+	echo "LUAROCKS_UNAME_M=[[$(LUAROCKS_UNAME_M)]]" >> src/luarocks/config.lua
+	echo "LUAROCKS_DOWNLOADER=[[$(LUAROCKS_DOWNLOADER)]]" >> src/luarocks/config.lua
+	echo "LUAROCKS_MD5CHECKER=[[$(LUAROCKS_MD5CHECKER)]]" >> src/luarocks/config.lua
+
+build_bins:
 	for f in $(BIN_FILES) ;\
 	do \
 	   sed "1d" src/bin/$$f >> src/bin/$$f.bak ;\
@@ -33,48 +73,8 @@ built:
 	   cat src/bin/$$f.bak >> src/bin/$$f ;\
 	   rm src/bin/$$f.bak ;\
 	done
-	sed -i.bak "/^local LUA/d" src/luarocks/cfg.lua
-	rm src/luarocks/cfg.lua.bak
-	cp src/luarocks/cfg.lua src/luarocks/cfg.lua.bak
-	rm src/luarocks/cfg.lua
-	if [ -n "$(PREFIX)" ] ;\
-	then \
-	   echo "local LUAROCKS_PREFIX=[[$(PREFIX)]]" >> src/luarocks/cfg.lua ;\
-	fi
-	if [ -n "$(LUA_INCDIR)" ] ;\
-	then \
-	   echo "local LUA_INCDIR=[[$(LUA_INCDIR)]]" >> src/luarocks/cfg.lua ;\
-	fi
-	if [ -n "$(LUA_LIBDIR)" ] ;\
-	then \
-	   echo "local LUA_LIBDIR=[[$(LUA_LIBDIR)]]" >> src/luarocks/cfg.lua ;\
-	fi
-	if [ -n "$(LUA_BINDIR)" ] ;\
-	then \
-	   echo "local LUA_BINDIR=[[$(LUA_BINDIR)]]" >> src/luarocks/cfg.lua ;\
-	fi
-	if [ -n "$(LUA_SUFFIX)" ] ;\
-	then \
-	   echo "local LUA_INTERPRETER=[[lua$(LUA_SUFFIX)]]" >> src/luarocks/cfg.lua ;\
-	fi
-	if [ -n "$(SYSCONFDIR)" ] ;\
-	then \
-	   echo "local LUAROCKS_SYSCONFIG=[[$(SYSCONFDIR)/config.lua]]" >> src/luarocks/cfg.lua ;\
-	fi
-	if [ -n "$(ROCKS_TREE)" ] ;\
-	then \
-	   echo "local LUAROCKS_ROCKS_TREE=[[$(ROCKS_TREE)]]" >> src/luarocks/cfg.lua ;\
-	fi
-	if [ -n "$(FORCE_CONFIG)" ] ;\
-	then \
-	   echo "local LUAROCKS_FORCE_CONFIG=true" >> src/luarocks/cfg.lua ;\
-	fi
-	echo "local LUAROCKS_UNAME_S=[[$(LUAROCKS_UNAME_S)]]" >> src/luarocks/cfg.lua
-	echo "local LUAROCKS_UNAME_M=[[$(LUAROCKS_UNAME_M)]]" >> src/luarocks/cfg.lua
-	echo "local LUAROCKS_DOWNLOADER=[[$(LUAROCKS_DOWNLOADER)]]" >> src/luarocks/cfg.lua
-	echo "local LUAROCKS_MD5CHECKER=[[$(LUAROCKS_MD5CHECKER)]]" >> src/luarocks/cfg.lua
-	cat src/luarocks/cfg.lua.bak >> src/luarocks/cfg.lua
-	rm src/luarocks/cfg.lua.bak
+
+built: src/luarocks/config.lua build_bins
 	touch built
 	@echo
 	@echo "Done. Type 'make install' to install into $(PREFIX)."
@@ -102,14 +102,22 @@ clean:
 	   sed -i.bak "s,^#!.*lua.*,#!/usr/bin/env lua,;/^package.path/d" src/bin/$$f ;\
 	   rm src/bin/$$f.bak ;\
 	done
-	sed -i.bak "/^local LUA/d" src/luarocks/cfg.lua
-	rm src/luarocks/cfg.lua.bak
+	rm -f src/luarocks/config.lua
+	rm -f built
 
-install: built
+install_bins:
 	mkdir -p "$(DESTDIR)$(BINDIR)"
 	cd src/bin && cp $(BIN_FILES) "$(DESTDIR)$(BINDIR)"
+
+install_luas:
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
 	cd src/luarocks && for f in $(LUAROCKS_FILES); do d="$(DESTDIR)$(LUADIR)/luarocks"/`dirname "$$f"`; mkdir -p "$$d"; cp "$$f" "$$d"; done
+
+install_config:
+	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
+	cd src/luarocks && cp config.lua "$(DESTDIR)$(LUADIR)/luarocks"
+
+write_sysconfig:
 	mkdir -p "$(DESTDIR)$(ROCKS_TREE)"
 	if [ ! -f "$(DESTDIR)$(CONFIG_FILE)" ] ;\
 	then \
@@ -124,17 +132,13 @@ install: built
 	   fi ;\
 	   echo '   [[$(ROCKS_TREE)]]' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	   echo '}' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
-	   if [ -n "$(SCRIPTS_DIR)" ] ;\
-	   then \
-	      echo "scripts_dir = [[$(SCRIPTS_DIR)]]" >> "$(DESTDIR)$(CONFIG_FILE)" ;\
-	   fi ;\
-	   if [ -n "$(LUA_MODULES_DIR)" ] ;\
-	   then \
-	      echo "lua_modules_dir = [[$(LUA_MODULES_DIR)]]" >> "$(DESTDIR)$(CONFIG_FILE)" ;\
-	   fi ;\
-	   if [ -n "$(BIN_MODULES_DIR)" ] ;\
-	   then \
-	      echo "bin_modules_dir = [[$(BIN_MODULES_DIR)]]" >> "$(DESTDIR)$(CONFIG_FILE)" ;\
-	   fi ;\
 	fi
 
+install: built install_bins install_luas install_config write_sysconfig
+
+bootstrap: src/luarocks/config.lua install_config write_sysconfig
+	LUA_PATH="$$PWD/src/?.lua;$$LUA_PATH" src/bin/luarocks make rockspec
+
+#build_rock: build_bins
+
+install_rock: install_bins install_luas

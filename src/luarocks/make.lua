@@ -34,7 +34,7 @@ function run(...)
    if not rockspec then
       local files = fs.list_dir(fs.current_dir())
       for _, file in pairs(files) do
-         if file:match(".rockspec$") then
+         if file:match("rockspec$") then
             if rockspec then
                return nil, "Please specify which rockspec file to use."
             else
@@ -46,7 +46,7 @@ function run(...)
          return nil, "Argument missing: please specify a rockspec to use on current directory."
       end
    end
-   if not rockspec:match("%.rockspec$") then
+   if not rockspec:match("rockspec$") then
       return nil, "Invalid argument: 'make' takes a rockspec as a parameter. See help."
    end
 

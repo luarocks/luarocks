@@ -146,9 +146,13 @@ function load_local_rockspec(filename)
    util.platform_overrides(rockspec.hooks)
 
    local basename = dir.base_name(filename)
-   rockspec.name = basename:match("(.*)-[^-]*-[0-9]*")
-   if not rockspec.name then
-      return nil, "Expected filename in format 'name-version-revision.rockspec'."
+   if basename == "rockspec" then
+      rockspec.name = rockspec.package:lower()
+   else
+      rockspec.name = basename:match("(.*)-[^-]*-[0-9]*")
+      if not rockspec.name then
+         return nil, "Expected filename in format 'name-version-revision.rockspec'."
+      end
    end
 
    local protocol, pathname = dir.split_url(rockspec.source.url)
@@ -164,7 +168,7 @@ function load_local_rockspec(filename)
    end
 
    local name_version = rockspec.package:lower() .. "-" .. rockspec.version
-   if basename ~= name_version .. ".rockspec" then
+   if basename ~= "rockspec" and basename ~= name_version .. ".rockspec" then
       return nil, "Inconsistency between rockspec filename ("..basename..") and its contents ("..name_version..".rockspec)."
    end
 
@@ -207,9 +211,15 @@ end
 function load_rockspec(filename, location)
    assert(type(filename) == "string")
 
-   local name = dir.base_name(filename):match("(.*)%.rockspec")
-   if not name then
-      return nil, "Filename '"..filename.."' does not look like a rockspec."
+   local name
+   local basename = dir.base_name(filename)
+   if basename == "rockspec" then
+      name = "rockspec"
+   else
+      name = basename:match("(.*)%.rockspec")
+      if not name and not basename == "rockspec" then
+         return nil, "Filename '"..filename.."' does not look like a rockspec."
+      end
    end
    
    local err, errcode
