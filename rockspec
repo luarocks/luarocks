@@ -13,11 +13,14 @@ description = {
       installed as well, and at run time, so that when a module is
       required, the correct version is loaded. LuaRocks supports both
       local and remote repositories, and multiple local rocks trees. 
-   ]]
+   ]],
+   license = "MIT/X11",
+   homepage = "http://www.luarocks.org",
+   maintainer = "Hisham Muhammad"
 }
 
 dependencies = {
-   "lua >= 5.1"
+   "lua ~> 5.1"
 }
 
 source = {
