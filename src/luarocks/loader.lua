@@ -56,9 +56,12 @@ function add_context(name, version)
    for _, tree in pairs(rocks_trees) do
       local manifest = tree.manifest
 
-      local pkgdeps = manifest.dependencies and manifest.dependencies[name][version]
+      local pkgdeps
+      if manifest.dependencies and manifest.dependencies[name] then
+         pkgdeps = manifest.dependencies[name][version]
+      end
       if not pkgdeps then
-         return
+         return nil
       end
       for _, dep in ipairs(pkgdeps) do
          local package, constraints = dep.name, dep.constraints
