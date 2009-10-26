@@ -140,6 +140,4 @@ install: built install_bins install_luas install_config write_sysconfig
 bootstrap: src/luarocks/config.lua install_config write_sysconfig
 	LUA_PATH="$$PWD/src/?.lua;$$LUA_PATH" src/bin/luarocks make rockspec
 
-#build_rock: build_bins
-
 install_rock: install_bins install_luas
