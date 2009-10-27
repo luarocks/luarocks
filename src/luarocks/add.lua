@@ -52,6 +52,9 @@ local function add_file_to_server(refresh, rockfile, server, upload_server)
    else
       local_cache, protocol, server_path, user, password = cache.split_server_url(download_url, cfg.upload_user, cfg.upload_password)
    end
+   if not local_cache then
+      return nil, protocol
+   end
    if not login_url then
       login_url = protocol.."://"..server_path
    end
