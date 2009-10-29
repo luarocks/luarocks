@@ -10,7 +10,11 @@ local rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, i
 module("luarocks.cfg")
 
 -- Load site-local global configurations
-local config = require("luarocks.config")
+local ok, config = pcall(require, "luarocks.config")
+if not ok then
+   print("Site-local luarocks/config.lua file not found. Incomplete installation?")
+   config = {}
+end
 
 program_version = "2.0.1"
 user_agent = "LuaRocks/"..program_version
