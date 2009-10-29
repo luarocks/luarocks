@@ -264,9 +264,11 @@ function copy_contents(src, dest)
    assert(lfs.attributes(src, "mode") == "directory")
    
    for file in lfs.dir(src) do
-      local ok = recursive_copy(dir.path(src, file), dest)
-      if not ok then
-         return false, "Failed copying "..src.." to "..dest
+      if file ~= "." and file ~= ".." then
+         local ok = recursive_copy(dir.path(src, file), dest)
+         if not ok then
+            return false, "Failed copying "..src.." to "..dest
+         end
       end
    end
    return true
