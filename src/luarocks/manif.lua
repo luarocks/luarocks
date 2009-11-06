@@ -321,7 +321,7 @@ local function find_providers(file, root)
 
    if starts_with(file, deploy_bin) then
       manifest_tbl = manifest.commands
-      key = file:sub(#deploy_bin+1)
+      key = file:sub(#deploy_bin+1):gsub("^/*", "")
    elseif starts_with(file, deploy_lua) then
       manifest_tbl = manifest.modules
       key = path.path_to_module(file:sub(#deploy_lua+1))
