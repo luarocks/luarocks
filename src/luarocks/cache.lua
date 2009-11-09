@@ -47,7 +47,7 @@ function refresh_local_cache(server, user, password)
    if password then login_info = login_info .. " --password="..password end
 
    -- TODO abstract away explicit 'wget' call
-   local ok = fs.execute("wget -q -m -np -nd "..protocol.."://"..server_path..login_info)
+   local ok = fs.execute("wget --no-cache -q -m -np -nd "..protocol.."://"..server_path..login_info)
    if not ok then
       return nil, "Failed downloading cache."
    end
