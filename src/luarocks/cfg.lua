@@ -7,6 +7,12 @@ local rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, i
 -- defines defaults for unset values. See the
 -- <a href="http://luarocks.org/en/Config_file_format">config
 -- file format documentation</a> for details.
+--
+-- End-users shouldn't edit this file. They can override any defaults
+-- set in this file using their system-wide $LUAROCKS_SYSCONFIG file
+-- (see luarocks.config) or their user-specific configuration file
+-- (~/.luarocks/config.lua on Unix or %APPDATA%/luarocks/config.lua on
+-- Windows).
 module("luarocks.cfg")
 
 -- Load site-local global configurations
