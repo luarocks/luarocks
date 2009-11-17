@@ -173,7 +173,6 @@ function manifest_search(results, repo, query)
    query_arch_as_table(query)
    local manifest, err = manif.load_manifest(repo)
    if not manifest then
-      print(err)
       return 
    end
    for name, versions in pairs(manifest.repository) do
