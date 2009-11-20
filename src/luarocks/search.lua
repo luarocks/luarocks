@@ -165,6 +165,7 @@ end
 -- If the arch field is omitted, the local architecture (cfg.arch)
 -- is used. The special value "any" is also recognized, returning all
 -- matches regardless of architecture.
+-- @return true or, in case of errors, nil and an error message.
 function manifest_search(results, repo, query)
    assert(type(results) == "table")
    assert(type(repo) == "string")
@@ -173,7 +174,7 @@ function manifest_search(results, repo, query)
    query_arch_as_table(query)
    local manifest, err = manif.load_manifest(repo)
    if not manifest then
-      return 
+      return nil, "Failed loading manifest: "..err
    end
    for name, versions in pairs(manifest.repository) do
       for version, items in pairs(versions) do
@@ -182,6 +183,7 @@ function manifest_search(results, repo, query)
          end
       end
    end
+   return true
 end
 
 --- Search on all configured rocks servers.
@@ -199,7 +201,10 @@ function search_repos(query)
       if protocol == "file" then
          repo = pathname
       end
-      manifest_search(results, repo, query)
+      local ok, err = manifest_search(results, repo, query)
+      if not ok then
+         util.warning("Failed searching manifest: "..err)
+      end
    end
    return results
 end
@@ -362,7 +367,7 @@ function run(...)
    local flags, name, version = util.parse_flags(...)
    
    if flags["all"] then
-      name, version = "", ""
+      name, version = "", nil
    end
 
    if type(name) ~= "string" and not flags["all"] then
