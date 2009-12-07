@@ -144,7 +144,7 @@ local function make_shallow_copy(tbl)
 end
 
 -- Check if a set of needed variables are referenced
--- somewher in a list of definitions, warning teh user
+-- somewher in a list of definitions, warning the user
 -- about any unused ones. Each key in needed_set should
 -- appear as a $(XYZ) variable at least once as a
 -- substring of some value of var_defs.
