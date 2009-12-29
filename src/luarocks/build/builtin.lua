@@ -104,6 +104,9 @@ function run(rockspec)
       if type(info) == "string" then
          local ext = info:match(".([^.]+)$")
          if ext == "lua" then
+            if info:match("init.lua$") then
+               moddir = path.module_to_path(name..".init")
+            end
             local dest = dir.path(luadir, moddir)
             built_modules[info] = dest
          else
