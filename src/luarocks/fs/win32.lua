@@ -81,6 +81,7 @@ function copy_binary(filename, dest)
    end
    local exe_pattern = "%.[Ee][Xx][Ee]$"
    local base = dir.base_name(filename)
+   local dest = dir.dir_name(dest)
    if base:match(exe_pattern) then
       base = base:gsub(exe_pattern, ".lua")
       local helpname = dest.."/"..base

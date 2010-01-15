@@ -36,18 +36,20 @@ local function make_rc(luafilename, rcfilename)
   if not rcfile then
     error("Could not open "..rcfilename.." for writing.")
   end
-  rcfile:write("#define IDS_RCLAUNCHER 1\r\n")
   rcfile:write("STRINGTABLE\r\nBEGIN\r\n")
-  rcfile:write("IDS_RCLAUNCHER \"")
 
+  local i = 1
   for line in io.lines(luafilename) do
     if not line:match("^#!") then
+      rcfile:write(i .. " \"")
       line = line:gsub("\\", "\\\\"):gsub('"', '""'):gsub("[\r\n]+", "")
-      rcfile:write(line .. "\\n\\\r\n")
+      rcfile:write(line .. "\\r\\n\"\r\n")
+      i = i + 1
     end
   end
 
-  rcfile:write("\"\r\nEND\r\n")
+  rcfile:write("END\r\n")
+
   rcfile:close()
 end
 
@@ -108,7 +110,7 @@ function run(rockspec)
 	 local ok = execute(variables.RC, "-r", "-fo"..resname, rcname)
 	 if not ok then return ok end
 	 ok = execute(variables.LD, "-out:"..wrapname, resname, variables.WRAPPER,
-		      fs.make_path(variables.LUA_LIBDIR, "lua5.1.lib"), "user32.lib")
+		      dir.path(variables.LUA_LIBDIR, "lua5.1.lib"), "user32.lib")
 	 local manifestfile = wrapname..".manifest"
 	 if ok and fs.exists(manifestfile) then
 	   ok = execute(variables.MT, "-manifest", manifestfile, "-outputresource:"..wrapname..";1")
@@ -144,7 +146,7 @@ function run(rockspec)
    -- otherwise just appends .exe to the name
    if build.install and build.install.bin then
      for i, name in ipairs(build.install.bin) do
-       local fullname = fs.make_path(fs.current_dir(), name)
+       local fullname = dir.path(fs.current_dir(), name)
        local match = name:match("%.lua$")
        local basename = name:gsub("%.lua$", "")
        local file
