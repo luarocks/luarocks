@@ -45,12 +45,12 @@ function is_writable(file)
    local result
    if fs.is_dir(file) then
       local file2 = file .. '/.tmpluarockstestwritable'
-      local fh = io.open(file2, 'w')
+      local fh = io.open(file2, 'wb')
       result = fh ~= nil
       if fh then fh:close() end
       os.remove(file2)
    else
-      local fh = io.open(file, 'r+')
+      local fh = io.open(file, 'rb+')
       result = fh ~= nil
       if fh then fh:close() end
    end
@@ -64,6 +64,7 @@ end
 function make_temp_dir(name)
    assert(type(name) == "string")
 
+   name = name:gsub("\\", "/")
    local temp_dir = (os.getenv("TMP") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-" .. tostring(math.floor(math.random() * 10000))
    if fs.make_dir(temp_dir) then
       return temp_dir
@@ -170,9 +171,14 @@ end
 -- @return boolean: true on success, false on failure.
 function make_dir(directory)
    assert(type(directory) == "string")
+   directory = directory:gsub("\\", "/")
    local path = nil
-   for d in directory:gmatch("[^"..dir.separator.."]*"..dir.separator.."*") do
-      path = path and path..d or d
+   if directory:sub(2, 2) == ":" then
+     path = directory:sub(1, 2)
+     directory = directory:sub(4)
+   end
+   for d in directory:gmatch("([^"..dir.separator.."]+)"..dir.separator.."*") do
+      path = path and path .. dir.separator .. d or d
       local mode = lfs.attributes(path, "mode")
       if not mode then
          if not lfs.mkdir(path) then
@@ -217,9 +223,9 @@ function copy(src, dest)
    if destmode == "directory" then
       dest = dir.path(dest, dir.base_name(src))
    end
-   local src_h, err = io.open(src, "r")
+   local src_h, err = io.open(src, "rb")
    if not src_h then return nil, err end
-   local dest_h, err = io.open(dest, "w+")
+   local dest_h, err = io.open(dest, "wb+")
    if not dest_h then src_h:close() return nil, err end
    while true do
       local block = src_h:read(8192)
@@ -303,7 +309,6 @@ end
 -- @return boolean: true on success, false on failure.
 function delete(arg)
    assert(arg)
-   assert(arg:sub(1,1) == "/")
    return recursive_delete(arg) or false
 end
 
@@ -467,7 +472,7 @@ if md5_ok then
 -- @return string: The MD5 checksum
 function get_md5(file)
    file = fs.absolute_name(file)
-   local file = io.open(file, "r")
+   local file = io.open(file, "rb")
    if not file then return false end
    local computed = md5.sumhexa(file:read("*a"))
    file:close()

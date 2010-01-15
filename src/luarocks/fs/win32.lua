@@ -22,17 +22,6 @@ function Q(arg)
    return '"' .. arg:gsub('"', '\\"') .. '"'
 end
 
---- Strip the last extension of a filename.
--- Example: "foo.tar.gz" becomes "foo.tar".
--- If filename has no dots, returns it unchanged.
--- @param filename string: The file name to strip.
--- @return string: The stripped name.
-local function strip_extension(filename)
-   assert(type(filename) == "string")
-
-   return (filename:gsub("%.[^.]+$", "")) or filename
-end
-
 --- Return an absolute pathname from a potentially relative one.
 -- @param pathname string: pathname to convert.
 -- @param relative_to string or nil: path to prepend when making

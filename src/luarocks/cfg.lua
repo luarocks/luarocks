@@ -22,7 +22,7 @@ if not ok then
    config = {}
 end
 
-program_version = "2.0.1"
+program_version = "2.0.2"
 user_agent = "LuaRocks/"..program_version
 
 local persist = require("luarocks.persist")
@@ -169,6 +169,8 @@ if detected.windows then
    defaults.make = "nmake" -- TODO: Split Windows flavors between mingw and msvc
    defaults.makefile = "Makefile.win"
    defaults.variables.CC = "cl"
+   defaults.variables.RC = "rc"
+   defaults.variables.WRAPPER = config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.obj"
    defaults.variables.LD = "link"
    defaults.variables.MT = "mt"
    defaults.variables.CFLAGS = "/MD /O2"

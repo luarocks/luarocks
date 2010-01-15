@@ -29,6 +29,28 @@ local function execute(...)
    return fs.execute(...)
 end
 
+--- Makes an RC file with an embedded Lua script, for building .exes on Windows
+-- @return nil if could open files, error otherwise
+local function make_rc(luafilename, rcfilename)
+  local rcfile = io.open(rcfilename, "w")
+  if not rcfile then
+    error("Could not open "..rcfilename.." for writing.")
+  end
+  rcfile:write("#define IDS_RCLAUNCHER 1\r\n")
+  rcfile:write("STRINGTABLE\r\nBEGIN\r\n")
+  rcfile:write("IDS_RCLAUNCHER \"")
+
+  for line in io.lines(luafilename) do
+    if not line:match("^#!") then
+      line = line:gsub("\\", "\\\\"):gsub('"', '""'):gsub("[\r\n]+", "")
+      rcfile:write(line .. "\\n\\\r\n")
+    end
+  end
+
+  rcfile:write("\"\r\nEND\r\n")
+  rcfile:close()
+end
+
 --- Driver function for the builtin build back-end.
 -- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string): true if no errors ocurred,
@@ -76,6 +98,23 @@ function run(rockspec)
          end
          return ok
       end
+      compile_wrapper_binary = function(fullname, name)
+	 local fullbasename = fullname:gsub("%.lua$", ""):gsub("/", "\\")
+	 local basename = name:gsub("%.lua$", ""):gsub("/", "\\")
+	 local rcname = basename..".rc"
+	 local resname = basename..".res"
+	 local wrapname = basename..".exe"
+	 make_rc(fullname, fullbasename..".rc")
+	 local ok = execute(variables.RC, "-r", "-fo"..resname, rcname)
+	 if not ok then return ok end
+	 ok = execute(variables.LD, "-out:"..wrapname, resname, variables.WRAPPER,
+		      fs.make_path(variables.LUA_LIBDIR, "lua5.1.lib"), "user32.lib")
+	 local manifestfile = wrapname..".manifest"
+	 if ok and fs.exists(manifestfile) then
+	   ok = execute(variables.MT, "-manifest", manifestfile, "-outputresource:"..wrapname..";1")
+	 end
+	 return ok, wrapname
+      end
    else
       compile_object = function(object, source, defines, incdirs)
          local extras = {}
@@ -92,6 +131,7 @@ function run(rockspec)
          end
          return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, "-L"..variables.LUA_LIBDIR, unpack(extras))
       end
+      compile_wrapper_binary = function(fullname, name) return true, name end
    end
 
    local ok = true
@@ -99,6 +139,30 @@ function run(rockspec)
    local luadir = path.lua_dir(rockspec.name, rockspec.version)
    local libdir = path.lib_dir(rockspec.name, rockspec.version)
    local docdir = path.doc_dir(rockspec.name, rockspec.version)
+   -- On Windows, compiles an .exe for each Lua file in build.install.bin, and
+   -- replaces the filename with the .exe name. Strips the .lua extension if it exists,
+   -- otherwise just appends .exe to the name
+   if build.install and build.install.bin then
+     for i, name in ipairs(build.install.bin) do
+       local fullname = fs.make_path(fs.current_dir(), name)
+       local match = name:match("%.lua$")
+       local basename = name:gsub("%.lua$", "")
+       local file
+       if not match then
+	 file = io.open(fullname)
+       end
+       if match or (file and file:read():match("#!.*lua.*")) then
+	 ok, name = compile_wrapper_binary(fullname, name)
+	 if ok then
+	   build.install.bin[i] = name
+	 else
+	   if file then file:close() end
+	   return nil, "Build error in wrapper binaries"
+	 end
+       end
+       if file then file:close() end
+     end
+   end
    for name, info in pairs(build.modules) do
       local moddir = path.module_to_path(name)
       if type(info) == "string" then

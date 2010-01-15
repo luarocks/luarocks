@@ -5,7 +5,7 @@ REM Boy, it feels like 1994 all over again.
 SETLOCAL
 
 SET PREFIX=C:\LuaRocks
-SET VERSION=1.0
+SET VERSION=2.0
 SET SYSCONFDIR=C:\LuaRocks
 SET ROCKS_TREE=C:\LuaRocks
 SET SCRIPTS_DIR=
@@ -256,16 +256,19 @@ IF ERRORLEVEL 1 GOTO ERROR
 XCOPY /S src\luarocks\*.* "%LUADIR%\luarocks" >NUL
 IF ERRORLEVEL 1 GOTO ERROR
 
-RENAME "%LUADIR%\luarocks\config.lua" "config.lua.bak"
-ECHO local LUA_INCDIR=[[%LUA_INCDIR%]]>> "%LUADIR%\luarocks\config.lua" 
-ECHO local LUA_LIBDIR=[[%LUA_LIBDIR%]]>> "%LUADIR%\luarocks\config.lua" 
-ECHO local LUA_BINDIR=[[%LUA_BINDIR%]]>> "%LUADIR%\luarocks\config.lua" 
-ECHO local LUA_INTERPRETER=[[%LUA_INTERPRETER%]]>> "%LUADIR%\luarocks\config.lua" 
-ECHO local LUAROCKS_UNAME_S=[[WindowsNT]]>> "%LUADIR%\luarocks\config.lua" 
-ECHO local LUAROCKS_UNAME_M=[[x86]]>> "%LUADIR%\luarocks\config.lua" 
-ECHO local LUAROCKS_SYSCONFIG=[[%SYSCONFDIR%/config.lua]]>> "%LUADIR%\luarocks\config.lua" 
-ECHO local LUAROCKS_ROCKS_TREE=[[%ROCKS_TREE%]]>> "%LUADIR%\luarocks\config.lua" 
-ECHO local LUAROCKS_PREFIX=[[%PREFIX%]]>> "%LUADIR%\luarocks\config.lua" 
+RENAME "%LUADIR%\luarocks\config.lua" config.lua.bak
+ECHO module("luarocks.config")>> "%LUADIR%\luarocks\config.lua" 
+ECHO LUA_INCDIR=[[%LUA_INCDIR%]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO LUA_LIBDIR=[[%LUA_LIBDIR%]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO LUA_BINDIR=[[%LUA_BINDIR%]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO LUA_INTERPRETER=[[%LUA_INTERPRETER%]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO LUAROCKS_UNAME_S=[[WindowsNT]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO LUAROCKS_UNAME_M=[[x86]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO LUAROCKS_SYSCONFIG=[[%SYSCONFDIR%/config.lua]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO LUAROCKS_ROCKS_TREE=[[%ROCKS_TREE%]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO LUAROCKS_PREFIX=[[%PREFIX%]]>> "%LUADIR%\luarocks\config.lua" 
+ECHO LUAROCKS_DOWNLOADER=[[wget]]>> "%LUADIR%\luarocks\config.lua"
+ECHO LUAROCKS_MD5CHECKER=[[md5sum]]>> "%LUADIR%\luarocks\config.lua"
 IF NOT [%FORCE_CONFIG%]==[] ECHO local LUAROCKS_FORCE_CONFIG=true>> "%LUADIR%\luarocks\config.lua"
 TYPE "%LUADIR%\luarocks\config.lua.bak">> "%LUADIR%\luarocks\config.lua" 
 
