@@ -33,7 +33,7 @@ local function restore_settings(settings)
    cfg.deploy_bin_dir = settings.deploy_bin_dir
    cfg.deploy_lua_dir = settings.deploy_lua_dir
    cfg.deploy_lib_dir = settings.deploy_lib_dir
-   cfg.variables.ROCKS_TREE = settings.root_dir
+   cfg.variables.ROCKS_TREE = settings.rocks_dir
    cfg.variables.SCRIPTS_DIR = settings.deploy_bin_dir
    table.remove(cfg.rocks_servers, 1)
 end
@@ -43,7 +43,7 @@ local function prepare_sandbox(file)
    cfg.root_dir = root_dir
    cfg.rocks_dir = path.rocks_dir(root_dir)
    cfg.deploy_bin_dir = path.deploy_bin_dir(root_dir)
-   cfg.variables.ROCKS_TREE = cfg.root_dir
+   cfg.variables.ROCKS_TREE = cfg.rocks_dir
    cfg.variables.SCRIPTS_DIR = cfg.deploy_bin_dir
    return root_dir
 end
@@ -154,7 +154,6 @@ end
 
 function run(...)
    local flags, repo = util.parse_flags(...)
-   assert(type(repo) == "string" or not repo)
    repo = repo or cfg.rocks_dir
 
    print("Verifying contents of "..repo)

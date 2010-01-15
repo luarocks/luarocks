@@ -1,6 +1,6 @@
 
-local rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, ipairs, package =
-      rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, ipairs, package
+local rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, ipairs, package, type =
+      rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, ipairs, package, type
 
 --- Configuration for LuaRocks.
 -- Tries to load the user's configuration file and
@@ -21,6 +21,8 @@ if not ok then
    print("Site-local luarocks/config.lua file not found. Incomplete installation?")
    config = {}
 end
+
+_M.config = config
 
 program_version = "2.0.2"
 user_agent = "LuaRocks/"..program_version
@@ -117,15 +119,10 @@ end
 
 -- Configure defaults:
 
-local root = config.LUAROCKS_ROCKS_TREE or home_tree
+local root = rocks_trees[#rocks_trees]
 local defaults = {
-   root_dir = root,
-   rocks_dir = root.."/lib/luarocks/rocks",
    lua_modules_path = "/share/lua/5.1/",
    lib_modules_path = "/lib/lua/5.1/",
-   deploy_bin_dir = root.."/bin/",
-   deploy_lua_dir = root.."/share/lua/5.1/",
-   deploy_lib_dir = root.."/lib/lua/5.1/",
 
    arch = "unknown",
    lib_extension = "unknown",
@@ -289,7 +286,13 @@ setmetatable(_M, cfg_mt)
 
 
 for _,tree in ipairs(rocks_trees) do
-   package.path = tree..lua_modules_path.."/?.lua;"..tree..lua_modules_path.."/?/init.lua;"..package.path
-   package.cpath = tree..lib_modules_path.."/?."..lib_extension..";"..package.cpath
+  if type(tree) == "string" then
+    package.path = tree..lua_modules_path.."/?.lua;"..tree..lua_modules_path.."/?/init.lua;"..package.path
+    package.cpath = tree..lib_modules_path.."/?."..lib_extension..";"..package.cpath
+  else
+    package.path = (tree.lua_dir or tree.root..lua_modules_path).."/?.lua;"..
+                       (tree.lua_dir or tree.root..lua_modules_path).."/?/init.lua;"..package.path
+    package.cpath = (tree.lib_dir or tree.root..lib_modules_path).."/?."..lib_extension..";"..package.cpath
+  end
 end
 

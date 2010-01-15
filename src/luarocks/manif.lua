@@ -56,7 +56,7 @@ function make_rock_manifest(name, version)
       local last_name
       for name in file:gmatch("[^/]+") do
          local next = walk[name]
-         if not next then 
+         if not next then
             next = {}
             walk[name] = next
          end
@@ -81,7 +81,7 @@ end
 -- or nil followed by an error message and an optional error code.
 function load_manifest(repo_url)
    assert(type(repo_url) == "string")
-   
+
    if manif_core.manifest_cache[repo_url] then
       return manif_core.manifest_cache[repo_url]
    end
@@ -141,7 +141,7 @@ local function sort_pkgs(a, b)
 
    local na, va = a:match("(.*)/(.*)$")
    local nb, vb = b:match("(.*)/(.*)$")
-   
+
    return (na == nb) and deps.compare_versions(va, vb) or na < nb
 end
 
@@ -150,7 +150,7 @@ end
 -- and values arrays of strings with packages names in "name/version" format.
 local function sort_package_matching_table(tbl)
    assert(type(tbl) == "table")
-   
+
    if next(tbl) then
       for item, pkgs in pairs(tbl) do
          if #pkgs > 1 then
@@ -275,8 +275,7 @@ end
 function update_manifest(name, version, repo)
    assert(type(name) == "string")
    assert(type(version) == "string")
-   assert(type(repo) == "string" or not repo)
-   repo = repo or cfg.rocks_dir
+   repo = path.rocks_dir(repo or cfg.root_dir)
 
    print("Updating manifest for "..repo)
 
@@ -297,7 +296,7 @@ function update_manifest(name, version, repo)
 
    local ok, err = store_results(results, manifest)
    if not ok then return nil, err end
-   
+
    return save_table(repo, "manifest", manifest)
 end
 
@@ -307,7 +306,6 @@ end
 
 local function find_providers(file, root)
    assert(type(file) == "string")
-   assert(type(root) == "string" or not root)
    root = root or cfg.root_dir
 
    local manifest = manif_core.load_local_manifest(path.rocks_dir(root))
@@ -319,22 +317,22 @@ local function find_providers(file, root)
    local deploy_lib = path.deploy_lib_dir(root)
    local key, manifest_tbl
 
-   if starts_with(file, deploy_bin) then
-      manifest_tbl = manifest.commands
-      key = file:sub(#deploy_bin+1):gsub("^/*", "")
-   elseif starts_with(file, deploy_lua) then
+   if starts_with(file, deploy_lua) then
       manifest_tbl = manifest.modules
-      key = path.path_to_module(file:sub(#deploy_lua+1))
+      key = path.path_to_module(file:sub(#deploy_lua+1):gsub("\\", "/"))
    elseif starts_with(file, deploy_lib) then
       manifest_tbl = manifest.modules
-      key = path.path_to_module(file:sub(#deploy_lib+1))
+      key = path.path_to_module(file:sub(#deploy_lib+1):gsub("\\", "/"))
+   elseif starts_with(file, deploy_bin) then
+      manifest_tbl = manifest.commands
+      key = file:sub(#deploy_bin+1):gsub("^[\\/]*", "")
    else
       assert(false, "Assertion failed: '"..file.."' is not a deployed file.")
    end
 
    local providers = manifest_tbl[key]
    if not providers then
-      return nil, "File "..file.." is not tracked by LuaRocks."
+      return nil, "untracked"
    end
    return providers
 end

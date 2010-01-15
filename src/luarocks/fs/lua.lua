@@ -8,7 +8,8 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 
-local zip_ok, zip = pcall(require, "luarocks.tools.zip")
+local zip_ok, lrzip = pcall(require, "luarocks.tools.zip")
+local unzip_ok, luazip = pcall(require, "zip"); _G.zip = nil
 local lfs_ok, lfs = pcall(require, "lfs")
 local curl_ok, curl = pcall(require, "luacurl")
 local md5_ok, md5 = pcall(require, "md5")
@@ -18,7 +19,7 @@ local tar = require("luarocks.tools.tar")
 local patch = require("luarocks.tools.patch")
 
 local dir_stack = {}
-            
+
 math.randomseed(os.time())
 
 dir_separator = "/"
@@ -29,7 +30,7 @@ dir_separator = "/"
 -- @return string: Quoted argument.
 function Q(arg)
    assert(type(arg) == "string")
-   
+
    -- FIXME Unix-specific
    return "'" .. arg:gsub("\\", "\\\\"):gsub("'", "'\\''") .. "'"
 end
@@ -82,7 +83,7 @@ end
 -- otherwise.
 function execute(command, ...)
    assert(type(command) == "string")
-   
+
    for _, arg in ipairs({...}) do
       assert(type(arg) == "string")
       command = command .. " " .. fs.Q(arg)
@@ -243,7 +244,7 @@ end
 -- @return boolean or (boolean, string): true on success, false on failure
 local function recursive_copy(src, dest)
    local srcmode = lfs.attributes(src, "mode")
-      
+
    if srcmode == "file" then
       local ok = fs.copy(src, dest)
       if not ok then return false end
@@ -268,7 +269,7 @@ end
 function copy_contents(src, dest)
    assert(src and dest)
    assert(lfs.attributes(src, "mode") == "directory")
-   
+
    for file in lfs.dir(src) do
       if file ~= "." and file ~= ".." then
          local ok = recursive_copy(dir.path(src, file), dest)
@@ -287,7 +288,7 @@ end
 -- or nil and an error message on failure.
 local function recursive_delete(src)
    local srcmode = lfs.attributes(src, "mode")
-      
+
    if srcmode == "file" then
       return os.remove(src)
    elseif srcmode == "directory" then
@@ -312,7 +313,7 @@ function delete(arg)
    return recursive_delete(arg) or false
 end
 
---- List the contents of a directory. 
+--- List the contents of a directory.
 -- @param at string or nil: directory to list (will be the current
 -- directory if none is given).
 -- @return table: an array of strings with the filenames representing
@@ -351,7 +352,7 @@ local function recursive_find(cwd, prefix, result)
    end
 end
 
---- Recursively scan the contents of a directory. 
+--- Recursively scan the contents of a directory.
 -- @param at string or nil: directory to scan (will be the current
 -- directory if none is given).
 -- @return table: an array of strings with the filenames representing
@@ -405,17 +406,38 @@ end
 
 if zip_ok then
 
-local function zip(zipfile, ...)
-   return zip.zip(zipfile, ...)
+function zip(zipfile, ...)
+   return lrzip.zip(zipfile, ...)
 end
 
+end
+
+if unzip_ok then
 --- Uncompress files from a .zip archive.
 -- @param zipfile string: pathname of .zip archive to be extracted.
 -- @return boolean: true on success, false on failure.
 function unzip(zipfile)
-   assert(zipfile)
-   -- FIXME!!!!
-   return fs.execute("unzip", zipfile)
+  local zipfile, err = luazip.open(zipfile)
+  if not zipfile then return nil, err end
+  local files = zipfile:files()
+  local file = files()
+  repeat
+	if file.filename:sub(#file.filename) == "/" then
+	  fs.make_dir(dir.path(fs.current_dir(), file.filename))
+	else
+      local rf, err = zipfile:open(file.filename)
+	  if not rf then zipfile:close(); return nil, err end
+	  local contents = rf:read("*a")
+	  rf:close()
+	  local wf, err = io.open(dir.path(fs.current_dir(), file.filename), "wb")
+	  if not wf then zipfile:close(); return nil, err end
+	  wf:write(contents)
+	  wf:close()
+	end
+	file = files()
+  until not file
+  zipfile:close()
+  return true
 end
 
 end
@@ -437,7 +459,7 @@ function download(url, filename)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
 
-   filename = filename or dir.base_name(url)
+   filename = dir.path(fs.current_dir(), filename or dir.base_name(url))
 
    local c = curl.new()
    if not c then return false end

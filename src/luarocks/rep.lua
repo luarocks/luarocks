@@ -208,9 +208,16 @@ function deploy_files(name, version)
             local target = dir.path(deploy_dir, parent_path, file)
             local ok, err
             if fs.exists(target) then
-               target, err = resolve_conflict(target, deploy_dir, name, version)
-               if err then return nil, err.." Cannot install new version." end
-            end
+               local new_target, err = resolve_conflict(target, deploy_dir, name, version)
+	       if err == "untracked" then
+		 if cfg.flags["force"] then
+		   fs.delete(target)
+		 else
+		   return nil, "File "..file.." is not tracked by LuaRocks. Cannot install new version. Install with --force if you want to install anyway."
+		 end
+	       elseif err then return nil, err.." Cannot install new version."
+	       else target = new_target end
+	    end
             fs.make_dir(dir.dir_name(target))
             ok, err = move_fn(source, target)
             fs.remove_dir_tree_if_empty(dir.dir_name(source))

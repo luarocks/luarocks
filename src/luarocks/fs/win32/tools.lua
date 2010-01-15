@@ -206,7 +206,7 @@ function delete(arg)
    return fs.execute_string("rm -rf " .. fs.Q(arg) .. " 1> NUL 2> NUL")
 end
 
---- List the contents of a directory. 
+--- List the contents of a directory.
 -- @param at string or nil: directory to list (will be the current
 -- directory if none is given).
 -- @return table: an array of strings with the filenames representing
@@ -229,7 +229,7 @@ function list_dir(at)
    return result
 end
 
---- Recursively scan the contents of a directory. 
+--- Recursively scan the contents of a directory.
 -- @param at string or nil: directory to scan (will be the current
 -- directory if none is given).
 -- @return table: an array of strings with the filenames representing
@@ -243,7 +243,7 @@ function find(at)
       return {}
    end
    local result = {}
-   local pipe = io.popen(command_at(at, "find 2> NUL")) 
+   local pipe = io.popen(command_at(at, "find 2> NUL"))
    for file in pipe:lines() do
       -- Windows find is a bit different
       if file:sub(1,2)==".\\" then file=file:sub(3) end
@@ -266,7 +266,7 @@ function download(url, filename)
    assert(type(filename) == "string" or not filename)
    local wget_cmd = "wget --cache=off --user-agent="..cfg.user_agent.." --quiet --continue "
 
-   if filename then   
+   if filename then
       return fs.execute(wget_cmd.." --output-document ", filename, url)
    else
       return fs.execute(wget_cmd, url)
@@ -307,7 +307,7 @@ end
 -- @return boolean or (boolean, string): true on success, false and an error message on failure.
 function unpack_archive(archive)
    assert(type(archive) == "string")
-   
+
    local ok
    if archive:match("%.tar%.gz$") then
       ok = gunzip(archive)

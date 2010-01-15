@@ -21,6 +21,18 @@ local function die(message)
    os.exit(1)
 end
 
+local function is_writable(tree)
+  if type(tree) == "string" then
+    return fs.make_dir(tree) and fs.is_writable(tree)
+  else
+    writable = true
+    for k, v in pairs(tree) do
+      writable = writable and fs.make_dir(v) and fs.is_writable(v)
+    end
+    return writable
+  end
+end
+
 --- Main command-line processor.
 -- Parses input arguments and calls the appropriate driver function
 -- to execute the action requested on the command-line, forwarding
@@ -45,6 +57,7 @@ function run_command(...)
    end
    local nonflags = { util.parse_flags(unpack(args)) }
    local flags = table.remove(nonflags, 1)
+   cfg.flags = flags
    
    if flags["to"] then
       if flags["to"] == true then
@@ -60,24 +73,28 @@ function run_command(...)
       local trees = cfg.rocks_trees
       for i = #trees, 1, -1 do
          local tree = trees[i]
-         if fs.make_dir(tree) and fs.is_writable(tree) then
+         if is_writable(tree) then
             cfg.root_dir = tree
             cfg.rocks_dir = path.rocks_dir(tree)
-            cfg.deploy_bin_dir = rawget(cfg, "deploy_bin_dir") or path.deploy_bin_dir(tree)
-            cfg.deploy_lua_dir = rawget(cfg, "deploy_lua_dir") or path.deploy_lua_dir(tree)
-            cfg.deploy_lib_dir = rawget(cfg, "deploy_lib_dir") or path.deploy_lib_dir(tree)
+            cfg.deploy_bin_dir = path.deploy_bin_dir(tree)
+            cfg.deploy_lua_dir = path.deploy_lua_dir(tree)
+            cfg.deploy_lib_dir = path.deploy_lib_dir(tree)
             break
          end
       end
    end
 
-   cfg.root_dir = cfg.root_dir:gsub("/+$", "")
+   if type(cfg.root_dir) == "string" then
+     cfg.root_dir = cfg.root_dir:gsub("/+$", "")
+   else
+     cfg.root_dir.root = cfg.root_dir.root:gsub("/+$", "")
+   end
    cfg.rocks_dir = cfg.rocks_dir:gsub("/+$", "")
    cfg.deploy_bin_dir = cfg.deploy_bin_dir:gsub("/+$", "")
    cfg.deploy_lua_dir = cfg.deploy_lua_dir:gsub("/+$", "")
    cfg.deploy_lib_dir = cfg.deploy_lib_dir:gsub("/+$", "")
    
-   cfg.variables.ROCKS_TREE = cfg.root_dir
+   cfg.variables.ROCKS_TREE = cfg.rocks_dir
    cfg.variables.SCRIPTS_DIR = cfg.deploy_bin_dir
 
    if flags["from"] then
