@@ -8,10 +8,11 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 
+local socket_ok, http = pcall(require, "socket.http")
 local zip_ok, lrzip = pcall(require, "luarocks.tools.zip")
 local unzip_ok, luazip = pcall(require, "zip"); _G.zip = nil
 local lfs_ok, lfs = pcall(require, "lfs")
-local curl_ok, curl = pcall(require, "luacurl")
+--local curl_ok, curl = pcall(require, "luacurl")
 local md5_ok, md5 = pcall(require, "md5")
 local posix_ok, posix = pcall(require, "posix")
 
@@ -479,6 +480,39 @@ function download(url, filename)
    ok = ok and c:close()
    file:close()
    return ok
+end
+
+end
+
+---------------------------------------------------------------------
+-- LuaSocket functions
+---------------------------------------------------------------------
+
+if socket_ok then
+
+--- Download a remote file.
+-- @param url string: URL to be fetched.
+-- @param filename string or nil: this function attempts to detect the
+-- resulting local filename of the remote file as the basename of the URL;
+-- if that is not correct (due to a redirection, for example), the local
+-- filename can be given explicitly as this second argument.
+-- @return boolean: true on success, false on failure.
+function download(url, filename)
+   assert(type(url) == "string")
+   assert(type(filename) == "string" or not filename)
+
+   filename = dir.path(fs.current_dir(), filename or dir.base_name(url))
+
+   local res, status, headers, line = http.request(url)
+   if not res then return false, status end
+   if status ~= 200 then
+     return false, "Failed downloading: " .. line
+   end
+   local file = io.open(filename, "wb")
+   if not file then return false end
+   file:write(res)
+   file:close()
+   return true
 end
 
 end
