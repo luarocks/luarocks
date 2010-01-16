@@ -279,7 +279,7 @@ end
 -- additional arguments.
 -- @return boolean: true on success, false on failure.
 function zip(zipfile, ...)
-   return fs.execute("zip -r", zipfile, ...)
+   return fs.execute("7z a", zipfile, ...)
 end
 
 --- Uncompress files from a .zip archive.
@@ -287,17 +287,14 @@ end
 -- @return boolean: true on success, false on failure.
 function unzip(zipfile)
    assert(zipfile)
-   return fs.execute("unzip", zipfile)
+   return fs.execute("7z x", zipfile)
 end
 
 --- Uncompress gzip file.
 -- @param archive string: Filename of archive.
 -- @return boolean : success status
 local function gunzip(archive)
-   local cmd = fs.execute("gunzip -h 1>NUL 2>NUL") and 'gunzip' or
-               fs.execute("gzip   -h 1>NUL 2>NUL") and 'gzip -d'
-   local ok = fs.execute(cmd, archive)
-   return ok
+  return fs.execute("7z x", archive)
 end
 
 --- Unpack an archive.
@@ -312,20 +309,20 @@ function unpack_archive(archive)
    if archive:match("%.tar%.gz$") then
       ok = gunzip(archive)
       if ok then
-         ok = fs.execute("tar -xf ", strip_extension(archive))
+         ok = fs.execute("7z x", strip_extension(archive))
       end
    elseif archive:match("%.tgz$") then
       ok = gunzip(archive)
       if ok then
-         ok = fs.execute("tar -xf ", strip_extension(archive)..".tar")
+         ok = fs.execute("7z x ", strip_extension(archive)..".tar")
       end
    elseif archive:match("%.tar%.bz2$") then
-      ok = fs.execute("bunzip2 ", archive)
+      ok = fs.execute("7z x ", archive)
       if ok then
-         ok = fs.execute("tar -xf ", strip_extension(archive))
+         ok = fs.execute("7z x ", strip_extension(archive))
       end
    elseif archive:match("%.zip$") then
-      ok = fs.execute("unzip ", archive)
+      ok = fs.execute("7z x ", archive)
    elseif archive:match("%.lua$") or archive:match("%.c$") then
       -- Ignore .lua and .c files; they don't need to be extracted.
       return true
