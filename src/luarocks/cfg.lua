@@ -74,6 +74,8 @@ elseif system and system:match("^CYGWIN") then
    detected.cygwin = true
 elseif system and system:match("^Windows") then
    detected.windows = true
+elseif system and system:match("^MINGW") then
+   detected.mingw32 = true
 else
    detected.unix = true
    -- Fall back to Unix in unknown systems.
@@ -82,7 +84,7 @@ end
 -- Path configuration:
 
 local sys_config_file, home_config_file, home_tree
-if detected.windows then
+if detected.windows or detected.mingw32 then
    home = os.getenv("APPDATA") or "c:"
    sys_config_file = "c:/luarocks/config.lua"
    home_config_file = home.."/luarocks/config.lua"
@@ -180,6 +182,39 @@ if detected.windows then
    defaults.runtime_external_deps_patterns = {
       bin = { "?.exe", "?.bat" },
       lib = { "?.dll" },
+      include = { "?.h" }
+   }
+   defaults.local_cache = home.."/cache/luarocks"
+end
+
+if detected.mingw32 then
+   home_config_file = home_config_file:gsub("\\","/")
+   defaults.arch = "mingw32-"..proc
+   defaults.platforms = { "win32", "mingw32" }
+   defaults.lib_extension = "dll"
+   defaults.external_lib_extension = "dll"
+   defaults.obj_extension = "o"
+   defaults.external_deps_dirs = { "c:/external/" }
+   defaults.variables.LUA_BINDIR = config.LUA_BINDIR and config.LUA_BINDIR:gsub("\\", "/") or "c:/lua5.1/bin"
+   defaults.variables.LUA_INCDIR = config.LUA_INCDIR and config.LUA_INCDIR:gsub("\\", "/") or "c:/lua5.1/include"
+   defaults.variables.LUA_LIBDIR = config.LUA_LIBDIR and config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua5.1/lib"
+   defaults.cmake_generator = "MinGW Makefiles"
+   defaults.make = "mingw32-make" -- TODO: Split Windows flavors between mingw and msvc
+   defaults.makefile = "Makefile.win"
+   defaults.variables.CC = "gcc"
+   defaults.variables.RC = "windres"
+   defaults.variables.WRAPPER = config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.o"
+   defaults.variables.LD = "gcc"
+   defaults.variables.CFLAGS = "-O2"
+   defaults.variables.LIBFLAG = "-shared --dll --export-all-symbols"
+   defaults.external_deps_patterns = {
+      bin = { "?.exe", "?.bat" },
+      lib = { "lib?.a", "?.dll", "lib?.dll" },
+      include = { "?.h" }
+   }
+   defaults.runtime_external_deps_patterns = {
+      bin = { "?.exe", "?.bat" },
+      lib = { "?.dll", "lib?.dll" },
       include = { "?.h" }
    }
    defaults.local_cache = home.."/cache/luarocks"

@@ -43,12 +43,14 @@ IF [%1]==[/?] (
    ECHO /LIB [dir]     Location of Lua libraries -e.g. c:\lua\5.1\lib
    ECHO /BIN [dir]     Location of Lua executables - e.g. c:\lua\5.1\bin
    ECHO.
-   ECHO /FORCECONFIG  Use a single config location. Do not use the
-   ECHO               LUAROCKS_CONFIG variable or the user's home directory.
-   ECHO               Useful to avoid conflicts when LuaRocks
-   ECHO               is embedded within an application.
+   ECHO /MW            Use mingw as build system instead of MSVC
    ECHO.
-   ECHO /F            Remove installation directory if it already exists.
+   ECHO /FORCECONFIG   Use a single config location. Do not use the
+   ECHO                LUAROCKS_CONFIG variable or the user's home directory.
+   ECHO                Useful to avoid conflicts when LuaRocks
+   ECHO                is embedded within an application.
+   ECHO.
+   ECHO /F             Remove installation directory if it already exists.
    ECHO.
    GOTO QUIT
 )
@@ -78,6 +80,11 @@ IF /I [%1]==[/SCRIPTS] (
 )
 IF /I [%1]==[/L] (
    SET INSTALL_LUA=ON
+   SHIFT /1
+   GOTO PARSE_LOOP
+)
+IF /I [%1]==[/MW] (
+   SET USE_MINGW=ON
    SHIFT /1
    GOTO PARSE_LOOP
 )
@@ -262,7 +269,11 @@ ECHO LUA_INCDIR=[[%LUA_INCDIR%]]>> "%LUADIR%\luarocks\config.lua"
 ECHO LUA_LIBDIR=[[%LUA_LIBDIR%]]>> "%LUADIR%\luarocks\config.lua" 
 ECHO LUA_BINDIR=[[%LUA_BINDIR%]]>> "%LUADIR%\luarocks\config.lua" 
 ECHO LUA_INTERPRETER=[[%LUA_INTERPRETER%]]>> "%LUADIR%\luarocks\config.lua" 
+IF [%USE_MINGW%]==[ON] (
+ECHO LUAROCKS_UNAME_S=[[MINGW]]>> "%LUADIR%\luarocks\config.lua" 
+) ELSE (
 ECHO LUAROCKS_UNAME_S=[[WindowsNT]]>> "%LUADIR%\luarocks\config.lua" 
+)
 ECHO LUAROCKS_UNAME_M=[[x86]]>> "%LUADIR%\luarocks\config.lua" 
 ECHO LUAROCKS_SYSCONFIG=[[%SYSCONFDIR%/config.lua]]>> "%LUADIR%\luarocks\config.lua" 
 ECHO LUAROCKS_ROCKS_TREE=[[%ROCKS_TREE%]]>> "%LUADIR%\luarocks\config.lua" 

@@ -76,7 +76,37 @@ function run(rockspec)
       end
    end
 
-   if is_platform("win32") then
+   if is_platform("mingw32") then
+      compile_object = function(object, source, defines, incdirs)
+         local extras = {}
+         add_flags(extras, "-D%s", defines)
+         add_flags(extras, "-I%s", incdirs)
+         return execute(variables.CC.." "..variables.CFLAGS, "-c", "-o", object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
+      end
+      compile_library = function(library, objects, libraries, libdirs, name)
+         local extras = { unpack(objects) }
+         add_flags(extras, "-L%s", libdirs)
+         add_flags(extras, "-l%s", libraries)
+	 extras[#extras+1] = "-L" .. variables.LUA_LIBDIR
+	 extras[#extras+1] = "-llua51"
+	 extras[#extras+1] = "-lmsvcrt"
+         local ok = execute(variables.LD.." "..variables.LIBFLAG, "-o", library, unpack(extras))
+         return ok
+      end
+      compile_wrapper_binary = function(fullname, name)
+	 local fullbasename = fullname:gsub("%.lua$", ""):gsub("/", "\\")
+	 local basename = name:gsub("%.lua$", ""):gsub("/", "\\")
+	 local rcname = basename..".rc"
+	 local resname = basename..".o"
+	 local wrapname = basename..".exe"
+	 make_rc(fullname, fullbasename..".rc")
+	 local ok = execute(variables.RC, "-o", resname, rcname)
+	 if not ok then return ok end
+	 ok = execute(variables.LD, "-o", wrapname, resname, variables.WRAPPER,
+		      "-L"..variables.LUA_LIBDIR, "-llua51", "-lmsvcrt", "-luser32")
+	 return ok, wrapname
+      end
+   elseif is_platform("win32") then
       compile_object = function(object, source, defines, incdirs)
          local extras = {}
          add_flags(extras, "-D%s", defines)
