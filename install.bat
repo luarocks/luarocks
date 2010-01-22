@@ -31,9 +31,9 @@ IF [%1]==[/?] (
    ECHO /P [dir]       Where to install.
    ECHO                Default is %PREFIX%
    ECHO /CONFIG [dir]  Location where the config file should be installed.
-   ECHO                Default is %SYSCONFDIR%
+   ECHO                Default is same place of installation
    ECHO /TREE [dir]    Root of the local tree of installed rocks.
-   ECHO                Default is %ROCKS_TREE%
+   ECHO                Default is same place of installation
    ECHO /SCRIPTS [dir] Where to install scripts installed by rocks.
    ECHO                Default is TREE/bin.
    ECHO.
@@ -56,6 +56,8 @@ IF [%1]==[/?] (
 )
 IF /I [%1]==[/P] (
    SET PREFIX=%2
+   SET SYSCONFDIR=%2
+   SET ROCKS_TREE=%2
    SHIFT /1
    SHIFT /1
    GOTO PARSE_LOOP
@@ -240,7 +242,11 @@ IF ERRORLEVEL 1 GOTO ERROR
 IF [%INSTALL_LUA%]==[ON] (
    IF NOT EXIST "%LUA_BINDIR%" %MKDIR% "%LUA_BINDIR%"
    IF NOT EXIST "%LUA_INCDIR%" %MKDIR% "%LUA_INCDIR%"
-   COPY lua5.1\bin\*.* "%LUA_BINDIR%" >NUL
+REM   IF [%USE_MINGW%]==[ON] (
+REM     COPY lua5.1\mingw32-bin\*.* "%LUA_BINDIR%" >NUL
+REM   ) ELSE (
+     COPY lua5.1\bin\*.* "%LUA_BINDIR%" >NUL
+REM   )
    COPY lua5.1\include\*.* "%LUA_INCDIR%" >NUL
 )
 COPY bin\*.* "%BINDIR%" >NUL
@@ -301,11 +307,19 @@ IF NOT EXIST "%CONFIG_FILE%" (
 
 IF [%SCRIPTS_DIR%]==[] (
    %MKDIR% "%ROCKS_TREE%"\bin >NUL
-   COPY lua5.1\bin\*.dll "%ROCKS_TREE%"\bin >NUL
+REM   IF [%USE_MINGW%]==[ON] (
+REM     COPY lua5.1\mingw32-bin\*.dll "%ROCKS_TREE%"\bin >NUL
+REM   ) ELSE (
+     COPY lua5.1\bin\*.dll "%ROCKS_TREE%"\bin >NUL
+REM   )
 )
 IF NOT [%SCRIPTS_DIR%]==[] (
    %MKDIR% "%SCRIPTS_DIR%" >NUL
-   COPY lua5.1\bin\*.dll "%SCRIPTS_DIR%" >NUL
+REM   IF [%USE_MINGW%]==[ON] (
+REM     COPY lua5.1\mingw32-bin\*.dll "%SCRIPTS_DIR%" >NUL
+REM   ) ELSE (
+     COPY lua5.1\bin\*.dll "%SCRIPTS_DIR%" >NUL
+REM   )
 )
 
 IF NOT EXIST "%ROCKS_TREE%" %MKDIR% "%ROCKS_TREE%"

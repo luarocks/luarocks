@@ -86,10 +86,9 @@ function run(rockspec)
       compile_library = function(library, objects, libraries, libdirs, name)
          local extras = { unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
-         add_flags(extras, "-l%s", libraries)
-	 extras[#extras+1] = "-L" .. variables.LUA_LIBDIR
-	 extras[#extras+1] = "-llua51"
-	 extras[#extras+1] = "-lmsvcrt"
+         add_flags(extras, "%s.lib", libraries)
+	 extras[#extras+1] = dir.path(variables.LUA_LIBDIR, "lua5.1.lib")
+	 extras[#extras+1] = "-l" .. (variables.MSVCRT or "msvcr80")
          local ok = execute(variables.LD.." "..variables.LIBFLAG, "-o", library, unpack(extras))
          return ok
       end
@@ -103,7 +102,7 @@ function run(rockspec)
 	 local ok = execute(variables.RC, "-o", resname, rcname)
 	 if not ok then return ok end
 	 ok = execute(variables.LD, "-o", wrapname, resname, variables.WRAPPER,
-		      "-L"..variables.LUA_LIBDIR, "-llua51", "-lmsvcrt", "-luser32")
+		      dir.path(variables.LUA_LIBDIR, "lua5.1.lib"), "-l" .. (variables.MSVCRT or "msvcr80"), "-luser32")
 	 return ok, wrapname
       end
    elseif is_platform("win32") then

@@ -176,12 +176,12 @@ if detected.windows then
    defaults.variables.LIBFLAG = "/dll"
    defaults.external_deps_patterns = {
       bin = { "?.exe", "?.bat" },
-      lib = { "?.lib", "?.dll" },
+      lib = { "?.lib", "?.dll", "lib?.dll" },
       include = { "?.h" }
    }
    defaults.runtime_external_deps_patterns = {
       bin = { "?.exe", "?.bat" },
-      lib = { "?.dll" },
+      lib = { "?.dll", "lib?.dll" },
       include = { "?.h" }
    }
    defaults.local_cache = home.."/cache/luarocks"
@@ -189,7 +189,7 @@ end
 
 if detected.mingw32 then
    home_config_file = home_config_file:gsub("\\","/")
-   defaults.arch = "mingw32-"..proc
+   defaults.arch = "win32-"..proc
    defaults.platforms = { "win32", "mingw32" }
    defaults.lib_extension = "dll"
    defaults.external_lib_extension = "dll"
@@ -201,15 +201,15 @@ if detected.mingw32 then
    defaults.cmake_generator = "MinGW Makefiles"
    defaults.make = "mingw32-make" -- TODO: Split Windows flavors between mingw and msvc
    defaults.makefile = "Makefile.win"
-   defaults.variables.CC = "gcc"
+   defaults.variables.CC = "mingw32-gcc"
    defaults.variables.RC = "windres"
    defaults.variables.WRAPPER = config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.o"
-   defaults.variables.LD = "gcc"
+   defaults.variables.LD = "mingw32-gcc"
    defaults.variables.CFLAGS = "-O2"
-   defaults.variables.LIBFLAG = "-shared --dll --export-all-symbols"
+   defaults.variables.LIBFLAG = "-shared"
    defaults.external_deps_patterns = {
       bin = { "?.exe", "?.bat" },
-      lib = { "lib?.a", "?.dll", "lib?.dll" },
+      lib = { "?.lib", "?.dll", "lib?.dll" },
       include = { "?.h" }
    }
    defaults.runtime_external_deps_patterns = {
