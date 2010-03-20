@@ -300,10 +300,6 @@ function update_manifest(name, version, repo)
    return save_table(repo, "manifest", manifest)
 end
 
-local function starts_with(s, prefix)
-   return s:sub(1,#prefix) == prefix
-end
-
 local function find_providers(file, root)
    assert(type(file) == "string")
    root = root or cfg.root_dir
@@ -317,13 +313,13 @@ local function find_providers(file, root)
    local deploy_lib = path.deploy_lib_dir(root)
    local key, manifest_tbl
 
-   if starts_with(file, deploy_lua) then
+   if util.starts_with(file, deploy_lua) then
       manifest_tbl = manifest.modules
       key = path.path_to_module(file:sub(#deploy_lua+1):gsub("\\", "/"))
-   elseif starts_with(file, deploy_lib) then
+   elseif util.starts_with(file, deploy_lib) then
       manifest_tbl = manifest.modules
       key = path.path_to_module(file:sub(#deploy_lib+1):gsub("\\", "/"))
-   elseif starts_with(file, deploy_bin) then
+   elseif util.starts_with(file, deploy_bin) then
       manifest_tbl = manifest.commands
       key = file:sub(#deploy_bin+1):gsub("^[\\/]*", "")
    else

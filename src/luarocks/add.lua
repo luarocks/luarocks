@@ -93,9 +93,6 @@ function run(...)
    if not server then
       return nil, "No server specified with --to and no default configured with upload_server."
    end
-   if cfg.upload_aliases then
-      server = cfg.upload_aliases[server] or server
-   end
    return add_file_to_server(not flags["no-refresh"], file, server, cfg.upload_servers and cfg.upload_servers[server])
 end
 

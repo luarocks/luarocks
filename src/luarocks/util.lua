@@ -239,6 +239,10 @@ function sortedpairs(tbl, sort_function)
    return coroutine.wrap(function() sortedpairs_iterator(tbl, sort_function) end)
 end
 
+function starts_with(s, prefix)
+   return s:sub(1,#prefix) == prefix
+end
+
 --[[
 Author: Julio Manuel Fernandez-Diaz
 Date:   January 12, 2007

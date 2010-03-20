@@ -166,6 +166,7 @@ function run(rockspec)
    end
 
    local ok = true
+   local err = "Build error"
    local built_modules = {}
    local luadir = path.lua_dir(rockspec.name, rockspec.version)
    local libdir = path.lib_dir(rockspec.name, rockspec.version)
@@ -219,7 +220,10 @@ function run(rockspec)
                object = source.."."..cfg.obj_extension
             end
             ok = compile_object(object, source, info.defines, info.incdirs)
-            if not ok then break end
+            if not ok then
+               err = "Failed compiling object "..object
+               break
+            end
             table.insert(objects, object)
          end
          if not ok then break end
@@ -230,22 +234,29 @@ function run(rockspec)
          local dest = dir.path(libdir, moddir)
          built_modules[module_name] = dest
          ok = compile_library(module_name, objects, info.libraries, info.libdirs, name)
-         if not ok then break end
+         if not ok then
+            err = "Failed compiling module "..module_name
+            break
+         end
       end
    end
    for name, dest in pairs(built_modules) do
       fs.make_dir(dest)
       ok = fs.copy(name, dest)
-      if not ok then break end
+      if not ok then
+         err = "Failed installing "..name.." in "..dest
+         break
+      end
    end
    if ok then
       if fs.is_dir("lua") then
          ok = fs.copy_contents("lua", luadir)
+         if not ok then err = "Failed copying contents of 'lua' directory." end
       end
    end
    if ok then
       return true
    else
-      return nil, "Build error"
+      return nil, err
    end
 end

@@ -20,8 +20,8 @@ function run(...)
    if not server then
       return nil, "No server specified with --from and no default configured with upload_server."
    end
-   if cfg.upload_aliases then
-      server = cfg.upload_aliases[server] or server
+   if cfg.upload_servers and cfg.upload_servers[server] and cfg.upload_servers[server].http then
+      server = "http://"..cfg.upload_servers[server].http
    end
    local ok, err = cache.refresh_local_cache(server, cfg.upload_user, cfg.upload_password)
    if not ok then

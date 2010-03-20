@@ -7,8 +7,10 @@ local fs = require("luarocks.fs")
 
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
+local util = require("luarocks.util")
 
 local socket_ok, http = pcall(require, "socket.http")
+local _, ftp = pcall(require, "socket.ftp")
 local zip_ok, lrzip = pcall(require, "luarocks.tools.zip")
 local unzip_ok, luazip = pcall(require, "zip"); _G.zip = nil
 local lfs_ok, lfs = pcall(require, "lfs")
@@ -178,6 +180,10 @@ function make_dir(directory)
    if directory:sub(2, 2) == ":" then
      path = directory:sub(1, 2)
      directory = directory:sub(4)
+   else
+     if directory:match("^/") then
+        path = ""
+     end
    end
    for d in directory:gmatch("([^"..dir.separator.."]+)"..dir.separator.."*") do
       path = path and path .. dir.separator .. d or d
@@ -503,14 +509,25 @@ function download(url, filename)
 
    filename = dir.path(fs.current_dir(), filename or dir.base_name(url))
 
-   local res, status, headers, line = http.request(url)
-   if not res then return false, status end
-   if status ~= 200 then
-     return false, "Failed downloading: " .. line
+   local content, err
+   if util.starts_with(url, "http:") then
+      local res, status, headers, line = http.request(url)
+      if not res then
+         err = status
+      elseif status ~= 200 then
+         err = line
+      else
+         content = res
+      end
+   elseif util.starts_with(url, "ftp:") then
+      content, err = ftp.get(url)
+   end
+   if not content then
+      return false, "Failed downloading: " .. err
    end
    local file = io.open(filename, "wb")
    if not file then return false end
-   file:write(res)
+   file:write(content)
    file:close()
    return true
 end
