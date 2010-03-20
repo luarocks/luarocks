@@ -1,0 +1,23 @@
+rock_manifest = {
+  ['luasocket-2.0.2-3.rockspec']='eb546dbbd806881232d4164ac2121d1a',
+  lua={
+    ['ltn12.lua']='3dfc54ef5c4d74c9558b503ea5595d0d',
+    socket={
+      ['ftp.lua']='a8fbe980f396bccfdaa5671a981e60cd',
+      ['url.lua']='2bb6b15f77e9fcf4fc028435d41ad748',
+      ['http.lua']='811e12534358f97907079ec49db9d753',
+      ['smtp.lua']='1d32e3dc5060e7e2f67b59e8f8376c63',
+      ['tp.lua']='b98814d6a43aa13dd01f78f3b573f4f6'
+    },
+    ['mime.lua']='6042de20ee4cacb2089388f1038bb92b',
+    ['socket.lua']='f8d9f766ce71816a68c90bb12a29eed9'
+  },
+  lib={
+    socket={
+      ['core.dll']='58a9887fb51f92e707c80f9ce4196d5c'
+    },
+    mime={
+      ['core.dll']='05efb07488c0ba45f35230b0066422f4'
+    }
+  }
+}

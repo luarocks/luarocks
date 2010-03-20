@@ -1,0 +1,16 @@
+local os = os
+
+module("luarocks.config")
+LFW_ROOT = os.getenv("LUA_DEV")
+LUA_INCDIR=LFW_ROOT..[[\include]]
+LUA_LIBDIR=LFW_ROOT..[[\lib]]
+LUA_BINDIR=LFW_ROOT
+LUA_INTERPRETER=[[lua]]
+LUAROCKS_UNAME_S=[[WindowsNT]]
+LUAROCKS_UNAME_M=[[x86]]
+LUAROCKS_SYSCONFIG=LFW_ROOT..[[\luarocks_config.lua]]
+LUAROCKS_ROCKS_TREE=LFW_ROOT
+LUAROCKS_PREFIX=LFW_ROOT
+LUAROCKS_DOWNLOADER=[[wget]]
+LUAROCKS_MD5CHECKER=[[md5sum]]
+
