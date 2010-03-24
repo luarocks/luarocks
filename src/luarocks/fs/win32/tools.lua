@@ -279,7 +279,7 @@ end
 -- additional arguments.
 -- @return boolean: true on success, false on failure.
 function zip(zipfile, ...)
-   return fs.execute("7z a", zipfile, ...)
+   return fs.execute("7z a -tzip", zipfile, ...)
 end
 
 --- Uncompress files from a .zip archive.
