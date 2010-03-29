@@ -4,7 +4,7 @@ rocks_servers = {
 }
 rocks_trees = {
    { root = LFW_ROOT, rocks_dir = LFW_ROOT..[[\rocks]],
-     bin_dir = LFW_ROOT..[[\utils]], lua_dir = LFW_ROOT..[[\lua]],
+     bin_dir = LFW_ROOT, lua_dir = LFW_ROOT..[[\lua]],
      lib_dir = LFW_ROOT..[[\clibs]] }
 }
-variables.WRAPPER = LFW_ROOT..[[rclauncher.obj]]
+variables.WRAPPER = LFW_ROOT..[[\rclauncher.obj]]
