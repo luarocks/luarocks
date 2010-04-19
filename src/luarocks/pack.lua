@@ -11,6 +11,7 @@ local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
+local search = require("luarocks.search")
 
 help_summary = "Create a rock, packing sources or binaries."
 help_arguments = "{<rockspec>|<name> [<version>]}"
@@ -82,27 +83,40 @@ end
 local function pack_binary_rock(name, version)
    assert(type(name) == "string")
    assert(type(version) == "string" or not version)
-   
-   local versions = rep.get_versions(name)
-   
-   if not versions then
+
+   local query = search.make_query(name, version)
+   query.exact_name = true
+   local results = {}
+   for _, tree in ipairs(cfg.rocks_trees) do
+      search.manifest_search(results, path.rocks_dir(tree), query)
+   end
+   if not next(results) then
       return nil, "'"..name.."' does not seem to be an installed rock."
    end
+   
+   local versions = results[name]
+   
    if not version then
-      if #versions > 1 then
+      local first = next(versions)
+      if next(versions, first) then
          return nil, "Please specify which version of '"..name.."' to pack."
       end
-      version = versions[1]
+      version = first
    end
    if not version:match("[^-]+%-%d+") then
       return nil, "Expected version "..version.." in version-revision format."
    end
-   local prefix = path.install_dir(name, version)
+   
+   local info = versions[version][1]
+   
+   local root = path.root_dir(info.repo)
+   local prefix = path.install_dir(name, version, root)
+   
    if not fs.exists(prefix) then
       return nil, "'"..name.." "..version.."' does not seem to be an installed rock."
    end
-
-   local rock_manifest = manif.load_rock_manifest(name, version)
+   
+   local rock_manifest = manif.load_rock_manifest(name, version, root)
    if not rock_manifest then
       return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks 2 tree?"
    end
@@ -115,11 +129,11 @@ local function pack_binary_rock(name, version)
 
    local is_binary = false
    if rock_manifest.lib then
-      copy_back_files(name, version, rock_manifest.lib, cfg.deploy_lib_dir, dir.path(temp_dir, "lib"))
+      copy_back_files(name, version, rock_manifest.lib, path.deploy_lib_dir(root), dir.path(temp_dir, "lib"))
       is_binary = true
    end
    if rock_manifest.lua then
-      copy_back_files(name, version, rock_manifest.lua, cfg.deploy_lua_dir, dir.path(temp_dir, "lua"))
+      copy_back_files(name, version, rock_manifest.lua, path.deploy_lua_dir(root), dir.path(temp_dir, "lua"))
    end
    
    fs.change_dir(temp_dir)

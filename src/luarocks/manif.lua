@@ -30,7 +30,7 @@ local function save_table(where, name, tbl)
    return persist.save_from_table(filename, tbl)
 end
 
-function load_rock_manifest(name, version)
+function load_rock_manifest(name, version, root)
    assert(type(name) == "string")
    assert(type(version) == "string")
 
@@ -38,7 +38,7 @@ function load_rock_manifest(name, version)
    if rock_manifest_cache[name_version] then
       return rock_manifest_cache[name_version].rock_manifest
    end
-   local pathname = path.rock_manifest_file(name, version)
+   local pathname = path.rock_manifest_file(name, version, root)
    local rock_manifest = persist.load_into_table(pathname)
    if not rock_manifest then return nil end
    rock_manifest_cache[name_version] = rock_manifest
