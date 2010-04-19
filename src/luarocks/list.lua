@@ -21,7 +21,7 @@ help = [[
 function run(...)
    local flags, filter, version = util.parse_flags(...)
    local results = {}
-   local query = search.make_query(filter or "", version)
+   local query = search.make_query(filter and filter:lower() or "", version)
    query.exact_name = false
    for _, tree in ipairs(cfg.rocks_trees) do
       search.manifest_search(results, path.rocks_dir(tree), query)

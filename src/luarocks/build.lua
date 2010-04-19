@@ -280,7 +280,7 @@ function run(...)
       return build_rock(name, true)
    elseif not name:match(dir.separator) then
       local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(run, name, version)
+      return search.act_on_src_or_rockspec(run, name:lower(), version)
    end
    return nil, "Don't know what to do with "..name
 end

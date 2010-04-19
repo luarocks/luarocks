@@ -374,7 +374,7 @@ function run(...)
       return nil, "Enter name and version or use --all; see help."
    end
    
-   local query = make_query(name, version)
+   local query = make_query(name:lower(), version)
    query.exact_name = false
    local results, err = search_repos(query)
    if not results then

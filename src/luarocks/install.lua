@@ -32,6 +32,7 @@ function install_binary_rock(rock_file)
    if not name then
       return nil, "Filename "..rock_file.." does not match format 'name-version-revision.arch.rock'."
    end
+   
    if arch ~= "all" and arch ~= cfg.arch then
       return nil, "Incompatible architecture "..arch, "arch"
    end
@@ -105,7 +106,7 @@ function run(...)
       return install_binary_rock(name)
    else
       local search = require("luarocks.search")
-      local results, err = search.find_suitable_rock(search.make_query(name, version))
+      local results, err = search.find_suitable_rock(search.make_query(name:lower(), version))
       if err then
          return nil, err
       elseif type(results) == "string" then
