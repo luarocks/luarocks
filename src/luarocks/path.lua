@@ -17,48 +17,55 @@ function rockspec_name_from_rock(rock_name)
 end
 
 function rocks_dir(repo)
-  if type(repo) == "string" then
-    return dir.path(repo, "lib", "luarocks", "rocks")
-  else
-    assert(type(repo) == "table")
-    return repo.rocks_dir or dir.path(repo.root, "lib", "luarocks", "rocks")
-  end
+   if type(repo) == "string" then
+      return dir.path(repo, "lib", "luarocks", "rocks")
+   else
+      assert(type(repo) == "table")
+      return repo.rocks_dir or dir.path(repo.root, "lib", "luarocks", "rocks")
+   end
+end
+
+function root_dir(rocks_dir)
+   assert(type(rocks_dir) == "string")
+   
+   local suffix = dir.path("lib", "luarocks", "rocks")
+   return rocks_dir:match("(.*)" .. suffix .. "$")
 end
 
 function deploy_bin_dir(repo)
-  if type(repo) == "string" then
-    return dir.path(repo, "bin")
-  else
-    assert(type(repo) == "table")
-    return repo.bin_dir or dir.path(repo.root, "bin")
-  end
+   if type(repo) == "string" then
+      return dir.path(repo, "bin")
+   else
+      assert(type(repo) == "table")
+      return repo.bin_dir or dir.path(repo.root, "bin")
+   end
 end
 
 function deploy_lua_dir(repo)
-  if type(repo) == "string" then
-    return dir.path(repo, "share", "lua", "5.1")
-  else
-    assert(type(repo) == "table")
-    return repo.lua_dir or dir.path(repo.root, "share", "lua", "5.1")
-  end
+   if type(repo) == "string" then
+      return dir.path(repo, "share", "lua", "5.1")
+   else
+      assert(type(repo) == "table")
+      return repo.lua_dir or dir.path(repo.root, "share", "lua", "5.1")
+   end
 end
 
 function deploy_lib_dir(repo)
-  if type(repo) == "string" then
-    return dir.path(repo, "lib", "lua", "5.1")
-  else
-    assert(type(repo) == "table")
-    return repo.lib_dir or dir.path(repo.root, "lib", "lua", "5.1")
-  end
+   if type(repo) == "string" then
+      return dir.path(repo, "lib", "lua", "5.1")
+   else
+      assert(type(repo) == "table")
+      return repo.lib_dir or dir.path(repo.root, "lib", "lua", "5.1")
+   end
 end
 
 function manifest_file(repo)
-  if type(repo) == "string" then
-    return dir.path(repo, "lib", "luarocks", "rocks", "manifest")
-  else
-    assert(type(repo) == "table")
-    return (repo.rocks_dir and dir.path(repo.rocks_dir, "manifest")) or dir.path(repo.root, "lib", "luarocks", "rocks", "manifest")
-  end
+   if type(repo) == "string" then
+      return dir.path(repo, "lib", "luarocks", "rocks", "manifest")
+   else
+      assert(type(repo) == "table")
+      return (repo.rocks_dir and dir.path(repo.rocks_dir, "manifest")) or dir.path(repo.root, "lib", "luarocks", "rocks", "manifest")
+   end
 end
 
 --- Get the repository directory for all versions of a package.
