@@ -30,7 +30,7 @@ function fetch_url(url, filename)
    if protocol == "file" then
       return fs.absolute_name(pathname)
    elseif protocol == "http" or protocol == "ftp" or protocol == "https" then
-      local ok = fs.download(url)
+      local ok = fs.download(url, filename)
       if not ok then
          return nil, "Failed downloading "..url, "network"
       end
