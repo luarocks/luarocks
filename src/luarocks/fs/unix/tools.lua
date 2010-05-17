@@ -291,21 +291,21 @@ function get_md5(file, md5sum)
    local computed
    if cfg.md5checker == "md5sum" then
       local pipe = io.popen("md5sum "..file)
-      computed = pipe:read("*l")
+      computed = pipe:read("*a")
       pipe:close()
       if computed then
          computed = computed:gsub("[^%x]+", ""):sub(1,32)
       end
    elseif cfg.md5checker == "openssl" then
       local pipe = io.popen("openssl md5 "..file)
-      computed = pipe:read("*l")
+      computed = pipe:read("*a")
       pipe:close()
       if computed then
          computed = computed:sub(-32)
       end
    elseif cfg.md5checker == "md5" then
       local pipe = io.popen("md5 "..file)
-      computed = pipe:read("*l")
+      computed = pipe:read("*a")
       pipe:close()
       if computed then
          computed = computed:sub(-32)
