@@ -246,6 +246,9 @@ if detected.unix then
       include = { "?.h" }
    }
    defaults.local_cache = home.."/.cache/luarocks"
+   if not defaults.variables.CFLAGS:match("-fPIC") then
+      defaults.variables.CFLAGS = defaults.variables.CFLAGS.." -fPIC"
+   end
 end
 
 if detected.cygwin then
@@ -282,10 +285,6 @@ if detected.freebsd then
    defaults.variables.CC = "gcc"
    defaults.variables.LD = "gcc"
    defaults.variables.LIBFLAG = "-shared"
-end
-
-if proc == "x86_64" and not defaults.variables.CFLAGS:match("-fPIC") then
-   defaults.variables.CFLAGS = defaults.variables.CFLAGS.." -fPIC"
 end
 
 -- Expose some more values detected by LuaRocks for use by rockspec authors.
