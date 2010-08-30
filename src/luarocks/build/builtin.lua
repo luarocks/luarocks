@@ -8,19 +8,6 @@ local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 
---- Check if platform was detected
--- @param query string: The platform name to check.
--- @return boolean: true if LuaRocks is currently running on queried platform.
-local function is_platform(query)
-   assert(type(query) == "string")
-
-   for _, platform in ipairs(cfg.platforms) do
-      if platform == query then
-         return true
-      end
-   end
-end
-
 --- Run a command displaying its execution on standard output.
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
@@ -76,7 +63,7 @@ function run(rockspec)
       end
    end
 
-   if is_platform("mingw32") then
+   if cfg.is_platform("mingw32") then
       compile_object = function(object, source, defines, incdirs)
          local extras = {}
          add_flags(extras, "-D%s", defines)
@@ -105,7 +92,7 @@ function run(rockspec)
 		      dir.path(variables.LUA_LIBDIR, "lua5.1.lib"), "-l" .. (variables.MSVCRT or "msvcr80"), "-luser32")
 	 return ok, wrapname
       end
-   elseif is_platform("win32") then
+   elseif cfg.is_platform("win32") then
       compile_object = function(object, source, defines, incdirs)
          local extras = {}
          add_flags(extras, "-D%s", defines)
@@ -157,7 +144,7 @@ function run(rockspec)
          local extras = { unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
          add_flags(extras, "-l%s", libraries)
-         if is_platform("cygwin") then
+         if cfg.is_platform("cygwin") then
             add_flags(extras, "-l%s", {"lua"})
          end
          return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, "-L"..variables.LUA_LIBDIR, unpack(extras))

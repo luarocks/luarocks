@@ -7,6 +7,14 @@ module("luarocks.path", package.seeall)
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.cfg")
 
+help_summary = "Return the currently configured package path."
+help_arguments = ""
+help = [[
+Returns the package path currently configured for this installation
+of LuaRocks, formatted as shell commands to update LUA_PATH and
+LUA_CPATH. (On Unix systems, you may run: eval `luarocks path`)
+]]
+
 --- Infer rockspec filename from a rock filename.
 -- @param rock_name string: Pathname of a rock file.
 -- @return string: Filename of the rockspec, without path.
@@ -291,3 +299,17 @@ function versioned_name(file, prefix, name, version)
    local name_version = (name.."_"..version):gsub("%-", "_"):gsub("%.", "_")
    return dir.path(prefix, name_version.."-"..rest)
 end
+
+--- Driver function for "path" command.
+-- @return boolean This function always succeeds.
+function run(...)
+   if cfg.is_platform("unix") then
+      print("export LUA_PATH='"..package.path.."'")
+      print("export LUA_CPATH='"..package.cpath.."'")
+   elseif cfg.is_platform("windows") then
+      print("SET LUA_PATH="..package.path)
+      print("SET LUA_CPATH="..package.cpath)
+   end
+   return true
+end
+

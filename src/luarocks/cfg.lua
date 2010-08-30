@@ -1,6 +1,6 @@
 
-local rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, ipairs, package, type =
-      rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, ipairs, package, type
+local rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, ipairs, package, type, assert =
+      rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, ipairs, package, type, assert
 
 --- Configuration for LuaRocks.
 -- Tries to load the user's configuration file and
@@ -318,7 +318,6 @@ local cfg_mt = {
 }
 setmetatable(_M, cfg_mt)
 
-
 for _,tree in ipairs(rocks_trees) do
   if type(tree) == "string" then
     package.path = tree..lua_modules_path.."/?.lua;"..tree..lua_modules_path.."/?/init.lua;"..package.path
@@ -330,3 +329,15 @@ for _,tree in ipairs(rocks_trees) do
   end
 end
 
+--- Check if platform was detected
+-- @param query string: The platform name to check.
+-- @return boolean: true if LuaRocks is currently running on queried platform.
+function is_platform(query)
+   assert(type(query) == "string")
+
+   for _, platform in ipairs(platforms) do
+      if platform == query then
+         return true
+      end
+   end
+end
