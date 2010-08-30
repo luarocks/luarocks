@@ -279,9 +279,16 @@ if [ -f "$lua_h" ]
 then
    echo "lua.h found in $lua_h"
 else
-   echo "lua.h not found (looked in $lua_h)"
-   echo "You may want to use the flag --with-lua-include. See --help."
-   exit 1
+   LUA_INCDIR="$LUA_INCDIR/lua5.1"
+   d_lua_h="$LUA_INCDIR/lua.h"
+   if [ -f "$d_lua_h" ]
+   then
+      echo "lua.h found in $d_lua_h (Debian/Ubuntu)"
+   else
+      echo "lua.h not found (looked in $lua_h)"
+      echo "You may want to use the flag --with-lua-include. See --help."
+      exit 1
+   fi
 fi
 
 if [ "$LUAROCKS_DOWNLOADER_SET" != "yes" ]
