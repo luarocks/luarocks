@@ -32,9 +32,11 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    local download_url = server
    local login_url = nil
    if upload_server then
-      if upload_server.http then download_url = "http://"..upload_server.http
+      if upload_server.rsync then download_url = "rsync://"..upload_server.rsync
+      elseif upload_server.http then download_url = "http://"..upload_server.http
       elseif upload_server.ftp then download_url = "ftp://"..upload_server.ftp
       end
+      
       if upload_server.ftp then login_url = "ftp://"..upload_server.ftp
       elseif upload_server.sftp then login_url = "sftp://"..upload_server.sftp
       end
@@ -44,9 +46,9 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
 
    local local_cache, protocol, server_path, user, password
    if refresh then
-      local_cache, protocol, server_path, user, password = cache.refresh_local_cache(download_url, cfg.upload_user, cfg.upload_password)
+      local_cache, protocol, server_path, user, password = cache.refresh_local_cache(server, download_url, cfg.upload_user, cfg.upload_password)
    else
-      local_cache, protocol, server_path, user, password = cache.split_server_url(download_url, cfg.upload_user, cfg.upload_password)
+      local_cache, protocol, server_path, user, password = cache.split_server_url(server, download_url, cfg.upload_user, cfg.upload_password)
    end
    if not local_cache then
       return nil, protocol
