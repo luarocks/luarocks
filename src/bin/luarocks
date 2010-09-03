@@ -17,5 +17,6 @@ commands.remove = require("luarocks.remove")
 commands.make = require("luarocks.make")
 commands.download = require("luarocks.download")
 commands.path = require("luarocks.path")
+commands.show = require("luarocks.show")
 
 command_line.run_command(...)
