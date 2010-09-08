@@ -8,6 +8,7 @@ module("luarocks.make", package.seeall)
 local build = require("luarocks.build")
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
+local cfg = require("luarocks.cfg")
 
 help_summary = "Compile package in current directory using a rockspec."
 help_arguments = "[<rockspec>]"
@@ -30,6 +31,11 @@ To install rocks, you'll normally want to use the "install" and
 function run(...)
    local flags, rockspec = util.parse_flags(...)
    assert(type(rockspec) == "string" or not rockspec)
+
+   if not flags["local"] and not fs.is_writable(cfg.root_dir) then
+      return nil, "Your user does not have write permissions in " .. cfg.root_dir ..
+                  " \n-- you may want to run as a privileged user or use your local tree with --local."
+   end
    
    if not rockspec then
       local files = fs.list_dir(fs.current_dir())

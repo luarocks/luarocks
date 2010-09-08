@@ -83,7 +83,7 @@ end
 
 -- Path configuration:
 
-local sys_config_file, home_config_file, home_tree
+local sys_config_file, home_config_file
 if detected.windows or detected.mingw32 then
    home = os.getenv("APPDATA") or "c:"
    sys_config_file = "c:/luarocks/config.lua"

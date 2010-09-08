@@ -252,10 +252,11 @@ function delete_version(name, version)
             local target = dir.path(deploy_dir, parent_path, file)
             local versioned = path.versioned_name(target, deploy_dir, name, version)
             if fs.exists(versioned) then
-               fs.delete(versioned)
+               local ok = fs.delete(versioned)
                fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
+               if not ok then return nil, "Failed deleting "..versioned end
             else
-               fs.delete(target)
+               local ok = fs.delete(target)
                local next_name, next_version = manif.find_next_provider(target)
                if next_name then
                   local versioned = path.versioned_name(target, deploy_dir, next_name, next_version)
@@ -263,6 +264,7 @@ function delete_version(name, version)
                   fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
                end
                fs.remove_dir_tree_if_empty(dir.dir_name(target))
+               if not ok then return nil, "Failed deleting "..target end
             end
             return true
          end

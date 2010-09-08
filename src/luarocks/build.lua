@@ -11,6 +11,7 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
 local manif = require("luarocks.manif")
+local cfg = require("luarocks.cfg")
 
 help_summary = "Build/compile a rock."
 help_arguments = "{<rockspec>|<rock>|<name> [<version>]}"
@@ -268,6 +269,11 @@ function run(...)
       return nil, "Argument missing, see help."
    end
    assert(type(version) == "string" or not version)
+
+   if not flags["local"] and not fs.is_writable(cfg.root_dir) then
+      return nil, "Your user does not have write permissions in " .. cfg.root_dir ..
+                  " \n-- you may want to run as a privileged user or use your local tree with --local."
+   end
 
    if name:match("%.rockspec$") then
       return build_rockspec(name, true)

@@ -11,6 +11,7 @@ local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 local manif = require("luarocks.manif")
+local fs = require("luarocks.fs")
 
 help_summary = "Uninstall a rock."
 help_arguments = "[--force] <name> [<version>]"
@@ -81,6 +82,12 @@ function run(...)
    if type(name) ~= "string" then
       return nil, "Argument missing, see help."
    end
+
+   if not flags["local"] and not fs.is_writable(cfg.rocks_dir) then
+      return nil, "Your user does not have write permissions in " .. cfg.rocks_dir ..
+                  " \n-- you may want to run as a privileged user or use your local tree with --local."
+   end
+
    local results = {}
    search.manifest_search(results, cfg.rocks_dir, search.make_query(name, version))
 
