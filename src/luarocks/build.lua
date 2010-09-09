@@ -230,6 +230,14 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
    ok, err = manif.update_manifest(name, version)
    if err then return nil, err end
 
+   local license = ""
+   if rockspec.description.license then
+      license = ("(license: "..rockspec.description.license..")")
+   end
+
+   print()
+   print(name.." "..version.." is now built and installed in "..cfg.root_dir.." "..license)
+   
    util.remove_scheduled_function(rollback)
    return true
 end
