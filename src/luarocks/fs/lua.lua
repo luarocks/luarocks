@@ -14,7 +14,6 @@ local _, ftp = pcall(require, "socket.ftp")
 local zip_ok, lrzip = pcall(require, "luarocks.tools.zip")
 local unzip_ok, luazip = pcall(require, "zip"); _G.zip = nil
 local lfs_ok, lfs = pcall(require, "lfs")
---local curl_ok, curl = pcall(require, "luacurl")
 local md5_ok, md5 = pcall(require, "md5")
 local posix_ok, posix = pcall(require, "posix")
 
@@ -445,47 +444,6 @@ function unzip(zipfile)
   until not file
   zipfile:close()
   return true
-end
-
-end
-
----------------------------------------------------------------------
--- LuaCurl functions
----------------------------------------------------------------------
-
-if curl_ok then
-
---- Download a remote file.
--- @param url string: URL to be fetched.
--- @param filename string or nil: this function attempts to detect the
--- resulting local filename of the remote file as the basename of the URL;
--- if that is not correct (due to a redirection, for example), the local
--- filename can be given explicitly as this second argument.
--- @return boolean: true on success, false on failure.
-function download(url, filename)
-   assert(type(url) == "string")
-   assert(type(filename) == "string" or not filename)
-
-   filename = dir.path(fs.current_dir(), filename or dir.base_name(url))
-
-   local c = curl.new()
-   if not c then return false end
-   local file = io.open(filename, "wb")
-   if not file then return false end
-   local ok = c:setopt(curl.OPT_WRITEFUNCTION, function (stream, buffer)
-      stream:write(buffer)
-      return string.len(buffer)
-   end)
-   ok = ok and c:setopt(curl.OPT_WRITEDATA, file)
-   ok = ok and c:setopt(curl.OPT_BUFFERSIZE, 5000)
-   ok = ok and c:setopt(curl.OPT_HTTPHEADER, "Connection: Keep-Alive")
-   ok = ok and c:setopt(curl.OPT_URL, url)
-   ok = ok and c:setopt(curl.OPT_CONNECTTIMEOUT, 15)
-   ok = ok and c:setopt(curl.OPT_USERAGENT, cfg.user_agent)
-   ok = ok and c:perform()
-   ok = ok and c:close()
-   file:close()
-   return ok
 end
 
 end
