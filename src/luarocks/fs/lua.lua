@@ -230,6 +230,7 @@ function copy(src, dest)
    if destmode == "directory" then
       dest = dir.path(dest, dir.base_name(src))
    end
+   local perms = fs.get_permissions(src)
    local src_h, err = io.open(src, "rb")
    if not src_h then return nil, err end
    local dest_h, err = io.open(dest, "wb+")
@@ -241,6 +242,7 @@ function copy(src, dest)
    end
    src_h:close()
    dest_h:close()
+   fs.chmod(dest, perms)
    return true
 end
 
@@ -569,6 +571,10 @@ if posix_ok then
 function chmod(file, mode)
    local err = posix.chmod(file, mode)
    return err == 0
+end
+
+function get_permissions(file)
+   return posix.stat(file, "mode")
 end
 
 end

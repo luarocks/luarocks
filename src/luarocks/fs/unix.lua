@@ -122,4 +122,3 @@ end
 function copy_binary(filename, dest) 
    return fs.copy(filename, dest)
 end
-
