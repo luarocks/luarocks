@@ -33,6 +33,14 @@ local function is_writable(tree)
   end
 end
 
+local function use_tree(tree)
+   cfg.root_dir = tree
+   cfg.rocks_dir = path.rocks_dir(tree)
+   cfg.deploy_bin_dir = path.deploy_bin_dir(tree)
+   cfg.deploy_lua_dir = path.deploy_lua_dir(tree)
+   cfg.deploy_lib_dir = path.deploy_lib_dir(tree)
+end
+
 --- Main command-line processor.
 -- Parses input arguments and calls the appropriate driver function
 -- to execute the action requested on the command-line, forwarding
@@ -58,30 +66,39 @@ function run_command(...)
    local nonflags = { util.parse_flags(unpack(args)) }
    local flags = table.remove(nonflags, 1)
    cfg.flags = flags
+
+   local command
+   
+   if flags["version"] then
+      print(program_name.." "..cfg.program_version)
+      print(program_description)
+      print()
+      os.exit(0)
+   elseif flags["help"] or #nonflags == 0 then
+      command = "help"
+      args = nonflags
+   else
+      command = nonflags[1]
+      for i, arg in ipairs(args) do
+         if arg == command then
+            table.remove(args, i)
+            break
+         end
+      end
+   end
+   command = command:gsub("-", "_")
    
    if flags["to"] then
       if flags["to"] == true then
          die("Argument error: use --to=<path>")
       end
       local root_dir = fs.absolute_name(flags["to"])
-      cfg.root_dir = root_dir
-      cfg.rocks_dir = path.rocks_dir(root_dir)
-      cfg.deploy_bin_dir = path.deploy_bin_dir(root_dir)
-      cfg.deploy_lua_dir = path.deploy_lua_dir(root_dir)
-      cfg.deploy_lib_dir = path.deploy_lib_dir(root_dir)
+      use_tree(root_dir)
+   elseif flags["local"] then
+      use_tree(cfg.home_tree)
    else
       local trees = cfg.rocks_trees
-      for i = #trees, 1, -1 do
-         local tree = trees[i]
-         if is_writable(tree) then
-            cfg.root_dir = tree
-            cfg.rocks_dir = path.rocks_dir(tree)
-            cfg.deploy_bin_dir = path.deploy_bin_dir(tree)
-            cfg.deploy_lua_dir = path.deploy_lua_dir(tree)
-            cfg.deploy_lib_dir = path.deploy_lib_dir(tree)
-            break
-         end
-      end
+      use_tree(trees[#trees])
    end
 
    if type(cfg.root_dir) == "string" then
@@ -111,34 +128,13 @@ function run_command(...)
       end
       cfg.rocks_servers = { flags["only-from"] }
    end
-   
-   local command
-   
-   if flags["version"] then
-      print(program_name.." "..cfg.program_version)
-      print(program_description)
-      print()
-      os.exit(0)
-   elseif flags["help"] or #nonflags == 0 then
-      command = "help"
-      args = nonflags
-   else
-      command = nonflags[1]
-      for i, arg in ipairs(args) do
-         if arg == command then
-            table.remove(args, i)
-            break
-         end
-      end
-   end
-   
+  
    if command ~= "help" then
       for k, v in pairs(cmdline_vars) do
          cfg.variables[k] = v
       end
    end
    
-   command = command:gsub("-", "_")
    if commands[command] then
       local xp, ok, err = xpcall(function() return commands[command].run(unpack(args)) end, function(err)
          die(debug.traceback("LuaRocks "..cfg.program_version

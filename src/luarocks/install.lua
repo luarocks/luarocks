@@ -79,6 +79,14 @@ function install_binary_rock(rock_file)
    ok, err = manif.update_manifest(name, version)
    if err then return nil, err end
    
+   local license = ""
+   if rockspec.description.license then
+      license = ("(license: "..rockspec.description.license..")")
+   end
+
+   print()
+   print(name.." "..version.." is now installed in "..cfg.root_dir.." "..license)
+   
    util.remove_scheduled_function(rollback)
    return true
 end
@@ -97,6 +105,11 @@ function run(...)
    local flags, name, version = util.parse_flags(...)
    if type(name) ~= "string" then
       return nil, "Argument missing, see help."
+   end
+
+   if not flags["local"] and not fs.is_writable(cfg.root_dir) then
+      return nil, "Your user does not have write permissions in " .. cfg.root_dir ..
+                  " \n-- you may want to run as a privileged user or use your local tree with --local."
    end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then

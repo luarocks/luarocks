@@ -40,6 +40,7 @@ can be overriden with VAR=VALUE assignments.
 --only-from=<server>  Fetch rocks/rockspecs from this server only
                       (overrides any entries in the config file)
 --to=<tree>           Which tree to operate on.
+--local               Use the tree in the user's home directory.
 
 Supported commands:
 ]])

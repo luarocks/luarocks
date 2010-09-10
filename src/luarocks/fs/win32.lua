@@ -95,3 +95,11 @@ function copy_binary(filename, dest)
    end
    return true
 end
+
+function chmod(filename, mode)
+   return true
+end
+
+function get_permissions(filename)
+   return ""
+end

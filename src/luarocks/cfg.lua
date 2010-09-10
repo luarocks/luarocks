@@ -63,9 +63,11 @@ end
 if system == "FreeBSD" then
    detected.unix = true
    detected.freebsd = true
+   detected.bsd = true
 elseif system == "Darwin" then
    detected.unix = true
    detected.macosx = true
+   detected.bsd = true
 elseif system == "Linux" then
    detected.unix = true
    detected.linux = true
@@ -83,7 +85,7 @@ end
 
 -- Path configuration:
 
-local sys_config_file, home_config_file, home_tree
+local sys_config_file, home_config_file
 if detected.windows or detected.mingw32 then
    home = os.getenv("APPDATA") or "c:"
    sys_config_file = "c:/luarocks/config.lua"

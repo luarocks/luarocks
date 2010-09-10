@@ -343,3 +343,12 @@ function unpack_archive(archive)
    end
    return true
 end
+
+function get_permissions(filename)
+   local ret
+   local flag = cfg.is_platform("bsd") and "-f '%A'" or "-c '%a'"
+   local pipe = io.popen("stat "..flag.." "..fs.Q(filename))
+   ret = pipe:read("*l")
+   pipe:close()
+   return ret
+end

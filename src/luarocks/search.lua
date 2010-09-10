@@ -283,8 +283,9 @@ end
 -- @param results table: A table where keys are package names and versions
 -- are tables matching version strings to an array of rocks servers.
 -- @param show_repo boolean or nil: Whether to show repository
+-- @param long boolean or nil: Whether to show module files
 -- information or not. Default is true.
-function print_results(results, show_repo)
+function print_results(results, show_repo, long)
    assert(type(results) == "table")
    assert(type(show_repo) == "boolean" or not show_repo)
    -- Force display of repo location for the time being

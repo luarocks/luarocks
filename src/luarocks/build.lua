@@ -11,6 +11,7 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
 local manif = require("luarocks.manif")
+local cfg = require("luarocks.cfg")
 
 help_summary = "Build/compile a rock."
 help_arguments = "{<rockspec>|<rock>|<name> [<version>]}"
@@ -229,6 +230,14 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
    ok, err = manif.update_manifest(name, version)
    if err then return nil, err end
 
+   local license = ""
+   if rockspec.description.license then
+      license = ("(license: "..rockspec.description.license..")")
+   end
+
+   print()
+   print(name.." "..version.." is now built and installed in "..cfg.root_dir.." "..license)
+   
    util.remove_scheduled_function(rollback)
    return true
 end
@@ -268,6 +277,11 @@ function run(...)
       return nil, "Argument missing, see help."
    end
    assert(type(version) == "string" or not version)
+
+   if not flags["local"] and not fs.is_writable(cfg.root_dir) then
+      return nil, "Your user does not have write permissions in " .. cfg.root_dir ..
+                  " \n-- you may want to run as a privileged user or use your local tree with --local."
+   end
 
    if name:match("%.rockspec$") then
       return build_rockspec(name, true)
