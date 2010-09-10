@@ -1,0 +1,64 @@
+#!/bin/sh
+
+if ! [ "$1" ]
+then
+   echo "usage: $0 <version>"
+   exit 1
+fi
+
+if ! [ -d ".git" ]
+then
+   echo "Should be run inside a git repo dir."
+   exit 1
+fi
+
+make clean || exit 1
+
+out="luarocks-$1"
+rm -rf "$out"
+mkdir "$out"
+rm -f "missing_ref"
+git ls-files | while read i
+do
+   if [ -f "$i" ]
+   then
+      dir=`dirname $i`
+      mkdir -p "$out/$dir"
+      cp "$i" "$out/$dir"
+      if echo "$i" | grep -v "/bin/" | grep -q "^src/"
+      then
+         grep -qw `basename "$i"` Makefile || { 
+            echo "Missing ref in makefile: $i"
+            touch "missing_ref"
+            exit 1
+         }
+      fi
+   fi
+done
+if [ -e "missing_ref" ]
+then
+   rm -f "missing_ref"
+   exit 1
+fi
+
+rm -rf "release-unix" "release-windows" "$out.tar.gz" "$out-win32.zip"
+
+mkdir "release-unix"
+cp -a "$out" "release-unix"
+mkdir "release-windows"
+mv "$out" "release-windows/$out-win32"
+
+cd "release-unix/$out"
+rm -rf makedist install.bat COPYING.7z win32 lfw src/bin/rclauncher.c 
+cd ..
+tar czvpf ../"$out.tar.gz" "$out"
+cd ..
+rm -rf "release-unix"
+
+cd "release-windows/$out-win32"
+cp -a win32/* .
+rm -rf makedist configure lfw
+cd ..
+zip -r ../"$out-win32.zip" "$out-win32"
+cd ..
+rm -rf "release-windows"
