@@ -56,8 +56,8 @@ cd ..
 rm -rf "release-unix"
 
 cd "release-windows/$out-win32"
-cp -a win32/* .
-rm -rf makedist configure lfw
+cp -va win32/* .
+rm -rf makedist Makefile configure lfw win32
 cd ..
 zip -r ../"$out-win32.zip" "$out-win32"
 cd ..
