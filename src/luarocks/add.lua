@@ -91,7 +91,10 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    -- TODO abstract away explicit 'curl' call
 
    local cmd
-   if upload_server.sftp then
+   if upload_server.rsync then
+      local srv, path = server_path:match("([^/]+)(/.+)")
+      cmd = "rsync -Oavz -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
+   elseif upload_server.sftp then
       local part1, part2 = upload_server.sftp:match("^([^/]*)/(.*)$")
       cmd = "scp manifest index.html "..table.concat(files, " ").." "..user.."@"..part1..":/"..part2
    else
