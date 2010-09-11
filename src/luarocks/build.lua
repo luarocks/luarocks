@@ -278,7 +278,7 @@ function run(...)
    end
    assert(type(version) == "string" or not version)
 
-   if not flags["local"] and not fs.is_writable(cfg.root_dir) then
+   if not flags["local"] and (fs.exists(cfg.root_dir) and not fs.is_writable(cfg.root_dir)) then
       return nil, "Your user does not have write permissions in " .. cfg.root_dir ..
                   " \n-- you may want to run as a privileged user or use your local tree with --local."
    end
