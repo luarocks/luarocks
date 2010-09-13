@@ -43,20 +43,20 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    end
    
    local at = fs.current_dir()
-
-   local local_cache, protocol, server_path, user, password
-   if refresh then
-      local_cache, protocol, server_path, user, password = cache.refresh_local_cache(server, download_url, cfg.upload_user, cfg.upload_password)
-   else
-      local_cache, protocol, server_path, user, password = cache.split_server_url(server, download_url, cfg.upload_user, cfg.upload_password)
-   end
+   
+   local refresh_fn = refresh and cache.refresh_local_cache or cache.split_server_url
+   local local_cache, protocol, server_path, user, password = refresh_fn(server, download_url, cfg.upload_user, cfg.upload_password)
    if not local_cache then
       return nil, protocol
    end
+   if protocol == "file" then
+      return nil, "Server "..server.." is not recognized, check your configuration."
+   end
+   
    if not login_url then
       login_url = protocol.."://"..server_path
    end
-
+   
    fs.change_dir(at)
    
    local files = {}
@@ -91,10 +91,10 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    -- TODO abstract away explicit 'curl' call
 
    local cmd
-   if upload_server.rsync then
+   if upload_server and upload_server.rsync then
       local srv, path = server_path:match("([^/]+)(/.+)")
       cmd = "rsync -Oavz -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
-   elseif upload_server.sftp then
+   elseif upload_server and upload_server.sftp then
       local part1, part2 = upload_server.sftp:match("^([^/]*)/(.*)$")
       cmd = "scp manifest index.html "..table.concat(files, " ").." "..user.."@"..part1..":/"..part2
    else
@@ -118,6 +118,7 @@ function run(...)
    if not server then
       return nil, "No server specified with --to and no default configured with upload_server."
    end
+   
    return add_files_to_server(not flags["no-refresh"], files, server, cfg.upload_servers and cfg.upload_servers[server])
 end
 
