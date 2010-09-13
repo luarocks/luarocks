@@ -266,7 +266,7 @@ end
 if detected.macosx then
    defaults.external_lib_extension = "dylib"
    defaults.arch = "macosx-"..proc
-   defaults.platforms = {"unix", "macosx"}
+   defaults.platforms = {"unix", "bsd", "macosx"}
    defaults.variables.CC = "export MACOSX_DEPLOYMENT_TARGET=10.3; gcc"
    defaults.variables.LD = "export MACOSX_DEPLOYMENT_TARGET=10.3; gcc"
    defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
@@ -283,7 +283,7 @@ end
 if detected.freebsd then
    defaults.arch = "freebsd-"..proc
    defaults.make = "gmake"
-   defaults.platforms = {"unix", "freebsd"}
+   defaults.platforms = {"unix", "bsd", "freebsd"}
    defaults.variables.CC = "gcc"
    defaults.variables.LD = "gcc"
    defaults.variables.LIBFLAG = "-shared"
