@@ -244,7 +244,11 @@ function download(url, filename)
 end
 
 function chmod(pathname, mode)
-  return fs.execute("chmod "..mode, pathname)
+   if mode then 
+      return fs.execute("chmod "..mode, pathname)
+   else
+      return false
+   end
 end
 
 --- Apply a patch.
