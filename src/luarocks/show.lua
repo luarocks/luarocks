@@ -110,8 +110,10 @@ function run(...)
       print()
       print(rockspec.package.." "..rockspec.version.." - "..descript.summary)
       print()
-      print(format_text(descript.detailed))
-      print()
+      if descript.detailed then
+         print(format_text(descript.detailed))
+         print()
+      end
       if descript.license then
          print("License: ", descript.license)
       end
