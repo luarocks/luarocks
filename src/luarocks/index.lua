@@ -104,9 +104,9 @@ function make_index(repo)
             if item.arch == 'rockspec' then
                local rs = ("%s-%s.rockspec"):format(package, version)
                if not latest_rockspec then latest_rockspec = rs end
-               output = output:gsub("$url", rs)
+               link = link:gsub("$url", rs)
             else
-               output = output:gsub("$url", ("%s-%s.%s.rock"):format(package, version, item.arch))
+               link = link:gsub("$url", ("%s-%s.%s.rock"):format(package, version, item.arch))
             end
             versions[item.arch] = link
             table.insert(versions_order, item.arch)
