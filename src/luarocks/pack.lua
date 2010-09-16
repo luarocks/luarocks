@@ -33,10 +33,10 @@ local function pack_source_rock(rockspec_file)
    assert(type(rockspec_file) == "string")
 
    local rockspec, err = fetch.load_rockspec(rockspec_file)
-   rockspec_file = rockspec.local_filename
    if err then
       return nil, "Error loading rockspec: "..err
    end
+   rockspec_file = rockspec.local_filename
 
    local name_version = rockspec.name .. "-" .. rockspec.version
    local rock_file = fs.absolute_name(name_version .. ".src.rock")
