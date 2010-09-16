@@ -95,13 +95,12 @@ function make_index(repo)
       local latest_rockspec = nil
       local output = index_package_start
       for version, data in util.sortedpairs(version_list, deps.compare_versions) do
-         local out_versions = {}
-         local arches = 0
-         output = output..version
-         local sep = ':&nbsp;'
+         local versions = {}
+         local versions_order = {}
+         output = output..version..':&nbsp;'
+         
          for _, item in ipairs(data) do
-            output = output .. sep .. '<a href="$url">'..item.arch..'</a>'
-            sep = ',&nbsp;'
+            local link = '<a href="$url">'..item.arch..'</a>'
             if item.arch == 'rockspec' then
                local rs = ("%s-%s.rockspec"):format(package, version)
                if not latest_rockspec then latest_rockspec = rs end
@@ -109,9 +108,14 @@ function make_index(repo)
             else
                output = output:gsub("$url", ("%s-%s.%s.rock"):format(package, version, item.arch))
             end
+            versions[item.arch] = link
+            table.insert(versions_order, item.arch)
          end
-         output = output .. '<br/>'
-         output = output:gsub("$na", arches)
+         table.sort(versions_order)
+         for i, arch in ipairs(versions_order) do
+            versions_order[i] = versions[versions_order[i]]
+         end
+         output = output .. table.concat(versions_order, ',&nbsp;') .. '<br/>'
       end
       output = output .. index_package_end
       if latest_rockspec then
