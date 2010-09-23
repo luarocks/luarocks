@@ -135,7 +135,9 @@ function parse_version(vstring)
          -- extract a word
          token, rest = vstring:match("^(%a+)[%.%-%_]*(.*)")
          if not token then
-            return nil
+            print("Warning: version number '"..vstring.."' could not be parsed.")
+            version[i] = 0
+            break
          end
          local last = #version
          version[i] = deltas[token] or (token:byte() / 1000)
