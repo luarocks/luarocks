@@ -88,6 +88,10 @@ function run_command(...)
    end
    command = command:gsub("-", "_")
    
+   if cfg.local_by_default then
+      flags["local"] = true
+   end
+   
    if flags["to"] then
       if flags["to"] == true then
          die("Argument error: use --to=<path>")
