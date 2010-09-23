@@ -74,7 +74,7 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    index.make_index(local_cache)
 
    local srv, path = server_path:match("([^/]+)(/.+)")
-   local cmd = "rsync -Oavz -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
+   local cmd = "rsync -Oavz --delete -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
 
    print(cmd)
    fs.execute(cmd)

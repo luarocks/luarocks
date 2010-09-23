@@ -21,7 +21,7 @@ function get_sources(rockspec, extract, dest_dir)
    local module = dir.base_name(rockspec.source.url)
    -- Strip off .git from base name if present
    module = module:gsub("%.git$", "")
-   local command = {"git", "clone", rockspec.source.url, module}
+   local command = {"git", "clone", "--depth=1", rockspec.source.url, module}
    local checkout_command
    local tag_or_branch = rockspec.source.tag or rockspec.source.branch
    if tag_or_branch then
@@ -41,13 +41,15 @@ function get_sources(rockspec, extract, dest_dir)
    if not fs.execute(unpack(command)) then
       return nil, "Failed fetching files from GIT while cloning."
    end
+   fs.change_dir(module)
    if checkout_command then
-      fs.change_dir(module)
       if not fs.execute(unpack(checkout_command)) then
          return nil, "Failed fetching files from GIT while getting tag/branch."
       end
-      fs.pop_dir()
    end
+   fs.delete(".git")
+   fs.delete(".gitignore")
+   fs.pop_dir()
    fs.pop_dir()
    return module, store_dir
 end
