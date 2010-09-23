@@ -11,6 +11,7 @@ commands = {
 commands.help = require("luarocks.help")
 commands.make_manifest = require("luarocks.make_manifest")
 commands.add = require("luarocks.add")
+commands.remove = require("luarocks.admin_remove")
 commands.refresh_cache = require("luarocks.refresh_cache")
 
 command_line.run_command(...)
