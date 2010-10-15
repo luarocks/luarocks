@@ -163,9 +163,16 @@ function run(...)
       return nil, "Argument missing, see help."
    end
 
+   local file, err
    if arg:match(".*%.rockspec") then
-      return pack_source_rock(arg)
+      file, err = pack_source_rock(arg)
    else
-      return pack_binary_rock(arg, version)
+      file, err = pack_binary_rock(arg, version)
+   end
+   if err then
+      return nil, err
+   else
+      print("Packed: "..file)
+      return true
    end
 end
