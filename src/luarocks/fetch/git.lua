@@ -39,12 +39,12 @@ function get_sources(rockspec, extract, dest_dir)
    end
    fs.change_dir(store_dir)
    if not fs.execute(unpack(command)) then
-      return nil, "Failed fetching files from GIT while cloning."
+      return nil, "Failed cloning git repository."
    end
    fs.change_dir(module)
    if checkout_command then
       if not fs.execute(unpack(checkout_command)) then
-         return nil, "Failed fetching files from GIT while getting tag/branch."
+         return nil, "Failed checking out tag/branch from git repository."
       end
    end
    fs.delete(".git")
