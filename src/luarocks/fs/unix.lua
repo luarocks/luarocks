@@ -101,6 +101,11 @@ function is_actual_binary(filename)
    if file then
       local found = false
       local first = file:read()
+      if not first then
+         file:close()
+         print("Warning: could not read "..filename)
+         return false
+      end
       if first:match("#!.*lua") then
          file:close()
          return true
