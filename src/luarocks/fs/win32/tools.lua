@@ -246,7 +246,8 @@ function find(at)
    local pipe = io.popen(command_at(at, "find 2> NUL"))
    for file in pipe:lines() do
       -- Windows find is a bit different
-      if file:sub(1,2)==".\\" then file=file:sub(3) end
+      local first_two = file:sub(1,2)
+      if first_two == ".\\" or first_two == "./" then file=file:sub(3) end
       if file ~= "." then
          table.insert(result, (file:gsub("\\", "/")))
       end
