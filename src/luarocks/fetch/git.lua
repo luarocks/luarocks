@@ -47,8 +47,8 @@ function get_sources(rockspec, extract, dest_dir)
          return nil, "Failed checking out tag/branch from git repository."
       end
    end
-   fs.delete(".git")
-   fs.delete(".gitignore")
+   fs.delete(dir.path(store_dir, module, ".git"))
+   fs.delete(dir.path(store_dir, module, ".gitignore"))
    fs.pop_dir()
    fs.pop_dir()
    return module, store_dir
