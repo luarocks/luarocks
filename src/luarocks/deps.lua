@@ -211,7 +211,7 @@ end
 function parse_dep(dep)
    assert(type(dep) == "string")
 
-   local name, rest = dep:match("^%s*(%a[%w%-]*%w)%s*(.*)")
+   local name, rest = dep:match("^%s*([a-zA-Z][a-zA-Z0-9%.%-%_]*)%s*(.*)")
    if not name then return nil end
    local constraints = parse_constraints(rest)
    if not constraints then return nil end
