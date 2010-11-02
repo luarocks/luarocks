@@ -64,6 +64,7 @@ local index_package_start = [[
 <td class="package">
 <p><a name="$anchor"></a><b>$package</b> - $summary<br/>
 </p><blockquote><p>$detailed<br/>
+$externaldependencies
 <font size="-1"><a href="$original">latest sources</a> $homepage | License: $license</font></p>
 </blockquote></a></td>
 <td class="version">
@@ -83,6 +84,34 @@ local index_footer = [[
 </html>
 ]]
 
+function format_external_dependencies(rockspec)
+   if rockspec.external_dependencies then
+      local deplist = {}
+      local listed_set = {}
+      local plats = nil
+      for name, desc in util.sortedpairs(rockspec.external_dependencies) do
+         if name ~= "platforms" then
+            table.insert(deplist, name:lower())
+            listed_set[name] = true
+         else
+            plats = desc
+         end
+      end
+      if plats then
+         for plat, entries in util.sortedpairs(plats) do
+            for name, desc in util.sortedpairs(entries) do
+               if not listed_set[name] then
+                  table.insert(deplist, name:lower() .. " (on "..plat..")")
+               end
+            end
+         end
+      end
+      return '<p><b>External dependencies:</b> ' .. table.concat(deplist, ',&nbsp;').. '</p>'
+   else
+      return ""
+   end
+end
+
 function make_index(repo)
    if not fs.is_dir(repo) then
       return nil, "Cannot access repository at "..repo
@@ -96,9 +125,8 @@ function make_index(repo)
       local output = index_package_start
       for version, data in util.sortedpairs(version_list, deps.compare_versions) do
          local versions = {}
-         local versions_order = {}
          output = output..version..':&nbsp;'
-         
+         table.sort(data, function(a,b) return a.arch < b.arch end)
          for _, item in ipairs(data) do
             local link = '<a href="$url">'..item.arch..'</a>'
             if item.arch == 'rockspec' then
@@ -108,14 +136,9 @@ function make_index(repo)
             else
                link = link:gsub("$url", ("%s-%s.%s.rock"):format(package, version, item.arch))
             end
-            versions[item.arch] = link
-            table.insert(versions_order, item.arch)
+            table.insert(versions, link)
          end
-         table.sort(versions_order)
-         for i, arch in ipairs(versions_order) do
-            versions_order[i] = versions[versions_order[i]]
-         end
-         output = output .. table.concat(versions_order, ',&nbsp;') .. '<br/>'
+         output = output .. table.concat(versions, ',&nbsp;') .. '<br/>'
       end
       output = output .. index_package_end
       if latest_rockspec then
@@ -127,7 +150,8 @@ function make_index(repo)
             summary = rockspec.description.summary or "",
             detailed = rockspec.description.detailed or "",
             license = rockspec.description.license or "N/A",
-            homepage = rockspec.description.homepage and ("| <a href="..rockspec.description.homepage..">project homepage</a>") or ""
+            homepage = rockspec.description.homepage and ("| <a href="..rockspec.description.homepage..">project homepage</a>") or "",
+            externaldependencies = format_external_dependencies(rockspec)
          }
          vars.detailed = vars.detailed:gsub("\n\n", "</p><p>"):gsub("%s+", " ")
          output = output:gsub("$(%w+)", vars)
