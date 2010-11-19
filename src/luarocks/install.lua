@@ -84,8 +84,9 @@ function install_binary_rock(rock_file)
       license = ("(license: "..rockspec.description.license..")")
    end
 
+   local root_dir = path.root_dir(cfg.rocks_dir)
    print()
-   print(name.." "..version.." is now installed in "..cfg.root_dir.." "..license)
+   print(name.." "..version.." is now installed in "..root_dir.." "..license)
    
    util.remove_scheduled_function(rollback)
    return true
@@ -107,10 +108,8 @@ function run(...)
       return nil, "Argument missing, see help."
    end
 
-   if not flags["local"] and (fs.exists(cfg.root_dir) and not fs.is_writable(cfg.root_dir)) then
-      return nil, "Your user does not have write permissions in " .. cfg.root_dir ..
-                  " \n-- you may want to run as a privileged user or use your local tree with --local."
-   end
+   local ok, err = fs.check_command_permissions(flags)
+   if not ok then return nil, err end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       local build = require("luarocks.build")
