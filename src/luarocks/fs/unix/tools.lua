@@ -302,14 +302,14 @@ function get_md5(file, md5sum)
       end
    elseif cfg.md5checker == "openssl" then
       local pipe = io.popen("openssl md5 "..file)
-      computed = pipe:read("*a")
+      computed = pipe:read("*l")
       pipe:close()
       if computed then
          computed = computed:sub(-32)
       end
    elseif cfg.md5checker == "md5" then
       local pipe = io.popen("md5 "..file)
-      computed = pipe:read("*a")
+      computed = pipe:read("*l")
       pipe:close()
       if computed then
          computed = computed:sub(-32)
