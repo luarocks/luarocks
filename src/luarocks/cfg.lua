@@ -64,6 +64,10 @@ if system == "FreeBSD" then
    detected.unix = true
    detected.freebsd = true
    detected.bsd = true
+elseif system == "OpenBSD" then
+   detected.unix = true
+   detected.openbsd = true
+   detected.bsd = true
 elseif system == "Darwin" then
    detected.unix = true
    detected.macosx = true
@@ -287,6 +291,11 @@ if detected.freebsd then
    defaults.variables.CC = "gcc"
    defaults.variables.LD = "gcc"
    defaults.variables.LIBFLAG = "-shared"
+end
+
+if detected.openbsd then
+   defaults.arch = "openbsd-"..proc
+   defaults.platforms = {"unix", "bsd", "openbsd"}
 end
 
 -- Expose some more values detected by LuaRocks for use by rockspec authors.

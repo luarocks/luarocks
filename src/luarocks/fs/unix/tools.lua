@@ -350,7 +350,18 @@ end
 
 function get_permissions(filename)
    local ret
-   local flag = cfg.is_platform("bsd") and "-f '%A'" or "-c '%a'"
+
+   local flag
+   if cfg.is_platform("bsd") then
+      if cfg.is_platform("openbsd") then
+         flag = "-f '%Op'"
+      else
+         flag = "-f '%A'"
+      end
+   else
+      flag = "-c '%a'"
+   end
+
    local pipe = io.popen("stat "..flag.." "..fs.Q(filename))
    ret = pipe:read("*l")
    pipe:close()
