@@ -302,14 +302,14 @@ function get_md5(file, md5sum)
       end
    elseif cfg.md5checker == "openssl" then
       local pipe = io.popen("openssl md5 "..file)
-      computed = pipe:read("*a")
+      computed = pipe:read("*l")
       pipe:close()
       if computed then
          computed = computed:sub(-32)
       end
    elseif cfg.md5checker == "md5" then
       local pipe = io.popen("md5 "..file)
-      computed = pipe:read("*a")
+      computed = pipe:read("*l")
       pipe:close()
       if computed then
          computed = computed:sub(-32)
@@ -350,7 +350,18 @@ end
 
 function get_permissions(filename)
    local ret
-   local flag = cfg.is_platform("bsd") and "-f '%A'" or "-c '%a'"
+
+   local flag
+   if cfg.is_platform("bsd") then
+      if cfg.is_platform("openbsd") then
+         flag = "-f '%Op'"
+      else
+         flag = "-f '%A'"
+      end
+   else
+      flag = "-c '%a'"
+   end
+
    local pipe = io.popen("stat "..flag.." "..fs.Q(filename))
    ret = pipe:read("*l")
    pipe:close()

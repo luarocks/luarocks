@@ -24,7 +24,7 @@ end
 
 _M.config = config
 
-program_version = "2.0.3"
+program_version = "2.0.4"
 user_agent = "LuaRocks/"..program_version
 
 local persist = require("luarocks.persist")
@@ -63,6 +63,10 @@ end
 if system == "FreeBSD" then
    detected.unix = true
    detected.freebsd = true
+   detected.bsd = true
+elseif system == "OpenBSD" then
+   detected.unix = true
+   detected.openbsd = true
    detected.bsd = true
 elseif system == "Darwin" then
    detected.unix = true
@@ -287,6 +291,11 @@ if detected.freebsd then
    defaults.variables.CC = "gcc"
    defaults.variables.LD = "gcc"
    defaults.variables.LIBFLAG = "-shared"
+end
+
+if detected.openbsd then
+   defaults.arch = "openbsd-"..proc
+   defaults.platforms = {"unix", "bsd", "openbsd"}
 end
 
 -- Expose some more values detected by LuaRocks for use by rockspec authors.

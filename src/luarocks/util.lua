@@ -362,4 +362,3 @@ function show_table(t, name, indent)
    addtocart(t, name, indent)
    return cart .. autoref
 end
-

@@ -8,6 +8,7 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
+local path = require("luarocks.path")
 
 local socket_ok, http = pcall(require, "socket.http")
 local _, ftp = pcall(require, "socket.ftp")
@@ -612,6 +613,20 @@ function move(src, dest)
    ok = fs.delete(src)
    if not ok then
       return false, "Failed move: could not delete "..src.." after copy."
+   end
+   return true
+end
+
+--- Check if user has write permissions for the command.
+-- Assumes the configuration variables under cfg have been previously set up.
+-- @param flags table: the flags table passed to run() drivers.
+-- @return boolean or (boolean, string): true on success, false on failure,
+-- plus an error message.
+function check_command_permissions(flags)
+   local root_dir = path.root_dir(cfg.rocks_dir)
+   if not flags["local"] and not fs.is_writable(root_dir) then
+      return nil, "Your user does not have write permissions in " .. root_dir ..
+                  " \n-- you may want to run as a privileged user or use your local tree with --local."
    end
    return true
 end

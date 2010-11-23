@@ -32,10 +32,8 @@ function run(...)
    local flags, rockspec = util.parse_flags(...)
    assert(type(rockspec) == "string" or not rockspec)
 
-   if not flags["local"] and not fs.is_writable(cfg.root_dir) then
-      return nil, "Your user does not have write permissions in " .. cfg.root_dir ..
-                  " \n-- you may want to run as a privileged user or use your local tree with --local."
-   end
+   local ok, err = fs.check_command_permissions(flags)
+   if not ok then return nil, err end
    
    if not rockspec then
       local files = fs.list_dir(fs.current_dir())
