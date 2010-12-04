@@ -34,7 +34,6 @@ end
 -- @param tbl table: the table to be written.
 local function write_table(out, tbl, level)
    out:write("{")
-   local size = table.getn(tbl)
    local sep = "\n"
    local indent = true
    local i = 1
