@@ -216,6 +216,20 @@ function keys(tbl)
    return ks
 end
 
+local function default_sort(a, b)
+   local ta = type(a)
+   local tb = type(b)
+   if ta == "number" and tb == "number" then
+      return a < b
+   elseif ta == "number" then
+      return true
+   elseif tb == "number" then
+      return false
+   else
+      return tostring(a) < tostring(b)
+   end
+end
+
 -- The iterator function used internally by util.sortedpairs.
 -- @param tbl table: The table to be iterated.
 -- @param sort_function function or nil: An optional comparison function
@@ -223,7 +237,7 @@ end
 -- @see sortedpairs
 local function sortedpairs_iterator(tbl, sort_function)
    local ks = keys(tbl)
-   table.sort(ks, sort_function)
+   table.sort(ks, sort_function or default_sort)
    for _, k in ipairs(ks) do
       coroutine.yield(k, tbl[k])
    end

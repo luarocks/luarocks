@@ -16,9 +16,9 @@ manifest_cache = {}
 -- @param file string: The local filename of the manifest file.
 -- @param repo_url string: The repository identifier.
 function manifest_loader(file, repo_url, quick)
-   local manifest = persist.load_into_table(file)
+   local manifest, err = persist.load_into_table(file)
    if not manifest then
-      return nil, "Failed loading manifest for "..repo_url
+      return nil, "Failed loading manifest for "..repo_url..": "..err
    end
    if not quick then
       local ok, err = type_check.type_check_manifest(manifest)

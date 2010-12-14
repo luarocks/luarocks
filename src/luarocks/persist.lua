@@ -28,10 +28,6 @@ function load_into_table(filename, tbl)
    return result
 end
 
-local function string_sort(a,b)
-   return tostring(a) < tostring(b)
-end
-
 --- Write a table as Lua code representing a table to disk
 -- (that is, in curly brackets notation).
 -- This function handles only numbers, strings and tables
@@ -43,7 +39,7 @@ local function write_table(out, tbl, level)
    local sep = "\n"
    local indent = true
    local i = 1
-   for k, v in util.sortedpairs(tbl, string_sort) do
+   for k, v in util.sortedpairs(tbl) do
       out:write(sep)
       if indent then
          for n = 1,level do out:write("  ") end
@@ -52,7 +48,7 @@ local function write_table(out, tbl, level)
       indent = true
       if type(k) == "number" then
          if k ~= i then
-            out:write(tostring(k).."=")
+            out:write('['..tostring(k).."]=")
          else
             i = i + 1
          end
@@ -95,7 +91,7 @@ function save_from_table(filename, tbl)
    if not out then
       return nil, "Cannot create file at "..filename
    end
-   for k, v in util.sortedpairs(tbl, string_sort) do
+   for k, v in util.sortedpairs(tbl) do
       out:write(k.." = ")
       write_table(out, v, 1)
       out:write("\n")
