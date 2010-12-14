@@ -287,35 +287,23 @@ function unpack_archive(archive)
    return true
 end
 
+local md5_cmd = {
+   md5sum = "md5sum ",
+   openssl = "openssl md5 ",
+   md5 = "md5 ",
+}
+   
 --- Get the MD5 checksum for a file.
 -- @param file string: The file to be computed.
 -- @return string: The MD5 checksum
-function get_md5(file, md5sum)
-   file = fs.absolute_name(file)
-   local computed
-   if cfg.md5checker == "md5sum" then
-      local pipe = io.popen("md5sum "..file)
-      computed = pipe:read("*a")
-      pipe:close()
-      if computed then
-         computed = computed:gsub("[^%x]+", ""):sub(1,32)
-      end
-   elseif cfg.md5checker == "openssl" then
-      local pipe = io.popen("openssl md5 "..file)
-      computed = pipe:read("*l")
-      pipe:close()
-      if computed then
-         computed = computed:sub(-32)
-      end
-   elseif cfg.md5checker == "md5" then
-      local pipe = io.popen("md5 "..file)
-      computed = pipe:read("*l")
-      pipe:close()
-      if computed then
-         computed = computed:sub(-32)
-      end
-   end
-   return computed
+function get_md5(file)
+   local cmd = md5_cmd[cfg.md5checker]
+   if not cmd then return nil end
+   local pipe = io.popen(cmd..fs.absolute_name(file))
+   local computed = pipe:read("*a")
+   pipe:close()
+   if not computed then return nil end
+   return computed:match("("..("%x"):rep(32)..")")
 end
 
 --- Unpack an archive.

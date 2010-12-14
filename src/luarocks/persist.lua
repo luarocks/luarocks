@@ -5,6 +5,8 @@
 -- as it is used in the bootstrapping stage of the cfg module.
 module("luarocks.persist", package.seeall)
 
+local util = require("luarocks.util")
+
 --- Load a Lua file containing assignments, storing them in a table.
 -- The global environment is not propagated to the loaded file.
 -- @param filename string: the name of the file.
@@ -26,6 +28,10 @@ function load_into_table(filename, tbl)
    return result
 end
 
+local function string_sort(a,b)
+   return tostring(a) < tostring(b)
+end
+
 --- Write a table as Lua code representing a table to disk
 -- (that is, in curly brackets notation).
 -- This function handles only numbers, strings and tables
@@ -34,11 +40,10 @@ end
 -- @param tbl table: the table to be written.
 local function write_table(out, tbl, level)
    out:write("{")
-   local size = table.getn(tbl)
    local sep = "\n"
    local indent = true
    local i = 1
-   for k, v in pairs(tbl) do
+   for k, v in util.sortedpairs(tbl, string_sort) do
       out:write(sep)
       if indent then
          for n = 1,level do out:write("  ") end
@@ -90,7 +95,7 @@ function save_from_table(filename, tbl)
    if not out then
       return nil, "Cannot create file at "..filename
    end
-   for k, v in pairs(tbl) do
+   for k, v in util.sortedpairs(tbl, string_sort) do
       out:write(k.." = ")
       write_table(out, v, 1)
       out:write("\n")
