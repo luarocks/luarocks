@@ -38,6 +38,10 @@ function Q(arg)
    return "'" .. arg:gsub("\\", "\\\\"):gsub("'", "'\\''") .. "'"
 end
 
+local function normalize(name)
+   return name:gsub("\\", "/"):gsub("/$", "")
+end
+
 --- Test is file/dir is writable.
 -- Warning: testing if a file/dir is writable does not guarantee
 -- that it will remain writable and therefore it is no replacement
@@ -46,9 +50,10 @@ end
 -- @return boolean: true if file exists, false otherwise.
 function is_writable(file)
    assert(file)
+   file = normalize(file)
    local result
    if fs.is_dir(file) then
-      local file2 = file .. '/.tmpluarockstestwritable'
+      local file2 = dir.path(file, '.tmpluarockstestwritable')
       local fh = io.open(file2, 'wb')
       result = fh ~= nil
       if fh then fh:close() end
@@ -67,8 +72,8 @@ end
 -- @return string or nil: name of temporary directory or nil on failure.
 function make_temp_dir(name)
    assert(type(name) == "string")
+   name = normalize(name)
 
-   name = name:gsub("\\", "/")
    local temp_dir = (os.getenv("TMP") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-" .. tostring(math.floor(math.random() * 10000))
    if fs.make_dir(temp_dir) then
       return temp_dir
@@ -100,6 +105,7 @@ end
 -- @return boolean: true if the MD5 checksum for 'file' equals 'md5sum', false if not
 -- or if it could not perform the check for any reason.
 function check_md5(file, md5sum)
+   file = normalize(file)
    local computed = fs.get_md5(file)
    if not computed then
       return false
@@ -144,6 +150,7 @@ end
 -- @param d string: The directory to switch to.
 function change_dir(d)
    table.insert(dir_stack, lfs.currentdir())
+   d = normalize(d)
    lfs.chdir(d)
 end
 
@@ -175,7 +182,7 @@ end
 -- @return boolean: true on success, false on failure.
 function make_dir(directory)
    assert(type(directory) == "string")
-   directory = directory:gsub("\\", "/")
+   directory = normalize(directory)
    local path = nil
    if directory:sub(2, 2) == ":" then
      path = directory:sub(1, 2)
@@ -205,6 +212,7 @@ end
 -- @param d string: pathname of directory to remove.
 function remove_dir_if_empty(d)
    assert(d)
+   d = normalize(d)
    lfs.rmdir(d)
 end
 
@@ -214,6 +222,7 @@ end
 -- @param d string: pathname of directory to remove.
 function remove_dir_tree_if_empty(d)
    assert(d)
+   d = normalize(d)
    for i=1,10 do
       lfs.rmdir(d)
       d = dir.dir_name(d)
@@ -227,6 +236,8 @@ end
 -- plus an error message.
 function copy(src, dest)
    assert(src and dest)
+   src = normalize(src)
+   dest = normalize(dest)
    local destmode = lfs.attributes(dest, "mode")
    if destmode == "directory" then
       dest = dir.path(dest, dir.base_name(src))
@@ -248,6 +259,7 @@ function copy(src, dest)
 end
 
 --- Implementation function for recursive copy of directory contents.
+-- Assumes paths are normalized.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
 -- @return boolean or (boolean, string): true on success, false on failure
@@ -277,6 +289,8 @@ end
 -- plus an error message.
 function copy_contents(src, dest)
    assert(src and dest)
+   src = normalize(src)
+   dest = normalize(dest)
    assert(lfs.attributes(src, "mode") == "directory")
 
    for file in lfs.dir(src) do
@@ -291,35 +305,34 @@ function copy_contents(src, dest)
 end
 
 --- Implementation function for recursive removal of directories.
--- @param src string: Pathname of source
--- @param dest string: Pathname of destination
+-- Assumes paths are normalized.
+-- @param name string: Pathname of file
 -- @return boolean or (boolean, string): true on success,
 -- or nil and an error message on failure.
-local function recursive_delete(src)
-   local srcmode = lfs.attributes(src, "mode")
+local function recursive_delete(name)
+   local mode = lfs.attributes(name, "mode")
 
-   if srcmode == "file" then
-      return os.remove(src)
-   elseif srcmode == "directory" then
-      for file in lfs.dir(src) do
+   if mode == "file" then
+      return os.remove(name)
+   elseif mode == "directory" then
+      for file in lfs.dir(name) do
          if file ~= "." and file ~= ".." then
-            local ok, err = recursive_delete(dir.path(src, file))
+            local ok, err = recursive_delete(dir.path(name, file))
             if not ok then return nil, err end
          end
       end
-      local ok, err = lfs.rmdir(src)
+      local ok, err = lfs.rmdir(name)
       if not ok then return nil, err end
    end
    return true
 end
 
 --- Delete a file or a directory and all its contents.
--- For safety, this only accepts absolute paths.
--- @param arg string: Pathname of source
+-- @param name string: Pathname of source
 -- @return boolean: true on success, false on failure.
-function delete(arg)
-   assert(arg)
-   return recursive_delete(arg) or false
+function delete(name)
+   name = normalize(name)
+   return recursive_delete(name) or false
 end
 
 --- List the contents of a directory.
@@ -332,6 +345,7 @@ function list_dir(at)
    if not at then
       at = fs.current_dir()
    end
+   at = normalize(at)
    if not fs.is_dir(at) then
       return {}
    end
@@ -345,6 +359,7 @@ function list_dir(at)
 end
 
 --- Implementation function for recursive find.
+-- Assumes paths are normalized.
 -- @param cwd string: Current working directory in recursion.
 -- @param prefix string: Auxiliary prefix string to form pathname.
 -- @param result table: Array of strings where results are collected.
@@ -371,6 +386,7 @@ function find(at)
    if not at then
       at = fs.current_dir()
    end
+   at = normalize(at)
    if not fs.is_dir(at) then
       return {}
    end
@@ -384,7 +400,8 @@ end
 -- @return boolean: true if file exists, false otherwise.
 function exists(file)
    assert(file)
-   return type(lfs.attributes(file)) == "table"
+   file = normalize(file)
+   return type(file) == "table"
 end
 
 --- Test is pathname is a directory.
@@ -392,6 +409,7 @@ end
 -- @return boolean: true if it is a directory, false otherwise.
 function is_dir(file)
    assert(file)
+   file = normalize(file)
    return lfs.attributes(file, "mode") == "directory"
 end
 
@@ -400,10 +418,12 @@ end
 -- @return boolean: true if it is a file, false otherwise.
 function is_file(file)
    assert(file)
+   file = normalize(file)
    return lfs.attributes(file, "mode") == "file"
 end
 
 function set_time(file, time)
+   file = normalize(file)
    return lfs.touch(file, time)
 end
 
@@ -426,27 +446,27 @@ if unzip_ok then
 -- @param zipfile string: pathname of .zip archive to be extracted.
 -- @return boolean: true on success, false on failure.
 function unzip(zipfile)
-  local zipfile, err = luazip.open(zipfile)
-  if not zipfile then return nil, err end
-  local files = zipfile:files()
-  local file = files()
-  repeat
-	if file.filename:sub(#file.filename) == "/" then
-	  fs.make_dir(dir.path(fs.current_dir(), file.filename))
-	else
-      local rf, err = zipfile:open(file.filename)
-	  if not rf then zipfile:close(); return nil, err end
-	  local contents = rf:read("*a")
-	  rf:close()
-	  local wf, err = io.open(dir.path(fs.current_dir(), file.filename), "wb")
-	  if not wf then zipfile:close(); return nil, err end
-	  wf:write(contents)
-	  wf:close()
-	end
-	file = files()
-  until not file
-  zipfile:close()
-  return true
+   local zipfile, err = luazip.open(zipfile)
+   if not zipfile then return nil, err end
+   local files = zipfile:files()
+   local file = files()
+   repeat
+      if file.filename:sub(#file.filename) == "/" then
+         fs.make_dir(dir.path(fs.current_dir(), file.filename))
+      else
+         local rf, err = zipfile:open(file.filename)
+         if not rf then zipfile:close(); return nil, err end
+         local contents = rf:read("*a")
+         rf:close()
+         local wf, err = io.open(dir.path(fs.current_dir(), file.filename), "wb")
+         if not wf then zipfile:close(); return nil, err end
+         wf:write(contents)
+         wf:close()
+      end
+      file = files()
+   until not file
+   zipfile:close()
+   return true
 end
 
 end
@@ -456,7 +476,6 @@ end
 ---------------------------------------------------------------------
 
 if socket_ok then
-
 
 local ltn12 = require("ltn12")
 
