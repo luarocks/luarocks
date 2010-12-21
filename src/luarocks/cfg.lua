@@ -243,12 +243,12 @@ if detected.unix then
    defaults.variables.LIBFLAG = "-shared"
    defaults.external_deps_patterns = {
       bin = { "?" },
-      lib = { "lib?.a", "lib?.so" },
+      lib = { "lib?.a", "lib?.so", "lib?.so.*" },
       include = { "?.h" }
    }
    defaults.runtime_external_deps_patterns = {
       bin = { "?" },
-      lib = { "lib?.so" },
+      lib = { "lib?.so", "lib?.so.*" },
       include = { "?.h" }
    }
    defaults.local_cache = home.."/.cache/luarocks"

@@ -543,9 +543,18 @@ function check_external_deps(rockspec, mode)
                      if f:match("%.so$") or f:match("%.dylib$") or f:match("%.dll$") then
                         f = f:gsub("%.[^.]+$", "."..cfg.external_lib_extension)
                      end
-                     local testfile = dir.path(dirdata.dir, f)
-                     if fs.exists(testfile) then
-                        found = true
+                     if f:match("%*") then
+                        local replaced = f:gsub("%.", "%%."):gsub("%*", ".*")
+                        for _, entry in ipairs(fs.list_dir(dirdata.dir)) do
+                           if entry:match(replaced) then
+                              found = true
+                              break
+                           end
+                        end
+                     else
+                        found = fs.exists(dir.path(dirdata.dir, f))
+                     end
+                     if found then
                         break
                      else
                         if failed_file then
