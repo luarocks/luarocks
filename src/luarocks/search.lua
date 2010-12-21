@@ -269,11 +269,11 @@ function find_suitable_rock(query)
    if not results then
       return nil, err
    end
-   local first = results and next(results)
-   if first and next(results, first) == nil then
-      return pick_latest_version(query.name, results[first])
-   elseif not first then
+   local first = next(results)
+   if not first then
       return nil, "No results matching query were found."
+   elseif not next(results, first) then
+      return pick_latest_version(query.name, results[first])
    else
       return results
    end
