@@ -431,19 +431,19 @@ function unzip(zipfile)
   local files = zipfile:files()
   local file = files()
   repeat
-	if file.filename:sub(#file.filename) == "/" then
-	  fs.make_dir(dir.path(fs.current_dir(), file.filename))
-	else
-      local rf, err = zipfile:open(file.filename)
-	  if not rf then zipfile:close(); return nil, err end
-	  local contents = rf:read("*a")
-	  rf:close()
-	  local wf, err = io.open(dir.path(fs.current_dir(), file.filename), "wb")
-	  if not wf then zipfile:close(); return nil, err end
-	  wf:write(contents)
-	  wf:close()
-	end
-	file = files()
+     if file.filename:sub(#file.filename) == "/" then
+        fs.make_dir(dir.path(fs.current_dir(), file.filename))
+     else
+        local rf, err = zipfile:open(file.filename)
+        if not rf then zipfile:close(); return nil, err end
+        local contents = rf:read("*a")
+        rf:close()
+        local wf, err = io.open(dir.path(fs.current_dir(), file.filename), "wb")
+        if not wf then zipfile:close(); return nil, err end
+        wf:write(contents)
+        wf:close()
+     end
+     file = files()
   until not file
   zipfile:close()
   return true
@@ -494,6 +494,8 @@ function download(url, filename)
       end
    elseif util.starts_with(url, "ftp:") then
       content, err = ftp.get(url)
+   else
+      err = "Unsupported protocol in URL: "..url
    end
    if not content then
       return false, "Failed downloading: " .. err
