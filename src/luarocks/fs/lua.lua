@@ -457,8 +457,29 @@ end
 
 if socket_ok then
 
-
 local ltn12 = require("ltn12")
+local luasec_ok, https = pcall(require, "ssl.https")
+
+local function http_request(url, http)
+   local proxy = cfg.proxy
+   local url_arg, proxy_result
+   if proxy then
+      proxy_result = {}
+      url_arg = { url = url, proxy = proxy, sink = ltn12.sink.table(proxy_result) }
+   else
+      url_arg = url
+   end
+   local res, status, headers, line = http.request(url_arg)
+   if not res then
+      err = status
+   elseif status ~= 200 then
+      err = line
+   else
+      if proxy_result then res = table.concat(proxy_result) end
+      content = res
+   end
+   return content, err
+end
 
 --- Download a remote file.
 -- @param url string: URL to be fetched.
@@ -475,30 +496,20 @@ function download(url, filename)
    
    local content, err
    if util.starts_with(url, "http:") then
-      local proxy = cfg.proxy
-      local url_arg, proxy_result
-      if proxy then
-         proxy_result = {}
-         url_arg = { url = url, proxy = proxy, sink = ltn12.sink.table(proxy_result) }
-      else
-         url_arg = url
-      end
-      local res, status, headers, line = http.request(url_arg)
-      if not res then
-         err = status
-      elseif status ~= 200 then
-         err = line
-      else
-         if proxy_result then res = table.concat(proxy_result) end
-         content = res
-      end
+      content, err = http_request(url, http)
    elseif util.starts_with(url, "ftp:") then
       content, err = ftp.get(url)
+   elseif util.starts_with(url, "https:") then
+      if luasec_ok then
+         content, err = http_request(url, https)
+      else
+         err = "Unsupported protocol - install luasec to get HTTPS support."
+      end
    else
-      err = "Unsupported protocol in URL: "..url
+      err = "Unsupported protocol"
    end
    if not content then
-      return false, "Failed downloading: " .. err
+      return false, err
    end
    local file = io.open(filename, "wb")
    if not file then return false end
@@ -506,43 +517,6 @@ function download(url, filename)
    file:close()
    return true
 end
-
---- Download a remote file.
--- @param url string: URL to be fetched.
--- @param filename string or nil: this function attempts to detect the
--- resulting local filename of the remote file as the basename of the URL;
--- if that is not correct (due to a redirection, for example), the local
--- filename can be given explicitly as this second argument.
--- @return boolean: true on success, false on failure.
-function download(url, filename)
-   assert(type(url) == "string")
-   assert(type(filename) == "string" or not filename)
-
-   filename = dir.path(fs.current_dir(), filename or dir.base_name(url))
-
-   local content, err
-   if util.starts_with(url, "http:") then
-      local res, status, headers, line = http.request(url)
-      if not res then
-         err = status
-      elseif status ~= 200 then
-         err = line
-      else
-         content = res
-      end
-   elseif util.starts_with(url, "ftp:") then
-      content, err = ftp.get(url)
-   end
-   if not content then
-      return false, "Failed downloading: " .. err
-   end
-   local file = io.open(filename, "wb")
-   if not file then return false end
-   file:write(content)
-   file:close()
-   return true
-end
-
 
 end
 ---------------------------------------------------------------------
