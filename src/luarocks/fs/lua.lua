@@ -88,6 +88,13 @@ function execute(command, ...)
    assert(type(command) == "string")
 
    for _, arg in ipairs({...}) do
+      if (type(arg) == "table") then
+        if arg[2] then -- should quote
+          arg = fs.Q(arg[1])
+        else -- should not quote
+          arg = arg[1]
+        end
+      end
       assert(type(arg) == "string")
       command = command .. " " .. fs.Q(arg)
    end
