@@ -401,7 +401,7 @@ end
 function exists(file)
    assert(file)
    file = normalize(file)
-   return type(file) == "table"
+   return type(lfs.attributes(file)) == "table"
 end
 
 --- Test is pathname is a directory.
