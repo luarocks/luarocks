@@ -239,7 +239,7 @@ function download(url, filename)
       end
    elseif cfg.downloader == "curl" then
       filename = filename or dir.base_name(url)
-      return fs.execute_string("curl --user-agent "..cfg.user_agent.." "..fs.Q(url).." 2> /dev/null 1> "..fs.Q(filename))
+      return fs.execute_string("curl -L --user-agent "..cfg.user_agent.." "..fs.Q(url).." 2> /dev/null 1> "..fs.Q(filename))
    end
 end
 
