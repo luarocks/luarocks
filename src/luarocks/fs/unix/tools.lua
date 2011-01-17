@@ -231,7 +231,7 @@ function download(url, filename)
    assert(type(filename) == "string" or not filename)
 
    if cfg.downloader == "wget" then
-      local wget_cmd = "wget --no-cache --user-agent="..cfg.user_agent.." --quiet --continue "
+      local wget_cmd = "wget --no-check-certificate --no-cache --user-agent="..cfg.user_agent.." --quiet --continue "
       if filename then
          return fs.execute(wget_cmd.." --output-document ", filename, url)
       else
