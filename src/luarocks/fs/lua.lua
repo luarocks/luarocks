@@ -490,6 +490,7 @@ local function http_request(url, http)
       url_arg = url
    end
    local res, status, headers, line = http.request(url_arg)
+   local content, err
    if not res then
       err = status
    elseif status ~= 200 then
