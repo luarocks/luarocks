@@ -479,8 +479,12 @@ if socket_ok then
 
 local ltn12 = require("ltn12")
 local luasec_ok, https = pcall(require, "ssl.https")
+local redirect_protocols = {
+   http = http,
+   https = luasec_ok and https,
+}
 
-local function http_request(url, http)
+local function http_request(url, http, loop_control)
    local proxy = cfg.proxy
    local url_arg, proxy_result
    if proxy then
@@ -493,6 +497,23 @@ local function http_request(url, http)
    local content, err
    if not res then
       err = status
+   elseif status == 301 or status == 302 then
+      local location = headers.location
+      if location then
+         local protocol, rest = dir.split_url(location)
+         if redirect_protocols[protocol] then
+            if not loop_control then
+               loop_control = {}
+            elseif loop_control[location] then
+               return nil, "Redirection loop -- broken URL?"
+            end
+            loop_control[url] = true
+            return http_request(location, redirect_protocols[protocol], loop_control)
+         else
+            return nil, "URL redirected to unsupported protocol - install luasec to get HTTPS support."
+         end
+      end
+      err = line
    elseif status ~= 200 then
       err = line
    else
