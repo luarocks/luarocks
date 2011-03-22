@@ -32,7 +32,7 @@ function fetch_url(url, filename)
    elseif protocol == "http" or protocol == "ftp" or protocol == "https" then
       local ok, err = fs.download(url, filename)
       if not ok then
-         return nil, "Failed downloading "..url.." - "..err, "network"
+         return nil, "Failed downloading "..url..(err and " - "..err or ""), "network"
       end
       return dir.path(fs.current_dir(), filename or dir.base_name(url))
    else
