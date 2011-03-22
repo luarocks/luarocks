@@ -6,6 +6,7 @@ module("luarocks.fs.win32.tools", package.seeall)
 
 local fs = require("luarocks.fs")
 local cfg = require("luarocks.cfg")
+local dir = require("luarocks.dir")
 
 local dir_stack = {}
 
@@ -253,14 +254,20 @@ end
 function download(url, filename)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
-   local wget_cmd = "wget --cache=off --user-agent="..cfg.user_agent.." --quiet --continue "
 
-   if filename then
-      return fs.execute(wget_cmd.." --output-document ", filename, url)
-   else
-      return fs.execute(wget_cmd, url)
+   if cfg.downloader == "wget" then
+      local wget_cmd = "wget --no-check-certificate --no-cache --user-agent="..cfg.user_agent.." --quiet --continue "
+      if filename then
+         return fs.execute(wget_cmd.." --output-document ", filename, url)
+      else
+         return fs.execute(wget_cmd, url)
+      end
+   elseif cfg.downloader == "curl" then
+      filename = filename or dir.base_name(url)
+      return fs.execute_string("curl -L --user-agent "..cfg.user_agent.." "..fs.Q(url).." 2> NUL 1> "..fs.Q(filename))
    end
 end
+
 
 --- Compress files in a .zip archive.
 -- @param zipfile string: pathname of .zip archive to be created.
