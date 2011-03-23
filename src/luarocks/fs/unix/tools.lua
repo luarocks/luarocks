@@ -306,36 +306,6 @@ function get_md5(file)
    return computed:match("("..("%x"):rep(32)..")")
 end
 
---- Unpack an archive.
--- Extract the contents of an archive, detecting its format by
--- filename extension.
--- @param archive string: Filename of archive.
--- @return boolean or (boolean, string): true on success, false and an error message on failure.
-function unpack_archive(archive)
-   assert(type(archive) == "string")
-
-   local ok
-   if archive:match("%.tar%.gz$") or archive:match("%.tgz$") then
-      -- ok = fs.execute("tar zxvpf ", archive)
-      ok = fs.execute_string("gunzip -c "..archive.."|tar -xf -")
-   elseif archive:match("%.tar%.bz2$") then
-      -- ok = fs.execute("tar jxvpf ", archive)
-      ok = fs.execute_string("bunzip2 -c "..archive.."|tar -xf -")
-   elseif archive:match("%.zip$") then
-      ok = fs.execute("unzip ", archive)
-   elseif archive:match("%.lua$") or archive:match("%.c$") then
-      -- Ignore .lua and .c files; they don't need to be extracted.
-      return true
-   else
-      local ext = archive:match(".*(%..*)")
-      return false, "Unrecognized filename extension "..(ext or "")
-   end
-   if not ok then
-      return false, "Failed extracting "..archive
-   end
-   return true
-end
-
 function get_permissions(filename)
    local ret
 
