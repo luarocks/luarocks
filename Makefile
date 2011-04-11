@@ -76,7 +76,7 @@ build_bins:
 	   rm src/bin/$$f.bak ;\
 	done
 
-built: src/luarocks/config.lua build_bins
+built: cleanup_bins src/luarocks/config.lua build_bins
 	touch built
 	@echo
 	@echo "Done. Type 'make install' to install into $(PREFIX)."
@@ -98,12 +98,14 @@ check_makefile:
 	@echo "Makefile is sane."
 	@echo
 
-clean:
+cleanup_bins:
 	for f in $(BIN_FILES) ;\
 	do \
 	   sed -i.bak "s,^#!.*lua.*,#!/usr/bin/env lua,;/^package.path/d" src/bin/$$f ;\
 	   rm src/bin/$$f.bak ;\
 	done
+
+clean: cleanup_bins
 	rm -f src/luarocks/config.lua
 	rm -f built
 
