@@ -174,7 +174,7 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
       local build_type
       ok, build_type = pcall(require, "luarocks.build." .. build.type)
       if not ok or not type(build_type) == "table" then
-         return nil, "Failed initializing build back-end for build type '"..build.type.."'"
+         return nil, "Failed initializing build back-end for build type '"..build.type.."': "..build_type
       end
   
       ok, err = build_type.run(rockspec)
