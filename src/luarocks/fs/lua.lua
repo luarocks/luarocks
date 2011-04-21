@@ -485,18 +485,10 @@ local redirect_protocols = {
 }
 
 local function http_request(url, http, loop_control)
-   local proxy = cfg.proxy
-   local url_arg, proxy_result
-   if proxy then
-      proxy_result = {}
-      url_arg = { url = url, proxy = proxy, sink = ltn12.sink.table(proxy_result) }
-   else
-      url_arg = url
-   end
-   local res, status, headers, line = http.request(url_arg)
-   local content, err
+   local result = {}
+   local res, status, headers, err = http.request { url = url, proxy = cfg.proxy, redirect = false, sink = ltn12.sink.table(result) }
    if not res then
-      err = status
+      return nil, status
    elseif status == 301 or status == 302 then
       local location = headers.location
       if location then
@@ -513,14 +505,12 @@ local function http_request(url, http, loop_control)
             return nil, "URL redirected to unsupported protocol - install luasec to get HTTPS support."
          end
       end
-      err = line
+      return nil, err
    elseif status ~= 200 then
-      err = line
+      return nil, err
    else
-      if proxy_result then res = table.concat(proxy_result) end
-      content = res
+      return table.concat(result)
    end
-   return content, err
 end
 
 --- Download a remote file.
