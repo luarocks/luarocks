@@ -518,6 +518,7 @@ function check_external_deps(rockspec, mode)
       for name, files in pairs(rockspec.external_dependencies) do
          local ok = true
          local failed_file = nil
+         local failed_dirname = nil
          for _, extdir in ipairs(cfg.external_deps_dirs) do
             ok = true
             local prefix = vars[name.."_DIR"]
@@ -566,6 +567,7 @@ function check_external_deps(rockspec, mode)
                   end
                   if not found then
                      ok = false
+                     failed_dirname = dirname
                      break
                   end
                end
@@ -579,7 +581,7 @@ function check_external_deps(rockspec, mode)
             end
          end
          if not ok then
-            return nil, "Could not find expected file "..failed_file.." for "..name.." -- you may have to install "..name.." in your system and/or set the "..name.."_DIR variable", "dependency"
+            return nil, "Could not find expected file "..failed_file.." for "..name.." -- you may have to install "..name.." in your system and/or pass "..name.."_DIR or "..name.."_"..failed_dirname.." to the luarocks command. Example: luarocks install "..rockspec.name.." "..name.."_DIR=/usr/local", "dependency"
          end
       end
    end
