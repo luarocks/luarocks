@@ -188,7 +188,7 @@ function new_zipwriter(name)
    
    local zw = {}
   
-   zw.ziphandle = io.open(name, "w")
+   zw.ziphandle = io.open(name, "wb")
    if not zw.ziphandle then
       return nil
    end
