@@ -5,8 +5,6 @@ local zlib = require("zlib")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 
-local size_buf = 65535
-
 local function number_to_bytestring(number, nbytes)
    local out = {}
    for i = 1, nbytes do
@@ -115,8 +113,8 @@ local function zipwriter_add(self, file)
          err = "error opening "..file.." for reading"
       end
    end
-   while ok do
-      local buf = fin:read(size_buf)
+   if ok then
+      local buf = fin:read("*a")
       if not buf then
          break
       end
