@@ -37,8 +37,8 @@ end
 
 --- Process the dependencies of a package to determine its dependency
 -- chain for loading modules.
--- @parse name string: The name of an installed rock.
--- @parse version string: The version of the rock, in string format
+-- @param name string: The name of an installed rock.
+-- @param version string: The version of the rock, in string format
 function add_context(name, version)
    -- assert(type(name) == "string")
    -- assert(type(version) == "string")

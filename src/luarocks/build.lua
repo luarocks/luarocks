@@ -93,6 +93,9 @@ end
 -- @param rockspec_file string: local or remote filename of a rockspec.
 -- @param need_to_fetch boolean: true if sources need to be fetched,
 -- false if the rockspec was obtained from inside a source rock.
+-- @param minimal_mode boolean: true if there's no need to fetch,
+-- unpack or change dir (this is used by "luarocks make"). Implies
+-- need_to_fetch = false.
 -- @return boolean or (nil, string, [string]): True if succeeded or 
 -- nil and an error message followed by an error code.
 function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
