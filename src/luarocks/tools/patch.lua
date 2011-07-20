@@ -1,4 +1,4 @@
--- patch.lua - Patch utility to apply unified diffs
+--- Patch utility to apply unified diffs
 --
 -- http://lua-users.org/wiki/LuaPatch
 --
