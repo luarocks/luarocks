@@ -506,14 +506,6 @@ function check_external_deps(rockspec, mode)
       patterns = cfg.runtime_external_deps_patterns
       subdirs = cfg.runtime_external_deps_subdirs
    end
-   local dirs = {
-      BINDIR = { subdir = subdirs.bin, testfile = "program", pattern = patterns.bin },
-      INCDIR = { subdir = subdirs.include, testfile = "header", pattern = patterns.include },
-      LIBDIR = { subdir = subdirs.lib, testfile = "library", pattern = patterns.lib }
-   }
-   if mode == "install" then
-      dirs.INCDIR = nil
-   end
    if rockspec.external_dependencies then
       for name, files in pairs(rockspec.external_dependencies) do
          local ok = true
@@ -522,8 +514,30 @@ function check_external_deps(rockspec, mode)
          for _, extdir in ipairs(cfg.external_deps_dirs) do
             ok = true
             local prefix = vars[name.."_DIR"]
+            local dirs = {
+               BINDIR = { subdir = subdirs.bin, testfile = "program", pattern = patterns.bin },
+               INCDIR = { subdir = subdirs.include, testfile = "header", pattern = patterns.include },
+               LIBDIR = { subdir = subdirs.lib, testfile = "library", pattern = patterns.lib }
+            }
+            if mode == "install" then
+               dirs.INCDIR = nil
+            end
             if not prefix then
                prefix = extdir
+            end
+            if type(prefix) == "table" then
+               if prefix.bin then
+                  dirs.BINDIR.subdir = prefix.bin
+               end
+               if prefix.include then
+                  if dirs.INCDIR then
+                     dirs.INCDIR.subdir = prefix.include
+                  end
+               end
+               if prefix.lib then
+                  dirs.LIBDIR.subdir = prefix.lib
+               end
+               prefix = prefix.prefix
             end
             for dirname, dirdata in pairs(dirs) do
                dirdata.dir = vars[name.."_"..dirname] or dir.path(prefix, dirdata.subdir)
