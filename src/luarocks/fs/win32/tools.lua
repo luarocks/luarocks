@@ -43,12 +43,9 @@ end
 -- Uses the module's internal dir stack.
 -- @return string: the absolute pathname of the current directory.
 function current_dir()
-   local current = os.getenv("PWD")
-   if not current then
-      local pipe = io.popen("pwd")
-      current = pipe:read("*l")
-      pipe:close()
-   end
+   local pipe = io.popen("pwd")
+   local current = pipe:read("*l")
+   pipe:close()
    for _, d in ipairs(dir_stack) do
       current = fs.absolute_name(d, current)
    end
