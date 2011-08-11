@@ -39,7 +39,7 @@ can be overriden with VAR=VALUE assignments.
                       (takes priority over config file)
 --only-from=<server>  Fetch rocks/rockspecs from this server only
                       (overrides any entries in the config file)
---to=<tree>           Which tree to operate on.
+--to=<tree>           Which tree to operate on. Can also be set via $LUA_TO_PATH
 --local               Use the tree in the user's home directory.
 
 Supported commands:
