@@ -92,11 +92,12 @@ function run_command(...)
       flags["local"] = true
    end
    
-   if flags["to"] then
+   local to = os.getenv("LUA_TO_PATH") or nil
+   if flags["to"] or to then
       if flags["to"] == true then
          die("Argument error: use --to=<path>")
       end
-      local root_dir = fs.absolute_name(flags["to"])
+      local root_dir = fs.absolute_name(flags["to"] or to)
       use_tree(root_dir)
    elseif flags["local"] then
       use_tree(cfg.home_tree)
