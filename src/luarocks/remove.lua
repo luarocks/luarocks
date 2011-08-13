@@ -61,7 +61,7 @@ end
 local function delete_versions(name, versions) 
 
    for version, _ in pairs(versions) do
-      print("Removing "..name.." "..version.."...")
+      util.printout("Removing "..name.." "..version.."...")
       local ok, err = rep.delete_version(name, version)
       if not ok then return nil, err end
    end
@@ -98,19 +98,19 @@ function run(...)
       local version = next(versions)
       local second = next(versions, version)
       
-      print("Checking stability of dependencies on the absence of")
-      print(name.." "..table.concat(util.keys(versions), ", ").."...")
-      print()
+      util.printout("Checking stability of dependencies on the absence of")
+      util.printout(name.." "..table.concat(util.keys(versions), ", ").."...")
+      util.printout()
       
       local dependents = check_dependents(name, versions)
       
       if #dependents == 0 or flags["force"] then
          if #dependents > 0 then
-            print("The following packages may be broken by this forced removal:")
+            util.printerr("The following packages may be broken by this forced removal:")
             for _, dependent in ipairs(dependents) do
-               print(dependent.name.." "..dependent.version)
+               util.printerr(dependent.name.." "..dependent.version)
             end
-            print()
+            util.printerr()
          end
          local ok, err = delete_versions(name, versions)
          if not ok then return nil, err end
@@ -118,19 +118,20 @@ function run(...)
          if not ok then return nil, err end
       else
          if not second then
-            print("Will not remove "..name.." "..version..".")
-            print("Removing it would break dependencies for: ")
+            util.printerr("Will not remove "..name.." "..version..".")
+            util.printerr("Removing it would break dependencies for: ")
          else
-            print("Will not remove all versions of "..name..".")
-            print("Removing them would break dependencies for: ")
+            util.printerr("Will not remove all versions of "..name..".")
+            util.printerr("Removing them would break dependencies for: ")
          end
          for _, dependent in ipairs(dependents) do
-            print(dependent.name.." "..dependent.version)
+            util.printerr(dependent.name.." "..dependent.version)
          end
-         print()
-         print("Use --force to force removal (warning: this may break modules).")
+         util.printerr()
+         util.printerr("Use --force to force removal (warning: this may break modules).")
          return nil, "Failed removing."
       end
    end
+   util.printout("Removal successful.")
    return true
 end

@@ -85,8 +85,8 @@ function install_binary_rock(rock_file)
    end
 
    local root_dir = path.root_dir(cfg.rocks_dir)
-   print()
-   print(name.." "..version.." is now installed in "..root_dir.." "..license)
+   util.printout()
+   util.printout(name.." "..version.." is now installed in "..root_dir.." "..license)
    
    util.remove_scheduled_function(rollback)
    return true
@@ -123,14 +123,14 @@ function run(...)
          return nil, err
       elseif type(results) == "string" then
          local url = results
-         print("Installing "..url.."...")
+         util.printout("Installing "..url.."...")
          return run(url)
       else
-         print()
-         print("Could not determine which rock to install.")
-         print()
-         print("Search results:")
-         print("---------------")
+         util.printout()
+         util.printerr("Could not determine which rock to install.")
+         util.printout()
+         util.printout("Search results:")
+         util.printout("---------------")
          search.print_results(results)
          return nil, (next(results) and "Please narrow your query." or "No results found.")
       end

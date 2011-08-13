@@ -51,7 +51,7 @@ end
 local function validate_rockspec(file)
    local ok, err, errcode = build.build_rockspec(file, true)
    if not ok then
-      print(err)
+      util.printerr(err)
    end
    return ok, err, errcode
 end
@@ -59,7 +59,7 @@ end
 local function validate_src_rock(file)
    local ok, err, errcode = build.build_rock(file, false)
    if not ok then
-      print(err)
+      util.printerr(err)
    end
    return ok, err, errcode
 end
@@ -67,7 +67,7 @@ end
 local function validate_rock(file)
    local ok, err, errcode = install.install_binary_rock(file)
    if not ok then
-      print(err)
+      util.printerr(err)
    end
    return ok, err, errcode
 end
@@ -93,8 +93,8 @@ local function validate(repo, flags)
          sandbox = prepare_sandbox(file)
       end
       local ok, err, errcode
-      print()
-      print("Verifying "..pathname)      
+      util.printout()
+      util.printout("Verifying "..pathname)
       if file:match("%.rockspec$") then
          ok, err, errcode = validate_rockspec(pathname)
       elseif file:match("%.src%.rock$") then
@@ -123,32 +123,32 @@ local function validate(repo, flags)
       fs.delete(sandbox)
    end
    restore_settings(settings)
-   print()
-   print("Results:")
-   print("--------")
-   print("OK: "..tostring(#results.ok))
+   util.printout()
+   util.printout("Results:")
+   util.printout("--------")
+   util.printout("OK: "..tostring(#results.ok))
    for _, entry in ipairs(results.ok) do
-      print(entry.file)
+      util.printout(entry.file)
    end
    for errcode, errors in pairs(results) do
       if errcode ~= "ok" then
-         print()
-         print(errcode.." errors: "..tostring(#errors))
+         util.printout()
+         util.printout(errcode.." errors: "..tostring(#errors))
          for _, entry in ipairs(errors) do
-            print(entry.file, entry.err)
+            util.printout(entry.file, entry.err)
          end
       end
    end
 
-   print()
-   print("Summary:")
-   print("--------")
+   util.printout()
+   util.printout("Summary:")
+   util.printout("--------")
    local total = 0
    for errcode, errors in pairs(results) do
-      print(errcode..": "..tostring(#errors))
+      util.printout(errcode..": "..tostring(#errors))
       total = total + #errors
    end
-   print("Total: "..total)
+   util.printout("Total: "..total)
    return true
 end
 
@@ -156,7 +156,7 @@ function run(...)
    local flags, repo = util.parse_flags(...)
    repo = repo or cfg.rocks_dir
 
-   print("Verifying contents of "..repo)
+   util.printout("Verifying contents of "..repo)
 
    return validate(repo, flags)
 end

@@ -25,7 +25,7 @@ function run(...)
    local flags, command = util.parse_flags(...)
 
    if not command then
-      print([[
+      util.printout([[
 LuaRocks ]]..cfg.program_version..[[, a module deployment system for Lua
 
 ]]..program_name..[[ - ]]..program_description..[[
@@ -51,18 +51,18 @@ Supported commands:
       table.sort(names)
       for _, name in ipairs(names) do
          local command = commands[name]
-         print(name, command.help_summary)
+         util.printout(name, command.help_summary)
       end
    else
       command = command:gsub("-", "_")
       if commands[command] then
          local arguments = commands[command].help_arguments or "<argument>"
-         print()
-         print(program_name.." "..command.." "..arguments)
-         print()
-         print(command.." - "..commands[command].help_summary)
-         print()
-         print(commands[command].help)
+         util.printout()
+         util.printout(program_name.." "..command.." "..arguments)
+         util.printout()
+         util.printout(command.." - "..commands[command].help_summary)
+         util.printout()
+         util.printout(commands[command].help)
       else
          return nil, "Unknown command '"..command.."'"
       end

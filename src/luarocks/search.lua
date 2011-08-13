@@ -292,17 +292,17 @@ function print_results(results, show_repo, long)
    show_repo = true -- show_repo == nil and true or show_repo
    
    for package, versions in util.sortedpairs(results) do
-      print(package)
+      util.printout(package)
       for version, repos in util.sortedpairs(versions, deps.compare_versions) do
          if show_repo then
             for _, repo in ipairs(repos) do
-               print("   "..version.." ("..repo.arch..") - "..repo.repo)
+               util.printout("   "..version.." ("..repo.arch..") - "..repo.repo)
             end
          else
-            print("   "..version)
+            util.printout("   "..version)
          end
       end
-      print()
+      util.printout()
    end
 end
 
@@ -348,10 +348,10 @@ function act_on_src_or_rockspec(action, name, version)
    if type(results) == "string" then
       return action(results)
    elseif type(results) == "table" and next(results) then
-      print("Multiple search results were returned.")
-      print()
-      print("Search results:")
-      print("---------------")
+      util.printout("Multiple search results were returned.")
+      util.printout()
+      util.printout("Search results:")
+      util.printout("---------------")
       print_results(results)
       return nil, "Please narrow your query."
    else
@@ -381,21 +381,21 @@ function run(...)
    if not results then
       return nil, err
    end
-   print()
-   print("Search results:")
-   print("===============")
-   print()
+   util.printout()
+   util.printout("Search results:")
+   util.printout("===============")
+   util.printout()
    local sources, binaries = split_source_and_binary_results(results)
    if next(sources) and not flags["binary"] then
-      print("Rockspecs and source rocks:")
-      print("---------------------------")
-      print()
+      util.printout("Rockspecs and source rocks:")
+      util.printout("---------------------------")
+      util.printout()
       print_results(sources, true)
    end
    if next(binaries) and not flags["source"] then    
-      print("Binary and pure-Lua rocks:")
-      print("--------------------------")
-      print()
+      util.printout("Binary and pure-Lua rocks:")
+      util.printout("--------------------------")
+      util.printout()
       print_results(binaries, true)
    end
    return true

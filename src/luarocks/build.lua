@@ -79,7 +79,7 @@ function apply_patches(rockspec)
    if build.patches then
       extract_from_rockspec(build.patches)
       for patch, patchdata in util.sortedpairs(build.patches) do
-         print("Applying patch "..patch.."...")
+         util.printout("Applying patch "..patch.."...")
          local ok, err = fs.apply_patch(tostring(patch), patchdata)
          if not ok then
             return nil, "Failed applying patch "..patch
@@ -170,7 +170,7 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
 
       -- Temporary compatibility
       if build.type == "module" then
-         print("Do not use 'module' as a build type. Use 'builtin' instead.")
+         util.printout("Do not use 'module' as a build type. Use 'builtin' instead.")
          build.type = "builtin"
       end
 
@@ -239,8 +239,8 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
    end
 
    local root_dir = path.root_dir(cfg.rocks_dir)
-   print()
-   print(name.." "..version.." is now built and installed in "..root_dir.." "..license)
+   util.printout()
+   util.printout(name.." "..version.." is now built and installed in "..root_dir.." "..license)
    
    util.remove_scheduled_function(rollback)
    return true

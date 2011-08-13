@@ -72,10 +72,10 @@ function run(...)
          end
          return all_ok, any_err
       else
-         print("Multiple search results were returned.")
-         print()
-         print("Search results:")
-         print("---------------")
+         util.printerr("Multiple search results were returned.")
+         util.printout()
+         util.printout("Search results:")
+         util.printout("---------------")
          search.print_results(results)
          return nil, "Please narrow your query or use --all."
       end

@@ -15,9 +15,9 @@ local function die(message)
 
    local ok, err = pcall(util.run_scheduled_functions)
    if not ok then
-      print("\nLuaRocks "..cfg.program_version.." internal bug (please report at luarocks-developers@lists.luaforge.net):\n"..err)
+      util.printerr("\nLuaRocks "..cfg.program_version.." internal bug (please report at luarocks-developers@lists.luaforge.net):\n"..err)
    end
-   print("\nError: "..message)
+   util.printerr("\nError: "..message)
    os.exit(1)
 end
 
@@ -70,9 +70,9 @@ function run_command(...)
    local command
    
    if flags["version"] then
-      print(program_name.." "..cfg.program_version)
-      print(program_description)
-      print()
+      util.printout(program_name.." "..cfg.program_version)
+      util.printout(program_description)
+      util.printout()
       os.exit(0)
    elseif flags["help"] or #nonflags == 0 then
       command = "help"

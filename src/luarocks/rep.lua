@@ -153,7 +153,7 @@ function run_hook(rockspec, hook_name)
    end
    local hook = hooks[hook_name]
    if hook then
-      print(hook)
+      util.printout(hook)
       if not fs.execute(hook) then
          return nil, "Failed running "..hook_name.." hook."
       end

@@ -6,6 +6,7 @@ module("luarocks.cache", package.seeall)
 local fs = require("luarocks.fs")
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
+local util = require("luarocks.util")
 
 function split_server_url(server, url, user, password)
    local protocol, server_path = dir.split_url(url)
@@ -40,7 +41,7 @@ function refresh_local_cache(server, url, user, password)
       return nil, "Failed creating local cache dir."
    end
    fs.change_dir(local_cache)
-   print("Refreshing cache "..local_cache.."...")
+   util.printout("Refreshing cache "..local_cache.."...")
 
    -- TODO abstract away explicit 'wget' call
    local ok = false
@@ -58,4 +59,3 @@ function refresh_local_cache(server, url, user, password)
    end
    return local_cache, protocol, server_path, user, password
 end
-

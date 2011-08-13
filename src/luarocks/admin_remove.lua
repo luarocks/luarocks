@@ -55,11 +55,11 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    for i, rockfile in ipairs(rockfiles) do
       local basename = dir.base_name(rockfile)
       local file = dir.path(local_cache, basename)
-      print("Removing file "..file.."...")
+      util.printout("Removing file "..file.."...")
       if fs.delete(file) then
          nr_files = nr_files + 1
       else
-         print("Failed removing "..file)
+         util.printerr("Failed removing "..file)
       end
    end
    if nr_files == 0 then
@@ -68,15 +68,15 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
 
    fs.change_dir(local_cache)
 
-   print("Updating manifest...")
+   util.printout("Updating manifest...")
    manif.make_manifest(local_cache)
-   print("Updating index.html...")
+   util.printout("Updating index.html...")
    index.make_index(local_cache)
 
    local srv, path = server_path:match("([^/]+)(/.+)")
    local cmd = "rsync -Oavz --delete -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
 
-   print(cmd)
+   util.printout(cmd)
    fs.execute(cmd)
 
    return true

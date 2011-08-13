@@ -116,10 +116,10 @@ local function run_unpacker(file)
             return nil, "Failed copying unpacked rockspec into unpacked source directory."
          end
       end
-      print()   
-      print("Done. You may now enter directory ")
-      print(dir.path(dir_name, rockspec.source.dir))
-      print("and type 'luarocks make' to build.")
+      util.printout()   
+      util.printout("Done. You may now enter directory ")
+      util.printout(dir.path(dir_name, rockspec.source.dir))
+      util.printout("and type 'luarocks make' to build.")
    end
    util.remove_scheduled_function(rollback)
    return true

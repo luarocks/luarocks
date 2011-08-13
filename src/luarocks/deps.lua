@@ -17,6 +17,7 @@ local cfg = require("luarocks.cfg")
 local manif_core = require("luarocks.manif_core")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
+local util = require("luarocks.util")
 
 local operators = {
    ["=="] = "==",
@@ -135,7 +136,7 @@ function parse_version(vstring)
          -- extract a word
          token, rest = vstring:match("^(%a+)[%.%-%_]*(.*)")
          if not token then
-            print("Warning: version number '"..vstring.."' could not be parsed.")
+            util.printerr("Warning: version number '"..vstring.."' could not be parsed.")
             version[i] = 0
             break
          end
@@ -435,34 +436,34 @@ function fulfill_dependencies(rockspec)
    local matched, missing, no_upgrade = match_deps(rockspec)
 
    if next(no_upgrade) then
-      print("Missing dependencies for "..rockspec.name.." "..rockspec.version..":")
+      util.printerr("Missing dependencies for "..rockspec.name.." "..rockspec.version..":")
       for _, dep in pairs(no_upgrade) do
-         print(show_dep(dep))
+         util.printerr(show_dep(dep))
       end
       if next(missing) then
          for _, dep in pairs(missing) do
-            print(show_dep(dep))
+            util.printerr(show_dep(dep))
          end
       end
-      print()
+      util.printerr()
       for _, dep in pairs(no_upgrade) do
-         print("This version of "..rockspec.name.." is designed for use with")
-         print(show_dep(dep)..", but is configured to avoid upgrading it")
-         print("automatically. Please upgrade "..dep.name.." with")
-         print("   luarocks install "..dep.name)
-         print("or choose an older version of "..rockspec.name.." with")
-         print("   luarocks search "..rockspec.name)
+         util.printerr("This version of "..rockspec.name.." is designed for use with")
+         util.printerr(show_dep(dep)..", but is configured to avoid upgrading it")
+         util.printerr("automatically. Please upgrade "..dep.name.." with")
+         util.printerr("   luarocks install "..dep.name)
+         util.printerr("or choose an older version of "..rockspec.name.." with")
+         util.printerr("   luarocks search "..rockspec.name)
       end
       return nil, "Failed matching dependencies."
    end
 
    if next(missing) then
-      print()
-      print("Missing dependencies for "..rockspec.name..":")
+      util.printerr()
+      util.printerr("Missing dependencies for "..rockspec.name..":")
       for _, dep in pairs(missing) do
-         print(show_dep(dep))
+         util.printerr(show_dep(dep))
       end
-      print()
+      util.printerr()
 
       for _, dep in pairs(missing) do
          -- Double-check in case dependency was filled during recursion.

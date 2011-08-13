@@ -6,6 +6,7 @@ module("luarocks.make_manifest", package.seeall)
 local manif = require("luarocks.manif")
 local index = require("luarocks.index")
 local cfg = require("luarocks.cfg")
+local util = require("luarocks.util")
 
 help_summary = "Compile a manifest file for a repository."
 
@@ -22,11 +23,11 @@ function run(repo)
    assert(type(repo) == "string" or not repo)
    repo = repo or cfg.rocks_dir
   
-   print("Making manifest for "..repo)
+   util.printout("Making manifest for "..repo)
    
    local ok, err = manif.make_manifest(repo)
    if ok then
-      print("Generating index.html for "..repo)
+      util.printout("Generating index.html for "..repo)
       index.make_index(repo)
    end
    return ok, err

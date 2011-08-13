@@ -26,10 +26,10 @@ function run(...)
    for _, tree in ipairs(cfg.rocks_trees) do
       search.manifest_search(results, path.rocks_dir(tree), query)
    end
-   print()
-   print("Installed rocks:")
-   print("----------------")
-   print()
+   util.printout()
+   util.printout("Installed rocks:")
+   util.printout("----------------")
+   util.printout()
    search.print_results(results, false)
    return true
 end

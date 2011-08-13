@@ -116,11 +116,13 @@ local function zipwriter_add(self, file)
    if ok then
       local buf = fin:read("*a")
       if not buf then
-         break
-      end
-      ok = self:write_file_in_zip(buf)
-      if not ok then
-         err = "error in writing "..file.." in the zipfile"
+         err = "error reading "..file
+         ok = false
+      else
+         ok = self:write_file_in_zip(buf)
+         if not ok then
+            err = "error in writing "..file.." in the zipfile"
+         end
       end
    end
    if fin then

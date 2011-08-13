@@ -1,6 +1,6 @@
 
-local rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, ipairs, package, type, assert =
-      rawset, next, table, pairs, print, require, io, os, setmetatable, pcall, ipairs, package, type, assert
+local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, type, assert =
+      rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, type, assert
 
 --- Configuration for LuaRocks.
 -- Tries to load the user's configuration file and
@@ -18,7 +18,7 @@ module("luarocks.cfg")
 -- Load site-local global configurations
 local ok, config = pcall(require, "luarocks.config")
 if not ok then
-   print("Site-local luarocks/config.lua file not found. Incomplete installation?")
+   io.stderr:write("Site-local luarocks/config.lua file not found. Incomplete installation?\n")
    config = {}
 end
 
@@ -35,8 +35,8 @@ if popen_ok then
       popen_result:close()
    end
 else
-   print("Your version of Lua does not support io.popen,")
-   print("which is required by LuaRocks. Please check your Lua installation.")
+   io.stderr:write("Your version of Lua does not support io.popen,\n")
+   io.stderr:write("which is required by LuaRocks. Please check your Lua installation.\n")
    os.exit(1)
 end
 
@@ -171,8 +171,8 @@ if detected.windows then
    defaults.variables.LUA_INCDIR = config.LUA_INCDIR and config.LUA_INCDIR:gsub("\\", "/") or "c:/lua5.1/include"
    defaults.variables.LUA_LIBDIR = config.LUA_LIBDIR and config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua5.1/lib"
    defaults.cmake_generator = "MinGW Makefiles"
-   defaults.make = "nmake" -- TODO: Split Windows flavors between mingw and msvc
    defaults.makefile = "Makefile.win"
+   defaults.variables.MAKE = "nmake" -- TODO: Split Windows flavors between mingw and msvc
    defaults.variables.CC = "cl"
    defaults.variables.RC = "rc"
    defaults.variables.WRAPPER = config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.obj"
@@ -236,8 +236,8 @@ if detected.unix then
    defaults.variables.LUA_LIBDIR = config.LUA_LIBDIR or "/usr/local/lib"
    defaults.variables.CFLAGS = "-O2"
    defaults.cmake_generator = "Unix Makefiles"
-   defaults.make = "make"
    defaults.platforms = { "unix" }
+   defaults.variables.MAKE = "make"
    defaults.variables.CC = "cc"
    defaults.variables.LD = "ld"
    defaults.variables.LIBFLAG = "-shared"
@@ -286,8 +286,8 @@ end
 
 if detected.freebsd then
    defaults.arch = "freebsd-"..proc
-   defaults.make = "gmake"
    defaults.platforms = {"unix", "bsd", "freebsd"}
+   defaults.variables.MAKE = "gmake"
    defaults.variables.CC = "gcc"
    defaults.variables.LD = "gcc"
    defaults.variables.LIBFLAG = "-shared"

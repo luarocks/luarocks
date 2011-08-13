@@ -10,6 +10,7 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
+local util = require("luarocks.util")
 
 math.randomseed(os.time())
 
@@ -103,7 +104,7 @@ function is_actual_binary(filename)
       local first = file:read()
       if not first then
          file:close()
-         print("Warning: could not read "..filename)
+         util.printerr("Warning: could not read "..filename)
          return false
       end
       if first:match("#!.*lua") then

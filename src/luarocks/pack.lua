@@ -172,7 +172,7 @@ function run(...)
    if err then
       return nil, err
    else
-      print("Packed: "..file)
+      util.printout("Packed: "..file)
       return true
    end
 end

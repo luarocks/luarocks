@@ -6,6 +6,7 @@ module("luarocks.path", package.seeall)
 
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.cfg")
+local util = require("luarocks.util")
 
 help_summary = "Return the currently configured package path."
 help_arguments = ""
@@ -301,14 +302,15 @@ function versioned_name(file, prefix, name, version)
 end
 
 --- Driver function for "path" command.
+-- This platform distinction is not in fs to avoid depending on that module here.
 -- @return boolean This function always succeeds.
 function run(...)
    if cfg.is_platform("unix") then
-      print("export LUA_PATH='"..package.path.."'")
-      print("export LUA_CPATH='"..package.cpath.."'")
+      util.printout("export LUA_PATH='"..package.path.."'")
+      util.printout("export LUA_CPATH='"..package.cpath.."'")
    elseif cfg.is_platform("windows") then
-      print("SET LUA_PATH="..package.path)
-      print("SET LUA_CPATH="..package.cpath)
+      util.printout("SET LUA_PATH="..package.path)
+      util.printout("SET LUA_CPATH="..package.cpath)
    end
    return true
 end

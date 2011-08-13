@@ -39,15 +39,15 @@ function run(rockspec)
       args = args .. ' -D' ..k.. '="' ..v.. '"'
    end
 
-   if not fs.execute("cmake . " ..args) then
+   if not fs.execute(rockspec.variables.CMAKE.." . " ..args) then
       return nil, "Failed cmake."
    end
    
-   if not fs.execute("make -fMakefile") then
+   if not fs.execute(rockspec.variables.MAKE.." -fMakefile") then
       return nil, "Failed building."
    end
 
-   if not fs.execute("make -fMakefile install") then
+   if not fs.execute(rockspec.variables.MAKE.." -fMakefile install") then
       return nil, "Failed installing."
    end
    return true

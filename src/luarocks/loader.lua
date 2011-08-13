@@ -1,7 +1,7 @@
 
 local global_env = _G
-local package, require, assert, ipairs, pairs, os, print, table, type, next, unpack =
-      package, require, assert, ipairs, pairs, os, print, table, type, next, unpack
+local package, require, ipairs, pairs, table, type, next, unpack =
+      package, require, ipairs, pairs, table, type, next, unpack
 
 module("luarocks.loader")
 
@@ -64,14 +64,14 @@ function add_context(name, version)
          return nil
       end
       for _, dep in ipairs(pkgdeps) do
-         local package, constraints = dep.name, dep.constraints
+         local pkg, constraints = dep.name, dep.constraints
    
          for _, tree in pairs(rocks_trees) do
-            local entries = tree.manifest.repository[package]
+            local entries = tree.manifest.repository[pkg]
             if entries then
-               for version, packages in pairs(entries) do
+               for version, pkgs in pairs(entries) do
                   if (not constraints) or deps.match_constraints(deps.parse_version(version), constraints) then
-                     add_context(package, version)
+                     add_context(pkg, version)
                   end
                end
             end

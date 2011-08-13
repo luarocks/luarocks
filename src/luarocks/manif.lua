@@ -190,9 +190,9 @@ local function update_dependencies(manifest)
                if missing then
                   for miss, _ in pairs(missing) do
                      if miss == current then
-                        print("Tree inconsistency detected: "..current.." has no rockspec.")
+                        util.printerr("Tree inconsistency detected: "..current.." has no rockspec.")
                      else
-                        print("Missing dependency for "..pkg.." "..version..": "..miss)
+                        util.printerr("Missing dependency for "..pkg.." "..version..": "..miss)
                      end
                   end
                end
@@ -277,11 +277,11 @@ function update_manifest(name, version, repo)
    assert(type(version) == "string")
    repo = path.rocks_dir(repo or cfg.root_dir)
 
-   print("Updating manifest for "..repo)
+   util.printout("Updating manifest for "..repo)
 
    local manifest, err = load_manifest(repo)
    if not manifest then
-      print("No existing manifest. Attempting to rebuild...")
+      util.printerr("No existing manifest. Attempting to rebuild...")
       local ok, err = make_manifest(repo)
       if not ok then
          return nil, err

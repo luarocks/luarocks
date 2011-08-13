@@ -99,39 +99,39 @@ function run(...)
    if not manifest then return nil,err end
    local minfo = manifest.repository[name][version][1]
 
-   if flags["tree"] then print(repo)
-   elseif flags["rock-dir"] then print(directory)
-   elseif flags["home"] then print(descript.homepage)
-   elseif flags["modules"] then print(keys_as_string(minfo.modules))
-   elseif flags["deps"] then print(keys_as_string(minfo.dependencies))
-   elseif flags["rockspec"] then print(rockspec_file)
-   elseif flags["mversion"] then print(version)
+   if flags["tree"] then util.printout(repo)
+   elseif flags["rock-dir"] then util.printout(directory)
+   elseif flags["home"] then util.printout(descript.homepage)
+   elseif flags["modules"] then util.printout(keys_as_string(minfo.modules))
+   elseif flags["deps"] then util.printout(keys_as_string(minfo.dependencies))
+   elseif flags["rockspec"] then util.printout(rockspec_file)
+   elseif flags["mversion"] then util.printout(version)
    else
-      print()
-      print(rockspec.package.." "..rockspec.version.." - "..descript.summary)
-      print()
+      util.printout()
+      util.printout(rockspec.package.." "..rockspec.version.." - "..descript.summary)
+      util.printout()
       if descript.detailed then
-         print(format_text(descript.detailed))
-         print()
+         util.printout(format_text(descript.detailed))
+         util.printout()
       end
       if descript.license then
-         print("License: ", descript.license)
+         util.printout("License: ", descript.license)
       end
       if descript.homepage then
-         print("Homepage: ", descript.homepage)
+         util.printout("Homepage: ", descript.homepage)
       end
-      print("Installed in: ", repo)
+      util.printout("Installed in: ", repo)
       if next(minfo.modules) then
-         print()
-         print("Modules:")
-         print("\t"..keys_as_string(minfo.modules, "\n\t"))
+         util.printout()
+         util.printout("Modules:")
+         util.printout("\t"..keys_as_string(minfo.modules, "\n\t"))
       end
       if next(minfo.dependencies) then
-         print()
-         print("Depends on:")
-         print("\t"..keys_as_string(minfo.dependencies, "\n\t"))
+         util.printout()
+         util.printout("Depends on:")
+         util.printout("\t"..keys_as_string(minfo.dependencies, "\n\t"))
       end
-      print()
+      util.printout()
    end
    return true
 end

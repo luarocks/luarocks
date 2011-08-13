@@ -62,12 +62,12 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    local files = {}
    for i, rockfile in ipairs(rockfiles) do
       if fs.exists(rockfile) then
-         print("Copying file "..rockfile.." to "..local_cache.."...")
+         util.printout("Copying file "..rockfile.." to "..local_cache.."...")
          local absolute = fs.absolute_name(rockfile)
          fs.copy(absolute, local_cache)
          table.insert(files, dir.base_name(absolute))
       else
-         print("File "..rockfile.." not found")
+         util.printerr("File "..rockfile.." not found")
       end
    end
    if #files == 0 then
@@ -76,9 +76,9 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
 
    fs.change_dir(local_cache)
 
-   print("Updating manifest...")
+   util.printout("Updating manifest...")
    manif.make_manifest(local_cache)
-   print("Updating index.html...")
+   util.printout("Updating index.html...")
    index.make_index(local_cache)
 
    local login_info = ""
@@ -101,7 +101,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
       cmd = "curl "..login_info.." -T '{manifest,index.html,"..table.concat(files, ",").."}' "..login_url
    end
 
-   print(cmd)
+   util.printout(cmd)
    fs.execute(cmd)
 
    return true
