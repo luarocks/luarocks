@@ -8,6 +8,30 @@ local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 
+function get_upload_server(server)
+   if not server then server = cfg.upload_server end
+   if not server then
+      return nil, "No server specified and no default configured with upload_server."
+   end
+   return server, cfg.upload_servers and cfg.upload_servers[server]
+end
+
+function get_server_urls(server, upload_server)
+   local download_url = server
+   local login_url = nil
+   if upload_server then
+      if upload_server.rsync then download_url = "rsync://"..upload_server.rsync
+      elseif upload_server.http then download_url = "http://"..upload_server.http
+      elseif upload_server.ftp then download_url = "ftp://"..upload_server.ftp
+      end
+      
+      if upload_server.ftp then login_url = "ftp://"..upload_server.ftp
+      elseif upload_server.sftp then login_url = "sftp://"..upload_server.sftp
+      end
+   end
+   return download_url, login_url
+end
+
 function split_server_url(server, url, user, password)
    local protocol, server_path = dir.split_url(url)
    if server_path:match("@") then

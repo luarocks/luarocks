@@ -29,18 +29,10 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    assert(type(server) == "string")
    assert(type(upload_server) == "table" or not upload_server)
 
-   local download_url = server
-   if upload_server then
-      if upload_server.rsync then
-         download_url = "rsync://"..upload_server.rsync
-      else
-         return nil, "This command requires 'rsync', check your configuration."
-      end
-   end
-   
+   local download_url, login_url = cache.get_server_urls(server, upload_server)
    local at = fs.current_dir()
-   
    local refresh_fn = refresh and cache.refresh_local_cache or cache.split_server_url
+   
    local local_cache, protocol, server_path, user, password = refresh_fn(server, download_url, cfg.upload_user, cfg.upload_password)
    if not local_cache then
       return nil, protocol
@@ -88,12 +80,8 @@ function run(...)
    if #files < 1 then
       return nil, "Argument missing, see help."
    end
-   local server = flags["from"]
-   if not server then server = cfg.upload_server end
-   if not server then
-      return nil, "No server specified with --to and no default configured with upload_server."
-   end
-   
-   return remove_files_from_server(not flags["no-refresh"], files, server, cfg.upload_servers and cfg.upload_servers[server])
+   local server, server_table = cache.get_upload_server(flags["from"])
+   if not server then return nil, server_table end
+   return remove_files_from_server(not flags["no-refresh"], files, server, server_table)
 end
 

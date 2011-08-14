@@ -28,23 +28,11 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    assert(type(rockfiles) == "table")
    assert(type(server) == "string")
    assert(type(upload_server) == "table" or not upload_server)
-
-   local download_url = server
-   local login_url = nil
-   if upload_server then
-      if upload_server.rsync then download_url = "rsync://"..upload_server.rsync
-      elseif upload_server.http then download_url = "http://"..upload_server.http
-      elseif upload_server.ftp then download_url = "ftp://"..upload_server.ftp
-      end
-      
-      if upload_server.ftp then login_url = "ftp://"..upload_server.ftp
-      elseif upload_server.sftp then login_url = "sftp://"..upload_server.sftp
-      end
-   end
    
+   local download_url, login_url = cache.get_server_urls(server, upload_server)
    local at = fs.current_dir()
-   
    local refresh_fn = refresh and cache.refresh_local_cache or cache.split_server_url
+   
    local local_cache, protocol, server_path, user, password = refresh_fn(server, download_url, cfg.upload_user, cfg.upload_password)
    if not local_cache then
       return nil, protocol
@@ -113,12 +101,8 @@ function run(...)
    if #files < 1 then
       return nil, "Argument missing, see help."
    end
-   local server = flags["to"]
-   if not server then server = cfg.upload_server end
-   if not server then
-      return nil, "No server specified with --to and no default configured with upload_server."
-   end
-   
-   return add_files_to_server(not flags["no-refresh"], files, server, cfg.upload_servers and cfg.upload_servers[server])
+   local server, server_table = cache.get_upload_server(flags["to"])
+   if not server then return nil, server_table end
+   return add_files_to_server(not flags["no-refresh"], files, server, server_table)
 end
 
