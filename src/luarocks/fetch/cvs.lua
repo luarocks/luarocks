@@ -19,7 +19,7 @@ function get_sources(rockspec, extract, dest_dir)
 
    local name_version = rockspec.name .. "-" .. rockspec.version
    local module = rockspec.source.module or dir.base_name(rockspec.source.url)
-   local command = {"cvs", "-d"..rockspec.source.pathname, "export", module}
+   local command = {rockspec.variables.CVS, "-d"..rockspec.source.pathname, "export", module}
    if rockspec.source.tag then
       table.insert(command, 4, "-r")
       table.insert(command, 5, rockspec.source.tag)

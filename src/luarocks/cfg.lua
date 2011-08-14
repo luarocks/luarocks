@@ -145,7 +145,47 @@ local defaults = {
    downloader = config.LUAROCKS_DOWNLOADER or "wget",
    md5checker = config.LUAROCKS_MD5CHECKER or "md5sum",
 
-   variables = {},
+   variables = {
+      MAKE = "make",
+      CC = "cc",
+      LD = "ld",
+      
+      CVS = "cvs",
+      GIT = "git",
+      SSCM = "sscm",
+      SVN = "svn",
+      
+      RSYNC = "rsync",
+      WGET = "wget",
+      SCP = "scp",
+      CURL = "curl",
+      
+      PWD = "pwd",
+      MKDIR = "mkdir",
+      RMDIR = "rmdir",
+      CP = "cp",
+      LS = "ls",
+      RM = "rm",
+      FIND = "find",
+      TEST = "test",
+      CHMOD = "chmod",
+      PATCH = "patch",
+
+      ZIP = "zip",
+      UNZIP = "unzip",
+      GUNZIP = "gunzip",
+      BUNZIP2 = "bunzip2",
+      TAR = "tar",
+      
+      MD5SUM = "md5sum",
+      OPENSSL = "openssl",
+      MD5 = "md5",
+      STAT = "stat",
+      
+      SEVENZ = "7z",
+      
+      STATFLAG = "-c '%a'",
+   },
    
    external_deps_subdirs = {
       bin = "bin",
@@ -241,9 +281,6 @@ if detected.unix then
    defaults.variables.CFLAGS = "-O2"
    defaults.cmake_generator = "Unix Makefiles"
    defaults.platforms = { "unix" }
-   defaults.variables.MAKE = "make"
-   defaults.variables.CC = "cc"
-   defaults.variables.LD = "ld"
    defaults.variables.LIBFLAG = "-shared"
    defaults.external_deps_patterns = {
       bin = { "?" },
@@ -282,6 +319,10 @@ if detected.macosx then
    defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
 end
 
+if detected.bsd then
+   defaults.variables.STATFLAG = "-f '%A'"
+end
+
 if detected.linux then
    defaults.arch = "linux-"..proc
    defaults.platforms = {"unix", "linux"}
@@ -302,6 +343,7 @@ end
 if detected.openbsd then
    defaults.arch = "openbsd-"..proc
    defaults.platforms = {"unix", "bsd", "openbsd"}
+   defaults.variables.STATFLAG = "-f '%Op'"
 end
 
 -- Expose some more values detected by LuaRocks for use by rockspec authors.

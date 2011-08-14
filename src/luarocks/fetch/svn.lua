@@ -17,10 +17,11 @@ function get_sources(rockspec, extract, dest_dir)
    assert(type(rockspec) == "table")
    assert(type(dest_dir) == "string" or not dest_dir)
 
+   local svn_cmd = rockspec.variables.SVN
    local name_version = rockspec.name .. "-" .. rockspec.version
    local module = rockspec.source.module or dir.base_name(rockspec.source.url)
    local url = rockspec.source.url:gsub("^svn://", "")
-   local command = {"svn", "checkout", url, module}
+   local command = {svn_cmd, "checkout", url, module}
    if rockspec.source.tag then
       table.insert(command, 5, "-r")
       table.insert(command, 6, rockspec.source.tag)

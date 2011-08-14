@@ -71,12 +71,12 @@ function refresh_local_cache(server, url, user, password)
    local ok = false
    if protocol == "rsync" then
       local srv, path = server_path:match("([^/]+)(/.+)")
-      ok = fs.execute("rsync -avz -e ssh "..user.."@"..srv..":"..path.."/ "..local_cache.."/")
+      ok = fs.execute(cfg.variables.RSYNC.." -avz -e ssh "..user.."@"..srv..":"..path.."/ "..local_cache.."/")
    else 
       local login_info = ""
       if user then login_info = " --user="..user end
       if password then login_info = login_info .. " --password="..password end
-      ok = fs.execute("wget --no-cache -q -m -np -nd "..protocol.."://"..server_path..login_info)
+      ok = fs.execute(cfg.variables.WGET.." --no-cache -q -m -np -nd "..protocol.."://"..server_path..login_info)
    end
    if not ok then
       return nil, "Failed downloading cache."

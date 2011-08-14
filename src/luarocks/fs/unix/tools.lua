@@ -8,6 +8,8 @@ local cfg = require("luarocks.cfg")
 
 local dir_stack = {}
 
+local vars = cfg.variables
+
 --- Run the given command.
 -- The command is executed in the current directory in the dir stack.
 -- @param cmd string: No quoting/escaping is applied to the command.
@@ -26,7 +28,7 @@ end
 -- Uses the module's internal dir stack.
 -- @return string: the absolute pathname of the current directory.
 function current_dir()
-   local pipe = io.popen("pwd")
+   local pipe = io.popen(vars.PWD)
    local current = pipe:read("*l")
    pipe:close()
    for _, d in ipairs(dir_stack) do
@@ -65,7 +67,7 @@ end
 -- @return boolean: true on success, false on failure.
 function make_dir(d)
    assert(d)
-   return fs.execute("mkdir -p", d)
+   return fs.execute(vars.MKDIR.." -p", d)
 end
 
 --- Remove a directory if it is empty.
@@ -74,7 +76,7 @@ end
 -- @param dir string: pathname of directory to remove.
 function remove_dir_if_empty(d)
    assert(d)
-   fs.execute_string("rmdir "..fs.Q(d).." 1> /dev/null 2> /dev/null")
+   fs.execute_string(vars.RMDIR.." "..fs.Q(d).." 1> /dev/null 2> /dev/null")
 end
 
 --- Remove a directory if it is empty.
@@ -83,7 +85,7 @@ end
 -- @param dir string: pathname of directory to remove.
 function remove_dir_tree_if_empty(d)
    assert(d)
-   fs.execute_string("rmdir -p "..fs.Q(d).." 1> /dev/null 2> /dev/null")
+   fs.execute_string(vars.RMDIR.." -p "..fs.Q(d).." 1> /dev/null 2> /dev/null")
 end
 
 --- Copy a file.
@@ -93,7 +95,7 @@ end
 -- plus an error message.
 function copy(src, dest)
    assert(src and dest)
-   if fs.execute("cp", src, dest) then
+   if fs.execute(vars.CP, src, dest) then
       return true
    else
       return false, "Failed copying "..src.." to "..dest
@@ -107,7 +109,7 @@ end
 -- plus an error message.
 function copy_contents(src, dest)
    assert(src and dest)
-   if fs.execute_string("cp -pPR "..fs.Q(src).."/* "..fs.Q(dest).." 1> /dev/null 2>/dev/null") then
+   if fs.execute_string(vars.CP.." -pPR "..fs.Q(src).."/* "..fs.Q(dest).." 1> /dev/null 2>/dev/null") then
       return true
    else
       return false, "Failed copying "..src.." to "..dest
@@ -120,7 +122,7 @@ end
 function delete(arg)
    assert(arg)
    assert(arg:sub(1,1) == "/")
-   return fs.execute_string("rm -rf " .. fs.Q(arg) .. " 1> /dev/null 2>/dev/null")
+   return fs.execute_string(vars.RM.." -rf " .. fs.Q(arg) .. " 1> /dev/null 2>/dev/null")
 end
 
 --- List the contents of a directory. 
@@ -137,7 +139,7 @@ function list_dir(at)
       return {}
    end
    local result = {}
-   local pipe = io.popen("cd "..fs.Q(at).." && ls")
+   local pipe = io.popen("cd "..fs.Q(at).." && "..vars.LS)
    for file in pipe:lines() do
       table.insert(result, file)
    end
@@ -159,7 +161,7 @@ function find(at)
       return {}
    end
    local result = {}
-   local pipe = io.popen("cd "..fs.Q(at).." && find * 2>/dev/null") 
+   local pipe = io.popen("cd "..fs.Q(at).." && "..vars.FIND.." * 2>/dev/null") 
    for file in pipe:lines() do
       table.insert(result, file)
    end
@@ -173,7 +175,7 @@ end
 -- additional arguments.
 -- @return boolean: true on success, false on failure.
 function zip(zipfile, ...)
-   return fs.execute("zip -r", zipfile, ...)
+   return fs.execute(vars.ZIP.." -r", zipfile, ...)
 end
 
 --- Uncompress files from a .zip archive.
@@ -181,7 +183,7 @@ end
 -- @return boolean: true on success, false on failure.
 function unzip(zipfile)
    assert(zipfile)
-   return fs.execute("unzip", zipfile)
+   return fs.execute(vars.UNZIP, zipfile)
 end
 
 --- Test for existance of a file.
@@ -189,7 +191,7 @@ end
 -- @return boolean: true if file exists, false otherwise.
 function exists(file)
    assert(file)
-   return fs.execute("test -r", file)
+   return fs.execute(vars.TEST, "-r", file)
 end
 
 --- Test is file/dir is writable.
@@ -197,7 +199,7 @@ end
 -- @return boolean: true if file exists, false otherwise.
 function is_writable(file)
    assert(file)
-   return fs.execute("test -w", file)
+   return fs.execute(vars.TEST, "-w", file)
 end
 
 --- Test is pathname is a directory.
@@ -205,7 +207,7 @@ end
 -- @return boolean: true if it is a directory, false otherwise.
 function is_dir(file)
    assert(file)
-   return fs.execute("test -d", file)
+   return fs.execute(vars.TEST, "-d", file)
 end
 
 --- Test is pathname is a regular file.
@@ -213,7 +215,7 @@ end
 -- @return boolean: true if it is a regular file, false otherwise.
 function is_file(file)
    assert(file)
-   return fs.execute("test -f", file)
+   return fs.execute(vars.TEST, "-f", file)
 end
 
 --- Download a remote file.
@@ -228,7 +230,7 @@ function download(url, filename)
    assert(type(filename) == "string" or not filename)
 
    if cfg.downloader == "wget" then
-      local wget_cmd = "wget --no-check-certificate --no-cache --user-agent="..cfg.user_agent.." --quiet --continue "
+      local wget_cmd = vars.WGET.." --no-check-certificate --no-cache --user-agent="..cfg.user_agent.." --quiet --continue "
       if filename then
          return fs.execute(wget_cmd.." --output-document ", filename, url)
       else
@@ -236,13 +238,13 @@ function download(url, filename)
       end
    elseif cfg.downloader == "curl" then
       filename = filename or dir.base_name(url)
-      return fs.execute_string("curl -L --user-agent "..cfg.user_agent.." "..fs.Q(url).." 2> /dev/null 1> "..fs.Q(filename))
+      return fs.execute_string(vars.CURL.." -L --user-agent "..cfg.user_agent.." "..fs.Q(url).." 2> /dev/null 1> "..fs.Q(filename))
    end
 end
 
 function chmod(pathname, mode)
    if mode then 
-      return fs.execute("chmod "..mode, pathname)
+      return fs.execute(vars.CHMOD, mode, pathname)
    else
       return false
    end
@@ -251,7 +253,7 @@ end
 --- Apply a patch.
 -- @param patchname string: The filename of the patch.
 function apply_patch(patchname)
-   return fs.execute("patch -p1 -f -i ", patchname)
+   return fs.execute(vars.PATCH.." -p1 -f -i ", patchname)
 end
 
 --- Unpack an archive.
@@ -265,12 +267,12 @@ function unpack_archive(archive)
    local ok
    if archive:match("%.tar%.gz$") or archive:match("%.tgz$") then
       -- ok = fs.execute("tar zxvpf ", archive)
-         ok = fs.execute_string("gunzip -c "..archive.."|tar -xf -")
+         ok = fs.execute_string(vars.GUNZIP.." -c "..archive.."|"..vars.TAR.." -xf -")
    elseif archive:match("%.tar%.bz2$") then
       -- ok = fs.execute("tar jxvpf ", archive)
-         ok = fs.execute_string("bunzip2 -c "..archive.."|tar -xf -")
+         ok = fs.execute_string(vars.BUNZIP2.." -c "..archive.."|tar -xf -")
    elseif archive:match("%.zip$") then
-      ok = fs.execute("unzip ", archive)
+      ok = fs.execute(vars.UNZIP, archive)
    elseif archive:match("%.lua$") or archive:match("%.c$") then
       -- Ignore .lua and .c files; they don't need to be extracted.
       return true
@@ -285,18 +287,18 @@ function unpack_archive(archive)
 end
 
 local md5_cmd = {
-   md5sum = "md5sum ",
-   openssl = "openssl md5 ",
-   md5 = "md5 ",
+   md5sum = vars.MD5SUM,
+   openssl = vars.OPENSSL.." md5",
+   md5 = vars.MD5,
 }
-   
+
 --- Get the MD5 checksum for a file.
 -- @param file string: The file to be computed.
 -- @return string: The MD5 checksum
 function get_md5(file)
    local cmd = md5_cmd[cfg.md5checker]
    if not cmd then return nil end
-   local pipe = io.popen(cmd..fs.absolute_name(file))
+   local pipe = io.popen(cmd.." "..fs.absolute_name(file))
    local computed = pipe:read("*a")
    pipe:close()
    if not computed then return nil end
@@ -304,21 +306,8 @@ function get_md5(file)
 end
 
 function get_permissions(filename)
-   local ret
-
-   local flag
-   if cfg.is_platform("bsd") then
-      if cfg.is_platform("openbsd") then
-         flag = "-f '%Op'"
-      else
-         flag = "-f '%A'"
-      end
-   else
-      flag = "-c '%a'"
-   end
-
-   local pipe = io.popen("stat "..flag.." "..fs.Q(filename))
-   ret = pipe:read("*l")
+   local pipe = io.popen(vars.STAT.." "..vars.STATFLAG.." "..fs.Q(filename))
+   local ret = pipe:read("*l")
    pipe:close()
    return ret
 end

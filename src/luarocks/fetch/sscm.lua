@@ -16,6 +16,7 @@ function get_sources(rockspec, extract, dest_dir)
    assert(type(rockspec) == "table")
    assert(type(dest_dir) == "string" or not dest_dir)
 
+   local sscm_cmd = rockspec.variables.SSCM
    local module = rockspec.source.module or dir.base_name(rockspec.source.url)
    local branch, repository = string.match(rockspec.source.pathname, "^([^/]*)/(.*)")
    if not branch or not repository then
@@ -23,7 +24,7 @@ function get_sources(rockspec, extract, dest_dir)
    end
    -- Search for working directory.
    local working_dir
-   local tmp = io.popen(string.format([[sscm property "/" -d -b%s -p%s]], branch, repository))
+   local tmp = io.popen(string.format(sscm_cmd..[[ property "/" -d -b%s -p%s]], branch, repository))
    for line in tmp:lines() do
       --%c because a chr(13) comes in the end.
       working_dir = string.match(line, "Working directory:[%s]*(.*)%c$")
@@ -33,7 +34,7 @@ function get_sources(rockspec, extract, dest_dir)
    if not working_dir then
       return nil, "Error retrieving working directory from SSCM."
    end
-   if not fs.execute([["sscm"]], "get", "*", "-e" , "-r", "-b"..branch, "-p"..repository, "-tmodify", "-wreplace") then
+   if not fs.execute(sscm_cmd, "get", "*", "-e" , "-r", "-b"..branch, "-p"..repository, "-tmodify", "-wreplace") then
       return nil, "Failed fetching files from SSCM."
    end
    -- FIXME: This function does not honor the dest_dir parameter.

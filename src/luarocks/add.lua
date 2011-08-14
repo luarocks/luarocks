@@ -81,12 +81,12 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    local cmd
    if protocol == "rsync" then
       local srv, path = server_path:match("([^/]+)(/.+)")
-      cmd = "rsync --exclude=.git -Oavz -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
+      cmd = cfg.variables.RSYNC.." --exclude=.git -Oavz -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
    elseif upload_server and upload_server.sftp then
       local part1, part2 = upload_server.sftp:match("^([^/]*)/(.*)$")
-      cmd = "scp manifest index.html "..table.concat(files, " ").." "..user.."@"..part1..":/"..part2
+      cmd = cfg.variables.SCP.." manifest index.html "..table.concat(files, " ").." "..user.."@"..part1..":/"..part2
    else
-      cmd = "curl "..login_info.." -T '{manifest,index.html,"..table.concat(files, ",").."}' "..login_url
+      cmd = cfg.variables.CURL.." "..login_info.." -T '{manifest,index.html,"..table.concat(files, ",").."}' "..login_url
    end
 
    util.printout(cmd)

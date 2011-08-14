@@ -17,15 +17,16 @@ function get_sources(rockspec, extract, dest_dir)
    assert(type(rockspec) == "table")
    assert(type(dest_dir) == "string" or not dest_dir)
 
+   local git_cmd = rockspec.variables.GIT
    local name_version = rockspec.name .. "-" .. rockspec.version
    local module = dir.base_name(rockspec.source.url)
    -- Strip off .git from base name if present
    module = module:gsub("%.git$", "")
-   local command = {"git", "clone", "--depth=1", rockspec.source.url, module}
+   local command = {git_cmd, "clone", "--depth=1", rockspec.source.url, module}
    local checkout_command
    local tag_or_branch = rockspec.source.tag or rockspec.source.branch
    if tag_or_branch then
-      checkout_command = {"git", "checkout", tag_or_branch}
+      checkout_command = {git_cmd, "checkout", tag_or_branch}
    end
    local store_dir
    if not dest_dir then
