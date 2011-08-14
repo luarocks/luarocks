@@ -302,16 +302,10 @@ function versioned_name(file, prefix, name, version)
 end
 
 --- Driver function for "path" command.
--- This platform distinction is not in fs to avoid depending on that module here.
 -- @return boolean This function always succeeds.
 function run(...)
-   if cfg.is_platform("unix") then
-      util.printout("export LUA_PATH='"..package.path.."'")
-      util.printout("export LUA_CPATH='"..package.cpath.."'")
-   elseif cfg.is_platform("windows") then
-      util.printout("SET LUA_PATH="..package.path)
-      util.printout("SET LUA_CPATH="..package.cpath)
-   end
+   util.printout(cfg.export_lua_path:format(package.path))
+   util.printout(cfg.export_lua_cpath:format(package.path))
    return true
 end
 

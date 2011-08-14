@@ -190,6 +190,8 @@ if detected.windows then
       lib = { "?.dll", "lib?.dll" },
       include = { "?.h" }
    }
+   defaults.export_lua_path = "SET LUA_PATH=%s"
+   defaults.export_lua_cpath = "SET LUA_CPATH=%s"
    defaults.local_cache = home.."/cache/luarocks"
 end
 
@@ -223,6 +225,8 @@ if detected.mingw32 then
       lib = { "?.dll", "lib?.dll" },
       include = { "?.h" }
    }
+   defaults.export_lua_path = "SET LUA_PATH=%s"
+   defaults.export_lua_cpath = "SET LUA_CPATH=%s"
    defaults.local_cache = home.."/cache/luarocks"
 end
 
@@ -251,6 +255,8 @@ if detected.unix then
       lib = { "lib?.so", "lib?.so.*" },
       include = { "?.h" }
    }
+   defaults.export_lua_path = "export LUA_PATH='%s'"
+   defaults.export_lua_cpath = "export LUA_CPATH='%s'"
    defaults.local_cache = home.."/.cache/luarocks"
    if not defaults.variables.CFLAGS:match("-fPIC") then
       defaults.variables.CFLAGS = defaults.variables.CFLAGS.." -fPIC"
