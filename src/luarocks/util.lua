@@ -259,7 +259,7 @@ end
 
 --- Print a line to standard error
 function printerr(...)
-   io.stdout:write(table.concat({...},"\t"))
+   io.stderr:write(table.concat({...},"\t"))
    io.stderr:write("\n")
 end
 
