@@ -24,7 +24,7 @@ end
 
 _M.config = config
 
-program_version = "2.0.4.1"
+program_version = "2.0.5"
 user_agent = "LuaRocks/"..program_version
 
 local persist = require("luarocks.persist")
