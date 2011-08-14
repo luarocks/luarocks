@@ -16,12 +16,11 @@ if [ ! -d ../rocks ]
 then
    echo "Downloading entire rocks repository for tests"
    cd ..
-   wget -r -nH -np -R"index.*" http://luarocks.org/repositories/rocks/
+   cp -a ~/.cache/luarocks/rocks .
    cd src
 fi
 
 rocks=(
-   `ls ../rocks/*.rockspec | grep -v luacom`
    `ls ../rocks/*.src.rock | grep -v luacom`
 )
 
