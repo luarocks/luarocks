@@ -156,7 +156,8 @@ function load_local_rockspec(filename)
    end
 
    local protocol, pathname = dir.split_url(rockspec.source.url)
-   if protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file" then
+   local vccs = rockspec.source.vccs
+   if vccs ~= nil and ( protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file" ) then
       rockspec.source.file = rockspec.source.file or dir.base_name(rockspec.source.url)
    end
    rockspec.source.protocol, rockspec.source.pathname = protocol, pathname
@@ -293,11 +294,12 @@ function fetch_sources(rockspec, extract, dest_dir)
    assert(type(dest_dir) == "string" or not dest_dir)
 
    local protocol = rockspec.source.protocol
+   local vccs = rockspec.source.protocol
    local ok, proto
-   if protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file" then
+   if vccs == nil or ( protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file" ) then
       proto = require("luarocks.fetch")
    else
-      ok, proto = pcall(require, "luarocks.fetch."..protocol)
+      ok, proto = pcall(require, "luarocks.fetch."..vccs or protocol)
       if not ok then
          return nil, "Unknown protocol "..protocol
       end
