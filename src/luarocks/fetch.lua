@@ -294,14 +294,15 @@ function fetch_sources(rockspec, extract, dest_dir)
    assert(type(dest_dir) == "string" or not dest_dir)
 
    local protocol = rockspec.source.protocol
-   local vccs = rockspec.source.protocol
+   local vccs = rockspec.source.vccs
+   
    local ok, proto
-   if vccs == nil or ( protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file" ) then
+   if vccs == nil and ( protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file" ) then
       proto = require("luarocks.fetch")
    else
       ok, proto = pcall(require, "luarocks.fetch."..vccs or protocol)
       if not ok then
-         return nil, "Unknown protocol "..protocol
+         return nil, "Unknown protocol "..proto
       end
    end
    

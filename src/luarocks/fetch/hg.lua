@@ -20,8 +20,7 @@ function get_sources(rockspec, extract, dest_dir)
    local hg_cmd = rockspec.variables.HG
    local name_version = rockspec.name .. "-" .. rockspec.version
    local module = dir.base_name(rockspec.source.url)
-   -- Strip off .hg from base name if present
-   module = module:gsub("%.hg$", "")
+
    local command = {hg_cmd, "clone", "--startrev HEAD", rockspec.source.url, module}
    local tag_or_branch = rockspec.source.tag or rockspec.source.branch
    if tag_or_branch then
