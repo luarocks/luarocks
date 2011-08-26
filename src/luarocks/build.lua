@@ -23,24 +23,26 @@ or the name of a rock to be fetched from a repository.
 
 --- Install files to a given location.
 -- Takes a table where the array part is a list of filenames to be copied.
--- In the hash part, other keys are identifiers in Lua module format,
--- to indicate which subdirectory the file should be copied to. For example,
--- install_files({["foo.bar"] = "src/bar.lua"}, "boo") will copy src/bar.lua
--- to boo/foo.
+-- In the hash part, other keys, if is_module_path is set, are identifiers
+-- in Lua module format, to indicate which subdirectory the file should be
+-- copied to. For example, install_files({["foo.bar"] = "src/bar.lua"}, "boo")
+-- will copy src/bar.lua to boo/foo.
 -- @param files table or nil: A table containing a list of files to copy in
 -- the format described above. If nil is passed, this function is a no-op.
 -- Directories should be delimited by forward slashes as in internet URLs.
 -- @param location string: The base directory files should be copied to.
+-- @param is_module_path boolean: True if string keys in files should be
+-- interpreted as dotted module paths.
 -- @return boolean or (nil, string): True if succeeded or 
 -- nil and an error message.
-local function install_files(files, location) 
+local function install_files(files, location, is_module_path)
    assert(type(files) == "table" or not files)
    assert(type(location) == "string")
    if files then
       for k, file in pairs(files) do
          local dest = location
          if type(k) == "string" then
-            dest = dir.path(location, path.module_to_path(k))
+            dest = is_module_path and dir.path(location, path.module_to_path(k)) or k
          end
          fs.make_dir(dest)
          local ok = fs.copy(dir.path(file), dest)
@@ -143,14 +145,14 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
    end
    
    local dirs = {
-      lua = path.lua_dir(name, version),
-      lib = path.lib_dir(name, version),
-      conf = path.conf_dir(name, version),
-      bin = path.bin_dir(name, version),
+      lua = { name = path.lua_dir(name, version), is_module_path = true },
+      lib = { name = path.lib_dir(name, version), is_module_path = true },
+      conf = { name = path.conf_dir(name, version), is_module_path = false },
+      bin = { name = path.bin_dir(name, version), is_module_path = false },
    }
    
    for _, d in pairs(dirs) do
-      fs.make_dir(d)
+      fs.make_dir(d.name)
    end
    local rollback = util.schedule_function(function()
       fs.delete(path.install_dir(name, version))
@@ -188,7 +190,7 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
 
    if build.install then
       for id, install_dir in pairs(dirs) do
-         ok, err = install_files(build.install[id], install_dir)
+         ok, err = install_files(build.install[id], install_dir.name, install_dir.is_module_path)
          if not ok then 
             return nil, err
          end
@@ -206,7 +208,7 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
    end
 
    for _, d in pairs(dirs) do
-      fs.remove_dir_if_empty(d)
+      fs.remove_dir_if_empty(d.name)
    end
 
    fs.pop_dir()
