@@ -80,7 +80,7 @@ end
 -- @param version string or nil: A version number may also be passed.
 -- @return string or (nil, string): The filename of the resulting
 -- .src.rock file; or nil and an error message.
-local function pack_binary_rock(name, version)
+function pack_binary_rock(name, version)
    assert(type(name) == "string")
    assert(type(version) == "string" or not version)
 

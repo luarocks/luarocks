@@ -33,14 +33,6 @@ local function is_writable(tree)
   end
 end
 
-local function use_tree(tree)
-   cfg.root_dir = tree
-   cfg.rocks_dir = path.rocks_dir(tree)
-   cfg.deploy_bin_dir = path.deploy_bin_dir(tree)
-   cfg.deploy_lua_dir = path.deploy_lua_dir(tree)
-   cfg.deploy_lib_dir = path.deploy_lib_dir(tree)
-end
-
 --- Main command-line processor.
 -- Parses input arguments and calls the appropriate driver function
 -- to execute the action requested on the command-line, forwarding
@@ -97,12 +89,12 @@ function run_command(...)
          die("Argument error: use --to=<path>")
       end
       local root_dir = fs.absolute_name(flags["to"])
-      use_tree(root_dir)
+      path.use_tree(root_dir)
    elseif flags["local"] then
-      use_tree(cfg.home_tree)
+      path.use_tree(cfg.home_tree)
    else
       local trees = cfg.rocks_trees
-      use_tree(trees[#trees])
+      path.use_tree(trees[#trees])
    end
 
    if type(cfg.root_dir) == "string" then

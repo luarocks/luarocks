@@ -14,11 +14,14 @@ local manif = require("luarocks.manif")
 local cfg = require("luarocks.cfg")
 
 help_summary = "Build/compile a rock."
-help_arguments = "{<rockspec>|<rock>|<name> [<version>]}"
+help_arguments = "[--pack-binary-rock] {<rockspec>|<rock>|<name> [<version>]}"
 help = [[
-Build a rock, compiling its C parts if any.
+Build and install a rock, compiling its C parts if any.
 Argument may be a rockspec file, a source rock file
 or the name of a rock to be fetched from a repository.
+
+If --pack-binary-rock is passed, the rock is not installed;
+instead, a .rock file with the contents of compilation is produced.
 ]]
 
 --- Install files to a given location.
@@ -269,6 +272,42 @@ function build_rock(rock_file, need_to_fetch)
    return ok, err, errcode
 end
 
+local function do_build(name, version)
+   if name:match("%.rockspec$") then
+      return build_rockspec(name, true)
+   elseif name:match("%.src%.rock$") then
+      return build_rock(name, false)
+   elseif name:match("%.all%.rock$") then
+      local install = require("luarocks.install")
+      return install.install_binary_rock(name)
+   elseif name:match("%.rock$") then
+      return build_rock(name, true)
+   elseif not name:match(dir.separator) then
+      local search = require("luarocks.search")
+      return search.act_on_src_or_rockspec(run, name:lower(), version)
+   end
+   return nil, "Don't know what to do with "..name
+end
+
+local function pack_binary_rock(name, version)
+   local temp_dir = fs.make_temp_dir("luarocks-build-pack-"..dir.base_name(name))
+   if not temp_dir then
+      return nil, "Failed creating temporary directory."
+   end
+   util.schedule_function(fs.delete, temp_dir)
+
+   path.use_tree(temp_dir)
+   local ok, err = do_build(name, version)
+   if not ok then
+      return nil, err
+   end
+   local rname, rversion = path.parse_name(name)
+   if not rname then
+      rname, rversion = name, version
+   end
+   return pack.pack_binary_rock(rname, rversion)
+end
+
 --- Driver function for "build" command.
 -- @param name string: A local or remote rockspec or rock file.
 -- If a package name is given, forwards the request to "search" and,
@@ -286,19 +325,10 @@ function run(...)
 
    local ok, err = fs.check_command_permissions(flags)
    if not ok then return nil, err end
-
-   if name:match("%.rockspec$") then
-      return build_rockspec(name, true)
-   elseif name:match("%.src%.rock$") then
-      return build_rock(name, false)
-   elseif name:match("%.all%.rock$") then
-      local install = require("luarocks.install")
-      return install.install_binary_rock(name)
-   elseif name:match("%.rock$") then
-      return build_rock(name, true)
-   elseif not name:match(dir.separator) then
-      local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(run, name:lower(), version)
+   
+   if flags["pack-binary-rock"] then
+      return pack_binary_rock(name, version)
+   else
+      return do_build(name, version)
    end
-   return nil, "Don't know what to do with "..name
 end

@@ -297,6 +297,14 @@ function versioned_name(file, prefix, name, version)
    return dir.path(prefix, name_version.."-"..rest)
 end
 
+function use_tree(tree)
+   cfg.root_dir = tree
+   cfg.rocks_dir = rocks_dir(tree)
+   cfg.deploy_bin_dir = deploy_bin_dir(tree)
+   cfg.deploy_lua_dir = deploy_lua_dir(tree)
+   cfg.deploy_lib_dir = deploy_lib_dir(tree)
+end
+
 --- Driver function for "path" command.
 -- @return boolean This function always succeeds.
 function run(...)
