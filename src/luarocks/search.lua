@@ -138,10 +138,7 @@ function disk_search(repo, query, results)
    
    for _, name in pairs(fs.list_dir(repo)) do
       local pathname = dir.path(repo, name)
-      local rname, rversion, rarch = path.parse_rock_name(name)
-      if not rname then
-         rname, rversion, rarch = path.parse_rockspec_name(name)
-      end
+      local rname, rversion, rarch = path.parse_name(name)
       if fs.is_dir(pathname) then
          for _, version in pairs(fs.list_dir(pathname)) do
             if version:match("-%d+$") then

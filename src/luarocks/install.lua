@@ -28,7 +28,7 @@ or a filename of a locally available rock.
 function install_binary_rock(rock_file)
    assert(type(rock_file) == "string")
 
-   local name, version, arch = path.parse_rock_name(rock_file)
+   local name, version, arch = path.parse_name(rock_file)
    if not name then
       return nil, "Filename "..rock_file.." does not match format 'name-version-revision.arch.rock'."
    end

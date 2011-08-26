@@ -193,22 +193,18 @@ function bin_dir(name, version, repo)
    return dir.path(rocks_dir(repo), name, version, "bin")
 end
 
---- Extract name, version and arch of a rock filename.
--- @param rock_file string: pathname of a rock
+--- Extract name, version and arch of a rock filename,
+-- or name, version and "rockspec" from a rockspec name.
+-- @param file_name string: pathname of a rock or rockspec
 -- @return (string, string, string) or nil: name, version and arch
--- of rock, or nil if name could not be parsed
-function parse_rock_name(rock_file)
-   assert(type(rock_file) == "string")
-   return dir.base_name(rock_file):match("(.*)-([^-]+-%d+)%.([^.]+)%.rock$")
-end
-
---- Extract name and version of a rockspec filename.
--- @param rockspec_file string: pathname of a rockspec
--- @return (string, string) or nil: name and version
--- of rockspec, or nil if name could not be parsed
-function parse_rockspec_name(rockspec_file)
-   assert(type(rockspec_file) == "string")
-   return dir.base_name(rockspec_file):match("(.*)-([^-]+-%d+)%.(rockspec)")
+-- or nil if name could not be parsed
+function parse_name(file_name)
+   assert(type(file_name) == "string")
+   if file_name:match("%.rock$") then
+      return dir.base_name(file_name):match("(.*)-([^-]+-%d+)%.([^.]+)%.rock$")
+   else
+      return dir.base_name(file_name):match("(.*)-([^-]+-%d+)%.(rockspec)")
+   end
 end
 
 --- Make a rockspec or rock URL.
