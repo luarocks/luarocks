@@ -15,7 +15,7 @@ local function die(message)
 
    local ok, err = pcall(util.run_scheduled_functions)
    if not ok then
-      util.printerr("\nLuaRocks "..cfg.program_version.." internal bug (please report at luarocks-developers@lists.luaforge.net):\n"..err)
+      util.printerr("\nLuaRocks "..cfg.program_version.." internal bug (please report at luarocks-developers@lists.sourceforge.net):\n"..err)
    end
    util.printerr("\nError: "..message)
    os.exit(1)
@@ -142,7 +142,7 @@ function run_command(...)
    if commands[command] then
       local xp, ok, err = xpcall(function() return commands[command].run(unpack(args)) end, function(err)
          die(debug.traceback("LuaRocks "..cfg.program_version
-            .." bug (please report at luarocks-developers@lists.luaforge.net).\n"
+            .." bug (please report at luarocks-developers@lists.sourceforge.net).\n"
             ..err, 2))
       end)
       if xp and (not ok) then
