@@ -21,7 +21,8 @@ Argument may be a rockspec file, a source rock file
 or the name of a rock to be fetched from a repository.
 
 If --pack-binary-rock is passed, the rock is not installed;
-instead, a .rock file with the contents of compilation is produced.
+instead, a .rock file with the contents of compilation is produced
+in the current directory.
 ]]
 
 --- Install files to a given location.
