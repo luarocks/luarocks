@@ -159,8 +159,7 @@ end
 -- a crossplatform way.
 function change_dir_to_root()
    table.insert(dir_stack, lfs.currentdir())
-   -- TODO Does this work on Windows?
-   lfs.chdir("/")
+   lfs.chdir("/")	-- works on Windows too
 end
 
 --- Change working directory to the previous in the dir stack.
