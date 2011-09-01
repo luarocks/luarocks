@@ -269,7 +269,7 @@ IF ERRORLEVEL 1 GOTO ERROR
 XCOPY /S src\luarocks\*.* "%LUADIR%\luarocks" >NUL
 IF ERRORLEVEL 1 GOTO ERROR
 
-RENAME "%LUADIR%\luarocks\config.lua" config.lua.bak
+IF EXIST "%LUADIR%\luarocks\config.lua" RENAME "%LUADIR%\luarocks\config.lua" config.lua.bak
 ECHO module("luarocks.config")>> "%LUADIR%\luarocks\config.lua" 
 ECHO LUA_INCDIR=[[%LUA_INCDIR%]]>> "%LUADIR%\luarocks\config.lua" 
 ECHO LUA_LIBDIR=[[%LUA_LIBDIR%]]>> "%LUADIR%\luarocks\config.lua" 
@@ -287,9 +287,9 @@ ECHO LUAROCKS_PREFIX=[[%PREFIX%]]>> "%LUADIR%\luarocks\config.lua"
 ECHO LUAROCKS_DOWNLOADER=[[curl]]>> "%LUADIR%\luarocks\config.lua"
 ECHO LUAROCKS_MD5CHECKER=[[md5sum]]>> "%LUADIR%\luarocks\config.lua"
 IF NOT [%FORCE_CONFIG%]==[] ECHO local LUAROCKS_FORCE_CONFIG=true>> "%LUADIR%\luarocks\config.lua"
-TYPE "%LUADIR%\luarocks\config.lua.bak">> "%LUADIR%\luarocks\config.lua" 
+IF EXIST "%LUADIR%\luarocks\config.lua.bak" TYPE "%LUADIR%\luarocks\config.lua.bak">> "%LUADIR%\luarocks\config.lua" 
 
-DEL /F /Q "%LUADIR%\luarocks\config.lua.bak" 
+IF EXIST "%LUADIR%\luarocks\config.lua.bak" DEL /F /Q "%LUADIR%\luarocks\config.lua.bak"
 
 SET CONFIG_FILE=%SYSCONFDIR%\config.lua
 
