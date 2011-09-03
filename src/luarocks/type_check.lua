@@ -38,7 +38,6 @@ rockspec_types = {
       md5 = "string",
       file = "string",
       dir = "string",
-      vccs = "string",
       tag = "string",
       branch = "string",
       module = "string",

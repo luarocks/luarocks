@@ -154,6 +154,7 @@ local defaults = {
       GIT = "git",
       SSCM = "sscm",
       SVN = "svn",
+      HG = "hg",
       
       RSYNC = "rsync",
       WGET = "wget",
