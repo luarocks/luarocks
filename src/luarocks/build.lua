@@ -291,6 +291,14 @@ local function do_build(name, version)
 end
 
 local function pack_binary_rock(name, version)
+
+   -- The --pack-binary-rock option for "luarocks build" basically performs
+   -- "luarocks build" on a temporary tree and then "luarocks pack". The
+   -- alternative would require refactoring parts of luarocks.build and
+   -- luarocks.pack, which would save a few file operations: the idea would be
+   -- to shave off the final deploy steps from the build phase and the initial
+   -- collect steps from the pack phase.
+
    local temp_dir = fs.make_temp_dir("luarocks-build-pack-"..dir.base_name(name))
    if not temp_dir then
       return nil, "Failed creating temporary directory."
