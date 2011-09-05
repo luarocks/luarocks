@@ -65,7 +65,12 @@ function install_binary_rock(rock_file)
    ok, err, errcode = deps.fulfill_dependencies(rockspec)
    if err then return nil, err, errcode end
 
-   ok, err = rep.deploy_files(name, version)
+   local wrap_bin_scripts = true
+   if rockspec.deploy and rockspec.deploy.wrap_bin_scripts == false then
+      wrap_bin_scripts = false
+   end
+
+   ok, err = rep.deploy_files(name, version, rep.should_wrap_bin_scripts(rockspec))
    if err then return nil, err end
 
    util.remove_scheduled_function(rollback)

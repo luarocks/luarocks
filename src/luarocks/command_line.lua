@@ -79,6 +79,12 @@ function run_command(...)
       end
    end
    command = command:gsub("-", "_")
+
+   if flags["extensions"] then
+      cfg.use_extensions = true
+      local type_check = require("luarocks.type_check")
+      type_check.load_extensions()
+   end
    
    if cfg.local_by_default then
       flags["local"] = true

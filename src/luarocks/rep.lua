@@ -194,9 +194,22 @@ local function resolve_conflict(target, deploy_dir, name, version)
    end
 end
 
-function deploy_files(name, version)
+function should_wrap_bin_scripts(rockspec)
+   assert(type(rockspec) == "table")
+
+   if cfg.wrap_bin_scripts ~= nil then
+      return cfg.wrap_bin_scripts
+   end
+   if rockspec.deploy and rockspec.deploy.wrap_bin_scripts == false then
+      return false
+   end
+   return true
+end
+
+function deploy_files(name, version, wrap_bin_scripts)
    assert(type(name) == "string")
    assert(type(version) == "string")
+   assert(type(wrap_bin_scripts) == "boolean")
 
    local function deploy_file_tree(file_tree, source_dir, deploy_dir, move_fn)
       if not move_fn then
@@ -230,7 +243,8 @@ function deploy_files(name, version)
    
    local ok, err = true
    if rock_manifest.bin then
-      ok, err = deploy_file_tree(rock_manifest.bin, path.bin_dir(name, version), cfg.deploy_bin_dir, install_binary)
+      local move_bin_fn = wrap_bin_scripts and install_binary or fs.copy_binary
+      ok, err = deploy_file_tree(rock_manifest.bin, path.bin_dir(name, version), cfg.deploy_bin_dir, move_bin_fn)
    end
    if ok and rock_manifest.lua then
       ok, err = deploy_file_tree(rock_manifest.lua, path.lua_dir(name, version), cfg.deploy_lua_dir)

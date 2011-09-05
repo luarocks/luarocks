@@ -4,6 +4,8 @@
 -- loaded by LuaRocks.
 module("luarocks.type_check", package.seeall)
 
+local cfg = require("luarocks.cfg")
+
 rockspec_format = "1.0"
 
 rockspec_types = {
@@ -71,6 +73,17 @@ rockspec_types = {
       post_install = "string"
    }
 }
+
+function load_extensions()
+   rockspec_format = "1.1"
+   rockspec_types.deploy = {
+      wrap_bin_scripts = true,
+   }
+end
+
+if cfg.use_extensions then
+   load_extensions()
+end
 
 rockspec_types.build.platforms.ANY = rockspec_types.build
 rockspec_types.dependencies.platforms.ANY = rockspec_types.dependencies
@@ -218,6 +231,10 @@ end
 -- succeeded, or nil and an error message if it failed.
 function type_check_rockspec(rockspec)
    assert(type(rockspec) == "table")
+   if rockspec.rockspec_format then
+      -- relies on global state
+      load_extensions()
+   end
    return type_check_table(rockspec, rockspec_types, "")
 end
 

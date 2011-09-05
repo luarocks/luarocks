@@ -225,7 +225,7 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
    ok, err = manif.make_rock_manifest(name, version)
    if err then return nil, err end
 
-   ok, err = rep.deploy_files(name, version)
+   ok, err = rep.deploy_files(name, version, rep.should_wrap_bin_scripts(rockspec))
    if err then return nil, err end
    
    util.remove_scheduled_function(rollback)
