@@ -209,10 +209,13 @@ function deploy_files(name, version)
             local ok, err
             if fs.exists(target) then
                local new_target, err = resolve_conflict(target, deploy_dir, name, version)
-	       if err == "untracked" then
-		 fs.delete(target)
-	       elseif err then return nil, err.." Cannot install new version."
-	       else target = new_target end
+               if err == "untracked" then
+                  fs.delete(target)
+               elseif err then
+                  return nil, err.." Cannot install new version."
+               else
+                  target = new_target
+               end
 	    end
             fs.make_dir(dir.dir_name(target))
             ok, err = move_fn(source, target)
