@@ -309,7 +309,7 @@ end
 -- @return boolean This function always succeeds.
 function run(...)
    util.printout(cfg.export_lua_path:format(package.path))
-   util.printout(cfg.export_lua_cpath:format(package.path))
+   util.printout(cfg.export_lua_cpath:format(package.cpath))
    return true
 end
 
