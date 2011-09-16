@@ -129,6 +129,11 @@ end
 
 local root = rocks_trees[#rocks_trees]
 local defaults = {
+
+   local_by_default = false,
+   use_extensions = false,
+   accept_unknown_fields = false,
+
    lua_modules_path = "/share/lua/5.1/",
    lib_modules_path = "/lib/lua/5.1/",
 

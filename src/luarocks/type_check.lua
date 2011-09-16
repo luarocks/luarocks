@@ -209,7 +209,9 @@ type_check_table = function(tbl, types, context)
       elseif types.MORE then
          -- Accept unknown field
       else
-         return nil, "Unknown field "..k
+         if not cfg.accept_unknown_fields then
+            return nil, "Unknown field "..k
+         end
       end
    end
    for k, v in pairs(types) do
