@@ -84,7 +84,11 @@ function deep_merge(dst, src)
          if not dst[k] then
             dst[k] = {}
          end
-         deep_merge(dst[k], v)
+         if type(dst[k]) == "table" then
+            deep_merge(dst[k], v)
+         else
+            dst[k] = v
+         end
       else
          dst[k] = v
       end

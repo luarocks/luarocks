@@ -112,6 +112,12 @@ if not site_config.LUAROCKS_FORCE_CONFIG then
    local home_overrides = persist.load_into_table(home_config_file, { home = home })
    if home_overrides then
       local util = require("luarocks.util")
+      if home_overrides.rocks_trees then
+         _M.rocks_trees = nil
+      end
+      if home_overrides.rocks_servers then
+         _M.rocks_servers = nil
+      end
       util.deep_merge(_M, home_overrides)
    end
 end
