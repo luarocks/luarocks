@@ -10,19 +10,19 @@ local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, 
 --
 -- End-users shouldn't edit this file. They can override any defaults
 -- set in this file using their system-wide $LUAROCKS_SYSCONFIG file
--- (see luarocks.config) or their user-specific configuration file
+-- (see luarocks.site_config) or their user-specific configuration file
 -- (~/.luarocks/config.lua on Unix or %APPDATA%/luarocks/config.lua on
 -- Windows).
 module("luarocks.cfg")
 
 -- Load site-local global configurations
-local ok, config = pcall(require, "luarocks.config")
+local ok, site_config = pcall(require, "luarocks.site_config")
 if not ok then
-   io.stderr:write("Site-local luarocks/config.lua file not found. Incomplete installation?\n")
-   config = {}
+   io.stderr:write("Site-local luarocks/site_config.lua file not found. Incomplete installation?\n")
+   site_config = {}
 end
 
-_M.config = config
+_M.site_config = site_config
 
 program_version = "2.0.5"
 user_agent = "LuaRocks/"..program_version
@@ -46,12 +46,12 @@ local detected = {}
 local system,proc
 
 -- A proper installation of LuaRocks will hardcode the system
--- and proc values with config.LUAROCKS_UNAME_S and config.LUAROCKS_UNAME_M,
+-- and proc values with site_config.LUAROCKS_UNAME_S and site_config.LUAROCKS_UNAME_M,
 -- so that this detection does not run every time. When it is
 -- performed, we use the Unix way to identify the system,
 -- even on Windows (assuming UnxUtils or Cygwin).
-system = config.LUAROCKS_UNAME_S or io.popen("uname -s"):read("*l")
-proc = config.LUAROCKS_UNAME_M or io.popen("uname -m"):read("*l")
+system = site_config.LUAROCKS_UNAME_S or io.popen("uname -s"):read("*l")
+proc = site_config.LUAROCKS_UNAME_M or io.popen("uname -m"):read("*l")
 if proc:match("i[%d]86") then
    proc = "x86"
 elseif proc:match("amd64") or proc:match("x86_64") then
@@ -105,9 +105,9 @@ end
 variables = {}
 rocks_trees = {}
 
-persist.load_into_table(config.LUAROCKS_SYSCONFIG or sys_config_file, _M)
+persist.load_into_table(site_config.LUAROCKS_SYSCONFIG or sys_config_file, _M)
 
-if not config.LUAROCKS_FORCE_CONFIG then
+if not site_config.LUAROCKS_FORCE_CONFIG then
    home_config_file = os.getenv("LUAROCKS_CONFIG") or home_config_file
    local home_overrides = persist.load_into_table(home_config_file, { home = home })
    if home_overrides then
@@ -120,8 +120,8 @@ if not next(rocks_trees) then
    if home_tree then
       table.insert(rocks_trees, home_tree)
    end
-   if config.LUAROCKS_ROCKS_TREE then
-      table.insert(rocks_trees, config.LUAROCKS_ROCKS_TREE)
+   if site_config.LUAROCKS_ROCKS_TREE then
+      table.insert(rocks_trees, site_config.LUAROCKS_ROCKS_TREE)
    end
 end
 
@@ -146,9 +146,9 @@ local defaults = {
    },
 
    lua_extension = "lua",
-   lua_interpreter = config.LUA_INTERPRETER or "lua",
-   downloader = config.LUAROCKS_DOWNLOADER or "wget",
-   md5checker = config.LUAROCKS_MD5CHECKER or "md5sum",
+   lua_interpreter = site_config.LUA_INTERPRETER or "lua",
+   downloader = site_config.LUAROCKS_DOWNLOADER or "wget",
+   md5checker = site_config.LUAROCKS_MD5CHECKER or "md5sum",
 
    variables = {
       MAKE = "make",
@@ -213,15 +213,15 @@ if detected.windows then
    defaults.external_lib_extension = "dll"
    defaults.obj_extension = "obj"
    defaults.external_deps_dirs = { "c:/external/" }
-   defaults.variables.LUA_BINDIR = config.LUA_BINDIR and config.LUA_BINDIR:gsub("\\", "/") or "c:/lua5.1/bin"
-   defaults.variables.LUA_INCDIR = config.LUA_INCDIR and config.LUA_INCDIR:gsub("\\", "/") or "c:/lua5.1/include"
-   defaults.variables.LUA_LIBDIR = config.LUA_LIBDIR and config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua5.1/lib"
+   defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua5.1/bin"
+   defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua5.1/include"
+   defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua5.1/lib"
    defaults.cmake_generator = "MinGW Makefiles"
    defaults.makefile = "Makefile.win"
    defaults.variables.MAKE = "nmake" -- TODO: Split Windows flavors between mingw and msvc
    defaults.variables.CC = "cl"
    defaults.variables.RC = "rc"
-   defaults.variables.WRAPPER = config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.obj"
+   defaults.variables.WRAPPER = site_config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.obj"
    defaults.variables.LD = "link"
    defaults.variables.MT = "mt"
    defaults.variables.CFLAGS = "/MD /O2"
@@ -249,15 +249,15 @@ if detected.mingw32 then
    defaults.external_lib_extension = "dll"
    defaults.obj_extension = "o"
    defaults.external_deps_dirs = { "c:/external/" }
-   defaults.variables.LUA_BINDIR = config.LUA_BINDIR and config.LUA_BINDIR:gsub("\\", "/") or "c:/lua5.1/bin"
-   defaults.variables.LUA_INCDIR = config.LUA_INCDIR and config.LUA_INCDIR:gsub("\\", "/") or "c:/lua5.1/include"
-   defaults.variables.LUA_LIBDIR = config.LUA_LIBDIR and config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua5.1/lib"
+   defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua5.1/bin"
+   defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua5.1/include"
+   defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua5.1/lib"
    defaults.cmake_generator = "MinGW Makefiles"
    defaults.make = "mingw32-make" -- TODO: Split Windows flavors between mingw and msvc
    defaults.makefile = "Makefile.win"
    defaults.variables.CC = "mingw32-gcc"
    defaults.variables.RC = "windres"
-   defaults.variables.WRAPPER = config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.o"
+   defaults.variables.WRAPPER = site_config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.o"
    defaults.variables.LD = "mingw32-gcc"
    defaults.variables.CFLAGS = "-O2"
    defaults.variables.LIBFLAG = "-shared"
@@ -281,9 +281,9 @@ if detected.unix then
    defaults.external_lib_extension = "so"
    defaults.obj_extension = "o"
    defaults.external_deps_dirs = { "/usr/local", "/usr" }
-   defaults.variables.LUA_BINDIR = config.LUA_BINDIR or "/usr/local/bin"
-   defaults.variables.LUA_INCDIR = config.LUA_INCDIR or "/usr/local/include"
-   defaults.variables.LUA_LIBDIR = config.LUA_LIBDIR or "/usr/local/lib"
+   defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR or "/usr/local/bin"
+   defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR or "/usr/local/include"
+   defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR or "/usr/local/lib"
    defaults.variables.CFLAGS = "-O2"
    defaults.cmake_generator = "Unix Makefiles"
    defaults.platforms = { "unix" }
@@ -356,7 +356,7 @@ end
 defaults.variables.LUA = defaults.lua_interpreter
 defaults.variables.LIB_EXTENSION = defaults.lib_extension
 defaults.variables.OBJ_EXTENSION = defaults.obj_extension
-defaults.variables.LUAROCKS_PREFIX = config.LUAROCKS_PREFIX
+defaults.variables.LUAROCKS_PREFIX = site_config.LUAROCKS_PREFIX
 
 -- Use defaults:
 
