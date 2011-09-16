@@ -162,8 +162,8 @@ function load_local_rockspec(filename)
    rockspec.source.protocol, rockspec.source.pathname = protocol, pathname
 
    -- Temporary compatibility
-   if not rockspec.source.cvs_module then rockspec.source.module = rockspec.source.cvs_module end
-   if not rockspec.source.cvs_tag then rockspec.source.tag = rockspec.source.cvs_tag end
+   if rockspec.source.cvs_module then rockspec.source.module = rockspec.source.cvs_module end
+   if rockspec.source.cvs_tag then rockspec.source.tag = rockspec.source.cvs_tag end
 
    local name_version = rockspec.package:lower() .. "-" .. rockspec.version
    if basename ~= "rockspec" and basename ~= name_version .. ".rockspec" then
