@@ -117,6 +117,7 @@ function run(...)
    if not ok then return nil, err end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
+      util.printout("Using "..name.."... switching to 'build' mode")
       local build = require("luarocks.build")
       return build.run(name, flags["local"] and "--local")
    elseif name:match("%.rock$") then
