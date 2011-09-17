@@ -108,7 +108,7 @@ function run(...)
    elseif flags["mversion"] then util.printout(version)
    else
       util.printout()
-      util.printout(rockspec.package.." "..rockspec.version.." - "..descript.summary)
+      util.printout(rockspec.package.." "..rockspec.version.." - "..(descript.summary or ""))
       util.printout()
       if descript.detailed then
          util.printout(format_text(descript.detailed))
