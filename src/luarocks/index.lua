@@ -143,14 +143,15 @@ function make_index(repo)
       output = output .. index_package_end
       if latest_rockspec then
          local rockspec = persist.load_into_table(dir.path(repo, latest_rockspec))
+         local descript = rockspec.description or {}
          local vars = {
             anchor = package,
             package = rockspec.package,
             original = rockspec.source.url,
-            summary = rockspec.description.summary or "",
-            detailed = rockspec.description.detailed or "",
-            license = rockspec.description.license or "N/A",
-            homepage = rockspec.description.homepage and ("| <a href="..rockspec.description.homepage..">project homepage</a>") or "",
+            summary = descript.summary or "",
+            detailed = descript.detailed or "",
+            license = descript.license or "N/A",
+            homepage = descript.homepage and ("| <a href="..descript.homepage..">project homepage</a>") or "",
             externaldependencies = format_external_dependencies(rockspec)
          }
          vars.detailed = vars.detailed:gsub("\n\n", "</p><p>"):gsub("%s+", " ")

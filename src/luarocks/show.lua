@@ -94,7 +94,7 @@ function run(...)
    local rockspec, err = fetch.load_local_rockspec(rockspec_file)
    if not rockspec then return nil,err end
 
-   local descript = rockspec.description
+   local descript = rockspec.description or {}
    local manifest, err = manif.load_manifest(repo_url)
    if not manifest then return nil,err end
    local minfo = manifest.repository[name][version][1]

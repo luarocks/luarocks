@@ -240,7 +240,7 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
    if err then return nil, err end
 
    local license = ""
-   if rockspec.description.license then
+   if rockspec.description and rockspec.description.license then
       license = ("(license: "..rockspec.description.license..")")
    end
 
