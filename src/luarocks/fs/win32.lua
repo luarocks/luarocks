@@ -33,7 +33,9 @@ function absolute_name(pathname, relative_to)
    assert(type(relative_to) == "string" or not relative_to)
 
    relative_to = relative_to or fs.current_dir()
-   if pathname:match("^[\.a-zA-Z]?:?[\\/]") then
+   -- FIXME I'm not sure this first \\ should be there at all.
+   -- What are the Windows rules for drive letters?
+   if pathname:match("^[\\.a-zA-Z]?:?[\\/]") then
       return pathname
    else
       return relative_to .. "/" .. pathname
