@@ -59,7 +59,11 @@ function fetch_url_at_temp_dir(url, tmpname, filename)
 
    local protocol, pathname = dir.split_url(url)
    if protocol == "file" then
-      return pathname, dir.dir_name(fs.absolute_name(pathname))
+      if fs.exists(pathname) then
+         return pathname, dir.dir_name(fs.absolute_name(pathname))
+      else
+         return nil, "File not found: "..pathname
+      end
    else
       local temp_dir = fs.make_temp_dir(tmpname)
       if not temp_dir then
