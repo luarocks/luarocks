@@ -3,6 +3,7 @@
 -- Builds a rock, compiling its C parts if any.
 module("luarocks.build", package.seeall)
 
+local pack = require("luarocks.pack")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
 local rep = require("luarocks.rep")
