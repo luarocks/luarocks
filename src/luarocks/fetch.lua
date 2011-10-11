@@ -9,6 +9,7 @@ local path = require("luarocks.path")
 local deps = require("luarocks.deps")
 local persist = require("luarocks.persist")
 local util = require("luarocks.util")
+local cfg = require("luarocks.cfg")
 
 --- Fetch a local or remote file.
 -- Make a remote or local URL/pathname local, fetching the file if necessary.
@@ -304,6 +305,16 @@ function fetch_sources(rockspec, extract, dest_dir)
       ok, proto = pcall(require, "luarocks.fetch."..protocol)
       if not ok then
          return nil, "Unknown protocol "..protocol
+      end
+   end
+   
+   if cfg.only_sources_from
+   and rockspec.source.pathname
+   and #rockspec.source.pathname > 0 then
+      if #cfg.only_sources_from == 0 then
+         return nil, "Can't download "..rockspec.source.url.." -- download from remote servers disabled"
+      elseif not rockspec.source.pathname:match("^"..cfg.only_sources_from) then
+         return nil, "Can't download "..rockspec.source.url.." -- only downloading from "..cfg.only_sources_from
       end
    end
    

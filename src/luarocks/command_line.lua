@@ -130,6 +130,10 @@ function run_command(...)
       end
       cfg.rocks_servers = { flags["only-from"] }
    end
+
+   if flags["only-sources-from"] then
+      cfg.only_sources_from = flags["only-sources-from"]
+   end
   
    if command ~= "help" then
       for k, v in pairs(cmdline_vars) do
