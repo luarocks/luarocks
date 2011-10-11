@@ -313,10 +313,9 @@ function fetch_sources(rockspec, extract, dest_dir)
    and #rockspec.source.pathname > 0 then
       if #cfg.only_sources_from == 0 then
          return nil, "Can't download "..rockspec.source.url.." -- download from remote servers disabled"
-      elseif not rockspec.source.pathname:match("^"..cfg.only_sources_from) then
+      elseif rockspec.source.pathname:find(cfg.only_sources_from, 1, true) ~= 1 then
          return nil, "Can't download "..rockspec.source.url.." -- only downloading from "..cfg.only_sources_from
       end
    end
-   
    return proto.get_sources(rockspec, extract, dest_dir)
 end
