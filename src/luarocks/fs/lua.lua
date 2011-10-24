@@ -231,9 +231,11 @@ end
 --- Copy a file.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
+-- @param perms string or nil: Permissions for destination file,
+-- or nil to use the source filename permissions
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
-function copy(src, dest)
+function copy(src, dest, perms)
    assert(src and dest)
    src = normalize(src)
    dest = normalize(dest)
@@ -241,7 +243,7 @@ function copy(src, dest)
    if destmode == "directory" then
       dest = dir.path(dest, dir.base_name(src))
    end
-   local perms = fs.get_permissions(src)
+   if not perms then perms = fs.get_permissions(src) end
    local src_h, err = io.open(src, "rb")
    if not src_h then return nil, err end
    local dest_h, err = io.open(dest, "wb+")

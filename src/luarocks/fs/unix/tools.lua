@@ -91,11 +91,22 @@ end
 --- Copy a file.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
+-- @param perms string or nil: Permissions for destination file,
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
-function copy(src, dest)
+function copy(src, dest, perm)
    assert(src and dest)
    if fs.execute(vars.CP, src, dest) then
+      if perm then
+         if fs.is_dir(dest) then
+            dest = dir.path(dest, dir.base_name(src))
+         end
+         if fs.execute(vars.CHMOD, perm, dest) then
+            return true
+         else
+            return false, "Failed setting permissions of "..dest
+         end
+      end
       return true
    else
       return false, "Failed copying "..src.." to "..dest

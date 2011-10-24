@@ -126,5 +126,5 @@ function is_actual_binary(filename)
 end
 
 function copy_binary(filename, dest) 
-   return fs.copy(filename, dest)
+   return fs.copy(filename, dest, "0755")
 end
