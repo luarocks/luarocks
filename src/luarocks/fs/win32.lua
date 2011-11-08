@@ -15,7 +15,7 @@ local dir = require("luarocks.dir")
 function Q(arg)
    assert(type(arg) == "string")
    -- Quote DIR for Windows
-    if arg:match("^[\.a-zA-Z]?:?[\\/]")  then
+    if arg:match("^[%.a-zA-Z]?:?[\\/]")  then
         return '"' .. arg:gsub("/", "\\"):gsub('"', '\\"') .. '"'
     end
     -- URLs and anything else
