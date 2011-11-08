@@ -542,7 +542,7 @@ function download(url, filename)
       err = "Unsupported protocol"
    end
    if not content then
-      return false, err
+      return false, tostring(err)
    end
    local file = io.open(filename, "wb")
    if not file then return false end
