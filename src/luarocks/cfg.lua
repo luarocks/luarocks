@@ -194,6 +194,7 @@ local defaults = {
       MD5 = "md5",
       STAT = "stat",
       
+      CMAKE = "cmake",
       SEVENZ = "7z",
       
       STATFLAG = "-c '%a'",
