@@ -291,33 +291,6 @@ local function do_build(name, version)
    return nil, "Don't know what to do with "..name
 end
 
-local function pack_binary_rock(name, version)
-
-   -- The --pack-binary-rock option for "luarocks build" basically performs
-   -- "luarocks build" on a temporary tree and then "luarocks pack". The
-   -- alternative would require refactoring parts of luarocks.build and
-   -- luarocks.pack, which would save a few file operations: the idea would be
-   -- to shave off the final deploy steps from the build phase and the initial
-   -- collect steps from the pack phase.
-
-   local temp_dir = fs.make_temp_dir("luarocks-build-pack-"..dir.base_name(name))
-   if not temp_dir then
-      return nil, "Failed creating temporary directory."
-   end
-   util.schedule_function(fs.delete, temp_dir)
-
-   path.use_tree(temp_dir)
-   local ok, err = do_build(name, version)
-   if not ok then
-      return nil, err
-   end
-   local rname, rversion = path.parse_name(name)
-   if not rname then
-      rname, rversion = name, version
-   end
-   return pack.pack_binary_rock(rname, rversion)
-end
-
 --- Driver function for "build" command.
 -- @param name string: A local or remote rockspec or rock file.
 -- If a package name is given, forwards the request to "search" and,
@@ -337,7 +310,7 @@ function run(...)
    if not ok then return nil, err end
    
    if flags["pack-binary-rock"] then
-      return pack_binary_rock(name, version)
+      return pack.pack_binary_rock(name, version, do_build, name, version)
    else
       return do_build(name, version)
    end

@@ -9,9 +9,11 @@ local build = require("luarocks.build")
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
+local fetch = require("luarocks.fetch")
+local pack = require("luarocks.pack")
 
 help_summary = "Compile package in current directory using a rockspec."
-help_arguments = "[<rockspec>]"
+help_arguments = "[--pack-binary-rock] [<rockspec>]"
 help = [[
 Builds sources in the current directory, but unlike "build",
 it does not fetch sources, etc., assuming everything is 
@@ -22,6 +24,10 @@ is found, you must specify which to use, through the command-line.
 This command is useful as a tool for debugging rockspecs. 
 To install rocks, you'll normally want to use the "install" and
 "build" commands. See the help on those for details.
+
+If --pack-binary-rock is passed, the rock is not installed;
+instead, a .rock file with the contents of compilation is produced
+in the current directory.
 ]]
 
 --- Driver function for "make" command.
@@ -54,5 +60,10 @@ function run(...)
       return nil, "Invalid argument: 'make' takes a rockspec as a parameter. See help."
    end
 
-   return build.build_rockspec(rockspec, false, true)
+   if flags["pack-binary-rock"] then
+      local rspec, err, errcode = fetch.load_rockspec(rockspec)
+      return pack.pack_binary_rock(rspec.name, rspec.version, build.build_rockspec, rockspec, false, true)
+   else
+      return build.build_rockspec(rockspec, false, true)
+   end
 end

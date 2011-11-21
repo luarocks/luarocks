@@ -80,16 +80,16 @@ end
 -- @param version string or nil: A version number may also be passed.
 -- @return string or (nil, string): The filename of the resulting
 -- .src.rock file; or nil and an error message.
-function pack_binary_rock(name, version)
+local function do_pack_binary_rock(name, version)
    assert(type(name) == "string")
    assert(type(version) == "string" or not version)
 
    local query = search.make_query(name, version)
    query.exact_name = true
    local results = {}
-   for _, tree in ipairs(cfg.rocks_trees) do
-      search.manifest_search(results, path.rocks_dir(tree), query)
-   end
+   
+   search.manifest_search(results, cfg.rocks_dir, query)
+   
    if not next(results) then
       return nil, "'"..name.."' does not seem to be an installed rock."
    end
@@ -149,6 +149,33 @@ function pack_binary_rock(name, version)
    return rock_file
 end
 
+function pack_binary_rock(name, version, cmd, ...)
+
+   -- The --pack-binary-rock option for "luarocks build" basically performs
+   -- "luarocks build" on a temporary tree and then "luarocks pack". The
+   -- alternative would require refactoring parts of luarocks.build and
+   -- luarocks.pack, which would save a few file operations: the idea would be
+   -- to shave off the final deploy steps from the build phase and the initial
+   -- collect steps from the pack phase.
+
+   local temp_dir = fs.make_temp_dir("luarocks-build-pack-"..dir.base_name(name))
+   if not temp_dir then
+      return nil, "Failed creating temporary directory."
+   end
+   util.schedule_function(fs.delete, temp_dir)
+
+   path.use_tree(temp_dir)
+   local ok, err = cmd(...)
+   if not ok then
+      return nil, err
+   end
+   local rname, rversion = path.parse_name(name)
+   if not rname then
+      rname, rversion = name, version
+   end
+   return do_pack_binary_rock(rname, rversion)
+end
+
 --- Driver function for the "pack" command.
 -- @param arg string:  may be a rockspec file, for creating a source rock,
 -- or the name of an installed package, for creating a binary rock.
@@ -167,7 +194,7 @@ function run(...)
    if arg:match(".*%.rockspec") then
       file, err = pack_source_rock(arg)
    else
-      file, err = pack_binary_rock(arg, version)
+      file, err = do_pack_binary_rock(arg, version)
    end
    if err then
       return nil, err
