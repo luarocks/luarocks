@@ -10,7 +10,7 @@ separator = "/"
 function base_name(pathname)
    assert(type(pathname) == "string")
 
-   local base = pathname:match(".*[/\\]([^/\\]*)")
+   local base = pathname:gsub("[/\\]*$", ""):match(".*[/\\]([^/\\]*)")
    return base or pathname
 end
 
