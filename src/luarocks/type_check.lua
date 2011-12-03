@@ -11,7 +11,7 @@ rockspec_format = "1.0"
 rockspec_types = {
    rockspec_format = "string",
    MUST_package = "string",
-   MUST_version = "string",
+   MUST_version = "[%w.]+-[%d]+",
    description = {
       summary = "string",
       detailed = "string",
@@ -167,6 +167,15 @@ local function type_check_item(name, item, expected, context)
    if expected_type == "number" then
       if not tonumber(item) then
          return nil, "Type mismatch on field "..context..name..": expected a number"
+      end
+   elseif expected_type == "string" then
+      if not tostring(item) then
+         return nil, "Type mismatch on field "..context..name..": expected a value convertible to string"
+      end
+      if expected ~= "string" then
+         if not item:match("^"..expected.."$") then
+            return nil, "Type mismatch on field "..context..name..": invalid value "..item
+         end
       end
    elseif expected_type == "table" then
       if item_type ~= expected_type then
