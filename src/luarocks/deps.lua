@@ -630,7 +630,7 @@ function scan_deps(results, missing, manifest, name, version)
    if not deplist then
       rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version))
       if err then
-         missing[name.." "..version] = true
+         missing[name.." "..version] = err
          return results, missing
       end
       dependencies_name[version] = rockspec.dependencies
@@ -643,7 +643,7 @@ function scan_deps(results, missing, manifest, name, version)
    end
    if next(failures) then
       for _, failure in pairs(failures) do
-         missing[show_dep(failure)] = true
+         missing[show_dep(failure)] = "failed"
       end
    end
    results[name] = version

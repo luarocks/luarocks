@@ -188,9 +188,9 @@ local function update_dependencies(manifest)
                repo.dependencies, missing = deps.scan_deps({}, {}, manifest, pkg, version)
                repo.dependencies[pkg] = nil
                if missing then
-                  for miss, _ in pairs(missing) do
+                  for miss, err in pairs(missing) do
                      if miss == current then
-                        util.printerr("Tree inconsistency detected: "..current.." has no rockspec.")
+                        util.printerr("Tree inconsistency detected: "..current.." has no rockspec. "..err)
                      else
                         util.printerr("Missing dependency for "..pkg.." "..version..": "..miss)
                      end

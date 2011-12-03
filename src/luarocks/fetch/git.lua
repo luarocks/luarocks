@@ -26,7 +26,7 @@ function get_sources(rockspec, extract, dest_dir)
    local checkout_command
    local tag_or_branch = rockspec.source.tag or rockspec.source.branch
    if tag_or_branch then
-      checkout_command = {git_cmd, "checkout", tag_or_branch}
+      checkout_command = {git_cmd, "checkout", "-q", tag_or_branch}
    end
    local store_dir
    if not dest_dir then
@@ -38,6 +38,7 @@ function get_sources(rockspec, extract, dest_dir)
    else
       store_dir = dest_dir
    end
+   store_dir = fs.absolute_name(store_dir)
    fs.change_dir(store_dir)
    if not fs.execute(unpack(command)) then
       return nil, "Failed cloning git repository."
