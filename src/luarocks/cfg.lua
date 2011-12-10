@@ -233,6 +233,7 @@ if detected.windows then
    defaults.variables.MT = "mt"
    defaults.variables.CFLAGS = "/MD /O2"
    defaults.variables.LIBFLAG = "/dll"
+   defaults.variables.LUALIB = "lua5.1.lib"
    defaults.external_deps_patterns = {
       bin = { "?.exe", "?.bat" },
       lib = { "?.lib", "?.dll", "lib?.dll" },

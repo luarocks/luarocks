@@ -317,7 +317,7 @@ local function match_dep(dep, blacklist)
 
    local versions
    if dep.name == "lua" then
-      versions = { "5.1" }
+      versions = { (_VERSION:gsub("Lua ", "")) }
    else
       versions = manif_core.get_versions(dep.name)
    end
