@@ -231,6 +231,7 @@ if detected.windows then
    defaults.variables.WRAPPER = site_config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.obj"
    defaults.variables.LD = "link"
    defaults.variables.MT = "mt"
+   defaults.variables.LUALIB = "lua5.1.lib"
    defaults.variables.CFLAGS = "/MD /O2"
    defaults.variables.LIBFLAG = "/dll"
    defaults.variables.LUALIB = "lua5.1.lib"
