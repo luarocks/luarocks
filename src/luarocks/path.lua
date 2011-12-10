@@ -52,19 +52,19 @@ end
 
 function deploy_lua_dir(repo)
    if type(repo) == "string" then
-      return dir.path(repo, "share", "lua", "5.1")
+      return repo..cfg.lua_modules_path
    else
       assert(type(repo) == "table")
-      return repo.lua_dir or dir.path(repo.root, "share", "lua", "5.1")
+      return repo.lua_dir or repo.root..cfg.lua_modules_path
    end
 end
 
 function deploy_lib_dir(repo)
    if type(repo) == "string" then
-      return dir.path(repo, "lib", "lua", "5.1")
+      return repo..cfg.lib_modules_path
    else
       assert(type(repo) == "table")
-      return repo.lib_dir or dir.path(repo.root, "lib", "lua", "5.1")
+      return repo.lib_dir or repo.root..cfg.lib_modules_path
    end
 end
 

@@ -74,7 +74,7 @@ function run(rockspec)
          local extras = { unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
          add_flags(extras, "%s.lib", libraries)
-         extras[#extras+1] = dir.path(variables.LUA_LIBDIR, "lua5.1.lib")
+         extras[#extras+1] = dir.path(variables.LUA_LIBDIR, variables.LUALIB)
          extras[#extras+1] = "-l" .. (variables.MSVCRT or "msvcr80")
          local ok = execute(variables.LD.." "..variables.LIBFLAG, "-o", library, unpack(extras))
          return ok
@@ -89,7 +89,7 @@ function run(rockspec)
          local ok = execute(variables.RC, "-o", resname, rcname)
          if not ok then return ok end
          ok = execute(variables.LD, "-o", wrapname, resname, variables.WRAPPER,
-                      dir.path(variables.LUA_LIBDIR, "lua5.1.lib"), "-l" .. (variables.MSVCRT or "msvcr80"), "-luser32")
+                      dir.path(variables.LUA_LIBDIR, variables.LUALIB), "-l" .. (variables.MSVCRT or "msvcr80"), "-luser32")
          return ok, wrapname
       end
    elseif cfg.is_platform("win32") then
@@ -109,7 +109,7 @@ function run(rockspec)
          def:write("EXPORTS\n")
          def:write("luaopen_"..name:gsub("%.", "_").."\n")
          def:close()
-         local ok = execute(variables.LD, "-dll", "-def:"..deffile, "-out:"..library, dir.path(variables.LUA_LIBDIR, "lua5.1.lib"), unpack(extras))
+         local ok = execute(variables.LD, "-dll", "-def:"..deffile, "-out:"..library, dir.path(variables.LUA_LIBDIR, variables.LUALIB), unpack(extras))
          local manifestfile = basename..".dll.manifest"
          if ok and fs.exists(manifestfile) then
             ok = execute(variables.MT, "-manifest", manifestfile, "-outputresource:"..basename..".dll;2")
@@ -126,7 +126,7 @@ function run(rockspec)
          local ok = execute(variables.RC, "-r", "-fo"..resname, rcname)
          if not ok then return ok end
          ok = execute(variables.LD, "-out:"..wrapname, resname, variables.WRAPPER,
-                      dir.path(variables.LUA_LIBDIR, "lua5.1.lib"), "user32.lib")
+                      dir.path(variables.LUA_LIBDIR, variables.LUALIB), "user32.lib")
          local manifestfile = wrapname..".manifest"
          if ok and fs.exists(manifestfile) then
             ok = execute(variables.MT, "-manifest", manifestfile, "-outputresource:"..wrapname..";1")
