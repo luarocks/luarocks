@@ -88,8 +88,20 @@ local function sort_versions(a,b)
    return a.version > b.version
 end
 
+--- Request module to be loaded through other loaders,
+-- once the proper name of the module has been determined.
+-- For example, in case the module "socket.core" has been requested
+-- to the LuaRocks loader and it determined based on context that
+-- the version 2.0.2 needs to be loaded and it is not the current
+-- version, the module requested for the other loaders will be
+-- "socket.core_2_0_2".
+-- @param module The module name requested by the user, such as "socket.core"
+-- @param name The rock name, such as "luasocket"
+-- @param version The rock version, such as "2.0.2-1"
+-- @param module_name The actual module name, such as "socket.core" or "socket.core_2_0_2".
+-- @return table or (nil, string): The module table as returned by some other loader,
+-- or nil followed by an error message if no other loader managed to load the module.
 local function call_other_loaders(module, name, version, module_name)
-   
    for i, loader in pairs(package.loaders) do
       if loader ~= luarocks_loader then
          local results = { loader(module_name) }
@@ -101,6 +113,17 @@ local function call_other_loaders(module, name, version, module_name)
    return nil, "Failed loading module "..module.." in LuaRocks rock "..name.." "..version
 end
 
+--- Search for a module in the rocks trees
+-- @param module string: module name (eg. "socket.core")
+-- @param filter_module_name function(string, string, string, string, number):
+-- a function that takes the module name (eg "socket.core"), the rock name
+-- (eg "luasocket"), the version (eg "2.0.2-1"), the path of the rocks tree
+-- (eg "/usr/local"), and the numeric index of the matching entry, so the
+-- filter function can know if the matching module was the first entry or not.
+-- @return string, string, string: name of the rock containing the module
+-- (eg. "luasocket"), version of the rock (eg. "2.0.2-1"),
+-- name of the module (eg. "socket.core", or "socket.core_2_0_2" if file is
+-- stored versioned).
 local function select_module(module, filter_module_name)
    --assert(type(module) == "string")
    --assert(type(filter_module_name) == "function")
@@ -116,6 +139,9 @@ local function select_module(module, filter_module_name)
          for i, entry in ipairs(entries) do
             local name, version = entry:match("^([^/]*)/(.*)$")
             local module_name = tree.manifest.repository[name][version][1].modules[module]
+            if not type(module_name) == "string" then
+               error("Invalid format in manifest file (invalid data for "..tostring(name).." "..tostring(version)..")")
+            end
             module_name = filter_module_name(module_name, name, version, tree.tree, i)
             if context[name] == version then
                return name, version, module_name
@@ -133,6 +159,12 @@ local function select_module(module, filter_module_name)
    end
 end
 
+--- Search for a module
+-- @param module string: module name (eg. "socket.core")
+-- @return string, string, string: name of the rock containing the module
+-- (eg. "luasocket"), version of the rock (eg. "2.0.2-1"),
+-- name of the module (eg. "socket.core", or "socket.core_2_0_2" if file is
+-- stored versioned).
 local function pick_module(module)
    return
       select_module(module, function(module_name, name, version, tree, i)
@@ -144,6 +176,11 @@ local function pick_module(module)
       end)
 end
 
+--- Return the pathname of the file that would be loaded for a module.
+-- @param module string: module name (eg. "socket.core")
+-- @return string, string, string: name of the rock containing the module
+-- (eg. "luasocket"), version of the rock (eg. "2.0.2-1"),
+-- filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so")
 function which(module)
    local name, version, module_name = 
       select_module(module, function(module_name, name, version, tree, i)
@@ -172,7 +209,6 @@ end
 -- @return table: The module table (typically), like in plain
 -- require(). See <a href="http://www.lua.org/manual/5.1/manual.html#pdf-require">require()</a>
 -- in the Lua reference manual for details.
-
 function luarocks_loader(module)
    local name, version, module_name = pick_module(module)
    if not name then
