@@ -35,12 +35,14 @@ usage: ]]..program_name..[[ [--from=<server> | --only-from=<server>] [--to=<tree
 Variables from the "variables" table of the configuration file
 can be overriden with VAR=VALUE assignments.
 
---from=<server>       Fetch rocks/rockspecs from this server
-                      (takes priority over config file)
---only-from=<server>  Fetch rocks/rockspecs from this server only
-                      (overrides any entries in the config file)
---to=<tree>           Which tree to operate on.
---local               Use the tree in the user's home directory.
+--server=<server>      Fetch rocks/rockspecs from this server
+                       (takes priority over config file)
+--only-server=<server> Fetch rocks/rockspecs from this server only
+                       (overrides any entries in the config file)
+--only-sources=<url>   Restrict downloads to paths matching the
+                       given URL.
+--tree=<tree>          Which tree to operate on.
+--local                Use the tree in the user's home directory.
 
 Supported commands:
 ]])

@@ -80,7 +80,7 @@ function run(...)
    if #files < 1 then
       return nil, "Argument missing, see help."
    end
-   local server, server_table = cache.get_upload_server(flags["from"])
+   local server, server_table = cache.get_upload_server(flags["server"])
    if not server then return nil, server_table end
    return remove_files_from_server(not flags["no-refresh"], files, server, server_table)
 end

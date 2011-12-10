@@ -57,6 +57,12 @@ function run_command(...)
    end
    local nonflags = { util.parse_flags(unpack(args)) }
    local flags = table.remove(nonflags, 1)
+   
+   if flags["from"] then flags["server"] = flags["from"] end
+   if flags["only-from"] then flags["only-server"] = flags["only-from"] end
+   if flags["only-sources-from"] then flags["only-sources"] = flags["only-sources-from"] end
+   if flags["to"] then flags["tree"] = flags["to"] end
+   
    cfg.flags = flags
 
    local command
@@ -90,11 +96,11 @@ function run_command(...)
       flags["local"] = true
    end
    
-   if flags["to"] then
-      if flags["to"] == true then
-         die("Argument error: use --to=<path>")
+   if flags["tree"] then
+      if flags["tree"] == true then
+         die("Argument error: use --tree=<path>")
       end
-      local root_dir = fs.absolute_name(flags["to"])
+      local root_dir = fs.absolute_name(flags["tree"])
       path.use_tree(root_dir)
    elseif flags["local"] then
       path.use_tree(cfg.home_tree)
@@ -116,23 +122,23 @@ function run_command(...)
    cfg.variables.ROCKS_TREE = cfg.rocks_dir
    cfg.variables.SCRIPTS_DIR = cfg.deploy_bin_dir
 
-   if flags["from"] then
-      if flags["from"] == true then
-         die("Argument error: use --from=<url>")
+   if flags["server"] then
+      if flags["server"] == true then
+         die("Argument error: use --server=<url>")
       end
-      local protocol, path = dir.split_url(flags["from"])
+      local protocol, path = dir.split_url(flags["server"])
       table.insert(cfg.rocks_servers, 1, protocol.."://"..path)
    end
    
-   if flags["only-from"] then
-      if flags["only-from"] == true then
-         die("Argument error: use --only-from=<url>")
+   if flags["only-server"] then
+      if flags["only-server"] == true then
+         die("Argument error: use --only-server=<url>")
       end
-      cfg.rocks_servers = { flags["only-from"] }
+      cfg.rocks_servers = { flags["only-server"] }
    end
 
-   if flags["only-sources-from"] then
-      cfg.only_sources_from = flags["only-sources-from"]
+   if flags["only-sources"] then
+      cfg.only_sources_from = flags["only-sources"]
    end
   
    if command ~= "help" then
