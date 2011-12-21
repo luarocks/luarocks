@@ -606,12 +606,15 @@ end
 --- Recursively scan dependencies, to build a transitive closure of all
 -- dependent packages.
 -- @param results table: The results table being built.
+-- @param missing table: The table of missing dependencies being recursively built.
+-- @param manifest table: The manifest table containing dependencies.
 -- @param name string: Package name.
 -- @param version string: Package version.
 -- @return (table, table): The results and a table of missing dependencies.
 function scan_deps(results, missing, manifest, name, version)
    assert(type(results) == "table")
    assert(type(missing) == "table")
+   assert(type(manifest) == "table")
    assert(type(name) == "string")
    assert(type(version) == "string")
 

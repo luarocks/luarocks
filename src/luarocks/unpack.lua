@@ -45,6 +45,8 @@ end
 --- Load a .rock file to the given directory and unpack it inside it.
 -- @param rock_file string: The URL for a .rock file.
 -- @param dir_name string: The directory where to unpack.
+-- @param kind string: the kind of rock file, as in the second-level
+-- extension in the rock filename (eg. "src", "all", "linux-x86")
 -- @return table or (nil, string): the loaded rockspec table or 
 -- nil and an error message.
 local function unpack_rock(rock_file, dir_name, kind)

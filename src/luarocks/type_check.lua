@@ -156,6 +156,9 @@ local type_check_table
 -- @param item any: The object being checked.
 -- @param expected any: The reference object. In case of a table,
 -- its is structured as a type reference table.
+-- @param context string: A string indicating the "context" where the
+-- error occurred (such as the name of the table the item is a part of),
+-- to be used by error messages.
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
 -- @see type_check_table
@@ -205,6 +208,9 @@ end
 -- @param tbl table: The table to be type checked.
 -- @param types table: The reference table, containing
 -- values for recognized fields in the checked table.
+-- @param context string: A string indicating the "context" where the
+-- error occurred (such as the name of the table the item is a part of),
+-- to be used by error messages.
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
 type_check_table = function(tbl, types, context)

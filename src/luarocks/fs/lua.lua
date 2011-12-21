@@ -595,6 +595,7 @@ end
 
 --- Apply a patch.
 -- @param patchname string: The filename of the patch.
+-- @param patchdata string or nil: The actual patch as a string.
 function apply_patch(patchname, patchdata)
    local p, all_ok = patch.read_patch(patchname, patchdata)
    if not all_ok then

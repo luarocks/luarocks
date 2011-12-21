@@ -7,6 +7,9 @@ local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 
 --- Call "make" with given target and variables
+-- @param make_cmd string: the make command to be used (typically
+-- configured through variables.MAKE in the config files, or
+-- the appropriate platform-specific default).
 -- @param pass boolean: If true, run make; if false, do nothing.
 -- @param target string: The make target; an empty string indicates 
 -- the default target.

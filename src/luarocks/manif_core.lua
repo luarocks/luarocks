@@ -15,6 +15,7 @@ manifest_cache = {}
 -- and stores it in the manifest cache.
 -- @param file string: The local filename of the manifest file.
 -- @param repo_url string: The repository identifier.
+-- @param quick boolean: If given, skips type checking.
 function manifest_loader(file, repo_url, quick)
    local manifest, err = persist.load_into_table(file)
    if not manifest then

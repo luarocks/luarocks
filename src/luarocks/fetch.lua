@@ -122,7 +122,7 @@ end
 
 --- Back-end function that actually loads the local rockspec.
 -- Performs some validation and postprocessing of the rockspec contents.
--- @param file string: The local filename of the rockspec file.
+-- @param filename string: The local filename of the rockspec file.
 -- @return table or (nil, string): A table representing the rockspec
 -- or nil followed by an error message.
 function load_local_rockspec(filename)

@@ -172,12 +172,11 @@ local function sort_package_matching_table(tbl)
    end
 end
 
---- Process the dependencies of a package to determine its dependency
--- chain for loading modules.
--- @param name string: Package name.
--- @param version string: Package version.
--- @return (table, table): A table listing dependencies as string-string pairs
--- of names and versions, and a similar table of missing dependencies.
+--- Process the dependencies of a manifest table to determine its dependency
+-- chains for loading modules. The manifest dependencies information is filled
+-- and any dependency inconsistencies or missing dependencies are reported to
+-- standard error.
+-- @param manifest table: a manifest table.
 local function update_dependencies(manifest)
    for pkg, versions in pairs(manifest.repository) do
       for version, repos in pairs(versions) do
@@ -205,6 +204,8 @@ end
 --- Store search results in a manifest table.
 -- @param results table: The search results as returned by search.disk_search.
 -- @param manifest table: A manifest table (must contain repository, modules, commands tables).
+-- It will be altered to include the search results.
+-- @return boolean or (nil, string): true in case of success, or nil followed by an error message.
 local function store_results(results, manifest)
    assert(type(results) == "table")
    assert(type(manifest) == "table")

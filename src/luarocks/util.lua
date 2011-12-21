@@ -26,7 +26,7 @@ end
 
 --- Unschedule a function.
 -- This is useful for cancelling a rollback of a completed operation.
--- @param table: The token representing the scheduled function that was
+-- @param item table: The token representing the scheduled function that was
 -- returned from the schedule_function call.
 function remove_scheduled_function(item)
    for k, v in pairs(scheduled_functions) do

@@ -34,6 +34,7 @@ end
 -- are keys (tables are handled recursively).
 -- @param out userdata: a file object, open for writing.
 -- @param tbl table: the table to be written.
+-- @param level number: the indentation level
 local function write_table(out, tbl, level)
    out:write("{")
    local sep = "\n"

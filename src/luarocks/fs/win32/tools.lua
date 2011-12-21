@@ -42,14 +42,14 @@ function exists(file)
 end
 
 --- Obtain current directory.
--- Uses the module's internal dir stack.
+-- Uses the module's internal directory stack.
 -- @return string: the absolute pathname of the current directory.
 function current_dir()
    local pipe = io.popen(vars.PWD)
    local current = pipe:read("*l")
    pipe:close()
-   for _, d in ipairs(dir_stack) do
-      current = fs.absolute_name(d, current)
+   for _, directory in ipairs(dir_stack) do
+      current = fs.absolute_name(directory, current)
    end
    return current
 end
@@ -82,13 +82,13 @@ function get_md5(file)
 end
 
 --- Change the current directory.
--- Uses the module's internal dir stack. This does not have exact
+-- Uses the module's internal directory stack. This does not have exact
 -- semantics of chdir, as it does not handle errors the same way,
 -- but works well for our purposes for now.
--- @param d string: The directory to switch to.
-function change_dir(d)
-   assert(type(d) == "string")
-   table.insert(dir_stack, d)
+-- @param directory string: The directory to switch to.
+function change_dir(directory)
+   assert(type(directory) == "string")
+   table.insert(dir_stack, directory)
 end
 
 --- Change directory to root.
@@ -98,14 +98,14 @@ function change_dir_to_root()
    table.insert(dir_stack, "/")
 end
 
---- Change working directory to the previous in the dir stack.
+--- Change working directory to the previous in the directory stack.
 function pop_dir()
-   local d = table.remove(dir_stack)
-   return d ~= nil
+   local directory = table.remove(dir_stack)
+   return directory ~= nil
 end
 
 --- Run the given command.
--- The command is executed in the current directory in the dir stack.
+-- The command is executed in the current directory in the directory stack.
 -- @param cmd string: No quoting/escaping is applied to the command.
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
@@ -128,30 +128,30 @@ end
 --- Create a directory if it does not already exist.
 -- If any of the higher levels in the path name does not exist
 -- too, they are created as well.
--- @param d string: pathname of directory to create.
+-- @param directory string: pathname of directory to create.
 -- @return boolean: true on success, false on failure.
-function make_dir(d)
-   assert(d)
-   fs.execute(vars.MKDIR.." "..fs.Q(d).." 1> NUL 2> NUL")
+function make_dir(directory)
+   assert(directory)
+   fs.execute(vars.MKDIR.." "..fs.Q(directory).." 1> NUL 2> NUL")
    return 1
 end
 
 --- Remove a directory if it is empty.
 -- Does not return errors (for example, if directory is not empty or
 -- if already does not exist)
--- @param d string: pathname of directory to remove.
-function remove_dir_if_empty(d)
-   assert(d)
-   fs.execute_string(vars.RMDIR.." "..fs.Q(d).." 1> NUL 2> NUL")
+-- @param directory string: pathname of directory to remove.
+function remove_dir_if_empty(directory)
+   assert(directory)
+   fs.execute_string(vars.RMDIR.." "..fs.Q(directory).." 1> NUL 2> NUL")
 end
 
 --- Remove a directory if it is empty.
 -- Does not return errors (for example, if directory is not empty or
 -- if already does not exist)
--- @param dir string: pathname of directory to remove.
-function remove_dir_tree_if_empty(d)
-   assert(d)
-   fs.execute_string(vars.RMDIR.." "..fs.Q(d).." 1> NUL 2> NUL")
+-- @param directory string: pathname of directory to remove.
+function remove_dir_tree_if_empty(directory)
+   assert(directory)
+   fs.execute_string(vars.RMDIR.." "..fs.Q(directory).." 1> NUL 2> NUL")
 end
 
 --- Copy a file.
