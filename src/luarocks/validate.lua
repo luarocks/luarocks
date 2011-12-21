@@ -1,4 +1,5 @@
 
+--- Sandboxed test of build/install of all packages in a repository (unfinished and disabled).
 module("luarocks.validate", package.seeall)
 
 local fs = require("luarocks.fs")

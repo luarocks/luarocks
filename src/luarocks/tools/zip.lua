@@ -1,4 +1,6 @@
 
+--- A Lua implementation of .zip file archiving (used for creating .rock files),
+-- using only lua-zlib.
 module("luarocks.tools.zip", package.seeall)
 
 local zlib = require("zlib")

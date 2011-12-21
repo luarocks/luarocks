@@ -1,11 +1,12 @@
 
-local pairs = pairs
-
 --- Proxy module for filesystem and platform abstractions.
 -- All code using "fs" code should require "luarocks.fs",
 -- and not the various platform-specific implementations.
 -- However, see the documentation of the implementation
 -- for the API reference.
+
+local pairs = pairs
+
 module("luarocks.fs", package.seeall)
 
 local cfg = require("luarocks.cfg")

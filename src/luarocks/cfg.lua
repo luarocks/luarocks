@@ -1,7 +1,4 @@
 
-local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, type, assert =
-      rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, type, assert
-
 --- Configuration for LuaRocks.
 -- Tries to load the user's configuration file and
 -- defines defaults for unset values. See the
@@ -13,6 +10,10 @@ local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, 
 -- (see luarocks.site_config) or their user-specific configuration file
 -- (~/.luarocks/config.lua on Unix or %APPDATA%/luarocks/config.lua on
 -- Windows).
+
+local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, type, assert =
+      rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, type, assert
+
 module("luarocks.cfg")
 
 -- Load site-local global configurations

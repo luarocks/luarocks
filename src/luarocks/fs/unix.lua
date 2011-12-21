@@ -1,8 +1,9 @@
 
+--- Unix implementation of filesystem and platform abstractions.
+
 local assert, type, table, io, package, math, os, ipairs =
       assert, type, table, io, package, math, os, ipairs
 
---- Unix implementation of filesystem and platform abstractions.
 module("luarocks.fs.unix", package.seeall)
 
 local fs = require("luarocks.fs")

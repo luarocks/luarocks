@@ -1,4 +1,5 @@
 
+--- Module which builds the index.html page to be used in rocks servers.
 module("luarocks.index", package.seeall)
 
 local util = require("luarocks.util")

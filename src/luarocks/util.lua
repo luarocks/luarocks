@@ -1,10 +1,11 @@
 
-local global_env = _G
-
---- Utility functions shared by other modules.
+--- Assorted utilities for managing tables, plus a scheduler for rollback functions.
 -- Does not requires modules directly (only as locals
 -- inside specific functions) to avoid interdependencies,
 -- as this is used in the bootstrapping stage of luarocks.cfg.
+
+local global_env = _G
+
 module("luarocks.util", package.seeall)
 
 local scheduled_functions = {}

@@ -1,4 +1,10 @@
 
+--- A module which installs a Lua package loader that is LuaRocks-aware.
+-- This loader uses dependency information from the LuaRocks tree to load
+-- correct versions of modules. It does this by constructing a "context"
+-- table in the environment, which records which versions of packages were
+-- used to load previous modules, so that the loader chooses versions
+-- that are declared to be compatible with the ones loaded earlier.
 local global_env = _G
 local package, require, ipairs, pairs, table, type, next, unpack =
       package, require, ipairs, pairs, table, type, next, unpack

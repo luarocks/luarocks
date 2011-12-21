@@ -1,4 +1,5 @@
 
+--- A pure-Lua implementation of untar (unpacking .tar archives)
 module("luarocks.tools.tar", package.seeall)
 
 local fs = require("luarocks.fs")

@@ -1,4 +1,5 @@
 
+--- Generic utilities for handling pathnames.
 module("luarocks.dir", package.seeall)
 
 separator = "/"

@@ -1,4 +1,5 @@
 
+--- Module implementing the luarocks-admin "refresh_cache" command.
 module("luarocks.refresh_cache", package.seeall)
 
 local util = require("luarocks.util")
