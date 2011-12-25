@@ -46,10 +46,18 @@ local function install_files(files, location, is_module_path)
    if files then
       for k, file in pairs(files) do
          local dest = location
-         if type(k) == "string" then
-            dest = is_module_path and dir.path(location, path.module_to_path(k)) or k
+         if is_module_path then
+            if type(k) == "string" then
+               dest = dir.path(location, path.module_to_path(k))
+            end
+            fs.make_dir(dest)
+         else
+            if type(k) == "string" then
+               dest = dir.path(location, dir.dir_name(k))
+            end
+            fs.make_dir(dest)
+            dest = dir.path(dest, dir.base_name(k))
          end
-         fs.make_dir(dest)
          local ok = fs.copy(dir.path(file), dest)
          if not ok then
             return nil, "Failed copying "..file
