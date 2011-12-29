@@ -127,5 +127,6 @@ function is_actual_binary(filename)
 end
 
 function copy_binary(filename, dest) 
-   return fs.copy(filename, dest, "0755")
+   -- LuaPosix (as of 5.1.15) does not support octal notation...
+   return fs.copy(filename, dest, "u=rwx,g=rx,o=rx")
 end
