@@ -46,17 +46,17 @@ local function install_files(files, location, is_module_path)
    if files then
       for k, file in pairs(files) do
          local dest = location
-         if is_module_path then
-            if type(k) == "string" then
+         if type(k) == "string" then
+            if is_module_path then
                dest = dir.path(location, path.module_to_path(k))
-            end
-            fs.make_dir(dest)
-         else
-            if type(k) == "string" then
+               fs.make_dir(dest)
+            else
                dest = dir.path(location, dir.dir_name(k))
+               fs.make_dir(dest)
+               dest = dir.path(dest, dir.base_name(k))
             end
+         else
             fs.make_dir(dest)
-            dest = dir.path(dest, dir.base_name(k))
          end
          local ok = fs.copy(dir.path(file), dest)
          if not ok then
