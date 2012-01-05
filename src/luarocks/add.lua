@@ -13,10 +13,10 @@ local fs = require("luarocks.fs")
 local cache = require("luarocks.cache")
 
 help_summary = "Add a rock or rockspec to a rocks server."
-help_arguments = "[--to=<server>] [--no-refresh] {<rockspec>|<rock>...}"
+help_arguments = "[--server=<server>] [--no-refresh] {<rockspec>|<rock>...}"
 help = [[
 Arguments are local files, which may be rockspecs or rocks.
-The flag --to indicates which server to use.
+The flag --server indicates which server to use.
 If not given, the default server set in the upload_server variable
 from the configuration file is used instead.
 The flag --no-refresh indicates the local cache should not be refreshed
@@ -101,7 +101,7 @@ function run(...)
    if #files < 1 then
       return nil, "Argument missing, see help."
    end
-   local server, server_table = cache.get_upload_server(flags["tree"])
+   local server, server_table = cache.get_upload_server(flags["server"])
    if not server then return nil, server_table end
    return add_files_to_server(not flags["no-refresh"], files, server, server_table)
 end
