@@ -25,7 +25,7 @@ end
 
 _M.site_config = site_config
 
-program_version = "2.0.7"
+program_version = "2.0.7.1"
 user_agent = "LuaRocks/"..program_version
 
 local persist = require("luarocks.persist")
