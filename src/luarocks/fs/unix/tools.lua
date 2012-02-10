@@ -101,7 +101,7 @@ function copy(src, dest, perm)
          if fs.is_dir(dest) then
             dest = dir.path(dest, dir.base_name(src))
          end
-         if fs.execute(vars.CHMOD, perm, dest) then
+         if fs.chmod(dest, perm) then
             return true
          else
             return false, "Failed setting permissions of "..dest

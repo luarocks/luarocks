@@ -578,7 +578,26 @@ end
 
 if posix_ok then
 
+local octal_to_rwx = {
+   ["0"] = "---",
+   ["1"] = "--x",
+   ["2"] = "-w-",
+   ["3"] = "-wx",
+   ["4"] = "r--",
+   ["5"] = "r-x",
+   ["6"] = "rw-",
+   ["7"] = "rwx",
+}
+
 function chmod(file, mode)
+   -- LuaPosix (as of 5.1.15) does not support octal notation...
+   if mode:sub(1,1) == "0" then
+      local new_mode = {}
+      for c in mode:sub(2):gmatch(".") do
+         table.insert(new_mode, octal_to_rwx[c])
+      end
+      mode = table.concat(new_mode)
+   end
    local err = posix.chmod(file, mode)
    return err == 0
 end

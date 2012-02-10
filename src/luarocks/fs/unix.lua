@@ -54,7 +54,7 @@ function wrap_script(file, dest)
    wrapper:write('export LUA_PATH LUA_CPATH\n')
    wrapper:write('exec "'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.loader "'..file..'" "$@"\n')
    wrapper:close()
-   if fs.execute("chmod +x",wrapname) then
+   if fs.chmod(wrapname, "0755") then
       return true
    else
       return nil, "Could not make "..wrapname.." executable."
@@ -66,35 +66,6 @@ end
 -- @param filename string: the file name with full path.
 -- @return boolean: returns true if file is an actual binary
 -- (or if it couldn't check) or false if it is a Lua wrapper.
-function is_actual_binary(filename)
-   if filename:match("%.lua$") then
-      return false
-   end
-   local file = io.open(filename)
-   if file then
-      local found = false
-      local first = file:read()
-      if first:match("#!.*lua") then
-         found = true
-      elseif first:match("#!/bin/sh") then
-         local line = file:read()
-         line = file:read()
-         if not(line and line:match("LUA_PATH")) then
-            found = true
-         end
-      end
-      file:close()
-      if found then
-         return false
-      else
-         return true
-      end
-   else
-      return true
-   end
-   return false
-end
-
 function is_actual_binary(filename)
    if filename:match("%.lua$") then
       return false
@@ -127,6 +98,5 @@ function is_actual_binary(filename)
 end
 
 function copy_binary(filename, dest) 
-   -- LuaPosix (as of 5.1.15) does not support octal notation...
-   return fs.copy(filename, dest, "u=rwx,g=rx,o=rx")
+   return fs.copy(filename, dest, "0755")
 end
