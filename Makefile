@@ -66,6 +66,9 @@ src/luarocks/site_config.lua: config.unix
 	echo "LUAROCKS_DOWNLOADER=[[$(LUAROCKS_DOWNLOADER)]]" >> src/luarocks/site_config.lua
 	echo "LUAROCKS_MD5CHECKER=[[$(LUAROCKS_MD5CHECKER)]]" >> src/luarocks/site_config.lua
 
+dev: cleanup_bins
+	make build_bins LUADIR=$(PWD)/src
+
 build_bins:
 	for f in $(BIN_FILES) ;\
 	do \
