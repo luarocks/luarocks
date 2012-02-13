@@ -314,12 +314,11 @@ function run(...)
    end
    assert(type(version) == "string" or not version)
 
-   local ok, err = fs.check_command_permissions(flags)
-   if not ok then return nil, err end
-   
    if flags["pack-binary-rock"] then
       return pack.pack_binary_rock(name, version, do_build, name, version)
    else
+      local ok, err = fs.check_command_permissions(flags)
+      if not ok then return nil, err end
       return do_build(name, version)
    end
 end
