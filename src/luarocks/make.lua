@@ -37,9 +37,6 @@ in the current directory.
 function run(...)
    local flags, rockspec = util.parse_flags(...)
    assert(type(rockspec) == "string" or not rockspec)
-
-   local ok, err = fs.check_command_permissions(flags)
-   if not ok then return nil, err end
    
    if not rockspec then
       local files = fs.list_dir(fs.current_dir())
@@ -64,6 +61,8 @@ function run(...)
       local rspec, err, errcode = fetch.load_rockspec(rockspec)
       return pack.pack_binary_rock(rspec.name, rspec.version, build.build_rockspec, rockspec, false, true)
    else
+      local ok, err = fs.check_command_permissions(flags)
+      if not ok then return nil, err end
       return build.build_rockspec(rockspec, false, true)
    end
 end
