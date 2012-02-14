@@ -9,11 +9,12 @@ local fetch = require("luarocks.fetch")
 local search = require("luarocks.search")
 
 help_summary = "Download a specific rock file from a rocks server."
-help_arguments = "[--all] [--source] [--arch=<arch>] [<name> [<version>]]"
+help_arguments = "[--all] [--arch=<arch> | --source | --rockspec] [<name> [<version>]]"
 
 help = [[
---all          Download multiple rock files if there is more than one match.
+--all          Download all files if there are multiple matches.
 --source       Download .src.rock if available.
+--rockspec     Download .rockspec if available.
 --arch=<arch>  Download rock for a specific architecture.
 ]]
 
