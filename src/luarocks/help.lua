@@ -25,8 +25,12 @@ function run(...)
    local flags, command = util.parse_flags(...)
 
    if not command then
+      local sys_file, sys_ok, home_file, home_ok = cfg.which_config()
       util.printout([[
 LuaRocks ]]..cfg.program_version..[[, a module deployment system for Lua
+
+Using system configuration file: ]]..sys_file .. " (" .. (sys_ok and "ok" or "failed") ..[[)
+and user configuration file: ]]..home_file .. " (" .. (home_ok and "ok" or "failed") ..[[)
 
 ]]..program_name..[[ - ]]..program_description..[[
 

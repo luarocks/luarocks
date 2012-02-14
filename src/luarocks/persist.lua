@@ -20,11 +20,17 @@ function load_into_table(filename, tbl)
 
    local chunk, err = loadfile(filename)
    if not chunk then
-      return nil, err
+      if err:sub(1,5) ~= filename:sub(1,5) then
+         return false, err
+      end
+      return nil, "Error loading file: "..err
    end
    local result = tbl or {}
    setfenv(chunk, result)
-   chunk()
+   local ok, err = pcall(chunk)
+   if not ok then
+      return nil, "Error running file: "..err
+   end
    return result
 end
 

@@ -91,6 +91,7 @@ end
 -- Path configuration:
 
 local sys_config_file, home_config_file
+local sys_config_ok, home_config_ok = false, false
 if detected.windows or detected.mingw32 then
    home = os.getenv("APPDATA") or "c:"
    sys_config_file = "c:/luarocks/config.lua"
@@ -106,12 +107,18 @@ end
 variables = {}
 rocks_trees = {}
 
-persist.load_into_table(site_config.LUAROCKS_SYSCONFIG or sys_config_file, _M)
+local ok, err = persist.load_into_table(site_config.LUAROCKS_SYSCONFIG or sys_config_file, _M)
+if ok then
+   sys_config_ok = true
+elseif err and ok == nil then
+   io.stderr:write(err.."\n")
+end
 
 if not site_config.LUAROCKS_FORCE_CONFIG then
    home_config_file = os.getenv("LUAROCKS_CONFIG") or home_config_file
-   local home_overrides = persist.load_into_table(home_config_file, { home = home })
+   local home_overrides, err = persist.load_into_table(home_config_file, { home = home })
    if home_overrides then
+      home_config_ok = true
       local util = require("luarocks.util")
       if home_overrides.rocks_trees then
          _M.rocks_trees = nil
@@ -120,6 +127,8 @@ if not site_config.LUAROCKS_FORCE_CONFIG then
          _M.rocks_servers = nil
       end
       util.deep_merge(_M, home_overrides)
+   elseif err and home_overrides == nil then
+      io.stderr:write(err.."\n")
    end
 end
 
@@ -402,6 +411,10 @@ for _,tree in ipairs(rocks_trees) do
                        (tree.lua_dir or tree.root..lua_modules_path).."/?/init.lua;"..package.path
     package.cpath = (tree.lib_dir or tree.root..lib_modules_path).."/?."..lib_extension..";"..package.cpath
   end
+end
+
+function which_config()
+   return sys_config_file, sys_config_ok, home_config_file, home_config_ok
 end
 
 --- Check if platform was detected
