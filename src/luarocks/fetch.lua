@@ -302,7 +302,7 @@ function fetch_sources(rockspec, extract, dest_dir)
    if protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file" then
       proto = require("luarocks.fetch")
    else
-      ok, proto = pcall(require, "luarocks.fetch."..protocol)
+      ok, proto = pcall(require, "luarocks.fetch."..protocol:gsub("[+-]", "_"))
       if not ok then
          return nil, "Unknown protocol "..protocol
       end
