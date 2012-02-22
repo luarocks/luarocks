@@ -71,30 +71,16 @@ function is_actual_binary(filename)
       return false
    end
    local file = io.open(filename)
-   if file then
-      local found = false
-      local first = file:read()
-      if not first then
-         file:close()
-         util.printerr("Warning: could not read "..filename)
-         return false
-      end
-      if first:match("#!.*lua") then
-         file:close()
-         return true
-      elseif first:match("#!/bin/sh") then
-         local line = file:read()
-         line = file:read()
-         if not(line and line:match("LUA_PATH")) then
-            file:close()
-            return true
-         end
-      end
-      file:close()
-   else
+   if not file then
       return true
    end
-   return false
+   local first = file:read(2)
+   file:close()
+   if not first then
+      util.printerr("Warning: could not read "..filename)
+      return true
+   end
+   return first ~= "#!"
 end
 
 function copy_binary(filename, dest) 
