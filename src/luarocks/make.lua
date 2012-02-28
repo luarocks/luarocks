@@ -59,6 +59,9 @@ function run(...)
 
    if flags["pack-binary-rock"] then
       local rspec, err, errcode = fetch.load_rockspec(rockspec)
+      if not rspec then
+         return nil, err
+      end
       return pack.pack_binary_rock(rspec.name, rspec.version, build.build_rockspec, rockspec, false, true)
    else
       local ok, err = fs.check_command_permissions(flags)
