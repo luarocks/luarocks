@@ -16,9 +16,9 @@ function run(rockspec)
    local variables = build.variables or {}
    
    -- Pass Env variables
-   build.variables.CMAKE_MODULE_PATH=os.getenv("CMAKE_MODULE_PATH")
-   build.variables.CMAKE_LIBRARY_PATH=os.getenv("CMAKE_LIBRARY_PATH")
-   build.variables.CMAKE_INCLUDE_PATH=os.getenv("CMAKE_INCLUDE_PATH")
+   variables.CMAKE_MODULE_PATH=os.getenv("CMAKE_MODULE_PATH")
+   variables.CMAKE_LIBRARY_PATH=os.getenv("CMAKE_LIBRARY_PATH")
+   variables.CMAKE_INCLUDE_PATH=os.getenv("CMAKE_INCLUDE_PATH")
 
    util.variable_substitutions(variables, rockspec.variables)
    
