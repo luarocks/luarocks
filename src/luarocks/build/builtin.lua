@@ -46,7 +46,7 @@ end
 -- nil and an error message otherwise.
 function run(rockspec)
    assert(type(rockspec) == "table")
-   local compile_object, compile_library
+   local compile_object, compile_library, compile_wrapper_binary
 
    local build = rockspec.build
    local variables = rockspec.variables
