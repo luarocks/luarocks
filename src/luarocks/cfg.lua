@@ -76,6 +76,9 @@ elseif system == "Darwin" then
 elseif system == "Linux" then
    detected.unix = true
    detected.linux = true
+elseif system == "SunOS" then
+   detected.unix = true
+   detected.solaris = true
 elseif system and system:match("^CYGWIN") then
    detected.unix = true
    detected.cygwin = true
@@ -369,6 +372,14 @@ if detected.openbsd then
    defaults.arch = "openbsd-"..proc
    defaults.platforms = {"unix", "bsd", "openbsd"}
    defaults.variables.STATFLAG = "-f '%Op'"
+end
+
+if detected.solaris then
+   defaults.arch = "solaris-"..proc
+   defaults.platforms = {"unix", "solaris"}
+   defaults.variables.MAKE = "gmake"
+   defaults.variables.CC = "gcc"
+   defaults.variables.LD = "gcc"
 end
 
 -- Expose some more values detected by LuaRocks for use by rockspec authors.
