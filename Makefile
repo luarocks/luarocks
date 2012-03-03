@@ -104,7 +104,8 @@ check_makefile:
 cleanup_bins:
 	for f in $(BIN_FILES) ;\
 	do \
-	   sed -i.bak "s,^#!.*lua.*,#!/usr/bin/env lua,;/^package.path/d" src/bin/$$f ;\
+	   mv src/bin/$$f{,.bak} ;\
+	   sed "s,^#!.*lua.*,#!/usr/bin/env lua,;/^package.path/d" < src/bin/$$f.bak > src/bin/$$f ;\
 	   rm src/bin/$$f.bak ;\
 	done
 
