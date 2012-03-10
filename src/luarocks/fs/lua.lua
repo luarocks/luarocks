@@ -59,7 +59,7 @@ function is_writable(file)
       if fh then fh:close() end
       os.remove(file2)
    else
-      local fh = io.open(file, 'rb+')
+      local fh = io.open(file, 'r+b')
       result = fh ~= nil
       if fh then fh:close() end
    end
@@ -129,7 +129,8 @@ if lfs_ok then
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
 function execute_string(cmd)
-   if os.execute(cmd) == 0 then
+   local code = os.execute(cmd)
+   if code == 0 or code == true then
       return true
    else
       return false

@@ -17,7 +17,8 @@ local vars = cfg.variables
 -- otherwise.
 function execute_string(cmd)
    local actual_cmd = "cd " .. fs.Q(fs.current_dir()) .. " && " .. cmd
-   if os.execute(actual_cmd) == 0 then
+   local code = os.execute(actual_cmd)
+   if code == 0 or code == true then
       return true
    else
       return false

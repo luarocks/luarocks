@@ -7,7 +7,7 @@ PREFIX ?= /usr/local
 ROCKS_TREE ?= $(PREFIX)
 SYSCONFDIR ?= $(PREFIX)/etc/luarocks
 BINDIR ?= $(PREFIX)/bin
-LUADIR ?= $(PREFIX)/share/lua/5.1/
+LUADIR ?= $(PREFIX)/share/lua/$(LUA_VERSION)/
 LUA_DIR ?= /usr/local
 LUA_BINDIR ?= $(LUA_DIR)/bin
 

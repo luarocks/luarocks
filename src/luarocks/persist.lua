@@ -18,17 +18,28 @@ function load_into_table(filename, tbl)
    assert(type(filename) == "string")
    assert(type(tbl) == "table" or not tbl)
 
-   local chunk, err = loadfile(filename)
+   local result, chunk, ran, err
+   local result = tbl or {}
+   if setfenv then -- Lua 5.1
+      chunk, err = loadfile(filename)
+      if chunk then
+         setfenv(chunk, result)
+         ran, err = pcall(chunk)
+      end
+   else -- Lua 5.2
+      chunk, err = loadfile(filename, "t", result)
+      if chunk then
+         ran, err = pcall(chunk)
+      end
+   end
+   
    if not chunk then
       if err:sub(1,5) ~= filename:sub(1,5) then
          return false, err
       end
       return nil, "Error loading file: "..err
    end
-   local result = tbl or {}
-   setfenv(chunk, result)
-   local ok, err = pcall(chunk)
-   if not ok then
+   if not ran then
       return nil, "Error running file: "..err
    end
    return result

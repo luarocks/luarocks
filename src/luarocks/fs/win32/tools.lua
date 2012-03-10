@@ -110,7 +110,8 @@ end
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
 function execute_string(cmd)
-   if os.execute(command_at(fs.current_dir(), cmd)) == 0 then
+   local code = os.execute(command_at(fs.current_dir(), cmd))
+   if code == 0 or code == true then
       return true
    else
       return false

@@ -11,8 +11,8 @@
 -- (~/.luarocks/config.lua on Unix or %APPDATA%/luarocks/config.lua on
 -- Windows).
 
-local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, type, assert =
-      rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, type, assert
+local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, type, assert, _VERSION =
+      rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, type, assert, _VERSION
 
 module("luarocks.cfg")
 
@@ -25,6 +25,7 @@ end
 
 _M.site_config = site_config
 
+lua_version = _VERSION:sub(5)
 program_version = "2.0.8"
 user_agent = "LuaRocks/"..program_version
 
@@ -150,8 +151,8 @@ local defaults = {
    use_extensions = false,
    accept_unknown_fields = false,
 
-   lua_modules_path = "/share/lua/5.1/",
-   lib_modules_path = "/lib/lua/5.1/",
+   lua_modules_path = "/share/lua/"..lua_version,
+   lib_modules_path = "/lib/lua/"..lua_version,
 
    arch = "unknown",
    lib_extension = "unknown",
@@ -230,9 +231,9 @@ if detected.windows then
    defaults.external_lib_extension = "dll"
    defaults.obj_extension = "obj"
    defaults.external_deps_dirs = { "c:/external/" }
-   defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua5.1/bin"
-   defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua5.1/include"
-   defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua5.1/lib"
+   defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua"..lua_version.."/bin"
+   defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua"..lua_version.."/include"
+   defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua"..lua_version.."/lib"
    defaults.cmake_generator = "MinGW Makefiles"
    defaults.makefile = "Makefile.win"
    defaults.variables.MAKE = "nmake" -- TODO: Split Windows flavors between mingw and msvc
@@ -241,10 +242,10 @@ if detected.windows then
    defaults.variables.WRAPPER = site_config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.obj"
    defaults.variables.LD = "link"
    defaults.variables.MT = "mt"
-   defaults.variables.LUALIB = "lua5.1.lib"
+   defaults.variables.LUALIB = "lua"..lua_version..".lib"
    defaults.variables.CFLAGS = "/MD /O2"
    defaults.variables.LIBFLAG = "/dll"
-   defaults.variables.LUALIB = "lua5.1.lib"
+   defaults.variables.LUALIB = "lua"..lua_version..".lib"
    defaults.external_deps_patterns = {
       bin = { "?.exe", "?.bat" },
       lib = { "?.lib", "?.dll", "lib?.dll" },
@@ -268,9 +269,9 @@ if detected.mingw32 then
    defaults.external_lib_extension = "dll"
    defaults.obj_extension = "o"
    defaults.external_deps_dirs = { "c:/external/" }
-   defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua5.1/bin"
-   defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua5.1/include"
-   defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua5.1/lib"
+   defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua"..lua_version.."/bin"
+   defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua"..lua_version.."/include"
+   defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua"..lua_version.."/lib"
    defaults.cmake_generator = "MinGW Makefiles"
    defaults.make = "mingw32-make" -- TODO: Split Windows flavors between mingw and msvc
    defaults.makefile = "Makefile.win"

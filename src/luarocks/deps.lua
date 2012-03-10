@@ -317,7 +317,7 @@ local function match_dep(dep, blacklist)
 
    local versions
    if dep.name == "lua" then
-      versions = { (_VERSION:gsub("Lua ", "")) }
+      versions = { cfg.lua_version }
    else
       versions = manif_core.get_versions(dep.name)
    end
@@ -470,7 +470,7 @@ function fulfill_dependencies(rockspec)
          if not match_dep(dep) then
             local rock = search.find_suitable_rock(dep)
             if not rock then
-               return nil, "Could not find a rock to satisfy dependency: "..show_dep(dep)
+               return nil, "Could not satisfy dependency: "..show_dep(dep)
             end
             local ok, err, errcode = install.run(rock)
             if not ok then
