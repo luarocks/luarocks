@@ -66,10 +66,10 @@ src/luarocks/site_config.lua: config.unix
 	echo "LUAROCKS_DOWNLOADER=[[$(LUAROCKS_DOWNLOADER)]]" >> src/luarocks/site_config.lua
 	echo "LUAROCKS_MD5CHECKER=[[$(LUAROCKS_MD5CHECKER)]]" >> src/luarocks/site_config.lua
 
-dev: cleanup_bins
-	make build_bins LUADIR=$(PWD)/src
+dev:
+	$(MAKE) build_bins LUADIR=$(PWD)/src
 
-build_bins:
+build_bins: cleanup_bins
 	for f in $(BIN_FILES) ;\
 	do \
 	   sed "1d" src/bin/$$f > src/bin/$$f.bak ;\
@@ -79,7 +79,7 @@ build_bins:
 	   rm src/bin/$$f.bak ;\
 	done
 
-built: cleanup_bins src/luarocks/site_config.lua build_bins
+built: src/luarocks/site_config.lua build_bins
 	touch built
 	@echo
 	@echo "Done. Type 'make install' to install into $(PREFIX)."
