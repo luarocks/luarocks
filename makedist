@@ -14,6 +14,12 @@ fi
 
 make clean || exit 1
 
+grep -q "\"$1\"" rockspec || {
+   echo
+   echo "Version in rockspec is incorrect. Please fix it."
+   exit 1
+}
+
 out="luarocks-$1"
 rm -rf "$out"
 mkdir "$out"
