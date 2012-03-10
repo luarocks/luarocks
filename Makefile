@@ -72,7 +72,7 @@ dev: cleanup_bins
 build_bins:
 	for f in $(BIN_FILES) ;\
 	do \
-	   sed "1d" src/bin/$$f >> src/bin/$$f.bak ;\
+	   sed "1d" src/bin/$$f > src/bin/$$f.bak ;\
 	   echo "#!$(LUA_BINDIR)/lua$(LUA_SUFFIX)" > src/bin/$$f ;\
 	   echo "package.path = [[$(LUADIR)/?.lua;$(LUADIR)/?/init.lua;]]..package.path" >> src/bin/$$f ;\
 	   cat src/bin/$$f.bak >> src/bin/$$f ;\
