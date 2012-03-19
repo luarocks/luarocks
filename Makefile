@@ -76,6 +76,7 @@ build_bins: cleanup_bins
 	   echo "#!$(LUA_BINDIR)/lua$(LUA_SUFFIX)" > src/bin/$$f ;\
 	   echo "package.path = [[$(LUADIR)/?.lua;$(LUADIR)/?/init.lua;]]..package.path" >> src/bin/$$f ;\
 	   cat src/bin/$$f.bak >> src/bin/$$f ;\
+	   chmod +x src/bin/$$f ;\
 	   rm src/bin/$$f.bak ;\
 	done
 
