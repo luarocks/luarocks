@@ -114,8 +114,11 @@ rocks_trees = {}
 local ok, err = persist.load_into_table(site_config.LUAROCKS_SYSCONFIG or sys_config_file, _M)
 if ok then
    sys_config_ok = true
-elseif err and ok == nil then
-   io.stderr:write(err.."\n")
+else -- nil or false
+   sys_config_ok = ok
+   if err and ok == nil then
+      io.stderr:write(err.."\n")
+   end
 end
 
 if not site_config.LUAROCKS_FORCE_CONFIG then
@@ -131,8 +134,11 @@ if not site_config.LUAROCKS_FORCE_CONFIG then
          _M.rocks_servers = nil
       end
       util.deep_merge(_M, home_overrides)
-   elseif err and home_overrides == nil then
-      io.stderr:write(err.."\n")
+   else -- nil or false
+      home_config_ok = home_overrides
+      if err and home_config_ok == nil then
+         io.stderr:write(err.."\n")
+      end
    end
 end
 

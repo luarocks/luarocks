@@ -24,6 +24,16 @@ local function print_section(section)
    util.printout("\n"..section)
 end
 
+local function get_status(status)
+   if status then
+      return "ok"
+   elseif status == false then
+      return "not found"
+   else
+      return "failed"
+   end
+end
+
 --- Driver function for the "help" command.
 -- @param command string or nil: command to show help for; if not
 -- given, help summaries for all commands are shown.
@@ -68,8 +78,8 @@ function run(...)
       end
       print_section("CONFIGURATION")
       util.printout([[
-	Using system configuration file: ]]..sys_file .. " (" .. (sys_ok and "ok" or "failed") ..[[)
-	and user configuration file: ]]..home_file .. " (" .. (home_ok and "ok" or "failed") ..")\n")
+	System configuration file: ]]..sys_file .. " (" .. get_status(sys_ok) ..[[)
+	User configuration file: ]]..home_file .. " (" .. get_status(home_ok) ..")\n")
    else
       command = command:gsub("-", "_")
       if commands[command] then
