@@ -654,9 +654,23 @@ end
 -- plus an error message.
 function check_command_permissions(flags)
    local root_dir = path.root_dir(cfg.rocks_dir)
-   if not flags["local"] and not (fs.is_writable(root_dir) or fs.is_writable(dir.dir_name(root_dir))) then
-      return nil, "Your user does not have write permissions in " .. root_dir ..
-                  " \n-- you may want to run as a privileged user or use your local tree with --local."
+   local ok = true
+   local err = ""
+   for _, dir in ipairs { cfg.rocks_dir, root_dir, dir.dir_name(root_dir) } do
+      if fs.exists(dir) and not fs.is_writable(dir) then
+         ok = false
+         err = "Your user does not have write permissions in " .. dir
+         break
+      end
    end
-   return true
+   if ok then
+      return true
+   else
+      if flags["local"] then
+         err = err .. " \n-- please check your permissions."
+      else
+         err = err .. " \n-- you may want to run as a privileged user or use your local tree with --local."
+      end
+      return nil, err
+   end
 end
