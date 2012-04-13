@@ -107,6 +107,7 @@ cleanup_bins:
 	do \
 	   mv src/bin/$$f{,.bak} ;\
 	   sed "s,^#!.*lua.*,#!/usr/bin/env lua,;/^package.path/d" < src/bin/$$f.bak > src/bin/$$f ;\
+	   chmod +x src/bin/$$f ;\
 	   rm src/bin/$$f.bak ;\
 	done
 
