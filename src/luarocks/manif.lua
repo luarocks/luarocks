@@ -98,7 +98,7 @@ function load_manifest(repo_url)
       local name = repo_url:gsub("[/:]","_")
       local file, err, errcode = fetch.fetch_url_at_temp_dir(url, "luarocks-manifest-"..name)
       if not file then
-         return nil, "Failed fetching manifest for "..repo_url, errcode
+         return nil, err and err or "Failed fetching manifest for "..repo_url, errcode
       end
       pathname = file
    end
