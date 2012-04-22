@@ -568,7 +568,7 @@ function check_external_deps(rockspec, mode)
                            end
                         end
                      else
-                        found = fs.exists(dir.path(dirdata.dir, f))
+                        found = fs.is_file(dir.path(dirdata.dir, f))
                      end
                      if found then
                         break
