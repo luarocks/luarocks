@@ -98,12 +98,12 @@ local sys_config_file, home_config_file
 local sys_config_ok, home_config_ok = false, false
 if detected.windows or detected.mingw32 then
    home = os.getenv("APPDATA") or "c:"
-   sys_config_file = "c:/luarocks/config.lua"
+   sys_config_file = site_config.LUAROCKS_SYSCONFIG or "c:/luarocks/config.lua"
    home_config_file = home.."/luarocks/config.lua"
    home_tree = home.."/luarocks/"
 else
    home = os.getenv("HOME") or ""
-   sys_config_file = "/etc/luarocks/config.lua"
+   sys_config_file = site_config.LUAROCKS_SYSCONFIG or "/etc/luarocks/config.lua"
    home_config_file = home.."/.luarocks/config.lua"
    home_tree = home.."/.luarocks/"
 end
@@ -111,7 +111,7 @@ end
 variables = {}
 rocks_trees = {}
 
-local ok, err = persist.load_into_table(site_config.LUAROCKS_SYSCONFIG or sys_config_file, _M)
+local ok, err = persist.load_into_table(sys_config_file, _M)
 if ok then
    sys_config_ok = true
 else -- nil or false
