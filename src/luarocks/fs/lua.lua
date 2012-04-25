@@ -397,6 +397,22 @@ function find(at)
    return result
 end
 
+--- Change file timestamps.
+-- A file argument that does not exist is created empty
+-- @param file string: filename
+-- @return boolean or (boolean, string): true on success, false on failure,
+-- plus an error message.
+function touch(file)
+   assert(file)
+   file = normalize(file)
+   local fh, err = io.open(file, "ab+")
+   if not fh then
+      return nil, err
+   end
+   fh:close()
+   return true
+end
+
 --- Test for existance of a file.
 -- @param file string: filename to test
 -- @return boolean: true if file exists, false otherwise.
