@@ -327,8 +327,8 @@ if detected.unix then
       lib = { "lib?.so", "lib?.so.*" },
       include = { "?.h" }
    }
-   defaults.export_lua_path = "export LUA_PATH='%s'"
-   defaults.export_lua_cpath = "export LUA_CPATH='%s'"
+   defaults.export_lua_path = "export LUA_PATH\nLUA_PATH='%s'"
+   defaults.export_lua_cpath = "export LUA_CPATH\nLUA_CPATH='%s'"
    defaults.local_cache = home.."/.cache/luarocks"
    if not defaults.variables.CFLAGS:match("-fPIC") then
       defaults.variables.CFLAGS = defaults.variables.CFLAGS.." -fPIC"
