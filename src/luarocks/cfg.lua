@@ -391,6 +391,8 @@ end
 
 -- Expose some more values detected by LuaRocks for use by rockspec authors.
 defaults.variables.LUA = defaults.lua_interpreter
+defaults.variables.LUA_VERSION = lua_version
+defaults.variables.LR_VERSION = program_version
 defaults.variables.LIB_EXTENSION = defaults.lib_extension
 defaults.variables.OBJ_EXTENSION = defaults.obj_extension
 defaults.variables.LUAROCKS_PREFIX = site_config.LUAROCKS_PREFIX
