@@ -158,7 +158,7 @@ local defaults = {
 
    local_by_default = false,
    use_extensions = false,
-   accept_unknown_fields = false,
+   accept_unknown_fields = true,
 
    lua_modules_path = "/share/lua/"..lua_version,
    lib_modules_path = "/lib/lua/"..lua_version,

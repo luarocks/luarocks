@@ -5,6 +5,7 @@
 module("luarocks.type_check", package.seeall)
 
 local cfg = require("luarocks.cfg")
+local util = require("luarocks.util")
 
 rockspec_format = "1.0"
 
@@ -225,15 +226,16 @@ type_check_table = function(tbl, types, context)
          -- Accept unknown field
       else
          if not cfg.accept_unknown_fields then
-            return nil, "Unknown field "..k
+            return nil, "Unknown field '"..k.."'"
          end
+         util.warning("Unknown field '"..k.."'. Either the .rockspec is broken or you should update LuaRocks.")
       end
    end
    for k, v in pairs(types) do
       local mandatory_key = k:match("^MUST_(.+)")
       if mandatory_key then
          if not tbl[mandatory_key] then
-            return nil, "Mandatory field "..context..mandatory_key.." is missing."
+            return nil, "Mandatory field '"..context..mandatory_key.."' is missing."
          end
       end
    end
