@@ -545,12 +545,9 @@ function check_external_deps(rockspec, mode)
                local file = files[dirdata.testfile]
                if file then
                   local files = {}
-                  if not file:match("%.") then
-                     for _, pattern in ipairs(dirdata.pattern) do
-                        table.insert(files, (pattern:gsub("?", file)))
-                     end
-                  else
-                     table.insert(files, file)
+                  table.insert(files, file)
+                  for _, pattern in ipairs(dirdata.pattern) do
+                     table.insert(files, (pattern:gsub("?", file)))
                   end
                   local found = false
                   failed_file = nil
@@ -568,7 +565,7 @@ function check_external_deps(rockspec, mode)
                            end
                         end
                      else
-                        found = fs.exists(dir.path(dirdata.dir, f))
+                        found = fs.is_file(dir.path(dirdata.dir, f))
                      end
                      if found then
                         break

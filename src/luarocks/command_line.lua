@@ -118,9 +118,19 @@ function run_command(...)
    cfg.deploy_bin_dir = cfg.deploy_bin_dir:gsub("/+$", "")
    cfg.deploy_lua_dir = cfg.deploy_lua_dir:gsub("/+$", "")
    cfg.deploy_lib_dir = cfg.deploy_lib_dir:gsub("/+$", "")
-   
-   cfg.variables.ROCKS_TREE = cfg.rocks_dir
-   cfg.variables.SCRIPTS_DIR = cfg.deploy_bin_dir
+
+   -- Expose some more values detected by LuaRocks for use by rockspec authors.
+   addons= {
+      ROCKS_TREE = cfg.rocks_dir,
+      SCRIPTS_DIR = cfg.deploy_bin_dir,
+      LR_TREES = table.concat(cfg.rocks_trees, ";"),
+      LR_TREE = cfg.root_dir,
+      LR_LIB_MODULES = cfg.lib_modules_path,
+      LR_LUA_MODULES = cfg.lua_modules_path,
+   }
+   for k,v in pairs(addons) do
+      cfg.variables[k]= v
+   end
 
    if flags["server"] then
       if flags["server"] == true then
@@ -146,13 +156,28 @@ function run_command(...)
          cfg.variables[k] = v
       end
    end
-   
+
    if commands[command] then
+      lock_fn= dir.path(cfg.rocks_dir, ".lock")
+      local simple= { help=true, search=true, list=true, path=true, show=true, download=true, pack=true, unpack=true }
+      if not simple[command] then
+         if fs.exists(lock_fn) then
+            die("Another instance of LuaRocks seems to be running."
+               .." If you are *absolutely* certain this not the case,"
+               .." please remove '"..lock_fn.."' and try again.")
+         end
+         -- Yes, i know, should be atomic. But how often will 2 or more processes
+         -- try to install luarocks at the very same second in the real world?
+         local ok, err = fs.touch(lock_fn)
+         if not ok then die(err) end
+      end
       local xp, ok, err = xpcall(function() return commands[command].run(unpack(args)) end, function(err)
+         fs.delete(lock_fn)
          die(debug.traceback("LuaRocks "..cfg.program_version
             .." bug (please report at luarocks-developers@lists.sourceforge.net).\n"
             ..err, 2))
       end)
+      fs.delete(lock_fn)
       if xp and (not ok) then
          die(err)
       end

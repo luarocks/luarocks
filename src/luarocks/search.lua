@@ -167,11 +167,11 @@ function manifest_search(results, repo, query)
    assert(type(results) == "table")
    assert(type(repo) == "string")
    assert(type(query) == "table")
-   
+
    query_arch_as_table(query)
    local manifest, err = manif.load_manifest(repo)
    if not manifest then
-      return nil, "Failed loading manifest: "..err
+      return nil, err and err or "Failed loading manifest"
    end
    for name, versions in pairs(manifest.repository) do
       for version, items in pairs(versions) do

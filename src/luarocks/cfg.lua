@@ -158,7 +158,7 @@ local defaults = {
 
    local_by_default = false,
    use_extensions = false,
-   accept_unknown_fields = false,
+   accept_unknown_fields = true,
 
    lua_modules_path = "/share/lua/"..lua_version,
    lib_modules_path = "/lib/lua/"..lua_version,
@@ -327,8 +327,8 @@ if detected.unix then
       lib = { "lib?.so", "lib?.so.*" },
       include = { "?.h" }
    }
-   defaults.export_lua_path = "export LUA_PATH='%s'"
-   defaults.export_lua_cpath = "export LUA_CPATH='%s'"
+   defaults.export_lua_path = "export LUA_PATH\nLUA_PATH='%s'"
+   defaults.export_lua_cpath = "export LUA_CPATH\nLUA_CPATH='%s'"
    defaults.local_cache = home.."/.cache/luarocks"
    if not defaults.variables.CFLAGS:match("-fPIC") then
       defaults.variables.CFLAGS = defaults.variables.CFLAGS.." -fPIC"
@@ -391,6 +391,8 @@ end
 
 -- Expose some more values detected by LuaRocks for use by rockspec authors.
 defaults.variables.LUA = defaults.lua_interpreter
+defaults.variables.LUA_VERSION = lua_version
+defaults.variables.LR_VERSION = program_version
 defaults.variables.LIB_EXTENSION = defaults.lib_extension
 defaults.variables.OBJ_EXTENSION = defaults.obj_extension
 defaults.variables.LUAROCKS_PREFIX = site_config.LUAROCKS_PREFIX
