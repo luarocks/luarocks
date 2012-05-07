@@ -23,9 +23,10 @@ or a filename of a locally available rock.
 
 --- Install a binary rock.
 -- @param rock_file string: local or remote filename of a rock.
+-- @param no_deps boolean: true if dependency check needs to be skipped
 -- @return boolean or (nil, string, [string]): True if succeeded or 
 -- nil and an error message and an optional error code.
-function install_binary_rock(rock_file)
+function install_binary_rock(rock_file, no_deps)
    assert(type(rock_file) == "string")
 
    local name, version, arch = path.parse_name(rock_file)
@@ -53,8 +54,12 @@ function install_binary_rock(rock_file)
       return nil, "Failed loading rockspec for installed package: "..err, errcode
    end
 
-   ok, err, errcode = deps.check_external_deps(rockspec, "install")
-   if err then return nil, err, errcode end
+   if no_deps then
+      util.printerr("Warning: skipping dependency checks.")
+   else
+      ok, err, errcode = deps.check_external_deps(rockspec, "install")
+      if err then return nil, err, errcode end
+   end
 
    -- For compatibility with .rock files built with LuaRocks 1
    if not fs.exists(path.rock_manifest_file(name, version)) then
@@ -62,8 +67,10 @@ function install_binary_rock(rock_file)
       if err then return nil, err end
    end
 
-   ok, err, errcode = deps.fulfill_dependencies(rockspec)
-   if err then return nil, err, errcode end
+   if not no_deps then
+      ok, err, errcode = deps.fulfill_dependencies(rockspec)
+      if err then return nil, err, errcode end
+   end
 
    local wrap_bin_scripts = true
    if rockspec.deploy and rockspec.deploy.wrap_bin_scripts == false then
@@ -121,7 +128,7 @@ function run(...)
       local build = require("luarocks.build")
       return build.run(name, flags["local"] and "--local")
    elseif name:match("%.rock$") then
-      return install_binary_rock(name)
+      return install_binary_rock(name, flags["nodeps"])
    else
       local search = require("luarocks.search")
       local results, err = search.find_suitable_rock(search.make_query(name:lower(), version))

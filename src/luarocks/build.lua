@@ -111,9 +111,10 @@ end
 -- @param minimal_mode boolean: true if there's no need to fetch,
 -- unpack or change dir (this is used by "luarocks make"). Implies
 -- need_to_fetch = false.
+-- @param no_deps boolean: true if dependency check needs to be skipped
 -- @return boolean or (nil, string, [string]): True if succeeded or 
 -- nil and an error message followed by an error code.
-function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
+function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, no_deps)
    assert(type(rockspec_file) == "string")
    assert(type(need_to_fetch) == "boolean")
 
@@ -126,10 +127,15 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode)
       return nil, "Rockspec error: build type not specified"
    end
 
-   local ok, err, errcode = deps.fulfill_dependencies(rockspec)
-   if err then
-      return nil, err, errcode
+   if no_deps then
+      util.printerr("Warning: skipping dependency checks.")
+   else
+      local ok, err, errcode = deps.fulfill_dependencies(rockspec)
+      if err then
+         return nil, err, errcode
+      end
    end
+
    ok, err, errcode = deps.check_external_deps(rockspec, "build")
    if err then
       return nil, err, errcode
@@ -267,7 +273,7 @@ end
 -- false if the rockspec was obtained from inside a source rock.
 -- @return boolean or (nil, string, [string]): True if build was successful,
 -- or false and an error message and an optional error code.
-function build_rock(rock_file, need_to_fetch)
+function build_rock(rock_file, need_to_fetch, no_deps)
    assert(type(rock_file) == "string")
    assert(type(need_to_fetch) == "boolean")
   
@@ -277,24 +283,24 @@ function build_rock(rock_file, need_to_fetch)
    end
    local rockspec_file = path.rockspec_name_from_rock(rock_file)
    fs.change_dir(unpack_dir)
-   local ok, err, errcode = build_rockspec(rockspec_file, need_to_fetch)
+   local ok, err, errcode = build_rockspec(rockspec_file, need_to_fetch, false, no_deps)
    fs.pop_dir()
    return ok, err, errcode
 end
 
-local function do_build(name, version)
+local function do_build(name, version, no_deps)
    if name:match("%.rockspec$") then
-      return build_rockspec(name, true)
+      return build_rockspec(name, true, false, no_deps)
    elseif name:match("%.src%.rock$") then
-      return build_rock(name, false)
+      return build_rock(name, false, no_deps)
    elseif name:match("%.all%.rock$") then
       local install = require("luarocks.install")
-      return install.install_binary_rock(name)
+      return install.install_binary_rock(name, no_deps)
    elseif name:match("%.rock$") then
-      return build_rock(name, true)
+      return build_rock(name, true, no_deps)
    elseif not name:match(dir.separator) then
       local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(run, name:lower(), version)
+      return search.act_on_src_or_rockspec(run, name:lower(), version, no_deps and "--nodeps")
    end
    return nil, "Don't know what to do with "..name
 end
@@ -315,10 +321,10 @@ function run(...)
    assert(type(version) == "string" or not version)
 
    if flags["pack-binary-rock"] then
-      return pack.pack_binary_rock(name, version, do_build, name, version)
+      return pack.pack_binary_rock(name, version, do_build, name, version, flags["nodeps"])
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err end
-      return do_build(name, version)
+      return do_build(name, version, flags["nodeps"])
    end
 end
