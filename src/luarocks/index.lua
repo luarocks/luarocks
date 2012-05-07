@@ -9,6 +9,8 @@ local persist = require("luarocks.persist")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 
+local ext_url_target = ' target="_blank"'
+
 local index_header = [[
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
@@ -152,10 +154,11 @@ function make_index(repo)
             summary = descript.summary or "",
             detailed = descript.detailed or "",
             license = descript.license or "N/A",
-            homepage = descript.homepage and ("| <a href="..descript.homepage..">project homepage</a>") or "",
+            homepage = descript.homepage and ('| <a href="'..descript.homepage..'"'..ext_url_target..'>project homepage</a>') or "",
             externaldependencies = format_external_dependencies(rockspec)
          }
          vars.detailed = vars.detailed:gsub("\n\n", "</p><p>"):gsub("%s+", " ")
+         vars.detailed = vars.detailed:gsub("(https?://[a-zA-Z0-9%.%%-_%+%[%]=%?&/$@;:]+)", '<a href="%1"'..ext_url_target..'>%1</a>')
          output = output:gsub("$(%w+)", vars)
       else
          output = output:gsub("$anchor", package)
