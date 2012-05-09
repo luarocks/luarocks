@@ -355,7 +355,7 @@ if detected.macosx then
 end
 
 if detected.bsd then
-   defaults.variables.STATFLAG = "-f '%A'"
+   defaults.variables.STATFLAG = "-f '%Sp'"
 end
 
 if detected.linux then
