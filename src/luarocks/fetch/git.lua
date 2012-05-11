@@ -27,8 +27,7 @@ function get_sources(rockspec, extract, dest_dir)
    local tag_or_branch = rockspec.source.tag or rockspec.source.branch
    if tag_or_branch then
       -- ensure the branch (or tag) is available
-      table.insert(command, 4, "--branch")
-      table.insert(command, 5, tag_or_branch)
+      table.insert(command, 4, "--branch=" .. tag_or_branch)
       checkout_command = {git_cmd, "checkout", tag_or_branch}
    end
    local store_dir
