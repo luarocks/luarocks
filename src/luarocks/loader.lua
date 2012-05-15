@@ -145,7 +145,7 @@ local function select_module(module, filter_module_name)
          for i, entry in ipairs(entries) do
             local name, version = entry:match("^([^/]*)/(.*)$")
             local module_name = tree.manifest.repository[name][version][1].modules[module]
-            if not type(module_name) == "string" then
+            if type(module_name) ~= "string" then
                error("Invalid format in manifest file (invalid data for "..tostring(name).." "..tostring(version)..")")
             end
             module_name = filter_module_name(module_name, name, version, tree.tree, i)
