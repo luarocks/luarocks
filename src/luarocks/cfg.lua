@@ -345,6 +345,10 @@ if detected.cygwin then
    defaults.variables.LIBFLAG = "-shared"
 end
 
+if detected.bsd then
+   defaults.variables.STATFLAG = "-f '%Op'"
+end
+
 if detected.macosx then
    defaults.external_lib_extension = "dylib"
    defaults.arch = "macosx-"..proc
@@ -352,9 +356,6 @@ if detected.macosx then
    defaults.variables.CC = "export MACOSX_DEPLOYMENT_TARGET=10.3; gcc"
    defaults.variables.LD = "export MACOSX_DEPLOYMENT_TARGET=10.3; gcc"
    defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
-end
-
-if detected.bsd then
    defaults.variables.STATFLAG = "-f '%A'"
 end
 
@@ -378,7 +379,6 @@ end
 if detected.openbsd then
    defaults.arch = "openbsd-"..proc
    defaults.platforms = {"unix", "bsd", "openbsd"}
-   defaults.variables.STATFLAG = "-f '%Op'"
 end
 
 if detected.solaris then
