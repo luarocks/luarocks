@@ -45,6 +45,37 @@ function load_into_table(filename, tbl)
    return result
 end
 
+local write_table
+
+--- Write a value as Lua code, invoking write_table.
+-- This function handles only numbers, strings and tables
+-- are keys (tables are handled recursively).
+-- @param out userdata: a file object, open for writing.
+-- @param v: the value to be written.
+-- @param level number: the indentation level
+-- @param sub_order table: optional prioritization table
+-- @see write_table
+local function write_value(out, v, level, sub_order)
+   if type(v) == "table" then
+      write_table(out, v, level + 1, sub_order)
+   elseif type(v) == "string" then
+      if v:match("\n") then
+         local open, close = "[[", "]]"
+         local equals = 0
+         while v:find(open,1,true) or v:find(close,1,true) do
+            equals = equals + 1
+            local eqs = ("="):rep(equals)
+            open, close = "["..eqs.."[", "]"..eqs.."]"
+         end
+         out:write(open.."\n"..v..close)
+      else
+         out:write("\""..v:gsub("\"", "\\\"").."\"")
+      end
+   else
+      out:write(tostring(v))
+   end
+end
+
 --- Write a table as Lua code representing a table to disk
 -- (that is, in curly brackets notation).
 -- This function handles only numbers, strings and tables
@@ -52,21 +83,23 @@ end
 -- @param out userdata: a file object, open for writing.
 -- @param tbl table: the table to be written.
 -- @param level number: the indentation level
-local function write_table(out, tbl, level)
+-- @param field_order table: optional prioritization table
+write_table = function(out, tbl, level, field_order)
    out:write("{")
    local sep = "\n"
+   local indentation = "   "
    local indent = true
    local i = 1
-   for k, v in util.sortedpairs(tbl) do
+   for k, v, sub_order in util.sortedpairs(tbl, field_order) do
       out:write(sep)
       if indent then
-         for n = 1,level do out:write("  ") end
+         for n = 1,level do out:write(indentation) end
       end
       sep = ",\n"
       indent = true
       if type(k) == "number" then
          if k ~= i then
-            out:write('['..tostring(k).."]=")
+            out:write("["..tostring(k).."]=")
          else
             i = i + 1
          end
@@ -75,25 +108,19 @@ local function write_table(out, tbl, level)
       elseif type(k) == "table" then
          out:write("[")
          write_table(out, k, level + 1)
-         out:write("]=")
+         out:write("] = ")
       else
-         if k:match("^[a-z_]+$") then
-            out:write(k.."=")
+         if k:match("^[a-zA-Z_][a-zA-Z0-9_]*$") then
+            out:write(k.." = ")
          else
-            out:write("['"..k:gsub("'", "\\'").."']=") 
+            out:write("['"..k:gsub("'", "\\'").."'] = ") 
          end
       end
-      if type(v) == "table" then
-         write_table(out, v, level + 1)
-      elseif type(v) == "string" then
-         out:write("'"..v:gsub("'", "\\'").."'")
-      else
-         out:write(tostring(v))
-      end
+      write_value(out, v, level, sub_order)
    end
    if sep ~= "\n" then
       out:write("\n")
-      for n = 1,level-1 do out:write("  ") end
+      for n = 1,level-1 do out:write(indentation) end
    end
    out:write("}")
 end
@@ -102,16 +129,19 @@ end
 -- Each element of the table is saved as a global assignment.
 -- Only numbers, strings and tables (containing numbers, strings
 -- or other recursively processed tables) are supported.
+-- @param filename string: the output filename
+-- @param tbl table: the table containing the data to be written
+-- @param field_order table: an optional array indicating the order of top-level fields.
 -- @return boolean or (nil, string): true if successful, or nil and a
 -- message in case of errors.
-function save_from_table(filename, tbl)
+function save_from_table(filename, tbl, field_order)
    local out = io.open(filename, "w")
    if not out then
       return nil, "Cannot create file at "..filename
    end
-   for k, v in util.sortedpairs(tbl) do
+   for k, v, sub_order in util.sortedpairs(tbl, field_order) do
       out:write(k.." = ")
-      write_table(out, v, 1)
+      write_value(out, v, 0, sub_order)
       out:write("\n")
    end
    out:close()
