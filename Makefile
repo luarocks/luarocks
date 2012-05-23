@@ -77,7 +77,7 @@ build_bins: cleanup_bins
 	   echo "package.path = [[$(LUADIR)/?.lua;$(LUADIR)/?/init.lua;]]..package.path" >> src/bin/$$f ;\
 	   cat src/bin/$$f.bak >> src/bin/$$f ;\
 	   chmod +x src/bin/$$f ;\
-	   rm src/bin/$$f.bak ;\
+	   rm -f src/bin/$$f.bak ;\
 	done
 
 built: src/luarocks/site_config.lua build_bins
@@ -97,7 +97,7 @@ check_makefile:
 	echo $(LUAROCKS_FILES) | tr " " "\n" | sort >> makefile_list.txt
 	( cd src/luarocks && find * -name "*.lua" ) | sort >> luarocks_dir.txt
 	diff makefile_list.txt luarocks_dir.txt
-	rm makefile_list.txt luarocks_dir.txt
+	rm -f makefile_list.txt luarocks_dir.txt
 	@echo
 	@echo "Makefile is sane."
 	@echo
@@ -108,7 +108,7 @@ cleanup_bins:
 	   mv src/bin/$$f src/bin/$$f.bak ;\
 	   sed "s,^#!.*lua.*,#!/usr/bin/env lua,;/^package.path/d" < src/bin/$$f.bak > src/bin/$$f ;\
 	   chmod +x src/bin/$$f ;\
-	   rm src/bin/$$f.bak ;\
+	   rm -f src/bin/$$f.bak ;\
 	done
 
 clean: cleanup_bins
