@@ -77,7 +77,7 @@ build_bins: cleanup_bins
 	   echo "package.path = [[$(LUADIR)/?.lua;$(LUADIR)/?/init.lua;]]..package.path" >> src/bin/$$f ;\
 	   cat src/bin/$$f.bak >> src/bin/$$f ;\
 	   chmod +x src/bin/$$f ;\
-	   rm src/bin/$$f.bak ;\
+	   rm -f src/bin/$$f.bak ;\
 	done
 
 built: src/luarocks/site_config.lua build_bins
@@ -97,7 +97,7 @@ check_makefile:
 	echo $(LUAROCKS_FILES) | tr " " "\n" | sort >> makefile_list.txt
 	( cd src/luarocks && find * -name "*.lua" ) | sort >> luarocks_dir.txt
 	diff makefile_list.txt luarocks_dir.txt
-	rm makefile_list.txt luarocks_dir.txt
+	rm -f makefile_list.txt luarocks_dir.txt
 	@echo
 	@echo "Makefile is sane."
 	@echo
@@ -108,26 +108,26 @@ cleanup_bins:
 	   mv src/bin/$$f src/bin/$$f.bak ;\
 	   sed "s,^#!.*lua.*,#!/usr/bin/env lua,;/^package.path/d" < src/bin/$$f.bak > src/bin/$$f ;\
 	   chmod +x src/bin/$$f ;\
-	   rm src/bin/$$f.bak ;\
+	   rm -f src/bin/$$f.bak ;\
 	done
 
 clean: cleanup_bins
 	rm -f src/luarocks/site_config.lua
 	rm -f built
 
-install_bins:
+install_bins: built
 	mkdir -p "$(DESTDIR)$(BINDIR)"
 	cd src/bin && cp $(BIN_FILES) "$(DESTDIR)$(BINDIR)"
 
-install_luas:
+install_luas: built
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
 	cd src/luarocks && for f in $(LUAROCKS_FILES); do d="$(DESTDIR)$(LUADIR)/luarocks"/`dirname "$$f"`; mkdir -p "$$d"; cp "$$f" "$$d"; done
 
-install_site_config:
+install_site_config: built
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
 	cd src/luarocks && cp site_config.lua "$(DESTDIR)$(LUADIR)/luarocks"
 
-write_sysconfig:
+write_sysconfig: built
 	mkdir -p "$(DESTDIR)$(ROCKS_TREE)"
 	if [ ! -f "$(DESTDIR)$(CONFIG_FILE)" ] ;\
 	then \
@@ -144,7 +144,7 @@ write_sysconfig:
 	   echo '}' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	fi
 
-install: built install_bins install_luas install_site_config write_sysconfig
+install: install_bins install_luas install_site_config write_sysconfig
 
 bootstrap: src/luarocks/site_config.lua install_site_config write_sysconfig
 	LUA_PATH="$$PWD/src/?.lua;$$LUA_PATH" src/bin/luarocks make rockspec
