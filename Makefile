@@ -115,19 +115,19 @@ clean: cleanup_bins
 	rm -f src/luarocks/site_config.lua
 	rm -f built
 
-install_bins:
+install_bins: built
 	mkdir -p "$(DESTDIR)$(BINDIR)"
 	cd src/bin && cp $(BIN_FILES) "$(DESTDIR)$(BINDIR)"
 
-install_luas:
+install_luas: built
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
 	cd src/luarocks && for f in $(LUAROCKS_FILES); do d="$(DESTDIR)$(LUADIR)/luarocks"/`dirname "$$f"`; mkdir -p "$$d"; cp "$$f" "$$d"; done
 
-install_site_config:
+install_site_config: built
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
 	cd src/luarocks && cp site_config.lua "$(DESTDIR)$(LUADIR)/luarocks"
 
-write_sysconfig:
+write_sysconfig: built
 	mkdir -p "$(DESTDIR)$(ROCKS_TREE)"
 	if [ ! -f "$(DESTDIR)$(CONFIG_FILE)" ] ;\
 	then \
@@ -144,7 +144,7 @@ write_sysconfig:
 	   echo '}' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	fi
 
-install: built install_bins install_luas install_site_config write_sysconfig
+install: install_bins install_luas install_site_config write_sysconfig
 
 bootstrap: src/luarocks/site_config.lua install_site_config write_sysconfig
 	LUA_PATH="$$PWD/src/?.lua;$$LUA_PATH" src/bin/luarocks make rockspec
