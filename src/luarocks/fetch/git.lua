@@ -23,10 +23,9 @@ function get_sources(rockspec, extract, dest_dir)
    -- Strip off .git from base name if present
    module = module:gsub("%.git$", "")
    local command = {git_cmd, "clone", "--depth=1", rockspec.source.url, module}
-   local checkout_command
    local tag_or_branch = rockspec.source.tag or rockspec.source.branch
    if tag_or_branch then
-      checkout_command = {git_cmd, "checkout", "-q", tag_or_branch}
+      table.insert(command, 4, "--branch=" .. tag_or_branch)
    end
    local store_dir
    if not dest_dir then
@@ -44,11 +43,6 @@ function get_sources(rockspec, extract, dest_dir)
       return nil, "Failed cloning git repository."
    end
    fs.change_dir(module)
-   if checkout_command then
-      if not fs.execute(unpack(checkout_command)) then
-         return nil, "Failed checking out tag/branch from git repository."
-      end
-   end
    fs.delete(dir.path(store_dir, module, ".git"))
    fs.delete(dir.path(store_dir, module, ".gitignore"))
    fs.pop_dir()
