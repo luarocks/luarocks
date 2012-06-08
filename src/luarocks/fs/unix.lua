@@ -33,6 +33,19 @@ function absolute_name(pathname, relative_to)
    end
 end
 
+--- Check whether given file has #! line
+-- @param file string: Path to test
+-- @return boolean: True if file has a shebang, False otherwise
+function has_shebang(file)
+   local f = io.open(file, 'r')
+   if not f then
+      return false
+   end
+   magic = f:read(2)
+   f:close()
+   return magic == '#!'
+end
+
 --- Create a wrapper to make a script executable from the command-line.
 -- @param file string: Pathname of script to be made executable.
 -- @param dest string: Directory where to put the wrapper.
@@ -42,6 +55,10 @@ function wrap_script(file, dest)
    assert(type(file) == "string")
    assert(type(dest) == "string")
    
+   if has_shebang(file) then
+      return copy_binary(file, dest)
+   end
+
    local base = dir.base_name(file)
    local wrapname = fs.is_dir(dest) and dest.."/"..base or dest
    local wrapper = io.open(wrapname, "w")
