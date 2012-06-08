@@ -20,6 +20,12 @@ grep -q "\"$1\"" rockspec || {
    exit 1
 }
 
+grep -q "program_version = \"$1\"" src/luarocks/cfg.lua || {
+   echo
+   echo "Version in src/luarocks/cfg.lua is incorrect. Please fix it."
+   exit 1
+}
+
 out="luarocks-$1"
 rm -rf "$out"
 mkdir "$out"
