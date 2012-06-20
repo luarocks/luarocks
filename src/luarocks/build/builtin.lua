@@ -143,6 +143,7 @@ function run(rockspec)
       compile_library = function (library, objects, libraries, libdirs)
          local extras = { unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
+         add_flags(extras, "-Wl,-rpath,%s:", libdirs)
          add_flags(extras, "-l%s", libraries)
          if cfg.is_platform("cygwin") then
             add_flags(extras, "-l%s", {"lua"})
