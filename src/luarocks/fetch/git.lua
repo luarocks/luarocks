@@ -24,9 +24,6 @@ function get_sources(rockspec, extract, dest_dir)
    module = module:gsub("%.git$", "")
    local command = {git_cmd, "clone", "--depth=1", rockspec.source.url, module}
    local tag_or_branch = rockspec.source.tag or rockspec.source.branch
-   if tag_or_branch then
-      table.insert(command, 4, "--branch=" .. tag_or_branch)
-   end
    local store_dir
    if not dest_dir then
       store_dir = fs.make_temp_dir(name_version)
@@ -43,6 +40,12 @@ function get_sources(rockspec, extract, dest_dir)
       return nil, "Failed cloning git repository."
    end
    fs.change_dir(module)
+   if tag_or_branch then
+      local checkout_command = {git_cmd, "checkout", tag_or_branch}
+      if not fs.execute(unpack(checkout_command)) then
+         return nil, 'Failed to check out the "' .. tag_or_branch ..'" tag or branch.'
+      end
+   end
    fs.delete(dir.path(store_dir, module, ".git"))
    fs.delete(dir.path(store_dir, module, ".gitignore"))
    fs.pop_dir()
