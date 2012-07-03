@@ -1,4 +1,3 @@
-
 --- Configuration for LuaRocks.
 -- Tries to load the user's configuration file and
 -- defines defaults for unset values. See the
@@ -26,7 +25,7 @@ end
 _M.site_config = site_config
 
 lua_version = _VERSION:sub(5)
-program_version = "2.0.8"
+program_version = "2.0.9"
 user_agent = "LuaRocks/"..program_version
 
 local persist = require("luarocks.persist")
