@@ -40,6 +40,13 @@ function get_sources(rockspec, extract, dest_dir)
    if not fs.execute(unpack(command)) then
       return nil, "Failed fetching files from Subversion."
    end
+   fs.change_dir(module)
+   for _, d in ipairs(fs.find(".")) do
+      if dir.base_name(d) == ".svn" then
+         fs.delete(dir.path(store_dir, module, d))
+      end
+   end
+   fs.pop_dir()
    fs.pop_dir()
    return module, store_dir
 end
