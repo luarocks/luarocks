@@ -247,7 +247,7 @@ function copy(src, dest, perms)
    if not perms then perms = fs.get_permissions(src) end
    local src_h, err = io.open(src, "rb")
    if not src_h then return nil, err end
-   local dest_h, err = io.open(dest, "wb+")
+   local dest_h, err = io.open(dest, "w+b")
    if not dest_h then src_h:close() return nil, err end
    while true do
       local block = src_h:read(8192)
