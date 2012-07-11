@@ -125,6 +125,34 @@ write_table = function(out, tbl, level, field_order)
    out:write("}")
 end
 
+--- Writes a rockspec table to an io-like object.
+-- @param out userdata: a file object, open for writing.
+-- @param tbl table: the table to be written.
+-- @param field_order table: optional prioritization table
+-- @return userdata The file object originally passed in as the `out` parameter.
+local function write_rockspec(out, tbl, field_order)
+   for k, v, sub_order in util.sortedpairs(tbl, field_order) do
+      out:write(k.." = ")
+      write_value(out, v, 0, sub_order)
+      out:write("\n")
+   end
+   return out
+end
+
+--- Save the contents of a table to a string.
+-- Each element of the table is saved as a global assignment.
+-- Only numbers, strings and tables (containing numbers, strings
+-- or other recursively processed tables) are supported.
+-- @param tbl table: the table containing the data to be written
+-- @param field_order table: an optional array indicating the order of top-level fields.
+-- @return string
+function save_from_table_to_string(tbl, field_order)
+   local out = {buffer = {}}
+   function out:write(data) table.insert(self.buffer, data) end
+   write_rockspec(out, tbl, field_order)
+   return table.concat(out.buffer)
+end
+
 --- Save the contents of a table in a file.
 -- Each element of the table is saved as a global assignment.
 -- Only numbers, strings and tables (containing numbers, strings
@@ -139,11 +167,7 @@ function save_from_table(filename, tbl, field_order)
    if not out then
       return nil, "Cannot create file at "..filename
    end
-   for k, v, sub_order in util.sortedpairs(tbl, field_order) do
-      out:write(k.." = ")
-      write_value(out, v, 0, sub_order)
-      out:write("\n")
-   end
+   write_rockspec(out, tbl, field_order)
    out:close()
    return true
 end
