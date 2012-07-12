@@ -125,12 +125,12 @@ write_table = function(out, tbl, level, field_order)
    out:write("}")
 end
 
---- Writes a rockspec table to an io-like object.
+--- Writes a table to an io-like object.
 -- @param out userdata: a file object, open for writing.
 -- @param tbl table: the table to be written.
 -- @param field_order table: optional prioritization table
 -- @return userdata The file object originally passed in as the `out` parameter.
-local function write_rockspec(out, tbl, field_order)
+local function write_table(out, tbl, field_order)
    for k, v, sub_order in util.sortedpairs(tbl, field_order) do
       out:write(k.." = ")
       write_value(out, v, 0, sub_order)
@@ -149,7 +149,7 @@ end
 function save_from_table_to_string(tbl, field_order)
    local out = {buffer = {}}
    function out:write(data) table.insert(self.buffer, data) end
-   write_rockspec(out, tbl, field_order)
+   write_table(out, tbl, field_order)
    return table.concat(out.buffer)
 end
 
