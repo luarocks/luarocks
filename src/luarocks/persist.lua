@@ -167,7 +167,7 @@ function save_from_table(filename, tbl, field_order)
    if not out then
       return nil, "Cannot create file at "..filename
    end
-   write_rockspec(out, tbl, field_order)
+   write_table(out, tbl, field_order)
    out:close()
    return true
 end
