@@ -15,7 +15,7 @@ local function git_can_clone_by_tag()
    local version_string = io.popen('git --version'):read()
    local major, minor, tiny = version_string:match('(%d-)%.(%d+)%.?(%d*)')
    major, minor, tiny = tonumber(major), tonumber(minor), tonumber(tiny) or 0
-   value = major > 1 or (major == 1 and (minor > 7 or (minor == 7 and tiny >= 10)))
+   local value = major > 1 or (major == 1 and (minor > 7 or (minor == 7 and tiny >= 10)))
    git_can_clone_by_tag = function() return value end
    return git_can_clone_by_tag()
 end
