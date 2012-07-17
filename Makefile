@@ -61,6 +61,10 @@ src/luarocks/site_config.lua: config.unix
 	then \
 	   echo "LUAROCKS_FORCE_CONFIG=true" >> src/luarocks/site_config.lua ;\
 	fi
+	if [ "$(LUA_DIR_SET)" = "yes" ] ;\
+	then \
+	   echo "LUA_DIR_SET=true" >> src/luarocks/site_config.lua ;\
+	fi
 	echo "LUAROCKS_UNAME_S=[[$(LUAROCKS_UNAME_S)]]" >> src/luarocks/site_config.lua
 	echo "LUAROCKS_UNAME_M=[[$(LUAROCKS_UNAME_M)]]" >> src/luarocks/site_config.lua
 	echo "LUAROCKS_DOWNLOADER=[[$(LUAROCKS_DOWNLOADER)]]" >> src/luarocks/site_config.lua

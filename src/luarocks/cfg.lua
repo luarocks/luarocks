@@ -25,7 +25,7 @@ end
 _M.site_config = site_config
 
 lua_version = _VERSION:sub(5)
-program_version = "2.0.9"
+program_version = "2.0.10"
 user_agent = "LuaRocks/"..program_version
 
 local persist = require("luarocks.persist")
@@ -389,10 +389,10 @@ if detected.solaris then
 end
 
 -- Expose some more values detected by LuaRocks for use by rockspec authors.
-defaults.variables.LUA = defaults.lua_interpreter
 defaults.variables.LIB_EXTENSION = defaults.lib_extension
 defaults.variables.OBJ_EXTENSION = defaults.obj_extension
 defaults.variables.LUAROCKS_PREFIX = site_config.LUAROCKS_PREFIX
+defaults.variables.LUA = site_config.LUA_DIR_SET and (defaults.variables.LUA_BINDIR.."/"..defaults.lua_interpreter) or defaults.lua_interpreter
 
 -- Use defaults:
 
