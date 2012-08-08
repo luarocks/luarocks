@@ -69,6 +69,10 @@ elseif system == "OpenBSD" then
    detected.unix = true
    detected.openbsd = true
    detected.bsd = true
+elseif system == "NetBSD" then
+   detected.unix = true
+   detected.netbsd = true
+   detected.bsd = true
 elseif system == "Darwin" then
    detected.unix = true
    detected.macosx = true
@@ -315,6 +319,8 @@ if detected.unix then
    defaults.variables.CFLAGS = "-O2"
    defaults.cmake_generator = "Unix Makefiles"
    defaults.platforms = { "unix" }
+   defaults.variables.CC = "gcc"
+   defaults.variables.LD = "gcc"
    defaults.variables.LIBFLAG = "-shared"
    defaults.external_deps_patterns = {
       bin = { "?" },
@@ -345,7 +351,8 @@ if detected.cygwin then
 end
 
 if detected.bsd then
-   defaults.variables.STATFLAG = "-f '%Op'"
+   defaults.variables.MAKE = "gmake"
+   defaults.variables.STATFLAG = "-f '%OLp'"
 end
 
 if detected.macosx then
@@ -361,18 +368,11 @@ end
 if detected.linux then
    defaults.arch = "linux-"..proc
    defaults.platforms = {"unix", "linux"}
-   defaults.variables.CC = "gcc"
-   defaults.variables.LD = "gcc"
-   defaults.variables.LIBFLAG = "-shared"
 end
 
 if detected.freebsd then
    defaults.arch = "freebsd-"..proc
    defaults.platforms = {"unix", "bsd", "freebsd"}
-   defaults.variables.MAKE = "gmake"
-   defaults.variables.CC = "gcc"
-   defaults.variables.LD = "gcc"
-   defaults.variables.LIBFLAG = "-shared"
 end
 
 if detected.openbsd then
@@ -380,12 +380,15 @@ if detected.openbsd then
    defaults.platforms = {"unix", "bsd", "openbsd"}
 end
 
+if detected.netbsd then
+   defaults.arch = "netbsd-"..proc
+   defaults.platforms = {"unix", "bsd", "netbsd"}
+end
+
 if detected.solaris then
    defaults.arch = "solaris-"..proc
    defaults.platforms = {"unix", "solaris"}
    defaults.variables.MAKE = "gmake"
-   defaults.variables.CC = "gcc"
-   defaults.variables.LD = "gcc"
 end
 
 -- Expose some more values detected by LuaRocks for use by rockspec authors.
