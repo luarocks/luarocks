@@ -39,7 +39,7 @@ function Q(arg)
 end
 
 local function normalize(name)
-   return name:gsub("\\", "/"):gsub("/$", "")
+   return name:gsub("\\", "/"):gsub("(.)/*$", "%1")
 end
 
 --- Test is file/dir is writable.
