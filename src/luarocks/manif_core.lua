@@ -59,14 +59,14 @@ end
 function get_versions(name, manifest)
    assert(type(name) == "string")
    assert(type(manifest) == "table" or not manifest)
-   
+
    if not manifest then
       manifest = load_local_manifest(cfg.rocks_dir)
       if not manifest then
          return {}
       end
    end
-   
+
    local item = manifest.repository[name]
    if item then
       return util.keys(item)
