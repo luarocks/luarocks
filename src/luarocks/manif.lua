@@ -194,8 +194,6 @@ local function update_dependencies(manifest)
                   for miss, err in pairs(missing) do
                      if miss == current then
                         util.printerr("Tree inconsistency detected: "..current.." has no rockspec. "..err)
-                     else
-                        util.printerr("Missing dependency for "..pkg.." "..version..": "..miss)
                      end
                   end
                end
