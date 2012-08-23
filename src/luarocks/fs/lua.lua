@@ -1,4 +1,3 @@
-
 --- Native Lua implementation of filesystem and platform abstractions,
 -- using LuaFileSystem, LZLib, MD5 and LuaCurl.
 module("luarocks.fs.lua", package.seeall)
@@ -657,6 +656,10 @@ function check_command_permissions(flags)
    local ok = true
    local err = ""
    for _, dir in ipairs { cfg.rocks_dir, root_dir, dir.dir_name(root_dir) } do
+      -- skip checking / if installed under /usr
+      if dir == "/" then
+         break
+      end
       if fs.exists(dir) and not fs.is_writable(dir) then
          ok = false
          err = "Your user does not have write permissions in " .. dir
