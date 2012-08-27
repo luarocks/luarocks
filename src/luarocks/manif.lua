@@ -31,7 +31,11 @@ local function save_table(where, name, tbl)
    assert(type(tbl) == "table")
 
    local filename = dir.path(where, name)
-   return persist.save_from_table(filename, tbl)
+   local ok, err = persist.save_from_table(filename..".tmp", tbl)
+   if ok then
+      ok, err = os.rename(filename..".tmp", filename)
+   end
+   return ok, err
 end
 
 function load_rock_manifest(name, version, root)
