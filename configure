@@ -333,10 +333,17 @@ else
    d_lua_h="$LUA_INCDIR/lua.h"
    if [ -f "$d_lua_h" ]
    then
-      echo "lua.h found in $d_lua_h (Debian/Ubuntu)"
+      echo "lua.h found in $d_lua_h"
    else
-      echo "lua.h not found (looked in $lua_h)"
-      die "You may want to use the flag --with-lua-include. See --help."
+      LUA_INCDIR="$LUA_INCDIR/lua$LUA_VERSION"
+      d_lua_h="$LUA_INCDIR/lua.h"
+      if [ -f "$d_lua_h" ]
+      then
+         echo "lua.h found in $d_lua_h (Debian/Ubuntu)"
+      else
+         echo "lua.h not found (looked in $lua_h)"
+         die "You may want to use the flag --with-lua-include. See --help."
+      fi
    fi
 fi
 
