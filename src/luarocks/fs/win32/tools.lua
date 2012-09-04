@@ -241,6 +241,7 @@ function find(at)
          table.insert(result, (file:gsub("\\", "/")))
       end
    end
+   pipe:close()
    return result
 end
 
