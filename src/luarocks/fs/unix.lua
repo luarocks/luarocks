@@ -15,6 +15,13 @@ local util = require("luarocks.util")
 
 math.randomseed(os.time())
 
+--- Annotate command string for quiet execution.
+-- @param cmd string: A command-line string.
+-- @return string: The command-line, with silencing annotation.
+function quiet(cmd)
+   return cmd.." 1> /dev/null 2> /dev/null"
+end
+
 --- Return an absolute pathname from a potentially relative one.
 -- @param pathname string: pathname to convert.
 -- @param relative_to string or nil: path to prepend when making

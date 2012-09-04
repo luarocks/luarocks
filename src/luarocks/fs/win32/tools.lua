@@ -32,13 +32,6 @@ local function command_at(directory, cmd)
    return cmd
 end
 
---- Annotate command string for quiet execution.
--- @param cmd string: A command-line string.
--- @return string: The command-line, with silencing annotation.
-function quiet(cmd)
-   return cmd.." 2> NUL 1> NUL"
-end
-
 --- Obtain current directory.
 -- Uses the module's internal directory stack.
 -- @return string: the absolute pathname of the current directory.

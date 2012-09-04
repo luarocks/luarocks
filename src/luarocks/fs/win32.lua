@@ -8,6 +8,13 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 
+--- Annotate command string for quiet execution.
+-- @param cmd string: A command-line string.
+-- @return string: The command-line, with silencing annotation.
+function quiet(cmd)
+   return cmd.." 2> NUL 1> NUL"
+end
+
 --- Quote argument for shell processing. Fixes paths on Windows.
 -- Adds single quotes and escapes.
 -- @param arg string: Unquoted argument.
