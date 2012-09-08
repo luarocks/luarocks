@@ -201,12 +201,12 @@ function unzip(zipfile)
    return fs.execute(vars.UNZIP, zipfile)
 end
 
---- Test is file/directory is writable.
+--- Test is file/directory exists
 -- @param file string: filename to test
 -- @return boolean: true if file exists, false otherwise.
-function is_writable(file)
+function exists(file)
    assert(file)
-   return fs.execute(vars.TEST, "-w", file)
+   return fs.execute(vars.TEST, "-e", file)
 end
 
 --- Test is pathname is a directory.
