@@ -488,7 +488,15 @@ local redirect_protocols = {
 
 local function http_request(url, http, loop_control)
    local result = {}
-   local res, status, headers, err = http.request { url = url, proxy = cfg.proxy, redirect = false, sink = ltn12.sink.table(result) }
+   
+   local proxy = cfg.proxy
+   if type(proxy) ~= "string" then proxy = nil end
+   -- LuaSocket's http.request crashes when given URLs missing the scheme part.
+   if proxy and not proxy:find("://") then
+      proxy = "http://" .. proxy
+   end
+   
+   local res, status, headers, err = http.request { url = url, proxy = proxy, redirect = false, sink = ltn12.sink.table(result) }
    if not res then
       return nil, status
    elseif status == 301 or status == 302 then
