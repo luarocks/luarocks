@@ -26,7 +26,7 @@ rocks_trees = nil
 local function load_rocks_trees() 
    local any_ok = false
    local trees = {}
-   for _, tree in pairs(cfg.rocks_trees) do
+   for _, tree in ipairs(cfg.rocks_trees) do
       local manifest, err = manif_core.load_local_manifest(path.rocks_dir(tree))
       if manifest then
          any_ok = true
@@ -59,7 +59,7 @@ function add_context(name, version)
    end
 
    local providers = {}
-   for _, tree in pairs(rocks_trees) do
+   for _, tree in ipairs(rocks_trees) do
       local manifest = tree.manifest
 
       local pkgdeps
@@ -72,7 +72,7 @@ function add_context(name, version)
       for _, dep in ipairs(pkgdeps) do
          local pkg, constraints = dep.name, dep.constraints
    
-         for _, tree in pairs(rocks_trees) do
+         for _, tree in ipairs(rocks_trees) do
             local entries = tree.manifest.repository[pkg]
             if entries then
                for version, pkgs in pairs(entries) do
@@ -139,7 +139,7 @@ local function select_module(module, filter_module_name)
    end
 
    local providers = {}
-   for _, tree in pairs(rocks_trees) do
+   for _, tree in ipairs(rocks_trees) do
       local entries = tree.manifest.modules[module]
       if entries then
          for i, entry in ipairs(entries) do
