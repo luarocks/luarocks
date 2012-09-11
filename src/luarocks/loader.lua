@@ -116,7 +116,7 @@ local function call_other_loaders(module, name, version, module_name)
          end
       end
    end
-   return nil, "Failed loading module "..module.." in LuaRocks rock "..name.." "..version
+   return "Failed loading module "..module.." in LuaRocks rock "..name.." "..version
 end
 
 --- Search for a module in the rocks trees
@@ -218,7 +218,7 @@ end
 function luarocks_loader(module)
    local name, version, module_name = pick_module(module)
    if not name then
-      return nil, "No LuaRocks module found for "..module
+      return "No LuaRocks module found for "..module
    else
       add_context(name, version)
       return call_other_loaders(module, name, version, module_name)
