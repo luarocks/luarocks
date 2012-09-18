@@ -172,8 +172,8 @@ local function type_check_item(name, item, expected, context)
          return nil, "Type mismatch on field "..context..name..": expected a number"
       end
    elseif expected_type == "string" then
-      if not tostring(item) then
-         return nil, "Type mismatch on field "..context..name..": expected a value convertible to string"
+      if type(item) ~= "string" then
+         return nil, "Type mismatch on field "..context..name..": expected a string"
       end
       if expected ~= "string" then
          if not item:match("^"..expected.."$") then

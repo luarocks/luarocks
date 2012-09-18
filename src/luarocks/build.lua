@@ -223,6 +223,8 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, no_deps)
          local dest = dir.path(path.install_dir(name, version), copy_dir)
          fs.make_dir(dest)
          fs.copy_contents(copy_dir, dest)
+      else
+         util.warning("Directory '"..copy_dir.."' not found")
       end
    end
 
