@@ -324,6 +324,7 @@ if detected.unix then
    defaults.platforms = { "unix" }
    defaults.variables.CC = "gcc"
    defaults.variables.LD = "gcc"
+   defaults.gcc_rpath = true
    defaults.variables.LIBFLAG = "-shared"
    defaults.external_deps_patterns = {
       bin = { "?" },
@@ -362,10 +363,17 @@ if detected.macosx then
    defaults.external_lib_extension = "dylib"
    defaults.arch = "macosx-"..proc
    defaults.platforms = {"unix", "bsd", "macosx"}
-   defaults.variables.CC = "export MACOSX_DEPLOYMENT_TARGET=10.3; gcc"
-   defaults.variables.LD = "export MACOSX_DEPLOYMENT_TARGET=10.3; gcc"
    defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
    defaults.variables.STATFLAG = "-f '%A'"
+   local version = io.popen("sw_vers -productVersion"):read("*l")
+   version = tonumber(version and version:match("^[^.]+%.([^.]+)")) or 3
+   if version >= 5 then
+      version = 5
+   else
+      defaults.gcc_rpath = false
+   end
+   defaults.variables.CC = "export MACOSX_DEPLOYMENT_TARGET=10."..version.."; gcc"
+   defaults.variables.LD = "export MACOSX_DEPLOYMENT_TARGET=10."..version.."; gcc"
 end
 
 if detected.linux then
