@@ -12,7 +12,7 @@ local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
 
 help_summary = "Auto-write a rockspec for a new version of a rock."
-help_arguments = "{<program>|<rockspec>} [<new_version>] [<new_url>]"
+help_arguments = "{<package>|<rockspec>} [<new_version>] [<new_url>]"
 help = [[
 This is a utility function that writes a new rockspec, updating data
 from a previous one.
@@ -76,7 +76,7 @@ function run(...)
    if not input:match(".rockspec$") then
       local err
       filename, err = download.download("rockspec", input)
-      if not input then
+      if not filename then
          return nil, err
       end
    end
