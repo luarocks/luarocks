@@ -171,7 +171,10 @@ local defaults = {
    obj_extension = "unknown",
 
    rocks_servers = {
-      "http://www.luarocks.org/repositories/rocks"
+      {
+        "http://www.luarocks.org/repositories/rocks",
+        "http://luarocks.giga.puc-rio.br/"
+      }
    },
 
    lua_extension = "lua",

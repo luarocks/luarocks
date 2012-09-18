@@ -194,13 +194,20 @@ function search_repos(query)
 
    local results = {}
    for _, repo in ipairs(cfg.rocks_servers) do
-      local protocol, pathname = dir.split_url(repo)
-      if protocol == "file" then
-         repo = pathname
+      if type(repo) == "string" then
+         repo = { repo }
       end
-      local ok, err = manifest_search(results, repo, query)
-      if not ok then
-         util.warning("Failed searching manifest: "..err)
+      for _, mirror in ipairs(repo) do
+         local protocol, pathname = dir.split_url(mirror)
+         if protocol == "file" then
+            mirror = pathname
+         end
+         local ok, err = manifest_search(results, mirror, query)
+         if ok then
+            break
+         else
+            util.warning("Failed searching manifest: "..err)
+         end
       end
    end
    return results

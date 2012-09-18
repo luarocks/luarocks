@@ -136,9 +136,6 @@ write_sysconfig: built
 	if [ ! -f "$(DESTDIR)$(CONFIG_FILE)" ] ;\
 	then \
 	   mkdir -p `dirname "$(DESTDIR)$(CONFIG_FILE)"` ;\
-	   echo 'rocks_servers = {' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
-	   echo '   [[http://luarocks.org/repositories/rocks]]' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
-	   echo '}' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	   echo 'rocks_trees = {' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	   if  [ ! -n "$(FORCE_CONFIG)" ] ;\
 	   then \
