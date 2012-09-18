@@ -362,8 +362,8 @@ if detected.macosx then
    defaults.external_lib_extension = "dylib"
    defaults.arch = "macosx-"..proc
    defaults.platforms = {"unix", "bsd", "macosx"}
-   defaults.variables.CC = "export MACOSX_DEPLOYMENT_TARGET=10.3; gcc"
-   defaults.variables.LD = "export MACOSX_DEPLOYMENT_TARGET=10.3; gcc"
+   defaults.variables.CC = "export MACOSX_DEPLOYMENT_TARGET=10.5; gcc"
+   defaults.variables.LD = "export MACOSX_DEPLOYMENT_TARGET=10.5; gcc"
    defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
    defaults.variables.STATFLAG = "-f '%A'"
 end
