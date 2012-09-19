@@ -4,7 +4,7 @@
 module("luarocks.pack", package.seeall)
 
 local path = require("luarocks.path")
-local rep = require("luarocks.rep")
+local repos = require("luarocks.repos")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local cfg = require("luarocks.cfg")
@@ -137,7 +137,7 @@ local function do_pack_binary_rock(name, version)
    end
    
    fs.change_dir(temp_dir)
-   if not is_binary and not rep.has_binaries(name, version) then
+   if not is_binary and not repos.has_binaries(name, version) then
       rock_file = rock_file:gsub("%."..cfg.arch:gsub("%-","%%-").."%.", ".all.")
    end
    fs.delete(rock_file)

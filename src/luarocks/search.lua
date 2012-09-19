@@ -297,9 +297,9 @@ function print_results(results, show_repo, long)
    
    for package, versions in util.sortedpairs(results) do
       util.printout(package)
-      for version, repos in util.sortedpairs(versions, deps.compare_versions) do
+      for version, repositories in util.sortedpairs(versions, deps.compare_versions) do
          if show_repo then
-            for _, repo in ipairs(repos) do
+            for _, repo in ipairs(repositories) do
                util.printout("   "..version.." ("..repo.arch..") - "..repo.repo)
             end
          else
@@ -319,8 +319,8 @@ end
 local function split_source_and_binary_results(results)
    local sources, binaries = {}, {}
    for name, versions in pairs(results) do
-      for version, repos in pairs(versions) do
-         for _, repo in ipairs(repos) do
+      for version, repositories in pairs(versions) do
+         for _, repo in ipairs(repositories) do
             local where = sources
             if repo.arch == "all" or repo.arch == cfg.arch then
                where = binaries

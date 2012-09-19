@@ -1,6 +1,6 @@
 
 --- Functions for managing the repository on disk.
-module("luarocks.rep", package.seeall)
+module("luarocks.repos", package.seeall)
 
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")

@@ -6,7 +6,7 @@ module("luarocks.build", package.seeall)
 local pack = require("luarocks.pack")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
-local rep = require("luarocks.rep")
+local repos = require("luarocks.repos")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
@@ -142,8 +142,8 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, no_deps)
    end
 
    local name, version = rockspec.name, rockspec.version
-   if rep.is_installed(name, version) then
-      rep.delete_version(name, version)
+   if repos.is_installed(name, version) then
+      repos.delete_version(name, version)
    end
 
    if not minimal_mode then
@@ -242,15 +242,15 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, no_deps)
    ok, err = manif.make_rock_manifest(name, version)
    if err then return nil, err end
 
-   ok, err = rep.deploy_files(name, version, rep.should_wrap_bin_scripts(rockspec))
+   ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec))
    if err then return nil, err end
    
    util.remove_scheduled_function(rollback)
    rollback = util.schedule_function(function()
-      rep.delete_version(name, version)
+      repos.delete_version(name, version)
    end)
 
-   ok, err = rep.run_hook(rockspec, "post_install")
+   ok, err = repos.run_hook(rockspec, "post_install")
    if err then return nil, err end
 
    ok, err = manif.update_manifest(name, version)

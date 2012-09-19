@@ -6,7 +6,7 @@ module("luarocks.remove", package.seeall)
 local search = require("luarocks.search")
 local deps = require("luarocks.deps")
 local fetch = require("luarocks.fetch")
-local rep = require("luarocks.rep")
+local repos = require("luarocks.repos")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
@@ -62,7 +62,7 @@ local function delete_versions(name, versions)
 
    for version, _ in pairs(versions) do
       util.printout("Removing "..name.." "..version.."...")
-      local ok, err = rep.delete_version(name, version)
+      local ok, err = repos.delete_version(name, version)
       if not ok then return nil, err end
    end
    

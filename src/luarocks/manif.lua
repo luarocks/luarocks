@@ -14,7 +14,7 @@ local search = require("luarocks.search")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 local path = require("luarocks.path")
-local rep = require("luarocks.rep")
+local repos = require("luarocks.repos")
 local deps = require("luarocks.deps")
 
 rock_manifest_cache = {}
@@ -187,9 +187,9 @@ end
 -- @param manifest table: a manifest table.
 local function update_dependencies(manifest)
    for pkg, versions in pairs(manifest.repository) do
-      for version, repos in pairs(versions) do
+      for version, repositories in pairs(versions) do
          local current = pkg.." "..version
-         for _, repo in ipairs(repos) do
+         for _, repo in ipairs(repositories) do
             if repo.arch == "installed" then
                local missing
                repo.dependencies, missing = deps.scan_deps({}, {}, manifest, pkg, version)
@@ -230,8 +230,8 @@ local function store_results(results, manifest)
                if not rock_manifest then
                   return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks 2 tree?"
                end
-               entrytable.modules = store_package_items(rep.package_modules, name, version, manifest.modules)
-               entrytable.commands = store_package_items(rep.package_commands, name, version, manifest.commands)
+               entrytable.modules = store_package_items(repos.package_modules, name, version, manifest.modules)
+               entrytable.commands = store_package_items(repos.package_commands, name, version, manifest.commands)
             end
             table.insert(versiontable, entrytable)
          end

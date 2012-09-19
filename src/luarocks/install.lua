@@ -4,7 +4,7 @@
 module("luarocks.install", package.seeall)
 
 local path = require("luarocks.path")
-local rep = require("luarocks.rep")
+local repos = require("luarocks.repos")
 local fetch = require("luarocks.fetch")
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
@@ -37,8 +37,8 @@ function install_binary_rock(rock_file, no_deps)
    if arch ~= "all" and arch ~= cfg.arch then
       return nil, "Incompatible architecture "..arch, "arch"
    end
-   if rep.is_installed(name, version) then
-      rep.delete_version(name, version)
+   if repos.is_installed(name, version) then
+      repos.delete_version(name, version)
    end
    
    local rollback = util.schedule_function(function()
@@ -77,15 +77,15 @@ function install_binary_rock(rock_file, no_deps)
       wrap_bin_scripts = false
    end
 
-   ok, err = rep.deploy_files(name, version, rep.should_wrap_bin_scripts(rockspec))
+   ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec))
    if err then return nil, err end
 
    util.remove_scheduled_function(rollback)
    rollback = util.schedule_function(function()
-      rep.delete_version(name, version)
+      repos.delete_version(name, version)
    end)
 
-   ok, err = rep.run_hook(rockspec, "post_install")
+   ok, err = repos.run_hook(rockspec, "post_install")
    if err then return nil, err end
    
    ok, err = manif.update_manifest(name, version)

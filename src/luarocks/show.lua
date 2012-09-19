@@ -82,9 +82,9 @@ function run(...)
    local package, versions = util.sortedpairs(results)()
    --question: what do we do about multiple versions? This should
    --give us the latest version on the last repo (which is usually the global one)
-   for vs, repos in util.sortedpairs(versions, deps.compare_versions) do
+   for vs, repositories in util.sortedpairs(versions, deps.compare_versions) do
       if not version then version = vs end
-      for _, rp in ipairs(repos) do repo_url = rp.repo end
+      for _, rp in ipairs(repositories) do repo_url = rp.repo end
    end
 
 
