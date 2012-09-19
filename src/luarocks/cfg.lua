@@ -162,6 +162,7 @@ local defaults = {
    local_by_default = false,
    use_extensions = false,
    accept_unknown_fields = false,
+   fs_use_modules = true,
 
    lua_modules_path = "/share/lua/"..lua_version,
    lib_modules_path = "/lib/lua/"..lua_version,
@@ -240,6 +241,7 @@ local defaults = {
 
 if detected.windows then
    home_config_file = home_config_file:gsub("\\","/")
+   defaults.fs_use_modules = false
    defaults.arch = "win32-"..proc
    defaults.platforms = {"win32", "windows" }
    defaults.lib_extension = "dll"
@@ -278,6 +280,7 @@ end
 
 if detected.mingw32 then
    home_config_file = home_config_file:gsub("\\","/")
+   defaults.fs_use_modules = false
    defaults.arch = "win32-"..proc
    defaults.platforms = { "win32", "mingw32" }
    defaults.lib_extension = "dll"
