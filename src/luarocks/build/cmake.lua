@@ -21,6 +21,10 @@ function run(rockspec)
    variables.CMAKE_INCLUDE_PATH=os.getenv("CMAKE_INCLUDE_PATH")
 
    util.variable_substitutions(variables, rockspec.variables)
+
+   if not fs.execute_string(fs.quiet(rockspec.variables.CMAKE.." --help")) then
+      return nil, "'"..rockspec.variables.CMAKE.."' program not found. Is cmake installed? You may want to edit variables.CMAKE"
+   end
    
    -- If inline cmake is present create CMakeLists.txt from it.
    if type(build.cmake) == "string" then
@@ -39,15 +43,15 @@ function run(rockspec)
       args = args .. ' -D' ..k.. '="' ..v.. '"'
    end
 
-   if not fs.execute(rockspec.variables.CMAKE.." . " ..args) then
+   if not fs.execute_string(rockspec.variables.CMAKE.." . " ..args) then
       return nil, "Failed cmake."
    end
    
-   if not fs.execute(rockspec.variables.MAKE.." -fMakefile") then
+   if not fs.execute_string(rockspec.variables.MAKE.." -fMakefile") then
       return nil, "Failed building."
    end
 
-   if not fs.execute(rockspec.variables.MAKE.." -fMakefile install") then
+   if not fs.execute_string(rockspec.variables.MAKE.." -fMakefile install") then
       return nil, "Failed installing."
    end
    return true
