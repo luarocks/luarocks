@@ -308,8 +308,12 @@ end
 --- Driver function for "path" command.
 -- @return boolean This function always succeeds.
 function run(...)
-   util.printout(cfg.export_lua_path:format(package.path))
-   util.printout(cfg.export_lua_cpath:format(package.cpath))
+   local flags = util.parse_flags(...)
+   util.printout(cfg.export_lua_path:format(util.remove_path_dupes(package.path, ';')))
+   util.printout(cfg.export_lua_cpath:format(util.remove_path_dupes(package.cpath, ';')))
+   if flags["bin"] then
+      util.printout(cfg.export_path:format(util.remove_path_dupes(os.getenv("PATH"), cfg.export_path_separator), cfg.deploy_bin_dir))
+   end
    return true
 end
 

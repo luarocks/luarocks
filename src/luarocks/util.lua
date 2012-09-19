@@ -326,6 +326,22 @@ function split_string(str, delim, maxNb)
    return result
 end
 
+--- Remove repeated entries from a path-style string.
+-- Example: given ("a;b;c;a;b;d", ";"), returns "a;b;c;d".
+-- @param list string: A path string (from $PATH or package.path)
+-- @param sep string: The separator
+function remove_path_dupes(list, sep)
+   local parts = split_string(list, sep)
+   local final, entries = {}, {}
+   for _, part in ipairs(parts) do
+      if not entries[part] then
+         table.insert(final, part)
+         entries[part] = true
+      end
+   end
+   return table.concat(final, sep)
+end
+
 --[[
 Author: Julio Manuel Fernandez-Diaz
 Date:   January 12, 2007

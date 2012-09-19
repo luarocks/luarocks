@@ -274,6 +274,8 @@ if detected.windows then
       lib = { "?.dll", "lib?.dll" },
       include = { "?.h" }
    }
+   defaults.export_path = "SET PATH=%s;%s"
+   defaults.export_path_separator = ";"
    defaults.export_lua_path = "SET LUA_PATH=%s"
    defaults.export_lua_cpath = "SET LUA_CPATH=%s"
    defaults.local_cache = home.."/cache/luarocks"
@@ -317,6 +319,8 @@ if detected.unix then
       lib = { "lib?.so", "lib?.so.*" },
       include = { "?.h" }
    }
+   defaults.export_path = "export PATH='%s:%s'"
+   defaults.export_path_separator = ":"
    defaults.export_lua_path = "export LUA_PATH='%s'"
    defaults.export_lua_cpath = "export LUA_CPATH='%s'"
    defaults.local_cache = home.."/.cache/luarocks"
