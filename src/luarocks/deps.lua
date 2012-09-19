@@ -482,6 +482,31 @@ function fulfill_dependencies(rockspec)
    return true
 end
 
+--- If filename matches a pattern, return the capture.
+-- For example, given "libfoo.so" and "lib?.so" is a pattern,
+-- returns "foo" (which can then be used to build names
+-- based on other patterns.
+-- @param file string: a filename
+-- @param pattern string: a pattern, where ? is to be matched by the filename.
+-- @return string The pattern, if found, or nil.
+local function deconstruct_pattern(file, pattern)
+   local depattern = "^"..(pattern:gsub("%.", "%%."):gsub("%*", ".*"):gsub("?", "(.*)")).."$"
+   return (file:match(depattern))
+end
+
+--- Construct all possible patterns for a name and add to the files array.
+-- Run through the patterns array replacing all occurrences of "?"
+-- with the given file name and store them in the files array.
+-- @param file string A raw name (e.g. "foo")
+-- @param array of string An array of patterns with "?" as the wildcard
+-- (e.g. {"?.so", "lib?.so"})
+-- @param files The array of constructed names
+local function add_all_patterns(file, patterns, files)
+   for _, pattern in ipairs(patterns) do
+      table.insert(files, (pattern:gsub("?", file)))
+   end
+end
+
 --- Set up path-related variables for external dependencies.
 -- For each key in the external_dependencies table in the
 -- rockspec file, four variables are created: <key>_DIR, <key>_BINDIR,
@@ -546,10 +571,14 @@ function check_external_deps(rockspec, mode)
                if file then
                   local files = {}
                   if not file:match("%.") then
-                     for _, pattern in ipairs(dirdata.pattern) do
-                        table.insert(files, (pattern:gsub("?", file)))
-                     end
+                     add_all_patterns(file, dirdata.pattern, files)
                   else
+                     for _, pattern in ipairs(dirdata.pattern) do
+                        local matched = deconstruct_pattern(file, pattern)
+                        if matched then
+                           add_all_patterns(matched, dirdata.pattern, files)
+                        end
+                     end
                      table.insert(files, file)
                   end
                   local found = false
