@@ -89,6 +89,7 @@ elseif system and system:match("^CYGWIN") then
 elseif system and system:match("^Windows") then
    detected.windows = true
 elseif system and system:match("^MINGW") then
+   detected.windows = true
    detected.mingw32 = true
 else
    detected.unix = true
@@ -99,7 +100,7 @@ end
 
 local sys_config_file, home_config_file
 local sys_config_ok, home_config_ok = false, false
-if detected.windows or detected.mingw32 then
+if detected.windows then
    home = os.getenv("APPDATA") or "c:"
    sys_config_file = site_config.LUAROCKS_SYSCONFIG or "c:/luarocks/config.lua"
    home_config_file = home.."/luarocks/config.lua"
@@ -253,7 +254,7 @@ if detected.windows then
    defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua"..lua_version.."/lib"
    defaults.cmake_generator = "MinGW Makefiles"
    defaults.makefile = "Makefile.win"
-   defaults.variables.MAKE = "nmake" -- TODO: Split Windows flavors between mingw and msvc
+   defaults.variables.MAKE = "nmake"
    defaults.variables.CC = "cl"
    defaults.variables.RC = "rc"
    defaults.variables.WRAPPER = site_config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.obj"
@@ -279,39 +280,16 @@ if detected.windows then
 end
 
 if detected.mingw32 then
-   home_config_file = home_config_file:gsub("\\","/")
-   defaults.fs_use_modules = false
-   defaults.arch = "win32-"..proc
    defaults.platforms = { "win32", "mingw32" }
-   defaults.lib_extension = "dll"
-   defaults.external_lib_extension = "dll"
    defaults.obj_extension = "o"
-   defaults.external_deps_dirs = { "c:/external/" }
-   defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua"..lua_version.."/bin"
-   defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua"..lua_version.."/include"
-   defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua"..lua_version.."/lib"
    defaults.cmake_generator = "MinGW Makefiles"
-   defaults.make = "mingw32-make" -- TODO: Split Windows flavors between mingw and msvc
-   defaults.makefile = "Makefile.win"
+   defaults.variables.MAKE = "mingw32-make"
    defaults.variables.CC = "mingw32-gcc"
    defaults.variables.RC = "windres"
    defaults.variables.WRAPPER = site_config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.o"
    defaults.variables.LD = "mingw32-gcc"
    defaults.variables.CFLAGS = "-O2"
    defaults.variables.LIBFLAG = "-shared"
-   defaults.external_deps_patterns = {
-      bin = { "?.exe", "?.bat" },
-      lib = { "?.lib", "?.dll", "lib?.dll" },
-      include = { "?.h" }
-   }
-   defaults.runtime_external_deps_patterns = {
-      bin = { "?.exe", "?.bat" },
-      lib = { "?.dll", "lib?.dll" },
-      include = { "?.h" }
-   }
-   defaults.export_lua_path = "SET LUA_PATH=%s"
-   defaults.export_lua_cpath = "SET LUA_CPATH=%s"
-   defaults.local_cache = home.."/cache/luarocks"
 end
 
 if detected.unix then
