@@ -12,12 +12,16 @@ help_arguments = "<rockspec>"
 help = [[
 This is a utility function that checks the syntax of a rockspec.
 
-It reports success or failure if the text of a rockspec is
+It returns success or failure if the text of a rockspec is
 syntactically correct.
 ]]
 
 function run(...)
    local flags, input = util.parse_flags(...)
+   
+   if not input then
+      return nil, "Argument missing, see help."
+   end
    
    local filename = input
    if not input:match(".rockspec$") then
