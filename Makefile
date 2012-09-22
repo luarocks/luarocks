@@ -127,9 +127,9 @@ install_luas: built
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
 	cd src/luarocks && for f in $(LUAROCKS_FILES); \
 	do \
-	   d="$(DESTDIR)$(LUADIR)/luarocks"/`dirname "$$f"`; \
-	   mkdir -p "$$d"; \
-	   cp "$$f" "$$d"; \
+	   d="$(DESTDIR)$(LUADIR)/luarocks"/`dirname "$$f"` && \
+	   mkdir -p "$$d" && \
+	   cp "$$f" "$$d" || exit 1; \
 	done
 
 install_site_config: built
