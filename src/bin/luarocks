@@ -20,5 +20,6 @@ commands.path = require("luarocks.path")
 commands.show = require("luarocks.show")
 commands.new_version = require("luarocks.new_version")
 commands.lint = require("luarocks.lint")
+commands.purge = require("luarocks.purge")
 
 command_line.run_command(...)

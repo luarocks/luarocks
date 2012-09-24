@@ -259,7 +259,11 @@ end
 -- Version numbers are compared as exact string comparison.
 -- @param name string: name of package
 -- @param version string: package version in string format
-function delete_version(name, version)
+-- @param quick boolean: do not try to fix the versioned name
+-- of another version that provides the same module that
+-- was deleted. This is used during 'purge', as every module
+-- will be eventually deleted.
+function delete_version(name, version, quick)
    assert(type(name) == "string")
    assert(type(version) == "string")
 
@@ -274,11 +278,13 @@ function delete_version(name, version)
                if not ok then return nil, "Failed deleting "..versioned end
             else
                local ok = fs.delete(target)
-               local next_name, next_version = manif.find_next_provider(target)
-               if next_name then
-                  local versioned = path.versioned_name(target, deploy_dir, next_name, next_version)
-                  fs.move(versioned, target)
-                  fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
+               if not quick then
+                  local next_name, next_version = manif.find_next_provider(target)
+                  if next_name then
+                     local versioned = path.versioned_name(target, deploy_dir, next_name, next_version)
+                     fs.move(versioned, target)
+                     fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
+                  end
                end
                fs.remove_dir_tree_if_empty(dir.dir_name(target))
                if not ok then return nil, "Failed deleting "..target end
