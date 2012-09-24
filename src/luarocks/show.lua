@@ -86,7 +86,7 @@ function run(...)
    end
 
    if not next(results) then --
-      return nil,"cannot find package "..name.." "..version.."\nUse 'list' to find installed rocks."
+      return nil,"cannot find package "..name.." "..(version or "").."\nUse 'list' to find installed rocks."
    end
 
    version = nil
