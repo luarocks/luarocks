@@ -184,25 +184,9 @@ end
 
 --- Return the pathname of the file that would be loaded for a module.
 -- @param module string: module name (eg. "socket.core")
--- @return string, string, string: name of the rock containing the module
--- (eg. "luasocket"), version of the rock (eg. "2.0.2-1"),
--- filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so")
+-- @return string: filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so")
 function which(module)
-   local name, version, module_name = 
-      select_module(module, function(module_name, name, version, tree, i)
-         local deploy_dir
-         if module_name:match("%.lua$") then
-            deploy_dir = path.deploy_lua_dir(tree)
-            module_name = deploy_dir.."/"..module_name
-         else
-            deploy_dir = path.deploy_lib_dir(tree)
-            module_name = deploy_dir.."/"..module_name
-         end
-         if i > 1 then
-            module_name = path.versioned_name(module_name, deploy_dir, name, version)
-         end
-         return module_name
-      end)
+   local name, version, module_name = select_module(module, path.which_i)
    return module_name
 end
 

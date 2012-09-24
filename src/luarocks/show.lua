@@ -55,6 +55,17 @@ local function format_text(text)
    return (table.concat(paragraphs, "\n\n"):gsub("%s$", ""))
 end
 
+local function module_name(mod, filename, name, version, repo, manifest)
+   local base_dir
+   if filename:match("%.lua$") then
+      base_dir = path.deploy_lua_dir(repo)
+   else
+      base_dir = path.deploy_lib_dir(repo)
+   end
+   
+   return dir.path(base_dir, filename)
+end
+
 --- Driver function for "show" command.
 -- @param name or nil: an existing package name.
 -- @param version string or nil: a version may also be passed.
@@ -75,10 +86,11 @@ function run(...)
    end
 
    if not next(results) then --
-      return nil,"cannot find package "..name.."\nUse 'list' to find installed rocks"
+      return nil,"cannot find package "..name.." "..version.."\nUse 'list' to find installed rocks."
    end
 
-   local version,repo_url
+   version = nil
+   local repo_url
    local package, versions = util.sortedpairs(results)()
    --question: what do we do about multiple versions? This should
    --give us the latest version on the last repo (which is usually the global one)
@@ -124,7 +136,9 @@ function run(...)
       if next(minfo.modules) then
          util.printout()
          util.printout("Modules:")
-         util.printout("\t"..keys_as_string(minfo.modules, "\n\t"))
+         for mod, filename in util.sortedpairs(minfo.modules) do
+            util.printout("\t"..mod.." ("..path.which(mod, filename, name, version, repo, manifest)..")")
+         end
       end
       if next(minfo.dependencies) then
          util.printout()

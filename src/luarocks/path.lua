@@ -305,6 +305,49 @@ function use_tree(tree)
    cfg.deploy_lib_dir = deploy_lib_dir(tree)
 end
 
+--- Return the pathname of the file that would be loaded for a module, indexed.
+-- @param module_name string: module name (eg. "socket.core")
+-- @param name string: name of the package (eg. "luasocket")
+-- @param version string: version number (eg. "2.0.2-1")
+-- @param tree string: repository path (eg. "/usr/local")
+-- @param i number: the index, 1 if version is the current default, > 1 otherwise.
+-- This is done this way for use by select_module in luarocks.loader.
+-- @return string: filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so")
+function which_i(module_name, name, version, tree, i)
+   local deploy_dir
+   if module_name:match("%.lua$") then
+      deploy_dir = deploy_lua_dir(tree)
+      module_name = dir.path(deploy_dir, module_name)
+   else
+      deploy_dir = deploy_lib_dir(tree)
+      module_name = dir.path(deploy_dir, module_name)
+   end
+   if i > 1 then
+      module_name = versioned_name(module_name, deploy_dir, name, version)
+   end
+   return module_name
+end
+
+--- Return the pathname of the file that would be loaded for a module, 
+-- returning the versioned pathname if given version is not the default version
+-- in the given manifest.
+-- @param module_name string: module name (eg. "socket.core")
+-- @param name string: name of the package (eg. "luasocket")
+-- @param version string: version number (eg. "2.0.2-1")
+-- @param tree string: repository path (eg. "/usr/local")
+-- @param manifest table: the manifest table for the tree.
+-- @return string: filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so")
+function which(module_name, filename, name, version, tree, manifest)
+   local versions = manifest.modules[module_name]
+   assert(versions)
+   for i, name_version in ipairs(versions) do
+      if name_version == name.."/"..version then
+         return which_i(filename, name, version, tree, i):gsub("//", "/")
+      end
+   end
+   assert(false)
+end
+
 --- Driver function for "path" command.
 -- @return boolean This function always succeeds.
 function run(...)
