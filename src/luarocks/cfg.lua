@@ -10,8 +10,8 @@
 -- (~/.luarocks/config.lua on Unix or %APPDATA%/luarocks/config.lua on
 -- Windows).
 
-local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, type, assert, _VERSION =
-      rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, type, assert, _VERSION
+local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, tonumber, type, assert, _VERSION =
+      rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, tonumber, type, assert, _VERSION
 
 module("luarocks.cfg")
 
