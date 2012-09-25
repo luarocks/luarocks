@@ -309,7 +309,7 @@ end
 function map_trees(use_trees, fn, ...)
    local result = {}
    if use_trees == "one" then
-      table.insert(result, fn(cfg.root_dir, ...))
+      table.insert(result, (fn(cfg.root_dir, ...)) or 0)
    elseif use_trees == "all" or use_trees == "order" then
       local use = false
       if use_trees == "all" then
@@ -320,7 +320,7 @@ function map_trees(use_trees, fn, ...)
             use = true
          end
          if use then
-            table.insert(result, fn(tree, ...))
+            table.insert(result, (fn(tree, ...)) or 0)
          end
       end
    end
