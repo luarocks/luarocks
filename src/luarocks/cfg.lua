@@ -98,16 +98,18 @@ end
 
 -- Path configuration:
 
+local version_suffix = lua_version:gsub ("%.", "_")
 local sys_config_file, home_config_file
 local sys_config_ok, home_config_ok = false, false
+sys_config_file = site_config["LUAROCKS_SYSCONFIG_" .. version_suffix] or site_config.LUAROCKS_SYSCONFIG
 if detected.windows then
    home = os.getenv("APPDATA") or "c:"
-   sys_config_file = site_config.LUAROCKS_SYSCONFIG or "c:/luarocks/config.lua"
+   sys_config_file = sys_config_file or "c:/luarocks/config.lua"
    home_config_file = home.."/luarocks/config.lua"
    home_tree = home.."/luarocks/"
 else
    home = os.getenv("HOME") or ""
-   sys_config_file = site_config.LUAROCKS_SYSCONFIG or "/etc/luarocks/config.lua"
+   sys_config_file = sys_config_file or "/etc/luarocks/config.lua"
    home_config_file = home.."/.luarocks/config.lua"
    home_tree = home.."/.luarocks/"
 end
@@ -126,7 +128,7 @@ else -- nil or false
 end
 
 if not site_config.LUAROCKS_FORCE_CONFIG then
-   home_config_file = os.getenv("LUAROCKS_CONFIG") or home_config_file
+   home_config_file = os.getenv("LUAROCKS_CONFIG_" .. version_suffix) or os.getenv("LUAROCKS_CONFIG") or home_config_file
    local home_overrides, err = persist.load_into_table(home_config_file, { home = home })
    if home_overrides then
       home_config_ok = true
