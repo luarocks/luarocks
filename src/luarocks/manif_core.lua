@@ -8,6 +8,7 @@ local type_check = require("luarocks.type_check")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
+local path = require("luarocks.path")
 
 manifest_cache = {}
 
@@ -52,22 +53,40 @@ end
 
 --- Get all versions of a package listed in a manifest file.
 -- @param name string: a package name.
--- @param manifest table or nil: a manifest table; if not given, the
--- default local manifest table is used.
+-- @param use_trees string: "one", to use only the currently
+-- configured tree; "order" to select trees based on order
+-- (use the current tree and all trees below it on the list)
+-- or "all", to use all trees.
 -- @return table: An array of strings listing installed
 -- versions of a package.
-function get_versions(name, manifest)
+function get_versions(name, use_trees)
    assert(type(name) == "string")
-   assert(type(manifest) == "table" or not manifest)
+   assert(type(use_trees) == "string")
    
-   if not manifest then
+   local manifest
+
+   if use_trees == "one" then
       manifest = load_local_manifest(cfg.rocks_dir)
-      if not manifest then
-         return {}
+   elseif use_trees == "all" or use_trees == "order" then
+      manifest = {}
+      local use = false
+      if use_trees == "all" then
+         use = true
+      end
+      for _, tree in ipairs(cfg.rocks_trees) do
+         if tree == cfg.rocks_dir then
+            use = true
+         end
+         if use then
+            local loaded = load_local_manifest(path.rocks_dir(tree))
+            if loaded then
+               util.deep_merge(manifest, loaded)
+            end
+         end
       end
    end
    
-   local item = manifest.repository[name]
+   local item = manifest and manifest.repository[name]
    if item then
       return util.keys(item)
    end

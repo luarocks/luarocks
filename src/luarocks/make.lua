@@ -11,6 +11,7 @@ local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 local fetch = require("luarocks.fetch")
 local pack = require("luarocks.pack")
+local deps = require("luarocks.deps")
 
 help_summary = "Compile package in current directory using a rockspec."
 help_arguments = "[--pack-binary-rock] [<rockspec>]"
@@ -62,10 +63,10 @@ function run(...)
       if not rspec then
          return nil, err
       end
-      return pack.pack_binary_rock(rspec.name, rspec.version, build.build_rockspec, rockspec, false, true, flags["nodeps"])
+      return pack.pack_binary_rock(rspec.name, rspec.version, build.build_rockspec, rockspec, false, true, deps.flags_to_deps_mode(flags))
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err end
-      return build.build_rockspec(rockspec, false, true)
+      return build.build_rockspec(rockspec, false, true, deps.flags_to_deps_mode(flags))
    end
 end

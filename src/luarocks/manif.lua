@@ -185,14 +185,14 @@ end
 -- and any dependency inconsistencies or missing dependencies are reported to
 -- standard error.
 -- @param manifest table: a manifest table.
-local function update_dependencies(manifest)
+local function update_dependencies(manifest, use_trees)
    for pkg, versions in pairs(manifest.repository) do
       for version, repositories in pairs(versions) do
          local current = pkg.." "..version
          for _, repo in ipairs(repositories) do
             if repo.arch == "installed" then
                local missing
-               repo.dependencies, missing = deps.scan_deps({}, {}, manifest, pkg, version)
+               repo.dependencies, missing = deps.scan_deps({}, {}, manifest, pkg, version, use_trees)
                repo.dependencies[pkg] = nil
                if missing then
                   for miss, err in pairs(missing) do
@@ -214,7 +214,7 @@ end
 -- @param manifest table: A manifest table (must contain repository, modules, commands tables).
 -- It will be altered to include the search results.
 -- @return boolean or (nil, string): true in case of success, or nil followed by an error message.
-local function store_results(results, manifest)
+local function store_results(results, manifest, use_trees)
    assert(type(results) == "table")
    assert(type(manifest) == "table")
 
@@ -239,7 +239,7 @@ local function store_results(results, manifest)
       end
       manifest.repository[name] = pkgtable
    end
-   update_dependencies(manifest)
+   update_dependencies(manifest, use_trees)
    sort_package_matching_table(manifest.modules)
    sort_package_matching_table(manifest.commands)
    return true
@@ -251,8 +251,10 @@ end
 -- @param repo A local repository directory.
 -- @return boolean or (nil, string): True if manifest was generated,
 -- or nil and an error message.
-function make_manifest(repo)
+function make_manifest(repo, use_trees)
    assert(type(repo) == "string")
+
+   if use_trees == "none" then use_trees = cfg.use_trees end
 
    if not fs.is_dir(repo) then
       return nil, "Cannot access repository at "..repo
@@ -265,7 +267,7 @@ function make_manifest(repo)
    local manifest = { repository = {}, modules = {}, commands = {} }
    manif_core.manifest_cache[repo] = manifest
 
-   local ok, err = store_results(results, manifest)
+   local ok, err = store_results(results, manifest, use_trees)
    if not ok then return nil, err end
 
    return save_table(repo, "manifest", manifest)
@@ -281,17 +283,19 @@ end
 -- the default local repository configured as cfg.rocks_dir is used.
 -- @return boolean or (nil, string): True if manifest was generated,
 -- or nil and an error message.
-function update_manifest(name, version, repo)
+function update_manifest(name, version, repo, use_trees)
    assert(type(name) == "string")
    assert(type(version) == "string")
    repo = path.rocks_dir(repo or cfg.root_dir)
+   
+   if use_trees == "none" then use_trees = cfg.use_trees end
 
    util.printout("Updating manifest for "..repo)
 
    local manifest, err = load_manifest(repo)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
-      local ok, err = make_manifest(repo)
+      local ok, err = make_manifest(repo, use_trees)
       if not ok then
          return nil, err
       end
@@ -303,7 +307,7 @@ function update_manifest(name, version, repo)
 
    local results = {[name] = {[version] = {{arch = "installed", repo = repo}}}}
 
-   local ok, err = store_results(results, manifest)
+   local ok, err = store_results(results, manifest, use_trees)
    if not ok then return nil, err end
 
    return save_table(repo, "manifest", manifest)

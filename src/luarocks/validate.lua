@@ -50,7 +50,7 @@ local function prepare_sandbox(file)
 end
 
 local function validate_rockspec(file)
-   local ok, err, errcode = build.build_rockspec(file, true)
+   local ok, err, errcode = build.build_rockspec(file, true, "one")
    if not ok then
       util.printerr(err)
    end
@@ -58,7 +58,7 @@ local function validate_rockspec(file)
 end
 
 local function validate_src_rock(file)
-   local ok, err, errcode = build.build_rock(file, false)
+   local ok, err, errcode = build.build_rock(file, false, "one")
    if not ok then
       util.printerr(err)
    end
@@ -66,7 +66,7 @@ local function validate_src_rock(file)
 end
 
 local function validate_rock(file)
-   local ok, err, errcode = install.install_binary_rock(file)
+   local ok, err, errcode = install.install_binary_rock(file, "one")
    if not ok then
       util.printerr(err)
    end
@@ -97,7 +97,7 @@ local function validate(repo, flags)
       util.printout()
       util.printout("Verifying "..pathname)
       if file:match("%.rockspec$") then
-         ok, err, errcode = validate_rockspec(pathname)
+         ok, err, errcode = validate_rockspec(pathname, "one")
       elseif file:match("%.src%.rock$") then
          ok, err, errcode = validate_src_rock(pathname)
       elseif file:match("%.rock$") then

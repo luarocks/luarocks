@@ -312,14 +312,14 @@ end
 -- @return table or nil: A table containing fields 'name' and 'version'
 -- representing an installed rock which matches the given dependency,
 -- or nil if it could not be matched.
-local function match_dep(dep, blacklist)
+local function match_dep(dep, blacklist, use_trees)
    assert(type(dep) == "table")
 
    local versions
    if dep.name == "lua" then
       versions = { cfg.lua_version }
    else
-      versions = manif_core.get_versions(dep.name)
+      versions = manif_core.get_versions(dep.name, use_trees)
    end
    if not versions then
       return nil
@@ -361,13 +361,13 @@ end
 -- in table format and values are tables containing fields 'name' and
 -- version' representing matches, and a table of missing dependencies
 -- parsed as tables.
-function match_deps(rockspec, blacklist)
+function match_deps(rockspec, blacklist, use_trees)
    assert(type(rockspec) == "table")
    assert(type(blacklist) == "table" or not blacklist)
    local matched, missing, no_upgrade = {}, {}, {}
 
    for _, dep in ipairs(rockspec.dependencies) do
-      local found = match_dep(dep, blacklist and blacklist[dep.name] or nil)
+      local found = match_dep(dep, blacklist and blacklist[dep.name] or nil, use_trees)
       if found then
          if dep.name ~= "lua" then 
             matched[dep] = found
@@ -401,7 +401,7 @@ end
 -- @return boolean or (nil, string, [string]): True if no errors occurred, or
 -- nil and an error message if any test failed, followed by an optional
 -- error code.
-function fulfill_dependencies(rockspec)
+function fulfill_dependencies(rockspec, use_trees)
 
    local search = require("luarocks.search")
    local install = require("luarocks.install")
@@ -433,7 +433,7 @@ function fulfill_dependencies(rockspec)
       end
    end
 
-   local matched, missing, no_upgrade = match_deps(rockspec)
+   local matched, missing, no_upgrade = match_deps(rockspec, nil, use_trees)
 
    if next(no_upgrade) then
       util.printerr("Missing dependencies for "..rockspec.name.." "..rockspec.version..":")
@@ -467,7 +467,7 @@ function fulfill_dependencies(rockspec)
 
       for _, dep in pairs(missing) do
          -- Double-check in case dependency was filled during recursion.
-         if not match_dep(dep) then
+         if not match_dep(dep, nil, use_trees) then
             local rock = search.find_suitable_rock(dep)
             if not rock then
                return nil, "Could not satisfy dependency: "..show_dep(dep)
@@ -640,7 +640,7 @@ end
 -- @param name string: Package name.
 -- @param version string: Package version.
 -- @return (table, table): The results and a table of missing dependencies.
-function scan_deps(results, missing, manifest, name, version)
+function scan_deps(results, missing, manifest, name, version, use_trees)
    assert(type(results) == "table")
    assert(type(missing) == "table")
    assert(type(manifest) == "table")
@@ -669,9 +669,9 @@ function scan_deps(results, missing, manifest, name, version)
    else
       rockspec = { dependencies = deplist }
    end
-   local matched, failures = match_deps(rockspec)
+   local matched, failures = match_deps(rockspec, nil, use_trees)
    for _, match in pairs(matched) do
-      results, missing = scan_deps(results, missing, manifest, match.name, match.version)
+      results, missing = scan_deps(results, missing, manifest, match.name, match.version, use_trees)
    end
    if next(failures) then
       for _, failure in pairs(failures) do
@@ -680,4 +680,32 @@ function scan_deps(results, missing, manifest, name, version)
    end
    results[name] = version
    return results, missing
+end
+
+local valid_trees = {
+   one = true,
+   order = true,
+   all = true,
+}
+
+function check_trees_flag(flag)
+   return valid_trees[flag]
+end
+
+function flags_to_deps_mode(flags)
+   if flags["nodeps"] then
+      return "none"
+   elseif flags["trees"] then
+      return flags["trees"]
+   else
+      return cfg.use_trees
+   end
+end
+
+function deps_mode_to_flag(deps_mode)
+   if deps_mode == "none" then
+      return "--nodeps"
+   else
+      return "--trees="..deps_mode
+   end
 end

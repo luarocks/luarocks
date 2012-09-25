@@ -164,6 +164,7 @@ local defaults = {
    use_extensions = false,
    accept_unknown_fields = false,
    fs_use_modules = true,
+   use_trees = "one",
 
    lua_modules_path = "/share/lua/"..lua_version,
    lib_modules_path = "/lib/lua/"..lua_version,

@@ -44,5 +44,5 @@ function run(...)
          end
       end
    end
-   return manif.make_manifest(cfg.rocks_dir)
+   return manif.make_manifest(cfg.rocks_dir, "one")
 end
