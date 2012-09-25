@@ -20,7 +20,7 @@ fetch/svn.lua tools/zip.lua tools/tar.lua pack.lua type_check.lua make.lua path.
 remove.lua fs.lua manif.lua add.lua deps.lua build.lua search.lua show.lua \
 manif_core.lua fetch.lua unpack.lua validate.lua cfg.lua download.lua \
 help.lua util.lua index.lua cache.lua add.lua refresh_cache.lua loader.lua \
-admin_remove.lua fetch/hg.lua fetch/git_file.lua new_version.lua lint.lua
+admin_remove.lua fetch/hg.lua fetch/git_file.lua new_version.lua lint.lua purge.lua
 
 CONFIG_FILE = $(SYSCONFDIR)/config.lua
 
