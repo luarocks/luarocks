@@ -37,8 +37,8 @@ end
 function root_dir(rocks_dir)
    assert(type(rocks_dir) == "string")
    
-   local suffix = dir.path("lib", "luarocks", "rocks")
-   return rocks_dir:match("(.*)" .. suffix .. "$")
+   local suffix = dir.path("lib", "luarocks")
+   return rocks_dir:match("(.*)" .. suffix .. ".*$")
 end
 
 function deploy_bin_dir(tree)
