@@ -63,30 +63,15 @@ function get_versions(name, use_trees)
    assert(type(name) == "string")
    assert(type(use_trees) == "string")
    
-   local manifest
-
-   if use_trees == "one" then
-      manifest = load_local_manifest(cfg.rocks_dir)
-   elseif use_trees == "all" or use_trees == "order" then
-      manifest = {}
-      local use = false
-      if use_trees == "all" then
-         use = true
+   local manifest = {}
+   path.map_trees(use_trees, function(tree)
+      local loaded = load_local_manifest(path.rocks_dir(tree))
+      if loaded then
+         util.deep_merge(manifest, loaded)
       end
-      for _, tree in ipairs(cfg.rocks_trees) do
-         if tree == cfg.rocks_dir then
-            use = true
-         end
-         if use then
-            local loaded = load_local_manifest(path.rocks_dir(tree))
-            if loaded then
-               util.deep_merge(manifest, loaded)
-            end
-         end
-      end
-   end
+   end)
    
-   local item = manifest and manifest.repository[name]
+   local item = next(manifest) and manifest.repository[name]
    if item then
       return util.keys(item)
    end

@@ -68,3 +68,7 @@ function split_url(url)
    end
    return protocol, pathname
 end
+
+function normalize(name)
+   return name:gsub("\\", "/"):gsub("(.)/*$", "%1")
+end

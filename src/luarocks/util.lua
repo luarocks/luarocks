@@ -331,6 +331,8 @@ end
 -- @param list string: A path string (from $PATH or package.path)
 -- @param sep string: The separator
 function remove_path_dupes(list, sep)
+   assert(type(list) == "string")
+   assert(type(sep) == "string")
    local parts = split_string(list, sep)
    local final, entries = {}, {}
    for _, part in ipairs(parts) do

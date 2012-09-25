@@ -43,10 +43,6 @@ function Q(arg)
    return "'" .. arg:gsub("\\", "\\\\"):gsub("'", "'\\''") .. "'"
 end
 
-local function normalize(name)
-   return name:gsub("\\", "/"):gsub("(.)/*$", "%1")
-end
-
 --- Test is file/dir is writable.
 -- Warning: testing if a file/dir is writable does not guarantee
 -- that it will remain writable and therefore it is no replacement
@@ -55,7 +51,7 @@ end
 -- @return boolean: true if file exists, false otherwise.
 function is_writable(file)
    assert(file)
-   file = normalize(file)
+   file = dir.normalize(file)
    local result
    if fs.is_dir(file) then
       local file2 = dir.path(file, '.tmpluarockstestwritable')
@@ -77,7 +73,7 @@ end
 -- @return string or nil: name of temporary directory or nil on failure.
 function make_temp_dir(name)
    assert(type(name) == "string")
-   name = normalize(name)
+   name = dir.normalize(name)
 
    local temp_dir = (os.getenv("TMP") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-" .. tostring(math.floor(math.random() * 10000))
    if fs.make_dir(temp_dir) then
@@ -110,7 +106,7 @@ end
 -- @return boolean: true if the MD5 checksum for 'file' equals 'md5sum', false if not
 -- or if it could not perform the check for any reason.
 function check_md5(file, md5sum)
-   file = normalize(file)
+   file = dir.normalize(file)
    local computed = fs.get_md5(file)
    if not computed then
       return false
@@ -156,7 +152,7 @@ end
 -- @param d string: The directory to switch to.
 function change_dir(d)
    table.insert(dir_stack, lfs.currentdir())
-   d = normalize(d)
+   d = dir.normalize(d)
    lfs.chdir(d)
 end
 
@@ -187,7 +183,7 @@ end
 -- @return boolean: true on success, false on failure.
 function make_dir(directory)
    assert(type(directory) == "string")
-   directory = normalize(directory)
+   directory = dir.normalize(directory)
    local path = nil
    if directory:sub(2, 2) == ":" then
      path = directory:sub(1, 2)
@@ -217,7 +213,7 @@ end
 -- @param d string: pathname of directory to remove.
 function remove_dir_if_empty(d)
    assert(d)
-   d = normalize(d)
+   d = dir.normalize(d)
    lfs.rmdir(d)
 end
 
@@ -227,7 +223,7 @@ end
 -- @param d string: pathname of directory to remove.
 function remove_dir_tree_if_empty(d)
    assert(d)
-   d = normalize(d)
+   d = dir.normalize(d)
    for i=1,10 do
       lfs.rmdir(d)
       d = dir.dir_name(d)
@@ -243,8 +239,8 @@ end
 -- plus an error message.
 function copy(src, dest, perms)
    assert(src and dest)
-   src = normalize(src)
-   dest = normalize(dest)
+   src = dir.normalize(src)
+   dest = dir.normalize(dest)
    local destmode = lfs.attributes(dest, "mode")
    if destmode == "directory" then
       dest = dir.path(dest, dir.base_name(src))
@@ -296,8 +292,8 @@ end
 -- plus an error message.
 function copy_contents(src, dest)
    assert(src and dest)
-   src = normalize(src)
-   dest = normalize(dest)
+   src = dir.normalize(src)
+   dest = dir.normalize(dest)
    assert(lfs.attributes(src, "mode") == "directory")
 
    for file in lfs.dir(src) do
@@ -338,7 +334,7 @@ end
 -- @param name string: Pathname of source
 -- @return boolean: true on success, false on failure.
 function delete(name)
-   name = normalize(name)
+   name = dir.normalize(name)
    return recursive_delete(name) or false
 end
 
@@ -352,7 +348,7 @@ function list_dir(at)
    if not at then
       at = fs.current_dir()
    end
-   at = normalize(at)
+   at = dir.normalize(at)
    if not fs.is_dir(at) then
       return {}
    end
@@ -393,7 +389,7 @@ function find(at)
    if not at then
       at = fs.current_dir()
    end
-   at = normalize(at)
+   at = dir.normalize(at)
    if not fs.is_dir(at) then
       return {}
    end
@@ -407,7 +403,7 @@ end
 -- @return boolean: true if file exists, false otherwise.
 function exists(file)
    assert(file)
-   file = normalize(file)
+   file = dir.normalize(file)
    return type(lfs.attributes(file)) == "table"
 end
 
@@ -416,7 +412,7 @@ end
 -- @return boolean: true if it is a directory, false otherwise.
 function is_dir(file)
    assert(file)
-   file = normalize(file)
+   file = dir.normalize(file)
    return lfs.attributes(file, "mode") == "directory"
 end
 
@@ -425,12 +421,12 @@ end
 -- @return boolean: true if it is a file, false otherwise.
 function is_file(file)
    assert(file)
-   file = normalize(file)
+   file = dir.normalize(file)
    return lfs.attributes(file, "mode") == "file"
 end
 
 function set_time(file, time)
-   file = normalize(file)
+   file = dir.normalize(file)
    return lfs.touch(file, time)
 end
 
