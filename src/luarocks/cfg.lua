@@ -176,7 +176,8 @@ local defaults = {
       {
         "http://www.luarocks.org/repositories/rocks",
         "http://luarocks.giga.puc-rio.br/",
-        "http://luafr.org/luarocks/rocks"
+        "http://luafr.org/luarocks/rocks",
+        "http://liblua.so/luarocks/repositories/rocks",
       }
    },
 
