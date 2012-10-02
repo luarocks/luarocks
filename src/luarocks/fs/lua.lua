@@ -23,7 +23,6 @@ if cfg.fs_use_modules then
    posix_ok, posix = pcall(require, "posix")
 end
 
-local tar = require("luarocks.tools.tar")
 local patch = require("luarocks.tools.patch")
 
 local dir_stack = {}
