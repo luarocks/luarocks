@@ -342,33 +342,23 @@ function remove_path_dupes(list, sep)
    return table.concat(final, sep)
 end
 
---[[
-Author: Julio Manuel Fernandez-Diaz
-Date:   January 12, 2007
-(For Lua 5.1)
-
-Formats tables with cycles recursively to any depth.
-The output is returned as a string.
-References to other tables are shown as values.
-Self references are indicated.
-
-The string returned is "Lua code", which can be procesed
-(in the case in which indent is composed by spaces or "--").
-Userdata and function keys and values are shown as strings,
-which logically are exactly not equivalent to the original code.
-
-This routine can serve for pretty formating tables with
-proper indentations, apart from printing them:
-
-io.write(table.show(t, "t"))   -- a typical use
-
-Heavily based on "Saving tables with cycles", PIL2, p. 113.
-
-Arguments:
-t is the table.
-name is the name of the table (optional)
-indent is a first indentation (optional).
---]]
+---
+-- Formats tables with cycles recursively to any depth.
+-- References to other tables are shown as values.
+-- Self references are indicated.
+-- The string returned is "Lua code", which can be procesed
+-- (in the case in which indent is composed by spaces or "--").
+-- Userdata and function keys and values are shown as strings,
+-- which logically are exactly not equivalent to the original code.
+-- This routine can serve for pretty formating tables with
+-- proper indentations, apart from printing them:
+-- io.write(table.show(t, "t"))   -- a typical use
+-- Written by Julio Manuel Fernandez-Diaz,
+-- Heavily based on "Saving tables with cycles", PIL2, p. 113.
+-- @param t table: is the table.
+-- @param name string: is the name of the table (optional)
+-- @param indent string: is a first indentation (optional).
+-- @return string: the pretty-printed table
 function show_table(t, name, indent)
    local cart     -- a container
    local autoref  -- for self references
