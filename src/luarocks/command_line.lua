@@ -21,18 +21,6 @@ local function die(message)
    os.exit(1)
 end
 
-local function is_writable(tree)
-  if type(tree) == "string" then
-    return fs.make_dir(tree) and fs.is_writable(tree)
-  else
-    writable = true
-    for k, v in pairs(tree) do
-      writable = writable and fs.make_dir(v) and fs.is_writable(v)
-    end
-    return writable
-  end
-end
-
 --- Main command-line processor.
 -- Parses input arguments and calls the appropriate driver function
 -- to execute the action requested on the command-line, forwarding
