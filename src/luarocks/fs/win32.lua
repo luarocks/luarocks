@@ -112,3 +112,20 @@ end
 function get_permissions(filename)
    return ""
 end
+
+--- Move a file on top of the other.
+-- The new file ceases to exist under its original name,
+-- and takes over the name of the old file.
+-- On Windows this is done by removing the original file and
+-- renaming the new file to its original name.
+-- @param old_file The name of the original file,
+-- which will be the new name of new_file.
+-- @param new_file The name of the new file,
+-- which will replace old_file.
+-- @return boolean or (nil, string): True if succeeded, or nil and
+-- an error message.
+function replace_file(old_file, new_file)
+   os.remove(old_file)
+   return os.rename(new_file, old_file)
+end
+

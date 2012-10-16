@@ -33,7 +33,7 @@ local function save_table(where, name, tbl)
    local filename = dir.path(where, name)
    local ok, err = persist.save_from_table(filename..".tmp", tbl)
    if ok then
-      ok, err = os.rename(filename..".tmp", filename)
+      ok, err = fs.replace_file(filename, filename..".tmp")
    end
    return ok, err
 end
