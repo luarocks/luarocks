@@ -26,7 +26,6 @@ _M.site_config = site_config
 
 lua_version = _VERSION:sub(5)
 program_version = "2.0.11"
-user_agent = "LuaRocks/"..program_version
 
 local persist = require("luarocks.persist")
 
@@ -438,6 +437,8 @@ end
 function which_config()
    return sys_config_file, sys_config_ok, home_config_file, home_config_ok
 end
+
+user_agent = "LuaRocks/"..program_version.." "..arch
 
 --- Check if platform was detected
 -- @param query string: The platform name to check.

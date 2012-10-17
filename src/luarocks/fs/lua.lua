@@ -496,7 +496,15 @@ local function http_request(url, http, loop_control)
       proxy = "http://" .. proxy
    end
    
-   local res, status, headers, err = http.request { url = url, proxy = proxy, redirect = false, sink = ltn12.sink.table(result) }
+   local res, status, headers, err = http.request {
+      url = url,
+      proxy = proxy,
+      redirect = false,
+      sink = ltn12.sink.table(result),
+      headers = {
+         ["user-agent"] = cfg.user_agent.." via LuaSocket"
+      },
+   }
    if not res then
       return nil, status
    elseif status == 301 or status == 302 then

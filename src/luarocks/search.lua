@@ -185,10 +185,9 @@ end
 
 --- Search on all configured rocks servers.
 -- @param query table: A dependency query.
--- @return table or (nil, string): A table where keys are package names
+-- @return table: A table where keys are package names
 -- and values are tables matching version strings to an array of
 -- rocks servers; if no results are found, an empty table is returned.
--- In case of errors, nil and and error message are returned.
 function search_repos(query)
    assert(type(query) == "table")
 
@@ -269,10 +268,7 @@ end
 function find_suitable_rock(query)
    assert(type(query) == "table")
    
-   local results, err = search_repos(query)
-   if not results then
-      return nil, err
-   end
+   local results = search_repos(query)
    local first = next(results)
    if not first then
       return nil, "No results matching query were found."
@@ -349,13 +345,6 @@ function act_on_src_or_rockspec(action, name, version, ...)
    local results, err = find_suitable_rock(query)
    if type(results) == "string" then
       return action(results, ...)
-   elseif type(results) == "table" and next(results) then
-      util.printout("Multiple search results were returned.")
-      util.printout()
-      util.printout("Search results:")
-      util.printout("---------------")
-      print_results(results)
-      return nil, "Please narrow your query."
    else
       return nil, "Could not find a result named "..name..(version and " "..version or "").."."
    end
@@ -380,9 +369,6 @@ function run(...)
    local query = make_query(name:lower(), version)
    query.exact_name = false
    local results, err = search_repos(query)
-   if not results then
-      return nil, err
-   end
    util.printout()
    util.printout("Search results:")
    util.printout("===============")
