@@ -24,7 +24,7 @@ function download(arch, name, version, all)
    if arch then query.arch = arch end
    if all then
       if name == "" then query.exact_name = false end
-      results, err = search.search_repos(query)
+      results = search.search_repos(query)
    else
       results, err = search.find_suitable_rock(query)
    end
