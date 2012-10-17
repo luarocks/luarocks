@@ -146,9 +146,7 @@ function run(...)
       else
          util.printout()
          util.printerr("Could not determine which rock to install.")
-         util.printout()
-         util.printout("Search results:")
-         util.printout("---------------")
+         util.title("Search results:")
          search.print_results(results)
          return nil, (next(results) and "Please narrow your query." or "No results found.")
       end

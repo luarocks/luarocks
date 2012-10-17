@@ -50,9 +50,7 @@ function download(arch, name, version, all)
          return all_ok, any_err
       else
          util.printerr("Multiple search results were returned.")
-         util.printout()
-         util.printout("Search results:")
-         util.printout("---------------")
+         util.title("Search results:")
          search.print_results(results)
          return nil, "Please narrow your query or use --all."
       end
