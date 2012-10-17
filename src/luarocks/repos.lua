@@ -53,22 +53,6 @@ local function recurse_rock_manifest_tree(file_tree, action)
    return do_recurse_rock_manifest_tree(file_tree, "", "")
 end
 
-local function store_package_data(result, name, sub, prefix)
-   assert(type(result) == "table")
-   assert(type(name) == "string")
-   assert(type(sub) == "table" or type(sub) == "string")
-   assert(type(prefix) == "string")
-
-   if type(sub) == "table" then
-      for sname, ssub in pairs(sub) do
-         store_package_data(result, sname, ssub, prefix..name.."/")
-      end
-   elseif type(sub) == "string" then
-      local pathname = prefix..name
-      result[path.path_to_module(pathname)] = pathname
-   end
-end
-
 local function store_package_data(result, name, file_tree)
    if not file_tree then return end
    return recurse_rock_manifest_tree(file_tree, 
