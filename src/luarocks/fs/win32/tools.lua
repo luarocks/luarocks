@@ -246,7 +246,7 @@ function download(url, filename)
    assert(type(filename) == "string" or not filename)
 
    if cfg.downloader == "wget" then
-      local wget_cmd = vars.WGET.." --no-check-certificate --no-cache --user-agent="..cfg.user_agent.." --quiet --continue "
+      local wget_cmd = vars.WGET.." --no-check-certificate --no-cache --user-agent=\""..cfg.user_agent.." via wget\" --quiet --continue "
       if filename then
          return fs.execute(wget_cmd.." --output-document ", filename, url)
       else
@@ -254,7 +254,7 @@ function download(url, filename)
       end
    elseif cfg.downloader == "curl" then
       filename = filename or dir.base_name(url)
-      return fs.execute_string(vars.CURL.." -L --user-agent "..cfg.user_agent.." "..fs.Q(url).." 2> NUL 1> "..fs.Q(filename))
+      return fs.execute_string(vars.CURL.." -L --user-agent \""..cfg.user_agent.." via curl\" "..fs.Q(url).." 2> NUL 1> "..fs.Q(filename))
    end
 end
 
