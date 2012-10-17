@@ -295,11 +295,8 @@ function print_results(results, porcelain)
          for _, repo in ipairs(repos) do
             if porcelain then
                util.printout(package, version, repo.arch, repo.repo)
-               --for k, v in pairs(repo) do print(k, v) end
             else
-               util.printout(
-                     "   "..version.." ("..repo.arch..") - "..repo.repo
-                  )
+               util.printout("   "..version.." ("..repo.arch..") - "..repo.repo)
             end
          end
       end
@@ -374,29 +371,16 @@ function run(...)
    local query = make_query(name:lower(), version)
    query.exact_name = false
    local results, err = search_repos(query)
-   -- N.B. --porcelain forces machine-readable output
-   if not flags["porcelain"] then
-      util.printout()
-      util.printout("Search results:")
-      util.printout("===============")
-      util.printout()
-   end
+   local porcelain = flags["porcelain"]
+   util.title("Search results:", porcelain, "=")
    local sources, binaries = split_source_and_binary_results(results)
    if next(sources) and not flags["binary"] then
-      if not flags["porcelain"] then
-         util.printout("Rockspecs and source rocks:")
-         util.printout("---------------------------")
-         util.printout()
-      end
-      print_results(sources, flags["porcelain"])
+      util.title("Rockspecs and source rocks:", porcelain)
+      print_results(sources, porcelain)
    end
    if next(binaries) and not flags["source"] then    
-      if not flags["porcelain"] then
-         util.printout("Binary and pure-Lua rocks:")
-         util.printout("--------------------------")
-         util.printout()
-      end
-      print_results(binaries, flags["porcelain"])
+      util.title("Binary and pure-Lua rocks:", porcelain)
+      print_results(binaries, porcelain)
    end
    return true
 end

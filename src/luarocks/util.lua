@@ -299,6 +299,14 @@ function warning(msg)
    printerr("Warning: "..msg)
 end
 
+function title(msg, porcelain, underline)
+   if porcelain then return end
+   printout()
+   printout(msg)
+   printout((underline or "-"):rep(#msg))
+   printout()
+end
+
 -- from http://lua-users.org/wiki/SplitJoin
 -- by PhilippeLhoste
 function split_string(str, delim, maxNb)

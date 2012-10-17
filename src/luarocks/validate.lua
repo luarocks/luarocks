@@ -124,9 +124,7 @@ local function validate(repo, flags)
       fs.delete(sandbox)
    end
    restore_settings(settings)
-   util.printout()
-   util.printout("Results:")
-   util.printout("--------")
+   util.title("Results:")
    util.printout("OK: "..tostring(#results.ok))
    for _, entry in ipairs(results.ok) do
       util.printout(entry.file)
@@ -141,9 +139,7 @@ local function validate(repo, flags)
       end
    end
 
-   util.printout()
-   util.printout("Summary:")
-   util.printout("--------")
+   util.title("Summary:")
    local total = 0
    for errcode, errors in pairs(results) do
       util.printout(errcode..": "..tostring(#errors))
