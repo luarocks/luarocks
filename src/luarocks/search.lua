@@ -282,25 +282,30 @@ end
 --- Print a list of rocks/rockspecs on standard output.
 -- @param results table: A table where keys are package names and versions
 -- are tables matching version strings to an array of rocks servers.
--- @param show_repo boolean or nil: Whether to show repository
-function print_results(results, show_repo)
+-- @param porcelain boolean or nil: A flag to force machine-friendly output.
+function print_results(results, porcelain)
    assert(type(results) == "table")
-   assert(type(show_repo) == "boolean" or not show_repo)
-   -- Force display of repo location for the time being
-   show_repo = true -- show_repo == nil and true or show_repo
+   assert(type(porcelain) == "boolean" or not porcelain)
    
    for package, versions in util.sortedpairs(results) do
-      util.printout(package)
-      for version, repositories in util.sortedpairs(versions, deps.compare_versions) do
-         if show_repo then
-            for _, repo in ipairs(repositories) do
-               util.printout("   "..version.." ("..repo.arch..") - "..repo.repo)
+      if not porcelain then
+         util.printout(package)
+      end
+      for version, repos in util.sortedpairs(versions, deps.compare_versions) do
+         for _, repo in ipairs(repos) do
+            if porcelain then
+               util.printout(package, version, repo.arch, repo.repo)
+               --for k, v in pairs(repo) do print(k, v) end
+            else
+               util.printout(
+                     "   "..version.." ("..repo.arch..") - "..repo.repo
+                  )
             end
-         else
-            util.printout("   "..version)
          end
       end
-      util.printout()
+      if not porcelain then
+         util.printout()
+      end
    end
 end
 
@@ -369,22 +374,29 @@ function run(...)
    local query = make_query(name:lower(), version)
    query.exact_name = false
    local results, err = search_repos(query)
-   util.printout()
-   util.printout("Search results:")
-   util.printout("===============")
-   util.printout()
+   -- N.B. --porcelain forces machine-readable output
+   if not flags["porcelain"] then
+      util.printout()
+      util.printout("Search results:")
+      util.printout("===============")
+      util.printout()
+   end
    local sources, binaries = split_source_and_binary_results(results)
    if next(sources) and not flags["binary"] then
-      util.printout("Rockspecs and source rocks:")
-      util.printout("---------------------------")
-      util.printout()
-      print_results(sources, true)
+      if not flags["porcelain"] then
+         util.printout("Rockspecs and source rocks:")
+         util.printout("---------------------------")
+         util.printout()
+      end
+      print_results(sources, flags["porcelain"])
    end
    if next(binaries) and not flags["source"] then    
-      util.printout("Binary and pure-Lua rocks:")
-      util.printout("--------------------------")
-      util.printout()
-      print_results(binaries, true)
+      if not flags["porcelain"] then
+         util.printout("Binary and pure-Lua rocks:")
+         util.printout("--------------------------")
+         util.printout()
+      end
+      print_results(binaries, flags["porcelain"])
    end
    return true
 end
