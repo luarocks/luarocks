@@ -349,13 +349,6 @@ function act_on_src_or_rockspec(action, name, version, ...)
    local results, err = find_suitable_rock(query)
    if type(results) == "string" then
       return action(results, ...)
-   elseif type(results) == "table" and next(results) then
-      util.printout("Multiple search results were returned.")
-      util.printout()
-      util.printout("Search results:")
-      util.printout("---------------")
-      print_results(results)
-      return nil, "Please narrow your query."
    else
       return nil, "Could not find a result named "..name..(version and " "..version or "").."."
    end
