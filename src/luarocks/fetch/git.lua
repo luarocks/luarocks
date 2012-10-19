@@ -1,4 +1,3 @@
-
 --- Fetch back-end for retrieving sources from GIT.
 module("luarocks.fetch.git", package.seeall)
 
@@ -50,7 +49,7 @@ function get_sources(rockspec, extract, dest_dir)
    store_dir = fs.absolute_name(store_dir)
    fs.change_dir(store_dir)
 
-   local command = {git_cmd, "clone", "--depth=1", rockspec.source.url, module}
+   local command = {git_cmd, "clone", "--depth=1", "--recursive", rockspec.source.url, module}
    local tag_or_branch = rockspec.source.tag or rockspec.source.branch
    -- If the tag or branch is explicitly set to "master" in the rockspec, then
    -- we can avoid passing it to Git since it's the default.
