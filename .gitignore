@@ -1,0 +1,5 @@
+/built
+/config.*
+/src/bin/luarocks
+/src/bin/luarocks-admin
+/src/luarocks/site_config.lua

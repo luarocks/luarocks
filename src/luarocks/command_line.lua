@@ -99,8 +99,10 @@ function run_command(...)
 
    if type(cfg.root_dir) == "string" then
      cfg.root_dir = cfg.root_dir:gsub("/+$", "")
+     cfg.variables.ROOT_DIR = cfg.root_dir
    else
      cfg.root_dir.root = cfg.root_dir.root:gsub("/+$", "")
+     cfg.variables.ROOT_DIR = cfg.root_dir.root
    end
    cfg.rocks_dir = cfg.rocks_dir:gsub("/+$", "")
    cfg.deploy_bin_dir = cfg.deploy_bin_dir:gsub("/+$", "")
@@ -109,6 +111,9 @@ function run_command(...)
    
    cfg.variables.ROCKS_TREE = cfg.rocks_dir
    cfg.variables.SCRIPTS_DIR = cfg.deploy_bin_dir
+   cfg.variables.DEPLOY_BIN_DIR = cfg.deploy_bin_dir
+   cfg.variables.DEPLOY_LUA_DIR = cfg.deploy_lua_dir
+   cfg.variables.DEPLOY_LIB_DIR = cfg.deploy_lib_dir
 
    if flags["server"] then
       if flags["server"] == true then
