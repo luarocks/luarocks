@@ -6,6 +6,7 @@ module("luarocks.manif_core", package.seeall)
 local persist = require("luarocks.persist")
 local type_check = require("luarocks.type_check")
 local dir = require("luarocks.dir")
+local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 
@@ -59,14 +60,17 @@ end
 function get_versions(name, manifest)
    assert(type(name) == "string")
    assert(type(manifest) == "table" or not manifest)
-   
+
    if not manifest then
-      manifest = load_local_manifest(cfg.rocks_dir)
-      if not manifest then
-         return {}
+      manifest = {}
+      for i = 1, #cfg.rocks_trees do
+         local loaded = load_local_manifest(path.rocks_dir(cfg.rocks_trees[i]))
+         if loaded then
+            util.deep_merge(manifest, loaded)
+         end
       end
    end
-   
+
    local item = manifest.repository[name]
    if item then
       return util.keys(item)
