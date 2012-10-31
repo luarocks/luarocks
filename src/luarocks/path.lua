@@ -306,13 +306,13 @@ function use_tree(tree)
    cfg.deploy_lib_dir = deploy_lib_dir(tree)
 end
 
-function map_trees(use_trees, fn, ...)
+function map_trees(deps_mode, fn, ...)
    local result = {}
-   if use_trees == "one" then
+   if deps_mode == "one" then
       table.insert(result, (fn(cfg.root_dir, ...)) or 0)
-   elseif use_trees == "all" or use_trees == "order" then
+   elseif deps_mode == "all" or deps_mode == "order" then
       local use = false
-      if use_trees == "all" then
+      if deps_mode == "all" then
          use = true
       end
       for _, tree in ipairs(cfg.rocks_trees) do
@@ -374,7 +374,7 @@ end
 -- @return boolean This function always succeeds.
 function run(...)
    local flags = util.parse_flags(...)
-   local deps_mode = deps.flags_to_deps_mode(flags)
+   local deps_mode = deps.get_deps_mode(flags)
 
    util.printout(cfg.export_lua_path:format(util.remove_path_dupes(package.path, ';')))
    util.printout(cfg.export_lua_cpath:format(util.remove_path_dupes(package.cpath, ';')))

@@ -127,13 +127,9 @@ function run(...)
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       util.printout("Using "..name.."... switching to 'build' mode")
       local build = require("luarocks.build")
-      local build_flags = {}
-      if flags["local"] then table.insert(build_flags, "--local") end
-      if flags["nodeps"] then table.insert(build_flags, "--nodeps") end
-      if flags["trees"] then table.insert(build_flags, "--trees="..flags["trees"]) end
-      return build.run(name, unpack(build_flags))
+      return build.run(name, deps.get_deps_mode(flags), flags["local"] and "--local")
    elseif name:match("%.rock$") then
-      return install_binary_rock(name, deps.flags_to_deps_mode(flags))
+      return install_binary_rock(name, deps.get_deps_mode(flags))
    else
       local search = require("luarocks.search")
       local results, err = search.find_suitable_rock(search.make_query(name:lower(), version))

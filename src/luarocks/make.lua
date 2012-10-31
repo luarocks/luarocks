@@ -63,10 +63,10 @@ function run(...)
       if not rspec then
          return nil, err
       end
-      return pack.pack_binary_rock(rspec.name, rspec.version, build.build_rockspec, rockspec, false, true, deps.flags_to_deps_mode(flags))
+      return pack.pack_binary_rock(rspec.name, rspec.version, build.build_rockspec, rockspec, false, true, deps.get_deps_mode(flags))
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err end
-      return build.build_rockspec(rockspec, false, true, deps.flags_to_deps_mode(flags))
+      return build.build_rockspec(rockspec, false, true, deps.get_deps_mode(flags))
    end
 end

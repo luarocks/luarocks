@@ -326,10 +326,10 @@ function run(...)
    assert(type(version) == "string" or not version)
 
    if flags["pack-binary-rock"] then
-      return pack.pack_binary_rock(name, version, do_build, name, version, deps.flags_to_deps_mode(flags))
+      return pack.pack_binary_rock(name, version, do_build, name, version, deps.get_deps_mode(flags))
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err end
-      return do_build(name, version, deps.flags_to_deps_mode(flags))
+      return do_build(name, version, deps.get_deps_mode(flags))
    end
 end

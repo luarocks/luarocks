@@ -28,7 +28,7 @@ To override this check and force the removal, use --force.
 -- @param versions array of string: the versions to be deleted.
 -- @return array of string: an empty table if no packages depend on any
 -- of the given list, or an array of strings in "name/version" format.
-local function check_dependents(name, versions, use_trees)
+local function check_dependents(name, versions, deps_mode)
    local dependents = {}
    local blacklist = {}
    blacklist[name] = {}
@@ -44,7 +44,7 @@ local function check_dependents(name, versions, use_trees)
       for rock_version, _ in pairs(rock_versions) do
          local rockspec, err = fetch.load_rockspec(path.rockspec_file(rock_name, rock_version))
          if rockspec then
-            local _, missing = deps.match_deps(rockspec, blacklist, use_trees)
+            local _, missing = deps.match_deps(rockspec, blacklist, deps_mode)
             if missing[name] then
                table.insert(dependents, { name = rock_name, version = rock_version })
             end
@@ -78,16 +78,12 @@ end
 -- successful, nil and an error message otherwise.
 function run(...)
    local flags, name, version = util.parse_flags(...)
-
-   if flags["trees"] and type(flags["trees"]) ~= "string" then
-      return nil, "Invalid entry for --trees."
-   end
    
    if type(name) ~= "string" then
       return nil, "Argument missing, see help."
    end
    
-   local use_trees = flags["trees"] or cfg.use_trees
+   local deps_mode = flags["deps-mode"] or cfg.deps_mode
    
    local ok, err = fs.check_command_permissions(flags)
    if not ok then return nil, err end
@@ -106,7 +102,7 @@ function run(...)
       util.printout(name.." "..table.concat(util.keys(versions), ", ").."...")
       util.printout()
       
-      local dependents = check_dependents(name, versions, use_trees)
+      local dependents = check_dependents(name, versions, deps_mode)
       
       if #dependents == 0 or flags["force"] then
          if #dependents > 0 then
@@ -118,7 +114,7 @@ function run(...)
          end
          local ok, err = delete_versions(name, versions)
          if not ok then return nil, err end
-         ok, err = manif.make_manifest(cfg.rocks_dir, use_trees)
+         ok, err = manif.make_manifest(cfg.rocks_dir, deps_mode)
          if not ok then return nil, err end
       else
          if not second then

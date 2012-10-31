@@ -7,6 +7,7 @@ local cfg = require("luarocks.cfg")
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
+local deps = require("luarocks.deps")
 
 --- Display an error message and exit.
 -- @param message string: The error message.
@@ -50,6 +51,7 @@ function run_command(...)
    if flags["only-from"] then flags["only-server"] = flags["only-from"] end
    if flags["only-sources-from"] then flags["only-sources"] = flags["only-sources-from"] end
    if flags["to"] then flags["tree"] = flags["to"] end
+   if flags["nodeps"] then flags["deps-mode"] = "none" end
    
    cfg.flags = flags
 
@@ -82,6 +84,10 @@ function run_command(...)
    
    if cfg.local_by_default then
       flags["local"] = true
+   end
+
+   if flags["deps-mode"] and not deps.check_dep_trees_flag(flags["deps-mode"]) then
+      return nil, "Invalid entry for --deps-mode."
    end
    
    if flags["tree"] then

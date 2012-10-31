@@ -53,18 +53,18 @@ end
 
 --- Get all versions of a package listed in a manifest file.
 -- @param name string: a package name.
--- @param use_trees string: "one", to use only the currently
+-- @param deps_mode string: "one", to use only the currently
 -- configured tree; "order" to select trees based on order
 -- (use the current tree and all trees below it on the list)
 -- or "all", to use all trees.
 -- @return table: An array of strings listing installed
 -- versions of a package.
-function get_versions(name, use_trees)
+function get_versions(name, deps_mode)
    assert(type(name) == "string")
-   assert(type(use_trees) == "string")
+   assert(type(deps_mode) == "string")
    
    local manifest = {}
-   path.map_trees(use_trees, function(tree)
+   path.map_trees(deps_mode, function(tree)
       local loaded = load_local_manifest(path.rocks_dir(tree))
       if loaded then
          util.deep_merge(manifest, loaded)
