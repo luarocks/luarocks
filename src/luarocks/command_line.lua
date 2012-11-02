@@ -4,7 +4,6 @@ module("luarocks.command_line", package.seeall)
 
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
-local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
@@ -51,7 +50,10 @@ function run_command(...)
    if flags["only-from"] then flags["only-server"] = flags["only-from"] end
    if flags["only-sources-from"] then flags["only-sources"] = flags["only-sources-from"] end
    if flags["to"] then flags["tree"] = flags["to"] end
-   if flags["nodeps"] then flags["deps-mode"] = "none" end
+   if flags["nodeps"] then
+      flags["deps-mode"] = "none"
+      table.insert(args, "--deps-mode=none")
+   end
    
    cfg.flags = flags
 
@@ -86,14 +88,15 @@ function run_command(...)
       flags["local"] = true
    end
 
-   if flags["deps-mode"] and not deps.check_dep_trees_flag(flags["deps-mode"]) then
-      return nil, "Invalid entry for --deps-mode."
+   if flags["deps-mode"] and not deps.check_deps_mode_flag(flags["deps-mode"]) then
+      die("Invalid entry for --deps-mode.")
    end
    
    if flags["tree"] then
-      if flags["tree"] == true then
+      if flags["tree"] == true or flags["tree"] == "" then
          die("Argument error: use --tree=<path>")
       end
+      local fs = require("luarocks.fs")
       local root_dir = fs.absolute_name(flags["tree"])
       path.use_tree(root_dir)
    elseif flags["local"] then
@@ -142,6 +145,12 @@ function run_command(...)
    end
    
    if commands[command] then
+      -- TODO the interface of run should be modified, to receive the
+      -- flags table and the (possibly unpacked) nonflags arguments.
+      -- This would remove redundant parsing of arguments.
+      -- I'm not changing this now to avoid messing with the run()
+      -- interface, which I know some people use (even though
+      -- I never published it as a public API...)
       local xp, ok, err = xpcall(function() return commands[command].run(unpack(args)) end, function(err)
          die(debug.traceback("LuaRocks "..cfg.program_version
             .." bug (please report at luarocks-developers@lists.sourceforge.net).\n"
