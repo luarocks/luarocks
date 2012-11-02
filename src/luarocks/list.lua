@@ -25,7 +25,11 @@ function run(...)
    local results = {}
    local query = search.make_query(filter and filter:lower() or "", version)
    query.exact_name = false
-   for _, tree in ipairs(cfg.rocks_trees) do
+   local trees = cfg.rocks_trees
+   if flags["tree"] then
+      trees = { flags["tree"] }
+   end
+   for _, tree in ipairs(trees) do
       search.manifest_search(results, path.rocks_dir(tree), query)
    end
    util.title("Installed rocks:", flags["porcelain"])
