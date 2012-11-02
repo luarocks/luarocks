@@ -9,9 +9,11 @@ local util = require("luarocks.util")
 local path = require("luarocks.path")
 
 help_summary = "Lists currently installed rocks."
-
+help_arguments = "[--porcelain] <filter>"
 help = [[
-<argument> is a substring of a rock name to filter by.
+<filter> is a substring of a rock name to filter by.
+
+--porcelain   Produce machine-friendly output.
 ]]
 
 --- Driver function for "list" command.
