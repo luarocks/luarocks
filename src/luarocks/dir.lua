@@ -26,10 +26,6 @@ function dir_name(pathname)
    return (pathname:gsub("/*$", ""):match("(.*/)[^/]*")) or ""
 end
 
-function strip_base_dir(pathname)
-   return pathname:gsub("^[^/]*/", "")
-end
-
 --- Describe a path in a cross-platform way.
 -- Use this function to avoid platform-specific directory
 -- separators in other modules. Removes trailing slashes from
