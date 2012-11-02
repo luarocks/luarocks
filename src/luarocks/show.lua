@@ -23,7 +23,7 @@ With these flags, return only the desired information:
 --deps      packages this package depends on
 --rockspec  the full path of the rockspec file
 --mversion  the package version
---tree      local tree where rock is installed
+--rock-tree local tree where rock is installed
 --rock-dir  data directory of the installed rock
 ]]
 
@@ -79,7 +79,11 @@ function run(...)
    local query = search.make_query(name, version)
    query.exact_name = true
    local tree_map = {}
-   for _, tree in ipairs(cfg.rocks_trees) do
+   local trees = cfg.rocks_trees
+   if flags["tree"] then
+      trees = { flags["tree"] }
+   end
+   for _, tree in ipairs(trees) do
       local rocks_dir = path.rocks_dir(tree)
       tree_map[rocks_dir] = tree
       search.manifest_search(results, rocks_dir, query)
@@ -111,7 +115,7 @@ function run(...)
    if not manifest then return nil,err end
    local minfo = manifest.repository[name][version][1]
 
-   if flags["tree"] then util.printout(repo)
+   if flags["rock-tree"] then util.printout(repo)
    elseif flags["rock-dir"] then util.printout(directory)
    elseif flags["home"] then util.printout(descript.homepage)
    elseif flags["modules"] then util.printout(keys_as_string(minfo.modules))
