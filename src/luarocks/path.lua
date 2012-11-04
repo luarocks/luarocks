@@ -7,6 +7,7 @@ module("luarocks.path", package.seeall)
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
+local deps = require("luarocks.deps")
 
 help_summary = "Return the currently configured package path."
 help_arguments = ""
@@ -305,6 +306,27 @@ function use_tree(tree)
    cfg.deploy_lib_dir = deploy_lib_dir(tree)
 end
 
+function map_trees(deps_mode, fn, ...)
+   local result = {}
+   if deps_mode == "one" then
+      table.insert(result, (fn(cfg.root_dir, ...)) or 0)
+   elseif deps_mode == "all" or deps_mode == "order" then
+      local use = false
+      if deps_mode == "all" then
+         use = true
+      end
+      for _, tree in ipairs(cfg.rocks_trees) do
+         if dir.normalize(tree) == dir.normalize(cfg.root_dir) then
+            use = true
+         end
+         if use then
+            table.insert(result, (fn(tree, ...)) or 0)
+         end
+      end
+   end
+   return result
+end
+
 --- Return the pathname of the file that would be loaded for a module, indexed.
 -- @param module_name string: module name (eg. "socket.core")
 -- @param name string: name of the package (eg. "luasocket")
@@ -352,10 +374,14 @@ end
 -- @return boolean This function always succeeds.
 function run(...)
    local flags = util.parse_flags(...)
+   local deps_mode = deps.get_deps_mode(flags)
+
    util.printout(cfg.export_lua_path:format(util.remove_path_dupes(package.path, ';')))
    util.printout(cfg.export_lua_cpath:format(util.remove_path_dupes(package.cpath, ';')))
    if flags["bin"] then
-      util.printout(cfg.export_path:format(util.remove_path_dupes(os.getenv("PATH"), cfg.export_path_separator), cfg.deploy_bin_dir))
+      local bin_dirs = map_trees(deps_mode, deploy_bin_dir)
+      table.insert(bin_dirs, 1, os.getenv("PATH"))
+      util.printout(cfg.export_path:format(util.remove_path_dupes(table.concat(bin_dirs, cfg.export_path_separator), cfg.export_path_separator)))
    end
    return true
 end

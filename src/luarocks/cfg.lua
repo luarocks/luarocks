@@ -165,6 +165,7 @@ local defaults = {
    use_extensions = false,
    accept_unknown_fields = false,
    fs_use_modules = true,
+   deps_mode = "one",
 
    lua_modules_path = "/share/lua/"..lua_version,
    lib_modules_path = "/lib/lua/"..lua_version,
@@ -278,7 +279,7 @@ if detected.windows then
       lib = { "?.dll", "lib?.dll" },
       include = { "?.h" }
    }
-   defaults.export_path = "SET PATH=%s;%s"
+   defaults.export_path = "SET PATH=%s"
    defaults.export_path_separator = ";"
    defaults.export_lua_path = "SET LUA_PATH=%s"
    defaults.export_lua_cpath = "SET LUA_CPATH=%s"
@@ -323,7 +324,7 @@ if detected.unix then
       lib = { "lib?.so", "lib?.so.*" },
       include = { "?.h" }
    }
-   defaults.export_path = "export PATH='%s:%s'"
+   defaults.export_path = "export PATH='%s'"
    defaults.export_path_separator = ":"
    defaults.export_lua_path = "export LUA_PATH='%s'"
    defaults.export_lua_cpath = "export LUA_CPATH='%s'"

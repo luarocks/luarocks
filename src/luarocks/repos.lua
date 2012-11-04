@@ -14,7 +14,7 @@ local deps = require("luarocks.deps")
 -- @param name string: a package name.
 -- @return table or nil: An array of strings listing installed
 -- versions of a package, or nil if none is available.
-function get_versions(name)
+local function get_installed_versions(name)
    assert(type(name) == "string")
    
    local dirs = fs.list_dir(path.versions_dir(name))
@@ -213,7 +213,7 @@ function deploy_files(name, version, wrap_bin_scripts)
                else
                   target = new_target
                end
-	    end
+            end
             fs.make_dir(dir.dir_name(target))
             ok, err = move_fn(source, target)
             fs.remove_dir_tree_if_empty(dir.dir_name(source))
@@ -296,7 +296,7 @@ function delete_version(name, version, quick)
    if err then return nil, err end
 
    fs.delete(path.install_dir(name, version))
-   if not get_versions(name) then
+   if not get_installed_versions(name) then
       fs.delete(dir.path(cfg.rocks_dir, name))
    end
    return true

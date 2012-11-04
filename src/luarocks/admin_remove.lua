@@ -61,7 +61,7 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    fs.change_dir(local_cache)
 
    util.printout("Updating manifest...")
-   manif.make_manifest(local_cache)
+   manif.make_manifest(local_cache, "one")
    util.printout("Updating index.html...")
    index.make_index(local_cache)
 

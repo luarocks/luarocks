@@ -23,10 +23,11 @@ or a filename of a locally available rock.
 
 --- Install a binary rock.
 -- @param rock_file string: local or remote filename of a rock.
--- @param no_deps boolean: true if dependency check needs to be skipped
+-- @param deps_mode: string: Which trees to check dependencies for:
+-- "none", "one", "order" or "all". 
 -- @return boolean or (nil, string, [string]): True if succeeded or 
 -- nil and an error message and an optional error code.
-function install_binary_rock(rock_file, no_deps)
+function install_binary_rock(rock_file, deps_mode)
    assert(type(rock_file) == "string")
 
    local name, version, arch = path.parse_name(rock_file)
@@ -54,7 +55,7 @@ function install_binary_rock(rock_file, no_deps)
       return nil, "Failed loading rockspec for installed package: "..err, errcode
    end
 
-   if no_deps then
+   if deps_mode == "none" then
       util.printerr("Warning: skipping dependency checks.")
    else
       ok, err, errcode = deps.check_external_deps(rockspec, "install")
@@ -67,8 +68,8 @@ function install_binary_rock(rock_file, no_deps)
       if err then return nil, err end
    end
 
-   if not no_deps then
-      ok, err, errcode = deps.fulfill_dependencies(rockspec)
+   if deps_mode ~= "none" then
+      ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
       if err then return nil, err, errcode end
    end
 
@@ -88,7 +89,7 @@ function install_binary_rock(rock_file, no_deps)
    ok, err = repos.run_hook(rockspec, "post_install")
    if err then return nil, err end
    
-   ok, err = manif.update_manifest(name, version)
+   ok, err = manif.update_manifest(name, version, nil, deps_mode)
    if err then return nil, err end
    
    local license = ""
@@ -126,9 +127,9 @@ function run(...)
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       util.printout("Using "..name.."... switching to 'build' mode")
       local build = require("luarocks.build")
-      return build.run(name, flags["local"] and "--local")
+      return build.run(name, deps.get_deps_mode(flags), flags["local"] and "--local")
    elseif name:match("%.rock$") then
-      return install_binary_rock(name, flags["nodeps"])
+      return install_binary_rock(name, deps.get_deps_mode(flags))
    else
       local search = require("luarocks.search")
       local results, err = search.find_suitable_rock(search.make_query(name:lower(), version))

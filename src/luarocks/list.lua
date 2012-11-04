@@ -9,9 +9,11 @@ local util = require("luarocks.util")
 local path = require("luarocks.path")
 
 help_summary = "Lists currently installed rocks."
-
+help_arguments = "[--porcelain] <filter>"
 help = [[
-<argument> is a substring of a rock name to filter by.
+<filter> is a substring of a rock name to filter by.
+
+--porcelain   Produce machine-friendly output.
 ]]
 
 --- Driver function for "list" command.
@@ -23,7 +25,11 @@ function run(...)
    local results = {}
    local query = search.make_query(filter and filter:lower() or "", version)
    query.exact_name = false
-   for _, tree in ipairs(cfg.rocks_trees) do
+   local trees = cfg.rocks_trees
+   if flags["tree"] then
+      trees = { flags["tree"] }
+   end
+   for _, tree in ipairs(trees) do
       search.manifest_search(results, path.rocks_dir(tree), query)
    end
    util.title("Installed rocks:", flags["porcelain"])
