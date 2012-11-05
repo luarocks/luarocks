@@ -95,9 +95,9 @@ luadoc:
 	mkdir -p doc/luadoc
 	cd src && luadoc -d ../doc/luadoc --nofiles luarocks/*.lua
 
-check_makefile:
+check_makefile: clean
 	echo $(BIN_FILES) | tr " " "\n" | sort > makefile_list.txt
-	( cd src/bin && ls -d * ) | grep -v "CVS" | sort > luarocks_dir.txt
+	( cd src/bin && ls -d * ) | grep -v "rclauncher.c" | sort > luarocks_dir.txt
 	echo $(LUAROCKS_FILES) | tr " " "\n" | sort >> makefile_list.txt
 	( cd src/luarocks && find * -name "*.lua" ) | sort >> luarocks_dir.txt
 	diff makefile_list.txt luarocks_dir.txt
