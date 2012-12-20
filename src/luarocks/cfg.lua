@@ -350,6 +350,7 @@ if detected.bsd then
 end
 
 if detected.macosx then
+   defaults.variables.MAKE = "make"
    defaults.external_lib_extension = "dylib"
    defaults.arch = "macosx-"..proc
    defaults.platforms = {"unix", "bsd", "macosx"}
