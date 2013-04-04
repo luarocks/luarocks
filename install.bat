@@ -42,9 +42,16 @@ IF [%1]==[/?] (
    ECHO                (/LUA, /INC, /LIB, /BIN will be ignored when used 
    ECHO                with /L^)
    ECHO /LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
+   ECHO                This is the base directory, the installer will look
+   ECHO                for subdirectories bin, lib, include. Alternatively
+   ECHO                these can be specified explicitly using the /INC,
+   ECHO                /LIB, and /BIN options.
    ECHO /INC [dir]     Location of Lua includes - e.g. c:\lua\5.1\include
+   ECHO                If provided overrides sub directory found using /LUA.
    ECHO /LIB [dir]     Location of Lua libraries -e.g. c:\lua\5.1\lib
+   ECHO                If provided overrides sub directory found using /LUA.
    ECHO /BIN [dir]     Location of Lua executables - e.g. c:\lua\5.1\bin
+   ECHO                If provided overrides sub directory found using /LUA.
    ECHO.
    ECHO /MW            Use mingw as build system instead of MSVC
    ECHO.
