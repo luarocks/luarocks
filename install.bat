@@ -362,15 +362,20 @@ IF NOT EXIST "%ROCKS_TREE%" (
 )
 IF NOT EXIST "%APPDATA%/luarocks" (
    %MKDIR% "%APPDATA%/luarocks"
-   ECHO Created rocktree: "%APPDATA%/luarocks"
+   ECHO Created rocktree: "%APPDATA%\luarocks"
 ) ELSE (
-   ECHO Rocktree exists: "%APPDATA%/luarocks"
+   ECHO Rocktree exists: "%APPDATA%\luarocks"
 )
 
 REM ***********************************************************
 REM Exit handlers 
 REM ***********************************************************
 
+ECHO.
+ECHO You may want to add the following elements to your paths;
+ECHO PATH     :   %LUA_BINDIR%;%FULL_PREFIX%
+ECHO LUA_PATH :   %ROCKS_TREE%\share\lua\5.1\?.lua;%ROCKS_TREE%\share\lua\5.1\?\init.lua
+ECHO LUA_CPATH:   %LUA_LIBDIR%\lua\5.1\?.dll
 ECHO.
 ECHO LuaRocks is installed!
 :QUIT
