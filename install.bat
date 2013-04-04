@@ -29,7 +29,8 @@ IF [%1]==[/?] (
    ECHO Installs LuaRocks.
    ECHO.
    ECHO /P [dir]       Where to install.
-   ECHO                Default is %PREFIX%
+   ECHO                Default is %PREFIX% (version; %VERSION%, will be
+   ECHO                appended to this path^)
    ECHO /CONFIG [dir]  Location where the config file should be installed.
    ECHO                Default is same place of installation
    ECHO /TREE [dir]    Root of the local tree of installed rocks.
@@ -38,6 +39,8 @@ IF [%1]==[/?] (
    ECHO                Default is TREE/bin.
    ECHO.
    ECHO /L             Install LuaRocks' own copy of Lua even if detected.
+   ECHO                (/LUA, /INC, /LIB, /BIN will be ignored when used 
+   ECHO                with /L^)
    ECHO /LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
    ECHO /INC [dir]     Location of Lua includes - e.g. c:\lua\5.1\include
    ECHO /LIB [dir]     Location of Lua libraries -e.g. c:\lua\5.1\lib
@@ -157,7 +160,7 @@ FOR %%L IN (%LUA_PREFIX% c:\lua\5.1.2 c:\lua c:\kepler\1.1) DO (
             SET LUA_INTERPRETER=luajit.exe
             GOTO INTERPRETER_IS_SET
          )		 
-         ECHO Lua executable lua.exe or lua5.1.exe not found in %LUA_BINDIR%
+         ECHO Lua executable lua.exe, luajit.exe or lua5.1.exe not found in %LUA_BINDIR%
          GOTO ERROR
       )
       SET CURR=%%L
