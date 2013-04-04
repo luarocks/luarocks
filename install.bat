@@ -259,22 +259,24 @@ ECHO Installing LuaRocks in %FULL_PREFIX%...
 IF NOT EXIST "%BINDIR%" %MKDIR% "%BINDIR%"
 IF ERRORLEVEL 1 GOTO ERROR
 IF [%INSTALL_LUA%]==[ON] (
+   REM Copy the included Lua interpreter binaries
    IF NOT EXIST "%LUA_BINDIR%" %MKDIR% "%LUA_BINDIR%"
    IF NOT EXIST "%LUA_INCDIR%" %MKDIR% "%LUA_INCDIR%"
-REM   IF [%USE_MINGW%]==[ON] (
-REM     COPY lua5.1\mingw32-bin\*.* "%LUA_BINDIR%" >NUL
-REM   ) ELSE (
-     COPY lua5.1\bin\*.* "%LUA_BINDIR%" >NUL
-REM   )
+   COPY lua5.1\bin\*.* "%LUA_BINDIR%" >NUL
    COPY lua5.1\include\*.* "%LUA_INCDIR%" >NUL
+   ECHO Installed the LuaRocks bundled Lua interpreter in %LUA_BINDIR%
 )
+REM Copy the LuaRocks binaries
 COPY bin\*.* "%BINDIR%" >NUL
 IF ERRORLEVEL 1 GOTO ERROR
+REM Create start scripts
 COPY src\bin\*.* "%BINDIR%" >NUL
 IF ERRORLEVEL 1 GOTO ERROR
 FOR %%C IN (luarocks luarocks-admin) DO (
+   REM rename unix-lua scripts to .lua files
    RENAME "%BINDIR%\%%C" %%C.lua
    IF ERRORLEVEL 1 GOTO ERROR
+   REM create a bootstrap batch file for the lua file, to start them
    DEL /F /Q "%BINDIR%\%%C.bat" 2>NUL
    ECHO @ECHO OFF>> "%BINDIR%\%%C.bat"
    ECHO SETLOCAL>> "%BINDIR%\%%C.bat"
@@ -282,12 +284,17 @@ FOR %%C IN (luarocks luarocks-admin) DO (
    ECHO SET PATH=%BINDIR%\;%%PATH%%>> "%BINDIR%\%%C.bat"
    ECHO "%LUA_INTERPRETER%" "%BINDIR%\%%C.lua" %%*>> "%BINDIR%\%%C.bat"
    ECHO ENDLOCAL>> "%BINDIR%\%%C.bat"
+   ECHO Created LuaRocks command: %BINDIR%\%%C.bat
 )
+REM Copy the LuaRocks lua source files
 IF NOT EXIST "%LUADIR%\luarocks" %MKDIR% "%LUADIR%\luarocks"
 IF ERRORLEVEL 1 GOTO ERROR
 XCOPY /S src\luarocks\*.* "%LUADIR%\luarocks" >NUL
 IF ERRORLEVEL 1 GOTO ERROR
 
+ECHO.
+ECHO Configuring LuaRocks...
+REM Create a site-config file
 IF EXIST "%LUADIR%\luarocks\site_config.lua" RENAME "%LUADIR%\luarocks\site_config.lua" site_config.lua.bak
 ECHO module("luarocks.site_config")>> "%LUADIR%\luarocks\site_config.lua" 
 ECHO LUA_INCDIR=[[%LUA_INCDIR%]]>> "%LUADIR%\luarocks\site_config.lua" 
@@ -309,7 +316,9 @@ IF NOT [%FORCE_CONFIG%]==[] ECHO local LUAROCKS_FORCE_CONFIG=true>> "%LUADIR%\lu
 IF EXIST "%LUADIR%\luarocks\site_config.lua.bak" TYPE "%LUADIR%\luarocks\site_config.lua.bak">> "%LUADIR%\luarocks\site_config.lua" 
 
 IF EXIST "%LUADIR%\luarocks\site_config.lua.bak" DEL /F /Q "%LUADIR%\luarocks\site_config.lua.bak"
+ECHO Created LuaRocks site-config file: %LUADIR%\luarocks\site_config.lua
 
+REM create config file
 SET CONFIG_FILE=%SYSCONFDIR%\config.lua
 
 IF NOT EXIST "%SYSCONFDIR%" %MKDIR% "%SYSCONFDIR%"
@@ -322,38 +331,54 @@ IF NOT EXIST "%CONFIG_FILE%" (
    ECHO    [[%ROCKS_TREE%]]>> "%CONFIG_FILE%"
    ECHO }>> "%CONFIG_FILE%"
    IF NOT [%SCRIPTS_DIR%]==[] ECHO scripts_dir=[[%SCRIPTS_DIR%]]>> "%CONFIG_FILE%"
+   ECHO Created LuaRocks config file: %CONFIG_FILE%
+) ELSE (
+   ECHO LuaRocks config file already exists: %CONFIG_FILE%
 )
 
 IF [%SCRIPTS_DIR%]==[] (
    %MKDIR% "%ROCKS_TREE%"\bin >NUL
-REM   IF [%USE_MINGW%]==[ON] (
-REM     COPY lua5.1\mingw32-bin\*.dll "%ROCKS_TREE%"\bin >NUL
-REM   ) ELSE (
+   IF [%USE_MINGW%]==[] (
+     REM definitly not for MinGW because of conflicting runtimes
+     REM but is it ok to do it for others???
      COPY lua5.1\bin\*.dll "%ROCKS_TREE%"\bin >NUL
-REM   )
-)
-IF NOT [%SCRIPTS_DIR%]==[] (
+   )
+) ELSE (
    %MKDIR% "%SCRIPTS_DIR%" >NUL
-REM   IF [%USE_MINGW%]==[ON] (
-REM     COPY lua5.1\mingw32-bin\*.dll "%SCRIPTS_DIR%" >NUL
-REM   ) ELSE (
+   IF [%USE_MINGW%]==[] (
+     REM definitly not for MinGW because of conflicting runtimes
+     REM but is it ok to do it for others???
      COPY lua5.1\bin\*.dll "%SCRIPTS_DIR%" >NUL
-REM   )
+   )
 )
 
-IF NOT EXIST "%ROCKS_TREE%" %MKDIR% "%ROCKS_TREE%"
-IF NOT EXIST "%APPDATA%/luarocks" %MKDIR% "%APPDATA%/luarocks"
+ECHO.
+ECHO Creating rocktrees...
+IF NOT EXIST "%ROCKS_TREE%" (
+   %MKDIR% "%ROCKS_TREE%"
+   ECHO Created rocktree: "%ROCKS_TREE%"
+) ELSE (
+   ECHO Rocktree exists: "%ROCKS_TREE%"
+)
+IF NOT EXIST "%APPDATA%/luarocks" (
+   %MKDIR% "%APPDATA%/luarocks"
+   ECHO Created rocktree: "%APPDATA%/luarocks"
+) ELSE (
+   ECHO Rocktree exists: "%APPDATA%/luarocks"
+)
 
 REM ***********************************************************
 REM Exit handlers 
 REM ***********************************************************
 
+ECHO.
 ECHO LuaRocks is installed!
 :QUIT
 ENDLOCAL
 EXIT /B 0
 
 :ERROR
+ECHO.
 ECHO Failed installing LuaRocks.
 ENDLOCAL
 EXIT /B 1
