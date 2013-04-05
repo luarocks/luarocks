@@ -269,6 +269,11 @@ IF [%INSTALL_LUA%]==[ON] (
 REM Copy the LuaRocks binaries
 COPY bin\*.* "%BINDIR%" >NUL
 IF ERRORLEVEL 1 GOTO ERROR
+REM Copy the LuaRocks lua source files
+IF NOT EXIST "%LUADIR%\luarocks" %MKDIR% "%LUADIR%\luarocks"
+IF ERRORLEVEL 1 GOTO ERROR
+XCOPY /S src\luarocks\*.* "%LUADIR%\luarocks" >NUL
+IF ERRORLEVEL 1 GOTO ERROR
 REM Create start scripts
 COPY src\bin\*.* "%BINDIR%" >NUL
 IF ERRORLEVEL 1 GOTO ERROR
@@ -286,11 +291,23 @@ FOR %%C IN (luarocks luarocks-admin) DO (
    ECHO ENDLOCAL>> "%BINDIR%\%%C.bat"
    ECHO Created LuaRocks command: %BINDIR%\%%C.bat
 )
-REM Copy the LuaRocks lua source files
-IF NOT EXIST "%LUADIR%\luarocks" %MKDIR% "%LUADIR%\luarocks"
-IF ERRORLEVEL 1 GOTO ERROR
-XCOPY /S src\luarocks\*.* "%LUADIR%\luarocks" >NUL
-IF ERRORLEVEL 1 GOTO ERROR
+REM configure 'scripts' directory
+IF [%SCRIPTS_DIR%]==[] (
+   %MKDIR% "%ROCKS_TREE%"\bin >NUL
+   IF [%USE_MINGW%]==[] (
+     REM definitly not for MinGW because of conflicting runtimes
+     REM but is it ok to do it for others???
+     COPY lua5.1\bin\*.dll "%ROCKS_TREE%"\bin >NUL
+   )
+) ELSE (
+   %MKDIR% "%SCRIPTS_DIR%" >NUL
+   IF [%USE_MINGW%]==[] (
+     REM definitly not for MinGW because of conflicting runtimes
+     REM but is it ok to do it for others???
+     COPY lua5.1\bin\*.dll "%SCRIPTS_DIR%" >NUL
+   )
+)
+
 
 ECHO.
 ECHO Configuring LuaRocks...
@@ -334,22 +351,6 @@ IF NOT EXIST "%CONFIG_FILE%" (
    ECHO Created LuaRocks config file: %CONFIG_FILE%
 ) ELSE (
    ECHO LuaRocks config file already exists: %CONFIG_FILE%
-)
-
-IF [%SCRIPTS_DIR%]==[] (
-   %MKDIR% "%ROCKS_TREE%"\bin >NUL
-   IF [%USE_MINGW%]==[] (
-     REM definitly not for MinGW because of conflicting runtimes
-     REM but is it ok to do it for others???
-     COPY lua5.1\bin\*.dll "%ROCKS_TREE%"\bin >NUL
-   )
-) ELSE (
-   %MKDIR% "%SCRIPTS_DIR%" >NUL
-   IF [%USE_MINGW%]==[] (
-     REM definitly not for MinGW because of conflicting runtimes
-     REM but is it ok to do it for others???
-     COPY lua5.1\bin\*.dll "%SCRIPTS_DIR%" >NUL
-   )
 )
 
 ECHO.
