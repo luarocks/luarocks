@@ -87,6 +87,13 @@ function run(...)
    
    local ok, err = fs.check_command_permissions(flags)
    if not ok then return nil, err end
+   
+   local rock_type = name:match("%.(rock)$") or name:match("%.(rockspec)$")
+   local filename = name
+   if rock_type then
+      name, version = path.parse_name(filename)
+      if not name then return nil, "Invalid "..rock_type.." filename: "..filename end
+   end
 
    local results = {}
    search.manifest_search(results, cfg.rocks_dir, search.make_query(name, version))
