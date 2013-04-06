@@ -115,7 +115,7 @@ function run(...)
    if not manifest then return nil,err end
    local minfo = manifest.repository[name][version][1]
 
-   if flags["rock-tree"] then util.printout(repo)
+   if flags["rock-tree"] then util.printout(path.rocks_tree_to_string(repo))
    elseif flags["rock-dir"] then util.printout(directory)
    elseif flags["home"] then util.printout(descript.homepage)
    elseif flags["modules"] then util.printout(keys_as_string(minfo.modules))
@@ -136,7 +136,7 @@ function run(...)
       if descript.homepage then
          util.printout("Homepage: ", descript.homepage)
       end
-      util.printout("Installed in: ", repo)
+      util.printout("Installed in: ", path.rocks_tree_to_string(repo))
       if next(minfo.modules) then
          util.printout()
          util.printout("Modules:")
