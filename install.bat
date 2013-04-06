@@ -401,7 +401,7 @@ IF NOT EXIST "%CONFIG_FILE%" (
    ) ELSE (
    ECHO    MSVCRT = 'msvcr80',>> "%CONFIG_FILE%"
    )
-   ECHO    LUALIB = '%LUA_LIB_NAME%'>> "%CONFIG_FILE%"
+   ECHO    LUALIB = '%LUA_LIBNAME%'>> "%CONFIG_FILE%"
    ECHO }>> "%CONFIG_FILE%"
    ECHO Created LuaRocks config file: %CONFIG_FILE%
 ) ELSE (
