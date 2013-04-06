@@ -2,7 +2,7 @@
 
 REM Boy, it feels like 1994 all over again.
 
-SETLOCAL
+SETLOCAL ENABLEDELAYEDEXPANSION 
 
 SET PREFIX=C:\LuaRocks
 SET VERSION=2.0
@@ -16,12 +16,16 @@ SET LUA_PREFIX=
 SET LUA_BINDIR=
 SET LUA_INCDIR=
 SET LUA_LIBDIR=
+SET LUA_LIBNAME=
 SET FORCE_CONFIG=
 SET MKDIR=.\bin\mkdir -p
+SET LUA_LIB_NAMES=lua5.1.lib lua51.dll liblua.dll.a
 
 REM ***********************************************************
 REM Option parser
 REM ***********************************************************
+ECHO LuaRocks %VERSION%.x installer.
+ECHO.
 
 :PARSE_LOOP
 IF [%1]==[] GOTO DONE_PARSING
@@ -29,7 +33,7 @@ IF [%1]==[/?] (
    ECHO Installs LuaRocks.
    ECHO.
    ECHO /P [dir]       Where to install.
-   ECHO                Default is %PREFIX% (version; %VERSION%, will be
+   ECHO                Default is %PREFIX% ^(version; %VERSION%, will be
    ECHO                appended to this path^)
    ECHO /CONFIG [dir]  Location where the config file should be installed.
    ECHO                Default is same place of installation
@@ -39,8 +43,7 @@ IF [%1]==[/?] (
    ECHO                Default is TREE/bin.
    ECHO.
    ECHO /L             Install LuaRocks' own copy of Lua even if detected.
-   ECHO                (/LUA, /INC, /LIB, /BIN will be ignored when used 
-   ECHO                with /L^)
+   ECHO                ^(/LUA, /INC, /LIB, /BIN cannot be used with /L^)
    ECHO /LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
    ECHO                This is the base directory, the installer will look
    ECHO                for subdirectories bin, lib, include. Alternatively
@@ -138,6 +141,14 @@ ECHO Unrecognized option: %1
 GOTO ERROR
 :DONE_PARSING
 
+REM check for combination flags
+IF [%INSTALL_LUA%]==[ON] (
+   IF NOT [%LUA_INCDIR%%LUA_BINDIR%%LUA_LIBDIR%%LUA_PREFIX%]==[] (
+      ECHO Cannot combine option /L with any of /LUA /BIN /LIB /INC
+      GOTO ERROR
+   )
+)
+
 SET FULL_PREFIX=%PREFIX%\%VERSION%
 
 SET BINDIR=%FULL_PREFIX%
@@ -151,20 +162,25 @@ REM ***********************************************************
 
 IF [%INSTALL_LUA%]==[ON] GOTO USE_OWN_LUA
 
+ECHO Looking for Lua interpreter
 FOR %%L IN (%LUA_PREFIX% c:\lua\5.1.2 c:\lua c:\kepler\1.1) DO (
+   ECHO    checking %%L
    SET CURR=%%L
    IF EXIST "%%L" (
       IF NOT [%LUA_BINDIR%]==[] (
          IF EXIST %LUA_BINDIR%\lua5.1.exe (
             SET LUA_INTERPRETER=lua5.1.exe
+            ECHO       Found .\!LUA_INTERPRETER!
             GOTO INTERPRETER_IS_SET
          )
          IF EXIST %LUA_BINDIR%\lua.exe (
             SET LUA_INTERPRETER=lua.exe
+            ECHO       Found .\!LUA_INTERPRETER!
             GOTO INTERPRETER_IS_SET
          )		 
          IF EXIST %LUA_BINDIR%\luajit.exe (
             SET LUA_INTERPRETER=luajit.exe
+            ECHO       Found .\!LUA_INTERPRETER!
             GOTO INTERPRETER_IS_SET
          )		 
          ECHO Lua executable lua.exe, luajit.exe or lua5.1.exe not found in %LUA_BINDIR%
@@ -175,51 +191,78 @@ FOR %%L IN (%LUA_PREFIX% c:\lua\5.1.2 c:\lua c:\kepler\1.1) DO (
          IF EXIST "%%L%%E\lua5.1.exe" (
             SET LUA_INTERPRETER=lua5.1.exe
             SET LUA_BINDIR=%%L%%E
+            ECHO       Found .\%%E\!LUA_INTERPRETER!
             GOTO INTERPRETER_IS_SET
          )
          IF EXIST "%%L%%E\lua.exe" (
             SET LUA_INTERPRETER=lua.exe
             SET LUA_BINDIR=%%L%%E
+            ECHO       Found .\%%E\!LUA_INTERPRETER!
             GOTO INTERPRETER_IS_SET
          )
          IF EXIST "%%L%%E\luajit.exe" (
             SET LUA_INTERPRETER=luajit.exe
             SET LUA_BINDIR=%%L%%E
+            ECHO       Found .\%%E\!LUA_INTERPRETER!
             GOTO INTERPRETER_IS_SET
          )
       )
+      ECHO      No Lua interpreter found
       GOTO TRY_NEXT_LUA_DIR
       :INTERPRETER_IS_SET
-      IF NOT "%LUA_LIBDIR%"=="" (
-         IF EXIST %LUA_LIBDIR%\lua5.1.lib GOTO LIBDIR_IS_SET
-         ECHO lua5.1.lib not found in %LUA_LIBDIR%
+      ECHO Interpreter found, now looking for link libraries...
+      IF NOT [%LUA_LIBDIR%]==[] (
+         FOR %%T IN (%LUA_LIB_NAMES%) DO (
+            ECHO    checking for %LUA_LIBDIR%\%%T
+            IF EXIST "%LUA_LIBDIR%\%%T" (
+               SET LUA_LIBNAME=%%T
+               ECHO       Found %%T
+               GOTO LIBDIR_IS_SET
+            )
+         )
+         ECHO link library ^(one of; %LUA_LIB_NAMES%^) not found in %LUA_LIBDIR%
          GOTO ERROR
       )
       FOR %%E IN (\ \lib\ \bin\) DO (
-         IF EXIST "%CURR%%%E\lua5.1.lib" (
-            SET LUA_LIBDIR=%CURR%%%E
-            GOTO LIBDIR_IS_SET
+         FOR %%S IN (%LUA_LIB_NAMES%) DO (
+            ECHO    checking for %CURR%%%E\%%S
+            IF EXIST "%CURR%%%E\%%S" (
+               SET LUA_LIBDIR=%CURR%%%E
+               SET LUA_LIBNAME=%%S
+               ECHO       Found %%S
+               GOTO LIBDIR_IS_SET
+            )
          )
       )
       GOTO TRY_NEXT_LUA_DIR
       :LIBDIR_IS_SET
+      ECHO Link library found, now looking for headers...
       IF NOT [%LUA_INCDIR%]==[] (
-         IF EXIST %LUA_INCDIR%\lua.h GOTO INCDIR_IS_SET
+         ECHO    checking for %LUA_INCDIR%\lua.h
+         IF EXIST %LUA_INCDIR%\lua.h (
+            ECHO       Found lua.h
+            GOTO INCDIR_IS_SET
+         )
          ECHO lua.h not found in %LUA_INCDIR%
          GOTO ERROR
       )
       FOR %%E IN (\ \include\) DO (
+         ECHO    checking for %CURR%%%E\lua.h
          IF EXIST "%CURR%%%E\lua.h" (
             SET LUA_INCDIR=%CURR%%%E
+            ECHO       Found lua.h
             GOTO INCDIR_IS_SET
          )
       )
       GOTO TRY_NEXT_LUA_DIR
       :INCDIR_IS_SET
-	%LUA_BINDIR%\%LUA_INTERPRETER% -v 2>NUL
+      ECHO Headers found, now testing interpreter...
+      %LUA_BINDIR%\%LUA_INTERPRETER% -v 2>NUL
       IF NOT ERRORLEVEL 1 (
+         ECHO   Ok
          GOTO LUA_IS_SET
       )
+      ECHO   Interpreter returned an error, not ok
    )
 :TRY_NEXT_LUA_DIR
    REM wtf
@@ -232,13 +275,16 @@ SET LUA_INTERPRETER=lua5.1
 SET LUA_BINDIR=%BINDIR%
 SET LUA_LIBDIR=%LIBDIR%
 SET LUA_INCDIR=%INCDIR%
+SET LUA_LIBNAME=lua5.1.lib
 :LUA_IS_SET
 ECHO.
 ECHO Will configure LuaRocks with the following paths:
-ECHO Lua interpreter: %LUA_INTERPRETER%
-ECHO Lua binaries:    %LUA_BINDIR%
-ECHO Lua libraries:   %LUA_LIBDIR%
-ECHO Lua includes:    %LUA_INCDIR%
+ECHO LuaRocks       : %FULL_PREFIX%
+ECHO Lua interpreter: %LUA_BINDIR%\%LUA_INTERPRETER%
+ECHO Lua binaries   : %LUA_BINDIR%
+ECHO Lua libraries  : %LUA_LIBDIR%
+ECHO Lua includes   : %LUA_INCDIR%
+ECHO Binaries will be linked against: %LUA_LIBNAME%
 ECHO.
 
 REM ***********************************************************
@@ -248,6 +294,7 @@ REM ***********************************************************
 IF [%FORCE%]==[ON] (
    ECHO Removing %FULL_PREFIX%...
    RD /S /Q "%FULL_PREFIX%"
+   ECHO.
 )
 
 IF NOT EXIST "%FULL_PREFIX%" GOTO NOT_EXIST_PREFIX
@@ -348,6 +395,14 @@ IF NOT EXIST "%CONFIG_FILE%" (
    ECHO    [[%ROCKS_TREE%]]>> "%CONFIG_FILE%"
    ECHO }>> "%CONFIG_FILE%"
    IF NOT [%SCRIPTS_DIR%]==[] ECHO scripts_dir=[[%SCRIPTS_DIR%]]>> "%CONFIG_FILE%"
+   ECHO variables = {>> "%CONFIG_FILE%"
+   IF [%USE_MINGW%]==[ON] (
+   ECHO    MSVCRT = 'm',>> "%CONFIG_FILE%"
+   ) ELSE (
+   ECHO    MSVCRT = 'msvcr80',>> "%CONFIG_FILE%"
+   )
+   ECHO    LUALIB = '%LUA_LIB_NAME%'>> "%CONFIG_FILE%"
+   ECHO }>> "%CONFIG_FILE%"
    ECHO Created LuaRocks config file: %CONFIG_FILE%
 ) ELSE (
    ECHO LuaRocks config file already exists: %CONFIG_FILE%
@@ -373,18 +428,19 @@ REM Exit handlers
 REM ***********************************************************
 
 ECHO.
+ECHO    *** LuaRocks is installed! ***
+ECHO.
 ECHO You may want to add the following elements to your paths;
 ECHO PATH     :   %LUA_BINDIR%;%FULL_PREFIX%
 ECHO LUA_PATH :   %ROCKS_TREE%\share\lua\5.1\?.lua;%ROCKS_TREE%\share\lua\5.1\?\init.lua
 ECHO LUA_CPATH:   %LUA_LIBDIR%\lua\5.1\?.dll
 ECHO.
-ECHO LuaRocks is installed!
 :QUIT
 ENDLOCAL
 EXIT /B 0
 
 :ERROR
 ECHO.
-ECHO Failed installing LuaRocks.
+ECHO Failed installing LuaRocks. Run with /? for help.
 ENDLOCAL
 EXIT /B 1
