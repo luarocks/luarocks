@@ -240,8 +240,8 @@ function run(rockspec)
    end
    if ok then
       if fs.is_dir("lua") then
-         ok = fs.copy_contents("lua", luadir)
-         if not ok then err = "Failed copying contents of 'lua' directory." end
+         ok, err = fs.copy_contents("lua", luadir)
+         if not ok then err = "Failed copying contents of 'lua' directory: "..err end
       end
    end
    if ok then
