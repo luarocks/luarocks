@@ -25,6 +25,7 @@ Windows Registry Editor Version 5.00
 @="<LUAROCKSPATH>lua.ico"
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell]
+@="Edit"
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\Fetch]
 @="Fetch and install"
@@ -50,4 +51,9 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\UninstallAll\Command]
 @="\"<LUAROCKSPATH>luarocksw.bat\" removeall \"%1\""
 
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\Edit]
+@="Edit"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\Edit\command]
+@="notepad.exe \"%1\""
 
