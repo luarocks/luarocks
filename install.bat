@@ -21,6 +21,8 @@ SET FORCE_CONFIG=
 SET USE_MINGW=
 SET MKDIR=.\bin\mkdir -p
 SET LUA_LIB_NAMES=lua5.1.lib lua51.dll liblua.dll.a
+SET REGISTRY=OFF
+SET P_SET=FALSE
 
 REM ***********************************************************
 REM Option parser
@@ -33,9 +35,9 @@ IF [%1]==[] GOTO DONE_PARSING
 IF [%1]==[/?] (
    ECHO Installs LuaRocks.
    ECHO.
-   ECHO /P [dir]       Where to install.
-   ECHO                Default is %PREFIX% ^(version; %VERSION%, will be
-   ECHO                appended to this path^)
+   ECHO /P [dir]       ^(REQUIRED^) Where to install. 
+   ECHO                Note that version; %VERSION%, will be
+   ECHO                appended to this path.
    ECHO /CONFIG [dir]  Location where the config file should be installed.
    ECHO                Default is same place of installation
    ECHO /TREE [dir]    Root of the local tree of installed rocks.
@@ -66,12 +68,16 @@ IF [%1]==[/?] (
    ECHO.
    ECHO /F             Remove installation directory if it already exists.
    ECHO.
+   ECHO /R             Load registry information to register '.rockspec'
+   ECHO                extension with LuaRocks commands ^(right-click^).
+   ECHO.
    GOTO QUIT
 )
 IF /I [%1]==[/P] (
    SET PREFIX=%~2
    SET SYSCONFDIR=%~2
    SET ROCKS_TREE=%~2
+   SET P_SET=TRUE
    SHIFT /1
    SHIFT /1
    GOTO PARSE_LOOP
@@ -138,11 +144,20 @@ IF /I [%1]==[/F] (
    SHIFT /1
    GOTO PARSE_LOOP
 )
+IF /I [%1]==[/R] (
+   SET REGISTRY=ON
+   SHIFT /1
+   GOTO PARSE_LOOP
+)
 ECHO Unrecognized option: %1
 GOTO ERROR
 :DONE_PARSING
 
-REM check for combination flags
+REM check for combination/required flags
+IF NOT [%P_SET%]==[TRUE] (
+   Echo Missing required parameter /P
+   GOTO ERROR
+)
 IF [%INSTALL_LUA%]==[ON] (
    IF NOT [%LUA_INCDIR%%LUA_BINDIR%%LUA_LIBDIR%%LUA_PREFIX%]==[] (
       ECHO Cannot combine option /L with any of /LUA /BIN /LIB /INC
@@ -422,6 +437,15 @@ IF NOT EXIST "%APPDATA%/luarocks" (
    ECHO Created rocktree: "%APPDATA%\luarocks"
 ) ELSE (
    ECHO Rocktree exists: "%APPDATA%\luarocks"
+)
+
+REM Load registry information
+IF [%REGISTRY%]==[ON] (
+   REM expand template with correct path information
+   ECHO.
+   ECHO Loading registry information for ".rockspec" files
+   lua5.1\bin\lua5.1.exe "%FULL_PREFIX%\create_reg_file.lua" "%FULL_PREFIX%\LuaRocks.reg.template"
+   %FULL_PREFIX%\LuaRocks.reg
 )
 
 REM ***********************************************************

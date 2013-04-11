@@ -1,0 +1,59 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\.rockspec]
+@="Lua.Rockspec"
+
+[HKEY_CLASSES_ROOT\.rockspec\Content Type]
+@="text/plain"
+
+[HKEY_CLASSES_ROOT\.rockspec\PerceivedType]
+@="text"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.rockspec]
+@="Lua.Rockspec"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.rockspec\Content Type]
+@="text/plain"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.rockspec\PerceivedType]
+@="text"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec]
+@="Lua Rockspec File"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\DefaultIcon]
+@="<LUAROCKSPATH>lua.ico"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell]
+@="Edit"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\Fetch]
+@="Fetch and install"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\Fetch\Command]
+@="\"<LUAROCKSPATH>luarocksw.bat\" install \"%1\"" 
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\Install]
+@="Install Lua module"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\Install\Command]
+@="\"<LUAROCKSPATH>luarocksw.bat\" make \"%1\""
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\Uninstall]
+@="Uninstall Lua module (this version)"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\Uninstall\Command]
+@="\"<LUAROCKSPATH>luarocksw.bat\" remove \"%1\""
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\UninstallAll]
+@="Uninstall Lua module (all versions)"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\UninstallAll\Command]
+@="\"<LUAROCKSPATH>luarocksw.bat\" removeall \"%1\""
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\Edit]
+@="Edit"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Lua.Rockspec\Shell\Edit\command]
+@="notepad.exe \"%1\""
+
