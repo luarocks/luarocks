@@ -42,7 +42,16 @@ static int runlua (lua_State *L, const char *lua_string, int argc, char *argv[])
 	err_func = lua_gettop (L);
 	err = luaL_loadstring (L, lua_string);
 	if(!err) {
+	  // fill global arg table
+	  lua_getglobal(L, "arg");
 	  int i;
+	  for(i = 1; i < argc; i++)
+	  {
+	    lua_pushstring(L, argv[i]);
+		lua_rawseti(L, -2, i);
+	  }
+	  lua_pop(L, 1);
+	  // fill parameters (in vararg '...')
 	  for(i = 1; i < argc; i++)
 	    lua_pushstring(L, argv[i]);
 	  return lua_pcall (L, argc - 1, LUA_MULTRET, err_func);
@@ -84,9 +93,15 @@ int main (int argc, char *argv[]) {
 	lua_State *L = lua_open();
 	(void)argc; /* avoid "unused parameter" warning */
 	luaL_openlibs(L);
+	lua_newtable(L);  // create arg table
+	lua_pushstring(L, argv[0]);  // add interpreter to arg table
+	lua_rawseti(L, -2, -1);  
 	dwLength = GetModulePath( NULL, name, MAX_PATH );
 	if(dwLength) { /* Optional bootstrap */
-	  strcat(name, ".lua");
+	  strcat(name, ".lua");  
+	  lua_pushstring(L, name);  // add lua script to arg table
+	  lua_rawseti(L, -2, 0);
+	  lua_setglobal(L,"arg");  // set global arg table
 	  if(!luaL_loadfile (L, name)) {
 	    if(lua_pcall (L, 0, LUA_MULTRET, 0)) {
 	      report (L);
@@ -95,6 +110,13 @@ int main (int argc, char *argv[]) {
 	    }
 	  }
 	}
+	else
+	{
+	  lua_pushstring(L, argv[0]);  // no lua script, so add interpreter again, now as lua script
+	  lua_rawseti(L, -2, 0);
+	  lua_setglobal(L,"arg");  // set global arg table
+	}
+
 	luaL_buffinit(L, &b);
 	for(i = 1; ; i++) {
 #ifdef UNICODE
