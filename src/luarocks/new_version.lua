@@ -100,11 +100,11 @@ function run(...)
       new_ver = old_ver
       new_rev = tonumber(old_rev) + 1
    end
-   
+   local new_rockver = new_ver:gsub("-", "")
    
    local out_rs = persist.load_into_table(filename)
    local out_name = out_rs.package:lower()
-   out_rs.version = new_ver.."-"..new_rev
+   out_rs.version = new_rockver.."-"..new_rev
    if url then
       out_rs.source.url = url
       check_url_and_update_md5(out_rs, out_name)
@@ -126,7 +126,7 @@ function run(...)
       out_rs.build.type = "builtin"
    end
    
-   local out_filename = out_name.."-"..new_ver.."-"..new_rev..".rockspec"
+   local out_filename = out_name.."-"..new_rockver.."-"..new_rev..".rockspec"
    
    persist.save_from_table(out_filename, out_rs, order)
    
