@@ -310,7 +310,7 @@ FOR %%L IN (%LUA_PREFIX% c:\lua\5.1.2 c:\lua c:\kepler\1.1) DO (
 ECHO Could not find Lua. Will install its own copy.
 ECHO See /? for options for specifying the location of Lua.
 :USE_OWN_LUA
-IF NOT [LUA_VERSION]==[5.1] (
+IF NOT [%LUA_VERSION%]==[5.1] (
    ECHO Cannot install own copy because no 5.2 version is bundled
    GOTO ERROR
 )
