@@ -20,7 +20,9 @@ SET LUA_LIBNAME=
 SET FORCE_CONFIG=
 SET USE_MINGW=
 SET MKDIR=.\bin\mkdir -p
-SET LUA_LIB_NAMES=lua5.1.lib lua51.dll liblua.dll.a
+SET LUA_VERSION=5.1
+SET LUA_SHORTV=
+SET LUA_LIB_NAMES=lua5.1.lib lua51.dll liblua.dll.a 
 SET REGISTRY=OFF
 SET P_SET=FALSE
 
@@ -45,7 +47,10 @@ IF [%1]==[/?] (
    ECHO /SCRIPTS [dir] Where to install scripts installed by rocks.
    ECHO                Default is TREE/bin.
    ECHO.
-   ECHO /L             Install LuaRocks' own copy of Lua even if detected.
+   ECHO /LV [version]  Lua version to use; either 5.1 or 5.2.
+   ECHO                Default is 5.1
+   ECHO /L             Install LuaRocks' own copy of Lua even if detected,
+   ECHO                this will always be a 5.1 installation.
    ECHO                ^(/LUA, /INC, /LIB, /BIN cannot be used with /L^)
    ECHO /LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
    ECHO                This is the base directory, the installer will look
@@ -96,6 +101,12 @@ IF /I [%1]==[/TREE] (
 )
 IF /I [%1]==[/SCRIPTS] (
    SET SCRIPTS_DIR=%~2
+   SHIFT /1
+   SHIFT /1
+   GOTO PARSE_LOOP
+)
+IF /I [%1]==[/LV] (
+   SET LUA_VERSION=%~2
    SHIFT /1
    SHIFT /1
    GOTO PARSE_LOOP
@@ -163,14 +174,27 @@ IF [%INSTALL_LUA%]==[ON] (
       ECHO Cannot combine option /L with any of /LUA /BIN /LIB /INC
       GOTO ERROR
    )
+   IF NOT [%LUA_VERSION%]==[5.1] (
+      ECHO Bundled Lua version is 5.1, cannot install 5.2
+      GOTO ERROR
+   )
+)
+IF NOT [%LUA_VERSION%]==[5.1] (
+   IF [%LUA_VERSION%]==[5.2] (
+      SET LUA_LIB_NAMES=%LUA_LIB_NAMES:5.1=5.2%
+      SET LUA_LIB_NAMES=%LUA_LIB_NAMES:51=52%
+   ) ELSE (
+      ECHO Bad argument: /LV must either be 5.1 or 5.2
+      GOTO ERROR
+   )
 )
 
 SET FULL_PREFIX=%PREFIX%\%VERSION%
-
 SET BINDIR=%FULL_PREFIX%
 SET LIBDIR=%FULL_PREFIX%
 SET LUADIR=%FULL_PREFIX%\lua
 SET INCDIR=%FULL_PREFIX%\include
+SET LUA_SHORTV=%LUA_VERSION:.=%
 
 REM ***********************************************************
 REM Detect Lua
@@ -184,8 +208,8 @@ FOR %%L IN (%LUA_PREFIX% c:\lua\5.1.2 c:\lua c:\kepler\1.1) DO (
    SET CURR=%%L
    IF EXIST "%%L" (
       IF NOT [%LUA_BINDIR%]==[] (
-         IF EXIST %LUA_BINDIR%\lua5.1.exe (
-            SET LUA_INTERPRETER=lua5.1.exe
+         IF EXIST %LUA_BINDIR%\lua%LUA_VERSION%.exe (
+            SET LUA_INTERPRETER=lua%LUA_VERSION%.exe
             ECHO       Found .\!LUA_INTERPRETER!
             GOTO INTERPRETER_IS_SET
          )
@@ -199,13 +223,13 @@ FOR %%L IN (%LUA_PREFIX% c:\lua\5.1.2 c:\lua c:\kepler\1.1) DO (
             ECHO       Found .\!LUA_INTERPRETER!
             GOTO INTERPRETER_IS_SET
          )		 
-         ECHO Lua executable lua.exe, luajit.exe or lua5.1.exe not found in %LUA_BINDIR%
+         ECHO Lua executable lua.exe, luajit.exe or lua%LUA_VERSION%.exe not found in %LUA_BINDIR%
          GOTO ERROR
       )
       SET CURR=%%L
       FOR %%E IN (\ \bin\) DO (
-         IF EXIST "%%L%%E\lua5.1.exe" (
-            SET LUA_INTERPRETER=lua5.1.exe
+         IF EXIST "%%L%%E\lua%LUA_VERSION%.exe" (
+            SET LUA_INTERPRETER=lua%LUA_VERSION%.exe
             SET LUA_BINDIR=%%L%%E
             ECHO       Found .\%%E\!LUA_INTERPRETER!
             GOTO INTERPRETER_IS_SET
@@ -286,6 +310,10 @@ FOR %%L IN (%LUA_PREFIX% c:\lua\5.1.2 c:\lua c:\kepler\1.1) DO (
 ECHO Could not find Lua. Will install its own copy.
 ECHO See /? for options for specifying the location of Lua.
 :USE_OWN_LUA
+IF NOT [LUA_VERSION]==[5.1] (
+   ECHO Cannot install own copy because no 5.2 version is bundled
+   GOTO ERROR
+)
 SET INSTALL_LUA=ON
 SET LUA_INTERPRETER=lua5.1
 SET LUA_BINDIR=%BINDIR%
@@ -457,8 +485,8 @@ ECHO    *** LuaRocks is installed! ***
 ECHO.
 ECHO You may want to add the following elements to your paths;
 ECHO PATH     :   %LUA_BINDIR%;%FULL_PREFIX%
-ECHO LUA_PATH :   %ROCKS_TREE%\share\lua\5.1\?.lua;%ROCKS_TREE%\share\lua\5.1\?\init.lua
-ECHO LUA_CPATH:   %LUA_LIBDIR%\lua\5.1\?.dll
+ECHO LUA_PATH :   %ROCKS_TREE%\share\lua\%LUA_VERSION%\?.lua;%ROCKS_TREE%\share\lua\%LUA_VERSION%\?\init.lua
+ECHO LUA_CPATH:   %LUA_LIBDIR%\lua\%LUA_VERSION%\?.dll
 ECHO.
 :QUIT
 ENDLOCAL
