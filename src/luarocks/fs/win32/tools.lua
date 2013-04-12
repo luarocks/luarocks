@@ -9,11 +9,11 @@ local dir = require("luarocks.dir")
 local cfg = require("luarocks.cfg")
 
 local dir_stack = {}
-   
+
 local vars = cfg.variables
 
-local function pack(...) 
-   return { n = select("#", ...), ... } 
+local function pack(...)
+   return { n = select("#", ...), ... }
 end
 
 --- Strip the last extension of a filename.
@@ -56,12 +56,12 @@ end
 -- otherwise.
 function execute_string(cmd)
    cmd = command_at(fs.current_dir(), cmd)
-   if cfg.verbose then print("Executing: "..tostring(cmd) end
+   if cfg.verbose then print("Executing: "..tostring(cmd)) end
    local code = pack(os.execute(cmd))
    if cfg.verbose then
       print("Results: "..tostring(code.n))
       for i = 1,code.n do
-         print("  "..tostring(i).." ("..type(code[i]).."): "..tostring(code[i])) 
+         print("  "..tostring(i).." ("..type(code[i]).."): "..tostring(code[i]))
       end
       print()
    end
