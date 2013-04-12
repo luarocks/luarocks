@@ -4,11 +4,6 @@
 -- used by this module.
 module("luarocks.fs.win32.tools", package.seeall)
 
-
---uncomment following line to make executed commands and results visible 
---TODO: make commandline option
---local verbose = true   
-
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.cfg")
@@ -61,9 +56,9 @@ end
 -- otherwise.
 function execute_string(cmd)
    cmd = command_at(fs.current_dir(), cmd)
-   if verbose then print("Executing: "..tostring(cmd)) end
+   if cfg.verbose then print("Executing: "..tostring(cmd) end
    local code = pack(os.execute(cmd))
-   if verbose then
+   if cfg.verbose then
       print("Results: "..tostring(code.n))
       for i = 1,code.n do
          print("  "..tostring(i).." ("..type(code[i]).."): "..tostring(code[i])) 

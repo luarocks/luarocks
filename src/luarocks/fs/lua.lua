@@ -129,6 +129,7 @@ if lfs_ok then
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
 function execute_string(cmd)
+   if cfg.verbose then print("Executing: "..cmd) end
    local code = os.execute(cmd)
    if code == 0 or code == true then
       return true
