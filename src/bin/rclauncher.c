@@ -35,8 +35,7 @@ static int runlua (lua_State *L, const char *lua_string, int argc, char *argv[])
 	int err_func;
 	int err;
 
-	lua_pushliteral(L, "debug");
-	lua_rawget(L, LUA_GLOBALSINDEX);  /* get traceback function */
+	lua_getglobal(L, "debug");
         lua_pushliteral(L, "traceback");
         lua_gettable(L, -2);
 	err_func = lua_gettop (L);
@@ -90,7 +89,7 @@ int main (int argc, char *argv[]) {
 	TCHAR lua_wstring[4098];
 #endif
 	char lua_string[4098];
-	lua_State *L = lua_open();
+	lua_State *L = luaL_newstate();
 	(void)argc; /* avoid "unused parameter" warning */
 	luaL_openlibs(L);
 	lua_newtable(L);  // create arg table
