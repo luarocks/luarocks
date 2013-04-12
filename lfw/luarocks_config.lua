@@ -7,4 +7,4 @@ rocks_trees = {
      bin_dir = LFW_ROOT, lua_dir = LFW_ROOT..[[\lua]],
      lib_dir = LFW_ROOT..[[\clibs]] }
 }
-variables.WRAPPER = LFW_ROOT..[[\rclauncher.obj]]
+variables.WRAPPER = LFW_ROOT..[[\rclauncher.c]]

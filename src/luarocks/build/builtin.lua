@@ -88,8 +88,10 @@ function run(rockspec)
          make_rc(fullname, fullbasename..".rc")
          local ok = execute(variables.RC, "-o", resname, rcname)
          if not ok then return ok end
-         ok = execute(variables.LD, "-o", wrapname, resname, variables.WRAPPER,
-                      dir.path(variables.LUA_LIBDIR, variables.LUALIB), "-l" .. (variables.MSVCRT or "m"), "-luser32")
+         ok = execute(variables.CC.." "..variables.CFLAGS, "-I"..variables.LUA_INCDIR,
+                      "-o", wrapname, resname, variables.WRAPPER,
+                      dir.path(variables.LUA_LIBDIR, variables.LUALIB),
+                      "-l" .. (variables.MSVCRT or "m"), "-luser32")
          return ok, wrapname
       end
    elseif cfg.is_platform("win32") then
@@ -119,13 +121,17 @@ function run(rockspec)
       compile_wrapper_binary = function(fullname, name)
          local fullbasename = fullname:gsub("%.lua$", ""):gsub("/", "\\")
          local basename = name:gsub("%.lua$", ""):gsub("/", "\\")
+         local object = basename..".obj"
          local rcname = basename..".rc"
          local resname = basename..".res"
          local wrapname = basename..".exe"
          make_rc(fullname, fullbasename..".rc")
          local ok = execute(variables.RC, "-r", "-fo"..resname, rcname)
          if not ok then return ok end
-         ok = execute(variables.LD, "-out:"..wrapname, resname, variables.WRAPPER,
+         ok = execute(variables.CC.." "..variables.CFLAGS, "-c", "-Fo"..object,
+                      "-I"..variables.LUA_INCDIR, variables.WRAPPER)
+         if not ok then return ok end
+         ok = execute(variables.LD, "-out:"..wrapname, resname, object,
                       dir.path(variables.LUA_LIBDIR, variables.LUALIB), "user32.lib")
          local manifestfile = wrapname..".manifest"
          if ok and fs.exists(manifestfile) then

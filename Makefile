@@ -97,7 +97,7 @@ luadoc:
 
 check_makefile: clean
 	echo $(BIN_FILES) | tr " " "\n" | sort > makefile_list.txt
-	( cd src/bin && ls -d * ) | grep -v "rclauncher.c" | sort > luarocks_dir.txt
+	( cd src/bin && ls -d * ) | sort > luarocks_dir.txt
 	echo $(LUAROCKS_FILES) | tr " " "\n" | sort >> makefile_list.txt
 	( cd src/luarocks && find * -name "*.lua" ) | sort >> luarocks_dir.txt
 	diff makefile_list.txt luarocks_dir.txt

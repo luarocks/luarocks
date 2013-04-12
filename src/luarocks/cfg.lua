@@ -193,18 +193,18 @@ local defaults = {
       MAKE = "make",
       CC = "cc",
       LD = "ld",
-      
+
       CVS = "cvs",
       GIT = "git",
       SSCM = "sscm",
       SVN = "svn",
       HG = "hg",
-      
+
       RSYNC = "rsync",
       WGET = "wget",
       SCP = "scp",
       CURL = "curl",
-      
+
       PWD = "pwd",
       MKDIR = "mkdir",
       RMDIR = "rmdir",
@@ -221,18 +221,18 @@ local defaults = {
       GUNZIP = "gunzip",
       BUNZIP2 = "bunzip2",
       TAR = "tar",
-      
+
       MD5SUM = "md5sum",
       OPENSSL = "openssl",
       MD5 = "md5",
       STAT = "stat",
-      
+
       CMAKE = "cmake",
       SEVENZ = "7z",
-      
+
       STATFLAG = "-c '%a'",
    },
-   
+
    external_deps_subdirs = {
       bin = "bin",
       lib = "lib",
@@ -262,7 +262,7 @@ if detected.windows then
    defaults.variables.MAKE = "nmake"
    defaults.variables.CC = "cl"
    defaults.variables.RC = "rc"
-   defaults.variables.WRAPPER = site_config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.obj"
+   defaults.variables.WRAPPER = site_config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.c"
    defaults.variables.LD = "link"
    defaults.variables.MT = "mt"
    defaults.variables.LUALIB = "lua"..lua_version..".lib"
@@ -293,7 +293,7 @@ if detected.mingw32 then
    defaults.variables.MAKE = "mingw32-make"
    defaults.variables.CC = "mingw32-gcc"
    defaults.variables.RC = "windres"
-   defaults.variables.WRAPPER = site_config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.o"
+   defaults.variables.WRAPPER = site_config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.c"
    defaults.variables.LD = "mingw32-gcc"
    defaults.variables.CFLAGS = "-O2"
    defaults.variables.LIBFLAG = "-shared"
