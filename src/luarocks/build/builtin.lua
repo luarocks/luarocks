@@ -230,12 +230,14 @@ function run(rockspec)
          end
       end
    end
-   for name, dest in pairs(built_modules) do
-      fs.make_dir(dest)
-      ok = fs.copy(name, dest)
-      if not ok then
-         err = "Failed installing "..name.." in "..dest
-         break
+   if ok then
+      for name, dest in pairs(built_modules) do
+         fs.make_dir(dest)
+         ok = fs.copy(name, dest)
+         if not ok then
+            err = "Failed installing "..name.." in "..dest
+            break
+         end
       end
    end
    if ok then
