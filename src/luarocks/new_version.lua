@@ -60,6 +60,18 @@ local function check_url_and_update_md5(out_rs, out_name)
    if file then
       util.printout("File successfully downloaded. Updating MD5 checksum...")
       out_rs.source.md5 = fs.get_md5(file)
+      fs.change_dir(temp_dir)
+      fs.unpack_archive(file)
+      local base_dir = out_rs.source.dir or fetch.url_to_base_dir(out_rs.source.url)
+      if not fs.exists(base_dir) then
+         util.printerr("Directory "..base_dir.." not found")
+         local files = fs.list_dir()
+         if files[1] and fs.is_dir(files[1]) then
+            util.printerr("Found "..files[1])
+            out_rs.source.dir = files[1]
+         end
+      end
+      fs.pop_dir()
    else
       util.printerr("Warning: invalid URL - "..temp_dir)
    end
@@ -110,6 +122,12 @@ function run(...)
       check_url_and_update_md5(out_rs, out_name)
    else
       if new_ver ~= old_ver then
+         if out_rs.source and out_rs.source.dir then
+            try_replace(out_rs.source, "dir", old_ver, new_ver)
+         end
+         if out_rs.source and out_rs.source.file then
+            try_replace(out_rs.source, "file", old_ver, new_ver)
+         end
          local ok = try_replace(out_rs.source, "url", old_ver, new_ver)
          if ok then
             check_url_and_update_md5(out_rs, out_name)

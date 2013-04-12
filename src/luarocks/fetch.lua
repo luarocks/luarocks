@@ -120,6 +120,11 @@ function fetch_and_unpack_rock(rock_file, dest)
    return unpack_dir
 end
 
+function url_to_base_dir(url)
+   local base = dir.base_name(url)
+   return base:gsub("%.[^.]*$", ""):gsub("%.tar$", "")
+end
+
 --- Back-end function that actually loads the local rockspec.
 -- Performs some validation and postprocessing of the rockspec contents.
 -- @param filename string: The local filename of the rockspec file.
@@ -177,8 +182,7 @@ function load_local_rockspec(filename)
 
    rockspec.local_filename = filename
    local filebase = rockspec.source.file or rockspec.source.url
-   local base = dir.base_name(filebase)
-   base = base:gsub("%.[^.]*$", ""):gsub("%.tar$", "")
+   local base = url_to_base_dir(filebase)
    rockspec.source.dir = rockspec.source.dir
                       or rockspec.source.module
                       or ((filebase:match(".lua$") or filebase:match(".c$")) and ".")
