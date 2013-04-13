@@ -52,6 +52,15 @@ function run_scheduled_functions()
    end
 end
 
+--- Produce a Lua pattern that matches precisely the given string
+-- (this is suitable to be concatenating to other patterns,
+-- so it does not include beginning- and end-of-string markers (^$)
+-- @param s string: The input string
+-- @return string: The equivalent pattern
+function matchquote(s)
+   return (s:gsub("[?%-+*%[%].%%()$^]","%%%1"))
+end
+
 --- Extract flags from an arguments list.
 -- Given string arguments, extract flag arguments into a flags set.
 -- For example, given "foo", "--tux=beep", "--bla", "bar", "--baz",

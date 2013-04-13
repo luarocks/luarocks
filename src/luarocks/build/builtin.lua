@@ -223,7 +223,7 @@ function run(rockspec)
             table.insert(objects, object)
          end
          if not ok then break end
-         local module_name = dir.path(moddir, name:match("([^.]*)$").."."..cfg.lib_extension):gsub("//", "/")
+         local module_name = dir.path(moddir, name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)):gsub("//", "/")
          if moddir ~= "" then
             fs.make_dir(moddir)
          end
