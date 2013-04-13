@@ -38,7 +38,7 @@ system's package manager.
 --rocks-tree=FILE           Root of the local tree of installed rocks.
                             Default is \$PREFIX
 
---lua-version=VERSION       Use specific Lua version: 5.1 or 5.2 (EXPERIMENTAL)
+--lua-version=VERSION       Use specific Lua version: 5.1 or 5.2
                             Default is "$LUA_VERSION"
 --lua-suffix=SUFFIX         Versioning suffix to use in Lua filenames.
                             Default is "$LUA_SUFFIX" (lua$LUA_SUFFIX...)
@@ -54,6 +54,9 @@ system's package manager.
 --with-md5-checker=TOOL     Which tool to use as a downloader.
                             Valid options are: md5sum, openssl
                             Default is to auto-detect.
+--versioned-rocks-dir       Use a versioned rocks dir, such as
+                            \$PREFIX/lib/luarocks/rocks-$LUA_VERSION/.
+                            Default is to auto-detect the necessity.
 --force-config              Use a single config location. Do not use the
                             \$LUAROCKS_CONFIG variable or the user's home
                             directory. Useful to avoid conflicts when LuaRocks
@@ -161,6 +164,9 @@ do
       ;;
    --force-config)
       FORCE_CONFIG=yes
+      ;;
+   --versioned-rocks-dir)
+      VERSIONED_ROCKS_DIR=yes
       ;;
    --lua-suffix)
       [ -n "$value" ] || die "Missing value in flag $key."
@@ -277,18 +283,6 @@ then
    done
 fi
 
-if [ "$LUA_VERSION" = "5.2" ]
-then
-   echo "******************************"
-   echo "WARNING: Lua 5.2 support is still experimental."
-   echo "Bug reports, patches and pull requests are welcome"
-   echo "at the GitHub project:"
-   echo "http://github.com/keplerproject/luarocks"
-   echo "and the mailing list:"
-   echo "https://lists.sourceforge.net/lists/listinfo/luarocks-developers"
-   echo "******************************"
-fi
-
 if [ "$LUA_DIR_SET" != "yes" ]
 then
    echo_n "Looking for Lua... "
@@ -376,6 +370,32 @@ else
    die "Could not determine processor architecture. 'uname -m' failed."
 fi
 
+if [ "$LUA_VERSION" = "5.2" ]
+then
+   LUA_OTHER_VERSION=5.1
+else
+   LUA_OTHER_VERSION=5.2
+fi
+
+LUAROCKS_ROCKS_SUBDIR=/lib/luarocks/rocks
+if [ "$VERSIONED_ROCKS_DIR" = "yes" ]
+then
+   LUAROCKS_ROCKS_SUBDIR=$LUAROCKS_ROCKS_SUBDIR-$LUA_VERSION
+   echo "Using versioned rocks dir: $PREFIX$LUAROCKS_ROCKS_SUBDIR"
+elif [ -e "$PREFIX/share/lua/$LUA_VERSION/luarocks/site_config.lua" ]
+then
+   echo "Existing installation detected."
+   LUAROCKS_ROCKS_SUBDIR=`grep "LUAROCKS_ROCKS_SUBDIR" "$PREFIX/lib/lua/$LUA_VERSION/luarocks/site_config.lua" | sed 's,.*=\[\[(.*)\]\],\1,'`
+   echo "Using previously configured rocks dir: $LUAROCKS_ROCKS_DIR"
+elif [ -e "$PREFIX/share/lua/$LUA_OTHER_VERSION/luarocks/site_config.lua" ]
+then
+   echo "Existing installation detected for other Lua version ($LUA_OTHER_VERSION)."
+   LUAROCKS_ROCKS_SUBDIR=$LUAROCKS_ROCKS_SUBDIR-$LUA_VERSION
+   echo "Using versioned rocks dir: $PREFIX$LUAROCKS_ROCKS_SUBDIR"
+else
+   echo "Using unversioned rocks dir: $PREFIX$LUAROCKS_ROCKS_SUBDIR"
+fi
+
 if [ -f config.unix ]; then
    rm -f config.unix
 fi
@@ -405,6 +425,7 @@ LUAROCKS_UNAME_M=$LUAROCKS_UNAME_M
 LUAROCKS_UNAME_S=$LUAROCKS_UNAME_S
 LUAROCKS_DOWNLOADER=$LUAROCKS_DOWNLOADER
 LUAROCKS_MD5CHECKER=$LUAROCKS_MD5CHECKER
+LUAROCKS_ROCKS_SUBDIR=$LUAROCKS_ROCKS_SUBDIR
 
 EOF
 

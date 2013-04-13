@@ -22,7 +22,7 @@ manif_core.lua fetch.lua unpack.lua validate.lua cfg.lua download.lua \
 help.lua util.lua index.lua cache.lua refresh_cache.lua loader.lua \
 admin_remove.lua fetch/hg.lua fetch/git_file.lua new_version.lua lint.lua purge.lua
 
-CONFIG_FILE = $(SYSCONFDIR)/config.lua
+CONFIG_FILE = $(SYSCONFDIR)/config-$(LUA_VERSION).lua
 
 all: built
 
@@ -51,7 +51,7 @@ src/luarocks/site_config.lua: config.unix
 	fi
 	if [ -n "$(SYSCONFDIR)" ] ;\
 	then \
-	   echo "LUAROCKS_SYSCONFIG=[[$(SYSCONFDIR)/config.lua]]" >> src/luarocks/site_config.lua ;\
+	   echo "LUAROCKS_SYSCONFDIR=[[$(SYSCONFDIR)]]" >> src/luarocks/site_config.lua ;\
 	fi
 	if [ -n "$(ROCKS_TREE)" ] ;\
 	then \
@@ -60,6 +60,10 @@ src/luarocks/site_config.lua: config.unix
 	if [ -n "$(FORCE_CONFIG)" ] ;\
 	then \
 	   echo "LUAROCKS_FORCE_CONFIG=true" >> src/luarocks/site_config.lua ;\
+	fi
+	if [ -n "$(LUAROCKS_ROCKS_SUBDIR)" ] ;\
+	then \
+	   echo "LUAROCKS_ROCKS_SUBDIR=[[$(LUAROCKS_ROCKS_SUBDIR)]]" >> src/luarocks/site_config.lua ;\
 	fi
 	if [ "$(LUA_DIR_SET)" = "yes" ] ;\
 	then \
@@ -121,7 +125,11 @@ clean: cleanup_bins
 
 install_bins: built
 	mkdir -p "$(DESTDIR)$(BINDIR)"
-	cd src/bin && cp $(BIN_FILES) "$(DESTDIR)$(BINDIR)"
+	cd src/bin && for f in $(BIN_FILES); \
+	do \
+	   cp "$$f" "$(DESTDIR)$(BINDIR)/$$f-$(LUA_VERSION)"; \
+	   ln -nfs "$(DESTDIR)$(BINDIR)/$$f-$(LUA_VERSION)" "$(DESTDIR)$(BINDIR)/$$f"; \
+	done
 
 install_luas: built
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
