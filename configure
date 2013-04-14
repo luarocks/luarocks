@@ -385,8 +385,8 @@ then
 elif [ -e "$PREFIX/share/lua/$LUA_VERSION/luarocks/site_config.lua" ]
 then
    echo "Existing installation detected."
-   LUAROCKS_ROCKS_SUBDIR=`grep "LUAROCKS_ROCKS_SUBDIR" "$PREFIX/lib/lua/$LUA_VERSION/luarocks/site_config.lua" | sed 's,.*=\[\[(.*)\]\],\1,'`
-   echo "Using previously configured rocks dir: $LUAROCKS_ROCKS_DIR"
+   LUAROCKS_ROCKS_SUBDIR=`grep "LUAROCKS_ROCKS_SUBDIR" "$PREFIX/share/lua/$LUA_VERSION/luarocks/site_config.lua" | sed 's,.*=\[\[\(.*\)\]\],\1,'`
+   echo "Using previously configured rocks dir: $PREFIX$LUAROCKS_ROCKS_SUBDIR"
 elif [ -e "$PREFIX/share/lua/$LUA_OTHER_VERSION/luarocks/site_config.lua" ]
 then
    echo "Existing installation detected for other Lua version ($LUA_OTHER_VERSION)."
