@@ -17,7 +17,7 @@ end
 
 -- cleanup filepath, remove all double backslashes
 while f:match("\\\\") do
-  f:gsub("\\\\", "\\")
+  f =  f:gsub("\\\\", "\\")
 end
 
 -- extract path and name from argument
