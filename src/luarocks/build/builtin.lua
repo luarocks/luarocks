@@ -217,8 +217,7 @@ function run(rockspec)
             end
             ok = compile_object(object, source, info.defines, info.incdirs)
             if not ok then
-               err = "Failed compiling object "..object
-               break
+               return nil, "Failed compiling object "..object
             end
             table.insert(objects, object)
          end
@@ -231,30 +230,22 @@ function run(rockspec)
          built_modules[module_name] = dest
          ok = compile_library(module_name, objects, info.libraries, info.libdirs, name)
          if not ok then
-            err = "Failed compiling module "..module_name
-            break
+            return nil, "Failed compiling module "..module_name
          end
       end
    end
-   if ok then
-      for name, dest in pairs(built_modules) do
-         fs.make_dir(dest)
-         ok = fs.copy(name, dest)
-         if not ok then
-            err = "Failed installing "..name.." in "..dest
-            break
-         end
+   for name, dest in pairs(built_modules) do
+      fs.make_dir(dest)
+      ok = fs.copy(name, dest)
+      if not ok then
+         return nil, "Failed installing "..name.." in "..dest
       end
    end
-   if ok then
-      if fs.is_dir("lua") then
-         ok, err = fs.copy_contents("lua", luadir)
-         if not ok then err = "Failed copying contents of 'lua' directory: "..err end
+   if fs.is_dir("lua") then
+      ok, err = fs.copy_contents("lua", luadir)
+      if not ok then 
+         return nil, "Failed copying contents of 'lua' directory: "..err
       end
    end
-   if ok then
-      return true
-   else
-      return nil, err
-   end
+   return true
 end
