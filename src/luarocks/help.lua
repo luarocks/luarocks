@@ -80,9 +80,12 @@ function run(...)
          util.printout("\t", command.help_summary)
       end
       print_section("CONFIGURATION")
-      util.printout([[
-	System configuration file: ]]..sys_file .. " (" .. get_status(sys_ok) ..[[)
-	User configuration file: ]]..home_file .. " (" .. get_status(home_ok) ..")\n")
+      util.printout("\tSystem configuration file: ".. sys_file .. " (" .. get_status(sys_ok) ..")")
+      if home_file then
+         util.printout("\tUser configuration file: ".. home_file .. " (" .. get_status(home_ok) ..")\n")
+      else
+         util.printout("\tUser configuration file disabled in this LuaRocks installation.\n")
+      end
    else
       command = command:gsub("-", "_")
       if commands[command] then

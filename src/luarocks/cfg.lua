@@ -264,7 +264,7 @@ local defaults = {
 }
 
 if detected.windows then
-   home_config_file = home_config_file:gsub("\\","/")
+   home_config_file = home_config_file and home_config_file:gsub("\\","/")
    defaults.fs_use_modules = false
    defaults.arch = "win32-"..proc
    defaults.platforms = {"win32", "windows" }
