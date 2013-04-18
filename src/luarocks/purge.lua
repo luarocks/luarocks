@@ -27,7 +27,7 @@ function run(...)
    local tree = flags["tree"]
 
    if type(tree) ~= "string" then
-      return nil, "The --tree argument is mandatory, see help."
+      return nil, "The --tree argument is mandatory. "..util.see_help("purge")
    end
    
    local results = {}

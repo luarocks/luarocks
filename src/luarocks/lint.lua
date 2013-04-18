@@ -20,7 +20,7 @@ function run(...)
    local flags, input = util.parse_flags(...)
    
    if not input then
-      return nil, "Argument missing, see help."
+      return nil, "Argument missing. "..util.see_help("lint")
    end
    
    local filename = input

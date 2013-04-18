@@ -139,7 +139,7 @@ function run(...)
 
    assert(type(version) == "string" or not version)
    if type(name) ~= "string" then
-      return nil, "Argument missing, see help."
+      return nil, "Argument missing. "..util.see_help("unpack")
    end
 
    if name:match(".*%.rock") or name:match(".*%.rockspec") then

@@ -365,7 +365,7 @@ function run(...)
    end
 
    if type(name) ~= "string" and not flags["all"] then
-      return nil, "Enter name and version or use --all; see help."
+      return nil, "Enter name and version or use --all. "..util.see_help("search")
    end
    
    local query = make_query(name:lower(), version)

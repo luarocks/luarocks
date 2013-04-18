@@ -8,6 +8,8 @@ local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
 
+local program = util.this_program("luarocks")
+
 --- Display an error message and exit.
 -- @param message string: The error message.
 local function die(message)
@@ -60,7 +62,7 @@ function run_command(...)
    local command
    
    if flags["version"] then
-      util.printout(program_name.." "..cfg.program_version)
+      util.printout(program.." "..cfg.program_version)
       util.printout(program_description)
       util.printout()
       os.exit(0)

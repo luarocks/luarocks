@@ -55,7 +55,7 @@ function run(...)
       end
    end
    if not rockspec:match("rockspec$") then
-      return nil, "Invalid argument: 'make' takes a rockspec as a parameter. See help."
+      return nil, "Invalid argument: 'make' takes a rockspec as a parameter. "..util.see_help("make")
    end
 
    if flags["pack-binary-rock"] then

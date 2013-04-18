@@ -78,7 +78,7 @@ function run(...)
    local files = { util.parse_flags(...) }
    local flags = table.remove(files, 1)
    if #files < 1 then
-      return nil, "Argument missing, see help."
+      return nil, "Argument missing. "..util.see_help("remove", "luarocks-admin")
    end
    local server, server_table = cache.get_upload_server(flags["server"])
    if not server then return nil, server_table end

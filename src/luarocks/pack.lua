@@ -187,7 +187,7 @@ function run(...)
    local flags, arg, version = util.parse_flags(...)
    assert(type(version) == "string" or not version)
    if type(arg) ~= "string" then
-      return nil, "Argument missing, see help."
+      return nil, "Argument missing. "..util.see_help("pack")
    end
 
    local file, err

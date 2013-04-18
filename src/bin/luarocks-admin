@@ -2,7 +2,6 @@
 
 local command_line = require("luarocks.command_line")
 
-program_name = "luarocks-admin"
 program_description = "LuaRocks repository administration interface"
 
 commands = {

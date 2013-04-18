@@ -73,7 +73,7 @@ end
 function run(...)
    local flags, name, version = util.parse_flags(...)
    if not name then
-      return nil, "Argument missing, see help."
+      return nil, "Argument missing. "..util.see_help("show")
    end
    local results = {}
    local query = search.make_query(name, version)

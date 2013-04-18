@@ -9,7 +9,9 @@ module("luarocks.help", package.seeall)
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 
-help_summary = "Help on commands. Type '"..program_name.." help <command>' for more."
+local program = util.this_program("luarocks")
+
+help_summary = "Help on commands. Type '"..program.." help <command>' for more."
 
 help_arguments = "[<command>]"
 help = [[
@@ -46,9 +48,9 @@ function run(...)
       local sys_file, sys_ok, home_file, home_ok = cfg.which_config()
       print_banner()
       print_section("NAME")
-      util.printout("\t"..program_name..[[ - ]]..program_description)
+      util.printout("\t"..program..[[ - ]]..program_description)
       print_section("SYNOPSIS")
-      util.printout("\t"..program_name..[[ [--from=<server> | --only-from=<server>] [--to=<tree>] [VAR=VALUE]... <command> [<argument>] ]])
+      util.printout("\t"..program..[[ [--from=<server> | --only-from=<server>] [--to=<tree>] [VAR=VALUE]... <command> [<argument>] ]])
       print_section("GENERAL OPTIONS")
       util.printout([[
 	These apply to all commands, as appropriate:
@@ -60,7 +62,8 @@ function run(...)
 	--only-sources=<url>   Restrict downloads to paths matching the
 	                       given URL.
 	--tree=<tree>          Which tree to operate on.
-	--local                Use the tree in the user's home directory.]])
+	--local                Use the tree in the user's home directory.
+	                       To enable it, see ']]..program..[[ help path'.]])
       print_section("VARIABLES")
       util.printout([[
 	Variables from the "variables" table of the configuration file
@@ -86,13 +89,13 @@ function run(...)
          local arguments = commands[command].help_arguments or "<argument>"
          print_banner()
          print_section("NAME")
-         util.printout("\t"..program_name.." "..command.." - "..commands[command].help_summary)
+         util.printout("\t"..program.." "..command.." - "..commands[command].help_summary)
          print_section("SYNOPSIS")
-         util.printout("\t"..program_name.." "..command.." "..arguments)
+         util.printout("\t"..program.." "..command.." "..arguments)
          print_section("DESCRIPTION")
          util.printout("",(commands[command].help:gsub("\n","\n\t"):gsub("\n\t$","")))
          print_section("SEE ALSO")
-         util.printout("","'luarocks help' for general options and configuration.\n")
+         util.printout("","'"..program.." help' for general options and configuration.\n")
       else
          return nil, "Unknown command '"..command.."'"
       end

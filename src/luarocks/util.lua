@@ -9,6 +9,7 @@ local global_env = _G
 module("luarocks.util", package.seeall)
 
 local scheduled_functions = {}
+local debug = require("debug")
 
 --- Schedule a function to be executed upon program termination.
 -- This is useful for actions such as deleting temporary directories
@@ -314,6 +315,23 @@ function title(msg, porcelain, underline)
    printout(msg)
    printout((underline or "-"):rep(#msg))
    printout()
+end
+
+function this_program(default)
+   local i = 1
+   local last, cur = default, default
+   while i do
+      local dbg = debug.getinfo(i,"S")
+      if not dbg then break end
+      last = cur
+      cur = dbg.source
+      i=i+1
+   end
+   return last:sub(2)
+end
+
+function see_help(command, program)
+   return "See '"..this_program(program or "luarocks")..' help '..command.."'."
 end
 
 -- from http://lua-users.org/wiki/SplitJoin

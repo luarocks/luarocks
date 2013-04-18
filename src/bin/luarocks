@@ -2,7 +2,6 @@
 
 local command_line = require("luarocks.command_line")
 
-program_name = "luarocks"
 program_description = "LuaRocks main command-line interface"
 
 commands = {}
