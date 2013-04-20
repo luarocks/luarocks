@@ -146,8 +146,7 @@ end
 -- plus an error message.
 function copy_contents(src, dest)
    assert(src and dest)
-   if fs.execute_string(fs.quiet("xcopy "..src.."\\*.* "..fs.Q(dest).." /S/E/Y")) then
-   --if fs.execute_string(fs.quiet(vars.CP.." -a "..src.."\\*.* "..fs.Q(dest))) then
+   if fs.execute_string(fs.quiet(vars.CP.." -a "..src.."\\*.* "..fs.Q(dest))) then
       return true
    else
       return false, "Failed copying "..src.." to "..dest
