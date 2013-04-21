@@ -1,499 +1,574 @@
+rem=rem --[[
+@setlocal&  set luafile="%~f0" & if exist "%~f0.bat" set luafile="%~f0.bat"
+@lua5.1\bin\lua5.1.exe %luafile% %*&  exit /b ]]
+
+local vars = {}
+
+vars.PREFIX = [[C:\LuaRocks]]
+vars.VERSION = "2.0"
+vars.SYSCONFDIR = [[C:\LuaRocks]]
+vars.ROCKS_TREE = [[C:\LuaRocks]]
+vars.SCRIPTS_DIR = nil
+vars.LUA_INTERPRETER = nil
+vars.LUA_PREFIX = nil
+vars.LUA_BINDIR = nil
+vars.LUA_INCDIR = nil
+vars.LUA_LIBDIR = nil
+vars.LUA_LIBNAME = nil
+vars.LUA_VERSION = "5.1"
+vars.LUA_SHORTV = nil
+vars.LUA_LIB_NAMES = "lua5.1.lib lua51.dll liblua.dll.a"
+
+local P_SET = false
+local FORCE = false
+local FORCE_CONFIG = false
+local INSTALL_LUA = false
+local USE_MINGW = false
+local REGISTRY = false
+
+---
+-- Some helpers
+-- 
+local function die(message)
+	if message then print(message) end
+	print()
+	print("Failed installing LuaRocks. Run with /? for help.")
+	os.exit(1)
+end
+
+local function exec(cmd)
+	--print(cmd)
+	local status = os.execute(cmd)
+	return status == 0
+end
+
+local function exists(filename)
+	local cmd = [[.\bin\test -e "]]..filename..[["]]
+	return exec(cmd)
+end
+
+local function mkdir (dir)
+	return exec([[.\bin\mkdir -p "]]..dir..[[" >NUL]])
+end
+
+-- interpolate string with values from 'vars' table
+local function S (tmpl)
+	return (tmpl:gsub('%$([%a_][%w_]*)', vars))
+end
+
+local function print_help()
+	print(S[[
+Installs LuaRocks.
+
+/P [dir]       ^(REQUIRED^) Where to install. 
+               Note that version; $VERSION, will be
+               appended to this path.
+/CONFIG [dir]  Location where the config file should be installed.
+               Default is same place of installation
+/TREE [dir]    Root of the local tree of installed rocks.
+               Default is same place of installation
+/SCRIPTS [dir] Where to install scripts installed by rocks.
+               Default is TREE/bin.
+
+/LV [version]  Lua version to use; either 5.1 or 5.2.
+               Default is 5.1
+/L             Install LuaRocks' own copy of Lua even if detected,
+               this will always be a 5.1 installation.
+               ^(/LUA, /INC, /LIB, /BIN cannot be used with /L^)
+/LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
+               This is the base directory, the installer will look
+               for subdirectories bin, lib, include. Alternatively
+               these can be specified explicitly using the /INC,
+               /LIB, and /BIN options.
+/INC [dir]     Location of Lua includes - e.g. c:\lua\5.1\include
+               If provided overrides sub directory found using /LUA.
+/LIB [dir]     Location of Lua libraries -e.g. c:\lua\5.1\lib
+               If provided overrides sub directory found using /LUA.
+/BIN [dir]     Location of Lua executables - e.g. c:\lua\5.1\bin
+               If provided overrides sub directory found using /LUA.
+
+/MW            Use mingw as build system instead of MSVC
+
+/FORCECONFIG   Use a single config location. Do not use the
+               LUAROCKS_CONFIG variable or the user's home directory.
+               Useful to avoid conflicts when LuaRocks
+               is embedded within an application.
+
+/F             Remove installation directory if it already exists.
+
+/R             Load registry information to register '.rockspec'
+               extension with LuaRocks commands ^(right-click^).
+
+]])
+end
+
+-- ***********************************************************
+-- Option parser
+-- ***********************************************************
+local function parse_options(args)
+	for _, option in ipairs(args) do
+		local name = option.name:upper()
+		if name == "/?" then
+			print_help()
+			os.exit(0)
+      
+		elseif name == "/P" then
+			vars.PREFIX = option.value
+			vars.SYSCONFDIR = option.value
+			vars.ROCKS_TREE = option.value
+			P_SET = true
+		elseif name == "/CONFIG" then
+			vars.SYSCONFDIR = option.value
+		elseif name == "/TREE" then
+			vars.ROCKS_TREE = option.value
+		elseif name == "/SCRIPTS" then
+			vars.SCRIPTS_DIR = option.value
+		elseif name == "/LV" then
+			vars.LUA_VERSION = option.value
+		elseif name == "/L" then
+			INSTALL_LUA = true
+		elseif name == "/MW" then
+			USE_MINGW = true
+		elseif name == "/LUA" then
+			vars.LUA_PREFIX = option.value
+		elseif name == "/LIB" then
+			vars.LUA_LIBDIR = option.value
+		elseif name == "/INC" then
+			vars.LUA_INCDIR = option.value
+		elseif name == "/BIN" then
+			vars.LUA_BINDIR = option.value
+		elseif name == "/FORCECONFIG" then
+			FORCE_CONFIG = true
+		elseif name == "/F" then
+			FORCE = true
+		elseif name == "/R" then
+			REGISTRY = true
+		else
+			die("Unrecognized option: " .. name)
+		end
+	end
+end
+
+-- check for combination/required flags
+local function check_flags()
+	if not P_SET then
+		die("Missing required parameter /P")
+	end
+	if INSTALL_LUA then
+		if vars.LUA_INCDIR or vars.LUA_BINDIR or vars.LUA_LIBDIR or vars.LUA_PREFIX then
+			die("Cannot combine option /L with any of /LUA /BIN /LIB /INC")
+		end
+		if vars.LUA_VERSION ~= "5.1" then
+			die("Bundled Lua version is 5.1, cannot install 5.2")
+		end
+	end
+	if vars.LUA_VERSION ~= "5.1" then
+		if vars.LUA_VERSION == "5.2" then
+			vars.LUA_LIB_NAMES = vars.LUA_LIB_NAMES:gsub("5([%.]?)1", "5%12")
+		else
+			die("Bad argument: /LV must either be 5.1 or 5.2")
+		end
+	end
+end
+
+-- ***********************************************************
+-- Detect Lua
+-- ***********************************************************
+local function look_for_interpreter (directory)
+	if vars.LUA_BINDIR then
+		if exists( S"$LUA_BINDIR\\lua$LUA_VERSION.exe" ) then
+			vars.LUA_INTERPRETER = S"lua$LUA_VERSION.exe"
+			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
+			return true
+		elseif exists(S"$LUA_BINDIR\\lua.exe") then
+			vars.LUA_INTERPRETER = "lua.exe"
+			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
+			return true
+		elseif exists(S"$LUA_BINDIR\\luajit.exe") then
+			vars.LUA_INTERPRETER = "luajit.exe"
+			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
+			return true
+		end
+		die(S"Lua executable lua.exe, luajit.exe or lua$LUA_VERSION.exe not found in $LUA_BINDIR")
+	end
+
+	for _, e in ipairs{ [[\]], [[\bin\]] } do
+		if exists(directory..e.."\\lua"..vars.LUA_VERSION..".exe") then
+			vars.LUA_INTERPRETER = S"lua$LUA_VERSION.exe"
+			vars.LUA_BINDIR = directory .. e
+			print("       Found ."..e..vars.LUA_INTERPRETER)
+			return true
+      
+		elseif exists(directory..e.."\\lua.exe") then
+			vars.LUA_INTERPRETER = "lua.exe"
+			vars.LUA_BINDIR = directory..e
+			print("       Found ."..e..vars.LUA_INTERPRETER)
+			return true
+      
+		elseif exists(directory..e.."\\luajit.exe") then
+			vars.LUA_INTERPRETER = "luajit.exe"
+			vars.LUA_BINDIR = directory..e
+			print("       Found ."..e..vars.LUA_INTERPRETER)
+			return true
+		end
+	end
+	print("      No Lua interpreter found")
+	return false
+end
+
+local function look_for_link_libraries (directory)
+	if vars.LUA_LIBDIR then
+		for name in vars.LUA_LIB_NAMES:gmatch("[^%s]+") do
+			print(S"    checking for $LUA_LIBDIR\\"..name)
+			if exists(vars.LUA_LIBDIR.."\\"..name) then
+				vars.LUA_LIBNAME = name
+				print("       Found "..name)
+				return true
+			end
+		end
+		die(S"link library ^(one of; $LUA_LIB_NAMES^) not found in $LUA_LIBDIR")
+	end
+
+	for _, e in ipairs{ [[\]], [[\lib\]], [[\bin\]]} do
+		for name in vars.LUA_LIB_NAMES:gmatch("[^%s]+") do
+			print("    checking for "..directory..e.."\\"..name)
+			if exists(directory..e.."\\"..name) then
+				vars.LUA_LIBDIR = directory .. e
+				vars.LUA_LIBNAME = name
+				print("       Found "..name)
+				return true
+			end
+		end
+	end
+	return true
+end
+
+local function look_for_headers (directory)
+	if vars.LUA_INCDIR then
+		print(S"    checking for $LUA_INCDIR\\lua.h")
+		if exists(S"$LUA_INCDIR\\lua.h") then
+			print("       Found lua.h")
+			return true
+		end
+		die(S"lua.h not found in $LUA_INCDIR")
+	end
+
+	for _, e in ipairs{ [[\]], [[\include\]]} do
+		print("    checking for "..directory..e.."\\lua.h")
+		if exists(directory..e.."\\lua.h") then
+			vars.LUA_INCDIR = directory..e
+			print("       Found lua.h")
+			return true
+		end
+	end
+end
+
+local function look_for_lua_install ()
+	print("Looking for Lua interpreter")
+	local directories = { [[c:\lua5.1.2]], [[c:\lua]], [[c:\kepler\1.1]] }
+	if vars.LUA_PREFIX then
+		table.insert(1, vars.LUA_PREFIX)
+	end
+	if vars.LUA_BINDIR and vars.LUA_LIBDIR and vars.LUA_INCDIR then
+		if look_for_interpreter(vars.LUA_BINDIR) and 
+			look_for_link_libraries(vars.LUA_LIBDIR) and
+			look_for_headers(vars.LUA_INCDIR)
+		then
+			if exec(S"$LUA_BINDIR\\$LUA_INTERPRETER -v 2>NUL") then
+				print("   Ok")
+				return true
+			end
+		end
+		return false
+	end
+	
+	for _, directory in ipairs(directories) do
+		print("    checking " .. directory)
+		if exists(directory) then
+			if look_for_interpreter(directory) then
+				print("Interpreter found, now looking for link libraries...")
+				if look_for_link_libraries(directory) then
+					print("Link library found, now looking for headers...")
+					if look_for_headers(directory) then
+						print("Headers found, now testing interpreter...")
+						if exec(S[[$LUA_BINDIR\$LUA_INTERPRETER -v 2>NUL]]) then
+							print("   Ok")
+							return true
+						end
+						print("   Interpreter returned an error, not ok")
+					end
+				end
+			end
+		end
+	end
+	return false
+end
+
+---
+-- Poor man's command-line parsing
+local config = {}
+local with_arg = {
+	["/P"] = true,
+	["/CONFIG"] = true,
+	["/TREE"] = true,
+	["/SCRIPTS"] = true,
+	["/LV"] = true,
+	["/LUA"] = true,
+	["/INC"] = true,
+	["/BIN"] = true,
+	["/LIB"] = true,
+}
+local i = 1
+while i <= #arg do
+	local opt = arg[i]
+	if with_arg[opt] then
+		local value = arg[i + 1]
+		if not value then
+			die("Missing value for option "..opt)
+		end
+		config[#config + 1] = { name = opt, value = value }
+		i = i + 1
+	else
+		config[#config + 1] = { name = opt }
+	end
+	i = i + 1
+end
+
+print(S"LuaRocks $VERSION.x installer.\n")
+
+parse_options(config)
+check_flags()
+
+vars.FULL_PREFIX = S"$PREFIX\\$VERSION"
+vars.BINDIR = vars.FULL_PREFIX
+vars.LIBDIR = vars.FULL_PREFIX
+vars.LUADIR = S"$FULL_PREFIX\\lua"
+vars.INCDIR = S"$FULL_PREFIX\\include"
+vars.LUA_SHORTV = vars.LUA_VERSION:gsub("%.", "")
+
+if not look_for_lua_install() then
+	print("Could not find Lua. Will install its own copy.")
+	print("See /? for options for specifying the location of Lua.")
+	if vars.LUA_VERSION ~= "5.1" then
+		die("Cannot install own copy because no 5.2 version is bundled")
+	end
+	INSTALL_LUA = true
+	vars.LUA_INTERPRETER = "lua5.1"
+	vars.LUA_BINDIR = vars.BINDIR
+	vars.LUA_LIBDIR = vars.LIBDIR
+	vars.LUA_INCDIR = vars.INCDIR
+	vars.LUA_LIBNAME = "lua5.1.lib"
+else
+	print(S[[
+Will configure LuaRocks with the following paths:
+LuaRocks       : $FULL_PREFIX
+Lua interpreter: $LUA_BINDIR\$LUA_INTERPRETER
+Lua binaries   : $LUA_BINDIR
+Lua libraries  : $LUA_LIBDIR
+Lua includes   : $LUA_INCDIR
+Binaries will be linked against: $LUA_LIBNAME
+
+]])
+end
+
+-- ***********************************************************
+-- Install LuaRocks files
+-- ***********************************************************
+if FORCE then
+	print(S"Removing $FULL_PREFIX...")
+	exec(S[[RD /S /Q "$FULL_PREFIX"]])
+	print()
+end
+
+if exists(vars.FULL_PREFIX) then
+	die(S"$FULL_PREFIX exists. Use /F to force removal and reinstallation.")
+end
+
+print(S"Installing LuaRocks in $FULL_PREFIX...")
+if not exists(vars.BINDIR) then
+	if not mkdir(vars.BINDIR) then
+		die()
+	end
+end
+
+if INSTALL_LUA then
+	-- Copy the included Lua interpreter binaries
+	if not exists(vars.LUA_BINDIR) then
+		mkdir(vars.LUA_BINDIR)
+	end
+	if not exists(vars.LUA_INCDIR) then
+		mkdir(vars.LUA_INCDIR)
+	end
+	exec(S[[COPY lua5.1\bin\*.* "$LUA_BINDIR" >NUL]])
+	exec(S[[COPY lua5.1\include\*.* "$LUA_INCDIR" >NUL]])
+	print(S"Installed the LuaRocks bundled Lua interpreter in $LUA_BINDIR")
+end
+
+-- Copy the LuaRocks binaries
+if not exec(S[[COPY bin\*.* "$BINDIR" >NUL]]) then
+	die()
+end
+-- Copy the LuaRocks lua source files
+if not exists(S[[$LUADIR\luarocks]]) then
+	if not mkdir(S[[$LUADIR\luarocks]]) then
+		die()
+	end
+end
+if not exec(S[[XCOPY /S src\luarocks\*.* "$LUADIR\luarocks" >NUL]]) then
+	die()
+end
+-- Create start scripts
+if not exec(S[[COPY src\bin\*.* "$BINDIR" >NUL]]) then
+	die()
+end
+for _, c in ipairs{"luarocks", "luarocks-admin"} do
+	-- rename unix-lua scripts to .lua files
+	if not exec( (S[[RENAME "$BINDIR\%s" %s.lua]]):format(c, c) ) then
+		die()
+	end
+	-- create a bootstrap batch file for the lua file, to start them
+	exec(S[[DEL /F /Q "$BINDIR\]]..c..[[.bat" 2>NUL]])
+	local f = io.open(vars.BINDIR.."\\"..c..".bat", "w")
+	f:write(S[[
 @ECHO OFF
-
-REM Boy, it feels like 1994 all over again.
-
-SETLOCAL ENABLEDELAYEDEXPANSION 
-
-SET PREFIX=C:\LuaRocks
-SET VERSION=2.0
-SET SYSCONFDIR=C:\LuaRocks
-SET ROCKS_TREE=C:\LuaRocks
-SET SCRIPTS_DIR=
-SET FORCE=OFF
-SET INSTALL_LUA=OFF
-SET LUA_INTERPRETER=
-SET LUA_PREFIX=
-SET LUA_BINDIR=
-SET LUA_INCDIR=
-SET LUA_LIBDIR=
-SET LUA_LIBNAME=
-SET FORCE_CONFIG=
-SET USE_MINGW=
-SET MKDIR=.\bin\mkdir -p
-SET LUA_VERSION=5.1
-SET LUA_SHORTV=
-SET LUA_LIB_NAMES=lua5.1.lib lua51.dll liblua.dll.a 
-SET REGISTRY=OFF
-SET P_SET=FALSE
-
-REM ***********************************************************
-REM Option parser
-REM ***********************************************************
-ECHO LuaRocks %VERSION%.x installer.
-ECHO.
-
-:PARSE_LOOP
-IF [%1]==[] GOTO DONE_PARSING
-IF [%1]==[/?] (
-   ECHO Installs LuaRocks.
-   ECHO.
-   ECHO /P [dir]       ^(REQUIRED^) Where to install. 
-   ECHO                Note that version; %VERSION%, will be
-   ECHO                appended to this path.
-   ECHO /CONFIG [dir]  Location where the config file should be installed.
-   ECHO                Default is same place of installation
-   ECHO /TREE [dir]    Root of the local tree of installed rocks.
-   ECHO                Default is same place of installation
-   ECHO /SCRIPTS [dir] Where to install scripts installed by rocks.
-   ECHO                Default is TREE/bin.
-   ECHO.
-   ECHO /LV [version]  Lua version to use; either 5.1 or 5.2.
-   ECHO                Default is 5.1
-   ECHO /L             Install LuaRocks' own copy of Lua even if detected,
-   ECHO                this will always be a 5.1 installation.
-   ECHO                ^(/LUA, /INC, /LIB, /BIN cannot be used with /L^)
-   ECHO /LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
-   ECHO                This is the base directory, the installer will look
-   ECHO                for subdirectories bin, lib, include. Alternatively
-   ECHO                these can be specified explicitly using the /INC,
-   ECHO                /LIB, and /BIN options.
-   ECHO /INC [dir]     Location of Lua includes - e.g. c:\lua\5.1\include
-   ECHO                If provided overrides sub directory found using /LUA.
-   ECHO /LIB [dir]     Location of Lua libraries -e.g. c:\lua\5.1\lib
-   ECHO                If provided overrides sub directory found using /LUA.
-   ECHO /BIN [dir]     Location of Lua executables - e.g. c:\lua\5.1\bin
-   ECHO                If provided overrides sub directory found using /LUA.
-   ECHO.
-   ECHO /MW            Use mingw as build system instead of MSVC
-   ECHO.
-   ECHO /FORCECONFIG   Use a single config location. Do not use the
-   ECHO                LUAROCKS_CONFIG variable or the user's home directory.
-   ECHO                Useful to avoid conflicts when LuaRocks
-   ECHO                is embedded within an application.
-   ECHO.
-   ECHO /F             Remove installation directory if it already exists.
-   ECHO.
-   ECHO /R             Load registry information to register '.rockspec'
-   ECHO                extension with LuaRocks commands ^(right-click^).
-   ECHO.
-   GOTO QUIT
-)
-IF /I [%1]==[/P] (
-   SET PREFIX=%~2
-   SET SYSCONFDIR=%~2
-   SET ROCKS_TREE=%~2
-   SET P_SET=TRUE
-   SHIFT /1
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-IF /I [%1]==[/CONFIG] (
-   SET SYSCONFDIR=%~2
-   SHIFT /1
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-IF /I [%1]==[/TREE] (
-   SET ROCKS_TREE=%~2
-   SHIFT /1
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-IF /I [%1]==[/SCRIPTS] (
-   SET SCRIPTS_DIR=%~2
-   SHIFT /1
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-IF /I [%1]==[/LV] (
-   SET LUA_VERSION=%~2
-   SHIFT /1
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-IF /I [%1]==[/L] (
-   SET INSTALL_LUA=ON
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-IF /I [%1]==[/MW] (
-   SET USE_MINGW=ON
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-IF /I [%1]==[/LUA] (
-   SET LUA_PREFIX=%~2
-   SHIFT /1
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-IF /I [%1]==[/LIB] (
-   SET LUA_LIBDIR=%~2
-   SHIFT /1
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-IF /I [%1]==[/INC] (
-   SET LUA_INCDIR=%~2
-   SHIFT /1
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-IF /I [%1]==[/BIN] (
-   SET LUA_BINDIR=%~2
-   SHIFT /1
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-IF /I [%1]==[/FORCECONFIG] (
-   SET FORCE_CONFIG=ON
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-IF /I [%1]==[/F] (
-   SET FORCE=ON
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-IF /I [%1]==[/R] (
-   SET REGISTRY=ON
-   SHIFT /1
-   GOTO PARSE_LOOP
-)
-ECHO Unrecognized option: %1
-GOTO ERROR
-:DONE_PARSING
-
-REM check for combination/required flags
-IF NOT [%P_SET%]==[TRUE] (
-   Echo Missing required parameter /P
-   GOTO ERROR
-)
-IF [%INSTALL_LUA%]==[ON] (
-   IF NOT [%LUA_INCDIR%%LUA_BINDIR%%LUA_LIBDIR%%LUA_PREFIX%]==[] (
-      ECHO Cannot combine option /L with any of /LUA /BIN /LIB /INC
-      GOTO ERROR
-   )
-   IF NOT [%LUA_VERSION%]==[5.1] (
-      ECHO Bundled Lua version is 5.1, cannot install 5.2
-      GOTO ERROR
-   )
-)
-IF NOT [%LUA_VERSION%]==[5.1] (
-   IF [%LUA_VERSION%]==[5.2] (
-      SET LUA_LIB_NAMES=%LUA_LIB_NAMES:5.1=5.2%
-      SET LUA_LIB_NAMES=%LUA_LIB_NAMES:51=52%
-   ) ELSE (
-      ECHO Bad argument: /LV must either be 5.1 or 5.2
-      GOTO ERROR
-   )
-)
-
-SET FULL_PREFIX=%PREFIX%\%VERSION%
-SET BINDIR=%FULL_PREFIX%
-SET LIBDIR=%FULL_PREFIX%
-SET LUADIR=%FULL_PREFIX%\lua
-SET INCDIR=%FULL_PREFIX%\include
-SET LUA_SHORTV=%LUA_VERSION:.=%
-
-REM ***********************************************************
-REM Detect Lua
-REM ***********************************************************
-
-IF [%INSTALL_LUA%]==[ON] GOTO USE_OWN_LUA
-
-ECHO Looking for Lua interpreter
-FOR %%L IN (%LUA_PREFIX% c:\lua\5.1.2 c:\lua c:\kepler\1.1) DO (
-   ECHO    checking %%L
-   SET CURR=%%L
-   IF EXIST "%%L" (
-      IF NOT [%LUA_BINDIR%]==[] (
-         IF EXIST %LUA_BINDIR%\lua%LUA_VERSION%.exe (
-            SET LUA_INTERPRETER=lua%LUA_VERSION%.exe
-            ECHO       Found .\!LUA_INTERPRETER!
-            GOTO INTERPRETER_IS_SET
-         )
-         IF EXIST %LUA_BINDIR%\lua.exe (
-            SET LUA_INTERPRETER=lua.exe
-            ECHO       Found .\!LUA_INTERPRETER!
-            GOTO INTERPRETER_IS_SET
-         )		 
-         IF EXIST %LUA_BINDIR%\luajit.exe (
-            SET LUA_INTERPRETER=luajit.exe
-            ECHO       Found .\!LUA_INTERPRETER!
-            GOTO INTERPRETER_IS_SET
-         )		 
-         ECHO Lua executable lua.exe, luajit.exe or lua%LUA_VERSION%.exe not found in %LUA_BINDIR%
-         GOTO ERROR
-      )
-      SET CURR=%%L
-      FOR %%E IN (\ \bin\) DO (
-         IF EXIST "%%L%%E\lua%LUA_VERSION%.exe" (
-            SET LUA_INTERPRETER=lua%LUA_VERSION%.exe
-            SET LUA_BINDIR=%%L%%E
-            ECHO       Found .\%%E\!LUA_INTERPRETER!
-            GOTO INTERPRETER_IS_SET
-         )
-         IF EXIST "%%L%%E\lua.exe" (
-            SET LUA_INTERPRETER=lua.exe
-            SET LUA_BINDIR=%%L%%E
-            ECHO       Found .\%%E\!LUA_INTERPRETER!
-            GOTO INTERPRETER_IS_SET
-         )
-         IF EXIST "%%L%%E\luajit.exe" (
-            SET LUA_INTERPRETER=luajit.exe
-            SET LUA_BINDIR=%%L%%E
-            ECHO       Found .\%%E\!LUA_INTERPRETER!
-            GOTO INTERPRETER_IS_SET
-         )
-      )
-      ECHO      No Lua interpreter found
-      GOTO TRY_NEXT_LUA_DIR
-      :INTERPRETER_IS_SET
-      ECHO Interpreter found, now looking for link libraries...
-      IF NOT [%LUA_LIBDIR%]==[] (
-         FOR %%T IN (%LUA_LIB_NAMES%) DO (
-            ECHO    checking for %LUA_LIBDIR%\%%T
-            IF EXIST "%LUA_LIBDIR%\%%T" (
-               SET LUA_LIBNAME=%%T
-               ECHO       Found %%T
-               GOTO LIBDIR_IS_SET
-            )
-         )
-         ECHO link library ^(one of; %LUA_LIB_NAMES%^) not found in %LUA_LIBDIR%
-         GOTO ERROR
-      )
-      FOR %%E IN (\ \lib\ \bin\) DO (
-         FOR %%S IN (%LUA_LIB_NAMES%) DO (
-            ECHO    checking for %CURR%%%E\%%S
-            IF EXIST "%CURR%%%E\%%S" (
-               SET LUA_LIBDIR=%CURR%%%E
-               SET LUA_LIBNAME=%%S
-               ECHO       Found %%S
-               GOTO LIBDIR_IS_SET
-            )
-         )
-      )
-      GOTO TRY_NEXT_LUA_DIR
-      :LIBDIR_IS_SET
-      ECHO Link library found, now looking for headers...
-      IF NOT [%LUA_INCDIR%]==[] (
-         ECHO    checking for %LUA_INCDIR%\lua.h
-         IF EXIST %LUA_INCDIR%\lua.h (
-            ECHO       Found lua.h
-            GOTO INCDIR_IS_SET
-         )
-         ECHO lua.h not found in %LUA_INCDIR%
-         GOTO ERROR
-      )
-      FOR %%E IN (\ \include\) DO (
-         ECHO    checking for %CURR%%%E\lua.h
-         IF EXIST "%CURR%%%E\lua.h" (
-            SET LUA_INCDIR=%CURR%%%E
-            ECHO       Found lua.h
-            GOTO INCDIR_IS_SET
-         )
-      )
-      GOTO TRY_NEXT_LUA_DIR
-      :INCDIR_IS_SET
-      ECHO Headers found, now testing interpreter...
-      %LUA_BINDIR%\%LUA_INTERPRETER% -v 2>NUL
-      IF NOT ERRORLEVEL 1 (
-         ECHO   Ok
-         GOTO LUA_IS_SET
-      )
-      ECHO   Interpreter returned an error, not ok
-   )
-:TRY_NEXT_LUA_DIR
-   REM wtf
-)
-ECHO Could not find Lua. Will install its own copy.
-ECHO See /? for options for specifying the location of Lua.
-:USE_OWN_LUA
-IF NOT [%LUA_VERSION%]==[5.1] (
-   ECHO Cannot install own copy because no 5.2 version is bundled
-   GOTO ERROR
-)
-SET INSTALL_LUA=ON
-SET LUA_INTERPRETER=lua5.1
-SET LUA_BINDIR=%BINDIR%
-SET LUA_LIBDIR=%LIBDIR%
-SET LUA_INCDIR=%INCDIR%
-SET LUA_LIBNAME=lua5.1.lib
-:LUA_IS_SET
-ECHO.
-ECHO Will configure LuaRocks with the following paths:
-ECHO LuaRocks       : %FULL_PREFIX%
-ECHO Lua interpreter: %LUA_BINDIR%\%LUA_INTERPRETER%
-ECHO Lua binaries   : %LUA_BINDIR%
-ECHO Lua libraries  : %LUA_LIBDIR%
-ECHO Lua includes   : %LUA_INCDIR%
-ECHO Binaries will be linked against: %LUA_LIBNAME%
-ECHO.
-
-REM ***********************************************************
-REM Install LuaRocks files
-REM ***********************************************************
-
-IF [%FORCE%]==[ON] (
-   ECHO Removing %FULL_PREFIX%...
-   RD /S /Q "%FULL_PREFIX%"
-   ECHO.
-)
-
-IF NOT EXIST "%FULL_PREFIX%" GOTO NOT_EXIST_PREFIX
-   ECHO %FULL_PREFIX% exists. Use /F to force removal and reinstallation.
-   GOTO ERROR
-:NOT_EXIST_PREFIX
-
-ECHO Installing LuaRocks in %FULL_PREFIX%...
-IF NOT EXIST "%BINDIR%" %MKDIR% "%BINDIR%"
-IF ERRORLEVEL 1 GOTO ERROR
-IF [%INSTALL_LUA%]==[ON] (
-   REM Copy the included Lua interpreter binaries
-   IF NOT EXIST "%LUA_BINDIR%" %MKDIR% "%LUA_BINDIR%"
-   IF NOT EXIST "%LUA_INCDIR%" %MKDIR% "%LUA_INCDIR%"
-   COPY lua5.1\bin\*.* "%LUA_BINDIR%" >NUL
-   COPY lua5.1\include\*.* "%LUA_INCDIR%" >NUL
-   ECHO Installed the LuaRocks bundled Lua interpreter in %LUA_BINDIR%
-)
-REM Copy the LuaRocks binaries
-COPY bin\*.* "%BINDIR%" >NUL
-IF ERRORLEVEL 1 GOTO ERROR
-REM Copy the LuaRocks lua source files
-IF NOT EXIST "%LUADIR%\luarocks" %MKDIR% "%LUADIR%\luarocks"
-IF ERRORLEVEL 1 GOTO ERROR
-XCOPY /S src\luarocks\*.* "%LUADIR%\luarocks" >NUL
-IF ERRORLEVEL 1 GOTO ERROR
-REM Create start scripts
-COPY src\bin\*.* "%BINDIR%" >NUL
-IF ERRORLEVEL 1 GOTO ERROR
-FOR %%C IN (luarocks luarocks-admin) DO (
-   REM rename unix-lua scripts to .lua files
-   RENAME "%BINDIR%\%%C" %%C.lua
-   IF ERRORLEVEL 1 GOTO ERROR
-   REM create a bootstrap batch file for the lua file, to start them
-   DEL /F /Q "%BINDIR%\%%C.bat" 2>NUL
-   ECHO @ECHO OFF>> "%BINDIR%\%%C.bat"
-   ECHO SETLOCAL>> "%BINDIR%\%%C.bat"
-   ECHO SET LUA_PATH=%LUADIR%\?.lua;%LUADIR%\?\init.lua;%%LUA_PATH%%>> "%BINDIR%\%%C.bat"
-   ECHO SET PATH=%BINDIR%\;%%PATH%%>> "%BINDIR%\%%C.bat"
-   ECHO "%LUA_INTERPRETER%" "%BINDIR%\%%C.lua" %%*>> "%BINDIR%\%%C.bat"
-   ECHO ENDLOCAL>> "%BINDIR%\%%C.bat"
-   ECHO Created LuaRocks command: %BINDIR%\%%C.bat
-)
-REM configure 'scripts' directory
-IF [%SCRIPTS_DIR%]==[] (
-   %MKDIR% "%ROCKS_TREE%"\bin >NUL
-   IF [%USE_MINGW%]==[] (
-     REM definitly not for MinGW because of conflicting runtimes
-     REM but is it ok to do it for others???
-     COPY lua5.1\bin\*.dll "%ROCKS_TREE%"\bin >NUL
-   )
-) ELSE (
-   %MKDIR% "%SCRIPTS_DIR%" >NUL
-   IF [%USE_MINGW%]==[] (
-     REM definitly not for MinGW because of conflicting runtimes
-     REM but is it ok to do it for others???
-     COPY lua5.1\bin\*.dll "%SCRIPTS_DIR%" >NUL
-   )
-)
-
-
-ECHO.
-ECHO Configuring LuaRocks...
-REM Create a site-config file
-IF EXIST "%LUADIR%\luarocks\site_config.lua" RENAME "%LUADIR%\luarocks\site_config.lua" site_config.lua.bak
-ECHO module("luarocks.site_config")>> "%LUADIR%\luarocks\site_config.lua" 
-ECHO LUA_INCDIR=[[%LUA_INCDIR%]]>> "%LUADIR%\luarocks\site_config.lua" 
-ECHO LUA_LIBDIR=[[%LUA_LIBDIR%]]>> "%LUADIR%\luarocks\site_config.lua" 
-ECHO LUA_BINDIR=[[%LUA_BINDIR%]]>> "%LUADIR%\luarocks\site_config.lua" 
-ECHO LUA_INTERPRETER=[[%LUA_INTERPRETER%]]>> "%LUADIR%\luarocks\site_config.lua" 
-IF [%USE_MINGW%]==[ON] (
-ECHO LUAROCKS_UNAME_S=[[MINGW]]>> "%LUADIR%\luarocks\site_config.lua" 
-) ELSE (
-ECHO LUAROCKS_UNAME_S=[[WindowsNT]]>> "%LUADIR%\luarocks\site_config.lua" 
-)
-ECHO LUAROCKS_UNAME_M=[[x86]]>> "%LUADIR%\luarocks\site_config.lua" 
-ECHO LUAROCKS_SYSCONFIG=[[%SYSCONFDIR%/config.lua]]>> "%LUADIR%\luarocks\site_config.lua" 
-ECHO LUAROCKS_ROCKS_TREE=[[%ROCKS_TREE%]]>> "%LUADIR%\luarocks\site_config.lua" 
-ECHO LUAROCKS_PREFIX=[[%PREFIX%]]>> "%LUADIR%\luarocks\site_config.lua" 
-ECHO LUAROCKS_DOWNLOADER=[[wget]]>> "%LUADIR%\luarocks\site_config.lua"
-ECHO LUAROCKS_MD5CHECKER=[[md5sum]]>> "%LUADIR%\luarocks\site_config.lua"
-IF NOT [%FORCE_CONFIG%]==[] ECHO local LUAROCKS_FORCE_CONFIG=true>> "%LUADIR%\luarocks\site_config.lua"
-IF EXIST "%LUADIR%\luarocks\site_config.lua.bak" TYPE "%LUADIR%\luarocks\site_config.lua.bak">> "%LUADIR%\luarocks\site_config.lua" 
-
-IF EXIST "%LUADIR%\luarocks\site_config.lua.bak" DEL /F /Q "%LUADIR%\luarocks\site_config.lua.bak"
-ECHO Created LuaRocks site-config file: %LUADIR%\luarocks\site_config.lua
-
-REM create config file
-SET CONFIG_FILE=%SYSCONFDIR%\config.lua
-
-IF NOT EXIST "%SYSCONFDIR%" %MKDIR% "%SYSCONFDIR%"
-IF NOT EXIST "%CONFIG_FILE%" (
-   ECHO rocks_servers = {>> "%CONFIG_FILE%"
-   ECHO    [[http://luarocks.org/repositories/rocks]]>> "%CONFIG_FILE%"
-   ECHO }>> "%CONFIG_FILE%"
-   ECHO rocks_trees = {>> "%CONFIG_FILE%"
-   IF [%FORCE_CONFIG%]==[] ECHO    home..[[/luarocks]],>> "%CONFIG_FILE%"
-   ECHO    [[%ROCKS_TREE%]]>> "%CONFIG_FILE%"
-   ECHO }>> "%CONFIG_FILE%"
-   IF NOT [%SCRIPTS_DIR%]==[] ECHO scripts_dir=[[%SCRIPTS_DIR%]]>> "%CONFIG_FILE%"
-   ECHO variables = {>> "%CONFIG_FILE%"
-   IF [%USE_MINGW%]==[ON] (
-   ECHO    MSVCRT = 'm',>> "%CONFIG_FILE%"
-   ) ELSE (
-   ECHO    MSVCRT = 'msvcr80',>> "%CONFIG_FILE%"
-   )
-   ECHO    LUALIB = '%LUA_LIBNAME%'>> "%CONFIG_FILE%"
-   ECHO }>> "%CONFIG_FILE%"
-   ECHO Created LuaRocks config file: %CONFIG_FILE%
-) ELSE (
-   ECHO LuaRocks config file already exists: %CONFIG_FILE%
-)
-
-ECHO.
-ECHO Creating rocktrees...
-IF NOT EXIST "%ROCKS_TREE%" (
-   %MKDIR% "%ROCKS_TREE%"
-   ECHO Created rocktree: "%ROCKS_TREE%"
-) ELSE (
-   ECHO Rocktree exists: "%ROCKS_TREE%"
-)
-IF NOT EXIST "%APPDATA%/luarocks" (
-   %MKDIR% "%APPDATA%/luarocks"
-   ECHO Created rocktree: "%APPDATA%\luarocks"
-) ELSE (
-   ECHO Rocktree exists: "%APPDATA%\luarocks"
-)
-
-REM Load registry information
-IF [%REGISTRY%]==[ON] (
-   REM expand template with correct path information
-   ECHO.
-   ECHO Loading registry information for ".rockspec" files
-   lua5.1\bin\lua5.1.exe "%FULL_PREFIX%\create_reg_file.lua" "%FULL_PREFIX%\LuaRocks.reg.template"
-   %FULL_PREFIX%\LuaRocks.reg
-)
-
-REM ***********************************************************
-REM Exit handlers 
-REM ***********************************************************
-
-ECHO.
-ECHO    *** LuaRocks is installed! ***
-ECHO.
-ECHO You may want to add the following elements to your paths;
-ECHO PATH     :   %LUA_BINDIR%;%FULL_PREFIX%
-ECHO LUA_PATH :   %ROCKS_TREE%\share\lua\%LUA_VERSION%\?.lua;%ROCKS_TREE%\share\lua\%LUA_VERSION%\?\init.lua
-ECHO LUA_CPATH:   %LUA_LIBDIR%\lua\%LUA_VERSION%\?.dll
-ECHO.
-:QUIT
+SETLOCAL
+SET LUA_PATH=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH%
+SET PATH=$BINDIR\;%PATH%
+"$LUA_INTERPRETER" "$BINDIR\]]..c..[[.lua" %*
 ENDLOCAL
-EXIT /B 0
+]])
+	f:close()
+	print(S"Created LuaRocks command: $BINDIR\\"..c..".bat")
+end
+-- configure 'scripts' directory
+if vars.SCRIPTS_DIR then
+	mkdir(vars.SCRIPTS_DIR)
+	if USE_MINGW then
+		-- definitly not for MinGW because of conflicting runtimes
+		-- but is it ok to do it for others???
+		exec(S[[COPY lua5.1\bin\*.dll "$SCRIPTS_DIR" >NUL]])
+	end
+else
+	mkdir(S[[$ROCKS_TREE\bin]])
+	if USE_MINGW then
+		-- definitly not for MinGW because of conflicting runtimes
+		-- but is it ok to do it for others???
+		exec(S[[COPY lua5.1\bin\*.dll "$ROCKS_TREE"\bin >NUL]])
+	end
+end
 
-:ERROR
-ECHO.
-ECHO Failed installing LuaRocks. Run with /? for help.
-ENDLOCAL
-EXIT /B 1
+
+print()
+print("Configuring LuaRocks...")
+-- Create a site-config file
+if exists(S[[$LUADIR\luarocks\site_config.lua]]) then
+	exec(S[[RENAME "$LUADIR\luarocks\site_config.lua" site_config.lua.bak]])
+end
+local f = io.open(vars.LUADIR.."\\luarocks\\site_config.lua", "w")
+f:write(S[=[
+module("luarocks.site_config")
+LUA_INCDIR=[[$LUA_INCDIR]]
+LUA_LIBDIR=[[$LUA_LIBDIR]]
+LUA_BINDIR=[[$LUA_BINDIR]]
+LUA_INTERPRETER=[[$LUA_INTERPRETER]]
+]=])
+if USE_MINGW then
+	f:write("LUAROCKS_UNAME_S=[[MINGW]]\n")
+else
+	f:write("LUAROCKS_UNAME_S=[[WindowsNT]]\n")
+end
+f:write(S[=[
+LUAROCKS_UNAME_M=[[x86]]
+LUAROCKS_SYSCONFIG=[[$SYSCONFDIR\config.lua]]
+LUAROCKS_ROCKS_TREE=[[$ROCKS_TREE]]
+LUAROCKS_PREFIX=[[$PREFIX]]
+LUAROCKS_DOWNLOADER=[[wget]]
+LUAROCKS_MD5CHECKER=[[md5sum]]
+]=])
+if FORCE_CONFIG then
+	f:write("local LUAROCKS_FORCE_CONFIG=true\n")
+end
+if exists(vars.LUADIR.."\\luarocks\\site_config.lua.bak") then
+	for line in io.lines(vars.LUADIR.."\\luarocks\\site_config.lua.bak", "r") do
+		f:write(line)
+		f:write("\n")
+	end
+	exec(S[[DEL /F /Q "$LUADIR\luarocks\site_config.lua.bak"]])
+end
+f:close()
+print(S[[Created LuaRocks site-config file: $LUADIR\luarocks\site_config.lua]])
+
+-- create config file
+vars.CONFIG_FILE = vars.SYSCONFDIR.."\\config.lua"
+if not exists(vars.SYSCONFDIR) then
+	mkdir(vars.SYSCONFDIR)
+end
+if not exists(vars.CONFIG_FILE) then
+	local f = io.open(vars.CONFIG_FILE, "w")
+	f:write([=[
+rocks_servers = {
+   [[http://luarocks.org/repositories/rocks]]
+}
+rocks_trees = {
+]=])
+	if FORCE_CONFIG then
+		f:write("    home..[[/luarocks]],\n")
+	end
+	f:write(S"    [[$ROCKS_TREE]]\n")
+	f:write("}\n")
+	if vars.SCRIPTS_DIR then
+		f:write(S"scripts_dir=[[$SCRIPTS_DIR]]\n")
+	end
+	f:write("variables = {\n")
+	if USE_MINGW then
+		f:write("    MSVCRT = 'm',\n")
+	else
+		f:write("    MSVCRT = 'msvcr80',\n")
+	end
+	f:write(S"    LUALIB = '$LUA_LIBNAME'\n")
+	f:write("}\n")
+	f:close()
+	print(S"Created LuaRocks config file: $CONFIG_FILE")
+else
+	print(S"LuaRocks config file already exists: $CONFIG_FILE")
+end
+
+print()
+print("Creating rocktrees...")
+if not exists(vars.ROCKS_TREE) then
+	mkdir(vars.ROCKS_TREE)
+	print(S[[Created rocktree: "$ROCKS_TREE"]])
+else
+	print(S[[Rocktree exists: "$ROCKS_TREE"]])
+end
+local APPDATA = os.getenv("APPDATA")
+if not exists(APPDATA.."\\luarocks") then
+	mkdir(APPDATA.."\\luarocks")
+	print([[Created rocktree: "]]..APPDATA..[[\luarocks"]])
+else
+	print([[Rocktree exists: "]]..APPDATA..[[\luarocks"]])
+end
+
+-- Load registry information
+if REGISTRY then
+	-- expand template with correct path information
+	print()
+	print([[Loading registry information for ".rockspec" files]])
+	exec( S[[lua5.1\bin\lua5.1.exe "$FULL_PREFIX\create_reg_file.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
+	exec( S"$FULL_PREFIX\\LuaRocks.reg" )
+end
+
+-- ***********************************************************
+-- Exit handlers 
+-- ***********************************************************
+
+print(S[[
+*** LuaRocks is installed! ***
+
+ You may want to add the following elements to your paths;
+PATH     :   $LUA_BINDIR;$FULL_PREFIX
+LUA_PATH :   $ROCKS_TREE\share\lua\$LUA_VERSION\?.lua;$ROCKS_TREE\share\lua\$LUA_VERSION\?\init.lua
+LUA_CPATH:   $LUA_LIBDIR\lua\$LUA_VERSION\?.dll
+
+]])
+os.exit(0)
