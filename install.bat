@@ -60,7 +60,7 @@ local function print_help()
 	print(S[[
 Installs LuaRocks.
 
-/P [dir]       ^(REQUIRED^) Where to install. 
+/P [dir]       (REQUIRED) Where to install. 
                Note that version; $VERSION, will be
                appended to this path.
 /CONFIG [dir]  Location where the config file should be installed.
@@ -74,7 +74,7 @@ Installs LuaRocks.
                Default is 5.1
 /L             Install LuaRocks' own copy of Lua even if detected,
                this will always be a 5.1 installation.
-               ^(/LUA, /INC, /LIB, /BIN cannot be used with /L^)
+               (/LUA, /INC, /LIB, /BIN cannot be used with /L)
 /LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
                This is the base directory, the installer will look
                for subdirectories bin, lib, include. Alternatively
@@ -97,7 +97,7 @@ Installs LuaRocks.
 /F             Remove installation directory if it already exists.
 
 /R             Load registry information to register '.rockspec'
-               extension with LuaRocks commands ^(right-click^).
+               extension with LuaRocks commands (right-click).
 
 ]])
 end
@@ -111,7 +111,6 @@ local function parse_options(args)
 		if name == "/?" then
 			print_help()
 			os.exit(0)
-      
 		elseif name == "/P" then
 			vars.PREFIX = option.value
 			vars.SYSCONFDIR = option.value
@@ -198,13 +197,13 @@ local function look_for_interpreter (directory)
 			vars.LUA_BINDIR = directory .. e
 			print("       Found ."..e..vars.LUA_INTERPRETER)
 			return true
-      
+
 		elseif exists(directory..e.."\\lua.exe") then
 			vars.LUA_INTERPRETER = "lua.exe"
 			vars.LUA_BINDIR = directory..e
 			print("       Found ."..e..vars.LUA_INTERPRETER)
 			return true
-      
+
 		elseif exists(directory..e.."\\luajit.exe") then
 			vars.LUA_INTERPRETER = "luajit.exe"
 			vars.LUA_BINDIR = directory..e
@@ -226,7 +225,7 @@ local function look_for_link_libraries (directory)
 				return true
 			end
 		end
-		die(S"link library ^(one of; $LUA_LIB_NAMES^) not found in $LUA_LIBDIR")
+		die(S"link library (one of; $LUA_LIB_NAMES) not found in $LUA_LIBDIR")
 	end
 
 	for _, e in ipairs{ [[\]], [[\lib\]], [[\bin\]]} do
@@ -240,7 +239,7 @@ local function look_for_link_libraries (directory)
 			end
 		end
 	end
-	return true
+	return false
 end
 
 local function look_for_headers (directory)
@@ -261,13 +260,14 @@ local function look_for_headers (directory)
 			return true
 		end
 	end
+	return false
 end
 
 local function look_for_lua_install ()
 	print("Looking for Lua interpreter")
 	local directories = { [[c:\lua5.1.2]], [[c:\lua]], [[c:\kepler\1.1]] }
 	if vars.LUA_PREFIX then
-		table.insert(1, vars.LUA_PREFIX)
+		table.insert(directories, 1, vars.LUA_PREFIX)
 	end
 	if vars.LUA_BINDIR and vars.LUA_LIBDIR and vars.LUA_INCDIR then
 		if look_for_interpreter(vars.LUA_BINDIR) and 
@@ -307,7 +307,7 @@ end
 ---
 -- Poor man's command-line parsing
 local config = {}
-local with_arg = {
+local with_arg = { -- options followed by an argument, others are flags
 	["/P"] = true,
 	["/CONFIG"] = true,
 	["/TREE"] = true,
@@ -360,6 +360,7 @@ if not look_for_lua_install() then
 	vars.LUA_LIBNAME = "lua5.1.lib"
 else
 	print(S[[
+
 Will configure LuaRocks with the following paths:
 LuaRocks       : $FULL_PREFIX
 Lua interpreter: $LUA_BINDIR\$LUA_INTERPRETER
@@ -443,14 +444,14 @@ end
 -- configure 'scripts' directory
 if vars.SCRIPTS_DIR then
 	mkdir(vars.SCRIPTS_DIR)
-	if USE_MINGW then
+	if not USE_MINGW then
 		-- definitly not for MinGW because of conflicting runtimes
 		-- but is it ok to do it for others???
 		exec(S[[COPY lua5.1\bin\*.dll "$SCRIPTS_DIR" >NUL]])
 	end
 else
+	if not USE_MINGW then
 	mkdir(S[[$ROCKS_TREE\bin]])
-	if USE_MINGW then
 		-- definitly not for MinGW because of conflicting runtimes
 		-- but is it ok to do it for others???
 		exec(S[[COPY lua5.1\bin\*.dll "$ROCKS_TREE"\bin >NUL]])
