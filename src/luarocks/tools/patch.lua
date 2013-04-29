@@ -295,7 +295,7 @@ function read_patch(filename, data)
         -- Accept a space as a terminator, like GNU patch does.
         -- Breaks patches containing filenames with spaces...
         -- FIXME Figure out what does GNU patch do in those cases.
-        local match = line:match("^--- ([^\t ]+)")
+        local match = line:match("^%-%-%- ([^\t ]+)")
         if not match then
           all_ok = false
           warning(format("skipping invalid filename at line %d", lineno+1))
@@ -329,7 +329,7 @@ function read_patch(filename, data)
           -- Accept a space as a terminator, like GNU patch does.
           -- Breaks patches containing filenames with spaces...
           -- FIXME Figure out what does GNU patch do in those cases.
-          local re_filename = "^%+%+%+ ([^ \t]+)"
+          local re_filename = "^%+%+%+ ([^ \t\r\n]+)"
           local match = line:match(re_filename)
           if not match then
             all_ok = false
