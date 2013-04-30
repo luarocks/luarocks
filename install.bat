@@ -18,6 +18,7 @@ vars.LUA_LIBNAME = nil
 vars.LUA_VERSION = "5.1"
 vars.LUA_SHORTV = nil
 vars.LUA_LIB_NAMES = "lua5.1.lib lua51.dll liblua.dll.a"
+vars.LUA_RUNTIME = nil
 
 local P_SET = false
 local FORCE = false
@@ -263,6 +264,39 @@ local function look_for_headers (directory)
 	return false
 end
 
+local function get_runtime()
+	local infile = vars.LUA_BINDIR .."\\"..vars.LUA_INTERPRETER
+	local outfile = "output.txt"
+	local content
+	-- analyze binary
+	if exec([[.\bin\objdump -x "]]..infile..[[" > ]]..outfile) then
+		-- read temp file
+		local fh = io.open(outfile)
+		content = fh:read("*a")
+		fh:close()
+	end
+	-- delete temp file
+	os.remove(outfile)
+	if not content then
+		print("    Failed to analyze "..infile.." for the runtime used")
+        return false
+    end
+
+	-- lookup
+	content = content:upper()
+	local result = content:match('DLL NAME%: (MSVCR%d*)%.DLL')
+	if not result then
+	  result = content:match('DLL NAME%: (MSVCRT)%.DLL')
+	end
+
+	if result then
+		vars.LUA_RUNTIME = result
+		print("    "..vars.LUA_INTERPRETER.." uses "..tostring(result)..".DLL as runtime")
+		return true
+	end
+	return false
+end
+
 local function look_for_lua_install ()
 	print("Looking for Lua interpreter")
 	local directories = { [[c:\lua5.1.2]], [[c:\lua]], [[c:\kepler\1.1]] }
@@ -275,7 +309,7 @@ local function look_for_lua_install ()
 			look_for_headers(vars.LUA_INCDIR)
 		then
 			if exec(S"$LUA_BINDIR\\$LUA_INTERPRETER -v 2>NUL") then
-				print("   Ok")
+				print("    Ok")
 				return true
 			end
 		end
@@ -290,12 +324,15 @@ local function look_for_lua_install ()
 				if look_for_link_libraries(directory) then
 					print("Link library found, now looking for headers...")
 					if look_for_headers(directory) then
-						print("Headers found, now testing interpreter...")
-						if exec(S[[$LUA_BINDIR\$LUA_INTERPRETER -v 2>NUL]]) then
-							print("   Ok")
-							return true
+						print("Headers found, checking runtime to use...")
+						if get_runtime() then
+							print("Runtime found, now testing interpreter...")
+							if exec(S[[$LUA_BINDIR\$LUA_INTERPRETER -v 2>NUL]]) then
+								print("    Ok")
+								return true
+							end
+							print("   Interpreter returned an error, not ok")
 						end
-						print("   Interpreter returned an error, not ok")
 					end
 				end
 			end
@@ -358,6 +395,7 @@ if not look_for_lua_install() then
 	vars.LUA_LIBDIR = vars.LIBDIR
 	vars.LUA_INCDIR = vars.INCDIR
 	vars.LUA_LIBNAME = "lua5.1.lib"
+    vars.LUA_RUNTIME = "MSVCR80"
 else
 	print(S[[
 
@@ -367,7 +405,7 @@ Lua interpreter: $LUA_BINDIR\$LUA_INTERPRETER
 Lua binaries   : $LUA_BINDIR
 Lua libraries  : $LUA_LIBDIR
 Lua includes   : $LUA_INCDIR
-Binaries will be linked against: $LUA_LIBNAME
+Binaries will be linked against: $LUA_LIBNAME with runtime $LUA_RUNTIME
 
 ]])
 end
@@ -521,10 +559,10 @@ rocks_trees = {
 		f:write(S"scripts_dir=[[$SCRIPTS_DIR]]\n")
 	end
 	f:write("variables = {\n")
-	if USE_MINGW then
+	if USE_MINGW and vars.LUA_RUNTIME == "MSVCRT" then
 		f:write("    MSVCRT = 'm',\n")
 	else
-		f:write("    MSVCRT = 'msvcr80',\n")
+		f:write("    MSVCRT = '"..vars.LUA_RUNTIME.."',\n")
 	end
 	f:write(S"    LUALIB = '$LUA_LIBNAME'\n")
 	f:write("}\n")
