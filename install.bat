@@ -560,7 +560,7 @@ rocks_trees = {
 	end
 	f:write("variables = {\n")
 	if USE_MINGW and vars.LUA_RUNTIME == "MSVCRT" then
-		f:write("    MSVCRT = 'm',\n")
+		f:write("    MSVCRT = 'm',   -- make MinGW use MSVCRT.DLL as runtime\n")
 	else
 		f:write("    MSVCRT = '"..vars.LUA_RUNTIME.."',\n")
 	end
