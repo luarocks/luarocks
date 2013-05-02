@@ -264,6 +264,9 @@ local function look_for_headers (directory)
 	return false
 end
 
+-- Checks a binary file for the runtime dll used by it. If nu runtime is found, it returns an
+-- array of dll's is depends upon.
+-- result: string = runtime used, table = list of dll's depended upon, nil = nothing found.
 local function get_file_runtime(p,f) -- path, filename
 	local infile = p.."\\"..f
 	local outfile = "output.txt"
@@ -293,6 +296,12 @@ local function get_file_runtime(p,f) -- path, filename
 		print("    "..f.." uses "..tostring(result)..".DLL as runtime")
 	else
 		print("    No runtime found for "..f)
+		-- so; create a list of dll's this file is depending upon, next level of the tree
+		result = {}
+		for name in content:gmatch("DLL NAME%: (.-%.DLL)") do
+			--print("found dll:", name)
+			table.insert(result, name)
+		end
 	end
 	return result
 end
@@ -300,11 +309,19 @@ end
 local function get_runtime()
 	-- first check interpreter
 	vars.LUA_RUNTIME = get_file_runtime(vars.LUA_BINDIR, vars.LUA_INTERPRETER)
-	if not vars.LUA_RUNTIME then
-		-- not found, check link library
-		vars.LUA_RUNTIME = get_file_runtime(vars.LUA_LIBDIR, vars.LUA_LIBNAME)
+	if type(vars.LUA_RUNTIME) == "table" then
+		-- a table with dll's depended upon was returned, check this list
+		-- note: we only check 1 level deep
+		for _,dll in ipairs(vars.LUA_RUNTIME) do
+			local t = get_file_runtime(vars.LUA_BINDIR, dll)
+			if type(t) == "string" then
+				-- found it
+				vars.LUA_RUNTIME = t
+				break
+			end
+		end
 	end
-	return (vars.LUA_RUNTIME ~= nil)
+	return (type(vars.LUA_RUNTIME) == "string")
 end
 
 local function look_for_lua_install ()
