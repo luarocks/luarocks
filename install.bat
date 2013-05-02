@@ -264,8 +264,8 @@ local function look_for_headers (directory)
 	return false
 end
 
-local function get_runtime()
-	local infile = vars.LUA_BINDIR .."\\"..vars.LUA_INTERPRETER
+local function get_file_runtime(p,f) -- path, filename
+	local infile = p.."\\"..f
 	local outfile = "output.txt"
 	local content
 	-- analyze binary
@@ -279,7 +279,7 @@ local function get_runtime()
 	os.remove(outfile)
 	if not content then
 		print("    Failed to analyze "..infile.." for the runtime used")
-        return false
+        return nil
     end
 
 	-- lookup
@@ -290,11 +290,21 @@ local function get_runtime()
 	end
 
 	if result then
-		vars.LUA_RUNTIME = result
-		print("    "..vars.LUA_INTERPRETER.." uses "..tostring(result)..".DLL as runtime")
-		return true
+		print("    "..f.." uses "..tostring(result)..".DLL as runtime")
+	else
+		print("    No runtime found for "..f)
 	end
-	return false
+	return result
+end
+
+local function get_runtime()
+	-- first check interpreter
+	vars.LUA_RUNTIME = get_file_runtime(vars.LUA_BINDIR, vars.LUA_INTERPRETER)
+	if not vars.LUA_RUNTIME then
+		-- not found, check link library
+		vars.LUA_RUNTIME = get_file_runtime(vars.LUA_LIBDIR, vars.LUA_LIBNAME)
+	end
+	return (vars.LUA_RUNTIME ~= nil)
 end
 
 local function look_for_lua_install ()
