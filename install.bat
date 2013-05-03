@@ -272,7 +272,7 @@ local function get_file_runtime(p,f) -- path, filename
 	local outfile = "output.txt"
 	local content
 	-- analyze binary
-	if exec([[.\bin\objdump -x "]]..infile..[[" > ]]..outfile) then
+	if exec([[.\bin\objdump -x "]]..infile..[[" > ]]..outfile..[[ 2<&1]]) then
 		-- read temp file
 		local fh = io.open(outfile)
 		content = fh:read("*a")
@@ -321,7 +321,12 @@ local function get_runtime()
 			end
 		end
 	end
-	return (type(vars.LUA_RUNTIME) == "string")
+	if type(vars.LUA_RUNTIME) ~= "string" then
+		-- analysis failed, issue a warning
+		vars.LUA_RUNTIME = "MSVCR80"
+		print("*** WARNING ***: could not analyse the runtime used, defaulting to "..vars.LUA_RUNTIME)
+	end
+	return true
 end
 
 local function look_for_lua_install ()
@@ -353,7 +358,7 @@ local function look_for_lua_install ()
 					if look_for_headers(directory) then
 						print("Headers found, checking runtime to use...")
 						if get_runtime() then
-							print("Runtime found, now testing interpreter...")
+							print("Runtime check completed, now testing interpreter...")
 							if exec(S[[$LUA_BINDIR\$LUA_INTERPRETER -v 2>NUL]]) then
 								print("    Ok")
 								return true
