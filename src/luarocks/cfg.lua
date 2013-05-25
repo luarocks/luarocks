@@ -235,7 +235,7 @@ local defaults = {
       PATCH = "patch",
 
       ZIP = "zip",
-      UNZIP = "unzip",
+      UNZIP = "unzip -n",
       GUNZIP = "gunzip",
       BUNZIP2 = "bunzip2",
       TAR = "tar",
