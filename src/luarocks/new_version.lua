@@ -55,26 +55,64 @@ local function try_replace(tbl, field, old, new)
 end
 
 local function check_url_and_update_md5(out_rs, out_name)
+   local old_md5 = out_rs.source.md5
    out_rs.source.md5 = nil
    local file, temp_dir = fetch.fetch_url_at_temp_dir(out_rs.source.url, "luarocks-new-version-"..out_name)
-   if file then
-      util.printout("File successfully downloaded. Updating MD5 checksum...")
-      out_rs.source.md5 = fs.get_md5(file)
-      fs.change_dir(temp_dir)
-      fs.unpack_archive(file)
-      local base_dir = out_rs.source.dir or fetch.url_to_base_dir(out_rs.source.url)
-      if not fs.exists(base_dir) then
-         util.printerr("Directory "..base_dir.." not found")
-         local files = fs.list_dir()
-         if files[1] and fs.is_dir(files[1]) then
-            util.printerr("Found "..files[1])
-            out_rs.source.dir = files[1]
-         end
-      end
-      fs.pop_dir()
-   else
+   if not file then
       util.printerr("Warning: invalid URL - "..temp_dir)
+      return true
    end
+   util.printout("File successfully downloaded. Updating MD5 checksum...")
+   out_rs.source.md5 = fs.get_md5(file)
+   fs.change_dir(temp_dir)
+   fs.unpack_archive(file)
+   local base_dir = out_rs.source.dir or fetch.url_to_base_dir(out_rs.source.url)
+   if not fs.exists(base_dir) then
+      util.printerr("Directory "..base_dir.." not found")
+      local files = fs.list_dir()
+      if files[1] and fs.is_dir(files[1]) then
+         util.printerr("Found "..files[1])
+         out_rs.source.dir = files[1]
+      end
+   end
+   fs.pop_dir()
+   return out_rs.source.md5 ~= old_md5
+end
+ 
+local function update_source_section(out_rs, out_name, url, old_ver, new_ver)
+   if url then
+      out_rs.source.url = url
+      check_url_and_update_md5(out_rs, out_name)
+      return true
+   end
+   if new_ver == old_ver then
+      return true
+   end
+   if not out_rs.source then
+      return nil, "'source' table is missing. Invalid rockspec?"
+   end
+   if out_rs.source.dir then
+      try_replace(out_rs.source, "dir", old_ver, new_ver)
+   end
+   if out_rs.source.file then
+      try_replace(out_rs.source, "file", old_ver, new_ver)
+   end
+   local ok = try_replace(out_rs.source, "url", old_ver, new_ver)
+   if ok then
+      check_url_and_update_md5(out_rs, out_name)
+      return true
+   end
+   ok = try_replace(out_rs.source, "tag", old_ver, new_ver)
+   if not ok then
+      ok = check_url_and_update_md5(out_rs, out_name)
+      if ok then
+         util.printerr("Warning: URL is the same, but MD5 has changed. Old rockspec is broken.")
+      end
+   end
+   if not ok then
+      return nil, "Failed to determine the location of the new version."
+   end
+   return true
 end
  
 function run(...)
@@ -117,29 +155,10 @@ function run(...)
    local out_rs = persist.load_into_table(filename)
    local out_name = out_rs.package:lower()
    out_rs.version = new_rockver.."-"..new_rev
-   if url then
-      out_rs.source.url = url
-      check_url_and_update_md5(out_rs, out_name)
-   else
-      if new_ver ~= old_ver then
-         if out_rs.source and out_rs.source.dir then
-            try_replace(out_rs.source, "dir", old_ver, new_ver)
-         end
-         if out_rs.source and out_rs.source.file then
-            try_replace(out_rs.source, "file", old_ver, new_ver)
-         end
-         local ok = try_replace(out_rs.source, "url", old_ver, new_ver)
-         if ok then
-            check_url_and_update_md5(out_rs, out_name)
-         else
-            ok = try_replace(out_rs.source, "tag", old_ver, new_ver)
-            if not ok then
-               return nil, "Failed to determine the location of the new version."
-            end
-         end
-      end
-   end
-   
+
+   local ok, err = update_source_section(out_rs, out_name, url, old_ver, new_ver)
+   if not ok then return nil, err end
+
    if out_rs.build and out_rs.build.type == "module" then
       out_rs.build.type = "builtin"
    end
