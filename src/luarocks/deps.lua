@@ -170,9 +170,14 @@ local function parse_constraint(input)
    assert(type(input) == "string")
 
    local no_upgrade, op, version, rest = input:match("^(@?)([<>=~!]*)%s*([%w%.%_%-]+)[%s,]*(.*)")
-   op = operators[op]
+   local _op = operators[op]
    version = parse_version(version)
-   if not op or not version then return nil end
+   if not _op then
+      return nil, "Encountered bad constraint operator: '"..tostring(op).."' in '"..input.."'"
+   end
+   if not version then 
+      return nil, "Could not parse version from constraint: '"..input.."'"
+   end
    return { op = op, version = version, no_upgrade = no_upgrade=="@" and true or nil }, rest
 end
 
@@ -187,13 +192,13 @@ end
 function parse_constraints(input)
    assert(type(input) == "string")
 
-   local constraints, constraint = {}, nil
+   local constraints, constraint, oinput = {}, nil, input
    while #input > 0 do
       constraint, input = parse_constraint(input)
       if constraint then
          table.insert(constraints, constraint)
       else
-         return nil
+         return nil, "Failed to parse constraint '"..tostring(o_input).."' with error: ".. input
       end
    end
    return constraints
@@ -213,9 +218,9 @@ function parse_dep(dep)
    assert(type(dep) == "string")
 
    local name, rest = dep:match("^%s*([a-zA-Z][a-zA-Z0-9%.%-%_]*)%s*(.*)")
-   if not name then return nil end
-   local constraints = parse_constraints(rest)
-   if not constraints then return nil end
+   if not name then return nil, "failed to extract dependency name from '"..tostring(dep).."'" end
+   local constraints, err = parse_constraints(rest)
+   if not constraints then return nil, err end
    return { name = name, constraints = constraints }
 end
 
