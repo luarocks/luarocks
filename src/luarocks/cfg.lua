@@ -305,7 +305,7 @@ if detected.windows then
 end
 
 if detected.mingw32 then
-   defaults.platforms = { "win32", "mingw32" }
+   defaults.platforms = { "win32", "mingw32", "windows" }
    defaults.obj_extension = "o"
    defaults.cmake_generator = "MinGW Makefiles"
    defaults.variables.MAKE = "mingw32-make"
