@@ -81,6 +81,16 @@ function make_rock_manifest(name, version)
    save_table(install_dir, "rock_manifest", rock_manifest )
 end
 
+local function fetch_manifest_from(repo_url, filename)
+   local url = dir.path(repo_url, filename)
+   local name = repo_url:gsub("[/:]","_")
+   local file, err, errcode = fetch.fetch_url_at_temp_dir(url, "luarocks-manifest-"..name)
+   if not file then
+      return nil, "Failed fetching manifest for "..repo_url..(err and " - "..err or ""), errcode
+   end
+   return file
+end
+
 --- Load a local or remote manifest describing a repository.
 -- All functions that use manifest tables assume they were obtained
 -- through either this function or load_local_manifest.
@@ -94,15 +104,21 @@ function load_manifest(repo_url)
       return manif_core.manifest_cache[repo_url]
    end
 
+   local vmanifest = "manifest-"..cfg.lua_version
+
    local protocol, pathname = dir.split_url(repo_url)
    if protocol == "file" then
-      pathname = dir.path(pathname, "manifest")
+      pathname = dir.path(pathname, vmanifest)
+      if not fs.exists(pathname) then
+         pathname = dir.path(pathname, "manifest")
+      end
    else
-      local url = dir.path(repo_url, "manifest")
-      local name = repo_url:gsub("[/:]","_")
-      local file, err, errcode = fetch.fetch_url_at_temp_dir(url, "luarocks-manifest-"..name)
+      local file, err = fetch_manifest_from(repo_url, vmanifest)
       if not file then
-         return nil, "Failed fetching manifest for "..repo_url..(err and " - "..err or ""), errcode
+         file, err = fetch_manifest_from(repo_url, "manifest")
+      end
+      if not file then 
+         return nil, err
       end
       pathname = file
    end
@@ -188,11 +204,16 @@ end
 -- @param deps_mode string: Dependency mode: "one" for the current default tree,
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for no trees.
-local function update_dependencies(manifest, deps_mode)
+-- @param repodir string: directory of repository being scanned
+-- @param filter_lua string or nil: filter by Lua version
+local function update_dependencies(manifest, deps_mode, repodir, filter_lua)
    assert(type(manifest) == "table")
    assert(type(deps_mode) == "string")
-
+   
+   local lua_version = filter_lua and deps.parse_version(filter_lua)
+   
    for pkg, versions in pairs(manifest.repository) do
+      local to_remove = {}
       for version, repositories in pairs(versions) do
          local current = pkg.." "..version
          for _, repo in ipairs(repositories) do
@@ -209,7 +230,25 @@ local function update_dependencies(manifest, deps_mode)
                      end
                   end
                end
+            elseif filter_lua and repo.arch == "rockspec" then
+               local rockspec = fetch.load_local_rockspec(dir.path(repodir, pkg.."-"..version..".rockspec"))
+               for _, dep in ipairs(rockspec.dependencies) do
+                  if dep.name == "lua" then 
+                     if not deps.match_constraints(lua_version, dep.constraints) then
+                        table.insert(to_remove, version)
+                     end
+                     break
+                  end
+               end
             end
+         end
+      end
+      if next(to_remove) then
+         for _, incompat in ipairs(to_remove) do
+            manifest.repository[pkg][incompat] = nil
+         end
+         if not next(manifest.repository[pkg]) then
+            manifest.repository[pkg] = nil
          end
       end
    end
@@ -222,8 +261,9 @@ end
 -- @param deps_mode string: Dependency mode: "one" for the current default tree,
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for no trees.
+-- @param repo string: directory of repository
 -- @return boolean or (nil, string): true in case of success, or nil followed by an error message.
-local function store_results(results, manifest, deps_mode)
+local function store_results(results, manifest, deps_mode, repo, filter_lua)
    assert(type(results) == "table")
    assert(type(manifest) == "table")
    assert(type(deps_mode) == "string")
@@ -249,7 +289,7 @@ local function store_results(results, manifest, deps_mode)
       end
       manifest.repository[name] = pkgtable
    end
-   update_dependencies(manifest, deps_mode)
+   update_dependencies(manifest, deps_mode, repo, filter_lua)
    sort_package_matching_table(manifest.modules)
    sort_package_matching_table(manifest.commands)
    return true
@@ -262,9 +302,11 @@ end
 -- @param deps_mode string: Dependency mode: "one" for the current default tree,
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for the default dependency mode from the configuration.
+-- @param versioned nil or array of string: a table of Lua versions, if versioned
+-- versions of the manifest should be created.
 -- @return boolean or (nil, string): True if manifest was generated,
 -- or nil and an error message.
-function make_manifest(repo, deps_mode)
+function make_manifest(repo, deps_mode, versioned)
    assert(type(repo) == "string")
    assert(type(deps_mode) == "string")
 
@@ -279,10 +321,19 @@ function make_manifest(repo, deps_mode)
    query.arch = "any"
    local results = search.disk_search(repo, query)
    local manifest = { repository = {}, modules = {}, commands = {} }
+
    manif_core.manifest_cache[repo] = manifest
 
-   local ok, err = store_results(results, manifest, deps_mode)
+   local ok, err = store_results(results, manifest, deps_mode, repo)
    if not ok then return nil, err end
+
+   if versioned then
+      for _, ver in ipairs(versioned) do
+         local vmanifest = { repository = {}, modules = {}, commands = {} }
+         local ok, err = store_results(results, vmanifest, deps_mode, repo, ver)
+         save_table(repo, "manifest-"..ver, vmanifest)
+      end
+   end
 
    return save_table(repo, "manifest", manifest)
 end
@@ -325,7 +376,7 @@ function update_manifest(name, version, repo, deps_mode)
 
    local results = {[name] = {[version] = {{arch = "installed", repo = repo}}}}
 
-   local ok, err = store_results(results, manifest, deps_mode)
+   local ok, err = store_results(results, manifest, deps_mode, repo)
    if not ok then return nil, err end
 
    return save_table(repo, "manifest", manifest)

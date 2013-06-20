@@ -26,7 +26,7 @@ In the latter case, the app version may be given as a second argument.
 local function unpack_rockspec(rockspec_file, dir_name)
    assert(type(rockspec_file) == "string")
    assert(type(dir_name) == "string")
-   
+
    local rockspec, err = fetch.load_rockspec(rockspec_file)
    if not rockspec then
       return nil, "Failed loading rockspec "..rockspec_file..": "..err
@@ -52,7 +52,7 @@ end
 local function unpack_rock(rock_file, dir_name, kind)
    assert(type(rock_file) == "string")
    assert(type(dir_name) == "string")
-   
+
    local ok, err, errcode = fetch.fetch_and_unpack_rock(rock_file, dir_name)
    if not ok then
       return nil, "Failed unzipping rock "..rock_file, errcode

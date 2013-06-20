@@ -65,7 +65,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    fs.change_dir(local_cache)
 
    util.printout("Updating manifest...")
-   manif.make_manifest(local_cache, "one")
+   manif.make_manifest(local_cache, "one", {"5.1", "5.2"})
    util.printout("Updating index.html...")
    index.make_index(local_cache)
 
@@ -76,6 +76,11 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
       login_url = login_url .. "/"
    end
 
+   table.insert(files, "index.html")
+   table.insert(files, "manifest")
+   table.insert(files, "manifest-5.1")
+   table.insert(files, "manifest-5.2")
+
    -- TODO abstract away explicit 'curl' call
 
    local cmd
@@ -84,9 +89,9 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
       cmd = cfg.variables.RSYNC.." --exclude=.git -Oavz -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
    elseif upload_server and upload_server.sftp then
       local part1, part2 = upload_server.sftp:match("^([^/]*)/(.*)$")
-      cmd = cfg.variables.SCP.." manifest index.html "..table.concat(files, " ").." "..user.."@"..part1..":/"..part2
+      cmd = cfg.variables.SCP.." "..table.concat(files, " ").." "..user.."@"..part1..":/"..part2
    else
-      cmd = cfg.variables.CURL.." "..login_info.." -T '{manifest,index.html,"..table.concat(files, ",").."}' "..login_url
+      cmd = cfg.variables.CURL.." "..login_info.." -T '{"..table.concat(files, ",").."}' "..login_url
    end
 
    util.printout(cmd)
