@@ -24,7 +24,8 @@ or a filename of a locally available rock.
 --- Install a binary rock.
 -- @param rock_file string: local or remote filename of a rock.
 -- @param deps_mode: string: Which trees to check dependencies for:
--- "none", "one", "order" or "all". 
+-- "one" for the current default tree, "all" for all trees,
+-- "order" for all trees with priority >= the current default, "none" for no trees.
 -- @return boolean or (nil, string, [string]): True if succeeded or 
 -- nil and an error message and an optional error code.
 function install_binary_rock(rock_file, deps_mode)

@@ -185,6 +185,9 @@ end
 -- and any dependency inconsistencies or missing dependencies are reported to
 -- standard error.
 -- @param manifest table: a manifest table.
+-- @param deps_mode string: Dependency mode: "one" for the current default tree,
+-- "all" for all trees, "order" for all trees with priority >= the current default,
+-- "none" for no trees.
 local function update_dependencies(manifest, deps_mode)
    assert(type(manifest) == "table")
    assert(type(deps_mode) == "string")
@@ -216,6 +219,9 @@ end
 -- @param results table: The search results as returned by search.disk_search.
 -- @param manifest table: A manifest table (must contain repository, modules, commands tables).
 -- It will be altered to include the search results.
+-- @param deps_mode string: Dependency mode: "one" for the current default tree,
+-- "all" for all trees, "order" for all trees with priority >= the current default,
+-- "none" for no trees.
 -- @return boolean or (nil, string): true in case of success, or nil followed by an error message.
 local function store_results(results, manifest, deps_mode)
    assert(type(results) == "table")
@@ -253,6 +259,9 @@ end
 -- A file called 'manifest' will be written in the root of the given
 -- repository directory.
 -- @param repo A local repository directory.
+-- @param deps_mode string: Dependency mode: "one" for the current default tree,
+-- "all" for all trees, "order" for all trees with priority >= the current default,
+-- "none" for the default dependency mode from the configuration.
 -- @return boolean or (nil, string): True if manifest was generated,
 -- or nil and an error message.
 function make_manifest(repo, deps_mode)
@@ -286,6 +295,9 @@ end
 -- @param version string: Version of a package from the repository.
 -- @param repo string or nil: Pathname of a local repository. If not given,
 -- the default local repository configured as cfg.rocks_dir is used.
+-- @param deps_mode string: Dependency mode: "one" for the current default tree,
+-- "all" for all trees, "order" for all trees with priority >= the current default,
+-- "none" for using the default dependency mode from the configuration.
 -- @return boolean or (nil, string): True if manifest was generated,
 -- or nil and an error message.
 function update_manifest(name, version, repo, deps_mode)

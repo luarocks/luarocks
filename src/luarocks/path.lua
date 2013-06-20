@@ -313,6 +313,13 @@ function use_tree(tree)
    cfg.deploy_lib_dir = deploy_lib_dir(tree)
 end
 
+--- Apply a given function to the active rocks trees based on chosen dependency mode.
+-- @param deps_mode string: Dependency mode: "one" for the current default tree,
+-- "all" for all trees, "order" for all trees with priority >= the current default,
+-- "none" for no trees (this function becomes a nop).
+-- @param fn function: function to be applied, with the tree dir (string) as the first
+-- argument and the remaining varargs of map_trees as the following arguments.
+-- @return a table with all results of invocations of fn collected.
 function map_trees(deps_mode, fn, ...)
    local result = {}
    if deps_mode == "one" then
