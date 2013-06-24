@@ -197,6 +197,10 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
          build.type = "builtin"
       end
 
+      if cfg.accepted_build_types and util.array_contains(cfg.accepted_build_types, build.type) then
+         return nil, "This rockspec uses the '"..build.type.."' build type, which is blocked by the 'accepted_build_types' setting in your LuaRocks configuration."
+      end
+
       local build_type
       ok, build_type = pcall(require, "luarocks.build." .. build.type)
       if not ok or not type(build_type) == "table" then

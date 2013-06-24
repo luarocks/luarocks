@@ -182,6 +182,7 @@ local defaults = {
    use_extensions = false,
    accept_unknown_fields = false,
    fs_use_modules = true,
+   hooks_enabled = true,
    deps_mode = "one",
 
    lua_modules_path = "/share/lua/"..lua_version,

@@ -131,6 +131,11 @@ function run_hook(rockspec, hook_name)
    if not hooks then
       return true
    end
+   
+   if cfg.hooks_enabled == false then
+      return nil, "This rockspec contains hooks, which are blocked by the 'hooks_enabled' setting in your LuaRocks configuration."
+   end
+   
    if not hooks.substituted_variables then
       util.variable_substitutions(hooks, rockspec.variables)
       hooks.substituted_variables = true

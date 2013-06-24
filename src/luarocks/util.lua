@@ -461,3 +461,12 @@ function show_table(t, name, indent)
    addtocart(t, name, indent)
    return cart .. autoref
 end
+
+function array_contains(tbl, value)
+   for _, v in ipairs(tbl) do
+      if v == value then
+         return true
+      end
+   end
+   return false
+end
