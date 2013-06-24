@@ -28,7 +28,7 @@ function run(...)
   
    util.printout("Making manifest for "..repo)
    
-   local ok, err = manif.make_manifest(repo, deps.get_deps_mode(flags))
+   local ok, err = manif.make_manifest(repo, deps.get_deps_mode(flags), true)
    if ok then
       util.printout("Generating index.html for "..repo)
       index.make_index(repo)

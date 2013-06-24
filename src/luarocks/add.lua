@@ -65,7 +65,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    fs.change_dir(local_cache)
 
    util.printout("Updating manifest...")
-   manif.make_manifest(local_cache, "one", {"5.1", "5.2"})
+   manif.make_manifest(local_cache, "one", true)
    util.printout("Updating index.html...")
    index.make_index(local_cache)
 
