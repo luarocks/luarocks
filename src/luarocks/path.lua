@@ -1,4 +1,3 @@
-
 --- LuaRocks-specific path handling functions.
 -- All paths are configured in this module, making it a single
 -- point where the layout of the local installation is defined in LuaRocks.
@@ -390,12 +389,16 @@ function run(...)
    local flags = util.parse_flags(...)
    local deps_mode = deps.get_deps_mode(flags)
 
-   util.printout(cfg.export_lua_path:format(util.remove_path_dupes(package.path, ';')))
-   util.printout(cfg.export_lua_cpath:format(util.remove_path_dupes(package.cpath, ';')))
+   local package_path = package.path:gsub (' ', '\\ ')
+   util.printout(cfg.export_lua_path:format(util.remove_path_dupes(package_path, ';')))
+
+   local package_cpath = package.cpath:gsub (' ', '\\ ')
+   util.printout(cfg.export_lua_cpath:format(util.remove_path_dupes(package_cpath, ';')))
    if flags["bin"] then
       local bin_dirs = map_trees(deps_mode, deploy_bin_dir)
       table.insert(bin_dirs, 1, os.getenv("PATH"))
-      util.printout(cfg.export_path:format(util.remove_path_dupes(table.concat(bin_dirs, cfg.export_path_separator), cfg.export_path_separator)))
+      local bin_path = table.concat(bin_dirs, cfg.export_path_separator):gsub (' ', '\\ ')
+      util.printout(cfg.export_path:format(util.remove_path_dupes(bin_path, cfg.export_path_separator)))
    end
    return true
 end
