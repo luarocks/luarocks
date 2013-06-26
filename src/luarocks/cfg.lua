@@ -443,15 +443,25 @@ local cfg_mt = {
 }
 setmetatable(_M, cfg_mt)
 
-for _,tree in ipairs(rocks_trees) do
-  if type(tree) == "string" then
-    package.path = tree..lua_modules_path.."/?.lua;"..tree..lua_modules_path.."/?/init.lua;"..package.path
-    package.cpath = tree..lib_modules_path.."/?."..lib_extension..";"..package.cpath
-  else
-    package.path = (tree.lua_dir or tree.root..lua_modules_path).."/?.lua;"..
-                       (tree.lua_dir or tree.root..lua_modules_path).."/?/init.lua;"..package.path
-    package.cpath = (tree.lib_dir or tree.root..lib_modules_path).."/?."..lib_extension..";"..package.cpath
-  end
+function package_paths()
+   local new_path, new_cpath = {}, {}
+   for _,tree in ipairs(rocks_trees) do
+     if type(tree) == "string" then
+        table.insert(new_path, 1, tree..lua_modules_path.."/?.lua;"..tree..lua_modules_path.."/?/init.lua")
+        table.insert(new_cpath, 1, tree..lib_modules_path.."/?."..lib_extension)
+     else
+        table.insert(new_path, 1, (tree.lua_dir or tree.root..lua_modules_path).."/?.lua;"..
+           (tree.lua_dir or tree.root..lua_modules_path).."/?/init.lua")
+        table.insert(new_cpath, 1, (tree.lib_dir or tree.root..lib_modules_path).."/?."..lib_extension)
+     end
+   end
+   return table.concat(new_path, ";"), table.concat(new_cpath, ";")
+end
+
+do
+   local new_path, new_cpath = package_paths()
+   package.path = new_path..";"..package.path
+   package.cpath = new_cpath..";"..package.cpath
 end
 
 function which_config()

@@ -389,13 +389,28 @@ end
 function run(...)
    local flags = util.parse_flags(...)
    local deps_mode = deps.get_deps_mode(flags)
+   
+   local lr_path, lr_cpath = cfg.package_paths()
+   local bin_dirs = map_trees(deps_mode, deploy_bin_dir)
+
+   if flags["lr-path"] then
+      util.printout(util.remove_path_dupes(lr_path, ';'))
+      return true
+   elseif flags["lr-cpath"] then
+      util.printout(util.remove_path_dupes(lr_cpath, ';'))
+      return true
+   elseif flags["lr-bin"] then
+      local lr_bin = util.remove_path_dupes(table.concat(bin_dirs, cfg.export_path_separator), cfg.export_path_separator)
+      util.printout(util.remove_path_dupes(lr_bin, ';'))
+      return true
+   end
 
    util.printout(cfg.export_lua_path:format(util.remove_path_dupes(package.path, ';')))
    util.printout(cfg.export_lua_cpath:format(util.remove_path_dupes(package.cpath, ';')))
    if flags["bin"] then
-      local bin_dirs = map_trees(deps_mode, deploy_bin_dir)
       table.insert(bin_dirs, 1, os.getenv("PATH"))
-      util.printout(cfg.export_path:format(util.remove_path_dupes(table.concat(bin_dirs, cfg.export_path_separator), cfg.export_path_separator)))
+      local lr_bin = util.remove_path_dupes(table.concat(bin_dirs, cfg.export_path_separator), cfg.export_path_separator)
+      util.printout(cfg.export_path:format(lr_bin))
    end
    return true
 end
