@@ -31,7 +31,7 @@ all:
 	@echo "  to install LuaRocks in $(PREFIX) as a rock."
 	@echo
 
-build:
+build: built
 
 src/luarocks/site_config.lua: config.unix
 	rm -f src/luarocks/site_config.lua
