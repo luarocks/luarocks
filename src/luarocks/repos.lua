@@ -150,7 +150,7 @@ function run_hook(rockspec, hook_name)
    return true
 end
 
-local function install_binary(source, target)
+local function install_binary(source, target, name, version)
    assert(type(source) == "string")
    assert(type(target) == "string")
 
@@ -160,7 +160,7 @@ local function install_binary(source, target)
       file = io.open(source)
    end
    if match or (file and file:read():match("^#!.*lua.*")) then
-      ok, err = fs.wrap_script(source, target)
+      ok, err = fs.wrap_script(source, target, name, version)
    else
       ok, err = fs.copy_binary(source, target)
    end
@@ -200,7 +200,8 @@ function deploy_files(name, version, wrap_bin_scripts)
    assert(type(version) == "string")
    assert(type(wrap_bin_scripts) == "boolean")
 
-   local function deploy_file_tree(file_tree, source_dir, deploy_dir, move_fn)
+   local function deploy_file_tree(file_tree, path_fn, deploy_dir, move_fn)
+      local source_dir = path_fn(name, version)
       if not move_fn then
          move_fn = fs.move
       end
@@ -220,7 +221,7 @@ function deploy_files(name, version, wrap_bin_scripts)
                end
             end
             fs.make_dir(dir.dir_name(target))
-            ok, err = move_fn(source, target)
+            ok, err = move_fn(source, target, name, version)
             fs.remove_dir_tree_if_empty(dir.dir_name(source))
             if not ok then return nil, err end
             return true
@@ -233,13 +234,13 @@ function deploy_files(name, version, wrap_bin_scripts)
    local ok, err = true
    if rock_manifest.bin then
       local move_bin_fn = wrap_bin_scripts and install_binary or fs.copy_binary
-      ok, err = deploy_file_tree(rock_manifest.bin, path.bin_dir(name, version), cfg.deploy_bin_dir, move_bin_fn)
+      ok, err = deploy_file_tree(rock_manifest.bin, path.bin_dir, cfg.deploy_bin_dir, move_bin_fn)
    end
    if ok and rock_manifest.lua then
-      ok, err = deploy_file_tree(rock_manifest.lua, path.lua_dir(name, version), cfg.deploy_lua_dir)
+      ok, err = deploy_file_tree(rock_manifest.lua, path.lua_dir, cfg.deploy_lua_dir)
    end
    if ok and rock_manifest.lib then
-      ok, err = deploy_file_tree(rock_manifest.lib, path.lib_dir(name, version), cfg.deploy_lib_dir)
+      ok, err = deploy_file_tree(rock_manifest.lib, path.lib_dir, cfg.deploy_lib_dir)
    end
    return ok, err
 end

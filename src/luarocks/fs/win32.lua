@@ -52,9 +52,11 @@ end
 --- Create a wrapper to make a script executable from the command-line.
 -- @param file string: Pathname of script to be made executable.
 -- @param dest string: Directory where to put the wrapper.
+-- @param name string: rock name to be used in loader context.
+-- @param version string: rock version to be used in loader context.
 -- @return boolean or (nil, string): True if succeeded, or nil and
 -- an error message.
-function wrap_script(file, dest)
+function wrap_script(file, dest, name, version)
    assert(type(file) == "string")
    assert(type(dest) == "string")
 
@@ -69,7 +71,7 @@ function wrap_script(file, dest)
    wrapper:write("setlocal\n")
    wrapper:write('set LUA_PATH='..package.path..";%LUA_PATH%\n")
    wrapper:write('set LUA_CPATH='..package.cpath..";%LUA_CPATH%\n")
-   wrapper:write('"'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.loader "'..file..'" %*\n')
+   wrapper:write('"'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.loader -e\'luarocks.loader.add_context([['..name..']],[['..version..']])\' "'..file..'" %*\n')
    wrapper:write("endlocal\n")
    wrapper:close()
    return true
