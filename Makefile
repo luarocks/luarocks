@@ -24,7 +24,14 @@ admin_remove.lua fetch/hg.lua fetch/git_file.lua new_version.lua lint.lua purge.
 
 CONFIG_FILE = $(SYSCONFDIR)/config-$(LUA_VERSION).lua
 
-all: built
+all: 
+	@echo "- Type 'make build' and 'make install':"
+	@echo "  to install to $(PREFIX) as usual."
+	@echo "- Type 'make bootstrap':"
+	@echo "  to install LuaRocks in $(PREFIX) as a rock."
+	@echo
+
+build:
 
 src/luarocks/site_config.lua: config.unix
 	rm -f src/luarocks/site_config.lua

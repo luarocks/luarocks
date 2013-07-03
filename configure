@@ -436,5 +436,9 @@ echo "Using Lua from: $LUA_DIR"
 make clean > /dev/null 2> /dev/null
 
 echo
-echo "Done. You can now run 'make' to build."
+echo "Done configuring."
+echo "- Type 'make build' and 'make install':"
+echo "  to install to $PREFIX as usual."
+echo "- Type 'make bootstrap':"
+echo "  to install LuaRocks in $PREFIX as a rock."
 echo

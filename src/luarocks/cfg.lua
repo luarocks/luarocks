@@ -30,7 +30,7 @@ end
 
 _M.site_config = site_config
 
-program_version = "2.0.13"
+program_version = "2.1.0"
 
 local persist = require("luarocks.persist")
 

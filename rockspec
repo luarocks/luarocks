@@ -1,5 +1,5 @@
 package = "LuaRocks"
-local VER = "2.0.13"
+local VER = "2.1.0"
 local REV = "1"
 version = VER.."-"..REV
 
