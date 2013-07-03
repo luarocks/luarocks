@@ -5,7 +5,7 @@ rem=rem --[[
 local vars = {}
 
 vars.PREFIX = [[C:\LuaRocks]]
-vars.VERSION = "2.0"
+vars.VERSION = "2.1"
 vars.SYSCONFDIR = [[C:\LuaRocks]]
 vars.ROCKS_TREE = [[C:\LuaRocks]]
 vars.SCRIPTS_DIR = nil
@@ -340,9 +340,13 @@ local function look_for_lua_install ()
 			look_for_link_libraries(vars.LUA_LIBDIR) and
 			look_for_headers(vars.LUA_INCDIR)
 		then
-			if exec(S"$LUA_BINDIR\\$LUA_INTERPRETER -v 2>NUL") then
-				print("    Ok")
-				return true
+			if get_runtime() then
+				print("Runtime check completed, now testing interpreter...")
+				if exec(S[[$LUA_BINDIR\$LUA_INTERPRETER -v 2>NUL]]) then
+					print("    Ok")
+					return true
+				end
+				print("   Interpreter returned an error, not ok")
 			end
 		end
 		return false
