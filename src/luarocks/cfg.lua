@@ -137,13 +137,13 @@ if not site_config.LUAROCKS_FORCE_CONFIG then
    local home_overrides, err
    home_config_file = os.getenv("LUAROCKS_CONFIG_" .. version_suffix) or os.getenv("LUAROCKS_CONFIG")
    if home_config_file then
-      home_overrides, err = persist.load_into_table(home_config_file, { home = home })
+      home_overrides, err = persist.load_into_table(home_config_file, { home = home, lua_version = lua_version })
    else
       home_config_file = home_config_dir.."/config-"..lua_version..".lua"
-      home_overrides, err = persist.load_into_table(home_config_file, { home = home })
+      home_overrides, err = persist.load_into_table(home_config_file, { home = home, lua_version = lua_version })
       if not home_overrides then
          home_config_file = home_config_dir.."/config.lua"
-         home_overrides, err = persist.load_into_table(home_config_file, { home = home })
+         home_overrides, err = persist.load_into_table(home_config_file, { home = home, lua_version = lua_version })
       end
    end
    if home_overrides then
