@@ -198,7 +198,7 @@ function parse_constraints(input)
       if constraint then
          table.insert(constraints, constraint)
       else
-         return nil, "Failed to parse constraint '"..tostring(o_input).."' with error: ".. input
+         return nil, "Failed to parse constraint '"..tostring(oinput).."' with error: ".. input
       end
    end
    return constraints
