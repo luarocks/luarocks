@@ -189,9 +189,9 @@ function load_local_rockspec(filename)
                       or base
    if rockspec.dependencies then
       for i = 1, #rockspec.dependencies do
-         local parsed = deps.parse_dep(rockspec.dependencies[i])
+         local parsed, err = deps.parse_dep(rockspec.dependencies[i])
          if not parsed then
-            return nil, "Parse error processing dependency '"..rockspec.dependencies[i].."'"
+            return nil, "Parse error processing dependency '"..rockspec.dependencies[i].."': "..tostring(err)
          end
          rockspec.dependencies[i] = parsed
       end
