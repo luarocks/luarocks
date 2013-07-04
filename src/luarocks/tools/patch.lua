@@ -95,7 +95,7 @@ local function string_as_file(s)
       eof = false,
       read = function(self, n)
          if self.eof then return nil end
-         local chunk = self.str:sub(self.at, self.at+n)
+         local chunk = self.str:sub(self.at, self.at + n - 1)
          self.at = self.at + n
          if self.at > self.len then
             self.eof = true
