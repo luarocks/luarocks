@@ -11,6 +11,7 @@ local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 local fetch = require("luarocks.fetch")
 local pack = require("luarocks.pack")
+local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
 
 help_summary = "Compile package in current directory using a rockspec."
@@ -67,6 +68,13 @@ function run(...)
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err end
-      return build.build_rockspec(rockspec, false, true, deps.get_deps_mode(flags))
+      ok, err = build.build_rockspec(rockspec, false, true, deps.get_deps_mode(flags))
+      if not ok then return nil, err end
+      local name, version = ok, err
+      if (not flags["keep"]) and not cfg.keep_other_versions then
+         local ok, err = remove.remove_other_versions(name, version, flags["force"])
+         if not ok then util.printerr(err) end
+      end
+      return name, version
    end
 end
