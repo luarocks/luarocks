@@ -178,7 +178,7 @@ local function parse_constraint(input)
    if not version then 
       return nil, "Could not parse version from constraint: '"..input.."'"
    end
-   return { op = op, version = version, no_upgrade = no_upgrade=="@" and true or nil }, rest
+   return { op = _op, version = version, no_upgrade = no_upgrade=="@" and true or nil }, rest
 end
 
 --- Convert a list of constraints from string to table format.
