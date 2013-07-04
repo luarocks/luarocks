@@ -69,6 +69,58 @@ local function delete_versions(name, versions)
    return true
 end
 
+function remove_search_results(results, name, deps_mode, force) 
+   local versions = results[name]
+
+   local version = next(versions)
+   local second = next(versions, version)
+   
+   util.printout("Checking stability of dependencies on the absence of")
+   util.printout(name.." "..table.concat(util.keys(versions), ", ").."...")
+   util.printout()
+   
+   local dependents = check_dependents(name, versions, deps_mode)
+   
+   if #dependents == 0 or force then
+      if #dependents > 0 then
+         util.printerr("The following packages may be broken by this forced removal:")
+         for _, dependent in ipairs(dependents) do
+            util.printerr(dependent.name.." "..dependent.version)
+         end
+         util.printerr()
+      end
+      local ok, err = delete_versions(name, versions)
+      if not ok then return nil, err end
+      ok, err = manif.make_manifest(cfg.rocks_dir, deps_mode)
+      if not ok then return nil, err end
+   else
+      if not second then
+         util.printerr("Will not remove "..name.." "..version..".")
+         util.printerr("Removing it would break dependencies for: ")
+      else
+         util.printerr("Will not remove installed versions of "..name..".")
+         util.printerr("Removing them would break dependencies for: ")
+      end
+      for _, dependent in ipairs(dependents) do
+         util.printerr(dependent.name.." "..dependent.version)
+      end
+      util.printerr()
+      util.printerr("Use --force to force removal (warning: this may break modules).")
+      return nil, "Failed removing."
+   end
+   util.printout("Removal successful.")
+   return true
+end
+
+function remove_other_versions(name, version, force)
+   local results = {}
+   search.manifest_search(results, cfg.rocks_dir, { name = name, exact_name = true, constraints = {{ op = "~=", version = version}} })
+   if results[name] then
+      return remove_search_results(results, name, cfg.deps_mode, force)
+   end
+   return true
+end
+
 --- Driver function for the "remove" command.
 -- @param name string: name of a rock. If a version is given, refer to
 -- a specific version; otherwise, try to remove all versions.
@@ -97,48 +149,9 @@ function run(...)
 
    local results = {}
    search.manifest_search(results, cfg.rocks_dir, search.make_query(name, version))
-
-   local versions = results[name]
-   if not versions then
+   if not results[name] then
       return nil, "Could not find rock '"..name..(version and " "..version or "").."' in local tree."
-   else
-      local version = next(versions)
-      local second = next(versions, version)
-      
-      util.printout("Checking stability of dependencies on the absence of")
-      util.printout(name.." "..table.concat(util.keys(versions), ", ").."...")
-      util.printout()
-      
-      local dependents = check_dependents(name, versions, deps_mode)
-      
-      if #dependents == 0 or flags["force"] then
-         if #dependents > 0 then
-            util.printerr("The following packages may be broken by this forced removal:")
-            for _, dependent in ipairs(dependents) do
-               util.printerr(dependent.name.." "..dependent.version)
-            end
-            util.printerr()
-         end
-         local ok, err = delete_versions(name, versions)
-         if not ok then return nil, err end
-         ok, err = manif.make_manifest(cfg.rocks_dir, deps_mode)
-         if not ok then return nil, err end
-      else
-         if not second then
-            util.printerr("Will not remove "..name.." "..version..".")
-            util.printerr("Removing it would break dependencies for: ")
-         else
-            util.printerr("Will not remove all versions of "..name..".")
-            util.printerr("Removing them would break dependencies for: ")
-         end
-         for _, dependent in ipairs(dependents) do
-            util.printerr(dependent.name.." "..dependent.version)
-         end
-         util.printerr()
-         util.printerr("Use --force to force removal (warning: this may break modules).")
-         return nil, "Failed removing."
-      end
    end
-   util.printout("Removal successful.")
-   return true
+
+   return remove_search_results(results, name, deps_mode, flags["force"])
 end

@@ -10,6 +10,7 @@ local util = require("luarocks.util")
 local fs = require("luarocks.fs")
 local deps = require("luarocks.deps")
 local manif = require("luarocks.manif")
+local remove = require("luarocks.remove")
 local cfg = require("luarocks.cfg")
 
 help_summary = "Install a rock."
@@ -26,8 +27,8 @@ or a filename of a locally available rock.
 -- @param deps_mode: string: Which trees to check dependencies for:
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
--- @return boolean or (nil, string, [string]): True if succeeded or 
--- nil and an error message and an optional error code.
+-- @return (string, string) or (nil, string, [string]): Name and version of
+-- installed rock if succeeded or nil and an error message followed by an error code.
 function install_binary_rock(rock_file, deps_mode)
    assert(type(rock_file) == "string")
 
@@ -103,7 +104,7 @@ function install_binary_rock(rock_file, deps_mode)
    util.printout(name.." "..version.." is now installed in "..root_dir.." "..license)
    
    util.remove_scheduled_function(rollback)
-   return true
+   return name, version
 end
 
 --- Driver function for the "install" command.
@@ -130,7 +131,14 @@ function run(...)
       local build = require("luarocks.build")
       return build.run(name, deps.get_deps_mode(flags), flags["local"] and "--local")
    elseif name:match("%.rock$") then
-      return install_binary_rock(name, deps.get_deps_mode(flags))
+      ok, err = install_binary_rock(name, deps.get_deps_mode(flags))
+      if not ok then return nil, err end
+      local name, version = ok, err
+      if (not flags["keep"]) and not cfg.keep_other_versions then
+         local ok, err = remove.remove_other_versions(name, version, flags["force"])
+         if not ok then util.printerr(err) end
+      end
+      return name, version
    else
       local search = require("luarocks.search")
       local results, err = search.find_suitable_rock(search.make_query(name:lower(), version))

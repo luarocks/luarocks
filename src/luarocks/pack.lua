@@ -111,7 +111,7 @@ local function do_pack_binary_rock(name, version)
    
    local root = path.root_dir(info.repo)
    local prefix = path.install_dir(name, version, root)
-   
+print(prefix)   
    if not fs.exists(prefix) then
       return nil, "'"..name.." "..version.."' does not seem to be an installed rock."
    end

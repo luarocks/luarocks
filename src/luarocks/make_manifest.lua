@@ -13,6 +13,9 @@ help_summary = "Compile a manifest file for a repository."
 
 help = [[
 <argument>, if given, is a local repository pathname.
+
+--local-tree  If given, do not write versioned versions of the manifest file.
+              Use this when rebuilding the manifest of a local rocks tree.
 ]]
 
 --- Driver function for "make_manifest" command.
@@ -28,8 +31,8 @@ function run(...)
   
    util.printout("Making manifest for "..repo)
    
-   local ok, err = manif.make_manifest(repo, deps.get_deps_mode(flags), true)
-   if ok then
+   local ok, err = manif.make_manifest(repo, deps.get_deps_mode(flags), not flags["local-tree"])
+   if ok and not flags["local-tree"] then
       util.printout("Generating index.html for "..repo)
       index.make_index(repo)
    end

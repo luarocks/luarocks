@@ -290,15 +290,18 @@ function match_constraints(version, constraints)
    local ok = true
    setmetatable(version, version_mt)
    for _, constr in pairs(constraints) do
-      local constr_version = constr.version
-      setmetatable(constr.version, version_mt)
-      if     constr.op == "==" then ok = version == constr_version
-      elseif constr.op == "~=" then ok = version ~= constr_version
-      elseif constr.op == ">"  then ok = version >  constr_version
-      elseif constr.op == "<"  then ok = version <  constr_version
-      elseif constr.op == ">=" then ok = version >= constr_version
-      elseif constr.op == "<=" then ok = version <= constr_version
-      elseif constr.op == "~>" then ok = partial_match(version, constr_version)
+      if type(constr.version) == "string" then
+         constr.version = parse_version(constr.version)
+      end
+      local constr_version, constr_op = constr.version, constr.op
+      setmetatable(constr_version, version_mt)
+      if     constr_op == "==" then ok = version == constr_version
+      elseif constr_op == "~=" then ok = version ~= constr_version
+      elseif constr_op == ">"  then ok = version >  constr_version
+      elseif constr_op == "<"  then ok = version <  constr_version
+      elseif constr_op == ">=" then ok = version >= constr_version
+      elseif constr_op == "<=" then ok = version <= constr_version
+      elseif constr_op == "~>" then ok = partial_match(version, constr_version)
       end
       if not ok then break end
    end

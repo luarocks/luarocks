@@ -12,18 +12,23 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
 local manif = require("luarocks.manif")
+local search = require("luarocks.search")
+local remove = require("luarocks.remove")
 local cfg = require("luarocks.cfg")
 
 help_summary = "Build/compile a rock."
-help_arguments = "[--pack-binary-rock] {<rockspec>|<rock>|<name> [<version>]}"
+help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
 help = [[
 Build and install a rock, compiling its C parts if any.
 Argument may be a rockspec file, a source rock file
 or the name of a rock to be fetched from a repository.
 
-If --pack-binary-rock is passed, the rock is not installed;
-instead, a .rock file with the contents of compilation is produced
-in the current directory.
+--pack-binary-rock  Do not install rock. Instead, produce a .rock file
+                    with the contents of compilation in the current
+                    directory.
+
+--keep              Do not remove previously installed versions of the
+                    rock after building a new one.
 ]]
 
 --- Install files to a given location.
@@ -114,8 +119,8 @@ end
 -- @param deps_mode string: Dependency mode: "one" for the current default tree,
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for no trees.
--- @return boolean or (nil, string, [string]): True if succeeded or 
--- nil and an error message followed by an error code.
+-- @return (string, string) or (nil, string, [string]): Name and version of
+-- installed rock if succeeded or nil and an error message followed by an error code.
 function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
    assert(type(rockspec_file) == "string")
    assert(type(need_to_fetch) == "boolean")
@@ -272,7 +277,7 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
    util.printout(name.." "..version.." is now built and installed in "..root_dir.." "..license)
    
    util.remove_scheduled_function(rollback)
-   return true
+   return name, version
 end
 
 --- Build and install a rock.
@@ -336,6 +341,13 @@ function run(...)
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err end
-      return do_build(name, version, deps.get_deps_mode(flags))
+      ok, err = do_build(name, version, deps.get_deps_mode(flags))
+      if not ok then return nil, err end
+      local name, version = ok, err
+      if (not flags["keep"]) and not cfg.keep_other_versions then
+         local ok, err = remove.remove_other_versions(name, version, flags["force"])
+         if not ok then util.printerr(err) end
+      end
+      return name, version
    end
 end
