@@ -81,7 +81,7 @@ local index_package_end = [[
 local index_footer = [[
 </table>
 <p class="manifest">
-<a href="manifest">manifest file</a>
+<a href="manifest">manifest file</a> &bull; <a href="manifest-5.1">Lua 5.1 manifest file</a> &bull; <a href="manifest-5.2">Lua 5.2 manifest file</a>
 </p>
 </body>
 </html>
