@@ -85,6 +85,38 @@ function parse_flags(...)
    return flags, unpack(args)
 end
 
+--- Build a sequence of flags for forwarding from one command to
+-- another (for example, from "install" to "build").
+-- @param flags table: A table of parsed flags
+-- @param ... string...: A variable number of flags to be checked
+-- in the flags table. If no flags are passed as varargs, the
+-- entire flags table is forwarded.
+-- @return string... A variable number of strings
+function forward_flags(flags, ...)
+   assert(type(flags) == "table")
+   local out = {}
+   local filter = select('#', ...)
+   local function add_flag(flagname)
+      if flags[flagname] then
+         if flags[flagname] == true then
+            table.insert(out, "--"..flagname)
+         else
+            table.insert(out, "--"..flagname.."="..flags[flagname])
+         end
+      end
+   end
+   if filter > 0 then
+      for i = 1, filter do
+         add_flag(select(i, ...))
+      end
+   else
+      for flagname, _ in pairs(flags) do
+         add_flag(flagname)
+      end
+   end
+   return unpack(out)
+end
+
 --- Merges contents of src on top of dst's contents.
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.

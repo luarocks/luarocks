@@ -134,7 +134,7 @@ function run(...)
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       util.printout("Using "..name.."... switching to 'build' mode")
       local build = require("luarocks.build")
-      return build.run(name, deps.get_deps_mode(flags), flags["local"] and "--local")
+      return build.run(name, util.forward_flags(flags, "local", "keep", "deps-mode"))
    elseif name:match("%.rock$") then
       ok, err = install_binary_rock(name, deps.get_deps_mode(flags))
       if not ok then return nil, err end
@@ -152,7 +152,7 @@ function run(...)
       elseif type(results) == "string" then
          local url = results
          util.printout("Installing "..url.."...")
-         return run(url)
+         return run(url, util.forward_flags(flags))
       else
          util.printout()
          util.printerr("Could not determine which rock to install.")
