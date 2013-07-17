@@ -20,6 +20,11 @@ help_arguments = "{<rock>|<name> [<version>]}"
 help = [[
 Argument may be the name of a rock to be fetched from a repository
 or a filename of a locally available rock.
+
+--keep              Do not remove previously installed versions of the
+                    rock after installing a new one. This behavior can
+                    be made permanent by setting keep_other_versions=true
+                    in the configuration file.
 ]]
 
 --- Install a binary rock.

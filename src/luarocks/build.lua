@@ -28,7 +28,9 @@ or the name of a rock to be fetched from a repository.
                     directory.
 
 --keep              Do not remove previously installed versions of the
-                    rock after building a new one.
+                    rock after building a new one. This behavior can
+                    be made permanent by setting keep_other_versions=true
+                    in the configuration file.
 ]]
 
 --- Install files to a given location.

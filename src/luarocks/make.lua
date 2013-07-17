@@ -27,9 +27,15 @@ This command is useful as a tool for debugging rockspecs.
 To install rocks, you'll normally want to use the "install" and
 "build" commands. See the help on those for details.
 
-If --pack-binary-rock is passed, the rock is not installed;
-instead, a .rock file with the contents of compilation is produced
-in the current directory.
+--pack-binary-rock  Do not install rock. Instead, produce a .rock file
+                    with the contents of compilation in the current
+                    directory.
+
+--keep              Do not remove previously installed versions of the
+                    rock after installing a new one. This behavior can
+                    be made permanent by setting keep_other_versions=true
+                    in the configuration file.
+
 ]]
 
 --- Driver function for "make" command.
