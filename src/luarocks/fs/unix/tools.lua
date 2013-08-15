@@ -71,7 +71,11 @@ end
 -- @return boolean: true on success, false on failure.
 function make_dir(directory)
    assert(directory)
-   return fs.execute(vars.MKDIR.." -p", directory)
+   local ok, err = fs.execute(vars.MKDIR.." -p", directory)
+   if not ok then
+      err = "failed making directory "..directory
+   end
+   return ok, err
 end
 
 --- Remove a directory if it is empty.

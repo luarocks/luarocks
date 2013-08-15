@@ -119,11 +119,13 @@ function untar(filename, destdir)
       end
       local pathname = dir.path(destdir, header.name)
       if header.typeflag == "directory" then
-         fs.make_dir(pathname)
+         local ok, err = fs.make_dir(pathname)
+         if not ok then return nil, err end
       elseif header.typeflag == "file" then
          local dirname = dir.dir_name(pathname)
          if dirname ~= "" then
-            fs.make_dir(dirname)
+            local ok, err = fs.make_dir(dirname)
+            if not ok then return nil, err end
          end
          local file_handle = io.open(pathname, "wb")
          file_handle:write(file_data)

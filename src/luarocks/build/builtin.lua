@@ -224,7 +224,8 @@ function run(rockspec)
          if not ok then break end
          local module_name = dir.path(moddir, name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)):gsub("//", "/")
          if moddir ~= "" then
-            fs.make_dir(moddir)
+            local ok, err = fs.make_dir(moddir)
+            if not ok then return nil, err end
          end
          local dest = dir.path(libdir, moddir)
          built_modules[module_name] = dest
@@ -242,7 +243,7 @@ function run(rockspec)
       end
    end
    if fs.is_dir("lua") then
-      ok, err = fs.copy_contents("lua", luadir)
+      local ok, err = fs.copy_contents("lua", luadir)
       if not ok then 
          return nil, "Failed copying contents of 'lua' directory: "..err
       end

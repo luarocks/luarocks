@@ -103,7 +103,10 @@ end
 function make_dir(directory)
    assert(directory)
    fs.execute(fs.quiet(vars.MKDIR.." "..fs.Q(directory)))
-   return 1
+   if not fs.is_dir(directory) then
+      return false, "failed making directory "..directory
+   end
+   return true
 end
 
 --- Remove a directory if it is empty.

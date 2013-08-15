@@ -56,14 +56,17 @@ local function install_files(files, location, is_module_path)
          if type(k) == "string" then
             if is_module_path then
                dest = dir.path(location, path.module_to_path(k))
-               fs.make_dir(dest)
+               local ok, err = fs.make_dir(dest)
+               if not ok then return nil, err end
             else
                dest = dir.path(location, dir.dir_name(k))
-               fs.make_dir(dest)
+               local ok, err = fs.make_dir(dest)
+               if not ok then return nil, err end
                dest = dir.path(dest, dir.base_name(k))
             end
          else
-            fs.make_dir(dest)
+            local ok, err = fs.make_dir(dest)
+            if not ok then return nil, err end
          end
          local ok = fs.copy(dir.path(file), dest)
          if not ok then
@@ -180,7 +183,8 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
    }
    
    for _, d in pairs(dirs) do
-      fs.make_dir(d.name)
+      local ok, err = fs.make_dir(d.name)
+      if not ok then return nil, err end
    end
    local rollback = util.schedule_function(function()
       fs.delete(path.install_dir(name, version))

@@ -99,7 +99,8 @@ local function run_unpacker(file)
    if (fs.exists(dir_name)) then
       return nil, "Directory "..dir_name.." already exists."
    end
-   fs.make_dir(dir_name)
+   local ok, err = fs.make_dir(dir_name)
+   if not ok then return nil, err end
    local rollback = util.schedule_function(fs.delete, fs.absolute_name(dir_name))
 
    local rockspec, err

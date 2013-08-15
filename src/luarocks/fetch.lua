@@ -66,9 +66,9 @@ function fetch_url_at_temp_dir(url, tmpname, filename)
          return nil, "File not found: "..pathname
       end
    else
-      local temp_dir = fs.make_temp_dir(tmpname)
+      local temp_dir, err = fs.make_temp_dir(tmpname)
       if not temp_dir then
-         return nil, "Failed creating temporary directory."
+         return nil, "Failed creating temporary directory "..tmpname..": "..err
       end
       util.schedule_function(fs.delete, temp_dir)
       fs.change_dir(temp_dir)
@@ -104,7 +104,10 @@ function fetch_and_unpack_rock(rock_file, dest)
    local unpack_dir
    if dest then
       unpack_dir = dest
-      fs.make_dir(unpack_dir)
+      local ok, err = fs.make_dir(unpack_dir)
+      if not ok then
+         return nil, "Failed unpacking rock file: " .. err
+      end
    else
       unpack_dir = fs.make_temp_dir(name)
    end

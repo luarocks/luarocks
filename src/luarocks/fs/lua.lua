@@ -69,16 +69,17 @@ end
 --- Create a temporary directory.
 -- @param name string: name pattern to use for avoiding conflicts
 -- when creating temporary directory.
--- @return string or nil: name of temporary directory or nil on failure.
+-- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
 function make_temp_dir(name)
    assert(type(name) == "string")
    name = dir.normalize(name)
 
    local temp_dir = (os.getenv("TMP") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-" .. tostring(math.floor(math.random() * 10000))
-   if fs.make_dir(temp_dir) then
+   local ok, err = fs.make_dir(temp_dir)
+   if ok then
       return temp_dir
    else
-      return nil
+      return nil, err
    end
 end
 
@@ -131,11 +132,7 @@ if lfs_ok then
 function execute_string(cmd)
    if cfg.verbose then print("Executing: "..cmd) end
    local code = os.execute(cmd)
-   if code == 0 or code == true then
-      return true
-   else
-      return false
-   end
+   return (code == 0 or code == true)
 end
 
 --- Obtain current directory.
@@ -180,7 +177,7 @@ end
 -- If any of the higher levels in the path name does not exist
 -- too, they are created as well.
 -- @param directory string: pathname of directory to create.
--- @return boolean: true on success, false on failure.
+-- @return boolean or (boolean, string): true on success or (false, error message) on failure.
 function make_dir(directory)
    assert(type(directory) == "string")
    directory = dir.normalize(directory)
@@ -197,11 +194,12 @@ function make_dir(directory)
       path = path and path .. dir.separator .. d or d
       local mode = lfs.attributes(path, "mode")
       if not mode then
-         if not lfs.mkdir(path) then
-            return false
+         local ok, err = lfs.mkdir(path)
+         if not ok then
+            return false, err
          end
       elseif mode ~= "directory" then
-         return false
+         return false, path.." is not a directory"
       end
    end
    return true
@@ -274,7 +272,8 @@ local function recursive_copy(src, dest)
       if not ok then return false end
    elseif srcmode == "directory" then
       local subdir = dir.path(dest, dir.base_name(src))
-      fs.make_dir(subdir)
+      local ok, err = fs.make_dir(subdir)
+      if not ok then return nil, err end
       for file in lfs.dir(src) do
          if file ~= "." and file ~= ".." then
             local ok = recursive_copy(dir.path(src, file), subdir)
@@ -455,7 +454,8 @@ function unzip(zipfile)
    local file = files()
    repeat
       if file.filename:sub(#file.filename) == "/" then
-         fs.make_dir(dir.path(fs.current_dir(), file.filename))
+         local ok, err = fs.make_dir(dir.path(fs.current_dir(), file.filename))
+         if not ok then return nil, err end
       else
          local rf, err = zipfile:open(file.filename)
          if not rf then zipfile:close(); return nil, err end

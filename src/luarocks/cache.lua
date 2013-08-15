@@ -53,11 +53,13 @@ end
 function refresh_local_cache(server, url, user, password)
    local local_cache, protocol, server_path, user, password = split_server_url(server, url, user, password)
 
-   fs.make_dir(cfg.local_cache)
+   local ok, err = fs.make_dir(cfg.local_cache)
+   if not ok then return nil, err end
 
    local tmp_cache = false
    if not local_cache then
-      local_cache = fs.make_temp_dir("local_cache")
+      local err
+      local_cache, err = fs.make_temp_dir("local_cache")
       tmp_cache = true
    end
    local ok = fs.make_dir(local_cache)

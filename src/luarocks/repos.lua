@@ -175,7 +175,8 @@ local function resolve_conflict(target, deploy_dir, name, version)
    end
    if name ~= cname or deps.compare_versions(version, cversion) then
       local versioned = path.versioned_name(target, deploy_dir, cname, cversion)
-      fs.make_dir(dir.dir_name(versioned))
+      local ok, err = fs.make_dir(dir.dir_name(versioned))
+      if not ok then return nil, err end
       fs.move(target, versioned)
       return target
    else
@@ -220,7 +221,8 @@ function deploy_files(name, version, wrap_bin_scripts)
                   target = new_target
                end
             end
-            fs.make_dir(dir.dir_name(target))
+            ok, err = fs.make_dir(dir.dir_name(target))
+            if not ok then return nil, err end
             ok, err = move_fn(source, target, name, version)
             fs.remove_dir_tree_if_empty(dir.dir_name(source))
             if not ok then return nil, err end
