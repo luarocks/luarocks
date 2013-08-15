@@ -45,7 +45,8 @@ local function pack_source_rock(rockspec_file)
    if not source_file then
       return nil, source_dir
    end
-   fs.change_dir(source_dir)
+   local ok, err = fs.change_dir(source_dir)
+   if not ok then return nil, err end
 
    fs.delete(rock_file)
    fs.copy(rockspec_file, source_dir)
@@ -139,7 +140,8 @@ local function do_pack_binary_rock(name, version)
       if not ok then return nil, "Failed copying back files: " .. err end
    end
    
-   fs.change_dir(temp_dir)
+   local ok, err = fs.change_dir(temp_dir)
+   if not ok then return nil, err end
    if not is_binary and not repos.has_binaries(name, version) then
       rock_file = rock_file:gsub("%."..cfg.arch:gsub("%-","%%-").."%.", ".all.")
    end

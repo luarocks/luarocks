@@ -150,7 +150,7 @@ end
 function change_dir(d)
    table.insert(dir_stack, lfs.currentdir())
    d = dir.normalize(d)
-   lfs.chdir(d)
+   return lfs.chdir(d)
 end
 
 --- Change directory to root.

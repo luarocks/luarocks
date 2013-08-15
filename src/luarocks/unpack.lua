@@ -31,12 +31,14 @@ local function unpack_rockspec(rockspec_file, dir_name)
    if not rockspec then
       return nil, "Failed loading rockspec "..rockspec_file..": "..err
    end
-   fs.change_dir(dir_name)
+   local ok, err = fs.change_dir(dir_name)
+   if not ok then return nil, err end
    local ok, sources_dir = fetch.fetch_sources(rockspec, true, ".")
    if not ok then
       return nil, sources_dir
    end
-   fs.change_dir(dir_name)
+   ok, err = fs.change_dir(dir_name)
+   if not ok then return nil, err end
    build.apply_patches(rockspec)
    fs.pop_dir()
    return rockspec
@@ -57,7 +59,8 @@ local function unpack_rock(rock_file, dir_name, kind)
    if not ok then
       return nil, "Failed unzipping rock "..rock_file, errcode
    end
-   fs.change_dir(dir_name)
+   ok, err = fs.change_dir(dir_name)
+   if not ok then return nil, err end
    local rockspec_file = dir_name..".rockspec"
    local rockspec, err = fetch.load_rockspec(rockspec_file)
    if not rockspec then
@@ -69,7 +72,8 @@ local function unpack_rock(rock_file, dir_name, kind)
          if not ok then
             return nil, err
          end
-         fs.change_dir(rockspec.source.dir)
+         ok, err = fs.change_dir(rockspec.source.dir)
+         if not ok then return nil, err end
          build.apply_patches(rockspec)
          fs.pop_dir()
       end

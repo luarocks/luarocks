@@ -62,11 +62,12 @@ function refresh_local_cache(server, url, user, password)
       local_cache, err = fs.make_temp_dir("local_cache")
       tmp_cache = true
    end
-   local ok = fs.make_dir(local_cache)
+   local ok, err = fs.make_dir(local_cache)
    if not ok then
-      return nil, "Failed creating local cache dir."
+      return nil, "Failed creating local cache dir: "..err
    end
    fs.change_dir(local_cache)
+   if not ok then return nil, err end
    util.printout("Refreshing cache "..local_cache.."...")
 
    -- TODO abstract away explicit 'wget' call

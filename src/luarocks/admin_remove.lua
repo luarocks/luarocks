@@ -41,7 +41,8 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
       return nil, "This command requires 'rsync', check your configuration."
    end
    
-   fs.change_dir(at)
+   local ok, err = fs.change_dir(at)
+   if not ok then return nil, err end
    
    local nr_files = 0
    for i, rockfile in ipairs(rockfiles) do
@@ -58,7 +59,8 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
       return nil, "No files removed."
    end
 
-   fs.change_dir(local_cache)
+   local ok, err = fs.change_dir(local_cache)
+   if not ok then return nil, err end
 
    util.printout("Updating manifest...")
    manif.make_manifest(local_cache, "one", true)

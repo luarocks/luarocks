@@ -77,9 +77,14 @@ end
 -- semantics of chdir, as it does not handle errors the same way,
 -- but works well for our purposes for now.
 -- @param directory string: The directory to switch to.
+-- @return boolean or (nil, string): true if successful, (nil, error message) if failed.
 function change_dir(directory)
    assert(type(directory) == "string")
-   table.insert(dir_stack, directory)
+   if fs.is_dir(directory) then
+      table.insert(dir_stack, directory)
+      return true
+   end
+   return nil, "directory not found: "..directory
 end
 
 --- Change directory to root.

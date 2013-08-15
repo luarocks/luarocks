@@ -148,7 +148,7 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
       end
    end
 
-   ok, err, errcode = deps.check_external_deps(rockspec, "build")
+   local ok, err, errcode = deps.check_external_deps(rockspec, "build")
    if err then
       return nil, err, errcode
    end
@@ -165,7 +165,8 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
          if not ok then
             return nil, source_dir, errcode
          end
-         fs.change_dir(source_dir)
+         local ok, err = fs.change_dir(source_dir)
+         if not ok then return nil, err end
       elseif rockspec.source.file then
          local ok, err = fs.unpack_archive(rockspec.source.file)
          if not ok then
@@ -304,7 +305,8 @@ function build_rock(rock_file, need_to_fetch, deps_mode)
       return nil, err, errcode
    end
    local rockspec_file = path.rockspec_name_from_rock(rock_file)
-   fs.change_dir(unpack_dir)
+   local ok, err = fs.change_dir(unpack_dir)
+   if not ok then return nil, err end
    local ok, err, errcode = build_rockspec(rockspec_file, need_to_fetch, false, deps_mode)
    fs.pop_dir()
    return ok, err, errcode

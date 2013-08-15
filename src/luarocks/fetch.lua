@@ -71,7 +71,8 @@ function fetch_url_at_temp_dir(url, tmpname, filename)
          return nil, "Failed creating temporary directory "..tmpname..": "..err
       end
       util.schedule_function(fs.delete, temp_dir)
-      fs.change_dir(temp_dir)
+      local ok, err = fs.change_dir(temp_dir)
+      if not ok then return nil, err end
       local file, err, errcode = fetch_url(url, filename)
       fs.pop_dir()
       if not file then
@@ -114,8 +115,9 @@ function fetch_and_unpack_rock(rock_file, dest)
    if not dest then
       util.schedule_function(fs.delete, unpack_dir)
    end
-   fs.change_dir(unpack_dir)
-   local ok = fs.unzip(rock_file)
+   local ok, err = fs.change_dir(unpack_dir)
+   if not ok then return nil, err end
+   ok = fs.unzip(rock_file)
    if not ok then
       return nil, "Failed unpacking rock file: " .. rock_file
    end
@@ -234,7 +236,8 @@ function load_rockspec(filename, location)
    
    local err, errcode
    if location then
-      fs.change_dir(location)
+      local ok, err = fs.change_dir(location)
+      if not ok then return nil, err end
       filename, err = fetch_url(filename)
       fs.pop_dir()
    else
@@ -265,7 +268,8 @@ function get_sources(rockspec, extract, dest_dir)
    local filename = rockspec.source.file
    local source_file, store_dir, err, errcode
    if dest_dir then
-      fs.change_dir(dest_dir)
+      local ok, err = fs.change_dir(dest_dir)
+      if not ok then return nil, err end
       source_file, err, errcode = fetch_url(url, filename)
       fs.pop_dir()
       store_dir = dest_dir
@@ -281,7 +285,8 @@ function get_sources(rockspec, extract, dest_dir)
       end
    end
    if extract then
-      fs.change_dir(store_dir)
+      local ok, err = fs.change_dir(store_dir)
+      if not ok then return nil, err end
       fs.unpack_archive(rockspec.source.file)
       if not fs.exists(rockspec.source.dir) then
          return nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file

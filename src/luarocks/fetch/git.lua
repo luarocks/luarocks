@@ -48,7 +48,8 @@ function get_sources(rockspec, extract, dest_dir)
       store_dir = dest_dir
    end
    store_dir = fs.absolute_name(store_dir)
-   fs.change_dir(store_dir)
+   local ok, err = fs.change_dir(store_dir)
+   if not ok then return nil, err end
 
    local command = {git_cmd, "clone", "--depth=1", rockspec.source.url, module}
    local tag_or_branch = rockspec.source.tag or rockspec.source.branch
@@ -65,7 +66,8 @@ function get_sources(rockspec, extract, dest_dir)
    if not fs.execute(unpack(command)) then
       return nil, "Failed cloning git repository."
    end
-   fs.change_dir(module)
+   local ok, err = fs.change_dir(module)
+   if not ok then return nil, err end
    if tag_or_branch and not git_can_clone_by_tag() then
       local checkout_command = {git_cmd, "checkout", tag_or_branch}
       if not fs.execute(unpack(checkout_command)) then

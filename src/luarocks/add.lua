@@ -45,7 +45,8 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
       login_url = protocol.."://"..server_path
    end
    
-   fs.change_dir(at)
+   local ok, err = fs.change_dir(at)
+   if not ok then return nil, err end
    
    local files = {}
    for i, rockfile in ipairs(rockfiles) do
@@ -62,7 +63,8 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
       return nil, "No files found"
    end
 
-   fs.change_dir(local_cache)
+   local ok, err = fs.change_dir(local_cache)
+   if not ok then return nil, err end
 
    util.printout("Updating manifest...")
    manif.make_manifest(local_cache, "one", true)

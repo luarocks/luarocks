@@ -48,7 +48,11 @@ end
 -- @param directory string: The directory to switch to.
 function change_dir(directory)
    assert(type(directory) == "string")
-   table.insert(dir_stack, directory)
+   if fs.is_dir(directory) then
+      table.insert(dir_stack, directory)
+      return true
+   end
+   return nil, "directory not found: "..directory
 end
 
 --- Change directory to root.
