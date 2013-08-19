@@ -27,6 +27,9 @@ a {
    color: #0000c0;
    text-decoration: none;
 }
+a.pkg {
+   color: black;
+}
 a:hover {
    text-decoration: underline;
 }
@@ -65,7 +68,7 @@ Lua modules available from this location for use with <a href="http://www.luaroc
 
 local index_package_start = [[
 <td class="package">
-<p><a name="$anchor"></a><b>$package</b> - $summary<br/>
+<p><a name="$anchor"></a><a href="#$anchor" class="pkg"><b>$package</b></a> - $summary<br/>
 </p><blockquote><p>$detailed<br/>
 $externaldependencies
 <font size="-1"><a href="$original">latest sources</a> $homepage | License: $license</font></p>
