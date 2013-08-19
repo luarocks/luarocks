@@ -53,22 +53,32 @@ local function install_files(files, location, is_module_path)
    if files then
       for k, file in pairs(files) do
          local dest = location
+         local filename = dir.base_name(file)
          if type(k) == "string" then
+            local modname = k
             if is_module_path then
-               dest = dir.path(location, path.module_to_path(k))
+               dest = dir.path(location, path.module_to_path(modname))
                local ok, err = fs.make_dir(dest)
                if not ok then return nil, err end
+               if filename:match("%.lua$") then
+                  local basename = modname:match("([^.]+)$")
+                  local baseinfo = filename:gsub("%.lua$", "")
+                  if basename ~= baseinfo then
+                     filename = basename..".lua"
+                  end
+               end
             else
-               dest = dir.path(location, dir.dir_name(k))
+               dest = dir.path(location, dir.dir_name(modname))
                local ok, err = fs.make_dir(dest)
                if not ok then return nil, err end
-               dest = dir.path(dest, dir.base_name(k))
+               filename = dir.base_name(modname)
             end
          else
             local ok, err = fs.make_dir(dest)
             if not ok then return nil, err end
          end
-         local ok = fs.copy(dir.path(file), dest)
+print("COPYING ",dir.path(file), dir.path(dest, filename))
+         local ok = fs.copy(dir.path(file), dir.path(dest, filename))
          if not ok then
             return nil, "Failed copying "..file
          end
