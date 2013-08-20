@@ -77,7 +77,6 @@ local function install_files(files, location, is_module_path)
             local ok, err = fs.make_dir(dest)
             if not ok then return nil, err end
          end
-print("COPYING ",dir.path(file), dir.path(dest, filename))
          local ok = fs.copy(dir.path(file), dir.path(dest, filename))
          if not ok then
             return nil, "Failed copying "..file
