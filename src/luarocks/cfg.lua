@@ -316,6 +316,19 @@ if detected.mingw32 then
    defaults.variables.LD = "mingw32-gcc"
    defaults.variables.CFLAGS = "-O2"
    defaults.variables.LIBFLAG = "-shared"
+   defaults.external_deps_patterns = {
+      bin = { "?.exe", "?.bat" },
+      -- mingw lookup list from http://stackoverflow.com/a/15853231/1793220
+      -- ...should we keep ?.lib at the end? It's not in the above list.
+      lib = { "lib?.dll.a", "?.dll.a", "lib?.a", "cyg?.dll", "lib?.dll", "?.dll", "?.lib" },
+      include = { "?.h" }
+   }
+   defaults.runtime_external_deps_patterns = {
+      bin = { "?.exe", "?.bat" },
+      lib = { "cyg?.dll", "?.dll", "lib?.dll" },
+      include = { "?.h" }
+   }
+
 end
 
 if detected.unix then
