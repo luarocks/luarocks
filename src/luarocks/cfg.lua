@@ -55,50 +55,74 @@ local sys_name,sys_version,proc
 -- so that this detection does not run every time. When it is
 -- performed, we use the Unix way to identify the system,
 -- even on Windows (assuming UnxUtils or Cygwin).
-sys_name = site_config.LUAROCKS_UNAME_S or io.popen("uname -s"):read("*l") or ""
-sys_version = site_config.LUAROCKS_UNAME_R or io.popen("uname -r"):read("*l") or ""
-proc = site_config.LUAROCKS_UNAME_M or io.popen("uname -m"):read("*l") or ""
-if proc:match("i[%d]86") then
-   proc = "x86"
-elseif proc:match("amd64") or proc:match("x86_64") then
-   proc = "x86_64"
-elseif proc:match("Power Macintosh") then
-   proc = "powerpc"
+sys_name = site_config.LUAROCKS_UNAME_S or io.popen("uname -s"):read("*l")
+if not sys_name then
+   if os.getenv("OS") == "Windows_NT" then
+      sys_name = "Windows"
+      proc = os.getenv("PROCESSOR_ARCHITECTURE")
+      local windows_ver = io.popen("ver"):read("*l")
+      if windows_ver then
+         sys_name,sys_ver = windows_ver:match("Microsoft (Windows[^%[]*)%[Version ([^%]]*)%]")
+      end
+   else
+      proc = "unknown"
+   end
+else
+   sys_version = site_config.LUAROCKS_UNAME_R or io.popen("uname -r"):read("*l")
+   proc = site_config.LUAROCKS_UNAME_M or io.popen("uname -m"):read("*l")
 end
 
-if sys_name == "FreeBSD" then
-   detected.unix = true
-   detected.freebsd = true
-   detected.bsd = true
-elseif sys_name == "OpenBSD" then
-   detected.unix = true
-   detected.openbsd = true
-   detected.bsd = true
-elseif sys_name == "NetBSD" then
-   detected.unix = true
-   detected.netbsd = true
-   detected.bsd = true
-elseif sys_name == "Darwin" then
-   detected.unix = true
-   detected.macosx = true
-   detected.bsd = true
-elseif sys_name == "Linux" then
-   detected.unix = true
-   detected.linux = true
-elseif sys_name == "SunOS" then
-   detected.unix = true
-   detected.solaris = true
-elseif sys_name:match("^CYGWIN") then
-   detected.unix = true
-   detected.cygwin = true
-elseif sys_name:match("^Windows") then
-   detected.windows = true
-elseif sys_name:match("^MINGW") then
-   detected.windows = true
-   detected.mingw32 = true
+if proc and proc ~= "" then
+   if proc:match("i[%d]86") then
+      proc = "x86"
+   elseif proc:match("amd64") or proc:match("x86_64") then
+      proc = "x86_64"
+   elseif proc:match("Power Macintosh") then
+      proc = "powerpc"
+   end
 else
-   detected.unix = true
-   -- Fall back to Unix in unknown systems.
+   proc = "unknown"
+end
+
+if sys_version == "" then
+   sys_version = nil
+end
+
+if sys_name then
+   if sys_name == "FreeBSD" then
+      detected.unix = true
+      detected.freebsd = true
+      detected.bsd = true
+   elseif sys_name == "OpenBSD" then
+      detected.unix = true
+      detected.openbsd = true
+      detected.bsd = true
+   elseif sys_name == "NetBSD" then
+      detected.unix = true
+      detected.netbsd = true
+      detected.bsd = true
+   elseif sys_name == "Darwin" then
+      detected.unix = true
+      detected.macosx = true
+      detected.bsd = true
+   elseif sys_name == "Linux" then
+      detected.unix = true
+      detected.linux = true
+   elseif sys_name == "SunOS" then
+      detected.unix = true
+      detected.solaris = true
+   elseif sys_name:match("^CYGWIN") then
+      detected.unix = true
+      detected.cygwin = true
+   elseif sys_name:match("^Windows") then
+      detected.windows = true
+   elseif sys_name:match("^MINGW") then
+      detected.windows = true
+      detected.mingw32 = true
+   else
+      detected.unix = true
+      -- Fall back to Unix in unknown systems.
+   end
 end
 
 -- Path configuration:
