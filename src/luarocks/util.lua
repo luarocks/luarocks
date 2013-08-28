@@ -142,11 +142,13 @@ end
 -- Overrides values of table with the contents of the appropriate
 -- subset of its "platforms" field. The "platforms" field should
 -- be a table containing subtables keyed with strings representing
--- platform names. Names that match the contents of the global
--- cfg.platforms setting are used. For example, if
--- cfg.platforms= {"foo"}, then the fields of
--- tbl.platforms.foo will overwrite those of tbl with the same
--- names. For table values, the operation is performed recursively
+-- platform name queries. Names that match the contents of the global
+-- cfg.platforms setting are used. The query is a case-insensitive
+-- pattern anchored at the start of the string. For example, if
+-- cfg.platforms= {"foo-bar"}, then the fields of
+-- tbl.platforms.Foo will overwrite those of tbl with the same
+-- names. But not tbl.platforms.FooBar.
+-- For table values, the operation is performed recursively
 -- (tbl.platforms.foo.x.y.z overrides tbl.x.y.z; other contents of
 -- tbl.x are preserved).
 -- @param tbl table or nil: Table which may contain a "platforms" field;
@@ -159,10 +161,16 @@ function platform_overrides(tbl)
    if not tbl then return end
    
    if tbl.platforms then
-      for _, platform in ipairs(cfg.platforms) do
-         local platform_tbl = tbl.platforms[platform]
-         if platform_tbl then
-            deep_merge(tbl, platform_tbl)
+      local platform_order = {}
+      for query, platform_tbl in pairs(tbl.platforms) do
+         local index = cfg.is_platform(query)
+         if index then
+            platform_order[index] = platform_tbl
+         end
+      end
+      for ix = 1, #cfg.platforms+1 do
+         if platform_order[ix] then
+            deep_merge(tbl, platform_order[ix])
          end
       end
    end
