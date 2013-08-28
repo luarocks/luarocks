@@ -214,7 +214,12 @@ function deploy_files(name, version, wrap_bin_scripts)
             if fs.exists(target) then
                local new_target, err = resolve_conflict(target, deploy_dir, name, version)
                if err == "untracked" then
-                  fs.delete(target)
+                  local backup = target
+                  repeat
+                     backup = target.."~"
+                  until not fs.exists(backup) -- slight race condition here, but shouldn't be a problem.
+                  util.printerr("Warning: "..target.." is not tracked by this installation of LuaRocks. Moving it to "..backup)
+                  fs.move(target, backup)
                elseif err then
                   return nil, err.." Cannot install new version."
                else

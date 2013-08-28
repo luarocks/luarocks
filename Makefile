@@ -168,6 +168,11 @@ write_sysconfig: built
 install: install_bins install_luas install_site_config write_sysconfig
 
 bootstrap: src/luarocks/site_config.lua install_site_config write_sysconfig
-	LUA_PATH="$$PWD/src/?.lua;$$LUA_PATH" src/bin/luarocks make rockspec --tree="$(PREFIX)"
+	if [ -n "$$LUA_PATH_5_2" ] ;\
+	then \
+	   LUA_PATH="$$PWD/src/?.lua;$$LUA_PATH" LUA_PATH_5_2="$$PWD/src/?.lua;$$LUA_PATH_5_2" src/bin/luarocks make rockspec --tree="$(PREFIX)" ;\
+	else \
+	   LUA_PATH="$$PWD/src/?.lua;$$LUA_PATH" src/bin/luarocks make rockspec --tree="$(PREFIX)" ;\
+	fi
 
 install_rock: install_bins install_luas
