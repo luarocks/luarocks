@@ -62,7 +62,7 @@ if not sys_name then
       proc = os.getenv("PROCESSOR_ARCHITECTURE")
       local windows_ver = io.popen("ver"):read("*l")
       if windows_ver then
-         sys_name,sys_ver = windows_ver:match("Microsoft (Windows[^%[]*)%[Version ([^%]]*)%]")
+         sys_name,sys_ver = windows_ver:match("(Windows[^%[]*)%[.- (%d+%.%d[^%]]*)%]")
       end
    else
       proc = "unknown"
