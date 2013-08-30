@@ -234,7 +234,7 @@ function run(rockspec)
             local ok, err = fs.make_dir(moddir)
             if not ok then return nil, err end
          end
-         built_modules[module_name] = dir.path(libdir, moddir, module_name)
+         built_modules[module_name] = dir.path(libdir, module_name)
          ok = compile_library(module_name, objects, info.libraries, info.libdirs, name)
          if not ok then
             return nil, "Failed compiling module "..module_name
