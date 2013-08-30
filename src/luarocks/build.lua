@@ -243,7 +243,12 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
       end
    end
    
-   local copy_directories = build.copy_directories or {"doc"}
+   local copy_directories = build.copy_directories
+   local copying_default = false
+   if not copy_directories then
+      copy_directories = {"doc"}
+      copying_default = true
+   end
 
    for _, copy_dir in pairs(copy_directories) do
       if fs.is_dir(copy_dir) then
@@ -251,7 +256,9 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
          fs.make_dir(dest)
          fs.copy_contents(copy_dir, dest)
       else
-         util.warning("Directory '"..copy_dir.."' not found")
+         if not copying_default then
+            return nil, "Directory '"..copy_dir.."' not found"
+         end
       end
    end
 
