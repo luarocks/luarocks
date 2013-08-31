@@ -403,7 +403,7 @@ local function find_providers(file, root)
 
    local manifest, err = manif_core.load_local_manifest(path.rocks_dir(root))
    if not manifest then
-      return nil, err .. " -- corrupted local rocks tree?"
+      return nil, "untracked"
    end
    local deploy_bin = path.deploy_bin_dir(root)
    local deploy_lua = path.deploy_lua_dir(root)

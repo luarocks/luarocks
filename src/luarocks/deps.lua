@@ -217,7 +217,7 @@ end
 function parse_dep(dep)
    assert(type(dep) == "string")
 
-   local name, rest = dep:match("^%s*([a-zA-Z][a-zA-Z0-9%.%-%_]*)%s*(.*)")
+   local name, rest = dep:match("^%s*([a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*(.*)")
    if not name then return nil, "failed to extract dependency name from '"..tostring(dep).."'" end
    local constraints, err = parse_constraints(rest)
    if not constraints then return nil, err end
