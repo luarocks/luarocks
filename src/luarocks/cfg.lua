@@ -512,18 +512,17 @@ end
 user_agent = "LuaRocks/"..program_version.." "..arch
 
 --- Check if platform was detected
+-- Compare a string against the standard system names.
+-- If you want to match the full system name or version then use
+-- deps.match_platform
 -- @param query string: The platform name to check.
 -- @return boolean: true if LuaRocks is currently running on queried platform.
 function is_platform(query)
    assert(type(query) == "string")
 
-   query = "^" .. query:lower()
-   for index, platform in ipairs(platforms) do
-      if platform:match(query) then
-         return index, platform
+   for _, platform in ipairs(platforms) do
+      if platform == query then
+         return true
       end
-   end
-   if system:lower():match(query) then
-      return #platforms + 1, system
    end
 end

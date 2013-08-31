@@ -157,13 +157,14 @@ function platform_overrides(tbl)
    assert(type(tbl) == "table" or not tbl)
    
    local cfg = require("luarocks.cfg")
+   local deps = require("luarocks.deps")
    
    if not tbl then return end
    
    if tbl.platforms then
       local platform_order = {}
       for query, platform_tbl in pairs(tbl.platforms) do
-         local index = cfg.is_platform(query)
+         local index = deps.match_platform(query)
          if index then
             platform_order[index] = platform_tbl
          end
