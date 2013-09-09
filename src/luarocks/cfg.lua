@@ -31,7 +31,7 @@ end
 _M.site_config = site_config
 
 program_version = "2.1.0"
-major_version = program_version:match("([^.]%.[^.])"
+major_version = program_version:match("([^.]%.[^.])")
 
 local persist = require("luarocks.persist")
 
@@ -296,7 +296,7 @@ if detected.windows then
       "MKDIR", "MV", "PWD", "RMDIR", "RM", "TEST", "UNAME", "WGET" }
    for _, var in ipairs(bins) do
       if defaults.variables[var] then
-         defaults.variables[var] = full_prefix.."\\"..defaults.variables[var]
+         defaults.variables[var] = full_prefix.."\\bin\\"..defaults.variables[var]
       end
    end
 
