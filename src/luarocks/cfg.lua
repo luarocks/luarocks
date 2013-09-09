@@ -31,7 +31,7 @@ end
 _M.site_config = site_config
 
 program_version = "2.1.0"
-major_version = program_version:match("([^.]%.[^.])"
+major_version = program_version:match("([^.]%.[^.])")
 
 local persist = require("luarocks.persist")
 
