@@ -107,7 +107,7 @@ end
 -- @return boolean: true on success, false on failure.
 function make_dir(directory)
    assert(directory)
-   fs.execute(fs.quiet(vars.MKDIR.." "..fs.Q(directory)))
+   fs.execute(fs.quiet(vars.MKDIR.." -p "..fs.Q(directory)))
    if not fs.is_dir(directory) then
       return false, "failed making directory "..directory
    end
