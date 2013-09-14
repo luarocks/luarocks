@@ -552,6 +552,16 @@ if USE_MINGW then
 else
 	f:write("LUAROCKS_UNAME_S=[[WindowsNT]]\n")
 end
+local sys_ver
+local windows_ver = io.popen("VER"):read("*l")
+if windows_ver then
+   sys_ver = windows_ver:match("Windows[^%[]*%[.- (%d+%.%d[^%]]*)%]")
+end
+if sys_ver then
+        f:write("LUAROCKS_UNAME_R=[["..sys_ver.."]]\n")
+else
+        f:write("LUAROCKS_UNAME_R=[[4.0]]\n")
+end
 f:write(S[=[
 LUAROCKS_UNAME_M=[[x86]]
 LUAROCKS_SYSCONFIG=[[$SYSCONFDIR\config.lua]]

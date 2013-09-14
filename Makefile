@@ -77,6 +77,7 @@ src/luarocks/site_config.lua: config.unix
 	   echo "LUA_DIR_SET=true" >> src/luarocks/site_config.lua ;\
 	fi
 	echo "LUAROCKS_UNAME_S=[[$(LUAROCKS_UNAME_S)]]" >> src/luarocks/site_config.lua
+	echo "LUAROCKS_UNAME_R=[[$(LUAROCKS_UNAME_R)]]" >> src/luarocks/site_config.lua
 	echo "LUAROCKS_UNAME_M=[[$(LUAROCKS_UNAME_M)]]" >> src/luarocks/site_config.lua
 	echo "LUAROCKS_DOWNLOADER=[[$(LUAROCKS_DOWNLOADER)]]" >> src/luarocks/site_config.lua
 	echo "LUAROCKS_MD5CHECKER=[[$(LUAROCKS_MD5CHECKER)]]" >> src/luarocks/site_config.lua
