@@ -31,6 +31,7 @@ end
 _M.site_config = site_config
 
 program_version = "2.1.0"
+major_version = program_version:match("([^.]%.[^.])")
 
 local persist = require("luarocks.persist")
 
@@ -293,6 +294,8 @@ local defaults = {
 }
 
 if detected.windows then
+   local full_prefix = site_config.LUAROCKS_PREFIX.."\\"..major_version
+
    home_config_file = home_config_file and home_config_file:gsub("\\","/")
    defaults.fs_use_modules = false
    defaults.arch = "win32-"..proc
@@ -309,13 +312,22 @@ if detected.windows then
    defaults.variables.MAKE = "nmake"
    defaults.variables.CC = "cl"
    defaults.variables.RC = "rc"
-   defaults.variables.WRAPPER = site_config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.c"
+   defaults.variables.WRAPPER = full_prefix.."\\rclauncher.c"
    defaults.variables.LD = "link"
    defaults.variables.MT = "mt"
    defaults.variables.LUALIB = "lua"..lua_version..".lib"
    defaults.variables.CFLAGS = "/MD /O2"
    defaults.variables.LIBFLAG = "/dll"
    defaults.variables.LUALIB = "lua"..lua_version..".lib"
+
+   local bins = { "SEVENZ", "CHMOD", "CP", "FIND", "LS", "MD5SUM",
+      "MKDIR", "MV", "PWD", "RMDIR", "RM", "TEST", "UNAME", "WGET" }
+   for _, var in ipairs(bins) do
+      if defaults.variables[var] then
+         defaults.variables[var] = full_prefix.."\\"..defaults.variables[var]
+      end
+   end
+
    defaults.external_deps_patterns = {
       bin = { "?.exe", "?.bat" },
       lib = { "?.lib", "?.dll", "lib?.dll" },
@@ -340,7 +352,6 @@ if detected.mingw32 then
    defaults.variables.MAKE = "mingw32-make"
    defaults.variables.CC = "mingw32-gcc"
    defaults.variables.RC = "windres"
-   defaults.variables.WRAPPER = site_config.LUAROCKS_PREFIX .. "\\2.0\\rclauncher.c"
    defaults.variables.LD = "mingw32-gcc"
    defaults.variables.CFLAGS = "-O2"
    defaults.variables.LIBFLAG = "-shared"
