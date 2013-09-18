@@ -400,14 +400,17 @@ end
 function match_platform(plat)
    assert(type(plat) == "string")
 
-   local plat_dep, err = parse_dep(plat)
-   if not plat_dep then return nil, err end
+   local dep, err = parse_dep(plat)
+   if not dep then return nil, err end
+   local version = parse_version(cfg.system_version)
    for index, platform in ipairs(cfg.platforms) do
-      if platform == plat_dep.name then
-         return index, platform
+      if platform == dep.name then
+         if match_constraints(version, dep.constraints) then
+           return index, platform
+         end
       end
    end
-   if cfg.system:lower():match("^"..plat_dep.name:lower()) then
+   if cfg.system:lower():match("^"..dep.name:lower()) and match_constraints(version, dep.constraints) then
       return #cfg.platforms + 1, cfg.system
    end
 end
