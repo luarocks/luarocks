@@ -1,6 +1,6 @@
 rem=rem --[[
 @setlocal&  set luafile="%~f0" & if exist "%~f0.bat" set luafile="%~f0.bat"
-@lua5.1\bin\lua5.1.exe %luafile% %*&  exit /b ]]
+@bin\lua52.exe %luafile% %*&  exit /b ]]
 
 local vars = {}
 
@@ -39,17 +39,17 @@ end
 
 local function exec(cmd)
 	--print(cmd)
-	local status = os.execute(cmd)
-	return status == 0
+	local result = os.execute(cmd)
+	return result == true
 end
 
 local function exists(filename)
-	local cmd = [[.\bin\bin\test -e "]]..filename..[["]]
+	local cmd = [[.\bin\test -e "]]..filename..[["]]
 	return exec(cmd)
 end
 
 local function mkdir (dir)
-	return exec([[.\bin\bin\mkdir -p "]]..dir..[[" >NUL]])
+	return exec([[.\bin\mkdir -p "]]..dir..[[" >NUL]])
 end
 
 -- interpolate string with values from 'vars' table
@@ -272,7 +272,7 @@ local function get_file_runtime(p,f) -- path, filename
 	local outfile = "output.txt"
 	local content
 	-- analyze binary
-	if exec([[.\bin\bin\objdump -x "]]..infile..[[" > ]]..outfile..[[ 2<&1]]) then
+	if exec([[.\bin\objdump -x "]]..infile..[[" > ]]..outfile..[[ 2<&1]]) then
 		-- read temp file
 		local fh = io.open(outfile)
 		content = fh:read("*a")
@@ -372,6 +372,8 @@ local function look_for_lua_install ()
 					end
 				end
 			end
+else
+print(directory, "doesn't exist")
 		end
 	end
 	return false
@@ -480,7 +482,7 @@ if INSTALL_LUA then
 end
 
 -- Copy the LuaRocks binaries
-if not exec(S[[XCOPY /S bin\*.* "$BINDIR" >NUL]]) then
+if not exec(S[[COPY bin\*.* "$BINDIR" >NUL]]) then
 	die()
 end
 -- Copy the LuaRocks lua source files
@@ -509,7 +511,7 @@ for _, c in ipairs{"luarocks", "luarocks-admin"} do
 SETLOCAL
 SET LUA_PATH=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH%
 SET PATH=$BINDIR\;%PATH%
-"$LUA_INTERPRETER" "$BINDIR\]]..c..[[.lua" %*
+"$SYSCONFDIR\lua52.exe" "$BINDIR\]]..c..[[.lua" %*
 ENDLOCAL
 ]])
 	f:close()
