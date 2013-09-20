@@ -372,8 +372,6 @@ local function look_for_lua_install ()
 					end
 				end
 			end
-else
-print(directory, "doesn't exist")
 		end
 	end
 	return false
