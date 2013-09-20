@@ -44,12 +44,12 @@ local function exec(cmd)
 end
 
 local function exists(filename)
-	local cmd = [[.\bin\test -e "]]..filename..[["]]
+	local cmd = [[.\bin\bin\test -e "]]..filename..[["]]
 	return exec(cmd)
 end
 
 local function mkdir (dir)
-	return exec([[.\bin\mkdir -p "]]..dir..[[" >NUL]])
+	return exec([[.\bin\bin\mkdir -p "]]..dir..[[" >NUL]])
 end
 
 -- interpolate string with values from 'vars' table
@@ -272,7 +272,7 @@ local function get_file_runtime(p,f) -- path, filename
 	local outfile = "output.txt"
 	local content
 	-- analyze binary
-	if exec([[.\bin\objdump -x "]]..infile..[[" > ]]..outfile..[[ 2<&1]]) then
+	if exec([[.\bin\bin\objdump -x "]]..infile..[[" > ]]..outfile..[[ 2<&1]]) then
 		-- read temp file
 		local fh = io.open(outfile)
 		content = fh:read("*a")
@@ -482,7 +482,7 @@ if INSTALL_LUA then
 end
 
 -- Copy the LuaRocks binaries
-if not exec(S[[COPY bin\*.* "$BINDIR" >NUL]]) then
+if not exec(S[[XCOPY /S bin\*.* "$BINDIR" >NUL]]) then
 	die()
 end
 -- Copy the LuaRocks lua source files
