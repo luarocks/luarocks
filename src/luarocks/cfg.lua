@@ -296,7 +296,7 @@ if detected.windows then
       "MKDIR", "MV", "PWD", "RMDIR", "RM", "TEST", "UNAME", "WGET" }
    for _, var in ipairs(bins) do
       if defaults.variables[var] then
-         defaults.variables[var] = full_prefix.."\\"..defaults.variables[var]
+         defaults.variables[var] = full_prefix.."\\bin\\"..defaults.variables[var]
       end
    end
 
