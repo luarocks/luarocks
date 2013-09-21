@@ -68,6 +68,9 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
 
    util.printout("Updating manifest...")
    manif.make_manifest(local_cache, "one", true)
+   
+   manif.zip_manifests()
+   
    util.printout("Updating index.html...")
    index.make_index(local_cache)
 
@@ -80,8 +83,10 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
 
    table.insert(files, "index.html")
    table.insert(files, "manifest")
-   table.insert(files, "manifest-5.1")
-   table.insert(files, "manifest-5.2")
+   for ver in util.lua_versions() do
+      table.insert(files, "manifest-"..ver)
+      table.insert(files, "manifest-"..ver..".zip")
+   end
 
    -- TODO abstract away explicit 'curl' call
 

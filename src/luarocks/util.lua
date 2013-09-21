@@ -319,6 +319,15 @@ function sortedpairs(tbl, sort_function)
    return coroutine.wrap(function() sortedpairs_iterator(tbl, sort_function) end)
 end
 
+function lua_versions()
+   local versions = { "5.1", "5.2" }
+   local i = 0
+   return function()
+      i = i + 1
+      return versions[i]
+   end
+end
+
 function starts_with(s, prefix)
    return s:sub(1,#prefix) == prefix
 end
