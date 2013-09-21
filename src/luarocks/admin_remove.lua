@@ -13,10 +13,10 @@ local fs = require("luarocks.fs")
 local cache = require("luarocks.cache")
 
 help_summary = "Remove a rock or rockspec from a rocks server."
-help_arguments = "[--from=<server>] [--no-refresh] {<rockspec>|<rock>...}"
+help_arguments = "[--server=<server>] [--no-refresh] {<rockspec>|<rock>...}"
 help = [[
 Arguments are local files, which may be rockspecs or rocks.
-The flag --from indicates which server to use.
+The flag --server indicates which server to use.
 If not given, the default server set in the upload_server variable
 from the configuration file is used instead.
 The flag --no-refresh indicates the local cache should not be refreshed
