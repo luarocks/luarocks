@@ -77,7 +77,15 @@ export LUA_PATH=
 export LUA_CPATH=
 
 luadir="/Programs/Lua/Current"
+platform="linux-x86"
 lua="$luadir/bin/lua"
+
+version_luacov=0.3
+version_luasocket=2.0.2
+version_lxsh=0.8.6
+version_validate_args=1.5.4
+verrev_luasocket=${version_luasocket}-5
+verrev_lxsh=${version_lxsh}-2
 
 cd ..
 ./configure --with-lua="$luadir"
@@ -88,7 +96,6 @@ cd src
 
 echo $LUA_PATH
 
-luacov_version=0.3
 luarocks_nocov="$lua $PWD/bin/luarocks"
 luarocks="$lua -erequire('luacov.runner')('$testing_dir/luacov.config') $PWD/bin/luarocks"
 luarocks_admin="$lua -erequire('luacov.runner')('$testing_dir/luacov.config') $PWD/bin/luarocks-admin"
@@ -148,40 +155,40 @@ fail_make_norockspec() { $luarocks make; }
 
 fail_build_blank_arg() { $luarocks build --tree="" lpeg; }
 test_build_withpatch() { $luarocks build luadoc; }
-test_build_diffversion() { $luarocks build luacov $luacov_version; }
+test_build_diffversion() { $luarocks build luacov ${version_luacov}; }
 test_build_command() { $luarocks build stdlib; }
 test_build_install_bin() { $luarocks build luarepl; }
-fail_build_nohttps() { $luarocks install luasocket && $luarocks download --rockspec validate-args 1.5.4 && $luarocks build ./validate-args-1.5.4-1.rockspec && rm ./validate-args-1.5.4-1.rockspec; }
-test_build_https() { $luarocks download --rockspec validate-args 1.5.4 && $luarocks install luasec && $luarocks build ./validate-args-1.5.4-1.rockspec && rm ./validate-args-1.5.4-1.rockspec; }
+fail_build_nohttps() { $luarocks install luasocket && $luarocks download --rockspec validate-args ${version_validate_args} && $luarocks build ./validate-args-${version_validate_args}-1.rockspec && rm ./validate-args-${version_validate_args}-1.rockspec; }
+test_build_https() { $luarocks download --rockspec validate-args ${version_validate_args} && $luarocks install luasec && $luarocks build ./validate-args-${version_validate_args}-1.rockspec && rm ./validate-args-${version_validate_args}-1.rockspec; }
 test_build_supported_platforms() { $luarocks build xctrl; }
 
 test_download_all() { $luarocks download --all validate-args && rm validate-args-*; }
-test_download_rockspecversion() { $luarocks download --rockspec validate-args 1.5.4 && rm validate-args-*; }
+test_download_rockspecversion() { $luarocks download --rockspec validate-args ${version_validate_args} && rm validate-args-*; }
 
 test_help() { $luarocks help; }
 
-test_install_binaryrock() { $luarocks build luasocket && $luarocks pack luasocket && $luarocks install ./luasocket-2.0.2-5.linux-x86.rock && rm ./luasocket-2.0.2-5.linux-x86.rock; }
+test_install_binaryrock() { $luarocks build luasocket && $luarocks pack luasocket && $luarocks install ./luasocket-${verrev_luasocket}.${platform}.rock && rm ./luasocket-${verrev_luasocket}.${platform}.rock; }
 test_install_with_bin() { $luarocks install wsapi; }
 
-test_lint_ok() { $luarocks download --rockspec validate-args 1.5.4 && $luarocks lint ./validate-args-1.5.4-1.rockspec && rm ./validate-args-1.5.4-1.rockspec; }
+test_lint_ok() { $luarocks download --rockspec validate-args ${version_validate_args} && $luarocks lint ./validate-args-${version_validate_args}-1.rockspec && rm ./validate-args-${version_validate_args}-1.rockspec; }
 
 test_list() { $luarocks list; }
 test_list_porcelain() { $luarocks list --porcelain; }
 
-test_make() { rm -rf ./luasocket-2.0.2-5 && $luarocks download --src luasocket && $luarocks unpack ./luasocket-2.0.2-5.src.rock && cd luasocket-2.0.2-5/luasocket-2.0.2  && $luarocks make && cd ../.. && rm -rf ./luasocket-2.0.2-5; }
-test_make_pack_binary_rock() { rm -rf ./lxsh-0.8.6-1 &&  $luarocks download --src lxsh 0.8.6-1 &&  $luarocks unpack ./lxsh-0.8.6-1.src.rock &&  cd lxsh-0.8.6-1/lxsh-0.8.6-1  &&  $luarocks make --deps-mode=none --pack-binary-rock &&  [ -e ./lxsh-0.8.6-1.all.rock ] &&  cd ../.. && rm -rf ./lxsh-0.8.6-1; }
+test_make() { rm -rf ./luasocket-${verrev_luasocket} && $luarocks download --src luasocket && $luarocks unpack ./luasocket-${verrev_luasocket}.src.rock && cd luasocket-${verrev_luasocket}/luasocket-${version_luasocket}  && $luarocks make && cd ../.. && rm -rf ./luasocket-${verrev_luasocket}; }
+test_make_pack_binary_rock() { rm -rf ./lxsh-${verrev_lxsh} &&  $luarocks download --src lxsh ${verrev_lxsh} &&  $luarocks unpack ./lxsh-${verrev_lxsh}.src.rock &&  cd lxsh-${verrev_lxsh}/lxsh-${version_lxsh}-1  &&  $luarocks make --deps-mode=none --pack-binary-rock &&  [ -e ./lxsh-${verrev_lxsh}.all.rock ] &&  cd ../.. && rm -rf ./lxsh-${verrev_lxsh}; }
 
-test_new_version() { $luarocks download --rockspec luacov $luacov_version &&  $luarocks new_version ./luacov-$luacov_version-1.rockspec 0.2 && rm ./luacov-0.*; }
+test_new_version() { $luarocks download --rockspec luacov ${version_luacov} &&  $luarocks new_version ./luacov-${version_luacov}-1.rockspec 0.2 && rm ./luacov-0.*; }
 
 test_pack() { $luarocks list && $luarocks pack luacov && rm ./luacov-*.rock; }
-test_pack_src() { $luarocks download --rockspec luasocket && $luarocks pack ./luasocket-2.0.2-5.rockspec && rm ./luasocket-2.0.2-*.rock; }
+test_pack_src() { $luarocks download --rockspec luasocket && $luarocks pack ./luasocket-${verrev_luasocket}.rockspec && rm ./luasocket-${version_luasocket}-*.rock; }
 
 test_path() { $luarocks path --bin; }
 
 fail_purge_missing_tree() { $luarocks purge --tree="$testing_tree"; }
 test_purge() { $luarocks purge --tree="$testing_sys_tree"; }
 
-test_remove() { $luarocks build luacov $luacov_version && $luarocks remove luacov $luacov_version; }
+test_remove() { $luarocks build luacov ${version_luacov} && $luarocks remove luacov ${version_luacov}; }
 #fail_remove_deps() { $luarocks build luadoc && $luarocks remove luasocket; }
 
 test_search_found() { $luarocks search zlib; }
@@ -190,20 +197,20 @@ test_search_missing() { $luarocks search missing_rock; }
 test_show() { $luarocks show luacov; }
 test_show_modules() { $luarocks show --modules luacov; }
 test_show_depends() { $luarocks install luasec && $luarocks show luasec; }
-test_show_oldversion() { $luarocks install luacov $luacov_version && $luarocks show luacov $luacov_version; }
+test_show_oldversion() { $luarocks install luacov ${version_luacov} && $luarocks show luacov ${version_luacov}; }
 
-test_unpack_download() { rm -rf ./luasocket-2.0.2-5 && $luarocks unpack luasocket && rm -rf ./luasocket-2.0.2-5; }
-test_unpack_src() { rm -rf ./luasocket-2.0.2-5 && $luarocks download --src luasocket && $luarocks unpack ./luasocket-2.0.2-5.src.rock && rm -rf ./luasocket-2.0.2-5; }
-test_unpack_rockspec() { rm -rf ./luasocket-2.0.2-5 && $luarocks download --rockspec luasocket && $luarocks unpack ./luasocket-2.0.2-5.rockspec && rm -rf ./luasocket-2.0.2-5; }
-test_unpack_binary() { rm -rf ./luasocket-2.0.2-5 && $luarocks build luasocket && $luarocks pack luasocket && $luarocks unpack ./luasocket-2.0.2-5.linux-x86.rock && rm -rf ./luasocket-2.0.2-5; }
+test_unpack_download() { rm -rf ./luasocket-${verrev_luasocket} && $luarocks unpack luasocket && rm -rf ./luasocket-${verrev_luasocket}; }
+test_unpack_src() { rm -rf ./luasocket-${verrev_luasocket} && $luarocks download --src luasocket && $luarocks unpack ./luasocket-${verrev_luasocket}.src.rock && rm -rf ./luasocket-${verrev_luasocket}; }
+test_unpack_rockspec() { rm -rf ./luasocket-${verrev_luasocket} && $luarocks download --rockspec luasocket && $luarocks unpack ./luasocket-${verrev_luasocket}.rockspec && rm -rf ./luasocket-${verrev_luasocket}; }
+test_unpack_binary() { rm -rf ./luasocket-${verrev_luasocket} && $luarocks build luasocket && $luarocks pack luasocket && $luarocks unpack ./luasocket-${verrev_luasocket}.${platform}.rock && rm -rf ./luasocket-${verrev_luasocket}; }
 
 test_admin_help() { $luarocks_admin help; }
 
 test_admin_make_manifest() { $luarocks_admin make_manifest; }
-test_admin_add_rsync() { $luarocks_admin --server=testing add ./luasocket-2.0.2-5.src.rock; }
-test_admin_add_sftp() { export LUAROCKS_CONFIG="$testing_dir/testing_config_sftp.lua" && $luarocks_admin --server=testing add ./luasocket-2.0.2-5.src.rock; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
+test_admin_add_rsync() { $luarocks_admin --server=testing add ./luasocket-${verrev_luasocket}.src.rock; }
+test_admin_add_sftp() { export LUAROCKS_CONFIG="$testing_dir/testing_config_sftp.lua" && $luarocks_admin --server=testing add ./luasocket-${verrev_luasocket}.src.rock; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
 fail_admin_add_missing() { $luarocks_admin --server=testing add; }
-fail_admin_invalidserver() { $luarocks_admin --server=invalid add ./luasocket-2.0.2-5.src.rock; }
+fail_admin_invalidserver() { $luarocks_admin --server=invalid add ./luasocket-${verrev_luasocket}.src.rock; }
 fail_admin_invalidrock() { $luarocks_admin --server=testing add invalid; }
 test_admin_refresh_cache() { $luarocks_admin --server=testing refresh_cache; }
 test_admin_remove() { $luarocks_admin --server=testing remove luasocket; }
@@ -216,8 +223,8 @@ test_deps_mode_order_sys() { $luarocks build --tree="$testing_tree" lpeg && $lua
 test_deps_mode_all_sys() { $luarocks build --tree="$testing_tree" lpeg && $luarocks build --deps-mode=all --tree="$testing_sys_tree" lxsh && [ `$luarocks list --tree="$testing_sys_tree" --porcelain lpeg | wc -l` = 0 ]; }
 test_deps_mode_none() { $luarocks build --tree="$testing_tree" --deps-mode=none lxsh; [ `$luarocks list --tree="$testing_tree" --porcelain lpeg | wc -l` = 0 ]; }
 test_deps_mode_nodeps_alias() { $luarocks build --tree="$testing_tree" --nodeps lxsh; [ `$luarocks list --tree="$testing_tree" --porcelain lpeg | wc -l` = 0 ]; }
-test_deps_mode_make_order() { $luarocks build --tree="$testing_sys_tree" lpeg && rm -rf ./lxsh-0.8.6-1 && $luarocks download --src lxsh 0.8.6-1 && $luarocks unpack ./lxsh-0.8.6-1.src.rock && cd lxsh-0.8.6-1/lxsh-0.8.6-1  && $luarocks make --tree="$testing_tree" --deps-mode=order && cd ../.. && [ `$luarocks list --tree="$testing_tree" --porcelain lpeg | wc -l` = 0 ] && rm -rf ./lxsh-0.8.6-1; }
-test_deps_mode_make_order_sys() { $luarocks build --tree="$testing_tree" lpeg && rm -rf ./lxsh-0.8.6-1 && $luarocks download --src lxsh 0.8.6-1 && $luarocks unpack ./lxsh-0.8.6-1.src.rock && cd lxsh-0.8.6-1/lxsh-0.8.6-1  && $luarocks make --tree="$testing_sys_tree" --deps-mode=order && cd ../.. && [ `$luarocks list --tree="$testing_tree" --porcelain lpeg | wc -l` = 1 ] && rm -rf ./lxsh-0.8.6-1; }
+test_deps_mode_make_order() { $luarocks build --tree="$testing_sys_tree" lpeg && rm -rf ./lxsh-${verrev_lxsh} && $luarocks download --src lxsh ${verrev_lxsh} && $luarocks unpack ./lxsh-${verrev_lxsh}.src.rock && cd lxsh-${verrev_lxsh}/lxsh-${version_lxsh}-1  && $luarocks make --tree="$testing_tree" --deps-mode=order && cd ../.. && [ `$luarocks list --tree="$testing_tree" --porcelain lpeg | wc -l` = 0 ] && rm -rf ./lxsh-${verrev_lxsh}; }
+test_deps_mode_make_order_sys() { $luarocks build --tree="$testing_tree" lpeg && rm -rf ./lxsh-${verrev_lxsh} && $luarocks download --src lxsh ${verrev_lxsh} && $luarocks unpack ./lxsh-${verrev_lxsh}.src.rock && cd lxsh-${verrev_lxsh}/lxsh-${version_lxsh}-1  && $luarocks make --tree="$testing_sys_tree" --deps-mode=order && cd ../.. && [ `$luarocks list --tree="$testing_tree" --porcelain lpeg | wc -l` = 1 ] && rm -rf ./lxsh-${verrev_lxsh}; }
 
 # Driver #########################################
 
