@@ -80,6 +80,7 @@ function run(...)
          util.printout("\t", command.help_summary)
       end
       print_section("CONFIGURATION")
+      util.printout("\tLua version: " .. cfg.lua_version)
       util.printout("\tSystem configuration file: ".. sys_file .. " (" .. get_status(sys_ok) ..")")
       if home_file then
          util.printout("\tUser configuration file: ".. home_file .. " (" .. get_status(home_ok) ..")\n")
