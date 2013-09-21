@@ -74,7 +74,7 @@ function refresh_local_cache(server, url, user, password)
    local ok = false
    if protocol == "rsync" then
       local srv, path = server_path:match("([^/]+)(/.+)")
-      ok = fs.execute(cfg.variables.RSYNC.." -avz -e ssh "..user.."@"..srv..":"..path.."/ "..local_cache.."/")
+      ok = fs.execute(cfg.variables.RSYNC.." --exclude=.git -Ocavz -e ssh "..user.."@"..srv..":"..path.."/ "..local_cache.."/")
    else 
       local login_info = ""
       if user then login_info = " --user="..user end
