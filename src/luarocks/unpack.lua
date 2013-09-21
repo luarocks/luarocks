@@ -37,9 +37,10 @@ local function unpack_rockspec(rockspec_file, dir_name)
    if not ok then
       return nil, sources_dir
    end
-   ok, err = fs.change_dir(dir_name)
+   ok, err = fs.change_dir(sources_dir)
    if not ok then return nil, err end
    build.apply_patches(rockspec)
+   fs.pop_dir()
    fs.pop_dir()
    return rockspec
 end
