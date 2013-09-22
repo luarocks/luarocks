@@ -643,7 +643,7 @@ print(S[[
  You may want to add the following elements to your paths;
 PATH     :   $LUA_BINDIR;$FULL_PREFIX
 LUA_PATH :   $ROCKS_TREE\share\lua\$LUA_VERSION\?.lua;$ROCKS_TREE\share\lua\$LUA_VERSION\?\init.lua
-LUA_CPATH:   $LUA_LIBDIR\lua\$LUA_VERSION\?.dll
+LUA_CPATH:   $ROCKS_TREE\lib\lua\$LUA_VERSION\?.dll
 
 ]])
 os.exit(0)
