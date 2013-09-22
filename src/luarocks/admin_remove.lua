@@ -68,7 +68,7 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    index.make_index(local_cache)
 
    local srv, path = server_path:match("([^/]+)(/.+)")
-   local cmd = cfg.variables.RSYNC.." --exclude=.git -Ocavz --delete -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
+   local cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." --delete -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
 
    util.printout(cmd)
    fs.execute(cmd)
