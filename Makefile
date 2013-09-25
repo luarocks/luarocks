@@ -80,6 +80,10 @@ src/luarocks/site_config.lua: config.unix
 	echo "LUAROCKS_UNAME_M=[[$(LUAROCKS_UNAME_M)]]" >> src/luarocks/site_config.lua
 	echo "LUAROCKS_DOWNLOADER=[[$(LUAROCKS_DOWNLOADER)]]" >> src/luarocks/site_config.lua
 	echo "LUAROCKS_MD5CHECKER=[[$(LUAROCKS_MD5CHECKER)]]" >> src/luarocks/site_config.lua
+	if [ -n "$(LUAROCKS_MULTIARCHDIR)" ] ;\
+	then \
+	   echo "LUAROCKS_MULTIARCHDIR=[[$(LUAROCKS_MULTIARCHDIR)]]" >> src/luarocks/site_config.lua ;\
+	fi
 
 dev:
 	$(MAKE) build_bins LUADIR=$(PWD)/src

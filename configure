@@ -14,6 +14,7 @@ LUA_BINDIR="/usr/bin"
 LUA_INCDIR="/usr/include"
 LUA_LIBDIR="/usr/lib"
 LUA_VERSION="5.1"
+MULTIARCHDIR=""
 
 # ----------------------------------------------------------------------------
 # FUNCTION DEFINITIONS
@@ -396,6 +397,15 @@ else
    echo "Using unversioned rocks dir: $PREFIX$LUAROCKS_ROCKS_SUBDIR"
 fi
 
+if [ "$LUAROCKS_UNAME_S" = Linux ]
+then
+   CC_ARCH=`cc -dumpmachine 2>/dev/null`
+   if [ -n "$CC_ARCH" ]
+   then
+      MULTIARCHDIR="/usr/lib/$CC_ARCH"
+   fi
+fi
+
 if [ -f config.unix ]; then
    rm -f config.unix
 fi
@@ -426,6 +436,7 @@ LUAROCKS_UNAME_S=$LUAROCKS_UNAME_S
 LUAROCKS_DOWNLOADER=$LUAROCKS_DOWNLOADER
 LUAROCKS_MD5CHECKER=$LUAROCKS_MD5CHECKER
 LUAROCKS_ROCKS_SUBDIR=$LUAROCKS_ROCKS_SUBDIR
+LUAROCKS_MULTIARCHDIR=$MULTIARCHDIR
 
 EOF
 
