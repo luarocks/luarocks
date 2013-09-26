@@ -82,7 +82,8 @@ src/luarocks/site_config.lua: config.unix
 	echo "LUAROCKS_MD5CHECKER=[[$(LUAROCKS_MD5CHECKER)]]" >> src/luarocks/site_config.lua
 	if [ -n "$(MULTIARCH_SUBDIR)" ] ;\
 	then \
-	   echo "LUAROCKS_ADD_LIB_SUBDIRS={ [[$(MULTIARCH_SUBDIR)]] }" >> src/luarocks/site_config.lua ;\
+	   echo 'LUAROCKS_EXTERNAL_DEPS_SUBDIRS={ bin="bin", lib={ "lib", [[$(MULTIARCH_SUBDIR)]] }, include="include" }' >> src/luarocks/site_config.lua ;\
+	   echo 'LUAROCKS_RUNTIME_EXTERNAL_DEPS_SUBDIRS={ bin="bin", lib={ "lib", [[$(MULTIARCH_SUBDIR)]] }, include="include" }' >> src/luarocks/site_config.lua ;\
 	fi
 
 dev:

@@ -399,7 +399,7 @@ fi
 
 if [ "$LUAROCKS_UNAME_S" = Linux ]
 then
-   GCC_ARCH=`gcc -dumpspecs 2>/dev/null | grep -A 1 "^*multilib:$" | tail -1 | cut -d: -f3 | cut -d' ' -f1`
+   GCC_ARCH=`gcc -print-multiarch 2>/dev/null`
    if [ -n "$GCC_ARCH" -a -d "/usr/lib/$GCC_ARCH" ]
    then
       MULTIARCH_SUBDIR="lib/$GCC_ARCH"
