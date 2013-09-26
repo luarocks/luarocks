@@ -206,7 +206,7 @@ end
 -- @return boolean: true on success, false on failure.
 function unzip(zipfile)
    assert(zipfile)
-   return fs.execute(vars.UNZIP, zipfile)
+   return fs.execute_string(fs.quiet(vars.UNZIP.." "..fs.Q(zipfile)))
 end
 
 --- Test is file/directory exists

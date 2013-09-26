@@ -103,26 +103,40 @@ function load_manifest(repo_url)
    if manif_core.manifest_cache[repo_url] then
       return manif_core.manifest_cache[repo_url]
    end
+   
+   local filenames = {
+      "manifest-"..cfg.lua_version..".zip",
+      "manifest-"..cfg.lua_version,
+      "manifest",
+   }
 
-   local vmanifest = "manifest-"..cfg.lua_version
-
-   local protocol, pathname = dir.split_url(repo_url)
+   local protocol, repodir = dir.split_url(repo_url)
+   local pathname
    if protocol == "file" then
-      local file = dir.path(pathname, vmanifest)
-      if fs.exists(file) then
-         pathname = file
-      else
-         pathname = dir.path(pathname, "manifest")
+      for _, filename in ipairs(filenames) do
+         pathname = dir.path(repodir, filename)
+         if fs.exists(pathname) then
+            break
+         end
       end
    else
-      local file, err = fetch_manifest_from(repo_url, vmanifest)
-      if not file then
-         file, err = fetch_manifest_from(repo_url, "manifest")
+      local err
+      for _, filename in ipairs(filenames) do
+         pathname, err = fetch_manifest_from(repo_url, filename)
+         if pathname then
+            break
+         end
       end
-      if not file then 
+      if not pathname then 
          return nil, err
       end
-      pathname = file
+   end
+   if pathname:match(".*%.zip$") then
+      local dir = dir.dir_name(pathname)
+      fs.change_dir(dir)
+      fs.unzip(pathname)
+      fs.pop_dir()
+      pathname = pathname:match("(.*)%.zip$")
    end
    return manif_core.manifest_loader(pathname, repo_url)
 end
@@ -343,7 +357,7 @@ function make_manifest(repo, deps_mode, versioned)
    if not ok then return nil, err end
 
    if versioned then
-      for _, luaver in ipairs({"5.1", "5.2"}) do
+      for luaver in util.lua_versions() do
          local vmanifest = { repository = {}, modules = {}, commands = {} }
          local ok, err = store_results(results, vmanifest, deps_mode, repo, luaver, cache)
          save_table(repo, "manifest-"..luaver, vmanifest)
@@ -395,6 +409,15 @@ function update_manifest(name, version, repo, deps_mode)
    if not ok then return nil, err end
 
    return save_table(repo, "manifest", manifest)
+end
+
+function zip_manifests()
+   for ver in util.lua_versions() do
+      local file = "manifest-"..ver
+      local zip = file..".zip"
+      fs.delete(dir.path(fs.current_dir(), zip))
+      fs.zip(zip, file)
+   end
 end
 
 local function find_providers(file, root)

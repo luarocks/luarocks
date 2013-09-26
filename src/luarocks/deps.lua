@@ -360,6 +360,11 @@ local function match_dep(dep, blacklist, deps_mode)
    end
 end
 
+local whitelist = {}
+if cfg.lua_version == "5.2" then
+   whitelist["bit32"] = true
+end
+
 --- Attempt to match dependencies of a rockspec to installed rocks.
 -- @param rockspec table: The rockspec loaded as a table.
 -- @param blacklist table or nil: Program versions to not use as valid matches.
@@ -367,24 +372,28 @@ end
 -- are program versions and values are 'true'.
 -- @return table, table: A table where keys are dependencies parsed
 -- in table format and values are tables containing fields 'name' and
--- version' representing matches, and a table of missing dependencies
--- parsed as tables.
+-- version' representing matches; a table of missing dependencies
+-- parsed as tables; and a table of "no-upgrade" missing dependencies
+-- (to be used in plugin modules so that a plugin does not force upgrade of
+-- its parent application).
 function match_deps(rockspec, blacklist, deps_mode)
    assert(type(rockspec) == "table")
    assert(type(blacklist) == "table" or not blacklist)
    local matched, missing, no_upgrade = {}, {}, {}
-
+   
    for _, dep in ipairs(rockspec.dependencies) do
-      local found = match_dep(dep, blacklist and blacklist[dep.name] or nil, deps_mode)
-      if found then
-         if dep.name ~= "lua" then 
-            matched[dep] = found
-         end
-      else
-         if dep.constraints[1] and dep.constraints[1].no_upgrade then
-            no_upgrade[dep.name] = dep
+      if not whitelist[dep.name] then
+         local found = match_dep(dep, blacklist and blacklist[dep.name] or nil, deps_mode)
+         if found then
+            if dep.name ~= "lua" then 
+               matched[dep] = found
+            end
          else
-            missing[dep.name] = dep
+            if dep.constraints[1] and dep.constraints[1].no_upgrade then
+               no_upgrade[dep.name] = dep
+            else
+               missing[dep.name] = dep
+            end
          end
       end
    end
@@ -441,7 +450,7 @@ function fulfill_dependencies(rockspec, deps_mode)
       end
    end
 
-   local matched, missing, no_upgrade = match_deps(rockspec, nil, deps_mode)
+   local _, missing, no_upgrade = match_deps(rockspec, nil, deps_mode)
 
    if next(no_upgrade) then
       util.printerr("Missing dependencies for "..rockspec.name.." "..rockspec.version..":")
