@@ -108,7 +108,7 @@ end
 function make_dir(directory)
    assert(directory)
    directory = dir.normalize(directory)
-   fs.execute(fs.quiet(vars.MKDIR.." -p "..fs.Q(directory)))
+   fs.execute_quiet(vars.MKDIR.." -p ", directory)
    if not fs.is_dir(directory) then
       return false, "failed making directory "..directory
    end
@@ -121,7 +121,7 @@ end
 -- @param directory string: pathname of directory to remove.
 function remove_dir_if_empty(directory)
    assert(directory)
-   fs.execute_string(fs.quiet(vars.RMDIR.." "..fs.Q(directory)))
+   fs.execute_quiet(vars.RMDIR, directory)
 end
 
 --- Remove a directory if it is empty.
@@ -130,7 +130,7 @@ end
 -- @param directory string: pathname of directory to remove.
 function remove_dir_tree_if_empty(directory)
    assert(directory)
-   fs.execute_string(fs.quiet(vars.RMDIR.." "..fs.Q(directory)))
+   fs.execute_quiet(vars.RMDIR, directory)
 end
 
 --- Copy a file.
@@ -155,7 +155,7 @@ end
 -- plus an error message.
 function copy_contents(src, dest)
    assert(src and dest)
-   if fs.execute_string(fs.quiet(vars.CP.." -dR "..src.."\\*.* "..fs.Q(dest))) then
+   if fs.execute_quiet(vars.CP.." -dR "..src.."\\*.* "..fs.Q(dest)) then
       return true
    else
       return false, "Failed copying "..src.." to "..dest
@@ -170,7 +170,7 @@ function delete(arg)
    assert(arg)
    assert(arg:match("^[\a-zA-Z]?:?[\\/]"))
    fs.execute(vars.CHMOD.." a+rw -R ", arg)
-   return fs.execute_string(fs.quiet(vars.RM.." -rf " .. fs.Q(arg)))
+   return fs.execute_quiet(vars.RM.." -rf ", arg)
 end
 
 --- List the contents of a directory.
@@ -245,7 +245,7 @@ end
 -- @return boolean: true if it is a directory, false otherwise.
 function is_dir(file)
    assert(file)
-   return fs.execute(fs.quiet(vars.TEST.." -d " .. fs.Q(file)))
+   return fs.execute_quiet(vars.TEST.." -d ", file)
 end
 
 --- Test is pathname is a regular file.
@@ -301,20 +301,20 @@ function unpack_archive(archive)
    if archive:match("%.tar%.gz$") then
       ok = gunzip(archive)
       if ok then
-         ok = fs.execute(sevenzx, strip_extension(archive))
+         ok = fs.execute_quiet(sevenzx, strip_extension(archive))
       end
    elseif archive:match("%.tgz$") then
       ok = gunzip(archive)
       if ok then
-         ok = fs.execute(sevenzx, strip_extension(archive)..".tar")
+         ok = fs.execute_quiet(sevenzx, strip_extension(archive)..".tar")
       end
    elseif archive:match("%.tar%.bz2$") then
-      ok = fs.execute(sevenzx, archive)
+      ok = fs.execute_quiet(sevenzx, archive)
       if ok then
-         ok = fs.execute(sevenzx, strip_extension(archive))
+         ok = fs.execute_quiet(sevenzx, strip_extension(archive))
       end
    elseif archive:match("%.zip$") then
-      ok = fs.execute(sevenzx, archive)
+      ok = fs.execute_quiet(sevenzx, archive)
    elseif archive:match("%.lua$") or archive:match("%.c$") then
       -- Ignore .lua and .c files; they don't need to be extracted.
       return true
@@ -352,5 +352,5 @@ end
 -- @return boolean: true if file exists, false otherwise.
 function exists(file)
    assert(file)
-   return fs.execute(fs.quiet("if not exist " .. fs.Q(file) .. " invalidcommandname"))
+   return fs.execute_quiet("if not exist " .. fs.Q(file) .. " invalidcommandname")
 end
