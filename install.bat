@@ -39,8 +39,8 @@ end
 
 local function exec(cmd)
 	--print(cmd)
-	local result = os.execute(cmd)
-	return result == true
+	local status = os.execute(cmd)
+	return (status == 0 or status == true) -- compat 5.1/5.2
 end
 
 local function exists(filename)
