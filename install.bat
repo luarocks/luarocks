@@ -629,9 +629,11 @@ if REGISTRY then
 	-- expand template with correct path information
 	print()
 	print([[Loading registry information for ".rockspec" files]])
-	exec( S[[lua5.1\bin\lua5.1.exe "$FULL_PREFIX\create_reg_file.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
+	exec( S[[lua5.1\bin\lua5.1.exe "$FULL_PREFIX\LuaRocks.reg.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
 	exec( S"$FULL_PREFIX\\LuaRocks.reg" )
 end
+-- remove regsitry related files, no longer needed
+exec( S[[del "$FULL_PREFIX\LuaRocks.reg.*" > nul]] )
 
 -- ***********************************************************
 -- Exit handlers 
