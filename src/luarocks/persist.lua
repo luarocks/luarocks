@@ -20,7 +20,7 @@ function load_into_table(filename, tbl)
 
    local result, chunk, ran, err
    local result = tbl or {}
-   if setfenv then -- Lua 5.1
+   if _VERSION == "Lua 5.1" then -- Lua 5.1
       chunk, err = loadfile(filename)
       if chunk then
          setfenv(chunk, result)

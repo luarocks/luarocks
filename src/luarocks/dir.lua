@@ -17,13 +17,12 @@ end
 
 --- Strip the name off a path+filename.
 -- @param pathname string: A path+name, such as "/a/b/c".
--- @return string: The filename without its path, such as "/a/b/".
--- For entries such as "/a/b/", "/a/" is returned. If there are
+-- @return string: The filename without its path, such as "/a/b".
+-- For entries such as "/a/b/", "/a" is returned. If there are
 -- no directory separators in input, "" is returned.
 function dir_name(pathname)
    assert(type(pathname) == "string")
-
-   return (pathname:gsub("/*$", ""):match("(.*/)[^/]*")) or ""
+   return (pathname:gsub("/*$", ""):match("(.*)[/]+[^/]*")) or ""
 end
 
 --- Describe a path in a cross-platform way.
