@@ -14,7 +14,7 @@ LUA_BINDIR="/usr/bin"
 LUA_INCDIR="/usr/include"
 LUA_LIBDIR="/usr/lib"
 LUA_VERSION="5.1"
-MULTIARCHDIR=""
+MULTIARCH_SUBDIR=""
 
 # ----------------------------------------------------------------------------
 # FUNCTION DEFINITIONS
@@ -399,10 +399,10 @@ fi
 
 if [ "$LUAROCKS_UNAME_S" = Linux ]
 then
-   CC_ARCH=`cc -dumpmachine 2>/dev/null`
-   if [ -n "$CC_ARCH" ]
+   GCC_ARCH=`gcc -dumpspecs 2>/dev/null | grep -A 1 "^*multilib:$" | tail -1 | cut -d: -f3 | cut -d' ' -f1`
+   if [ -n "$GCC_ARCH" -a -d "/usr/lib/$GCC_ARCH" ]
    then
-      MULTIARCHDIR="/usr/lib/$CC_ARCH"
+      MULTIARCH_SUBDIR="lib/$GCC_ARCH"
    fi
 fi
 
@@ -436,7 +436,7 @@ LUAROCKS_UNAME_S=$LUAROCKS_UNAME_S
 LUAROCKS_DOWNLOADER=$LUAROCKS_DOWNLOADER
 LUAROCKS_MD5CHECKER=$LUAROCKS_MD5CHECKER
 LUAROCKS_ROCKS_SUBDIR=$LUAROCKS_ROCKS_SUBDIR
-LUAROCKS_MULTIARCHDIR=$MULTIARCHDIR
+MULTIARCH_SUBDIR=$MULTIARCH_SUBDIR
 
 EOF
 

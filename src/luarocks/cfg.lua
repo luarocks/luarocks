@@ -437,6 +437,23 @@ if detected.solaris then
    defaults.variables.MAKE = "gmake"
 end
 
+if type(site_config.LUAROCKS_ADD_LIB_SUBDIRS) == "table" and next(site_config.LUAROCKS_ADD_LIB_SUBDIRS) ~= nil then
+   local lib = defaults.external_deps_subdirs.lib
+   if type(lib) ~= "table" then
+      lib = { lib }
+   end
+   local rt_lib = defaults.runtime_external_deps_subdirs.lib
+   if type(rt_lib) ~= "table" then
+      rt_lib = { rt_lib }
+   end
+   for i,v in ipairs(site_config.LUAROCKS_ADD_LIB_SUBDIRS) do
+      lib[#lib+1] = v
+      rt_lib[#rt_lib+1] = v
+   end
+   defaults.external_deps_subdirs.lib = lib
+   defaults.runtime_external_deps_subdirs.lib = rt_lib
+end
+
 -- Expose some more values detected by LuaRocks for use by rockspec authors.
 defaults.variables.LIB_EXTENSION = defaults.lib_extension
 defaults.variables.OBJ_EXTENSION = defaults.obj_extension
