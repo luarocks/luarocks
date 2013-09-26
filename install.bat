@@ -1,6 +1,6 @@
 rem=rem --[[
 @setlocal&  set luafile="%~f0" & if exist "%~f0.bat" set luafile="%~f0.bat"
-@lua5.1\bin\lua5.1.exe %luafile% %*&  exit /b ]]
+@bin\bin\lua52.exe %luafile% %*&  exit /b ]]
 
 local vars = {}
 
@@ -509,7 +509,7 @@ for _, c in ipairs{"luarocks", "luarocks-admin"} do
 SETLOCAL
 SET LUA_PATH=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH%
 SET PATH=$BINDIR\;%PATH%
-"$LUA_INTERPRETER" "$BINDIR\]]..c..[[.lua" %*
+"$SYSCONFDIR\lua52.exe" "$BINDIR\]]..c..[[.lua" %*
 ENDLOCAL
 ]])
 	f:close()
@@ -629,7 +629,7 @@ if REGISTRY then
 	-- expand template with correct path information
 	print()
 	print([[Loading registry information for ".rockspec" files]])
-	exec( S[[lua5.1\bin\lua5.1.exe "$FULL_PREFIX\LuaRocks.reg.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
+	exec( S[[bin\bin\lua52.exe "$FULL_PREFIX\LuaRocks.reg.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
 	exec( S"$FULL_PREFIX\\LuaRocks.reg" )
 end
 -- remove regsitry related files, no longer needed
