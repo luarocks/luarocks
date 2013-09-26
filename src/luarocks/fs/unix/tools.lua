@@ -88,7 +88,7 @@ end
 -- @param directory string: pathname of directory to remove.
 function remove_dir_if_empty(directory)
    assert(directory)
-   fs.execute_string(fs.quiet(vars.RMDIR.." "..fs.Q(directory)))
+   fs.execute_quiet(vars.RMDIR, directory)
 end
 
 --- Remove a directory if it is empty.
@@ -97,7 +97,7 @@ end
 -- @param directory string: pathname of directory to remove.
 function remove_dir_tree_if_empty(directory)
    assert(directory)
-   fs.execute_string(fs.quiet(vars.RMDIR.." -p "..fs.Q(directory)))
+   fs.execute_quiet(vars.RMDIR, "-p", directory)
 end
 
 --- Copy a file.
@@ -132,7 +132,7 @@ end
 -- plus an error message.
 function copy_contents(src, dest)
    assert(src and dest)
-   if fs.execute_string(fs.quiet(vars.CP.." -pPR "..fs.Q(src).."/* "..fs.Q(dest))) then
+   if fs.execute_quiet(vars.CP.." -pPR "..fs.Q(src).."/* "..fs.Q(dest)) then
       return true
    else
       return false, "Failed copying "..src.." to "..dest
@@ -145,7 +145,7 @@ end
 function delete(arg)
    assert(arg)
    assert(arg:sub(1,1) == "/")
-   return fs.execute_string(fs.quiet(vars.RM.." -rf " .. fs.Q(arg)))
+   return fs.execute_quiet(vars.RM, "-rf", arg)
 end
 
 --- List the contents of a directory.
@@ -206,7 +206,7 @@ end
 -- @return boolean: true on success, false on failure.
 function unzip(zipfile)
    assert(zipfile)
-   return fs.execute_string(fs.quiet(vars.UNZIP.." "..fs.Q(zipfile)))
+   return fs.execute_quiet(vars.UNZIP, zipfile)
 end
 
 --- Test is file/directory exists

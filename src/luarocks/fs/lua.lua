@@ -83,6 +83,15 @@ function make_temp_dir(name)
    end
 end
 
+local function quote_args(command, ...)
+   local out = { command }
+   for _, arg in ipairs({...}) do
+      assert(type(arg) == "string")
+      out[#out+1] = fs.Q(arg)
+   end
+   return table.concat(out, " ")
+end
+
 --- Run the given command, quoting its arguments.
 -- The command is executed in the current directory in the dir stack.
 -- @param command string: The command to be executed. No quoting/escaping
@@ -92,12 +101,19 @@ end
 -- otherwise.
 function execute(command, ...)
    assert(type(command) == "string")
+   return fs.execute_string(quote_args(command, ...))
+end
 
-   for _, arg in ipairs({...}) do
-      assert(type(arg) == "string")
-      command = command .. " " .. fs.Q(arg)
-   end
-   return fs.execute_string(command)
+--- Run the given command, quoting its arguments, silencing its output.
+-- The command is executed in the current directory in the dir stack.
+-- @param command string: The command to be executed. No quoting/escaping
+-- is applied.
+-- @param ... Strings containing additional arguments, which are quoted.
+-- @return boolean: true if command succeeds (status code 0), false
+-- otherwise.
+function execute_quiet(command, ...)
+   assert(type(command) == "string")
+   return fs.execute_string(fs.quiet(quote_args(command, ...)))
 end
 
 --- Check the MD5 checksum for a file.
@@ -482,6 +498,7 @@ if socket_ok then
 
 local ltn12 = require("ltn12")
 local luasec_ok, https = pcall(require, "ssl.https")
+
 local redirect_protocols = {
    http = http,
    https = luasec_ok and https,
