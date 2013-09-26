@@ -1,6 +1,6 @@
 rem=rem --[[
 @setlocal&  set luafile="%~f0" & if exist "%~f0.bat" set luafile="%~f0.bat"
-@bin\lua52.exe %luafile% %*&  exit /b ]]
+@bin\bin\lua52.exe %luafile% %*&  exit /b ]]
 
 local vars = {}
 
@@ -629,7 +629,7 @@ if REGISTRY then
 	-- expand template with correct path information
 	print()
 	print([[Loading registry information for ".rockspec" files]])
-	exec( S[[lua5.1\bin\lua5.1.exe "$FULL_PREFIX\create_reg_file.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
+	exec( S[[bin\bin\lua52.exe "$FULL_PREFIX\create_reg_file.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
 	exec( S"$FULL_PREFIX\\LuaRocks.reg" )
 end
 
