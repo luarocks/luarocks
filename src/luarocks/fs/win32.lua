@@ -10,9 +10,16 @@ local dir = require("luarocks.dir")
 
 --- Annotate command string for quiet execution.
 -- @param cmd string: A command-line string.
--- @return string: The command-line, with silencing annotation.
+-- @return string: The command-line, with silencing annotation, or
+-- just the silencer string if `cmd` was `nil`.
 function quiet(cmd)
-   return cmd.." 2> NUL 1> NUL"
+   local silent = "2> NUL 1> NUL"
+   if cmd then
+      assert(type(cmd) == "string", "expected string")
+      return cmd.." "..silent
+   else
+      return silent
+   end
 end
 
 --- Quote argument for shell processing. Fixes paths on Windows.

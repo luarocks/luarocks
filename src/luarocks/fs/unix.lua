@@ -17,9 +17,16 @@ math.randomseed(os.time())
 
 --- Annotate command string for quiet execution.
 -- @param cmd string: A command-line string.
--- @return string: The command-line, with silencing annotation.
+-- @return string: The command-line, with silencing annotation, or
+-- just the silencer string if `cmd` was `nil`.
 function quiet(cmd)
-   return cmd.." 1> /dev/null 2> /dev/null"
+   local silent = "1> /dev/null 2> /dev/null"
+   if cmd then
+      assert(type(cmd) == "string", "expected string")
+      return cmd.." "..silent
+   else
+      return silent
+   end
 end
 
 --- Return an absolute pathname from a potentially relative one.
