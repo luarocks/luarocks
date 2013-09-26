@@ -237,7 +237,7 @@ end
 -- @return boolean: true on success, false on failure.
 function unzip(zipfile)
    assert(zipfile)
-   return fs.execute(vars.SEVENZ.." x", zipfile)
+   return fs.execute(vars.SEVENZ.." x", zipfile, fs.quiet())
 end
 
 --- Test is pathname is a directory.
@@ -285,7 +285,7 @@ end
 -- @param archive string: Filename of archive.
 -- @return boolean : success status
 local function gunzip(archive)
-  return fs.execute(vars.SEVENZ.." x", archive)
+  return fs.execute(vars.SEVENZ.." x", archive, fs.quiet())
 end
 
 --- Unpack an archive.
@@ -301,20 +301,20 @@ function unpack_archive(archive)
    if archive:match("%.tar%.gz$") then
       ok = gunzip(archive)
       if ok then
-         ok = fs.execute(sevenzx, strip_extension(archive))
+         ok = fs.execute(sevenzx, strip_extension(archive), fs.quiet())
       end
    elseif archive:match("%.tgz$") then
       ok = gunzip(archive)
       if ok then
-         ok = fs.execute(sevenzx, strip_extension(archive)..".tar")
+         ok = fs.execute(sevenzx, strip_extension(archive)..".tar", fs.quiet())
       end
    elseif archive:match("%.tar%.bz2$") then
-      ok = fs.execute(sevenzx, archive)
+      ok = fs.execute(sevenzx, archive, fs.quiet())
       if ok then
-         ok = fs.execute(sevenzx, strip_extension(archive))
+         ok = fs.execute(sevenzx, strip_extension(archive), fs.quiet())
       end
    elseif archive:match("%.zip$") then
-      ok = fs.execute(sevenzx, archive)
+      ok = fs.execute(sevenzx, archive, fs.quiet())
    elseif archive:match("%.lua$") or archive:match("%.c$") then
       -- Ignore .lua and .c files; they don't need to be extracted.
       return true

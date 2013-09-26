@@ -83,7 +83,8 @@ function make_temp_dir(name)
    end
 end
 
---- Run the given command, quoting its arguments.
+--- Run the given command, quoting its arguments. If the last argument is 
+-- a silencer (that is `arg == fs.quiet()` then it is left unquoted.
 -- The command is executed in the current directory in the dir stack.
 -- @param command string: The command to be executed. No quoting/escaping
 -- is applied.
@@ -92,10 +93,18 @@ end
 -- otherwise.
 function execute(command, ...)
    assert(type(command) == "string")
-
-   for _, arg in ipairs({...}) do
+   
+   local lst = { n = select("#", ...), ... }
+   for i = 1,lst.n do
+      local arg = lst[i]
       assert(type(arg) == "string")
-      command = command .. " " .. fs.Q(arg)
+      
+      if (i == lst.n) and (arg == fs.quiet()) then
+         -- last argument is a silencer, no quoting
+         command = command .. " " .. arg
+      else
+         command = command .. " " .. fs.Q(arg)
+      end
    end
    return fs.execute_string(command)
 end
