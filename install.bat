@@ -40,7 +40,7 @@ end
 local function exec(cmd)
 	--print(cmd)
 	local status = os.execute(cmd)
-	return status == 0
+	return (status == 0 or status == true) -- compat 5.1/5.2
 end
 
 local function exists(filename)
