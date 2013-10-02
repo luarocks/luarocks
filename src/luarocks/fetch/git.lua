@@ -11,8 +11,8 @@ local util = require("luarocks.util")
 -- clone by tag then we'll have to issue a subsequent command to check out the
 -- given tag.
 -- @return boolean: Whether Git can clone by tag.
-local function git_can_clone_by_tag()
-   local version_string = io.popen('git --version'):read()
+local function git_can_clone_by_tag(git_cmd)
+   local version_string = io.popen(git_cmd..' --version'):read()
    local major, minor, tiny = version_string:match('(%d-)%.(%d+)%.?(%d*)')
    major, minor, tiny = tonumber(major), tonumber(minor), tonumber(tiny) or 0
    local value = major > 1 or (major == 1 and (minor > 7 or (minor == 7 and tiny >= 10)))
@@ -57,7 +57,7 @@ function get_sources(rockspec, extract, dest_dir)
    -- we can avoid passing it to Git since it's the default.
    if tag_or_branch == "master" then tag_or_branch = nil end
    if tag_or_branch then
-      if git_can_clone_by_tag() then
+      if git_can_clone_by_tag(git_cmd) then
          -- The argument to `--branch` can actually be a branch or a tag as of
          -- Git 1.7.10.
          table.insert(command, 4, "--branch=" .. tag_or_branch)
