@@ -19,6 +19,7 @@ vars.LUA_VERSION = "5.1"
 vars.LUA_SHORTV = nil   -- "51"
 vars.LUA_LIB_NAMES = "lua5.1.lib lua51.dll liblua.dll.a"
 vars.LUA_RUNTIME = nil
+vars.UNAME_M = nil
 
 local P_SET = false
 local FORCE = false
@@ -387,6 +388,19 @@ local function look_for_lua_install ()
 	return false
 end
 
+local function get_architecture()
+	-- detect processor arch
+	proc = io.popen([[.\bin\bin\uname -m]]):read("*l")
+	if proc:match("i[%d]86") then
+	    proc = "x86"
+	elseif proc:match("amd64") or proc:match("x86_64") then
+	    proc = "x86_64"
+    else
+        die("Could not detect processor architecture")
+	end
+    return proc
+end
+
 ---
 -- Poor man's command-line parsing
 local config = {}
@@ -428,6 +442,7 @@ vars.LIBDIR = vars.FULL_PREFIX
 vars.LUADIR = S"$FULL_PREFIX\\lua"
 vars.INCDIR = S"$FULL_PREFIX\\include"
 vars.LUA_SHORTV = vars.LUA_VERSION:gsub("%.", "")
+vars.UNAME_M = get_architecture()
 
 if not look_for_lua_install() then
 	print("Could not find Lua. Will install its own copy.")
@@ -452,6 +467,7 @@ Lua binaries   : $LUA_BINDIR
 Lua libraries  : $LUA_LIBDIR
 Lua includes   : $LUA_INCDIR
 Binaries will be linked against: $LUA_LIBNAME with runtime $LUA_RUNTIME
+System architecture detected as: $UNAME_M
 
 ]])
 end
@@ -563,7 +579,7 @@ else
 	f:write("LUAROCKS_UNAME_S=[[WindowsNT]]\n")
 end
 f:write(S[=[
-LUAROCKS_UNAME_M=[[x86]]
+LUAROCKS_UNAME_M=[[$UNAME_M]]
 LUAROCKS_SYSCONFIG=[[$SYSCONFDIR\config.lua]]
 LUAROCKS_ROCKS_TREE=[[$ROCKS_TREE]]
 LUAROCKS_PREFIX=[[$PREFIX]]
