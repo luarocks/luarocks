@@ -16,7 +16,7 @@ vars.LUA_INCDIR = nil
 vars.LUA_LIBDIR = nil
 vars.LUA_LIBNAME = nil
 vars.LUA_VERSION = "5.1"
-vars.LUA_SHORTV = nil
+vars.LUA_SHORTV = nil   -- "51"
 vars.LUA_LIB_NAMES = "lua5.1.lib lua51.dll liblua.dll.a"
 vars.LUA_RUNTIME = nil
 
@@ -180,6 +180,10 @@ local function look_for_interpreter (directory)
 			vars.LUA_INTERPRETER = S"lua$LUA_VERSION.exe"
 			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
 			return true
+		elseif exists( S"$LUA_BINDIR\\lua$LUA_SHORTV.exe" ) then
+			vars.LUA_INTERPRETER = S"lua$LUA_SHORTV.exe"
+			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
+			return true
 		elseif exists(S"$LUA_BINDIR\\lua.exe") then
 			vars.LUA_INTERPRETER = "lua.exe"
 			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
@@ -195,6 +199,12 @@ local function look_for_interpreter (directory)
 	for _, e in ipairs{ [[\]], [[\bin\]] } do
 		if exists(directory..e.."\\lua"..vars.LUA_VERSION..".exe") then
 			vars.LUA_INTERPRETER = S"lua$LUA_VERSION.exe"
+			vars.LUA_BINDIR = directory .. e
+			print("       Found ."..e..vars.LUA_INTERPRETER)
+			return true
+
+		elseif exists(directory..e.."\\lua"..vars.LUA_SHORTV..".exe") then
+			vars.LUA_INTERPRETER = S"lua$LUA_SHORTV.exe"
 			vars.LUA_BINDIR = directory .. e
 			print("       Found ."..e..vars.LUA_INTERPRETER)
 			return true
