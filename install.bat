@@ -389,15 +389,22 @@ local function look_for_lua_install ()
 end
 
 local function get_architecture()
-	-- detect processor arch
-	proc = io.popen([[.\bin\bin\uname -m]]):read("*l")
-	if proc:match("i[%d]86") then
-	    proc = "x86"
-	elseif proc:match("amd64") or proc:match("x86_64") then
-	    proc = "x86_64"
-    else
+    -- detect processor arch
+    local tmpname = [[.\_architect_temp.txt]]
+    local cmd = [[REG.exe Query HKLM\Hardware\Description\System\CentralProcessor\0 >"]]..tmpname.. [["]]
+    if not exec(cmd) then
         die("Could not detect processor architecture")
-	end
+    end
+    local f = io.open(tmpname, "r")
+    local proc = f:read('*a')
+    f:close()
+    os.remove(tmpname)
+    
+    if proc:match("x86") then
+        proc = "x86"
+    else
+        proc = "x86_64"
+	  end
     return proc
 end
 
