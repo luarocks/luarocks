@@ -534,6 +534,9 @@ for _, c in ipairs{"luarocks", "luarocks-admin"} do
 @ECHO OFF
 SETLOCAL
 SET LUA_PATH=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH%
+IF NOT *%LUA_PATH_5_2%*==** (
+   SET LUA_PATH_5_2=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_2%
+)
 SET PATH=$BINDIR\;%PATH%
 "$LUA_INTERPRETER" "$BINDIR\]]..c..[[.lua" %*
 ENDLOCAL
