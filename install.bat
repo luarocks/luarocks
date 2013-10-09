@@ -16,9 +16,10 @@ vars.LUA_INCDIR = nil
 vars.LUA_LIBDIR = nil
 vars.LUA_LIBNAME = nil
 vars.LUA_VERSION = "5.1"
-vars.LUA_SHORTV = nil
+vars.LUA_SHORTV = nil   -- "51"
 vars.LUA_LIB_NAMES = "lua5.1.lib lua51.dll liblua.dll.a"
 vars.LUA_RUNTIME = nil
+vars.UNAME_M = nil
 
 local P_SET = false
 local FORCE = false
@@ -180,6 +181,10 @@ local function look_for_interpreter (directory)
 			vars.LUA_INTERPRETER = S"lua$LUA_VERSION.exe"
 			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
 			return true
+		elseif exists( S"$LUA_BINDIR\\lua$LUA_SHORTV.exe" ) then
+			vars.LUA_INTERPRETER = S"lua$LUA_SHORTV.exe"
+			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
+			return true
 		elseif exists(S"$LUA_BINDIR\\lua.exe") then
 			vars.LUA_INTERPRETER = "lua.exe"
 			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
@@ -195,6 +200,12 @@ local function look_for_interpreter (directory)
 	for _, e in ipairs{ [[\]], [[\bin\]] } do
 		if exists(directory..e.."\\lua"..vars.LUA_VERSION..".exe") then
 			vars.LUA_INTERPRETER = S"lua$LUA_VERSION.exe"
+			vars.LUA_BINDIR = directory .. e
+			print("       Found ."..e..vars.LUA_INTERPRETER)
+			return true
+
+		elseif exists(directory..e.."\\lua"..vars.LUA_SHORTV..".exe") then
+			vars.LUA_INTERPRETER = S"lua$LUA_SHORTV.exe"
 			vars.LUA_BINDIR = directory .. e
 			print("       Found ."..e..vars.LUA_INTERPRETER)
 			return true
@@ -377,6 +388,26 @@ local function look_for_lua_install ()
 	return false
 end
 
+local function get_architecture()
+    -- detect processor arch
+    local tmpname = [[.\_architect_temp.txt]]
+    local cmd = [[REG.exe Query HKLM\Hardware\Description\System\CentralProcessor\0 >"]]..tmpname.. [["]]
+    if not exec(cmd) then
+        die("Could not detect processor architecture")
+    end
+    local f = io.open(tmpname, "r")
+    local proc = f:read('*a')
+    f:close()
+    os.remove(tmpname)
+    
+    if proc:match("x86") then
+        proc = "x86"
+    else
+        proc = "x86_64"
+	  end
+    return proc
+end
+
 ---
 -- Poor man's command-line parsing
 local config = {}
@@ -418,6 +449,7 @@ vars.LIBDIR = vars.FULL_PREFIX
 vars.LUADIR = S"$FULL_PREFIX\\lua"
 vars.INCDIR = S"$FULL_PREFIX\\include"
 vars.LUA_SHORTV = vars.LUA_VERSION:gsub("%.", "")
+vars.UNAME_M = get_architecture()
 
 if not look_for_lua_install() then
 	print("Could not find Lua. Will install its own copy.")
@@ -442,6 +474,7 @@ Lua binaries   : $LUA_BINDIR
 Lua libraries  : $LUA_LIBDIR
 Lua includes   : $LUA_INCDIR
 Binaries will be linked against: $LUA_LIBNAME with runtime $LUA_RUNTIME
+System architecture detected as: $UNAME_M
 
 ]])
 end
@@ -508,7 +541,9 @@ for _, c in ipairs{"luarocks", "luarocks-admin"} do
 @ECHO OFF
 SETLOCAL
 SET LUA_PATH=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH%
-IF NOT "%LUA_PATH_5_2%"=="" SET LUA_PATH_5_2=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_2%
+IF NOT *%LUA_PATH_5_2%*==** (
+   SET LUA_PATH_5_2=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_2%
+)
 SET PATH=$BINDIR\;%PATH%
 "$LUA_INTERPRETER" "$BINDIR\]]..c..[[.lua" %*
 ENDLOCAL
@@ -554,7 +589,7 @@ else
 	f:write("LUAROCKS_UNAME_S=[[WindowsNT]]\n")
 end
 f:write(S[=[
-LUAROCKS_UNAME_M=[[x86]]
+LUAROCKS_UNAME_M=[[$UNAME_M]]
 LUAROCKS_SYSCONFIG=[[$SYSCONFDIR\config.lua]]
 LUAROCKS_ROCKS_TREE=[[$ROCKS_TREE]]
 LUAROCKS_PREFIX=[[$PREFIX]]
