@@ -180,9 +180,9 @@ function run(...)
    if name and not version then
       local protocol, path = dir.split_url(name)
       if not fetch.is_basic_protocol(protocol) then
-         name = dir.base_name(name):gsub("%.[^.]+$", "")
-         version = "scm"
          local_dir = name
+         version = "scm"
+         name = dir.base_name(name):gsub("%.[^.]+$", "")
       else
          return nil, "Missing name and version arguments. "..util.see_help("write_rockspec")
       end
