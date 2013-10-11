@@ -17,7 +17,7 @@ local function git_can_clone_by_tag(git_cmd)
    major, minor, tiny = tonumber(major), tonumber(minor), tonumber(tiny) or 0
    local value = major > 1 or (major == 1 and (minor > 7 or (minor == 7 and tiny >= 10)))
    git_can_clone_by_tag = function() return value end
-   return git_can_clone_by_tag()
+   return value
 end
 
 --- Download sources for building a rock, using git.

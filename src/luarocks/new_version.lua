@@ -10,6 +10,7 @@ local fetch = require("luarocks.fetch")
 local persist = require("luarocks.persist")
 local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
+local type_check = require("luarocks.type_check")
 
 help_summary = "Auto-write a rockspec for a new version of a rock."
 help_arguments = "{<package>|<rockspec>} [<new_version>] [<new_url>]"
@@ -32,13 +33,6 @@ the new MD5 checksum.
 WARNING: it writes the new rockspec to the current directory,
 overwriting the file if it already exists.
 ]]
-
-local order = {"rockspec_format", "package", "version", 
-   { "source", { "url", "tag", "branch", "md5" } },
-   { "description", {"summary", "detailed", "homepage", "license" } },
-   "supported_platforms", "dependencies", "external_dependencies",
-   { "build", {"type", "modules", "copy_directories", "platforms"} },
-   "hooks"}
 
 local function try_replace(tbl, field, old, new)
    if not tbl[field] then
@@ -166,7 +160,7 @@ function run(...)
    
    local out_filename = out_name.."-"..new_rockver.."-"..new_rev..".rockspec"
    
-   persist.save_from_table(out_filename, out_rs, order)
+   persist.save_from_table(out_filename, out_rs, type_check.rockspec_order)
    
    util.printout("Wrote "..out_filename)
 
