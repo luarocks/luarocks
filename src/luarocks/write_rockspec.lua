@@ -68,7 +68,7 @@ local function configure_lua_version(rockspec, luaver)
    elseif luaver == "5.2" then
       table.insert(rockspec.dependencies, "lua ~> 5.2")
    elseif luaver == "5.1,5.2" then
-      table.insert(rockspec.dependencies, "lua >= 5.1, <= 5.3")
+      table.insert(rockspec.dependencies, "lua >= 5.1, < 5.3")
    else
       util.warning("Please specify supported Lua version with --lua-version=<ver>. "..util.see_help("write_rockspec"))
    end
