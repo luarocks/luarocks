@@ -81,6 +81,11 @@ src/luarocks/site_config.lua: config.unix
 	echo "LUAROCKS_UNAME_M=[[$(LUAROCKS_UNAME_M)]]" >> src/luarocks/site_config.lua
 	echo "LUAROCKS_DOWNLOADER=[[$(LUAROCKS_DOWNLOADER)]]" >> src/luarocks/site_config.lua
 	echo "LUAROCKS_MD5CHECKER=[[$(LUAROCKS_MD5CHECKER)]]" >> src/luarocks/site_config.lua
+	if [ -n "$(MULTIARCH_SUBDIR)" ] ;\
+	then \
+	   echo 'LUAROCKS_EXTERNAL_DEPS_SUBDIRS={ bin="bin", lib={ "lib", [[$(MULTIARCH_SUBDIR)]] }, include="include" }' >> src/luarocks/site_config.lua ;\
+	   echo 'LUAROCKS_RUNTIME_EXTERNAL_DEPS_SUBDIRS={ bin="bin", lib={ "lib", [[$(MULTIARCH_SUBDIR)]] }, include="include" }' >> src/luarocks/site_config.lua ;\
+	fi
 
 dev:
 	$(MAKE) build_bins LUADIR=$(PWD)/src
@@ -169,11 +174,6 @@ write_sysconfig: built
 install: install_bins install_luas install_site_config write_sysconfig
 
 bootstrap: src/luarocks/site_config.lua install_site_config write_sysconfig
-	if [ -n "$$LUA_PATH_5_2" ] ;\
-	then \
-	   LUA_PATH="$$PWD/src/?.lua;$$LUA_PATH" LUA_PATH_5_2="$$PWD/src/?.lua;$$LUA_PATH_5_2" src/bin/luarocks make rockspec --tree="$(PREFIX)" ;\
-	else \
-	   LUA_PATH="$$PWD/src/?.lua;$$LUA_PATH" src/bin/luarocks make rockspec --tree="$(PREFIX)" ;\
-	fi
+	'$(LUA_BINDIR)/lua$(LUA_SUFFIX)' -e "package.path=[[$$PWD/src/?.lua;]]..package.path" src/bin/luarocks make rockspec --tree="$(PREFIX)"
 
 install_rock: install_bins install_luas

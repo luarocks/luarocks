@@ -63,18 +63,13 @@ function wrap_script(file, dest, name, version)
    local base = dir.base_name(file)
    local wrapname = fs.is_dir(dest) and dest.."/"..base or dest
    wrapname = wrapname..".bat"
+   local lpath, lcpath = cfg.package_paths()
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
       return nil, "Could not open "..wrapname.." for writing."
    end
    wrapper:write("@echo off\n")
-   wrapper:write("setlocal\n")
-   wrapper:write('set LUA_PATH='..package.path..";%LUA_PATH%\n")
-   wrapper:write('set LUA_CPATH='..package.cpath..";%LUA_CPATH%\n")
-   wrapper:write('if not "%LUA_PATH_5_2%"=="" set LUA_PATH_5_2='..package.path..";%LUA_PATH_5_2%\n")
-   wrapper:write('if not "%LUA_CPATH_5_2%"=="" set LUA_CPATH_5_2='..package.cpath..";%LUA_CPATH_5_2%\n")
-   wrapper:write('"'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.loader -e"luarocks.loader.add_context([['..name..']],[['..version..']])" "'..file..'" %*\n')
-   wrapper:write("endlocal\n")
+   wrapper:write('"'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -e "package.path=[['..lpath..';]]..package.path" -e "package.cpath=[['..lcpath..';]]..package.cpath" -lluarocks.loader -e"luarocks.loader.add_context([['..name..']],[['..version..']])" "'..file..'" %*\n')
    wrapper:close()
    return true
 end
