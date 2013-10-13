@@ -58,18 +58,7 @@ function wrap_script(file, dest, name, version)
       return nil, "Could not open "..wrapname.." for writing."
    end
    wrapper:write("#!/bin/sh\n\n")
-   wrapper:write('LUA_PATH="'..package.path..';$LUA_PATH"\n')
-   wrapper:write('LUA_CPATH="'..package.cpath..';$LUA_CPATH"\n')
-   wrapper:write('export LUA_PATH LUA_CPATH\n')
-   wrapper:write('if [ -n "$LUA_PATH_5_2" ]; then\n')
-   wrapper:write('   LUA_PATH_5_2="'..package.path..';$LUA_PATH_5_2"\n')
-   wrapper:write('   export LUA_PATH_5_2\n')
-   wrapper:write('fi\n')
-   wrapper:write('if [ -n "$LUA_CPATH_5_2" ]; then\n')
-   wrapper:write('   LUA_CPATH_5_2="'..package.cpath..';$LUA_CPATH_5_2"\n')
-   wrapper:write('   export LUA_CPATH_5_2\n')
-   wrapper:write('fi\n')
-   wrapper:write('exec "'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.loader -e\'luarocks.loader.add_context([['..name..']],[['..version..']])\' "'..file..'" "$@"\n')
+   wrapper:write('exec "'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -e \'package.path=[['..package.path..';]]..package.path\' -e \'package.cpath=[['..package.cpath..';]]..package.cpath\' -lluarocks.loader -e\'luarocks.loader.add_context([['..name..']],[['..version..']])\' "'..file..'" "$@"\n')
    wrapper:close()
    if fs.chmod(wrapname, "0755") then
       return true
