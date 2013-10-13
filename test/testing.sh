@@ -7,6 +7,14 @@
    exit 1
 }
 
+if [ -z "$@"]
+then
+   ps aux | grep -q '[s]shd' || {
+      echo "Run sudo /bin/sshd in order to perform all tests."
+      exit 1
+   }
+fi
+
 testing_dir="$PWD"
 
 testing_tree="$testing_dir/testing"

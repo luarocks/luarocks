@@ -74,6 +74,13 @@ rockspec_types = {
    }
 }
 
+rockspec_order = {"rockspec_format", "package", "version", 
+   { "source", { "url", "tag", "branch", "md5" } },
+   { "description", {"summary", "detailed", "homepage", "license" } },
+   "supported_platforms", "dependencies", "external_dependencies",
+   { "build", {"type", "modules", "copy_directories", "platforms"} },
+   "hooks"}
+
 function load_extensions()
    rockspec_format = "1.1"
    rockspec_types.deploy = {

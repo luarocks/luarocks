@@ -11,6 +11,10 @@ local persist = require("luarocks.persist")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 
+function is_basic_protocol(protocol, remote)
+   return protocol == "http" or protocol == "https" or protocol == "ftp" or (not remote and protocol == "file")
+end
+
 --- Fetch a local or remote file.
 -- Make a remote or local URL/pathname local, fetching the file if necessary.
 -- Other "fetch" and "load" functions use this function to obtain files.
@@ -30,7 +34,7 @@ function fetch_url(url, filename)
    local protocol, pathname = dir.split_url(url)
    if protocol == "file" then
       return fs.absolute_name(pathname)
-   elseif protocol == "http" or protocol == "ftp" or protocol == "https" then
+   elseif is_basic_protocol(protocol, true) then
       local ok, err = fs.download(url, filename)
       if not ok then
          return nil, "Failed downloading "..url..(err and " - "..err or ""), "network"
@@ -171,7 +175,7 @@ function load_local_rockspec(filename)
    end
 
    local protocol, pathname = dir.split_url(rockspec.source.url)
-   if protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file" then
+   if is_basic_protocol(protocol) then
       rockspec.source.file = rockspec.source.file or dir.base_name(rockspec.source.url)
    end
    rockspec.source.protocol, rockspec.source.pathname = protocol, pathname
@@ -254,7 +258,8 @@ end
 -- @param rockspec table: The rockspec table
 -- @param extract boolean: Whether to extract the sources from
 -- the fetched source tarball or not.
--- @param dest_dir string or nil: If set, will extract to the given directory.
+-- @param dest_dir string or nil: If set, will extract to the given directory;
+-- if not given, will extract to a temporary directory.
 -- @return (string, string) or (nil, string, [string]): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message and optional error code.
@@ -301,6 +306,7 @@ end
 -- @param extract boolean: When downloading compressed formats, whether to extract
 -- the sources from the fetched archive or not.
 -- @param dest_dir string or nil: If set, will extract to the given directory.
+-- if not given, will extract to a temporary directory.
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
@@ -311,7 +317,7 @@ function fetch_sources(rockspec, extract, dest_dir)
 
    local protocol = rockspec.source.protocol
    local ok, proto
-   if protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file" then
+   if is_basic_protocol(protocol) then
       proto = require("luarocks.fetch")
    else
       ok, proto = pcall(require, "luarocks.fetch."..protocol:gsub("[+-]", "_"))
