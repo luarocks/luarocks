@@ -39,7 +39,7 @@ function Q(arg)
    assert(type(arg) == "string")
 
    -- FIXME Unix-specific
-   return "'" .. arg:gsub("\\", "\\\\"):gsub("'", "'\\''") .. "'"
+   return "'" .. arg:gsub("'", "'\\''") .. "'"
 end
 
 --- Test is file/dir is writable.
@@ -514,15 +514,28 @@ local function http_request(url, http, loop_control)
       proxy = "http://" .. proxy
    end
    
+   io.write("Downloading "..url.." ...\n")
+   local dots = 0
    local res, status, headers, err = http.request {
       url = url,
       proxy = proxy,
       redirect = false,
       sink = ltn12.sink.table(result),
+      step = function(...)
+         io.write(".")
+         io.flush()
+         dots = dots + 1
+         if dots == 70 then
+            io.write("\n")
+            dots = 0
+         end
+         return ltn12.pump.step(...)
+      end,
       headers = {
          ["user-agent"] = cfg.user_agent.." via LuaSocket"
       },
    }
+   io.write("\n")
    if not res then
       return nil, status
    elseif status == 301 or status == 302 then
