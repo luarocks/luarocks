@@ -42,18 +42,6 @@ function Q(arg)
    return "'" .. arg:gsub("'", "'\\''") .. "'"
 end
 
---- Quote argument for shell processing in batch files/scripts.
--- By default calls fs.Q()
--- @param arg string: Unquoted argument.
--- @return string: Quoted argument.
-function Qb(arg)
-   assert(type(arg) == "string")
-
-   -- only strange platforms (aka Windows) need special
-   -- escape handling for scripts/batch files
-   return fs.Q(arg)
-end
-
 --- Test is file/dir is writable.
 -- Warning: testing if a file/dir is writable does not guarantee
 -- that it will remain writable and therefore it is no replacement
