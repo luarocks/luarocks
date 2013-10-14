@@ -16,18 +16,59 @@ function quiet(cmd)
    return cmd.." 2> NUL 1> NUL"
 end
 
+
+local win_escape_chars = {
+  ["%"] = "%%",
+  ['"'] = '\\"',
+}
+
+local function q_escaper(bs, q)
+  return ("\\"):rep(2*#bs-1) .. (q or "\\")
+end
+
+local function p_escaper(bs)
+   return bs .. bs .. '"%"'
+end
+
 --- Quote argument for shell processing. Fixes paths on Windows.
--- Adds single quotes and escapes.
+-- Adds double quotes and escapes.
 -- @param arg string: Unquoted argument.
 -- @return string: Quoted argument.
 function Q(arg)
    assert(type(arg) == "string")
    -- Quote DIR for Windows
-    if arg:match("^[%.a-zA-Z]?:?[\\/]")  then
-        return '"' .. arg:gsub("/", "\\"):gsub('"', '\\"') .. '"'
-    end
+   if arg:match("^[%.a-zA-Z]?:?[\\/]")  then
+      arg = arg:gsub("/", "\\")
+   end
+   if arg == "\\" then
+      return '\\' -- CHDIR needs special handling for root dir
+   end
     -- URLs and anything else
-   return '"' .. arg:gsub('"', '\\"') .. '"'
+   arg = arg:gsub('(\\+)(")', q_escaper)
+   arg = arg:gsub('(\\+)$', q_escaper)
+   arg = arg:gsub('"', win_escape_chars)
+   arg = arg:gsub('(\\*)%%', p_escaper)
+   return '"' .. arg .. '"'
+end
+
+--- Quote argument for shell processing in batch files.
+-- Adds double quotes and escapes.
+-- @param arg string: Unquoted argument.
+-- @return string: Quoted argument.
+function Qb(arg)
+   assert(type(arg) == "string")
+   -- Quote DIR for Windows
+   if arg:match("^[%.a-zA-Z]?:?[\\/]")  then
+      arg = arg:gsub("/", "\\")
+   end
+   if arg == "\\" then
+      return '\\' -- CHDIR needs special handling for root dir
+   end
+   -- URLs and anything else
+   arg = arg:gsub('(\\+)(")', q_escaper)
+   arg = arg:gsub('(\\+)$', q_escaper)
+   arg = arg:gsub('[%%"]', win_escape_chars)
+   return '"' .. arg .. '"'
 end
 
 --- Return an absolute pathname from a potentially relative one.
@@ -73,7 +114,7 @@ function wrap_script(file, dest, name, version)
    local lua = dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)
    local ppaths = "package.path="..util.LQ(lpath..";").."..package.path; package.cpath="..util.LQ(lcpath..";").."..package.cpath"
    local addctx = "luarocks.loader.add_context("..util.LQ(name)..","..util.LQ(version)..")"
-   wrapper:write(fs.Q(lua)..' -e '..fs.Q(ppaths)..' -lluarocks.loader -e '..fs.Q(addctx)..' '..fs.Q(file)..' %*\n')
+   wrapper:write(fs.Qb(lua)..' -e '..fs.Qb(ppaths)..' -lluarocks.loader -e '..fs.Qb(addctx)..' '..fs.Qb(file)..' %*\n')
    wrapper:close()
    return true
 end
