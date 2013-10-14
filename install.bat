@@ -31,6 +31,9 @@ local REGISTRY = false
 ---
 -- Some helpers
 -- 
+
+local pe = assert(loadfile(".\\bin\\pe-parser.lua"))()
+
 local function die(message)
 	if message then print(message) end
 	print()
@@ -275,69 +278,33 @@ local function look_for_headers (directory)
 	return false
 end
 
--- Checks a binary file for the runtime dll used by it. If nu runtime is found, it returns an
--- array of dll's is depends upon.
--- result: string = runtime used, table = list of dll's depended upon, nil = nothing found.
-local function get_file_runtime(p,f) -- path, filename
-	local infile = p.."\\"..f
-	local outfile = "output.txt"
-	local content
-	-- analyze binary
-	if exec([[.\bin\bin\objdump -x "]]..infile..[[" > ]]..outfile..[[ 2<&1]]) then
-		-- read temp file
-		local fh = io.open(outfile)
-		content = fh:read("*a")
-		fh:close()
-	end
-	-- delete temp file
-	os.remove(outfile)
-	if not content then
-		print("    Failed to analyze "..infile.." for the runtime used")
-        return nil
-    end
-
-	-- lookup
-	content = content:upper()
-	local result = content:match('DLL NAME%: (MSVCR%d*)%.DLL')
-	if not result then
-	  result = content:match('DLL NAME%: (MSVCRT)%.DLL')
-	end
-
-	if result then
-		print("    "..f.." uses "..tostring(result)..".DLL as runtime")
-	else
-		print("    No runtime found for "..f)
-		-- so; create a list of dll's this file is depending upon, next level of the tree
-		result = {}
-		for name in content:gmatch("DLL NAME%: (.-%.DLL)") do
-			--print("found dll:", name)
-			table.insert(result, name)
-		end
-	end
-	return result
-end
 
 local function get_runtime()
-	-- first check interpreter
-	vars.LUA_RUNTIME = get_file_runtime(vars.LUA_BINDIR, vars.LUA_INTERPRETER)
-	if type(vars.LUA_RUNTIME) == "table" then
-		-- a table with dll's depended upon was returned, check this list
-		-- note: we only check 1 level deep
-		for _,dll in ipairs(vars.LUA_RUNTIME) do
-			local t = get_file_runtime(vars.LUA_BINDIR, dll)
-			if type(t) == "string" then
-				-- found it
-				vars.LUA_RUNTIME = t
-				break
-			end
-		end
-	end
+    local f
+	vars.LUA_RUNTIME, f = pe.msvcrt(vars.LUA_BINDIR.."\\"..vars.LUA_INTERPRETER)
 	if type(vars.LUA_RUNTIME) ~= "string" then
 		-- analysis failed, issue a warning
 		vars.LUA_RUNTIME = "MSVCR80"
 		print("*** WARNING ***: could not analyse the runtime used, defaulting to "..vars.LUA_RUNTIME)
+    else
+		print("    "..f.." uses "..vars.LUA_RUNTIME..".DLL as runtime")
 	end
 	return true
+end
+
+local function get_architecture()
+    -- detect processor arch interpreter was compiled for
+    local proc = (pe.parse(vars.LUA_BINDIR.."\\"..vars.LUA_INTERPRETER) or {}).Machine
+    if not proc then
+        die("Could not detect processor architecture used in "..vars.LUA_INTERPRETER)
+    end
+    proc = pe.const.Machine[proc]  -- collect name from constant value
+    if proc == "IMAGE_FILE_MACHINE_I386" then
+        proc = "x86"
+    else
+        proc = "x86_64"
+    end
+    return proc
 end
 
 local function look_for_lua_install ()
@@ -388,26 +355,6 @@ local function look_for_lua_install ()
 	return false
 end
 
-local function get_architecture()
-    -- detect processor arch
-    local tmpname = [[.\_architect_temp.txt]]
-    local cmd = [[REG.exe Query HKLM\Hardware\Description\System\CentralProcessor\0 >"]]..tmpname.. [["]]
-    if not exec(cmd) then
-        die("Could not detect processor architecture")
-    end
-    local f = io.open(tmpname, "r")
-    local proc = f:read('*a')
-    f:close()
-    os.remove(tmpname)
-    
-    if proc:match("x86") then
-        proc = "x86"
-    else
-        proc = "x86_64"
-	  end
-    return proc
-end
-
 ---
 -- Poor man's command-line parsing
 local config = {}
@@ -449,7 +396,6 @@ vars.LIBDIR = vars.FULL_PREFIX
 vars.LUADIR = S"$FULL_PREFIX\\lua"
 vars.INCDIR = S"$FULL_PREFIX\\include"
 vars.LUA_SHORTV = vars.LUA_VERSION:gsub("%.", "")
-vars.UNAME_M = get_architecture()
 
 if not look_for_lua_install() then
 	print("Could not find Lua. Will install its own copy.")
@@ -464,7 +410,9 @@ if not look_for_lua_install() then
 	vars.LUA_INCDIR = vars.INCDIR
 	vars.LUA_LIBNAME = "lua5.1.lib"
     vars.LUA_RUNTIME = "MSVCR80"
+    vars.UNAME_M = "x86"
 else
+    vars.UNAME_M = get_architecture()
 	print(S[[
 
 Will configure LuaRocks with the following paths:
@@ -668,8 +616,14 @@ if REGISTRY then
 	exec( S[[lua5.1\bin\lua5.1.exe "$FULL_PREFIX\LuaRocks.reg.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
 	exec( S"$FULL_PREFIX\\LuaRocks.reg" )
 end
+
+-- ***********************************************************
+-- Cleanup
+-- ***********************************************************
 -- remove regsitry related files, no longer needed
 exec( S[[del "$FULL_PREFIX\LuaRocks.reg.*" > nul]] )
+-- remove pe-parser module
+exec( S[[del "$FULL_PREFIX\pe-parser.lua" > nul]] )
 
 -- ***********************************************************
 -- Exit handlers 
