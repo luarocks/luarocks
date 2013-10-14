@@ -583,7 +583,19 @@ function check_external_deps(rockspec, mode)
                prefix = prefix.prefix
             end
             for dirname, dirdata in pairs(dirs) do
-               dirdata.dir = vars[name.."_"..dirname] or dir.path(prefix, dirdata.subdir)
+               local paths
+               local path_var_value = vars[name.."_"..dirname]
+               if path_var_value then
+                  paths = { path_var_value }
+               elseif type(dirdata.subdir) == "table" then
+                  paths = {}
+                  for i,v in ipairs(dirdata.subdir) do
+                     paths[i] = dir.path(prefix, v)
+                  end
+               else
+                  paths = { dir.path(prefix, dirdata.subdir) }
+               end
+               dirdata.dir = paths[1]
                local file = files[dirdata.testfile]
                if file then
                   local files = {}
@@ -605,16 +617,22 @@ function check_external_deps(rockspec, mode)
                      if f:match("%.so$") or f:match("%.dylib$") or f:match("%.dll$") then
                         f = f:gsub("%.[^.]+$", "."..cfg.external_lib_extension)
                      end
-                     if f:match("%*") then
-                        local replaced = f:gsub("%.", "%%."):gsub("%*", ".*")
-                        for _, entry in ipairs(fs.list_dir(dirdata.dir)) do
-                           if entry:match(replaced) then
-                              found = true
-                              break
+                     for _, d in ipairs(paths) do
+                        if f:match("%*") then
+                           local replaced = f:gsub("%.", "%%."):gsub("%*", ".*")
+                           for _, entry in ipairs(fs.list_dir(d)) do
+                              if entry:match(replaced) then
+                                 found = true
+                                 break
+                              end
                            end
+                        else
+                           found = fs.is_file(dir.path(d, f))
                         end
-                     else
-                        found = fs.is_file(dir.path(dirdata.dir, f))
+                        if found then
+                           dirdata.dir = d
+                           break
+                        end
                      end
                      if found then
                         break

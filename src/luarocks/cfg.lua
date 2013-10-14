@@ -254,12 +254,12 @@ local defaults = {
       STATFLAG = "-c '%a'",
    },
 
-   external_deps_subdirs = {
+   external_deps_subdirs = site_config.LUAROCKS_EXTERNAL_DEPS_SUBDIRS or {
       bin = "bin",
       lib = "lib",
       include = "include"
    },
-   runtime_external_deps_subdirs = {
+   runtime_external_deps_subdirs = site_config.LUAROCKS_RUNTIME_EXTERNAL_DEPS_SUBDIRS or {
       bin = "bin",
       lib = "lib",
       include = "include"
