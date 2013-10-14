@@ -40,6 +40,9 @@ function Q(arg)
    if arg:match("^[%.a-zA-Z]?:?[\\/]")  then
       arg = arg:gsub("/", "\\")
    end
+   if arg == "\\" then
+      return '\\' -- CHDIR needs special handling for root dir
+   end
     -- URLs and anything else
    arg = arg:gsub('(\\+)(")', q_escaper)
    arg = arg:gsub('(\\+)$', q_escaper)
@@ -57,6 +60,9 @@ function Qb(arg)
    -- Quote DIR for Windows
    if arg:match("^[%.a-zA-Z]?:?[\\/]")  then
       arg = arg:gsub("/", "\\")
+   end
+   if arg == "\\" then
+      return '\\' -- CHDIR needs special handling for root dir
    end
    -- URLs and anything else
    arg = arg:gsub('(\\+)(")', q_escaper)
