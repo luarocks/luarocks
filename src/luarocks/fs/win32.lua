@@ -7,6 +7,7 @@ local fs = require("luarocks.fs")
 
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
+local util = require("luarocks.util")
 
 --- Annotate command string for quiet execution.
 -- @param cmd string: A command-line string.
@@ -64,6 +65,8 @@ function wrap_script(file, dest, name, version)
    local wrapname = fs.is_dir(dest) and dest.."/"..base or dest
    wrapname = wrapname..".bat"
    local lpath, lcpath = cfg.package_paths()
+   lpath = util.escape_doublebrackets(lpath)
+   lcpath = util.escape_doublebrackets(lcpath)
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
       return nil, "Could not open "..wrapname.." for writing."

@@ -511,3 +511,7 @@ function array_contains(tbl, value)
    end
    return false
 end
+
+function escape_doublebrackets(s)
+   return s:gsub("(([%[%]])%2)","]]..'%1'..[[")
+end
