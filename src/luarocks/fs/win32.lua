@@ -65,14 +65,15 @@ function wrap_script(file, dest, name, version)
    local wrapname = fs.is_dir(dest) and dest.."/"..base or dest
    wrapname = wrapname..".bat"
    local lpath, lcpath = cfg.package_paths()
-   lpath = util.escape_doublebrackets(lpath)
-   lcpath = util.escape_doublebrackets(lcpath)
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
       return nil, "Could not open "..wrapname.." for writing."
    end
    wrapper:write("@echo off\n")
-   wrapper:write('"'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -e "package.path=[['..lpath..';]]..package.path" -e "package.cpath=[['..lcpath..';]]..package.cpath" -lluarocks.loader -e"luarocks.loader.add_context([['..name..']],[['..version..']])" "'..file..'" %*\n')
+   local lua = dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)
+   local ppaths = "package.path="..util.LQ(lpath..";").."..package.path; package.cpath="..util.LQ(lcpath..";").."..package.cpath"
+   local addctx = "luarocks.loader.add_context("..util.LQ(name)..","..util.LQ(version)..")"
+   wrapper:write(fs.Q(lua)..' -e '..fs.Q(ppaths)..' -lluarocks.loader -e '..fs.Q(addctx)..' '..fs.Q(file)..' %*\n')
    wrapper:close()
    return true
 end

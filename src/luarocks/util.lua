@@ -512,6 +512,9 @@ function array_contains(tbl, value)
    return false
 end
 
-function escape_doublebrackets(s)
-   return s:gsub("(([%[%]])%2)","]]..'%1'..[[")
+-- Quote Lua string, analogous to fs.Q.
+-- @param s A string, such as "hello"
+-- @return string: A quoted string, such as '"hello"'
+function LQ(s)
+   return ("%q"):format(s)
 end
