@@ -36,8 +36,10 @@ rockspec, and is not guaranteed to be complete or correct.
 
 local function get_url(rockspec)
    local url = rockspec.source.url
-   local file, temp_dir = fetch.fetch_sources(rockspec, true)
-   if not file then
+   local file, temp_dir, err_code, err_file, err_temp_dir = fetch.fetch_sources(rockspec, true)
+   if err_code == "source.dir" then
+      file, temp_dir = err_file, err_temp_dir
+   elseif not file then
       util.warning("Could not fetch sources - "..temp_dir)
       return false
    end
@@ -94,6 +96,17 @@ local function detect_description(rockspec)
          rockspec.description.detailed = paragraph
       end
    end
+end
+
+local function show_license(rockspec)
+   local fd = io.open("COPYING", "r")
+   if not fd then fd = io.open("LICENSE", "r") end
+   if not fd then return end
+   local data = fd:read("*a")
+   fd:close()
+   util.title("License for "..rockspec.package..":")
+   util.printout(data)
+   util.printout()
 end
 
 local function get_cmod_name(file)
@@ -183,6 +196,11 @@ function run(...)
          local_dir = name
          version = "scm"
          name = dir.base_name(name):gsub("%.[^.]+$", "")
+      elseif protocol ~= "file" then
+         local_dir = name
+         local filename = dir.base_name(name)
+         name, version = filename:match("(.*)-([^-]+)")
+         version = version:gsub(".[a-z]+$", ""):gsub(".tar$", "")
       else
          return nil, "Missing name and version arguments. "..util.see_help("write_rockspec")
       end
@@ -223,6 +241,8 @@ function run(...)
 
    if local_dir:match("://") then
       rockspec.source.url = local_dir
+      rockspec.source.file = dir.base_name(local_dir)
+      rockspec.source.dir = "dummy"
       if not fetch.is_basic_protocol(rockspec.source.protocol) then
          if version ~= "scm" then
             rockspec.source.tag = "v" .. version
@@ -261,6 +281,8 @@ function run(...)
    if not ok then return nil, "Failed reaching files from project - error entering directory "..local_dir end
 
    detect_description(rockspec)
+
+   show_license(rockspec)
    
    fill_as_builtin(rockspec, libs)
       

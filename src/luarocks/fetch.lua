@@ -274,7 +274,7 @@ function get_sources(rockspec, extract, dest_dir)
    local source_file, store_dir, err, errcode
    if dest_dir then
       local ok, err = fs.change_dir(dest_dir)
-      if not ok then return nil, err end
+      if not ok then return nil, err, "dest_dir" end
       source_file, err, errcode = fetch_url(url, filename)
       fs.pop_dir()
       store_dir = dest_dir
@@ -286,7 +286,7 @@ function get_sources(rockspec, extract, dest_dir)
    end
    if rockspec.source.md5 then
       if not fs.check_md5(source_file, rockspec.source.md5) then
-         return nil, "MD5 check for "..filename.." has failed."
+         return nil, "MD5 check for "..filename.." has failed.", "md5"
       end
    end
    if extract then
@@ -294,7 +294,7 @@ function get_sources(rockspec, extract, dest_dir)
       if not ok then return nil, err end
       fs.unpack_archive(rockspec.source.file)
       if not fs.exists(rockspec.source.dir) then
-         return nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file
+         return nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file, "source.dir", source_file, store_dir
       end
       fs.pop_dir()
    end
