@@ -295,6 +295,12 @@ function configure_paths(rockspec)
    rockspec.variables = vars
 end
 
+--- Produce a versioned version of a filename.
+-- @param file string: filename (must start with prefix)
+-- @param prefix string: Path prefix for file
+-- @param name string: Rock name
+-- @param version string: Rock version
+-- @return string: a pathname with the same directory parts and a versioned basename.
 function versioned_name(file, prefix, name, version)
    assert(type(file) == "string")
    assert(type(name) == "string")
