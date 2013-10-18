@@ -187,6 +187,7 @@ test_make() { rm -rf ./luasocket-${verrev_luasocket} && $luarocks download --src
 test_make_pack_binary_rock() { rm -rf ./lxsh-${verrev_lxsh} &&  $luarocks download --src lxsh ${verrev_lxsh} &&  $luarocks unpack ./lxsh-${verrev_lxsh}.src.rock &&  cd lxsh-${verrev_lxsh}/lxsh-${version_lxsh}-1  &&  $luarocks make --deps-mode=none --pack-binary-rock &&  [ -e ./lxsh-${verrev_lxsh}.all.rock ] &&  cd ../.. && rm -rf ./lxsh-${verrev_lxsh}; }
 
 test_new_version() { $luarocks download --rockspec luacov ${version_luacov} &&  $luarocks new_version ./luacov-${version_luacov}-1.rockspec 0.2 && rm ./luacov-0.*; }
+test_new_version_url() { $luarocks download --rockspec abelhas 1.0 && $luarocks new_version ./abelhas-1.0-1.rockspec 1.1 https://github.com/downloads/ittner/abelhas/abelhas-1.1.tar.gz && rm ./abelhas-*; }
 
 test_pack() { $luarocks list && $luarocks pack luacov && rm ./luacov-*.rock; }
 test_pack_src() { $luarocks download --rockspec luasocket && $luarocks pack ./luasocket-${verrev_luasocket}.rockspec && rm ./luasocket-${version_luasocket}-*.rock; }
@@ -221,7 +222,7 @@ fail_admin_add_missing() { $luarocks_admin --server=testing add; }
 fail_admin_invalidserver() { $luarocks_admin --server=invalid add ./luasocket-${verrev_luasocket}.src.rock; }
 fail_admin_invalidrock() { $luarocks_admin --server=testing add invalid; }
 test_admin_refresh_cache() { $luarocks_admin --server=testing refresh_cache; }
-test_admin_remove() { $luarocks_admin --server=testing remove luasocket; }
+test_admin_remove() { $luarocks_admin --server=testing remove ./luasocket-${verrev_luasocket}.src.rock; }
 fail_admin_remove_missing() { $luarocks_admin --server=testing remove; }
 
 fail_deps_mode_invalid_arg() { $luarocks remove luacov --deps-mode; }
@@ -233,6 +234,11 @@ test_deps_mode_none() { $luarocks build --tree="$testing_tree" --deps-mode=none 
 test_deps_mode_nodeps_alias() { $luarocks build --tree="$testing_tree" --nodeps lxsh; [ `$luarocks list --tree="$testing_tree" --porcelain lpeg | wc -l` = 0 ]; }
 test_deps_mode_make_order() { $luarocks build --tree="$testing_sys_tree" lpeg && rm -rf ./lxsh-${verrev_lxsh} && $luarocks download --src lxsh ${verrev_lxsh} && $luarocks unpack ./lxsh-${verrev_lxsh}.src.rock && cd lxsh-${verrev_lxsh}/lxsh-${version_lxsh}-1  && $luarocks make --tree="$testing_tree" --deps-mode=order && cd ../.. && [ `$luarocks list --tree="$testing_tree" --porcelain lpeg | wc -l` = 0 ] && rm -rf ./lxsh-${verrev_lxsh}; }
 test_deps_mode_make_order_sys() { $luarocks build --tree="$testing_tree" lpeg && rm -rf ./lxsh-${verrev_lxsh} && $luarocks download --src lxsh ${verrev_lxsh} && $luarocks unpack ./lxsh-${verrev_lxsh}.src.rock && cd lxsh-${verrev_lxsh}/lxsh-${version_lxsh}-1  && $luarocks make --tree="$testing_sys_tree" --deps-mode=order && cd ../.. && [ `$luarocks list --tree="$testing_tree" --porcelain lpeg | wc -l` = 1 ] && rm -rf ./lxsh-${verrev_lxsh}; }
+
+test_write_rockspec() { $luarocks write_rockspec git://github.com/keplerproject/luarocks; }
+test_write_rockspec_lib() { $luarocks write_rockspec git://github.com/mbalmer/luafcgi --lib=fcgi --license="3-clause BSD" --lua-version=5.1,5.2; }
+test_write_rockspec_fullargs() { $luarocks write_rockspec git://github.com/keplerproject/luarocks --lua-version=5.1,5.2 --license="MIT/X11" --homepage="http://www.luarocks.org" --summary="A package manager for Lua modules"; }
+fail_write_rockspec_args() { $luarocks write_rockspec invalid; }
 
 # Driver #########################################
 
