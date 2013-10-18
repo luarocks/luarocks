@@ -216,7 +216,7 @@ function deploy_files(name, version, wrap_bin_scripts)
                if err == "untracked" then
                   local backup = target
                   repeat
-                     backup = target.."~"
+                     backup = backup.."~"
                   until not fs.exists(backup) -- slight race condition here, but shouldn't be a problem.
                   util.printerr("Warning: "..target.." is not tracked by this installation of LuaRocks. Moving it to "..backup)
                   fs.move(target, backup)
