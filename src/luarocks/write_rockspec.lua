@@ -178,6 +178,7 @@ local function fill_as_builtin(rockspec, libs)
 end
 
 local function rockspec_cleanup(rockspec)
+   rockspec.source.file = nil
    rockspec.source.protocol = nil
    rockspec.variables = nil
    rockspec.name = nil
@@ -200,7 +201,11 @@ function run(...)
          local_dir = name
          local filename = dir.base_name(name)
          name, version = filename:match("(.*)-([^-]+)")
-         version = version:gsub(".[a-z]+$", ""):gsub(".tar$", "")
+         if version then
+            version = version:gsub(".[a-z]+$", ""):gsub(".tar$", "")
+         else
+            return nil, "Missing name and version arguments. "..util.see_help("write_rockspec")
+         end
       else
          return nil, "Missing name and version arguments. "..util.see_help("write_rockspec")
       end
@@ -248,6 +253,7 @@ function run(...)
             rockspec.source.tag = "v" .. version
          end
       end
+      rockspec.source.dir = nil
       local ok, base_dir, temp_dir = get_url(rockspec)
       if ok then
          if base_dir ~= dir.base_name(local_dir) then
