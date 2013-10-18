@@ -328,11 +328,9 @@ end
 -- @return boolean or (boolean, string): true on success,
 -- or nil and an error message on failure.
 local function recursive_delete(name)
-   local mode = lfs.attributes(name, "mode")
-
-   if mode == "file" then
-      return os.remove(name)
-   elseif mode == "directory" then
+   local ok = os.remove(name)
+   if ok then return true end
+   local pok, ok, err = pcall(function()
       for file in lfs.dir(name) do
          if file ~= "." and file ~= ".." then
             local ok, err = recursive_delete(dir.path(name, file))
@@ -340,9 +338,13 @@ local function recursive_delete(name)
          end
       end
       local ok, err = lfs.rmdir(name)
-      if not ok then return nil, err end
+      return ok, (not ok) and err
+   end)
+   if pok then
+      return ok, err
+   else
+      return pok, ok
    end
-   return true
 end
 
 --- Delete a file or a directory and all its contents.
