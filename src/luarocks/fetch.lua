@@ -27,7 +27,7 @@ end
 -- @return string or (nil, string, [string]): the absolute local pathname for the
 -- fetched file, or nil and a message in case of errors, followed by
 -- an optional error code.
-function fetch_url(url, filename)
+function fetch_url(url, filename, cache)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
 
@@ -35,11 +35,11 @@ function fetch_url(url, filename)
    if protocol == "file" then
       return fs.absolute_name(pathname)
    elseif is_basic_protocol(protocol, true) then
-      local ok, err = fs.download(url, filename)
+      local ok, filename = fs.download(url, filename, cache)
       if not ok then
-         return nil, "Failed downloading "..url..(err and " - "..err or ""), "network"
+         return nil, "Failed downloading "..url..(filename and " - "..filename or ""), "network"
       end
-      return dir.path(fs.current_dir(), filename or dir.base_name(url))
+      return filename
    else
       return nil, "Unsupported protocol "..protocol
    end

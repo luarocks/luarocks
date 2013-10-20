@@ -262,22 +262,35 @@ end
 -- resulting local filename of the remote file as the basename of the URL;
 -- if that is not correct (due to a redirection, for example), the local
 -- filename can be given explicitly as this second argument.
--- @return boolean: true on success, false on failure.
-function download(url, filename)
+-- @return (boolean, string): true and the filename on success,
+-- false and the error message on failure.
+function download(url, filename, cache)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
 
+   filename = fs.absolute_name(filename or dir.base_name(url))
+
+   local ok   
    if cfg.downloader == "wget" then
-      local wget_cmd = vars.WGET.." --no-check-certificate --no-cache --user-agent=\""..cfg.user_agent.." via wget\" --quiet --continue "
-      if filename then
-         wget_cmd = wget_cmd.." --output-document "..fs.Q(filename).." "..fs.Q(url)
+      local wget_cmd = vars.WGET.." --no-check-certificate --no-cache --user-agent=\""..cfg.user_agent.." via wget\" --quiet "
+      if cache then
+         -- --timestamping is incompatible with --output-document,
+         -- but that's not a problem for our use cases.
+         fs.change_dir(dir.dir_name(filename))
+         ok = fs.execute(wget_cmd.." --timestamping "..fs.Q(url).." 2> NUL 1> NUL")
+         fs.pop_dir()
+      elseif filename then
+         ok = fs.execute(wget_cmd.." --output-document "..fs.Q(filename)..fs.Q(url).." 2> NUL 1> NUL")
       else
-         wget_cmd = wget_cmd.." "..fs.Q(url)
+         ok = fs.execute(wget_cmd..fs.Q(url).." 2> NUL 1> NUL")
       end
-      return fs.execute(wget_cmd.." 2> NUL 1> NUL")
    elseif cfg.downloader == "curl" then
-      filename = filename or dir.base_name(url)
-      return fs.execute_string(vars.CURL.." -L --user-agent \""..cfg.user_agent.." via curl\" "..fs.Q(url).." 2> NUL 1> "..fs.Q(filename))
+      ok = fs.execute_string(vars.CURL.." -L --user-agent \""..cfg.user_agent.." via curl\" "..fs.Q(url).." 2> NUL 1> "..fs.Q(filename))
+   end
+   if ok then
+      return true, filename
+   else
+      return false
    end
 end
 

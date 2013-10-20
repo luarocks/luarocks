@@ -252,6 +252,20 @@ function deploy_files(name, version, wrap_bin_scripts)
    return ok, err
 end
 
+local function delete_suffixed(filename, suffix)
+   local filenames = { filename }
+   if suffix and suffix ~= "" then filenames = { filename..suffix, filename } end
+   for _, name in ipairs(filenames) do
+      local ok, err = fs.delete(name)
+      if ok then
+         return true, name
+      elseif fs.exists(name) then
+         return nil, "Failed deleting "..name, "fail"
+      end
+   end
+   return false, "File not found", "not found"
+end
+
 --- Delete a package from the local repository.
 -- Version numbers are compared as exact string comparison.
 -- @param name string: name of package
@@ -264,28 +278,28 @@ function delete_version(name, version, quick)
    assert(type(name) == "string")
    assert(type(version) == "string")
 
-   local function delete_deployed_file_tree(file_tree, deploy_dir)
+   local function delete_deployed_file_tree(file_tree, deploy_dir, suffix)
       return recurse_rock_manifest_tree(file_tree, 
          function(parent_path, parent_module, file)
             local target = dir.path(deploy_dir, parent_path, file)
             local versioned = path.versioned_name(target, deploy_dir, name, version)
-            if fs.exists(versioned) then
-               local ok = fs.delete(versioned)
+            local ok, name, err = delete_suffixed(versioned, suffix)
+            if ok then
                fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
-               if not ok then return nil, "Failed deleting "..versioned end
-            else
-               local ok = fs.delete(target)
-               if not quick then
-                  local next_name, next_version = manif.find_next_provider(target)
-                  if next_name then
-                     local versioned = path.versioned_name(target, deploy_dir, next_name, next_version)
-                     fs.move(versioned, target)
-                     fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
-                  end
-               end
-               fs.remove_dir_tree_if_empty(dir.dir_name(target))
-               if not ok then return nil, "Failed deleting "..target end
+               return true
             end
+            if err == "fail" then return nil, name end
+            ok, name, err = delete_suffixed(target, suffix)
+            if err == "fail" then return nil, name end
+            if not quick then
+               local next_name, next_version = manif.find_next_provider(target)
+               if next_name then
+                  local versioned = path.versioned_name(name, deploy_dir, next_name, next_version)
+                  fs.move(versioned, name)
+                  fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
+               end
+            end
+            fs.remove_dir_tree_if_empty(dir.dir_name(target))
             return true
          end
       )
@@ -298,7 +312,7 @@ function delete_version(name, version, quick)
    
    local ok, err = true
    if rock_manifest.bin then
-      ok, err = delete_deployed_file_tree(rock_manifest.bin, cfg.deploy_bin_dir)
+      ok, err = delete_deployed_file_tree(rock_manifest.bin, cfg.deploy_bin_dir, cfg.wrapper_suffix)
    end
    if ok and rock_manifest.lua then
       ok, err = delete_deployed_file_tree(rock_manifest.lua, cfg.deploy_lua_dir)

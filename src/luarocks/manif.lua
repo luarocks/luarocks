@@ -84,7 +84,12 @@ end
 local function fetch_manifest_from(repo_url, filename)
    local url = dir.path(repo_url, filename)
    local name = repo_url:gsub("[/:]","_")
-   local file, err, errcode = fetch.fetch_url_at_temp_dir(url, "luarocks-manifest-"..name)
+   local cache_dir = dir.path(cfg.local_cache, name)
+   local ok = fs.make_dir(cache_dir)
+   if not ok then
+      return nil, "Failed creating temporary cache directory "..cache_dir
+   end
+   local file, err, errcode = fetch.fetch_url(url, dir.path(cache_dir, filename), true)
    if not file then
       return nil, "Failed fetching manifest for "..repo_url..(err and " - "..err or ""), errcode
    end

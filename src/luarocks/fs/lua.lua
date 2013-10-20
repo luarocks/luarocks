@@ -190,7 +190,7 @@ function pop_dir()
 end
 
 --- Create a directory if it does not already exist.
--- If any of the higher levels in the path name does not exist
+-- If any of the higher levels in the path name do not exist
 -- too, they are created as well.
 -- @param directory string: pathname of directory to create.
 -- @return boolean or (boolean, string): true on success or (false, error message) on failure.
@@ -506,7 +506,7 @@ local redirect_protocols = {
    https = luasec_ok and https,
 }
 
-local function http_request(url, http, loop_control)
+local function request(url, method, http, loop_control)
    local result = {}
    
    local proxy = cfg.proxy
@@ -516,14 +516,17 @@ local function http_request(url, http, loop_control)
       proxy = "http://" .. proxy
    end
    
-   io.write("Downloading "..url.." ...\n")
+   if cfg.show_downloads then
+      io.write(method.." "..url.." ...\n")
+   end
    local dots = 0
    local res, status, headers, err = http.request {
       url = url,
       proxy = proxy,
+      method = method,
       redirect = false,
       sink = ltn12.sink.table(result),
-      step = function(...)
+      step = cfg.show_downloads and function(...)
          io.write(".")
          io.flush()
          dots = dots + 1
@@ -537,7 +540,9 @@ local function http_request(url, http, loop_control)
          ["user-agent"] = cfg.user_agent.." via LuaSocket"
       },
    }
-   io.write("\n")
+   if cfg.show_downloads then
+      io.write("\n")
+   end
    if not res then
       return nil, status
    elseif status == 301 or status == 302 then
@@ -551,7 +556,7 @@ local function http_request(url, http, loop_control)
                return nil, "Redirection loop -- broken URL?"
             end
             loop_control[url] = true
-            return http_request(location, redirect_protocols[protocol], loop_control)
+            return request(location, method, redirect_protocols[protocol], loop_control)
          else
             return nil, "URL redirected to unsupported protocol - install luasec to get HTTPS support."
          end
@@ -560,7 +565,32 @@ local function http_request(url, http, loop_control)
    elseif status ~= 200 then
       return nil, err
    else
+      return result, status, headers, err
+   end
+end
+
+local function http_request(url, http, cached)
+   if cached then
+      local tsfd = io.open(cached..".timestamp", "r")
+      if tsfd then
+         local timestamp = tsfd:read("*a")
+         tsfd:close()
+         local result, status, headers, err = request(url, "HEAD", http)
+         if status == 200 and headers["last-modified"] == timestamp then
+            return true
+         end
+      end
+   end
+   local result, status, headers, err = request(url, "GET", http)
+   if result then
+      if cached and headers["last-modified"] then
+         local tsfd = io.open(cached..".timestamp", "w")
+         tsfd:write(headers["last-modified"])
+         tsfd:close()
+      end
       return table.concat(result)
+   else
+      return nil, status
    end
 end
 
@@ -570,26 +600,30 @@ end
 -- resulting local filename of the remote file as the basename of the URL;
 -- if that is not correct (due to a redirection, for example), the local
 -- filename can be given explicitly as this second argument.
--- @return boolean: true on success, false on failure.
-function download(url, filename)
+-- @return (boolean, string): true and the filename on success,
+-- false and the error message on failure.
+function download(url, filename, cache)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
 
-   filename = dir.path(fs.current_dir(), filename or dir.base_name(url))
+   filename = fs.absolute_name(filename or dir.base_name(url))
    
    local content, err
    if util.starts_with(url, "http:") then
-      content, err = http_request(url, http)
+      content, err = http_request(url, http, cache and filename)
    elseif util.starts_with(url, "ftp:") then
       content, err = ftp.get(url)
    elseif util.starts_with(url, "https:") then
       if luasec_ok then
-         content, err = http_request(url, https)
+         content, err = http_request(url, https, cache and filename)
       else
          err = "Unsupported protocol - install luasec to get HTTPS support."
       end
    else
       err = "Unsupported protocol"
+   end
+   if cache and content == true then
+      return true, filename
    end
    if not content then
       return false, tostring(err)
@@ -598,7 +632,7 @@ function download(url, filename)
    if not file then return false end
    file:write(content)
    file:close()
-   return true
+   return true, filename
 end
 
 end
