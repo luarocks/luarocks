@@ -229,7 +229,7 @@ end
 -- additional arguments.
 -- @return boolean: true on success, false on failure.
 function zip(zipfile, ...)
-   return fs.execute_quiet(vars.SEVENZ.." a -tzip", zipfile, ...)
+   return fs.execute_quiet(vars.SEVENZ.." -aoa a -tzip", zipfile, ...)
 end
 
 --- Uncompress files from a .zip archive.
@@ -237,7 +237,7 @@ end
 -- @return boolean: true on success, false on failure.
 function unzip(zipfile)
    assert(zipfile)
-   return fs.execute_quiet(vars.SEVENZ.." x", zipfile)
+   return fs.execute_quiet(vars.SEVENZ.." -aoa x", zipfile)
 end
 
 --- Test is pathname is a directory.
@@ -298,7 +298,7 @@ end
 -- @param archive string: Filename of archive.
 -- @return boolean : success status
 local function gunzip(archive)
-  return fs.execute_quiet(vars.SEVENZ.." x", archive)
+  return fs.execute_quiet(vars.SEVENZ.." -aoa x", archive)
 end
 
 --- Unpack an archive.
@@ -310,7 +310,7 @@ function unpack_archive(archive)
    assert(type(archive) == "string")
 
    local ok
-   local sevenzx = vars.SEVENZ.." x"
+   local sevenzx = vars.SEVENZ.." -aoa x"
    if archive:match("%.tar%.gz$") then
       ok = gunzip(archive)
       if ok then
