@@ -280,7 +280,7 @@ function download(url, filename, cache)
          ok = fs.execute(wget_cmd.." --timestamping "..fs.Q(url).." 2> NUL 1> NUL")
          fs.pop_dir()
       elseif filename then
-         ok = fs.execute(wget_cmd.." --output-document "..fs.Q(filename)..fs.Q(url).." 2> NUL 1> NUL")
+         ok = fs.execute(wget_cmd.." --output-document "..fs.Q(filename).." "..fs.Q(url).." 2> NUL 1> NUL")
       else
          ok = fs.execute(wget_cmd..fs.Q(url).." 2> NUL 1> NUL")
       end
