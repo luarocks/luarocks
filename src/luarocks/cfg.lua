@@ -316,7 +316,13 @@ if detected.windows then
    defaults.export_lua_path = "SET LUA_PATH=%s"
    defaults.export_lua_cpath = "SET LUA_CPATH=%s"
    defaults.wrapper_suffix = ".bat"
-   defaults.local_cache = home.."/cache/luarocks"
+
+   local localappdata = os.getenv("LOCALAPPDATA")
+   if not localappdata then
+      -- for Windows versions below Vista
+      localappdata = os.getenv("USER_PROFILE").."/Local Settings/Application Data"
+   end
+   defaults.local_cache = localappdata.."/LuaRocks/Cache"
 end
 
 if detected.mingw32 then
