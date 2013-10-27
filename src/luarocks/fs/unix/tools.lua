@@ -141,11 +141,11 @@ end
 --- Delete a file or a directory and all its contents.
 -- For safety, this only accepts absolute paths.
 -- @param arg string: Pathname of source
--- @return boolean: true on success, false on failure.
+-- @return nil
 function delete(arg)
    assert(arg)
    assert(arg:sub(1,1) == "/")
-   return fs.execute_quiet(vars.RM, "-rf", arg)
+   fs.execute_quiet(vars.RM, "-rf", arg)
 end
 
 --- List the contents of a directory.

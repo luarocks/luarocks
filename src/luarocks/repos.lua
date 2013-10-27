@@ -256,11 +256,12 @@ local function delete_suffixed(filename, suffix)
    local filenames = { filename }
    if suffix and suffix ~= "" then filenames = { filename..suffix, filename } end
    for _, name in ipairs(filenames) do
-      local ok, err = fs.delete(name)
-      if ok then
+      if fs.exists(name) then
+         fs.delete(name)
+         if fs.exists(name) then
+            return nil, "Failed deleting "..name, "fail"
+         end
          return true, name
-      elseif fs.exists(name) then
-         return nil, "Failed deleting "..name, "fail"
       end
    end
    return false, "File not found", "not found"

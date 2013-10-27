@@ -349,10 +349,10 @@ end
 
 --- Delete a file or a directory and all its contents.
 -- @param name string: Pathname of source
--- @return boolean: true on success, false on failure.
+-- @return nil
 function delete(name)
    name = dir.normalize(name)
-   return recursive_delete(name) or false
+   recursive_delete(name)
 end
 
 --- List the contents of a directory.
@@ -723,8 +723,8 @@ function move(src, dest)
    if not ok then
       return false, err
    end
-   ok = fs.delete(src)
-   if not ok then
+   fs.delete(src)
+   if fs.exists(src) then
       return false, "Failed move: could not delete "..src.." after copy."
    end
    return true

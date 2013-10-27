@@ -49,7 +49,8 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
       local basename = dir.base_name(rockfile)
       local file = dir.path(local_cache, basename)
       util.printout("Removing file "..file.."...")
-      if fs.delete(file) then
+      fs.delete(file)
+      if fs.exists(file) then
          nr_files = nr_files + 1
       else
          util.printerr("Failed removing "..file)

@@ -40,9 +40,13 @@ end
 -- Uses the module's internal directory stack.
 -- @return string: the absolute pathname of the current directory.
 function current_dir()
-   local pipe = io.popen(vars.PWD)
-   local current = pipe:read("*l")
-   pipe:close()
+   local current = cfg.cache_pwd
+   if not current then
+      local pipe = io.popen(vars.PWD)
+      current = pipe:read("*l")
+      pipe:close()
+      cfg.cache_pwd = current
+   end
    for _, directory in ipairs(dir_stack) do
       current = fs.absolute_name(directory, current)
    end
@@ -141,7 +145,8 @@ end
 function copy(src, dest)
    assert(src and dest)
    if dest:match("[/\\]$") then dest = dest:sub(1, -2) end
-   if fs.execute(vars.CP, src, dest) then
+   local ok = fs.execute(vars.CP, src, dest)
+   if ok then
       return true
    else
       return false, "Failed copying "..src.." to "..dest
@@ -165,12 +170,11 @@ end
 --- Delete a file or a directory and all its contents.
 -- For safety, this only accepts absolute paths.
 -- @param arg string: Pathname of source
--- @return boolean: true on success, false on failure.
+-- @return nil
 function delete(arg)
    assert(arg)
    assert(arg:match("^[\a-zA-Z]?:?[\\/]"))
-   fs.execute(vars.CHMOD.." a+rw -R ", arg)
-   return fs.execute_quiet(vars.RM.." -rf ", arg)
+   fs.execute_quiet("if exist "..fs.Q(arg.."\\").." ( RMDIR /S /Q "..fs.Q(arg).." ) else ( DEL /Q /F "..fs.Q(arg).." )")
 end
 
 --- List the contents of a directory.
@@ -245,7 +249,7 @@ end
 -- @return boolean: true if it is a directory, false otherwise.
 function is_dir(file)
    assert(file)
-   return fs.execute_quiet(vars.TEST.." -d ", file)
+   return fs.execute_quiet("if not exist " .. fs.Q(file.."\\").." invalidcommandname")
 end
 
 --- Test is pathname is a regular file.
