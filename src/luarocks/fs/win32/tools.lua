@@ -173,7 +173,7 @@ end
 -- @return nil
 function delete(arg)
    assert(arg)
-   assert(arg:match("^[\a-zA-Z]?:?[\\/]"))
+   assert(arg:match("^[a-zA-Z]?:?[\\/]"))
    fs.execute_quiet("if exist "..fs.Q(arg.."\\").." ( RMDIR /S /Q "..fs.Q(arg).." ) else ( DEL /Q /F "..fs.Q(arg).." )")
 end
 
