@@ -106,6 +106,7 @@ end
 local sys_config_file, home_config_file
 local sys_config_dir, home_config_dir
 local sys_config_ok, home_config_ok = false, false
+local extra_luarocks_module_dir
 sys_config_dir = site_config.LUAROCKS_SYSCONFDIR
 if detected.windows then
    home = os.getenv("APPDATA") or "c:"
@@ -268,6 +269,7 @@ local defaults = {
 
 if detected.windows then
    local full_prefix = site_config.LUAROCKS_PREFIX.."\\"..major_version
+   extra_luarocks_module_dir = full_prefix.."\\lua\\?.lua"
 
    home_config_file = home_config_file and home_config_file:gsub("\\","/")
    defaults.fs_use_modules = false
@@ -293,8 +295,8 @@ if detected.windows then
    defaults.variables.LIBFLAG = "/dll"
    defaults.variables.LUALIB = "lua"..lua_version..".lib"
 
-   local bins = { "SEVENZ", "CHMOD", "CP", "FIND", "LS", "MD5SUM",
-      "MKDIR", "MV", "PWD", "RMDIR", "RM", "TEST", "UNAME", "WGET" }
+   local bins = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM",
+      "MKDIR", "MV", "PWD", "RMDIR", "TEST", "UNAME", "WGET" }
    for _, var in ipairs(bins) do
       if defaults.variables[var] then
          defaults.variables[var] = full_prefix.."\\bin\\"..defaults.variables[var]
@@ -477,7 +479,7 @@ local cfg_mt = {
 setmetatable(_M, cfg_mt)
 
 function package_paths()
-   local new_path, new_cpath = {}, {}
+   local new_path, new_cpath = { extra_luarocks_module_dir }, {}
    for _,tree in ipairs(rocks_trees) do
      if type(tree) == "string" then
         table.insert(new_path, 1, tree..lua_modules_path.."/?.lua;"..tree..lua_modules_path.."/?/init.lua")
