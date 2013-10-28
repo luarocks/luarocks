@@ -25,6 +25,8 @@ purge.lua path.lua write_rockspec.lua
 
 CONFIG_FILE = $(SYSCONFDIR)/config-$(LUA_VERSION).lua
 
+SAFEPWD=`echo "$$PWD" | sed -e 's/\([][]\)\1/]]..'\''\1\1'\''..[[/g' -`
+
 all: 
 	@echo "- Type 'make build' and 'make install':"
 	@echo "  to install to $(PREFIX) as usual."
@@ -174,6 +176,6 @@ write_sysconfig: built
 install: install_bins install_luas install_site_config write_sysconfig
 
 bootstrap: src/luarocks/site_config.lua install_site_config write_sysconfig
-	'$(LUA_BINDIR)/lua$(LUA_SUFFIX)' -e "package.path=[[$$PWD/src/?.lua;]]..package.path" src/bin/luarocks make rockspec --tree="$(PREFIX)"
+	'$(LUA_BINDIR)/lua$(LUA_SUFFIX)' -e "package.path=[[$(SAFEPWD)/src/?.lua;]]..package.path" src/bin/luarocks make rockspec --tree="$(PREFIX)"
 
 install_rock: install_bins install_luas
