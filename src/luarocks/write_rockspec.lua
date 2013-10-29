@@ -10,10 +10,12 @@ local type_check = require("luarocks.type_check")
 local util = require("luarocks.util")
 
 help_summary = "Write a template for a rockspec file."
-help_arguments = "[--output=<file> ...] <name> [<version>] [<url>|<path>]"
+help_arguments = "[--output=<file> ...] [<name>] [<version>] {<url>|<path>}"
 help = [[
 This command writes an initial version of a rockspec file,
-based on an URL or a local path.
+based on an URL or a local path. You may use a relative path such as '.'.
+If a local path is given, name and version arguments are mandatory.
+For URLs, LuaRocks will attempt to infer name and version if not given.
 
 If a repository URL is given with no version, it creates an 'scm' rock.
 
@@ -36,7 +38,7 @@ rockspec, and is not guaranteed to be complete or correct.
 
 local function get_url(rockspec)
    local url = rockspec.source.url
-   local file, temp_dir, err_code, err_file, err_temp_dir = fetch.fetch_sources(rockspec, true)
+   local file, temp_dir, err_code, err_file, err_temp_dir = fetch.fetch_sources(rockspec, false)
    if err_code == "source.dir" then
       file, temp_dir = err_file, err_temp_dir
    elseif not file then
@@ -185,40 +187,38 @@ local function rockspec_cleanup(rockspec)
 end
 
 function run(...)
-   local flags, name, version, local_dir = util.parse_flags(...)
+   local flags, name, version, url_or_dir = util.parse_flags(...)
    
    if not name then
       return nil, "Missing arguments. "..util.see_help("write_rockspec")
    end
 
    if name and not version then
-      local protocol, path = dir.split_url(name)
-      if not fetch.is_basic_protocol(protocol) then
-         local_dir = name
-         version = "scm"
-         name = dir.base_name(name):gsub("%.[^.]+$", "")
-      elseif protocol ~= "file" then
-         local_dir = name
-         local filename = dir.base_name(name)
-         name, version = filename:match("(.*)-([^-]+)")
-         if version then
-            version = version:gsub(".[a-z]+$", ""):gsub(".tar$", "")
-         else
-            return nil, "Missing name and version arguments. "..util.see_help("write_rockspec")
-         end
+      url_or_dir = name
+      name = nil
+   elseif not url_or_dir then
+      url_or_dir = version
+   end
+   
+   local protocol, pathname = dir.split_url(url_or_dir)
+   if not fetch.is_basic_protocol(protocol) then
+      version = "scm"
+      if not name then
+         name = dir.base_name(url_or_dir):gsub("%.[^.]+$", "")
+      end
+   elseif protocol ~= "file" then
+      local filename = dir.base_name(url_or_dir)
+      local newname, newversion = filename:match("(.*)-([^-]+)")
+      if not name then
+         name = newname
+      end
+      if newversion then
+         version = newversion:gsub(".[a-z]+$", ""):gsub(".tar$", "")
       else
          return nil, "Missing name and version arguments. "..util.see_help("write_rockspec")
       end
-   end
-
-   if not local_dir then
-      local protocol, path = dir.split_url(version)
-      if not fetch.is_basic_protocol(protocol) then
-         local_dir = version
-         version = "scm"
-      elseif protocol ~= "file" then
-         return nil, "Missing version argument. "..util.see_help("write_rockspec")
-      end
+   elseif not version then
+      return nil, "Missing name and version arguments. "..util.see_help("write_rockspec")
    end
 
    local filename = flags["output"] or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
@@ -240,13 +240,15 @@ function run(...)
       build = {},
    }
    path.configure_paths(rockspec)
-   rockspec.source.protocol = dir.split_url(local_dir)
+   rockspec.source.protocol = protocol
    
    configure_lua_version(rockspec, flags["lua-version"])
+   
+   local local_dir = url_or_dir
 
-   if local_dir:match("://") then
-      rockspec.source.url = local_dir
-      rockspec.source.file = dir.base_name(local_dir)
+   if url_or_dir:match("://") then
+      rockspec.source.url = url_or_dir
+      rockspec.source.file = dir.base_name(url_or_dir)
       rockspec.source.dir = "dummy"
       if not fetch.is_basic_protocol(rockspec.source.protocol) then
          if version ~= "scm" then
@@ -256,7 +258,7 @@ function run(...)
       rockspec.source.dir = nil
       local ok, base_dir, temp_dir = get_url(rockspec)
       if ok then
-         if base_dir ~= dir.base_name(local_dir) then
+         if base_dir ~= dir.base_name(url_or_dir) then
             rockspec.source.dir = base_dir
          end
       end
