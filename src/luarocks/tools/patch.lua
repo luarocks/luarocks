@@ -10,6 +10,7 @@
 module("luarocks.tools.patch", package.seeall)
 
 local fs = require("luarocks.fs")
+local util = require("luarocks.util")
 
 local version = '0.1'
 
@@ -45,12 +46,6 @@ local function table_copy(t)
   local t2 = {}
   for k,v in pairs(t) do t2[k] = v end
   return t2
-end
-
--- Returns boolean whether array t contains value v.
-local function array_contains(t, v)
-  for _,v2 in ipairs(t) do if v == v2 then return true end end
-  return false
 end
 
 local function exists(filename)
@@ -284,7 +279,7 @@ function read_patch(filename, data)
     local advance
     if state == 'filenames' then
       if startswith(line, "--- ") then
-        if array_contains(files.source, nextfileno) then
+        if util.array_contains(files.source, nextfileno) then
           all_ok = false
           warning(format("skipping invalid patch for %s",
                          files.source[nextfileno+1]))
@@ -304,7 +299,7 @@ function read_patch(filename, data)
           table.insert(files.source, match)
         end
       elseif not startswith(line, "+++ ") then
-        if array_contains(files.source, nextfileno) then
+        if util.array_contains(files.source, nextfileno) then
           all_ok = false
           warning(format("skipping invalid patch with no target for %s",
                          files.source[nextfileno+1]))
@@ -315,7 +310,7 @@ function read_patch(filename, data)
         end
         state = 'header'
       else
-        if array_contains(files.target, nextfileno) then
+        if util.array_contains(files.target, nextfileno) then
           all_ok = false
           warning(format("skipping invalid patch - double target at line %d",
                          lineno+1))
@@ -354,7 +349,7 @@ function read_patch(filename, data)
     if not advance and state == 'hunkhead' then
       local m1, m2, m3, m4 = match_linerange(line)
       if not m1 then
-        if not array_contains(files.hunks, nextfileno-1) then
+        if not util.array_contains(files.hunks, nextfileno-1) then
           all_ok = false
           warning(format("skipping invalid patch with no hunks for file %s",
                          files.target[nextfileno]))
