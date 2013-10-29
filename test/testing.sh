@@ -7,7 +7,7 @@
    exit 1
 }
 
-if [ -z "$@"]
+if [ -z "$@" ]
 then
    ps aux | grep -q '[s]shd' || {
       echo "Run sudo /bin/sshd in order to perform all tests."
@@ -32,6 +32,15 @@ rm -rf "$testing_sys_tree"
 rm -rf "$testing_tree_copy"
 rm -rf "$testing_sys_tree_copy"
 rm -rf "$testing_cache"
+rm -rf "$testing_dir/testing_config.lua"
+rm -rf "$testing_dir/testing_config_show_downloads.lua"
+rm -rf "$testing_dir/testing_config_sftp.lua"
+rm -rf "$testing_dir/luacov.config"
+
+[ "$1" = "clean" ] && {
+   rm -f luacov.stats.out
+   exit 0
+}
 
 cat <<EOF > $testing_dir/testing_config.lua
 rocks_trees = {
@@ -47,6 +56,10 @@ upload_servers = {
    },
 }
 EOF
+(
+   cat $testing_dir/testing_config.lua
+   echo "show_downloads = true"
+) > $testing_dir/testing_config_show_downloads.lua
 cat <<EOF > $testing_dir/testing_config_sftp.lua
 rocks_trees = {
    "$testing_tree",
@@ -151,6 +164,7 @@ fail_search_noarg() { $luarocks search; }
 fail_show_noarg() { $luarocks show; }
 fail_unpack_noarg() { $luarocks unpack; }
 fail_new_version_noarg() { $luarocks new_version; }
+fail_write_rockspec_noarg() { $luarocks write_rockspec; }
 
 fail_build_invalid() { $luarocks build invalid; }
 fail_download_invalid() { $luarocks download invalid; }
@@ -169,6 +183,9 @@ test_build_install_bin() { $luarocks build luarepl; }
 fail_build_nohttps() { $luarocks install luasocket && $luarocks download --rockspec validate-args ${version_validate_args} && $luarocks build ./validate-args-${version_validate_args}-1.rockspec && rm ./validate-args-${version_validate_args}-1.rockspec; }
 test_build_https() { $luarocks download --rockspec validate-args ${version_validate_args} && $luarocks install luasec && $luarocks build ./validate-args-${version_validate_args}-1.rockspec && rm ./validate-args-${version_validate_args}-1.rockspec; }
 test_build_supported_platforms() { $luarocks build xctrl; }
+
+test_build_deps_partial_match() { $luarocks build yaml; }
+test_build_show_downloads() { export LUAROCKS_CONFIG="$testing_dir/testing_config_show_downloads.lua" && $luarocks build alien; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
 
 test_download_all() { $luarocks download --all validate-args && rm validate-args-*; }
 test_download_rockspecversion() { $luarocks download --rockspec validate-args ${version_validate_args} && rm validate-args-*; }
@@ -239,6 +256,9 @@ test_write_rockspec() { $luarocks write_rockspec git://github.com/keplerproject/
 test_write_rockspec_lib() { $luarocks write_rockspec git://github.com/mbalmer/luafcgi --lib=fcgi --license="3-clause BSD" --lua-version=5.1,5.2; }
 test_write_rockspec_fullargs() { $luarocks write_rockspec git://github.com/keplerproject/luarocks --lua-version=5.1,5.2 --license="MIT/X11" --homepage="http://www.luarocks.org" --summary="A package manager for Lua modules"; }
 fail_write_rockspec_args() { $luarocks write_rockspec invalid; }
+fail_write_rockspec_args_url() { $luarocks write_rockspec http://example.com/invalid.zip; }
+test_write_rockspec_http() { $luarocks write_rockspec http://luarocks.org/releases/luarocks-2.1.0.tar.gz --lua-version=5.1; }
+test_write_rockspec_basedir() { $luarocks write_rockspec https://github.com/downloads/Olivine-Labs/luassert/luassert-1.2.tar.gz --lua-version=5.1; }
 
 # Driver #########################################
 
