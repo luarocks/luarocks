@@ -705,6 +705,7 @@ function scan_deps(results, missing, manifest, name, version, deps_mode)
       rockspec = { dependencies = deplist }
    end
    local matched, failures = match_deps(rockspec, nil, deps_mode)
+   results[name] = results
    for _, match in pairs(matched) do
       results, missing = scan_deps(results, missing, manifest, match.name, match.version, deps_mode)
    end
