@@ -108,7 +108,7 @@ end
 -- @return table or (nil, string): The module table as returned by some other loader,
 -- or nil followed by an error message if no other loader managed to load the module.
 local function call_other_loaders(module, name, version, module_name)
-   for i, loader in pairs(package.loaders) do
+   for i, loader in ipairs(package.loaders) do
       if loader ~= luarocks_loader then
          local results = { loader(module_name) }
          if type(results[1]) == "function" then
