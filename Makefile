@@ -143,7 +143,7 @@ install_bins: built
 	cd src/bin && for f in $(BIN_FILES); \
 	do \
 	   cp "$$f" "$(DESTDIR)$(BINDIR)/$$f-$(LUA_VERSION)"; \
-	   ln -nfs "$(DESTDIR)$(BINDIR)/$$f-$(LUA_VERSION)" "$(DESTDIR)$(BINDIR)/$$f"; \
+	   ln -nfs "$$f-$(LUA_VERSION)" "$(DESTDIR)$(BINDIR)/$$f"; \
 	done
 
 install_luas: built
