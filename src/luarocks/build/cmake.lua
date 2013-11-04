@@ -22,7 +22,7 @@ function run(rockspec)
 
    util.variable_substitutions(variables, rockspec.variables)
 
-   if not fs.execute_quiet(rockspec.variables.CMAKE, "--help")) then
+   if not fs.execute_quiet(rockspec.variables.CMAKE, "--help") then
       return nil, "'"..rockspec.variables.CMAKE.."' program not found. Is cmake installed? You may want to edit variables.CMAKE"
    end
    
