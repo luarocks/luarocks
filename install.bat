@@ -372,20 +372,34 @@ local with_arg = { -- options followed by an argument, others are flags
 	["/BIN"] = true,
 	["/LIB"] = true,
 }
--- reconstruct argument values with spaces
-if #arg > 1 then
-	for i = #arg - 1, 1, -1 do
-		if (arg[i]:sub(1,1) ~= "/") and (arg[i+1]:sub(1,1) ~= "/") then
-			arg[i] = arg[i].." "..arg[i+1]
-			table.remove(arg, i+1)
+-- reconstruct argument values with spaces and double quotes
+-- this will be damaged by the batch construction at the start of this file
+if #arg > 0 then
+	farg = table.concat(arg, " ") .. " "
+	arg = {}
+	farg = farg:gsub('%"', "")
+	local i = 0
+	while #farg>0 do
+		i = i + 1
+		if (farg:sub(1,1) ~= "/") and ((arg[i-1] or ""):sub(1,1) ~= "/") then
+			i = i - 1       -- continued previous arg
+			if i == 0 then i = 1 end
 		end
+		if arg[i] then
+			arg[i] = arg[i] .. " "
+		else
+			arg[i] = ""
+		end
+		local v,r = farg:match("^(.-)%s(.*)$")
+		arg[i], farg = arg[i]..v, r
+		while farg:sub(1,1) == " " do farg = farg:sub(2,-1) end	-- remove prefix spaces
 	end
 end
 
 local i = 1
 while i <= #arg do
 	local opt = arg[i]
-	if with_arg[opt] then
+	if with_arg[opt:upper()] then
 		local value = arg[i + 1]
 		if not value then
 			die("Missing value for option "..opt)
