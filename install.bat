@@ -68,18 +68,16 @@ Installs LuaRocks.
 /P [dir]       (REQUIRED) Where to install. 
                Note that version; $VERSION, will be
                appended to this path.
-/CONFIG [dir]  Location where the config file should be installed.
-               Default is same place of installation
+
+Configuring the destinations:
 /TREE [dir]    Root of the local tree of installed rocks.
                Default is same place of installation
-/SCRIPTS [dir] Where to install scripts installed by rocks.
-               Default is TREE/bin.
+/SCRIPTS [dir] Where to install commandline scripts installed by
+               rocks. Default is TREE/bin.
 
+Configuring the Lua interpreter:
 /LV [version]  Lua version to use; either 5.1 or 5.2.
                Default is 5.1
-/L             Install LuaRocks' own copy of Lua even if detected,
-               this will always be a 5.1 installation.
-               (/LUA, /INC, /LIB, /BIN cannot be used with /L)
 /LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
                This is the base directory, the installer will look
                for subdirectories bin, lib, include. Alternatively
@@ -87,20 +85,25 @@ Installs LuaRocks.
                /LIB, and /BIN options.
 /INC [dir]     Location of Lua includes - e.g. c:\lua\5.1\include
                If provided overrides sub directory found using /LUA.
-/LIB [dir]     Location of Lua libraries -e.g. c:\lua\5.1\lib
+/LIB [dir]     Location of Lua libraries (.dll) - e.g. c:\lua\5.1\lib
                If provided overrides sub directory found using /LUA.
 /BIN [dir]     Location of Lua executables - e.g. c:\lua\5.1\bin
                If provided overrides sub directory found using /LUA.
+/L             Install LuaRocks' own copy of Lua even if detected,
+               this will always be a 5.1 installation.
+               (/LUA, /INC, /LIB, /BIN cannot be used with /L)
 
+Compiler configuration:
 /MW            Use mingw as build system instead of MSVC
 
+Other options:
+/CONFIG [dir]  Location where the config file should be installed.
+               Default is same place of installation
 /FORCECONFIG   Use a single config location. Do not use the
                LUAROCKS_CONFIG variable or the user's home directory.
                Useful to avoid conflicts when LuaRocks
                is embedded within an application.
-
 /F             Remove installation directory if it already exists.
-
 /R             Load registry information to register '.rockspec'
                extension with LuaRocks commands (right-click).
 
@@ -197,7 +200,7 @@ local function look_for_interpreter (directory)
 			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
 			return true
 		end
-		die(S"Lua executable lua.exe, luajit.exe or lua$LUA_VERSION.exe not found in $LUA_BINDIR")
+		die(S"Lua executable lua.exe, luajit.exe, lua$LUA_SHORTV.exe or lua$LUA_VERSION.exe not found in $LUA_BINDIR")
 	end
 
 	for _, e in ipairs{ [[\]], [[\bin\]] } do
@@ -280,31 +283,31 @@ end
 
 
 local function get_runtime()
-    local f
+	local f
 	vars.LUA_RUNTIME, f = pe.msvcrt(vars.LUA_BINDIR.."\\"..vars.LUA_INTERPRETER)
 	if type(vars.LUA_RUNTIME) ~= "string" then
 		-- analysis failed, issue a warning
 		vars.LUA_RUNTIME = "MSVCR80"
 		print("*** WARNING ***: could not analyse the runtime used, defaulting to "..vars.LUA_RUNTIME)
-    else
+	else
 		print("    "..f.." uses "..vars.LUA_RUNTIME..".DLL as runtime")
 	end
 	return true
 end
 
 local function get_architecture()
-    -- detect processor arch interpreter was compiled for
-    local proc = (pe.parse(vars.LUA_BINDIR.."\\"..vars.LUA_INTERPRETER) or {}).Machine
-    if not proc then
-        die("Could not detect processor architecture used in "..vars.LUA_INTERPRETER)
-    end
-    proc = pe.const.Machine[proc]  -- collect name from constant value
-    if proc == "IMAGE_FILE_MACHINE_I386" then
-        proc = "x86"
-    else
-        proc = "x86_64"
-    end
-    return proc
+	-- detect processor arch interpreter was compiled for
+	local proc = (pe.parse(vars.LUA_BINDIR.."\\"..vars.LUA_INTERPRETER) or {}).Machine
+	if not proc then
+		die("Could not detect processor architecture used in "..vars.LUA_INTERPRETER)
+	end
+	proc = pe.const.Machine[proc]  -- collect name from constant value
+	if proc == "IMAGE_FILE_MACHINE_I386" then
+		proc = "x86"
+	else
+		proc = "x86_64"
+	end
+	return proc
 end
 
 local function look_for_lua_install ()
@@ -369,6 +372,16 @@ local with_arg = { -- options followed by an argument, others are flags
 	["/BIN"] = true,
 	["/LIB"] = true,
 }
+-- reconstruct argument values with spaces
+if #arg > 1 then
+	for i = #arg - 1, 1, -1 do
+		if (arg[i]:sub(1,1) ~= "/") and (arg[i+1]:sub(1,1) ~= "/") then
+			arg[i] = arg[i].." "..arg[i+1]
+			table.remove(arg, i+1)
+		end
+	end
+end
+
 local i = 1
 while i <= #arg do
 	local opt = arg[i]
@@ -409,10 +422,10 @@ if not look_for_lua_install() then
 	vars.LUA_LIBDIR = vars.LIBDIR
 	vars.LUA_INCDIR = vars.INCDIR
 	vars.LUA_LIBNAME = "lua5.1.lib"
-    vars.LUA_RUNTIME = "MSVCR80"
-    vars.UNAME_M = "x86"
+	vars.LUA_RUNTIME = "MSVCR80"
+	vars.UNAME_M = "x86"
 else
-    vars.UNAME_M = get_architecture()
+	vars.UNAME_M = get_architecture()
 	print(S[[
 
 Will configure LuaRocks with the following paths:
