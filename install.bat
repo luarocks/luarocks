@@ -41,6 +41,32 @@ local function die(message)
 	os.exit(1)
 end
 
+function split_string(str, delim, maxNb)
+	-- Eliminate bad cases...
+	if string.find(str, delim) == nil then
+		return { str }
+	end
+	if maxNb == nil or maxNb < 1 then
+		maxNb = 0	 -- No limit
+	end
+	local result = {}
+	local pat = "(.-)" .. delim .. "()"
+	local nb = 0
+	local lastPos
+	for part, pos in string.gmatch(str, pat) do
+		nb = nb + 1
+		result[nb] = part
+		lastPos = pos
+		if nb == maxNb then break end
+	end
+	-- Handle the last field
+	if nb ~= maxNb then
+		result[nb + 1] = string.sub(str, lastPos)
+	end
+	return result
+end
+
+
 local function exec(cmd)
 	--print(cmd)
 	local status = os.execute(cmd)
@@ -80,6 +106,9 @@ Configuring the Lua interpreter:
 /LV [version]  Lua version to use; either 5.1 or 5.2.
                Default is 5.1
 /LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
+               If not provided, the installer will search the system
+               path and some default locations for a valid Lua
+               installation.
                This is the base directory, the installer will look
                for subdirectories bin, lib, include. Alternatively
                these can be specified explicitly using the /INC,
@@ -184,6 +213,7 @@ end
 -- ***********************************************************
 local function look_for_interpreter (directory)
 	if vars.LUA_BINDIR then
+        -- if LUA_BINDIR is specified, it must be there, otherwise we fail
 		if exists( S"$LUA_BINDIR\\lua$LUA_VERSION.exe" ) then
 			vars.LUA_INTERPRETER = S"lua$LUA_VERSION.exe"
 			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
@@ -313,9 +343,31 @@ end
 
 local function look_for_lua_install ()
 	print("Looking for Lua interpreter")
-	local directories = { [[c:\lua5.1.2]], [[c:\lua]], [[c:\kepler\1.1]] }
+	local directories
 	if vars.LUA_PREFIX then
-		table.insert(directories, 1, vars.LUA_PREFIX)
+		directories = { vars.LUA_PREFIX }
+	else
+		-- no prefix given, so use path
+		directories = (os.getenv("PATH",";") or "")
+		local i = 1
+        while i ~= 0 do directories, i = directories:gsub(";;",";") end  --remove all doubles
+		directories = split_string(directories,";")
+		-- if a path element ends with "\bin\" then remove it, as the searcher will check there anyway
+		for i, val in ipairs(directories) do
+			-- remove trailing backslash
+			while val:sub(-1,-1) == "\\" and val:sub(-2,-1) ~= ":\\" do 
+				val = val:sub(1,-2)
+			end
+			-- remove trailing 'bin'
+			if val:upper():sub(-4,-1) == "\\BIN" or val:upper():sub(-4,-1) == ":BIN" then
+				val = val:sub(1,-5)
+			end
+			directories[i] = val
+		end
+		-- finaly add some other default paths
+		table.insert(directories, [[c:\lua5.1.2]])
+		table.insert(directories, [[c:\lua]])
+		table.insert(directories, [[c:\kepler\1.1]])
 	end
 	if vars.LUA_BINDIR and vars.LUA_LIBDIR and vars.LUA_INCDIR then
 		if look_for_interpreter(vars.LUA_BINDIR) and 
@@ -425,13 +477,10 @@ vars.LUADIR = S"$FULL_PREFIX\\lua"
 vars.INCDIR = S"$FULL_PREFIX\\include"
 vars.LUA_SHORTV = vars.LUA_VERSION:gsub("%.", "")
 
-if not look_for_lua_install() then
-	print("Could not find Lua. Will install its own copy.")
-	print("See /? for options for specifying the location of Lua.")
+if INSTALL_LUA then
 	if vars.LUA_VERSION ~= "5.1" then
-		die("Cannot install own copy because no 5.2 version is bundled")
+		die("Cannot install own copy of Lua because only 5.1 is bundled")
 	end
-	INSTALL_LUA = true
 	vars.LUA_INTERPRETER = "lua5.1"
 	vars.LUA_BINDIR = vars.BINDIR
 	vars.LUA_LIBDIR = vars.LIBDIR
@@ -440,8 +489,13 @@ if not look_for_lua_install() then
 	vars.LUA_RUNTIME = "MSVCR80"
 	vars.UNAME_M = "x86"
 else
-	vars.UNAME_M = get_architecture()
-	print(S[[
+	if not look_for_lua_install() then
+		die("Could not find Lua. See /? for options for specifying the location of Lua, or installing a bundled copy of Lua 5.1.")
+	end
+    vars.UNAME_M = get_architecture()  -- can only do when installation was found
+end
+
+print(S[[
 
 Will configure LuaRocks with the following paths:
 LuaRocks       : $FULL_PREFIX
@@ -453,7 +507,7 @@ Binaries will be linked against: $LUA_LIBNAME with runtime $LUA_RUNTIME
 System architecture detected as: $UNAME_M
 
 ]])
-end
+
 
 -- ***********************************************************
 -- Install LuaRocks files
@@ -642,7 +696,7 @@ if REGISTRY then
 	print()
 	print([[Loading registry information for ".rockspec" files]])
 	exec( S[[lua5.1\bin\lua5.1.exe "$FULL_PREFIX\LuaRocks.reg.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
-	exec( S"$FULL_PREFIX\\LuaRocks.reg" )
+	exec( S[["$FULL_PREFIX\\LuaRocks.reg"]] )
 end
 
 -- ***********************************************************
