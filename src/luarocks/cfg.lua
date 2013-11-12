@@ -493,12 +493,6 @@ function package_paths()
    return table.concat(new_path, ";"), table.concat(new_cpath, ";")
 end
 
-do
-   local new_path, new_cpath = package_paths()
-   package.path = new_path..";"..package.path
-   package.cpath = new_cpath..";"..package.cpath
-end
-
 function which_config()
    return sys_config_file, sys_config_ok, home_config_file, home_config_ok
 end
