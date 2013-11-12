@@ -696,7 +696,7 @@ if REGISTRY then
 	print()
 	print([[Loading registry information for ".rockspec" files]])
 	exec( S[[lua5.1\bin\lua5.1.exe "$FULL_PREFIX\LuaRocks.reg.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
-	exec( S"$FULL_PREFIX\\LuaRocks.reg" )
+	exec( S[["$FULL_PREFIX\\LuaRocks.reg"]] )
 end
 
 -- ***********************************************************
