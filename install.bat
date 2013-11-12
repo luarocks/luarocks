@@ -65,9 +65,10 @@ local function print_help()
 	print(S[[
 Installs LuaRocks.
 
-/P [dir]       (REQUIRED) Where to install. 
-               Note that version; $VERSION, will be
-               appended to this path.
+/P [dir]       (REQUIRED) Where to install LuaRocks. 
+               Note that version; $VERSION, will be appended to this
+               path, so "/P c:\luarocks\" will install in 
+               "c:\luarocks\$VERSION\"
 
 Configuring the destinations:
 /TREE [dir]    Root of the local tree of installed rocks.
