@@ -1,5 +1,6 @@
 #!/usr/bin/env lua
 
+local loader = require("luarocks.loader")
 local command_line = require("luarocks.command_line")
 
 program_description = "LuaRocks main command-line interface"

@@ -42,7 +42,7 @@ end
 function current_dir()
    local current = cfg.cache_pwd
    if not current then
-      local pipe = io.popen(vars.PWD)
+      local pipe = io.popen(fs.Q(vars.PWD))
       current = pipe:read("*l")
       pipe:close()
       cfg.cache_pwd = current

@@ -1,6 +1,9 @@
-# $Id: Makefile,v 1.30 2008/08/18 14:07:35 hisham Exp $
 
 include config.unix
+
+.PHONY: all build dev build_bins luadoc check_makefile cleanup_bins clean \
+ install_bins install_luas install_site_config write_sysconfig \
+ install bootstrap install_rock
 
 DESTDIR =
 PREFIX ?= /usr/local
@@ -34,7 +37,10 @@ all:
 	@echo "  to install LuaRocks in $(PREFIX) as a rock."
 	@echo
 
-build: built
+build: src/luarocks/site_config.lua build_bins
+	@echo
+	@echo "Done. Type 'make install' to install into $(PREFIX)."
+	@echo
 
 src/luarocks/site_config.lua: config.unix
 	rm -f src/luarocks/site_config.lua
@@ -97,17 +103,11 @@ build_bins: cleanup_bins
 	do \
 	   sed "1d" src/bin/$$f > src/bin/$$f.bak ;\
 	   echo "#!$(LUA_BINDIR)/lua$(LUA_SUFFIX)" > src/bin/$$f ;\
-	   echo "package.path = [[$(LUADIR)/?.lua;$(LUADIR)/?/init.lua;]]..package.path" >> src/bin/$$f ;\
+	   echo "package.path = [[$(LUADIR)/?.lua;]]..package.path" | sed "s,//,/,g" >> src/bin/$$f ;\
 	   cat src/bin/$$f.bak >> src/bin/$$f ;\
 	   chmod +x src/bin/$$f ;\
 	   rm -f src/bin/$$f.bak ;\
 	done
-
-built: src/luarocks/site_config.lua build_bins
-	touch built
-	@echo
-	@echo "Done. Type 'make install' to install into $(PREFIX)."
-	@echo
 
 luadoc:
 	rm -rf doc/luadoc
@@ -136,9 +136,8 @@ cleanup_bins:
 
 clean: cleanup_bins
 	rm -f src/luarocks/site_config.lua
-	rm -f built
 
-install_bins: built
+install_bins:
 	mkdir -p "$(DESTDIR)$(BINDIR)"
 	cd src/bin && for f in $(BIN_FILES); \
 	do \
@@ -146,7 +145,7 @@ install_bins: built
 	   ln -nfs "$$f-$(LUA_VERSION)" "$(DESTDIR)$(BINDIR)/$$f"; \
 	done
 
-install_luas: built
+install_luas:
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
 	cd src/luarocks && for f in $(LUAROCKS_FILES); \
 	do \
@@ -155,11 +154,11 @@ install_luas: built
 	   cp "$$f" "$$d" || exit 1; \
 	done
 
-install_site_config: built
+install_site_config: src/luarocks/site_config.lua
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
-	cd src/luarocks && cp site_config.lua "$(DESTDIR)$(LUADIR)/luarocks"
+	cp src/luarocks/site_config.lua "$(DESTDIR)$(LUADIR)/luarocks"
 
-write_sysconfig: built
+write_sysconfig:
 	mkdir -p "$(DESTDIR)$(ROCKS_TREE)"
 	if [ ! -f "$(DESTDIR)$(CONFIG_FILE)" ] ;\
 	then \
@@ -175,7 +174,7 @@ write_sysconfig: built
 
 install: install_bins install_luas install_site_config write_sysconfig
 
-bootstrap: src/luarocks/site_config.lua install_site_config write_sysconfig
+bootstrap: src/luarocks/site_config.lua install_site_config write_sysconfig cleanup_bins
 	'$(LUA_BINDIR)/lua$(LUA_SUFFIX)' -e "package.path=[[$(SAFEPWD)/src/?.lua;]]..package.path" src/bin/luarocks make rockspec --tree="$(PREFIX)"
 
 install_rock: install_bins install_luas
