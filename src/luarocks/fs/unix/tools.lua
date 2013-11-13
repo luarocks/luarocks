@@ -328,8 +328,11 @@ function get_md5(file)
    local pipe = io.popen(cmd.." "..fs.absolute_name(file))
    local computed = pipe:read("*a")
    pipe:close()
-   if not computed then return nil end
-   return computed:match("("..("%x"):rep(32)..")")
+   if computed then
+      computed = computed:match("("..("%x"):rep(32)..")")
+   end
+   if computed then return computed end
+   return nil, "Failed to compute MD5 hash for file "..tostring(fs.absolute_name(file))
 end
 
 function get_permissions(filename)

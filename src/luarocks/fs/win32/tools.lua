@@ -353,15 +353,18 @@ local md5_cmd = {
 
 --- Get the MD5 checksum for a file.
 -- @param file string: The file to be computed.
--- @return string: The MD5 checksum
+-- @return string: The MD5 checksum or nil + message
 function get_md5(file)
    local cmd = md5_cmd[cfg.md5checker]
    if not cmd then return nil end
-   local pipe = io.popen(cmd.." "..fs.Q(fs.absolute_name(file)))
+   local pipe = io.popen(cmd.." "..fs.absolute_name(file))   -- should be in fs.Q()
    local computed = pipe:read("*a")
    pipe:close()
-   if not computed then return nil end
-   return computed:match("("..("%x"):rep(32)..")")
+   if computed then
+      computed = computed:match("("..("%x"):rep(32)..")")
+   end
+   if computed then return computed end
+   return nil, "Failed to compute MD5 hash for file "..tostring(fs.absolute_name(file))
 end
 
 --- Test for existance of a file.
