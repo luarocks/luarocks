@@ -336,7 +336,7 @@ function map_trees(deps_mode, fn, ...)
          use = true
       end
       for _, tree in ipairs(cfg.rocks_trees) do
-         if dir.normalize(tree) == dir.normalize(cfg.root_dir) then
+         if dir.normalize(rocks_tree_to_string(tree)) == dir.normalize(rocks_tree_to_string(cfg.root_dir)) then
             use = true
          end
          if use then

@@ -28,7 +28,7 @@ purge.lua path.lua write_rockspec.lua
 
 CONFIG_FILE = $(SYSCONFDIR)/config-$(LUA_VERSION).lua
 
-SAFEPWD=`echo "$$PWD" | sed -e 's/\([][]\)\1/]]..'\''\1\1'\''..[[/g' -`
+SAFEPWD=`echo "$$PWD" | sed -e 's/\([][]\)\1/]]..'\''\1\1'\''..[[/g'`
 
 all: 
 	@echo "- Type 'make build' and 'make install':"

@@ -113,8 +113,8 @@ function wrap_script(file, dest, name, version)
    wrapper:write("@echo off\n")
    local lua = dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)
    local ppaths = "package.path="..util.LQ(lpath..";").."..package.path; package.cpath="..util.LQ(lcpath..";").."..package.cpath"
-   local addctx = "luarocks.loader.add_context("..util.LQ(name)..","..util.LQ(version)..")"
-   wrapper:write(fs.Qb(lua)..' -e '..fs.Qb(ppaths)..' -lluarocks.loader -e '..fs.Qb(addctx)..' '..fs.Qb(file)..' %*\n')
+   local addctx = "local k,l,_=pcall(require,"..util.LQ("luarocks.loader")..") _=k and l.add_context("..util.LQ(name)..","..util.LQ(version)..")"
+   wrapper:write(fs.Qb(lua)..' -e '..fs.Qb(ppaths)..' -e '..fs.Qb(addctx)..' '..fs.Qb(file)..' %*\n')
    wrapper:close()
    return true
 end

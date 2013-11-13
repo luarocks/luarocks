@@ -61,8 +61,8 @@ function wrap_script(file, dest, name, version)
    wrapper:write("#!/bin/sh\n\n")
    local lua = dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)
    local ppaths = "package.path="..util.LQ(lpath..";").."..package.path; package.cpath="..util.LQ(lcpath..";").."..package.cpath"
-   local addctx = "luarocks.loader.add_context("..util.LQ(name)..","..util.LQ(version)..")"
-   wrapper:write('exec '..fs.Q(lua)..' -e '..fs.Q(ppaths)..' -lluarocks.loader -e '..fs.Q(addctx)..' '..fs.Q(file)..' "$@"\n')
+   local addctx = "local k,l,_=pcall(require,"..util.LQ("luarocks.loader")..") _=k and l.add_context("..util.LQ(name)..","..util.LQ(version)..")"
+   wrapper:write('exec '..fs.Q(lua)..' -e '..fs.Q(ppaths)..' -e '..fs.Q(addctx)..' '..fs.Q(file)..' "$@"\n')
    wrapper:close()
    if fs.chmod(wrapname, "0755") then
       return true
