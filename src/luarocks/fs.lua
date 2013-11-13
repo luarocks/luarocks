@@ -38,3 +38,22 @@ load_fns(fs_lua)
 local ok, fs_plat_tools = pcall(require, "luarocks.fs."..loaded_platform..".tools")
 if ok and fs_plat_tools then load_fns(fs_plat_tools) end
 
+-- uncomment below for further debugging than 'verbose=true' in config file
+-- code below will also catch commands outside of fs.execute()
+-- especially uses of io.popen().
+--[[
+old_exec = os.execute
+os.execute = function(cmd)
+  print("os.execute: ", cmd)
+  return old_exec(cmd)
+end
+old_popen = io.popen
+io.popen = function(one, two)
+  if two == nil then
+    print("io.popen: ", one)
+  else
+    print("io.popen: ", one, "Mode:", two)
+  end
+  return old_popen(one, two)
+end
+--]]

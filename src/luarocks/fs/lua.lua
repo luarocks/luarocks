@@ -108,12 +108,16 @@ end
 -- The command is executed in the current directory in the dir stack.
 -- @param command string: The command to be executed. No quoting/escaping
 -- is applied.
--- @param ... Strings containing additional arguments, which are quoted.
+-- @param ... Strings containing additional arguments, which will be quoted.
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
 function execute_quiet(command, ...)
    assert(type(command) == "string")
-   return fs.execute_string(fs.quiet(quote_args(command, ...)))
+   if cfg.verbose then 
+      return fs.execute_string(quote_args(command, ...))
+   else
+      return fs.execute_string(fs.quiet(quote_args(command, ...)))
+   end
 end
 
 --- Check the MD5 checksum for a file.
