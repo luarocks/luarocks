@@ -410,9 +410,17 @@ function run(...)
       util.printout(util.remove_path_dupes(lr_bin, ';'))
       return true
    end
+   
+   if flags["append"] then
+      lr_path = package.path .. ";" .. lr_path
+      lr_cpath = package.cpath .. ";" .. lr_cpath
+   else
+      lr_path =  lr_path.. ";" .. package.path
+      lr_cpath = lr_cpath .. ";" .. package.cpath
+   end
 
-   util.printout(cfg.export_lua_path:format(util.remove_path_dupes(package.path, ';')))
-   util.printout(cfg.export_lua_cpath:format(util.remove_path_dupes(package.cpath, ';')))
+   util.printout(cfg.export_lua_path:format(util.remove_path_dupes(lr_path, ';')))
+   util.printout(cfg.export_lua_cpath:format(util.remove_path_dupes(lr_cpath, ';')))
    if flags["bin"] then
       table.insert(bin_dirs, 1, os.getenv("PATH"))
       local lr_bin = util.remove_path_dupes(table.concat(bin_dirs, cfg.export_path_separator), cfg.export_path_separator)
