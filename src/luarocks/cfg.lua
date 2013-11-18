@@ -322,7 +322,7 @@ if detected.windows then
    local localappdata = os.getenv("LOCALAPPDATA")
    if not localappdata then
       -- for Windows versions below Vista
-      localappdata = os.getenv("USER_PROFILE").."/Local Settings/Application Data"
+      localappdata = os.getenv("USERPROFILE").."/Local Settings/Application Data"
    end
    defaults.local_cache = localappdata.."/LuaRocks/Cache"
 end
