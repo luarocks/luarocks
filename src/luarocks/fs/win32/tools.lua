@@ -357,7 +357,7 @@ local md5_cmd = {
 function get_md5(file)
    local cmd = md5_cmd[cfg.md5checker]
    if not cmd then return nil end
-   local pipe = io.popen(cmd.." "..fs.absolute_name(file))   -- should be in fs.Q()
+   local pipe = io.popen(cmd.." "..fs.Q(fs.absolute_name(file)))
    local computed = pipe:read("*a")
    pipe:close()
    if computed then
