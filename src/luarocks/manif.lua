@@ -139,9 +139,11 @@ function load_manifest(repo_url)
    if pathname:match(".*%.zip$") then
       local dir = dir.dir_name(pathname)
       fs.change_dir(dir)
+      local nozip = pathname:match("(.*)%.zip$")
+      fs.delete(nozip)
       fs.unzip(pathname)
       fs.pop_dir()
-      pathname = pathname:match("(.*)%.zip$")
+      pathname = nozip
    end
    return manif_core.manifest_loader(pathname, repo_url)
 end
