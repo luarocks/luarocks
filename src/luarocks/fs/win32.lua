@@ -9,15 +9,6 @@ local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 
--- Monkey patch io.popen and os.execute to make sure quoting
--- works as expected.
--- See http://lua-users.org/lists/lua-l/2013-11/msg00367.html
-local _prefix = "type NUL && "
-local _popen, _execute = io.popen, os.execute
-io.popen = function(cmd, ...) return _popen(_prefix..cmd, ...) end
-os.execute = function(cmd, ...) return _execute(_prefix..cmd, ...) end
-
-
 --- Annotate command string for quiet execution.
 -- @param cmd string: A command-line string.
 -- @return string: The command-line, with silencing annotation.
