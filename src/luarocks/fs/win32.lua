@@ -173,3 +173,36 @@ function replace_file(old_file, new_file)
    return os.rename(new_file, old_file)
 end
 
+--- Test is file/dir is writable.
+-- Warning: testing if a file/dir is writable does not guarantee
+-- that it will remain writable and therefore it is no replacement
+-- for checking the result of subsequent operations.
+-- @param file string: filename to test
+-- @return boolean: true if file exists, false otherwise.
+function is_writable(file)
+   assert(file)
+   file = dir.normalize(file)
+   local result
+   local tmpname = 'tmpluarockstestwritable.deleteme'
+   if fs.is_dir(file) then
+      local file2 = dir.path(file, tmpname)
+      local fh = io.open(file2, 'wb')
+      result = fh ~= nil
+      if fh then fh:close() end
+      if result then
+         -- the above test might give a false positive when writing to
+         -- c:\program files\ because of VirtualStore redirection on Vista and up
+         -- So get a directory listing and check whether it's really there
+         local pipe = io.popen("dir "..fs.Q(file))
+         local dir_list = pipe:read("*a")
+         pipe:close()
+         result = (nil ~= string.find(dir_list, tmpname, 1, true))
+      end
+      os.remove(file2)
+   else
+      local fh = io.open(file, 'r+b')
+      result = fh ~= nil
+      if fh then fh:close() end
+   end
+   return result
+end
