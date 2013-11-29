@@ -27,6 +27,7 @@ local FORCE_CONFIG = false
 local INSTALL_LUA = false
 local USE_MINGW = false
 local REGISTRY = false
+local NOADMIN = false
 
 ---
 -- Some helpers
@@ -82,6 +83,12 @@ local function mkdir (dir)
 	return exec([[.\bin\bin\mkdir -p "]]..dir..[[" >NUL]])
 end
 
+-- does the current user have admin priviledges ( = elevated)
+local function permission()
+	return exec("net session >nul 2>&1") -- fails if not admin
+end
+
+
 -- interpolate string with values from 'vars' table
 local function S (tmpl)
 	return (tmpl:gsub('%$([%a_][%w_]*)', vars))
@@ -136,6 +143,11 @@ Other options:
 /F             Remove installation directory if it already exists.
 /R             Load registry information to register '.rockspec'
                extension with LuaRocks commands (right-click).
+/NOADMIN       The installer requires admin priviledges. If not
+               available it will elevate a new process. Use this
+               switch to prevent elevation, but make sure the
+               destination paths are all accessible for the current
+               user.
 
 ]])
 end
@@ -180,6 +192,8 @@ local function parse_options(args)
 			FORCE = true
 		elseif name == "/R" then
 			REGISTRY = true
+		elseif name == "/NOADMIN" then
+			NOADMIN = true
 		else
 			die("Unrecognized option: " .. name)
 		end
@@ -427,6 +441,7 @@ local with_arg = { -- options followed by an argument, others are flags
 }
 -- reconstruct argument values with spaces and double quotes
 -- this will be damaged by the batch construction at the start of this file
+local oarg = arg  -- retain old table
 if #arg > 0 then
 	farg = table.concat(arg, " ") .. " "
 	arg = {}
@@ -448,6 +463,9 @@ if #arg > 0 then
 		while farg:sub(1,1) == " " do farg = farg:sub(2,-1) end	-- remove prefix spaces
 	end
 end
+for k,v in pairs(oarg) do if k < 1 then arg[k] = v end end -- copy 0 and negative indexes
+oarg = nil
+
 
 local i = 1
 while i <= #arg do
@@ -469,6 +487,29 @@ print(S"LuaRocks $VERSION.x installer.\n")
 
 parse_options(config)
 check_flags()
+
+if not permission() then
+	if not NOADMIN then
+		-- must elevate the process with admin priviledges
+		print("Need admin priviledges, now elevating a new process to continue installing...")
+		local runner = os.getenv("TEMP").."\\".."LuaRocks_Installer.bat"
+		local f = io.open(runner, "w")
+		f:write("@echo off\n")
+		f:write("CHDIR /D "..arg[0]:match("(.+)%\\.-$").."\n")  -- return to current die, elevation changes current path
+		f:write('"'..arg[-1]..'" "'..table.concat(arg, '" "', 0)..'"\n')
+		f:write("ECHO Press any key to close this window...\n")
+		f:write("PAUSE > NUL\n")
+		f:close()
+		-- run the created temp batch file in elevated mode
+		exec("PowerShell -Command (New-Object -com 'Shell.Application').ShellExecute('"..runner.."', '', '', 'runas')\n")
+		print("Now exiting unpriviledged installer")
+       	os.exit()  -- exit here, the newly created elevated process will do the installing
+	else
+		print("Attempting to install without admin priviledges...")
+	end
+else
+	print("Admin priviledges available for installing")
+end
 
 vars.FULL_PREFIX = S"$PREFIX\\$VERSION"
 vars.BINDIR = vars.FULL_PREFIX
