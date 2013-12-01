@@ -709,6 +709,7 @@ rocks_trees = {
 	end
 	f:write(S"    LUALIB = '$LUA_LIBNAME'\n")
 	f:write("}\n")
+	f:write("verbose = false   -- set to 'true' to enable verbose output\n")
 	f:close()
 	print(S"Created LuaRocks config file: $CONFIG_FILE")
 else
