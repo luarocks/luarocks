@@ -201,11 +201,8 @@ function is_writable(file)
       if result then
          -- the above test might give a false positive when writing to
          -- c:\program files\ because of VirtualStore redirection on Vista and up
-         -- So get a directory listing and check whether it's really there
-         local pipe = io.popen("dir "..fs.Q(file))
-         local dir_list = pipe:read("*a")
-         pipe:close()
-         result = (nil ~= string.find(dir_list, tmpname, 1, true))
+         -- So check whether it's really there
+         result = fs.exists(file2)
       end
       os.remove(file2)
    else
