@@ -106,6 +106,7 @@ end
 
 --- Run the given command, quoting its arguments, silencing its output.
 -- The command is executed in the current directory in the dir stack.
+-- Silencing is omitted if 'verbose' mode is enabled.
 -- @param command string: The command to be executed. No quoting/escaping
 -- is applied.
 -- @param ... Strings containing additional arguments, which will be quoted.
@@ -113,7 +114,7 @@ end
 -- otherwise.
 function execute_quiet(command, ...)
    assert(type(command) == "string")
-   if cfg.verbose then 
+   if cfg.verbose then -- omit silencing output
       return fs.execute_string(quote_args(command, ...))
    else
       return fs.execute_string(fs.quiet(quote_args(command, ...)))
@@ -150,7 +151,6 @@ if lfs_ok then
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
 function execute_string(cmd)
-   if cfg.verbose then print("Executing: "..cmd) end
    local code = os.execute(cmd)
    return (code == 0 or code == true)
 end
