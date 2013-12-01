@@ -491,6 +491,10 @@ check_flags()
 if not permission() then
 	if not NOADMIN then
 		-- must elevate the process with admin priviledges
+        if not exec("PowerShell /? >NUL 2>&1") then
+          -- powershell is not available, so error out
+          die("No administrative priviledges detected and cannot auto-elevate. Please run with admin priviledges or use the /NOADMIN switch")
+        end
 		print("Need admin priviledges, now elevating a new process to continue installing...")
 		local runner = os.getenv("TEMP").."\\".."LuaRocks_Installer.bat"
 		local f = io.open(runner, "w")
