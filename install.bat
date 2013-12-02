@@ -88,6 +88,19 @@ local function permission()
 	return exec("net session >nul 2>&1") -- fails if not admin
 end
 
+-- rename file (full path) to backup (name only), appending number if required
+-- returns the new name (name only)
+local function backup(filename, backupname)
+	local path = filename:match("(.+)%\\.-$").."\\"
+	local nname = backupname
+	local i = 0
+	while exists(path..nname) do
+		i = i + 1
+		nname = backupname..tostring(i)
+	end
+	exec([[REN "]]..filename..[[" "]]..nname..[[" > NUL]])
+	return nname
+end
 
 -- interpolate string with values from 'vars' table
 local function S (tmpl)
@@ -699,51 +712,56 @@ vars.CONFIG_FILE = vars.SYSCONFDIR.."\\config.lua"
 if not exists(vars.SYSCONFDIR) then
 	mkdir(vars.SYSCONFDIR)
 end
-if not exists(vars.CONFIG_FILE) then
-	local f = io.open(vars.CONFIG_FILE, "w")
-	f:write([=[
+if exists(vars.CONFIG_FILE) then
+	local nname = backup(vars.CONFIG_FILE, "config.bak")
+	print("***************")
+	print(S"*** WARNING *** LuaRocks config file already exists: '$CONFIG_FILE'. The old file has been renamed to '"..nname.."'")
+	print("***************")
+end
+local f = io.open(vars.CONFIG_FILE, "w")
+f:write([=[
 rocks_servers = {
    [[http://luarocks.org/repositories/rocks]]
 }
 rocks_trees = {
 ]=])
-	if FORCE_CONFIG then
-		f:write("    home..[[/luarocks]],\n")
-	end
-	f:write(S"    [[$ROCKS_TREE]]\n")
-	f:write("}\n")
-	if vars.SCRIPTS_DIR then
-		f:write(S"scripts_dir=[[$SCRIPTS_DIR]]\n")
-	end
-	f:write("variables = {\n")
-	if USE_MINGW and vars.LUA_RUNTIME == "MSVCRT" then
-		f:write("    MSVCRT = 'm',   -- make MinGW use MSVCRT.DLL as runtime\n")
-	else
-		f:write("    MSVCRT = '"..vars.LUA_RUNTIME.."',\n")
-	end
-	f:write(S"    LUALIB = '$LUA_LIBNAME'\n")
-	f:write("}\n")
-	f:write("verbose = false   -- set to 'true' to enable verbose output\n")
-	f:close()
-	print(S"Created LuaRocks config file: $CONFIG_FILE")
-else
-	print(S"LuaRocks config file already exists: $CONFIG_FILE")
+if FORCE_CONFIG then
+	f:write("    home..[[/luarocks]],\n")
 end
+f:write(S"    [[$ROCKS_TREE]]\n")
+f:write("}\n")
+if vars.SCRIPTS_DIR then
+	f:write(S"scripts_dir=[[$SCRIPTS_DIR]]\n")
+end
+f:write("variables = {\n")
+if USE_MINGW and vars.LUA_RUNTIME == "MSVCRT" then
+	f:write("    MSVCRT = 'm',   -- make MinGW use MSVCRT.DLL as runtime\n")
+else
+	f:write("    MSVCRT = '"..vars.LUA_RUNTIME.."',\n")
+end
+f:write(S"    LUALIB = '$LUA_LIBNAME'\n")
+f:write("}\n")
+f:write("verbose = false   -- set to 'true' to enable verbose output\n")
+f:close()
+
+print(S"Created LuaRocks config file: $CONFIG_FILE")
+
 
 print()
 print("Creating rocktrees...")
 if not exists(vars.ROCKS_TREE) then
 	mkdir(vars.ROCKS_TREE)
-	print(S[[Created rocktree: "$ROCKS_TREE"]])
+	print(S[[Created system rocktree    : "$ROCKS_TREE"]])
 else
-	print(S[[Rocktree exists: "$ROCKS_TREE"]])
+	print(S[[System rocktree exists     : "$ROCKS_TREE"]])
 end
-local APPDATA = os.getenv("APPDATA")
-if not exists(APPDATA.."\\luarocks") then
-	mkdir(APPDATA.."\\luarocks")
-	print([[Created rocktree: "]]..APPDATA..[[\luarocks"]])
+
+vars.LOCAL_TREE = os.getenv("APPDATA")..[[\LuaRocks]]
+if not exists(vars.LOCAL_TREE) then
+	mkdir(vars.LOCAL_TREE)
+	print(S[[Created local user rocktree: "$LOCAL_TREE"]])
 else
-	print([[Rocktree exists: "]]..APPDATA..[[\luarocks"]])
+	print(S[[Local user rocktree exists : "$LOCAL_TREE"]])
 end
 
 -- Load registry information
@@ -768,12 +786,24 @@ exec( S[[del "$FULL_PREFIX\pe-parser.lua" > nul]] )
 -- ***********************************************************
 
 print(S[[
+
 *** LuaRocks is installed! ***
 
- You may want to add the following elements to your paths;
-PATH     :   $LUA_BINDIR;$FULL_PREFIX
-LUA_PATH :   $ROCKS_TREE\share\lua\$LUA_VERSION\?.lua;$ROCKS_TREE\share\lua\$LUA_VERSION\?\init.lua
-LUA_CPATH:   $ROCKS_TREE\lib\lua\$LUA_VERSION\?.dll
+You may want to add the following elements to your paths;
+Lua interpreter;
+  PATH     :   $LUA_BINDIR
+  PATHEXT  :   .LUA
+LuaRocks;
+  PATH     :   $FULL_PREFIX
+  LUA_PATH :   $FULL_PREFIX\lua\?.lua;$FULL_PREFIX\lua\?\init.lua
+Local user rocktree (Note: %APPDATA% is user dependent);
+  PATH     :   %APPDATA%\LuaRock\bin
+  LUA_PATH :   %APPDATA%\LuaRocks\share\lua\$LUA_VERSION\?.lua;%APPDATA%\LuaRocks\share\lua\$LUA_VERSION\?\init.lua
+  LUA_CPATH:   %APPDATA%\LuaRocks\lib\lua\$LUA_VERSION\?.dll
+System rocktree
+  PATH     :   $ROCKS_TREE\bin
+  LUA_PATH :   $ROCKS_TREE\share\lua\$LUA_VERSION\?.lua;$ROCKS_TREE\share\lua\$LUA_VERSION\?\init.lua
+  LUA_CPATH:   $ROCKS_TREE\lib\lua\$LUA_VERSION\?.dll
 
 ]])
 os.exit(0)
