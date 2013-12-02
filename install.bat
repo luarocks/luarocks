@@ -6,8 +6,8 @@ local vars = {}
 
 vars.PREFIX = [[C:\LuaRocks]]
 vars.VERSION = "2.1"
-vars.SYSCONFDIR = [[C:\LuaRocks]]
-vars.ROCKS_TREE = [[C:\LuaRocks]]
+vars.SYSCONFDIR = nil
+vars.ROCKS_TREE = nil
 vars.SCRIPTS_DIR = nil
 vars.LUA_INTERPRETER = nil
 vars.LUA_PREFIX = nil
@@ -163,8 +163,6 @@ local function parse_options(args)
 			os.exit(0)
 		elseif name == "/P" then
 			vars.PREFIX = option.value
-			vars.SYSCONFDIR = option.value
-			vars.ROCKS_TREE = option.value
 			P_SET = true
 		elseif name == "/CONFIG" then
 			vars.SYSCONFDIR = option.value
@@ -425,7 +423,11 @@ local function look_for_lua_install ()
 	return false
 end
 
----
+
+-- ***********************************************************
+-- Installer script start
+-- ***********************************************************
+
 -- Poor man's command-line parsing
 local config = {}
 local with_arg = { -- options followed by an argument, others are flags
@@ -466,7 +468,7 @@ end
 for k,v in pairs(oarg) do if k < 1 then arg[k] = v end end -- copy 0 and negative indexes
 oarg = nil
 
-
+-- build config option table with name and value elements
 local i = 1
 while i <= #arg do
 	local opt = arg[i]
@@ -499,10 +501,11 @@ if not permission() then
 		local runner = os.getenv("TEMP").."\\".."LuaRocks_Installer.bat"
 		local f = io.open(runner, "w")
 		f:write("@echo off\n")
-		f:write("CHDIR /D "..arg[0]:match("(.+)%\\.-$").."\n")  -- return to current die, elevation changes current path
+		f:write("CHDIR /D "..arg[0]:match("(.+)%\\.-$").."\n")  -- return to current dir, elevation changes current path
 		f:write('"'..arg[-1]..'" "'..table.concat(arg, '" "', 0)..'"\n')
 		f:write("ECHO Press any key to close this window...\n")
 		f:write("PAUSE > NUL\n")
+		f:write('DEL "'..runner..'"')  -- temp batch file deletes itself
 		f:close()
 		-- run the created temp batch file in elevated mode
 		exec("PowerShell -Command (New-Object -com 'Shell.Application').ShellExecute('"..runner.."', '', '', 'runas')\n")
@@ -515,6 +518,8 @@ else
 	print("Admin priviledges available for installing")
 end
 
+vars.SYSCONFDIR = vars.SYSCONFDIR or vars.PREFIX
+vars.ROCKS_TREE = vars.ROCKS_TREE or vars.PREFIX
 vars.FULL_PREFIX = S"$PREFIX\\$VERSION"
 vars.BINDIR = vars.FULL_PREFIX
 vars.LIBDIR = vars.FULL_PREFIX
@@ -644,8 +649,13 @@ else
 end
 
 
+-- ***********************************************************
+-- Configure LuaRocks
+-- ***********************************************************
+
 print()
 print("Configuring LuaRocks...")
+
 -- Create a site-config file
 if exists(S[[$LUADIR\luarocks\site_config.lua]]) then
 	exec(S[[RENAME "$LUADIR\luarocks\site_config.lua" site_config.lua.bak]])
