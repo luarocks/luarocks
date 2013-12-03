@@ -406,7 +406,7 @@ local function look_for_lua_install ()
 		then
 			if get_runtime() then
 				print("Runtime check completed, now testing interpreter...")
-				if exec(S[[$LUA_BINDIR\$LUA_INTERPRETER -v 2>NUL]]) then
+				if exec(S[["$LUA_BINDIR\$LUA_INTERPRETER" -v 2>NUL]]) then
 					print("    Ok")
 					return true
 				end
@@ -427,7 +427,7 @@ local function look_for_lua_install ()
 						print("Headers found, checking runtime to use...")
 						if get_runtime() then
 							print("Runtime check completed, now testing interpreter...")
-							if exec(S[[$LUA_BINDIR\$LUA_INTERPRETER -v 2>NUL]]) then
+							if exec(S[["$LUA_BINDIR\$LUA_INTERPRETER" -v 2>NUL]]) then
 								print("    Ok")
 								return true
 							end
@@ -804,7 +804,7 @@ LuaRocks;
   PATH     :   $FULL_PREFIX
   LUA_PATH :   $FULL_PREFIX\lua\?.lua;$FULL_PREFIX\lua\?\init.lua
 Local user rocktree (Note: %APPDATA% is user dependent);
-  PATH     :   %APPDATA%\LuaRock\bin
+  PATH     :   %APPDATA%\LuaRocks\bin
   LUA_PATH :   %APPDATA%\LuaRocks\share\lua\$LUA_VERSION\?.lua;%APPDATA%\LuaRocks\share\lua\$LUA_VERSION\?\init.lua
   LUA_CPATH:   %APPDATA%\LuaRocks\lib\lua\$LUA_VERSION\?.dll
 System rocktree
