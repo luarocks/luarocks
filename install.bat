@@ -4,10 +4,11 @@ rem=rem --[[
 
 local vars = {}
 
-vars.PREFIX = [[C:\LuaRocks]]
+
+vars.PREFIX = os.getenv("PROGRAMFILES")..[[\LuaRocks]]
 vars.VERSION = "2.1"
-vars.SYSCONFDIR = nil
-vars.ROCKS_TREE = nil
+vars.SYSCONFDIR = (os.getenv("PROGRAMDATA") or (os.getenv("ALLUSERSPROFILE")..[[\Application Data]])) .. [[\LuaRocks]] -- ALLUSERS for WinXP compat
+vars.ROCKS_TREE = vars.SYSCONFDIR 
 vars.SCRIPTS_DIR = nil
 vars.LUA_INTERPRETER = nil
 vars.LUA_PREFIX = nil
@@ -21,13 +22,13 @@ vars.LUA_LIB_NAMES = "lua5.1.lib lua51.dll liblua.dll.a"
 vars.LUA_RUNTIME = nil
 vars.UNAME_M = nil
 
-local P_SET = false
 local FORCE = false
 local FORCE_CONFIG = false
 local INSTALL_LUA = false
 local USE_MINGW = false
 local REGISTRY = false
 local NOADMIN = false
+local PROMPT = true
 
 ---
 -- Some helpers
@@ -111,16 +112,17 @@ local function print_help()
 	print(S[[
 Installs LuaRocks.
 
-/P [dir]       (REQUIRED) Where to install LuaRocks. 
+/P [dir]       Where to install LuaRocks. 
                Note that version; $VERSION, will be appended to this
                path, so "/P c:\luarocks\" will install in 
                "c:\luarocks\$VERSION\"
+               Default is %PROGRAMFILES%\LuaRocks
 
 Configuring the destinations:
 /TREE [dir]    Root of the local tree of installed rocks.
-               Default is same place of installation
+               Default is %PROGRAMDATA%\LuaRocks
 /SCRIPTS [dir] Where to install commandline scripts installed by
-               rocks. Default is TREE/bin.
+               rocks. Default is {TREE}/bin.
 
 Configuring the Lua interpreter:
 /LV [version]  Lua version to use; either 5.1 or 5.2.
@@ -148,7 +150,7 @@ Compiler configuration:
 
 Other options:
 /CONFIG [dir]  Location where the config file should be installed.
-               Default is same place of installation
+               Default is %PROGRAMDATA%\LuaRocks
 /FORCECONFIG   Use a single config location. Do not use the
                LUAROCKS_CONFIG variable or the user's home directory.
                Useful to avoid conflicts when LuaRocks
@@ -161,6 +163,11 @@ Other options:
                switch to prevent elevation, but make sure the
                destination paths are all accessible for the current
                user.
+/Q             Do not prompt for confirmation of settings
+
+Example:
+To create a self contained install use (assuming Lua is in your PATH):
+INSTALL /P c:\LuaRocks /TREE c:\LuaRocks /CONFIG c:\LuaRocks
 
 ]])
 end
@@ -176,7 +183,6 @@ local function parse_options(args)
 			os.exit(0)
 		elseif name == "/P" then
 			vars.PREFIX = option.value
-			P_SET = true
 		elseif name == "/CONFIG" then
 			vars.SYSCONFDIR = option.value
 		elseif name == "/TREE" then
@@ -205,6 +211,8 @@ local function parse_options(args)
 			REGISTRY = true
 		elseif name == "/NOADMIN" then
 			NOADMIN = true
+		elseif name == "/Q" then
+			PROMPT = false
 		else
 			die("Unrecognized option: " .. name)
 		end
@@ -213,9 +221,6 @@ end
 
 -- check for combination/required flags
 local function check_flags()
-	if not P_SET then
-		die("Missing required parameter /P")
-	end
 	if INSTALL_LUA then
 		if vars.LUA_INCDIR or vars.LUA_BINDIR or vars.LUA_LIBDIR or vars.LUA_PREFIX then
 			die("Cannot combine option /L with any of /LUA /BIN /LIB /INC")
@@ -531,8 +536,6 @@ else
 	print("Admin priviledges available for installing")
 end
 
-vars.SYSCONFDIR = vars.SYSCONFDIR or vars.PREFIX
-vars.ROCKS_TREE = vars.ROCKS_TREE or vars.PREFIX
 vars.FULL_PREFIX = S"$PREFIX\\$VERSION"
 vars.BINDIR = vars.FULL_PREFIX
 vars.LIBDIR = vars.FULL_PREFIX
@@ -563,14 +566,18 @@ print(S[[
 Will configure LuaRocks with the following paths:
 LuaRocks       : $FULL_PREFIX
 Lua interpreter: $LUA_BINDIR\$LUA_INTERPRETER
-Lua binaries   : $LUA_BINDIR
-Lua libraries  : $LUA_LIBDIR
-Lua includes   : $LUA_INCDIR
+    binaries   : $LUA_BINDIR
+    libraries  : $LUA_LIBDIR
+    includes   : $LUA_INCDIR
 Binaries will be linked against: $LUA_LIBNAME with runtime $LUA_RUNTIME
 System architecture detected as: $UNAME_M
 
 ]])
 
+if PROMPT then
+	print("Press <ENTER> to start installing, or press <CTRL>+<C> to abort. Use install /? for installation options.")
+	io.read()
+end
 
 -- ***********************************************************
 -- Install LuaRocks files
@@ -770,7 +777,7 @@ if REGISTRY then
 	print()
 	print([[Loading registry information for ".rockspec" files]])
 	exec( S[[lua5.1\bin\lua5.1.exe "$FULL_PREFIX\LuaRocks.reg.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
-	exec( S[["$FULL_PREFIX\\LuaRocks.reg"]] )
+	exec( S[[regedit /S "$FULL_PREFIX\\LuaRocks.reg"]] )
 end
 
 -- ***********************************************************
