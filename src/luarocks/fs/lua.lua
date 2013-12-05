@@ -106,31 +106,36 @@ end
 
 --- Run the given command, quoting its arguments, silencing its output.
 -- The command is executed in the current directory in the dir stack.
+-- Silencing is omitted if 'verbose' mode is enabled.
 -- @param command string: The command to be executed. No quoting/escaping
 -- is applied.
--- @param ... Strings containing additional arguments, which are quoted.
+-- @param ... Strings containing additional arguments, which will be quoted.
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
 function execute_quiet(command, ...)
    assert(type(command) == "string")
-   return fs.execute_string(fs.quiet(quote_args(command, ...)))
+   if cfg.verbose then -- omit silencing output
+      return fs.execute_string(quote_args(command, ...))
+   else
+      return fs.execute_string(fs.quiet(quote_args(command, ...)))
+   end
 end
 
 --- Check the MD5 checksum for a file.
 -- @param file string: The file to be checked.
 -- @param md5sum string: The string with the expected MD5 checksum.
--- @return boolean: true if the MD5 checksum for 'file' equals 'md5sum', false if not
+-- @return boolean: true if the MD5 checksum for 'file' equals 'md5sum', false + msg if not
 -- or if it could not perform the check for any reason.
 function check_md5(file, md5sum)
    file = dir.normalize(file)
-   local computed = fs.get_md5(file)
+   local computed, msg = fs.get_md5(file)
    if not computed then
-      return false
+      return false, msg
    end
    if computed:match("^"..md5sum) then
       return true
    else
-      return false
+      return false, "Mismatch MD5 hash for file "..file
    end
 end
 
@@ -146,7 +151,6 @@ if lfs_ok then
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
 function execute_string(cmd)
-   if cfg.verbose then print("Executing: "..cmd) end
    local code = os.execute(cmd)
    return (code == 0 or code == true)
 end
@@ -644,14 +648,15 @@ if md5_ok then
 
 --- Get the MD5 checksum for a file.
 -- @param file string: The file to be computed.
--- @return string: The MD5 checksum
+-- @return string: The MD5 checksum or nil + error
 function get_md5(file)
    file = fs.absolute_name(file)
    local file = io.open(file, "rb")
-   if not file then return false end
+   if not file then return nil, "Failed to compute MD5 hash for file "..file end
    local computed = md5.sumhexa(file:read("*a"))
    file:close()
-   return computed
+   if computed then return computed end
+   return nil, "Failed to compute MD5 hash for file "..file
 end
 
 end

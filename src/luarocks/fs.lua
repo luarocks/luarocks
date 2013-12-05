@@ -11,6 +11,32 @@ module("luarocks.fs", package.seeall)
 
 local cfg = require("luarocks.cfg")
 
+local pack = table.pack or function(...) return { n = select("#", ...), ... } end
+local unpack = table.unpack or unpack
+
+if cfg.verbose then -- patch io.popen and os.execute to display commands in verbose mode
+  old_popen = io.popen
+  io.popen = function(one, two)
+    if two == nil then
+      print("\nio.popen: ", one)
+    else
+      print("\nio.popen: ", one, "Mode:", two)
+    end
+    return old_popen(one, two)
+  end
+  
+  old_exec = os.execute
+  os.execute = function(cmd)
+    print("\nos.execute: ", cmd)
+    local code = pack(old_exec(cmd))
+    print("Results: "..tostring(code.n))
+    for i = 1,code.n do
+      print("  "..tostring(i).." ("..type(code[i]).."): "..tostring(code[i]))
+    end
+    return unpack(code, 1, code.n)    
+  end
+end
+
 local function load_fns(fs_table)
    for name, fn in pairs(fs_table) do
       if not _M[name] then
