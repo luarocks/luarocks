@@ -184,7 +184,7 @@ local function type_check_item(name, item, expected, context)
       end
       if expected ~= "string" then
          if not item:match("^"..expected.."$") then
-            return nil, "Type mismatch on field "..context..name..": invalid value "..item
+            return nil, "Type mismatch on field "..context..name..": invalid value "..item.." does not match '"..expected.."'"
          end
       end
    elseif expected_type == "table" then
