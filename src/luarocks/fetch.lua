@@ -233,7 +233,7 @@ function load_rockspec(filename, location)
       name = "rockspec"
    else
       name = basename:match("(.*)%.rockspec")
-      if not name and not basename == "rockspec" then
+      if not name then
          return nil, "Filename '"..filename.."' does not look like a rockspec."
       end
    end
