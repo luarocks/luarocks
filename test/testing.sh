@@ -211,7 +211,7 @@ test_build_command() { $luarocks build stdlib; }
 test_build_install_bin() { $luarocks build luarepl; }
 fail_build_nohttps() { $luarocks install luasocket && $luarocks download --rockspec validate-args ${version_validate_args} && $luarocks build ./validate-args-${version_validate_args}-1.rockspec && rm ./validate-args-${version_validate_args}-1.rockspec; }
 test_build_https() { $luarocks download --rockspec validate-args ${version_validate_args} && $luarocks install $luasec && $luarocks build ./validate-args-${version_validate_args}-1.rockspec && rm ./validate-args-${version_validate_args}-1.rockspec; }
-test_build_supported_platforms() { $luarocks build xctrl; }
+test_build_supported_platforms() { $luarocks build lpty; }
 
 test_build_deps_partial_match() { $luarocks build yaml; }
 test_build_show_downloads() { export LUAROCKS_CONFIG="$testing_dir/testing_config_show_downloads.lua" && $luarocks build alien; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
