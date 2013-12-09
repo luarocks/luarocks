@@ -270,7 +270,7 @@ test_admin_add_sftp() { if [ "$travis" ]; then return; fi; export LUAROCKS_CONFI
 fail_admin_add_missing() { $luarocks_admin --server=testing add; }
 fail_admin_invalidserver() { $luarocks_admin --server=invalid add ./luasocket-${verrev_luasocket}.src.rock; }
 fail_admin_invalidrock() { $luarocks_admin --server=testing add invalid; }
-test_admin_refresh_cache() { $luarocks_admin --server=testing refresh_cache; }
+test_admin_refresh_cache() { if [ "$travis" ]; then return; fi; $luarocks_admin --server=testing refresh_cache; }
 test_admin_remove() { if [ "$travis" ]; then return; fi; $luarocks_admin --server=testing remove ./luasocket-${verrev_luasocket}.src.rock; }
 fail_admin_remove_missing() { $luarocks_admin --server=testing remove; }
 
