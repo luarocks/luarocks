@@ -118,10 +118,11 @@ then
    fi
    popd
    luadir=/tmp/lua
+   platform="linux-x86_64"
 else
    luadir="/Programs/Lua/Current"
+   platform="linux-x86"
 fi
-platform="linux-x86"
 lua="$luadir/bin/lua"
 
 version_luasocket=3.0rc1
