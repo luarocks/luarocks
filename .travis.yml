@@ -1,0 +1,3 @@
+language: c
+compiler: gcc
+script: cd test && ./testing.sh --travis
