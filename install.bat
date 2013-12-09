@@ -86,7 +86,7 @@ end
 
 -- does the current user have admin priviledges ( = elevated)
 local function permission()
-	return exec("net session >nul 2>&1") -- fails if not admin
+	return exec("net session >NUL 2>&1") -- fails if not admin
 end
 
 -- rename file (full path) to backup (name only), appending number if required
@@ -651,23 +651,26 @@ ENDLOCAL
 	f:close()
 	print(S"Created LuaRocks command: $BINDIR\\"..c..".bat")
 end
--- configure 'scripts' directory
-if vars.SCRIPTS_DIR then
-	mkdir(vars.SCRIPTS_DIR)
-	if not USE_MINGW then
-		-- definitly not for MinGW because of conflicting runtimes
-		-- but is it ok to do it for others???
-		exec(S[[COPY lua5.1\bin\*.dll "$SCRIPTS_DIR" >NUL]])
-	end
-else
-	if not USE_MINGW then
-	mkdir(S[[$ROCKS_TREE\bin]])
-		-- definitly not for MinGW because of conflicting runtimes
-		-- but is it ok to do it for others???
-		exec(S[[COPY lua5.1\bin\*.dll "$ROCKS_TREE"\bin >NUL]])
-	end
-end
 
+-- part below was commented out as its purpose was unclear
+-- see https://github.com/keplerproject/luarocks/pull/197#issuecomment-30176548
+
+-- configure 'scripts' directory
+-- if vars.SCRIPTS_DIR then
+-- 	mkdir(vars.SCRIPTS_DIR)
+-- 	if not USE_MINGW then
+-- 		-- definitly not for MinGW because of conflicting runtimes
+-- 		-- but is it ok to do it for others???
+-- 		exec(S[[COPY lua5.1\bin\*.dll "$SCRIPTS_DIR" >NUL]])
+-- 	end
+-- else
+-- 	if not USE_MINGW then
+-- 	mkdir(S[[$ROCKS_TREE\bin]])
+-- 		-- definitly not for MinGW because of conflicting runtimes
+-- 		-- but is it ok to do it for others???
+-- 		exec(S[[COPY lua5.1\bin\*.dll "$ROCKS_TREE"\bin >NUL]])
+-- 	end
+-- end
 
 -- ***********************************************************
 -- Configure LuaRocks
@@ -763,7 +766,8 @@ else
 	print(S[[System rocktree exists     : "$ROCKS_TREE"]])
 end
 
-vars.LOCAL_TREE = os.getenv("APPDATA")..[[\LuaRocks]]
+vars.APPDATA = os.getenv("APPDATA")
+vars.LOCAL_TREE = vars.APPDATA..[[\LuaRocks]]
 if not exists(vars.LOCAL_TREE) then
 	mkdir(vars.LOCAL_TREE)
 	print(S[[Created local user rocktree: "$LOCAL_TREE"]])
@@ -784,9 +788,9 @@ end
 -- Cleanup
 -- ***********************************************************
 -- remove regsitry related files, no longer needed
-exec( S[[del "$FULL_PREFIX\LuaRocks.reg.*" > nul]] )
+exec( S[[del "$FULL_PREFIX\LuaRocks.reg.*" >NUL]] )
 -- remove pe-parser module
-exec( S[[del "$FULL_PREFIX\pe-parser.lua" > nul]] )
+exec( S[[del "$FULL_PREFIX\pe-parser.lua" >NUL]] )
 
 -- ***********************************************************
 -- Exit handlers 
@@ -811,6 +815,9 @@ System rocktree
   PATH     :   $ROCKS_TREE\bin
   LUA_PATH :   $ROCKS_TREE\share\lua\$LUA_VERSION\?.lua;$ROCKS_TREE\share\lua\$LUA_VERSION\?\init.lua
   LUA_CPATH:   $ROCKS_TREE\lib\lua\$LUA_VERSION\?.dll
+
+Note that the %APPDATA% element in the paths above is user specific and it MUST be replaced by its actual value.
+For the current user that value is: $APPDATA.
 
 ]])
 os.exit(0)
