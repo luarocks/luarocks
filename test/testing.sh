@@ -7,7 +7,7 @@
    exit 1
 }
 
-if [ -z "$@" ]
+if [ -z "$*" ]
 then
    ps aux | grep -q '[s]shd' || {
       echo "Run sudo /bin/sshd in order to perform all tests."
@@ -107,12 +107,15 @@ luaversion=5.2.3
 if [ "$travis" ]
 then
    pushd /tmp
-   mkdir -p lua
-   wget "http://www.lua.org/ftp/lua-$luaversion.tar.gz"
-   tar zxvpf "lua-$luaversion.tar.gz"
-   cd "lua-$luaversion"
-   make linux INSTALL_TOP=/tmp/lua
-   make install INSTALL_TOP=/tmp/lua
+   if [ ! -e "lua/bin/lua" ]
+   then
+      mkdir -p lua
+      wget "http://www.lua.org/ftp/lua-$luaversion.tar.gz"
+      tar zxvpf "lua-$luaversion.tar.gz"
+      cd "lua-$luaversion"
+      make linux INSTALL_TOP=/tmp/lua
+      make install INSTALL_TOP=/tmp/lua
+   fi
    popd
    luadir=/tmp/lua
 else
@@ -129,6 +132,10 @@ version_luacov=0.3
 version_lxsh=0.8.6
 version_validate_args=1.5.4
 verrev_lxsh=${version_lxsh}-2
+
+# will change to luasec=luasec once LuaSec for Lua 5.2 is released
+luasec="http://luarocks.org/repositories/rocks-scm/luasec-scm-1.rockspec"
+#luasec=luasec
 
 cd ..
 ./configure --with-lua="$luadir"
@@ -203,7 +210,7 @@ test_build_diffversion() { $luarocks build luacov ${version_luacov}; }
 test_build_command() { $luarocks build stdlib; }
 test_build_install_bin() { $luarocks build luarepl; }
 fail_build_nohttps() { $luarocks install luasocket && $luarocks download --rockspec validate-args ${version_validate_args} && $luarocks build ./validate-args-${version_validate_args}-1.rockspec && rm ./validate-args-${version_validate_args}-1.rockspec; }
-test_build_https() { $luarocks download --rockspec validate-args ${version_validate_args} && $luarocks install luasec && $luarocks build ./validate-args-${version_validate_args}-1.rockspec && rm ./validate-args-${version_validate_args}-1.rockspec; }
+test_build_https() { $luarocks download --rockspec validate-args ${version_validate_args} && $luarocks install $luasec && $luarocks build ./validate-args-${version_validate_args}-1.rockspec && rm ./validate-args-${version_validate_args}-1.rockspec; }
 test_build_supported_platforms() { $luarocks build xctrl; }
 
 test_build_deps_partial_match() { $luarocks build yaml; }
@@ -231,7 +238,7 @@ test_new_version() { $luarocks download --rockspec luacov ${version_luacov} &&  
 test_new_version_url() { $luarocks download --rockspec abelhas 1.0 && $luarocks new_version ./abelhas-1.0-1.rockspec 1.1 https://github.com/downloads/ittner/abelhas/abelhas-1.1.tar.gz && rm ./abelhas-*; }
 
 test_pack() { $luarocks list && $luarocks pack luacov && rm ./luacov-*.rock; }
-test_pack_src() { $luarocks install luasec && $luarocks download --rockspec luasocket && $luarocks pack ./luasocket-${verrev_luasocket}.rockspec && rm ./luasocket-${version_luasocket}-*.rock; }
+test_pack_src() { $luarocks install $luasec && $luarocks download --rockspec luasocket && $luarocks pack ./luasocket-${verrev_luasocket}.rockspec && rm ./luasocket-${version_luasocket}-*.rock; }
 
 test_path() { $luarocks path --bin; }
 
@@ -246,7 +253,7 @@ test_search_missing() { $luarocks search missing_rock; }
 
 test_show() { $luarocks show luacov; }
 test_show_modules() { $luarocks show --modules luacov; }
-test_show_depends() { $luarocks install luasec && $luarocks show luasec; }
+test_show_depends() { $luarocks install $luasec && $luarocks show luasec; }
 test_show_oldversion() { $luarocks install luacov ${version_luacov} && $luarocks show luacov ${version_luacov}; }
 
 test_unpack_download() { rm -rf ./luasocket-${verrev_luasocket} && $luarocks unpack luasocket && rm -rf ./luasocket-${verrev_luasocket}; }
