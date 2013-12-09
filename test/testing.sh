@@ -15,6 +15,12 @@ then
    }
 fi
 
+if [ "$1" == "--travis" ]
+then
+   travis=true
+   shift
+fi
+
 testing_dir="$PWD"
 
 testing_tree="$testing_dir/testing"
@@ -97,15 +103,31 @@ export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"
 export LUA_PATH=
 export LUA_CPATH=
 
-luadir="/Programs/Lua/Current"
+luaversion=5.2.3
+if [ "$travis" ]
+then
+   pushd /tmp
+   mkdir -p lua
+   wget "http://www.lua.org/ftp/lua-$luaversion.tar.gz"
+   tar zxvpf "lua-$luaversion.tar.gz"
+   cd "lua-$luaversion"
+   make linux INSTALL_TOP=/tmp/lua
+   make install INSTALL_TOP=/tmp/lua
+   popd
+   luadir=/tmp/lua
+else
+   luadir="/Programs/Lua/Current"
+fi
 platform="linux-x86"
 lua="$luadir/bin/lua"
 
+version_luasocket=3.0rc1
+verrev_luasocket=${version_luasocket}-1
+srcdir_luasocket=luasocket-3.0-rc1
+
 version_luacov=0.3
-version_luasocket=2.0.2
 version_lxsh=0.8.6
 version_validate_args=1.5.4
-verrev_luasocket=${version_luasocket}-5
 verrev_lxsh=${version_lxsh}-2
 
 cd ..
@@ -200,14 +222,16 @@ test_lint_ok() { $luarocks download --rockspec validate-args ${version_validate_
 test_list() { $luarocks list; }
 test_list_porcelain() { $luarocks list --porcelain; }
 
-test_make() { rm -rf ./luasocket-${verrev_luasocket} && $luarocks download --src luasocket && $luarocks unpack ./luasocket-${verrev_luasocket}.src.rock && cd luasocket-${verrev_luasocket}/luasocket-${version_luasocket}  && $luarocks make && cd ../.. && rm -rf ./luasocket-${verrev_luasocket}; }
+test_make_with_rockspec() { rm -rf ./luasocket-${verrev_luasocket} && $luarocks download --src luasocket && $luarocks unpack ./luasocket-${verrev_luasocket}.src.rock && cd luasocket-${verrev_luasocket}/${srcdir_luasocket}  && $luarocks make luasocket-${verrev_luasocket}.rockspec && cd ../.. && rm -rf ./luasocket-${verrev_luasocket}; }
+test_make_default_rockspec() { rm -rf ./lxsh-${verrev_lxsh} &&  $luarocks download --src lxsh ${verrev_lxsh} &&  $luarocks unpack ./lxsh-${verrev_lxsh}.src.rock &&  cd lxsh-${verrev_lxsh}/lxsh-${version_lxsh}-1  &&  $luarocks make && cd ../.. && rm -rf ./lxsh-${verrev_lxsh}; }
 test_make_pack_binary_rock() { rm -rf ./lxsh-${verrev_lxsh} &&  $luarocks download --src lxsh ${verrev_lxsh} &&  $luarocks unpack ./lxsh-${verrev_lxsh}.src.rock &&  cd lxsh-${verrev_lxsh}/lxsh-${version_lxsh}-1  &&  $luarocks make --deps-mode=none --pack-binary-rock &&  [ -e ./lxsh-${verrev_lxsh}.all.rock ] &&  cd ../.. && rm -rf ./lxsh-${verrev_lxsh}; }
+fail_make_which_rockspec() { rm -rf ./luasocket-${verrev_luasocket} && $luarocks download --src luasocket && $luarocks unpack ./luasocket-${verrev_luasocket}.src.rock && cd luasocket-${verrev_luasocket}/${srcdir_luasocket}  && $luarocks make && cd ../.. && rm -rf ./luasocket-${verrev_luasocket}; }
 
 test_new_version() { $luarocks download --rockspec luacov ${version_luacov} &&  $luarocks new_version ./luacov-${version_luacov}-1.rockspec 0.2 && rm ./luacov-0.*; }
 test_new_version_url() { $luarocks download --rockspec abelhas 1.0 && $luarocks new_version ./abelhas-1.0-1.rockspec 1.1 https://github.com/downloads/ittner/abelhas/abelhas-1.1.tar.gz && rm ./abelhas-*; }
 
 test_pack() { $luarocks list && $luarocks pack luacov && rm ./luacov-*.rock; }
-test_pack_src() { $luarocks download --rockspec luasocket && $luarocks pack ./luasocket-${verrev_luasocket}.rockspec && rm ./luasocket-${version_luasocket}-*.rock; }
+test_pack_src() { $luarocks install luasec && $luarocks download --rockspec luasocket && $luarocks pack ./luasocket-${verrev_luasocket}.rockspec && rm ./luasocket-${version_luasocket}-*.rock; }
 
 test_path() { $luarocks path --bin; }
 
@@ -234,7 +258,7 @@ test_admin_help() { $luarocks_admin help; }
 
 test_admin_make_manifest() { $luarocks_admin make_manifest; }
 test_admin_add_rsync() { $luarocks_admin --server=testing add ./luasocket-${verrev_luasocket}.src.rock; }
-test_admin_add_sftp() { export LUAROCKS_CONFIG="$testing_dir/testing_config_sftp.lua" && $luarocks_admin --server=testing add ./luasocket-${verrev_luasocket}.src.rock; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
+test_admin_add_sftp() { if [ "$travis" ]; then return; fi; export LUAROCKS_CONFIG="$testing_dir/testing_config_sftp.lua" && $luarocks_admin --server=testing add ./luasocket-${verrev_luasocket}.src.rock; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
 fail_admin_add_missing() { $luarocks_admin --server=testing add; }
 fail_admin_invalidserver() { $luarocks_admin --server=invalid add ./luasocket-${verrev_luasocket}.src.rock; }
 fail_admin_invalidrock() { $luarocks_admin --server=testing add invalid; }
