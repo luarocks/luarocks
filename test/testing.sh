@@ -213,7 +213,7 @@ fail_build_nohttps() { $luarocks install luasocket && $luarocks download --rocks
 test_build_https() { $luarocks download --rockspec validate-args ${version_validate_args} && $luarocks install $luasec && $luarocks build ./validate-args-${version_validate_args}-1.rockspec && rm ./validate-args-${version_validate_args}-1.rockspec; }
 test_build_supported_platforms() { $luarocks build lpty; }
 
-test_build_deps_partial_match() { $luarocks build yaml; }
+test_build_deps_partial_match() { if [ "$travis" ]; then return; fi; $luarocks build yaml; }
 test_build_show_downloads() { export LUAROCKS_CONFIG="$testing_dir/testing_config_show_downloads.lua" && $luarocks build alien; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
 
 test_download_all() { $luarocks download --all validate-args && rm validate-args-*; }
