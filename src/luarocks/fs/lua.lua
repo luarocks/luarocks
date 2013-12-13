@@ -652,7 +652,7 @@ if md5_ok then
 function get_md5(file)
    file = fs.absolute_name(file)
    local file = io.open(file, "rb")
-   if not file then return nil, "Failed to compute MD5 hash for file "..file end
+   if not file then return nil, "Failed to open file for reading: "..file end
    local computed = md5.sumhexa(file:read("*a"))
    file:close()
    if computed then return computed end

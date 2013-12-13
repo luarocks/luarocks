@@ -73,7 +73,11 @@ function make_rock_manifest(name, version)
          walk = next
       end
       if fs.is_file(full_path) then
-         last[last_name] = fs.get_md5(full_path)
+         local sum, err = fs.get_md5(full_path)
+         if not sum then
+            return nil, "Failed producing checksum: "..tostring(err)
+         end
+         last[last_name] = sum
       end
    end
    local rock_manifest = { rock_manifest=tree }
