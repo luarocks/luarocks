@@ -38,12 +38,16 @@ rm -rf "$testing_tree"
 rm -rf "$testing_sys_tree"
 rm -rf "$testing_tree_copy"
 rm -rf "$testing_sys_tree_copy"
-rm -rf "$testing_cache"
-rm -rf "$testing_server"
 rm -rf "$testing_dir/testing_config.lua"
 rm -rf "$testing_dir/testing_config_show_downloads.lua"
 rm -rf "$testing_dir/testing_config_sftp.lua"
 rm -rf "$testing_dir/luacov.config"
+
+if [ "$1" == "--clean" ]
+then
+   rm -rf "$testing_cache"
+   rm -rf "$testing_server"
+fi
 
 mkdir -p "$testing_cache"
 
@@ -117,11 +121,13 @@ then
    if [ ! -e "lua/bin/lua" ]
    then
       mkdir -p lua
-      wget "http://www.lua.org/ftp/lua-$luaversion.tar.gz"
-      tar zxvpf "lua-$luaversion.tar.gz"
+      echo "Downloading lua $luaversion..."
+      wget "http://www.lua.org/ftp/lua-$luaversion.tar.gz" &> /dev/null
+      tar zxpf "lua-$luaversion.tar.gz"
       cd "lua-$luaversion"
-      make linux INSTALL_TOP=/tmp/lua
-      make install INSTALL_TOP=/tmp/lua
+      echo "Building lua $luaversion..."
+      make linux INSTALL_TOP=/tmp/lua &> /dev/null
+      make install INSTALL_TOP=/tmp/lua &> /dev/null
    fi
    popd
    luadir=/tmp/lua
@@ -188,38 +194,40 @@ luarocks_admin_nocov="run_lua --nocov luarocks-admin"
 
 ###################################################
 
-if [ ! -d "$testing_server" ]
-then
-   mkdir "$testing_server"
-   (
-      cd "$testing_server"
-      luarocks_repo="http://luarocks.org/repositories/rocks"
-      luarocks_scm_repo="http://luarocks.org/repositories/rocks-scm"
-      wget "$luarocks_repo/luacov-${verrev_luacov}.src.rock"
-      wget "$luarocks_repo/luacov-${verrev_luacov}.rockspec"
-      wget "$luarocks_repo/luadoc-3.0.1-1.src.rock"
-      wget "$luarocks_repo/lualogging-1.3.0-1.src.rock"
-      wget "$luarocks_repo/luasocket-${verrev_luasocket}.src.rock"
-      wget "$luarocks_repo/luasocket-${verrev_luasocket}.rockspec"
-      wget "$luarocks_repo/luafilesystem-1.6.2-1.src.rock"
-      wget "$luarocks_repo/stdlib-35-1.src.rock"
-      wget "$luarocks_repo/luarepl-0.4-1.src.rock"
-      wget "$luarocks_repo/validate-args-1.5.4-1.rockspec"
-      wget "$luarocks_scm_repo/luasec-scm-1.rockspec"
-      wget "$luarocks_repo/luabitop-1.0.2-1.rockspec"
-      wget "$luarocks_repo/lpty-1.0.1-1.src.rock"
-      wget "$luarocks_repo/cprint-${verrev_cprint}.src.rock"
-      wget "$luarocks_repo/cprint-${verrev_cprint}.rockspec"
-      wget "$luarocks_repo/wsapi-1.6-1.src.rock"
-      wget "$luarocks_repo/lxsh-${verrev_lxsh}.src.rock"
-      wget "$luarocks_repo/abelhas-1.0-1.rockspec"
-      wget "$luarocks_repo/lzlib-0.4.work3-1.src.rock"
-      wget "$luarocks_repo/lpeg-0.12-1.src.rock"
-      wget "$luarocks_repo/luaposix-31-1.src.rock"
-      wget "$luarocks_repo/md5-1.2-1.src.rock"
-   )
-   $luarocks_admin_nocov make_manifest "$testing_server"
-fi
+mkdir -p "$testing_server"
+(
+   cd "$testing_server"
+   luarocks_repo="http://luarocks.org/repositories/rocks"
+   luarocks_scm_repo="http://luarocks.org/repositories/rocks-scm"
+   get() { [ -e `basename "$1"` ] || wget -c "$1"; }
+   get "$luarocks_repo/luacov-${verrev_luacov}.src.rock"
+   get "$luarocks_repo/luacov-${verrev_luacov}.rockspec"
+   get "$luarocks_repo/luadoc-3.0.1-1.src.rock"
+   get "$luarocks_repo/lualogging-1.3.0-1.src.rock"
+   get "$luarocks_repo/luasocket-${verrev_luasocket}.src.rock"
+   get "$luarocks_repo/luasocket-${verrev_luasocket}.rockspec"
+   get "$luarocks_repo/luafilesystem-1.6.2-1.src.rock"
+   get "$luarocks_repo/stdlib-35-1.src.rock"
+   get "$luarocks_repo/luarepl-0.4-1.src.rock"
+   get "$luarocks_repo/validate-args-1.5.4-1.rockspec"
+   get "$luarocks_scm_repo/luasec-scm-1.rockspec"
+   get "$luarocks_repo/luabitop-1.0.2-1.rockspec"
+   get "$luarocks_repo/lpty-1.0.1-1.src.rock"
+   get "$luarocks_repo/cprint-${verrev_cprint}.src.rock"
+   get "$luarocks_repo/cprint-${verrev_cprint}.rockspec"
+   get "$luarocks_repo/wsapi-1.6-1.src.rock"
+   get "$luarocks_repo/lxsh-${verrev_lxsh}.src.rock"
+   get "$luarocks_repo/abelhas-1.0-1.rockspec"
+   get "$luarocks_repo/lzlib-0.4.work3-1.src.rock"
+   get "$luarocks_repo/lpeg-0.12-1.src.rock"
+   get "$luarocks_repo/luaposix-31-1.src.rock"
+   get "$luarocks_repo/md5-1.2-1.src.rock"
+   get "$luarocks_repo/lrandom-20120430.51-1.src.rock"
+   get "$luarocks_repo/lrandom-20120430.52-1.src.rock"
+   get "$luarocks_repo/lrandom-20120430.51-1.rockspec"
+   get "$luarocks_repo/lrandom-20120430.52-1.rockspec"
+)
+$luarocks_admin_nocov make_manifest "$testing_server"
 
 ###################################################
 
@@ -234,9 +242,13 @@ build_environment() {
    rm -rf "$testing_sys_tree_copy"
    mkdir -p "$testing_tree"
    mkdir -p "$testing_sys_tree"
+   $luarocks_admin_nocov make_manifest "$testing_cache"
    for package in "$@"
    do
-      $luarocks_nocov build --tree="$testing_sys_tree" $package
+      $luarocks_nocov install --only-server="$testing_cache" --tree="$testing_sys_tree" $package || {
+         $luarocks_nocov build --tree="$testing_sys_tree" $package
+         $luarocks_nocov pack --tree="$testing_sys_tree" $package; mv $package-*.rock "$testing_cache"
+      }
    done
    eval `$luarocks_noecho_nocov path --bin`
    cp -a "$testing_tree" "$testing_tree_copy"
@@ -410,7 +422,6 @@ run_tests() {
       else echo "FAIL: Unexpected failure."; exit 1
       fi
    done
-
    grep "^fail_$1.*(" < $testing_dir/testing.sh | cut -d'(' -f1 | while read test
    do
       echo "-------------------------------------------"
@@ -425,11 +436,17 @@ run_tests() {
 }
 
 run_with_minimal_environment() {
+   echo "==========================================="
+   echo "Running with minimal environment"
+   echo "==========================================="
    build_environment luacov
    run_tests $1
 }
 
 run_with_full_environment() {
+   echo "==========================================="
+   echo "Running with full environment"
+   echo "==========================================="
    build_environment luacov luafilesystem luasocket luabitop luaposix md5 lzlib
    run_tests $1
 }
@@ -444,4 +461,10 @@ run_all_tests $1
 
 $testing_sys_tree/bin/luacov -c $testing_dir/luacov.config src/luarocks src/bin
 
-cat $testing_dir/luacov.report.out
+if [ "$travis" ]
+then
+   grep "Summary" -B1 -A1000 $testing_dir/luacov.report.out
+else
+   cat "$testing_dir/luacov.report.out"
+fi
+
