@@ -98,9 +98,22 @@ function run_command(...)
       if flags["tree"] == true or flags["tree"] == "" then
          die("Argument error: use --tree=<path>")
       end
-      local fs = require("luarocks.fs")
-      local root_dir = fs.absolute_name(flags["tree"])
-      path.use_tree(root_dir)
+      local named = false
+      for _, tree in ipairs(cfg.rocks_trees) do
+         if type(tree) == "table" and flags["tree"] == tree.name then
+            if not tree.root then
+               die("Configuration error: tree '"..tree.name.."' has no 'root' field.")
+            end
+            path.use_tree(dir.normalize(tree.root))
+            named = true
+            break
+         end
+      end
+      if not named then
+         local fs = require("luarocks.fs")
+         local root_dir = fs.absolute_name(flags["tree"])
+         path.use_tree(root_dir)
+      end
    elseif flags["local"] then
       path.use_tree(cfg.home_tree)
    else

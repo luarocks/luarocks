@@ -59,7 +59,7 @@ mkdir -p "$testing_cache"
 cat <<EOF > $testing_dir/testing_config.lua
 rocks_trees = {
    "$testing_tree",
-   "$testing_sys_tree",
+   { name = "system", root = "$testing_sys_tree" },
 }
 rocks_servers = {
    "$testing_server"
@@ -398,8 +398,8 @@ test_admin_remove() { if [ "$travis" ]; then return; fi; $luarocks_admin --serve
 fail_admin_remove_missing() { $luarocks_admin --server=testing remove; }
 
 fail_deps_mode_invalid_arg() { $luarocks remove luacov --deps-mode; }
-test_deps_mode_one() { $luarocks build --tree="$testing_sys_tree" lpeg && $luarocks list && $luarocks build --deps-mode=one --tree="$testing_tree" lxsh && [ `$luarocks_noecho list --tree="$testing_tree" --porcelain lpeg | wc -l` = 1 ]; }
-test_deps_mode_order() { $luarocks build --tree="$testing_sys_tree" lpeg && $luarocks build --deps-mode=order --tree="$testing_tree" lxsh && [ `$luarocks_noecho list --tree="$testing_tree" --porcelain lpeg | wc -l` = 0 ]; }
+test_deps_mode_one() { $luarocks build --tree="system" lpeg && $luarocks list && $luarocks build --deps-mode=one --tree="$testing_tree" lxsh && [ `$luarocks_noecho list --tree="$testing_tree" --porcelain lpeg | wc -l` = 1 ]; }
+test_deps_mode_order() { $luarocks build --tree="system" lpeg && $luarocks build --deps-mode=order --tree="$testing_tree" lxsh && [ `$luarocks_noecho list --tree="$testing_tree" --porcelain lpeg | wc -l` = 0 ]; }
 test_deps_mode_order_sys() { $luarocks build --tree="$testing_tree" lpeg && $luarocks build --deps-mode=order --tree="$testing_sys_tree" lxsh && [ `$luarocks_noecho list --tree="$testing_sys_tree" --porcelain lpeg | wc -l` = 1 ]; }
 test_deps_mode_all_sys() { $luarocks build --tree="$testing_tree" lpeg && $luarocks build --deps-mode=all --tree="$testing_sys_tree" lxsh && [ `$luarocks_noecho list --tree="$testing_sys_tree" --porcelain lpeg | wc -l` = 0 ]; }
 test_deps_mode_none() { $luarocks build --tree="$testing_tree" --deps-mode=none lxsh; [ `$luarocks_noecho list --tree="$testing_tree" --porcelain lpeg | wc -l` = 0 ]; }
