@@ -330,7 +330,7 @@ fail_build_nohttps() { need_luasocket; $luarocks download --rockspec validate-ar
 test_build_https() { need_luasocket; $luarocks download --rockspec validate-args ${verrev_validate_args} && echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx && pwd && ls && $luarocks install $luasec && pwd && ls && $luarocks build ./validate-args-${verrev_validate_args}.rockspec && rm ./validate-args-${verrev_validate_args}.rockspec; }
 test_build_supported_platforms() { $luarocks build lpty; }
 
-test_build_deps_partial_match() { if [ "$travis" ]; then return; fi; $luarocks build yaml; }
+test_build_deps_partial_match() { $luarocks build lrandom; }
 test_build_show_downloads() { export LUAROCKS_CONFIG="$testing_dir/testing_config_show_downloads.lua" && $luarocks build alien; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
 
 test_download_all() { $luarocks download --all validate-args && rm validate-args-*; }
@@ -340,8 +340,12 @@ test_help() { $luarocks help; }
 
 test_install_binaryrock() { $luarocks build --pack-binary-rock cprint && $luarocks install ./cprint-${verrev_cprint}.${platform}.rock && rm ./cprint-${verrev_cprint}.${platform}.rock; }
 test_install_with_bin() { $luarocks install wsapi; }
+fail_install_notazipfile() { $luarocks install "$testing_dir/testfiles/not_a_zipfile-1.0-1.src.rock"; }
 
 test_lint_ok() { $luarocks download --rockspec validate-args ${verrev_validate_args} && $luarocks lint ./validate-args-${verrev_validate_args}.rockspec && rm ./validate-args-${verrev_validate_args}.rockspec; }
+fail_lint_type_mismatch_string() { $luarocks lint "$testing_dir/testfiles/type_mismatch_string-1.0-1.rockspec"; }
+fail_lint_type_mismatch_version() { $luarocks lint "$testing_dir/testfiles/type_mismatch_version-1.0-1.rockspec"; }
+fail_lint_type_mismatch_table() { $luarocks lint "$testing_dir/testfiles/type_mismatch_table-1.0-1.rockspec"; }
 
 test_list() { $luarocks list; }
 test_list_porcelain() { $luarocks list --porcelain; }
@@ -358,6 +362,9 @@ test_pack() { $luarocks list && $luarocks pack luacov && rm ./luacov-*.rock; }
 test_pack_src() { $luarocks install $luasec && $luarocks download --rockspec luasocket && $luarocks pack ./luasocket-${verrev_luasocket}.rockspec && rm ./luasocket-${version_luasocket}-*.rock; }
 
 test_path() { $luarocks path --bin; }
+test_path_lr_path() { $luarocks path --lr-path; }
+test_path_lr_cpath() { $luarocks path --lr-cpath; }
+test_path_lr_bin() { $luarocks path --lr-bin; }
 
 fail_purge_missing_tree() { $luarocks purge --tree="$testing_tree"; }
 test_purge() { $luarocks purge --tree="$testing_sys_tree"; }
