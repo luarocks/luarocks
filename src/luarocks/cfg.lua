@@ -325,6 +325,7 @@ if detected.windows then
       localappdata = os.getenv("USERPROFILE").."/Local Settings/Application Data"
    end
    defaults.local_cache = localappdata.."/LuaRocks/Cache"
+   defaults.web_browser = "start"
 end
 
 if detected.mingw32 then
@@ -386,6 +387,7 @@ if detected.unix then
    if not defaults.variables.CFLAGS:match("-fPIC") then
       defaults.variables.CFLAGS = defaults.variables.CFLAGS.." -fPIC"
    end
+   defaults.web_browser = "xdg-open"
 end
 
 if detected.cygwin then
@@ -419,6 +421,7 @@ if detected.macosx then
    end
    defaults.variables.CC = "export MACOSX_DEPLOYMENT_TARGET=10."..version.."; gcc"
    defaults.variables.LD = "export MACOSX_DEPLOYMENT_TARGET=10."..version.."; gcc"
+   defaults.web_browser = "open"
 end
 
 if detected.linux then
