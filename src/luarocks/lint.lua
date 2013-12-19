@@ -37,5 +37,17 @@ function run(...)
       return nil, "Failed loading rockspec: "..err
    end
 
-   return true
+   local ok = true
+   
+   -- This should have been done in the type checker, 
+   -- but it would break compatibility of other commands.
+   -- Making 'lint' alone be stricter shouldn't be a problem,
+   -- because extra-strict checks is what lint-type commands
+   -- are all about.
+   if not rs.description.license then
+      util.printerr("Rockspec has no license field.")
+      ok = false
+   end
+
+   return ok, ok or filename.." failed consistency checks."
 end
