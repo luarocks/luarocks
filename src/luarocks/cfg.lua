@@ -168,10 +168,10 @@ end
 
 if not next(rocks_trees) then
    if home_tree then
-      table.insert(rocks_trees, home_tree)
+      table.insert(rocks_trees, { name = "user", root = home_tree } )
    end
    if site_config.LUAROCKS_ROCKS_TREE then
-      table.insert(rocks_trees, site_config.LUAROCKS_ROCKS_TREE)
+      table.insert(rocks_trees, { name = "system", root = site_config.LUAROCKS_ROCKS_TREE } )
    end
 end
 

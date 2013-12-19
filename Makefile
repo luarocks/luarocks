@@ -166,9 +166,9 @@ write_sysconfig:
 	   echo 'rocks_trees = {' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	   if  [ ! -n "$(FORCE_CONFIG)" ] ;\
 	   then \
-	      echo '   home..[[/.luarocks]],' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
+	      echo '   { name = [[user]], root = home..[[/.luarocks]] },' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	   fi ;\
-	   echo '   [[$(ROCKS_TREE)]]' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
+	   echo '   { name = [[system]], root = [[$(ROCKS_TREE)]] }' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	   echo '}' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	fi
 
