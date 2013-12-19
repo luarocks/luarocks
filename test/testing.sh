@@ -158,8 +158,6 @@ version_validate_args=1.5.4
 verrev_validate_args=1.5.4-1
 verrev_lxsh=${version_lxsh}-2
 
-# will change to luasec=luasec once LuaSec for Lua 5.2 is released
-#luasec="http://luarocks.org/repositories/rocks-scm/luasec-scm-1.rockspec"
 luasec=luasec
 
 cd ..
@@ -388,13 +386,13 @@ test_unpack_binary() { rm -rf ./cprint-${verrev_cprint} && $luarocks build cprin
 test_admin_help() { $luarocks_admin help; }
 
 test_admin_make_manifest() { $luarocks_admin make_manifest; }
-test_admin_add_rsync() { if [ "$travis" ]; then return; fi; $luarocks_admin --server=testing add ./luasocket-${verrev_luasocket}.src.rock; }
+test_admin_add_rsync() { if [ "$travis" ]; then return; fi; $luarocks_admin --server=testing add "$testing_server/luasocket-${verrev_luasocket}.src.rock"; }
 test_admin_add_sftp() { if [ "$travis" ]; then return; fi; export LUAROCKS_CONFIG="$testing_dir/testing_config_sftp.lua" && $luarocks_admin --server=testing add ./luasocket-${verrev_luasocket}.src.rock; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
 fail_admin_add_missing() { $luarocks_admin --server=testing add; }
-fail_admin_invalidserver() { $luarocks_admin --server=invalid add ./luasocket-${verrev_luasocket}.src.rock; }
+fail_admin_invalidserver() { $luarocks_admin --server=invalid add "$testing_server/luasocket-${verrev_luasocket}.src.rock"; }
 fail_admin_invalidrock() { if [ "$travis" ]; then return 1; fi; $luarocks_admin --server=testing add invalid; }
 test_admin_refresh_cache() { if [ "$travis" ]; then return; fi; $luarocks_admin --server=testing refresh_cache; }
-test_admin_remove() { if [ "$travis" ]; then return; fi; $luarocks_admin --server=testing remove ./luasocket-${verrev_luasocket}.src.rock; }
+test_admin_remove() { if [ "$travis" ]; then return; fi; $luarocks_admin --server=testing remove luasocket-${verrev_luasocket}.src.rock; }
 fail_admin_remove_missing() { $luarocks_admin --server=testing remove; }
 
 fail_deps_mode_invalid_arg() { $luarocks remove luacov --deps-mode; }
