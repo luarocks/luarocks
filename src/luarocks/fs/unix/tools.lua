@@ -341,3 +341,7 @@ function get_permissions(filename)
    pipe:close()
    return ret
 end
+
+function browser(url)
+   return os.execute(cfg.web_browser..' '..url)
+end
