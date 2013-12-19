@@ -9,12 +9,7 @@ local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
---[[
-local search = require("luarocks.search")
-local cfg = require("luarocks.cfg")
-local deps = require("luarocks.deps")
-local manif = require("luarocks.manif")
-]]
+
 help_summary = "Shows documentation for an installed rock."
 
 help = [[
@@ -26,47 +21,6 @@ With these flags, return only the desired information:
 --home      Open the home page of project.
 
 For more information about a rock, see the 'show' command.
-]]
-
---[[
-local function keys_as_string(t, sep)
-    return table.concat(util.keys(t), sep or " ")
-end
-
-local function word_wrap(line) 
-   local width = tonumber(os.getenv("COLUMNS")) or 80
-   if width > 80 then width = 80 end
-   if #line > width then
-      local brk = width
-      while brk > 0 and line:sub(brk, brk) ~= " " do
-         brk = brk - 1
-      end
-      if brk > 0 then
-         return line:sub(1, brk-1) .. "\n" .. word_wrap(line:sub(brk+1))
-      end
-   end
-   return line
-end
-
-local function format_text(text)
-   text = text:gsub("^%s*",""):gsub("%s$", ""):gsub("\n[ \t]+","\n"):gsub("([^\n])\n([^\n])","%1 %2")
-   local paragraphs = util.split_string(text, "\n\n")
-   for n, line in ipairs(paragraphs) do
-      paragraphs[n] = word_wrap(line)
-   end
-   return (table.concat(paragraphs, "\n\n"):gsub("%s$", ""))
-end
-
-local function module_name(mod, filename, name, version, repo, manifest)
-   local base_dir
-   if filename:match("%.lua$") then
-      base_dir = path.deploy_lua_dir(repo)
-   else
-      base_dir = path.deploy_lib_dir(repo)
-   end
-   
-   return dir.path(base_dir, filename)
-end
 ]]
 
 --- Driver function for "doc" command.
