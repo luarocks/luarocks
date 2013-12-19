@@ -19,6 +19,7 @@ using a series of heuristics.
 With these flags, return only the desired information:
 
 --home      Open the home page of project.
+--list      List documentation files only.
 
 For more information about a rock, see the 'show' command.
 ]]
@@ -63,6 +64,7 @@ function run(...)
          break
       end
    end
+   docdir = dir.normalize(docdir):gsub("/+", "/")
    if not docdir then
       if descript.homepage then
          util.printout("Local documentation directory not found -- opening "..descript.homepage.." ...")
@@ -73,8 +75,28 @@ function run(...)
    end
 
    local files = fs.find(docdir)
-   local extensions = { "%.htm", "%.md", "%.txt",  "%.textile", "" }
+   local htmlpatt = "%.html?$"
+   local extensions = { htmlpatt, "%.md$", "%.txt$",  "%.textile$", "" }
    local basenames = { "index", "readme", "manual" }
+   
+   local porcelain = flags["porcelain"]
+   if #files > 0 then
+      util.title("Documentation files for "..name.." "..version, porcelain)
+      if porcelain then
+         for _, file in ipairs(files) do
+            util.printout(docdir.."/"..file)
+         end
+      else
+         util.printout(docdir.."/")
+         for _, file in ipairs(files) do
+            util.printout("\t"..file)
+         end
+      end
+   end
+   
+   if flags["list"] then
+      return true
+   end
    
    for _, extension in ipairs(extensions) do
       for _, basename in ipairs(basenames) do
@@ -87,8 +109,11 @@ function run(...)
          end
          if found then
             local pathname = dir.path(docdir, found)
+            util.printout()
             util.printout("Opening "..pathname.." ...")
-            if not fs.browser(pathname) then
+            util.printout()
+            local ok = fs.browser(pathname)
+            if not ok and not pathname:match(htmlpatt) then
                local fd = io.open(pathname, "r")
                util.printout(fd:read("*a"))
                fd:close()
