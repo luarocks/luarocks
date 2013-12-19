@@ -44,6 +44,9 @@ function run(...)
    local descript = rockspec.description or {}
 
    if flags["home"] then
+      if not descript.homepage then
+         return nil, "No 'homepage' field in rockspec for "..name.." "..version
+      end
       util.printout("Opening "..descript.homepage.." ...")
       fs.browser(descript.homepage)
       return true
@@ -70,7 +73,7 @@ function run(...)
    end
 
    local files = fs.find(docdir)
-   local extensions = { ".html", ".md", ".txt", "" }
+   local extensions = { "%.htm", "%.md", "%.txt", "" }
    local basenames = { "index", "readme", "manual" }
    
    for _, extension in ipairs(extensions) do
