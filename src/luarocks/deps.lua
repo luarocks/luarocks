@@ -34,7 +34,7 @@ local operators = {
 }
 
 local deltas = {
-   scm =    1000,
+   scm =    1100,
    cvs =    1000,
    rc =    -1000,
    pre =   -10000,
