@@ -73,7 +73,7 @@ function run(...)
    end
 
    local files = fs.find(docdir)
-   local extensions = { "%.htm", "%.md", "%.txt", "" }
+   local extensions = { "%.htm", "%.md", "%.txt",  "%.textile", "" }
    local basenames = { "index", "readme", "manual" }
    
    for _, extension in ipairs(extensions) do
