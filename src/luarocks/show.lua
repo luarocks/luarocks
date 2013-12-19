@@ -66,22 +66,14 @@ local function module_name(mod, filename, name, version, repo, manifest)
    return dir.path(base_dir, filename)
 end
 
---- Driver function for "show" command.
--- @param name or nil: an existing package name.
--- @param version string or nil: a version may also be passed.
--- @return boolean: True if succeeded, nil on errors.
-function run(...)
-   local flags, name, version = util.parse_flags(...)
-   if not name then
-      return nil, "Argument missing. "..util.see_help("show")
-   end
+function pick_installed_rock(name, version, tree)
    local results = {}
    local query = search.make_query(name, version)
    query.exact_name = true
    local tree_map = {}
    local trees = cfg.rocks_trees
-   if flags["tree"] then
-      trees = { flags["tree"] }
+   if tree then
+      trees = { tree }
    end
    for _, tree in ipairs(trees) do
       local rocks_dir = path.rocks_dir(tree)
@@ -103,8 +95,26 @@ function run(...)
       for _, rp in ipairs(repositories) do repo_url = rp.repo end
    end
 
-
    local repo = tree_map[repo_url]
+   return name, version, repo, repo_url
+end
+
+--- Driver function for "show" command.
+-- @param name or nil: an existing package name.
+-- @param version string or nil: a version may also be passed.
+-- @return boolean: True if succeeded, nil on errors.
+function run(...)
+   local flags, name, version = util.parse_flags(...)
+   if not name then
+      return nil, "Argument missing. "..util.see_help("show")
+   end
+   
+   local repo, repo_url
+   name, version, repo, repo_url = pick_installed_rock(name, version, flags["tree"])
+   if not name then
+      return nil, version
+   end
+
    local directory = path.install_dir(name,version,repo)
    local rockspec_file = path.rockspec_file(name, version, repo)
    local rockspec, err = fetch.load_local_rockspec(rockspec_file)
