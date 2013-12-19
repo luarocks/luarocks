@@ -22,5 +22,6 @@ commands.new_version = require("luarocks.new_version")
 commands.lint = require("luarocks.lint")
 commands.write_rockspec = require("luarocks.write_rockspec")
 commands.purge = require("luarocks.purge")
+commands.doc = require("luarocks.doc")
 
 command_line.run_command(...)
