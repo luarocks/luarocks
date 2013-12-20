@@ -472,25 +472,16 @@ end
 
 -- Use defaults:
 
--- Populate values from 'defaults.variables' in 'variables' if they were not
--- already set by user.
-if not _M.variables then
-   _M.variables = {}
-end
-for k,v in pairs(defaults.variables) do
-   if not _M.variables[k] then
-      _M.variables[k] = v
+-- Populate some arrays with values from their 'defaults' counterparts
+-- if they were not already set by user.
+for _, entry in ipairs({"variables", "rocks_provided"}) do
+   if not _M[entry] then
+      _M[entry] = {}
    end
-end
-
--- Populate values from 'defaults.rocks_provided' in 'rocks_provided' if they
--- were not already set by user.
-if not type(_M.rocks_provided) == "table" then
-   _M.rocks_provided = {}
-end
-for k,v in pairs(defaults.rocks_provided) do
-   if not _M.rocks_provided[k] then
-      _M.rocks_provided[k] = v
+   for k,v in pairs(defaults[entry]) do
+      if not _M[entry][k] then
+         _M[entry][k] = v
+      end
    end
 end
 
