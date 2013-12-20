@@ -640,11 +640,11 @@ for _, c in ipairs{"luarocks", "luarocks-admin"} do
 	f:write(S[[
 @ECHO OFF
 SETLOCAL
-SET LUA_PATH=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH%
+SET "LUA_PATH=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH%"
 IF NOT "%LUA_PATH_5_2%"=="" (
-   SET LUA_PATH_5_2=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_2%
+   "SET LUA_PATH_5_2=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_2%"
 )
-SET PATH=$BINDIR\;%PATH%
+SET "PATH=$BINDIR;%PATH%"
 "$LUA_INTERPRETER" "$BINDIR\]]..c..[[.lua" %*
 ENDLOCAL
 ]])
@@ -738,7 +738,8 @@ rocks_trees = {
 if FORCE_CONFIG then
 	f:write("    home..[[/luarocks]],\n")
 end
-f:write(S"    [[$ROCKS_TREE]]\n")
+f:write(S"    { name = [[system]], root = [[$ROCKS_TREE]] },\n")
+f:write(S"    { name = [[user]],   root = home..[[/luarocks]] },\n")
 f:write("}\n")
 if vars.SCRIPTS_DIR then
 	f:write(S"scripts_dir=[[$SCRIPTS_DIR]]\n")

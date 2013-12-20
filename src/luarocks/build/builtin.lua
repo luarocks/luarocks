@@ -112,9 +112,15 @@ function run(rockspec)
          def:write("luaopen_"..name:gsub("%.", "_").."\n")
          def:close()
          local ok = execute(variables.LD, "-dll", "-def:"..deffile, "-out:"..library, dir.path(variables.LUA_LIBDIR, variables.LUALIB), unpack(extras))
-         local manifestfile = basename..".dll.manifest"
+         local basedir = ""
+         if name:find("%.") ~= nil then
+            basedir = name:gsub("%.%w+$", "\\")
+            basedir = basedir:gsub("%.", "\\")
+         end
+         local manifestfile = basedir .. basename..".dll.manifest"
+
          if ok and fs.exists(manifestfile) then
-            ok = execute(variables.MT, "-manifest", manifestfile, "-outputresource:"..basename..".dll;2")
+            ok = execute(variables.MT, "-manifest", manifestfile, "-outputresource:"..basedir..basename..".dll;2")
          end
          return ok
       end
@@ -250,7 +256,7 @@ function run(rockspec)
    end
    if fs.is_dir("lua") then
       local ok, err = fs.copy_contents("lua", luadir)
-      if not ok then 
+      if not ok then
          return nil, "Failed copying contents of 'lua' directory: "..err
       end
    end

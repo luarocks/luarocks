@@ -323,9 +323,10 @@ end
 local function match_dep(dep, blacklist, deps_mode)
    assert(type(dep) == "table")
 
-   local versions
-   if dep.name == "lua" then
-      versions = { cfg.lua_version }
+   local versions = cfg.rocks_provided[dep.name]
+   if cfg.rocks_provided[dep.name] then
+      -- provided rocks have higher priority than manifest's rocks
+      versions = { cfg.rocks_provided[dep.name] }
    else
       versions = manif_core.get_versions(dep.name, deps_mode)
    end
@@ -360,17 +361,12 @@ local function match_dep(dep, blacklist, deps_mode)
    end
 end
 
-local whitelist = {}
-if cfg.lua_version == "5.2" then
-   whitelist["bit32"] = true
-end
-
 --- Attempt to match dependencies of a rockspec to installed rocks.
 -- @param rockspec table: The rockspec loaded as a table.
 -- @param blacklist table or nil: Program versions to not use as valid matches.
 -- Table where keys are program names and values are tables where keys
 -- are program versions and values are 'true'.
--- @return table, table: A table where keys are dependencies parsed
+-- @return table, table, table: A table where keys are dependencies parsed
 -- in table format and values are tables containing fields 'name' and
 -- version' representing matches; a table of missing dependencies
 -- parsed as tables; and a table of "no-upgrade" missing dependencies
@@ -382,18 +378,16 @@ function match_deps(rockspec, blacklist, deps_mode)
    local matched, missing, no_upgrade = {}, {}, {}
    
    for _, dep in ipairs(rockspec.dependencies) do
-      if not whitelist[dep.name] then
-         local found = match_dep(dep, blacklist and blacklist[dep.name] or nil, deps_mode)
-         if found then
-            if dep.name ~= "lua" then 
-               matched[dep] = found
-            end
+      local found = match_dep(dep, blacklist and blacklist[dep.name] or nil, deps_mode)
+      if found then
+         if not cfg.rocks_provided[dep.name] then
+            matched[dep] = found
+         end
+      else
+         if dep.constraints[1] and dep.constraints[1].no_upgrade then
+            no_upgrade[dep.name] = dep
          else
-            if dep.constraints[1] and dep.constraints[1].no_upgrade then
-               no_upgrade[dep.name] = dep
-            else
-               missing[dep.name] = dep
-            end
+            missing[dep.name] = dep
          end
       end
    end
