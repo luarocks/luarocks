@@ -265,6 +265,8 @@ local defaults = {
       lib = "lib",
       include = "include"
    },
+
+   rocks_provided = {}
 }
 
 if detected.windows then
@@ -453,6 +455,24 @@ defaults.variables.OBJ_EXTENSION = defaults.obj_extension
 defaults.variables.LUAROCKS_PREFIX = site_config.LUAROCKS_PREFIX
 defaults.variables.LUA = site_config.LUA_DIR_SET and (defaults.variables.LUA_BINDIR.."/"..defaults.lua_interpreter) or defaults.lua_interpreter
 
+-- Add built-in modules to rocks_provided
+defaults.rocks_provided["lua"] = lua_version.."-1"
+
+if lua_version >= "5.2" then
+   -- Lua 5.2+
+   defaults.rocks_provided["bit32"] = lua_version.."-1"
+end
+
+if package.loaded.jit then
+   -- LuaJIT
+   local lj_version = package.loaded.jit.version:match("LuaJIT (%d%.%d%.%d)")
+   defaults.rocks_provided["luajit"] = lj_version.."-1"
+   defaults.rocks_provided["jit"] = lj_version.."-1"
+   defaults.rocks_provided["ffi"] = lj_version.."-1"
+   defaults.rocks_provided["bit"] = lj_version.."-1"
+   defaults.rocks_provided["luabitop"] = lj_version.."-1"
+end
+
 -- Use defaults:
 
 -- Populate values from 'defaults.variables' in 'variables' if they were not
@@ -463,6 +483,17 @@ end
 for k,v in pairs(defaults.variables) do
    if not _M.variables[k] then
       _M.variables[k] = v
+   end
+end
+
+-- Populate values from 'defaults.rocks_provided' in 'rocks_provided' if they
+-- were not already set by user.
+if not type(_M.rocks_provided) == "table" then
+   _M.rocks_provided = {}
+end
+for k,v in pairs(defaults.rocks_provided) do
+   if not _M.rocks_provided[k] then
+      _M.rocks_provided[k] = v
    end
 end
 
