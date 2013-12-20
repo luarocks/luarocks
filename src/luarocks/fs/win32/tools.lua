@@ -364,5 +364,5 @@ function exists(file)
 end
 
 function browser(url)
-   return fs.execute(cfg.web_browser, url)
+   return fs.execute(cfg.web_browser.." "..url)
 end
