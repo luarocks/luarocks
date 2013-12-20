@@ -64,9 +64,8 @@ function run(...)
          break
       end
    end
-   docdir = dir.normalize(docdir):gsub("/+", "/")
    if not docdir then
-      if descript.homepage then
+      if descript.homepage and not flags["list"] then
          util.printout("Local documentation directory not found -- opening "..descript.homepage.." ...")
          fs.browser(descript.homepage)
          return true
@@ -74,6 +73,7 @@ function run(...)
       return nil, "Documentation directory not found for "..name.." "..version
    end
 
+   docdir = dir.normalize(docdir):gsub("/+", "/")
    local files = fs.find(docdir)
    local htmlpatt = "%.html?$"
    local extensions = { htmlpatt, "%.md$", "%.txt$",  "%.textile$", "" }
