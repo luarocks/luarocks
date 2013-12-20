@@ -104,6 +104,7 @@ function run_command(...)
             if not tree.root then
                die("Configuration error: tree '"..tree.name.."' has no 'root' field.")
             end
+            flags["tree"] = tree.root
             path.use_tree(dir.normalize(tree.root))
             named = true
             break
@@ -112,6 +113,7 @@ function run_command(...)
       if not named then
          local fs = require("luarocks.fs")
          local root_dir = fs.absolute_name(flags["tree"])
+         flags["tree"] = root_dir
          path.use_tree(root_dir)
       end
    elseif flags["local"] then
