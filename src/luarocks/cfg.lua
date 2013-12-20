@@ -465,11 +465,8 @@ end
 
 if package.loaded.jit then
    -- LuaJIT
-   local lj_version = package.loaded.jit.version:match("LuaJIT (%d%.%d%.%d)")
-   defaults.rocks_provided["luajit"] = lj_version.."-1"
-   defaults.rocks_provided["jit"] = lj_version.."-1"
-   defaults.rocks_provided["ffi"] = lj_version.."-1"
-   defaults.rocks_provided["bit"] = lj_version.."-1"
+   local lj_version = package.loaded.jit.version:match("LuaJIT (.*)"):gsub("%-","")
+   --defaults.rocks_provided["luajit"] = lj_version.."-1"
    defaults.rocks_provided["luabitop"] = lj_version.."-1"
 end
 
