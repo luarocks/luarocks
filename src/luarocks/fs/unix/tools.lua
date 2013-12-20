@@ -343,5 +343,5 @@ function get_permissions(filename)
 end
 
 function browser(url)
-   return os.execute(cfg.web_browser..' '..url)
+   return fs.execute(cfg.web_browser, url)
 end
