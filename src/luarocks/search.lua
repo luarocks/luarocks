@@ -210,7 +210,7 @@ function search_repos(query)
       end
    end
    -- search through rocks in cfg.rocks_provided
-   local provided_repo = "built-in or listed in cfg.rocks_provided"
+   local provided_repo = "provided by VM or rocks_provided"
    local name, versions
    for name, versions in pairs(cfg.rocks_provided) do
       store_if_match(results, provided_repo, name, versions, "installed", query)
@@ -281,9 +281,9 @@ function find_suitable_rock(query)
    elseif not next(results, first) then
       if cfg.rocks_provided[query.name] ~= nil then
          -- do not install versions that listed in cfg.rocks_provided
-         return nil, "The found rock "..query.name..
+         return nil, "Rock "..query.name..
                      " "..cfg.rocks_provided[query.name]..
-                     " is either built-in or listed in cfg.rocks_provided!"
+                     " was found but it is provided by VM or 'rocks_provided' in the config file."
       end
       return pick_latest_version(query.name, results[first])
    else
