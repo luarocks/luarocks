@@ -738,8 +738,8 @@ rocks_trees = {
 if FORCE_CONFIG then
 	f:write("    home..[[/luarocks]],\n")
 end
-f:write(S"    { name = [[system]], root = [[$ROCKS_TREE]] },\n")
 f:write(S"    { name = [[user]],   root = home..[[/luarocks]] },\n")
+f:write(S"    { name = [[system]], root = [[$ROCKS_TREE]] },\n")
 f:write("}\n")
 if vars.SCRIPTS_DIR then
 	f:write(S"scripts_dir=[[$SCRIPTS_DIR]]\n")
