@@ -65,5 +65,5 @@ function split_url(url)
 end
 
 function normalize(name)
-   return name:gsub("\\", "/"):gsub("(.)/*$", "%1")
+   return name:gsub("\\", "/"):gsub("(.)/*$", "%1"):gsub("//", "/")
 end

@@ -305,6 +305,7 @@ function print_results(results, porcelain)
       end
       for version, repos in util.sortedpairs(versions, deps.compare_versions) do
          for _, repo in ipairs(repos) do
+            repo.repo = dir.normalize(repo.repo)
             if porcelain then
                util.printout(package, version, repo.arch, repo.repo)
             else
