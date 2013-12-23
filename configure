@@ -271,14 +271,14 @@ if [ "$LUA_SUFFIX_SET" != "yes" ]
 then
    if [ "$LUA_VERSION_SET" = "yes" -a "$LUA_VERSION" = "5.1" ]
    then
-      suffixes="5.1 51"
+      suffixes="5.1 51 -5.1 -51"
    elif [ "$LUA_VERSION_SET" = "yes" -a "$LUA_VERSION" = "5.2" ]
    then
-      suffixes="5.2 52"
+      suffixes="5.2 52 -5.2 -52"
    else
-      suffixes="5.2 52 5.1 51"
+      suffixes="5.2 52 -5.2 -52 5.1 51 -5.1 -51"
    fi
-   for suffix in "" `echo $suffixes` ""
+   for suffix in `echo $suffixes` ""
    do
       search_interpreter "$suffix" && break
    done
@@ -286,9 +286,9 @@ fi
 
 if [ "$LUA_DIR_SET" != "yes" ]
 then
-   echo_n "Looking for Lua... "
-   if [ ! -n "$find_lua" ]
+   if [ -n "$find_lua" ]
    then
+      echo_n "Looking for Lua... "
       find_lua=`find_program lua$LUA_SUFFIX`
    fi
 
