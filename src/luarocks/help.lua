@@ -87,6 +87,15 @@ function run(...)
       else
          util.printout("\tUser configuration file disabled in this LuaRocks installation.\n")
       end
+      util.printout("\tRocks trees in use: ")
+      for _, tree in ipairs(cfg.rocks_trees) do
+      	if type(tree) == "string" then
+      	   util.printout("\t\t"..tree)
+      	else
+      	   local name = tree.name and " (\""..tree.name.."\")" or ""
+      	   util.printout("\t\t"..tree.root..name)
+      	end
+      end
    else
       command = command:gsub("-", "_")
       if commands[command] then

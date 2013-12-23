@@ -23,6 +23,18 @@ local function die(message)
    os.exit(1)
 end
 
+local function replace_tree(flags, args, tree)
+   local tree = dir.normalize(tree)
+   flags["tree"] = tree
+   for i = 1, #args do
+      if args[i]:match("%-%-tree=") then
+         args[i] = "--tree="..tree
+         break
+      end
+   end
+   path.use_tree(tree)
+end
+
 --- Main command-line processor.
 -- Parses input arguments and calls the appropriate driver function
 -- to execute the action requested on the command-line, forwarding
@@ -110,7 +122,7 @@ function run_command(...)
             if not tree.root then
                die("Configuration error: tree '"..tree.name.."' has no 'root' field.")
             end
-            path.use_tree(dir.normalize(tree.root))
+            replace_tree(flags, args, tree.root)
             named = true
             break
          end
@@ -118,10 +130,10 @@ function run_command(...)
       if not named then
          local fs = require("luarocks.fs")
          local root_dir = fs.absolute_name(flags["tree"])
-         path.use_tree(root_dir)
+         replace_tree(flags, args, root_dir)
       end
    elseif flags["local"] then
-      path.use_tree(cfg.home_tree)
+      replace_tree(flags, args, cfg.home_tree)
    else
       local trees = cfg.rocks_trees
       path.use_tree(trees[#trees])
