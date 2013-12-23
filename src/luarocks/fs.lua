@@ -14,7 +14,9 @@ local cfg = require("luarocks.cfg")
 local pack = table.pack or function(...) return { n = select("#", ...), ... } end
 local unpack = table.unpack or unpack
 
-if cfg.verbose then -- patch io.popen and os.execute to display commands in verbose mode
+local old_popen, old_exec
+_M.verbose = function()    -- patch io.popen and os.execute to display commands in verbose mode
+  if old_popen or old_exec then return end
   old_popen = io.popen
   io.popen = function(one, two)
     if two == nil then
@@ -36,6 +38,7 @@ if cfg.verbose then -- patch io.popen and os.execute to display commands in verb
     return unpack(code, 1, code.n)    
   end
 end
+if cfg.verbose then _M.verbose() end
 
 local function load_fns(fs_table)
    for name, fn in pairs(fs_table) do

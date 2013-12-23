@@ -6,8 +6,8 @@
 -- used to load previous modules, so that the loader chooses versions
 -- that are declared to be compatible with the ones loaded earlier.
 local global_env = _G
-local package, require, ipairs, pairs, table, type, next, unpack =
-      package, require, ipairs, pairs, table, type, next, unpack
+local package, require, ipairs, pairs, table, type, next, unpack, tostring, error =
+      package, require, ipairs, pairs, table, type, next, unpack, tostring, error
 
 module("luarocks.loader")
 
@@ -146,7 +146,7 @@ local function select_module(module, filter_module_name)
             local name, version = entry:match("^([^/]*)/(.*)$")
             local module_name = tree.manifest.repository[name][version][1].modules[module]
             if type(module_name) ~= "string" then
-               error("Invalid format in manifest file (invalid data for "..tostring(name).." "..tostring(version)..")")
+               error("Invalid data in manifest file for module "..tostring(module).." (invalid data for "..tostring(name).." "..tostring(version)..")")
             end
             module_name = filter_module_name(module_name, name, version, tree.tree, i)
             if context[name] == version then

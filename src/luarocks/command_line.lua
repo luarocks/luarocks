@@ -61,6 +61,12 @@ function run_command(...)
 
    local command
    
+   if flags["verbose"] then   -- setting it in the config file will kick-in earlier in the process
+      cfg.verbose = true
+      local fs = require("luarocks.fs")
+      fs.verbose()
+   end
+
    if flags["version"] then
       util.printout(program.." "..cfg.program_version)
       util.printout(program_description)
