@@ -5,10 +5,10 @@ rem=rem --[[
 local vars = {}
 
 
-vars.PREFIX = os.getenv("PROGRAMFILES")..[[\LuaRocks]]
+vars.PREFIX = nil
 vars.VERSION = "2.1"
-vars.SYSCONFDIR = (os.getenv("PROGRAMDATA") or (os.getenv("ALLUSERSPROFILE")..[[\Application Data]])) .. [[\LuaRocks]] -- ALLUSERS for WinXP compat
-vars.ROCKS_TREE = vars.SYSCONFDIR 
+vars.SYSCONFDIR = nil
+vars.ROCKS_TREE = nil
 vars.SCRIPTS_DIR = nil
 vars.LUA_INTERPRETER = nil
 vars.LUA_PREFIX = nil
@@ -26,9 +26,10 @@ local FORCE = false
 local FORCE_CONFIG = false
 local INSTALL_LUA = false
 local USE_MINGW = false
-local REGISTRY = false
+local REGISTRY = true
 local NOADMIN = false
 local PROMPT = true
+local SELFCONTAINED = false
 
 ---
 -- Some helpers
@@ -120,10 +121,19 @@ Installs LuaRocks.
 
 Configuring the destinations:
 /TREE [dir]    Root of the local tree of installed rocks.
-               Default is %PROGRAMDATA%\LuaRocks
+               Default is %PROGRAMFILES%\LuaRocks\systree
 /SCRIPTS [dir] Where to install commandline scripts installed by
                rocks. Default is {TREE}/bin.
-
+/CONFIG [dir]  Location where the config file should be installed.
+               Default is %PROGRAMFILES%\LuaRocks
+/SELFCONTAINED Creates a self contained installation in a single
+               directory given by /P.
+               Sets the /TREE and /CONFIG options to the same 
+               location as /P. And does not load registry info
+               with option /NOREG. The only option NOT self
+               contained is the user rock tree, so don't use that
+               if you create a self contained installation.
+               
 Configuring the Lua interpreter:
 /LV [version]  Lua version to use; either 5.1 or 5.2.
                Default is 5.1
@@ -149,14 +159,12 @@ Compiler configuration:
 /MW            Use mingw as build system instead of MSVC
 
 Other options:
-/CONFIG [dir]  Location where the config file should be installed.
-               Default is %PROGRAMDATA%\LuaRocks
 /FORCECONFIG   Use a single config location. Do not use the
                LUAROCKS_CONFIG variable or the user's home directory.
                Useful to avoid conflicts when LuaRocks
                is embedded within an application.
 /F             Remove installation directory if it already exists.
-/R             Load registry information to register '.rockspec'
+/NOREG         Do not load registry info to register '.rockspec'
                extension with LuaRocks commands (right-click).
 /NOADMIN       The installer requires admin priviledges. If not
                available it will elevate a new process. Use this
@@ -164,10 +172,6 @@ Other options:
                destination paths are all accessible for the current
                user.
 /Q             Do not prompt for confirmation of settings
-
-Example:
-To create a self contained install use (assuming Lua is in your PATH):
-INSTALL /P c:\LuaRocks /TREE c:\LuaRocks /CONFIG c:\LuaRocks
 
 ]])
 end
@@ -207,8 +211,10 @@ local function parse_options(args)
 			FORCE_CONFIG = true
 		elseif name == "/F" then
 			FORCE = true
-		elseif name == "/R" then
-			REGISTRY = true
+		elseif name == "/SELFCONTAINED" then
+			SELFCONTAINED = true
+		elseif name == "/NOREG" then
+			REGISTRY = false
 		elseif name == "/NOADMIN" then
 			NOADMIN = true
 		elseif name == "/Q" then
@@ -221,6 +227,14 @@ end
 
 -- check for combination/required flags
 local function check_flags()
+	if SELFCONTAINED then
+		if not vars.PREFIX then
+			die("Option /P is required when using /SELFCONTAINED")
+		end
+		if vars.SYSCONFDIR or vars.ROCKS_TREE or vars.SCRIPTS_DIR then
+			die("Cannot combine /TREE, /SCRIPTS or /CONFIG with /SELFCONTAINED")
+		end
+	end
 	if INSTALL_LUA then
 		if vars.LUA_INCDIR or vars.LUA_BINDIR or vars.LUA_LIBDIR or vars.LUA_PREFIX then
 			die("Cannot combine option /L with any of /LUA /BIN /LIB /INC")
@@ -536,6 +550,7 @@ else
 	print("Admin priviledges available for installing")
 end
 
+vars.PREFIX = vars.PREFIX or os.getenv("PROGRAMFILES")..[[\LuaRocks]]
 vars.FULL_PREFIX = S"$PREFIX\\$VERSION"
 vars.BINDIR = vars.FULL_PREFIX
 vars.LIBDIR = vars.FULL_PREFIX
@@ -561,15 +576,34 @@ else
     vars.UNAME_M = get_architecture()  -- can only do when installation was found
 end
 
+local datapath
+if vars.UNAME_M == "x86" then
+	datapath = os.getenv("PROGRAMFILES") .. [[\LuaRocks]]
+else
+	-- our target interpreter is 64bit, so the tree (with binaries) should go into 64bit program files
+	datapath = os.getenv("ProgramW6432") .. [[\LuaRocks]]
+end
+vars.SYSCONFDIR = vars.SYSCONDFIR or datapath
+vars.ROCKS_TREE = vars.ROCKS_TREE or datapath..[[\systree]]
+if SELFCONTAINED then
+	vars.SYSCONFDIR = vars.PREFIX
+	vars.ROCKS_TREE = vars.PREFIX..[[\systree]]
+	REGISTRY = false
+end
+
 print(S[[
 
 Will configure LuaRocks with the following paths:
 LuaRocks       : $FULL_PREFIX
+Config file    : $SYSCONFDIR\config.lua
+Rocktree       : $ROCKS_TREE
+
 Lua interpreter: $LUA_BINDIR\$LUA_INTERPRETER
     binaries   : $LUA_BINDIR
     libraries  : $LUA_LIBDIR
     includes   : $LUA_INCDIR
-Binaries will be linked against: $LUA_LIBNAME with runtime $LUA_RUNTIME
+
+Binaries will be linked against: $LUA_LIBNAME with runtime $LUA_RUNTIME.dll
 System architecture detected as: $UNAME_M
 
 ]])
