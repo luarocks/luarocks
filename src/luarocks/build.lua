@@ -364,7 +364,7 @@ function run(...)
       return pack.pack_binary_rock(name, version, do_build, name, version, deps.get_deps_mode(flags))
    else
       local ok, err = fs.check_command_permissions(flags)
-      if not ok then return nil, err end
+      if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
       ok, err = do_build(name, version, deps.get_deps_mode(flags))
       if not ok then return nil, err end
       local name, version = ok, err

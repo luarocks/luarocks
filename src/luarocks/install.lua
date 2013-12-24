@@ -129,7 +129,7 @@ function run(...)
    end
 
    local ok, err = fs.check_command_permissions(flags)
-   if not ok then return nil, err end
+   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       util.printout("Using "..name.."... switching to 'build' mode")

@@ -73,7 +73,7 @@ function run(...)
       return pack.pack_binary_rock(rspec.name, rspec.version, build.build_rockspec, rockspec, false, true, deps.get_deps_mode(flags))
    else
       local ok, err = fs.check_command_permissions(flags)
-      if not ok then return nil, err end
+      if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
       ok, err = build.build_rockspec(rockspec, false, true, deps.get_deps_mode(flags))
       if not ok then return nil, err end
       local name, version = ok, err
