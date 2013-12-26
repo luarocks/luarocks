@@ -120,8 +120,8 @@ end
 -- if returned a result, installs the matching rock.
 -- @param version string: When passing a package name, a version number
 -- may also be given.
--- @return boolean or (nil, string): True if installation was
--- successful, nil and an error message otherwise.
+-- @return boolean or (nil, string, exitcode): True if installation was
+-- successful, nil and an error message otherwise. exitcode is optionally returned.
 function run(...)
    local flags, name, version = util.parse_flags(...)
    if type(name) ~= "string" then
@@ -129,7 +129,7 @@ function run(...)
    end
 
    local ok, err = fs.check_command_permissions(flags)
-   if not ok then return nil, err end
+   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       util.printout("Using "..name.."... switching to 'build' mode")
