@@ -132,8 +132,8 @@ end
 -- a specific version; otherwise, try to remove all versions.
 -- @param version string: When passing a package name, a version number
 -- may also be given.
--- @return boolean or (nil, string): True if removal was
--- successful, nil and an error message otherwise.
+-- @return boolean or (nil, string, exitcode): True if removal was
+-- successful, nil and an error message otherwise. exitcode is optionally returned.
 function run(...)
    local flags, name, version = util.parse_flags(...)
    

@@ -519,6 +519,14 @@ end
 
 print(S"LuaRocks $VERSION.x installer.\n")
 
+print([[
+
+========================
+== Checking system... ==
+========================
+
+]])
+
 parse_options(config)
 check_flags()
 
@@ -593,6 +601,10 @@ end
 
 print(S[[
 
+==========================
+== System check results ==
+==========================
+
 Will configure LuaRocks with the following paths:
 LuaRocks       : $FULL_PREFIX
 Config file    : $SYSCONFDIR\config.lua
@@ -612,6 +624,14 @@ if PROMPT then
 	print("Press <ENTER> to start installing, or press <CTRL>+<C> to abort. Use install /? for installation options.")
 	io.read()
 end
+
+print([[
+
+============================
+== Installing LuaRocks... ==
+============================
+
+]])
 
 -- ***********************************************************
 -- Install LuaRocks files
@@ -680,6 +700,35 @@ IF NOT "%LUA_PATH_5_2%"=="" (
 )
 SET "PATH=$BINDIR;%PATH%"
 "$LUA_INTERPRETER" "$BINDIR\]]..c..[[.lua" %*
+IF NOT "%ERRORLEVEL%"=="2" GOTO EXITLR
+
+REM Permission denied error, try and auto elevate...
+REM already an admin? (checking to prevent loops)
+NET SESSION >NUL 2>&1
+IF "%ERRORLEVEL%"=="0" GOTO EXITLR
+
+REM Do we have PowerShell available?
+PowerShell /? >NUL 2>&1
+IF NOT "%ERRORLEVEL%"=="0" GOTO EXITLR
+
+:GETTEMPNAME
+SET TMPFILE=%TEMP%\LuaRocks-Elevator-%RANDOM%.bat
+IF EXIST "%TMPFILE%" GOTO :GETTEMPNAME 
+
+ECHO @ECHO OFF                                  >  "%TMPFILE%"
+ECHO CHDIR /D %CD%                              >> "%TMPFILE%"
+ECHO ECHO %0 %*                                 >> "%TMPFILE%"
+ECHO ECHO.                                      >> "%TMPFILE%"
+ECHO CALL %0 %*                                 >> "%TMPFILE%"
+ECHO ECHO.                                      >> "%TMPFILE%"
+ECHO ECHO Press any key to close this window... >> "%TMPFILE%"
+ECHO PAUSE ^> NUL                               >> "%TMPFILE%"
+ECHO DEL "%TMPFILE%"                            >> "%TMPFILE%"
+
+ECHO Now trying to run again elevated...
+PowerShell -Command (New-Object -com 'Shell.Application').ShellExecute('%TMPFILE%', '', '', 'runas')
+
+:EXITLR
 ENDLOCAL
 ]])
 	f:close()
@@ -833,7 +882,10 @@ exec( S[[del "$FULL_PREFIX\pe-parser.lua" >NUL]] )
 
 print(S[[
 
-*** LuaRocks is installed! ***
+============================
+== LuaRocks is installed! ==
+============================
+
 
 You may want to add the following elements to your paths;
 Lua interpreter;

@@ -351,8 +351,8 @@ end
 -- if returned a result, installs the matching rock.
 -- @param version string: When passing a package name, a version number may
 -- also be given.
--- @return boolean or (nil, string): True if build was successful; nil and an
--- error message otherwise.
+-- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
+-- error message otherwise. exitcode is optionally returned.
 function run(...)
    local flags, name, version = util.parse_flags(...)
    if type(name) ~= "string" then

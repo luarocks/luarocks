@@ -40,8 +40,8 @@ To install rocks, you'll normally want to use the "install" and
 
 --- Driver function for "make" command.
 -- @param name string: A local rockspec.
--- @return boolean or (nil, string): True if build was successful; nil and an
--- error message otherwise.
+-- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
+-- error message otherwise. exitcode is optionally returned.
 function run(...)
    local flags, rockspec = util.parse_flags(...)
    assert(type(rockspec) == "string" or not rockspec)
