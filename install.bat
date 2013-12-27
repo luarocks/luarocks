@@ -606,17 +606,16 @@ print(S[[
 ==========================
 
 Will configure LuaRocks with the following paths:
-LuaRocks       : $FULL_PREFIX
-Config file    : $SYSCONFDIR\config.lua
-Rocktree       : $ROCKS_TREE
+LuaRocks        : $FULL_PREFIX
+Config file     : $SYSCONFDIR\config.lua
+Rocktree        : $ROCKS_TREE
 
-Lua interpreter: $LUA_BINDIR\$LUA_INTERPRETER
-    binaries   : $LUA_BINDIR
-    libraries  : $LUA_LIBDIR
-    includes   : $LUA_INCDIR
-
-Binaries will be linked against: $LUA_LIBNAME with runtime $LUA_RUNTIME.dll
-System architecture detected as: $UNAME_M
+Lua interpreter : $LUA_BINDIR\$LUA_INTERPRETER
+    binaries    : $LUA_BINDIR
+    libraries   : $LUA_LIBDIR
+    includes    : $LUA_INCDIR
+    architecture: $UNAME_M
+    binary link : $LUA_LIBNAME with runtime $LUA_RUNTIME.dll
 
 ]])
 
@@ -725,7 +724,7 @@ ECHO ECHO Press any key to close this window... >> "%TMPFILE%"
 ECHO PAUSE ^> NUL                               >> "%TMPFILE%"
 ECHO DEL "%TMPFILE%"                            >> "%TMPFILE%"
 
-ECHO Now trying to run again elevated...
+ECHO Now retrying as a priviledged user...
 PowerShell -Command (New-Object -com 'Shell.Application').ShellExecute('%TMPFILE%', '', '', 'runas')
 
 :EXITLR
