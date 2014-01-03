@@ -351,8 +351,8 @@ end
 -- if returned a result, installs the matching rock.
 -- @param version string: When passing a package name, a version number may
 -- also be given.
--- @return boolean or (nil, string): True if build was successful; nil and an
--- error message otherwise.
+-- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
+-- error message otherwise. exitcode is optionally returned.
 function run(...)
    local flags, name, version = util.parse_flags(...)
    if type(name) ~= "string" then
@@ -364,7 +364,7 @@ function run(...)
       return pack.pack_binary_rock(name, version, do_build, name, version, deps.get_deps_mode(flags))
    else
       local ok, err = fs.check_command_permissions(flags)
-      if not ok then return nil, err end
+      if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
       ok, err = do_build(name, version, deps.get_deps_mode(flags))
       if not ok then return nil, err end
       local name, version = ok, err

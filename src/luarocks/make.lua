@@ -40,8 +40,8 @@ To install rocks, you'll normally want to use the "install" and
 
 --- Driver function for "make" command.
 -- @param name string: A local rockspec.
--- @return boolean or (nil, string): True if build was successful; nil and an
--- error message otherwise.
+-- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
+-- error message otherwise. exitcode is optionally returned.
 function run(...)
    local flags, rockspec = util.parse_flags(...)
    assert(type(rockspec) == "string" or not rockspec)
@@ -73,7 +73,7 @@ function run(...)
       return pack.pack_binary_rock(rspec.name, rspec.version, build.build_rockspec, rockspec, false, true, deps.get_deps_mode(flags))
    else
       local ok, err = fs.check_command_permissions(flags)
-      if not ok then return nil, err end
+      if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
       ok, err = build.build_rockspec(rockspec, false, true, deps.get_deps_mode(flags))
       if not ok then return nil, err end
       local name, version = ok, err
