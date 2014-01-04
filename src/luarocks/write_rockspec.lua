@@ -31,10 +31,14 @@ rockspec, and is not guaranteed to be complete or correct.
 --homepage=<url>      Project homepage.
 --lua-version=<ver>   Supported Lua versions. Accepted values are "5.1", "5.2"
                       or "5.1,5.2".
+--tag=<tag>           Tag to use. Will attempt to extract version number from it.
 --lib=<lib>[,<lib>]   A comma-separated list of libraries that C files need to
                       link to.
 ]]
 
+local function open_file(name)
+   return io.open(dir.path(fs.current_dir(), name), "r")
+end
 
 local function get_url(rockspec)
    local url = rockspec.source.url
@@ -79,12 +83,11 @@ local function configure_lua_version(rockspec, luaver)
 end
 
 local function detect_description(rockspec)
-   local fd = io.open("README.md", "r")
-   if not fd then fd = io.open("README", "r") end
+   local fd = open_file("README.md") or open_file("README")
    if not fd then return end
    local data = fd:read("*a")
    fd:close()
-   local paragraph = data:match("\n\n(.-)\n\n")
+   local paragraph = data:match("\n\n([^%[].-)\n\n")
    if not paragraph then paragraph = data:match("\n\n(.*)") end
    if paragraph then
       if #paragraph < 80 then
@@ -100,19 +103,32 @@ local function detect_description(rockspec)
    end
 end
 
+local function detect_mit_license(data)
+   local strip_copyright = (data:gsub("Copyright [^\n]*\n", ""))
+   local sum = 0
+   for i = 1, #strip_copyright do
+      local num = string.byte(strip_copyright:sub(i,i))
+      if num > 32 and num <= 128 then
+         sum = sum + num
+      end
+   end
+   return sum == 78656
+end
+
 local function show_license(rockspec)
-   local fd = io.open("COPYING", "r")
-   if not fd then fd = io.open("LICENSE", "r") end
-   if not fd then return end
+   local fd = open_file("COPYING") or open_file("LICENSE") or open_file("MIT-LICENSE.txt")
+   if not fd then return nil end
    local data = fd:read("*a")
    fd:close()
+   local is_mit = detect_mit_license(data)
    util.title("License for "..rockspec.package..":")
    util.printout(data)
    util.printout()
+   return is_mit
 end
 
 local function get_cmod_name(file)
-   local fd = io.open(file, "r")
+   local fd = open_file(file)
    if not fd then return nil end
    local data = fd:read("*a")
    fd:close()
@@ -199,22 +215,35 @@ function run(...)
    elseif not url_or_dir then
       url_or_dir = version
    end
+
+   if flags["tag"] == true then
+      return nil, "Incorrect usage: --tag requires an argument. "..util.see_help("write_rockspec")
+   end
+   
+   if flags["tag"] then
+      if not version then
+         version = flags["tag"]:gsub("^v", "")
+      end
+   end
    
    local protocol, pathname = dir.split_url(url_or_dir)
    if not fetch.is_basic_protocol(protocol) then
-      version = "scm"
       if not name then
          name = dir.base_name(url_or_dir):gsub("%.[^.]+$", "")
+      end
+      if not version then
+         version = "scm"
       end
    elseif protocol ~= "file" then
       local filename = dir.base_name(url_or_dir)
       local newname, newversion = filename:match("(.*)-([^-]+)")
-      if not name then
+      if (not name) and newname then
          name = newname
       end
-      if newversion then
+      if (not version) and newversion then
          version = newversion:gsub(".[a-z]+$", ""):gsub(".tar$", "")
-      else
+      end
+      if not (name and version) then
          return nil, "Missing name and version arguments. "..util.see_help("write_rockspec")
       end
    elseif not version then
@@ -222,13 +251,18 @@ function run(...)
    end
 
    local filename = flags["output"] or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
+   
+   if not flags["homepage"] and url_or_dir:match("^git://github.com") then
+      flags["homepage"] = "http://"..url_or_dir:match("^[^:]+://(.*)")
+   end
 
    local rockspec = {
       package = name,
       name = name:lower(),
       version = version.."-1",
       source = {
-         url = "*** please add URL for source tarball, zip or repository here ***"
+         url = "*** please add URL for source tarball, zip or repository here ***",
+         tag = flags["tag"],
       },
       description = {
          summary = flags["summary"] or "*** please specify description summary ***",
@@ -252,7 +286,7 @@ function run(...)
       rockspec.source.dir = "dummy"
       if not fetch.is_basic_protocol(rockspec.source.protocol) then
          if version ~= "scm" then
-            rockspec.source.tag = "v" .. version
+            rockspec.source.tag = flags["tag"] or "v" .. version
          end
       end
       rockspec.source.dir = nil
@@ -290,7 +324,11 @@ function run(...)
 
    detect_description(rockspec)
 
-   show_license(rockspec)
+   local is_mit = show_license(rockspec)
+   
+   if is_mit and not flags["license"] then
+      rockspec.description.license = "MIT"
+   end
    
    fill_as_builtin(rockspec, libs)
       
