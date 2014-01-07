@@ -35,6 +35,21 @@ major_version = program_version:match("([^.]%.[^.])")
 
 local persist = require("luarocks.persist")
 
+_M.errorcodes = setmetatable({
+   OK = 0,
+   UNSPECIFIED = 1,
+   PERMISSIONDENIED = 2,
+},{
+   __index = function(t, key)
+      local val = rawget(t, key)
+      if not val then
+         error("'"..tostring(key).."' is not a valid errorcode", 2)
+      end
+      return val
+   end
+})
+
+
 local popen_ok, popen_result = pcall(io.popen, "")
 if popen_ok then
    if popen_result then
@@ -43,7 +58,7 @@ if popen_ok then
 else
    io.stderr:write("Your version of Lua does not support io.popen,\n")
    io.stderr:write("which is required by LuaRocks. Please check your Lua installation.\n")
-   os.exit(1)
+   os.exit(_M.errorcodes.UNSPECIFIED)
 end
 
 -- System detection:

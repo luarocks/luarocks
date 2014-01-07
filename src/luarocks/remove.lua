@@ -22,7 +22,8 @@ Will only perform the removal if it does not break dependencies.
 To override this check and force the removal, use --force.
 To perform a forced removal without reporting dependency issues,
 use --force=fast.
-]]
+
+]]..util.deps_mode_help()
 
 --- Obtain a list of packages that depend on the given set of packages
 -- (where all packages of the set are versions of one program).
@@ -132,8 +133,8 @@ end
 -- a specific version; otherwise, try to remove all versions.
 -- @param version string: When passing a package name, a version number
 -- may also be given.
--- @return boolean or (nil, string): True if removal was
--- successful, nil and an error message otherwise.
+-- @return boolean or (nil, string, exitcode): True if removal was
+-- successful, nil and an error message otherwise. exitcode is optionally returned.
 function run(...)
    local flags, name, version = util.parse_flags(...)
    
@@ -144,7 +145,7 @@ function run(...)
    local deps_mode = flags["deps-mode"] or cfg.deps_mode
    
    local ok, err = fs.check_command_permissions(flags)
-   if not ok then return nil, err end
+   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
    
    local rock_type = name:match("%.(rock)$") or name:match("%.(rockspec)$")
    local filename = name

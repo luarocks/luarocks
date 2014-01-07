@@ -12,7 +12,8 @@ local program = util.this_program("luarocks")
 
 --- Display an error message and exit.
 -- @param message string: The error message.
-local function die(message)
+-- @param exitcode number: the exitcode to use
+local function die(message, exitcode)
    assert(type(message) == "string")
 
    local ok, err = pcall(util.run_scheduled_functions)
@@ -20,7 +21,19 @@ local function die(message)
       util.printerr("\nLuaRocks "..cfg.program_version.." internal bug (please report at luarocks-developers@lists.sourceforge.net):\n"..err)
    end
    util.printerr("\nError: "..message)
-   os.exit(1)
+   os.exit(exitcode or cfg.errorcodes.UNSPECIFIED)
+end
+
+local function replace_tree(flags, args, tree)
+   local tree = dir.normalize(tree)
+   flags["tree"] = tree
+   for i = 1, #args do
+      if args[i]:match("%-%-tree=") then
+         args[i] = "--tree="..tree
+         break
+      end
+   end
+   path.use_tree(tree)
 end
 
 --- Main command-line processor.
@@ -71,7 +84,7 @@ function run_command(...)
       util.printout(program.." "..cfg.program_version)
       util.printout(program_description)
       util.printout()
-      os.exit(0)
+      os.exit(cfg.errorcodes.OK)
    elseif flags["help"] or #nonflags == 0 then
       command = "help"
       args = nonflags
@@ -110,8 +123,7 @@ function run_command(...)
             if not tree.root then
                die("Configuration error: tree '"..tree.name.."' has no 'root' field.")
             end
-            flags["tree"] = tree.root
-            path.use_tree(dir.normalize(tree.root))
+            replace_tree(flags, args, tree.root)
             named = true
             break
          end
@@ -119,11 +131,10 @@ function run_command(...)
       if not named then
          local fs = require("luarocks.fs")
          local root_dir = fs.absolute_name(flags["tree"])
-         flags["tree"] = root_dir
-         path.use_tree(root_dir)
+         replace_tree(flags, args, root_dir)
       end
    elseif flags["local"] then
-      path.use_tree(cfg.home_tree)
+      replace_tree(flags, args, cfg.home_tree)
    else
       local trees = cfg.rocks_trees
       path.use_tree(trees[#trees])
@@ -174,13 +185,13 @@ function run_command(...)
       -- I'm not changing this now to avoid messing with the run()
       -- interface, which I know some people use (even though
       -- I never published it as a public API...)
-      local xp, ok, err = xpcall(function() return commands[command].run(unpack(args)) end, function(err)
+      local xp, ok, err, exitcode = xpcall(function() return commands[command].run(unpack(args)) end, function(err)
          die(debug.traceback("LuaRocks "..cfg.program_version
             .." bug (please report at luarocks-developers@lists.sourceforge.net).\n"
             ..err, 2))
       end)
       if xp and (not ok) then
-         die(err)
+         die(err, exitcode)
       end
    else
       die("Unknown command: "..command)

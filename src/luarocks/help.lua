@@ -8,6 +8,7 @@ module("luarocks.help", package.seeall)
 
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
+local dir = require("luarocks.dir")
 
 local program = util.this_program("luarocks")
 
@@ -81,11 +82,21 @@ function run(...)
       end
       print_section("CONFIGURATION")
       util.printout("\tLua version: " .. cfg.lua_version)
-      util.printout("\tSystem configuration file: ".. sys_file .. " (" .. get_status(sys_ok) ..")")
+      util.printout("\tConfiguration files:")
+      util.printout("\t\tSystem: ".. dir.normalize(sys_file) .. " (" .. get_status(sys_ok) ..")")
       if home_file then
-         util.printout("\tUser configuration file: ".. home_file .. " (" .. get_status(home_ok) ..")\n")
+         util.printout("\t\tUser  : ".. dir.normalize(home_file) .. " (" .. get_status(home_ok) ..")\n")
       else
-         util.printout("\tUser configuration file disabled in this LuaRocks installation.\n")
+         util.printout("\t\tUser  : disabled in this LuaRocks installation.\n")
+      end
+      util.printout("\tRocks trees in use: ")
+      for _, tree in ipairs(cfg.rocks_trees) do
+      	if type(tree) == "string" then
+      	   util.printout("\t\t"..dir.normalize(tree))
+      	else
+      	   local name = tree.name and " (\""..tree.name.."\")" or ""
+      	   util.printout("\t\t"..dir.normalize(tree.root)..name)
+      	end
       end
    else
       command = command:gsub("-", "_")

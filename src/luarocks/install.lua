@@ -25,7 +25,8 @@ or a filename of a locally available rock.
                     rock after installing a new one. This behavior can
                     be made permanent by setting keep_other_versions=true
                     in the configuration file.
-]]
+]]..util.deps_mode_help()
+
 
 --- Install a binary rock.
 -- @param rock_file string: local or remote filename of a rock.
@@ -120,8 +121,8 @@ end
 -- if returned a result, installs the matching rock.
 -- @param version string: When passing a package name, a version number
 -- may also be given.
--- @return boolean or (nil, string): True if installation was
--- successful, nil and an error message otherwise.
+-- @return boolean or (nil, string, exitcode): True if installation was
+-- successful, nil and an error message otherwise. exitcode is optionally returned.
 function run(...)
    local flags, name, version = util.parse_flags(...)
    if type(name) ~= "string" then
@@ -129,7 +130,7 @@ function run(...)
    end
 
    local ok, err = fs.check_command_permissions(flags)
-   if not ok then return nil, err end
+   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       util.printout("Using "..name.."... switching to 'build' mode")
