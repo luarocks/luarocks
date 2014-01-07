@@ -8,6 +8,8 @@ local global_env = _G
 
 module("luarocks.util", package.seeall)
 
+local cfg = require("luarocks.cfg")
+
 local scheduled_functions = {}
 local debug = require("debug")
 
@@ -369,6 +371,24 @@ function this_program(default)
       i=i+1
    end
    return last:sub(2)
+end
+
+function deps_mode_help(program)
+   return [[
+--deps-mode=<mode>  How to handle dependencies. Four modes are supported:
+                    * all - use all trees from the rocks_trees list
+                      for finding dependencies
+                    * one - use only the current tree (possibly set
+                      with --tree)
+                    * order - use trees based on order (use the current
+                      tree and all trees below it on the rocks_trees list)
+                    * none - ignore dependencies altogether.
+                    The default mode may be set with the deps_mode entry
+                    in the configuration file.
+                    The current default is "]]..cfg.deps_mode..[[".
+                    Type ']]..this_program(program or "luarocks")..[[' with no arguments to see
+                    your list of rocks trees.
+]]
 end
 
 function see_help(command, program)

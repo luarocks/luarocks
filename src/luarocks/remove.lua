@@ -22,7 +22,8 @@ Will only perform the removal if it does not break dependencies.
 To override this check and force the removal, use --force.
 To perform a forced removal without reporting dependency issues,
 use --force=fast.
-]]
+
+]]..util.deps_mode_help()
 
 --- Obtain a list of packages that depend on the given set of packages
 -- (where all packages of the set are versions of one program).
