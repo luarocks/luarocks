@@ -141,12 +141,18 @@ function load_manifest(repo_url)
       end
    end
    if pathname:match(".*%.zip$") then
+      pathname = fs.absolute_name(pathname)
       local dir = dir.dir_name(pathname)
       fs.change_dir(dir)
       local nozip = pathname:match("(.*)%.zip$")
       fs.delete(nozip)
-      fs.unzip(pathname)
+      local ok = fs.unzip(pathname)
       fs.pop_dir()
+      if not ok then
+         fs.delete(pathname)
+         fs.delete(pathname..".timestamp")
+         return nil, "Failed extracting manifest file"
+      end
       pathname = nozip
    end
    return manif_core.manifest_loader(pathname, repo_url)
