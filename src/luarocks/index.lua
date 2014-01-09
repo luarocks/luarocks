@@ -139,15 +139,14 @@ function make_index(repo)
          output = output..version..':&nbsp;'
          table.sort(data, function(a,b) return a.arch < b.arch end)
          for _, item in ipairs(data) do
-            local link = '<a href="$url">'..item.arch..'</a>'
+            local file
             if item.arch == 'rockspec' then
-               local rs = ("%s-%s.rockspec"):format(package, version)
-               if not latest_rockspec then latest_rockspec = rs end
-               link = link:gsub("$url", rs)
+               file = ("%s-%s.rockspec"):format(package, version)
+               if not latest_rockspec then latest_rockspec = file end
             else
-               link = link:gsub("$url", ("%s-%s.%s.rock"):format(package, version, item.arch))
+               file = ("%s-%s.%s.rock"):format(package, version, item.arch)
             end
-            table.insert(versions, link)
+            table.insert(versions, '<a href="'..file..'">'..item.arch..'</a>')
          end
          output = output .. table.concat(versions, ',&nbsp;') .. '<br/>'
       end

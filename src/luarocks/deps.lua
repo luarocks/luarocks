@@ -689,7 +689,7 @@ function scan_deps(results, missing, manifest, name, version, deps_mode)
    local deplist = dependencies_name[version]
    local rockspec, err
    if not deplist then
-      rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version))
+      rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version), false)
       if err then
          missing[name.." "..version] = err
          return results, missing

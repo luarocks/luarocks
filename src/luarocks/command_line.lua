@@ -185,7 +185,8 @@ function run_command(...)
       -- I'm not changing this now to avoid messing with the run()
       -- interface, which I know some people use (even though
       -- I never published it as a public API...)
-      local xp, ok, err, exitcode = xpcall(function() return commands[command].run(unpack(args)) end, function(err)
+      local cmd = require(commands[command])
+      local xp, ok, err, exitcode = xpcall(function() return cmd.run(unpack(args)) end, function(err)
          die(debug.traceback("LuaRocks "..cfg.program_version
             .." bug (please report at luarocks-developers@lists.sourceforge.net).\n"
             ..err, 2))
