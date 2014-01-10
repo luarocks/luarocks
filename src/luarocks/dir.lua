@@ -35,17 +35,11 @@ end
 -- @return string: a string with a platform-specific representation
 -- of the path.
 function path(...)
-   local items = {...}
-   local i = 1
-   while items[i] do
-      items[i] = items[i]:gsub("(.+)/+$", "%1")
-      if items[i] == "" then
-         table.remove(items, i)
-      else
-         i = i + 1
-      end
+   local t = {...}
+   while t[1] == "" do
+      table.remove(t, 1)
    end
-   return (table.concat(items, "/"):gsub("(.+)/+$", "%1"))
+   return (table.concat(t, "/"):gsub("([^:])/+", "%1/"):gsub("^/+", "/"):gsub("/*$", ""))
 end
 
 --- Split protocol and path from an URL or local pathname.

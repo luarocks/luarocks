@@ -519,6 +519,8 @@ end
 
 print(S"LuaRocks $VERSION.x installer.\n")
 
+parse_options(config)
+
 print([[
 
 ========================
@@ -527,7 +529,6 @@ print([[
 
 ]])
 
-parse_options(config)
 check_flags()
 
 if not permission() then
