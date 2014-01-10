@@ -125,7 +125,7 @@ Configuring the destinations:
 /SCRIPTS [dir] Where to install commandline scripts installed by
                rocks. Default is {TREE}/bin.
 /CONFIG [dir]  Location where the config file should be installed.
-               Default is %PROGRAMFILES%\LuaRocks
+               Default is to follow /P option
 /SELFCONTAINED Creates a self contained installation in a single
                directory given by /P.
                Sets the /TREE and /CONFIG options to the same 
@@ -592,7 +592,7 @@ else
 	-- our target interpreter is 64bit, so the tree (with binaries) should go into 64bit program files
 	datapath = os.getenv("ProgramW6432") .. [[\LuaRocks]]
 end
-vars.SYSCONFDIR = vars.SYSCONFDIR or datapath
+vars.SYSCONFDIR = vars.SYSCONFDIR or vars.PREFIX
 vars.ROCKS_TREE = vars.ROCKS_TREE or datapath..[[\systree]]
 if SELFCONTAINED then
 	vars.SYSCONFDIR = vars.PREFIX
