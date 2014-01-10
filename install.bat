@@ -592,7 +592,7 @@ else
 	-- our target interpreter is 64bit, so the tree (with binaries) should go into 64bit program files
 	datapath = os.getenv("ProgramW6432") .. [[\LuaRocks]]
 end
-vars.SYSCONFDIR = vars.SYSCONDFIR or datapath
+vars.SYSCONFDIR = vars.SYSCONFDIR or datapath
 vars.ROCKS_TREE = vars.ROCKS_TREE or datapath..[[\systree]]
 if SELFCONTAINED then
 	vars.SYSCONFDIR = vars.PREFIX
