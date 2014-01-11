@@ -71,14 +71,10 @@ function run(...)
 	can be overriden with VAR=VALUE assignments.]])
       print_section("COMMANDS")
       local names = {}
-      for name, command in pairs(commands) do
-         table.insert(names, name)
-      end
-      table.sort(names)
-      for _, name in ipairs(names) do
-         local command = commands[name]
+      for name, command in util.sortedpairs(commands) do
+         local cmd = require(command)
          util.printout("", name)
-         util.printout("\t", command.help_summary)
+         util.printout("\t", cmd.help_summary)
       end
       print_section("CONFIGURATION")
       util.printout("\tLua version: " .. cfg.lua_version)
@@ -100,15 +96,16 @@ function run(...)
       end
    else
       command = command:gsub("-", "_")
-      if commands[command] then
-         local arguments = commands[command].help_arguments or "<argument>"
+      local cmd = require(commands[command])
+      if cmd then
+         local arguments = cmd.help_arguments or "<argument>"
          print_banner()
          print_section("NAME")
-         util.printout("\t"..program.." "..command.." - "..commands[command].help_summary)
+         util.printout("\t"..program.." "..command.." - "..cmd.help_summary)
          print_section("SYNOPSIS")
          util.printout("\t"..program.." "..command.." "..arguments)
          print_section("DESCRIPTION")
-         util.printout("",(commands[command].help:gsub("\n","\n\t"):gsub("\n\t$","")))
+         util.printout("",(cmd.help:gsub("\n","\n\t"):gsub("\n\t$","")))
          print_section("SEE ALSO")
          util.printout("","'"..program.." help' for general options and configuration.\n")
       else

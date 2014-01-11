@@ -31,7 +31,8 @@ or the name of a rock to be fetched from a repository.
                     rock after building a new one. This behavior can
                     be made permanent by setting keep_other_versions=true
                     in the configuration file.
-]]
+
+]]..util.deps_mode_help()
 
 --- Install files to a given location.
 -- Takes a table where the array part is a list of filenames to be copied.

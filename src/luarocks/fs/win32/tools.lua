@@ -362,3 +362,7 @@ function exists(file)
    assert(file)
    return fs.execute_quiet("if not exist " .. fs.Q(file) .. " invalidcommandname")
 end
+
+function browser(url)
+   return fs.execute(cfg.web_browser.." "..url)
+end

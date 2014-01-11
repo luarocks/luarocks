@@ -137,9 +137,11 @@ end
 --- Back-end function that actually loads the local rockspec.
 -- Performs some validation and postprocessing of the rockspec contents.
 -- @param filename string: The local filename of the rockspec file.
+-- @param quick boolean: if true, skips some steps when loading
+-- rockspec.
 -- @return table or (nil, string): A table representing the rockspec
 -- or nil followed by an error message.
-function load_local_rockspec(filename)
+function load_local_rockspec(filename, quick)
    assert(type(filename) == "string")
    filename = fs.absolute_name(filename)
    local rockspec, err = persist.load_into_table(filename)
@@ -147,9 +149,12 @@ function load_local_rockspec(filename)
       return nil, "Could not load rockspec file "..filename.." ("..err..")"
    end
 
-   local ok, err = type_check.type_check_rockspec(rockspec)
-   if not ok then
-      return nil, filename..": "..err
+   local ok, err = true, nil
+   if not quick then
+      ok, err = type_check.type_check_rockspec(rockspec)
+      if not ok then
+         return nil, filename..": "..err
+      end
    end
    
    if rockspec.rockspec_format then
@@ -207,9 +212,8 @@ function load_local_rockspec(filename)
    else
       rockspec.dependencies = {}
    end
-   local ok, err = path.configure_paths(rockspec)
-   if err then
-      return nil, "Error verifying paths: "..err
+   if not quick then
+      path.configure_paths(rockspec)
    end
 
    return rockspec

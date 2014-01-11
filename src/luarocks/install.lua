@@ -25,7 +25,8 @@ or a filename of a locally available rock.
                     rock after installing a new one. This behavior can
                     be made permanent by setting keep_other_versions=true
                     in the configuration file.
-]]
+]]..util.deps_mode_help()
+
 
 --- Install a binary rock.
 -- @param rock_file string: local or remote filename of a rock.
