@@ -286,7 +286,7 @@ fi
 
 if [ "$LUA_DIR_SET" != "yes" ]
 then
-   if [ -n "$find_lua" ]
+   if [ -z "$find_lua" ]
    then
       echo_n "Looking for Lua... "
       find_lua=`find_program lua$LUA_SUFFIX`
