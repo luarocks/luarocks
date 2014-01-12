@@ -342,7 +342,7 @@ if detected.windows then
       localappdata = os.getenv("USERPROFILE").."/Local Settings/Application Data"
    end
    defaults.local_cache = localappdata.."/LuaRocks/Cache"
-   defaults.web_browser = "start"
+   defaults.web_browser = "" -- no command, windows starts app based on extension
 end
 
 if detected.mingw32 then

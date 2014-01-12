@@ -18,7 +18,10 @@ vars.LUA_LIBDIR = nil
 vars.LUA_LIBNAME = nil
 vars.LUA_VERSION = "5.1"
 vars.LUA_SHORTV = nil   -- "51"
-vars.LUA_LIB_NAMES = "lua5.1.lib lua51.dll liblua.dll.a"
+-- MinGW does not generate .lib, nor needs it to link, but MSVC does
+-- so .lib must be listed first to ensure they are found first if present.
+-- To prevent MSVC trying to link to a .dll, which won't work.
+vars.LUA_LIB_NAMES = "lua5.1.lib lua51.lib lua5.1.dll lua51.dll liblua.dll.a"
 vars.LUA_RUNTIME = nil
 vars.UNAME_M = nil
 
@@ -147,7 +150,7 @@ Configuring the Lua interpreter:
                /LIB, and /BIN options.
 /INC [dir]     Location of Lua includes - e.g. c:\lua\5.1\include
                If provided overrides sub directory found using /LUA.
-/LIB [dir]     Location of Lua libraries (.dll) - e.g. c:\lua\5.1\lib
+/LIB [dir]     Location of Lua libraries (.dll/.lib) - e.g. c:\lua\5.1\lib
                If provided overrides sub directory found using /LUA.
 /BIN [dir]     Location of Lua executables - e.g. c:\lua\5.1\bin
                If provided overrides sub directory found using /LUA.
