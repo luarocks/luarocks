@@ -22,8 +22,9 @@ function manifest_loader(file, repo_url, quick)
    if not manifest then
       return nil, "Failed loading manifest for "..repo_url..": "..err
    end
+   local globals = err
    if not quick then
-      local ok, err = type_check.type_check_manifest(manifest)
+      local ok, err = type_check.type_check_manifest(manifest, globals)
       if not ok then
          return nil, "Error checking manifest: "..err
       end

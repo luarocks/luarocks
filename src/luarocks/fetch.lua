@@ -148,10 +148,11 @@ function load_local_rockspec(filename, quick)
    if not rockspec then
       return nil, "Could not load rockspec file "..filename.." ("..err..")"
    end
+   local globals = err
 
    local ok, err = true, nil
    if not quick then
-      ok, err = type_check.type_check_rockspec(rockspec)
+      ok, err = type_check.type_check_rockspec(rockspec, globals)
       if not ok then
          return nil, filename..": "..err
       end

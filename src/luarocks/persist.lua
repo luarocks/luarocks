@@ -20,6 +20,15 @@ function load_into_table(filename, tbl)
 
    local result, chunk, ran, err
    local result = tbl or {}
+   local globals = {}
+   local globals_mt = {
+      __index = function(t, n)
+         globals[n] = true
+         return rawget(t, n)
+      end
+   }
+   local save_mt = getmetatable(result)
+   setmetatable(result, globals_mt)
    if _VERSION == "Lua 5.1" then -- Lua 5.1
       chunk, err = loadfile(filename)
       if chunk then
@@ -32,6 +41,7 @@ function load_into_table(filename, tbl)
          ran, err = pcall(chunk)
       end
    end
+   setmetatable(result, save_mt)
    
    if not chunk then
       if err:sub(1,5) ~= filename:sub(1,5) then
@@ -42,7 +52,7 @@ function load_into_table(filename, tbl)
    if not ran then
       return nil, "Error running file: "..err
    end
-   return result
+   return result, globals
 end
 
 local write_table
