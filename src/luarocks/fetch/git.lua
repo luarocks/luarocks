@@ -27,7 +27,7 @@ end
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function get_sources(rockspec, extract, dest_dir)
+function get_sources(rockspec, extract, dest_dir, depth)
    assert(type(rockspec) == "table")
    assert(type(dest_dir) == "string" or not dest_dir)
 
@@ -51,7 +51,7 @@ function get_sources(rockspec, extract, dest_dir)
    local ok, err = fs.change_dir(store_dir)
    if not ok then return nil, err end
 
-   local command = {git_cmd, "clone", "--depth=1", rockspec.source.url, module}
+   local command = {git_cmd, "clone", depth or "--depth=1", rockspec.source.url, module}
    local tag_or_branch = rockspec.source.tag or rockspec.source.branch
    -- If the tag or branch is explicitly set to "master" in the rockspec, then
    -- we can avoid passing it to Git since it's the default.
