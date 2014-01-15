@@ -5,7 +5,7 @@ module("luarocks.type_check", package.seeall)
 
 local cfg = require("luarocks.cfg")
 
-local rockspec_format = "1.0"
+rockspec_format = "1.0"
 
 local rockspec_types = {
    rockspec_format = "string",
