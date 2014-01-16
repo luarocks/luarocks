@@ -1,5 +1,12 @@
 
---- Fetch back-end for retrieving sources from local Git repositories.
+--- Fetch back-end for retrieving sources from Git repositories
+-- that use http:// transport. For example, for fetching a repository
+-- that requires the following command line:
+-- `git clone http://example.com/foo.git`
+-- you can use this in the rockspec:
+-- source = { url = "git+http://example.com/foo.git" }
+-- Prefer using the normal git:// fetch mode as it is more widely
+-- available in older versions of LuaRocks.
 module("luarocks.fetch.git_http", package.seeall)
 
 local git = require("luarocks.fetch.git")
