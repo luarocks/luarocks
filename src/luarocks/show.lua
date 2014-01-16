@@ -1,4 +1,3 @@
-
 --- Module implementing the LuaRocks "show" command.
 -- Shows information about an installed rock.
 module("luarocks.show", package.seeall)
@@ -128,7 +127,7 @@ function run(...)
    if flags["rock-tree"] then util.printout(path.rocks_tree_to_string(repo))
    elseif flags["rock-dir"] then util.printout(directory)
    elseif flags["home"] then util.printout(descript.homepage)
-   elseif flags["modules"] then util.printout(keys_as_string(minfo.modules))
+   elseif flags["modules"] then util.printout(keys_as_string(minfo.modules), "\n")
    elseif flags["deps"] then util.printout(keys_as_string(minfo.dependencies))
    elseif flags["rockspec"] then util.printout(rockspec_file)
    elseif flags["mversion"] then util.printout(version)
