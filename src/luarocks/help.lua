@@ -64,7 +64,8 @@ function run(...)
 	                       given URL.
 	--tree=<tree>          Which tree to operate on.
 	--local                Use the tree in the user's home directory.
-	                       To enable it, see ']]..program..[[ help path'.]])
+	                       To enable it, see ']]..program..[[ help path'.
+	--verbose              Display verbose output of commands executed.]])
       print_section("VARIABLES")
       util.printout([[
 	Variables from the "variables" table of the configuration file
