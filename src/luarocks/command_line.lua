@@ -113,6 +113,13 @@ function run_command(...)
       die("Invalid entry for --deps-mode.")
    end
    
+   if flags["branch"] then
+     if flags["branch"] == true or flags["branch"] == "" then
+       die("Argument error: use --branch=<branch-name>")
+     end
+     cfg.branch = flags["branch"]
+   end
+   
    if flags["tree"] then
       if flags["tree"] == true or flags["tree"] == "" then
          die("Argument error: use --tree=<path>")
