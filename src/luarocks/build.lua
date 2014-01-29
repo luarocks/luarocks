@@ -32,6 +32,10 @@ or the name of a rock to be fetched from a repository.
                     be made permanent by setting keep_other_versions=true
                     in the configuration file.
 
+--branch=<name>     Override the `source.branch` field in the loaded
+                    rockspec. Allows to specify a different branch to 
+                    fetch. Particularly for SCM rocks.
+
 ]]..util.deps_mode_help()
 
 --- Install files to a given location.
