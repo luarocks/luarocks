@@ -146,7 +146,7 @@ if not sys_config_ok then
    sys_config_file = sys_config_dir.."/config.lua"
    sys_config_ok, err = persist.load_into_table(sys_config_file, _M)
 end
-if err and ok == nil then
+if err and sys_config_ok == nil then
    io.stderr:write(err.."\n")
 end
 
