@@ -144,14 +144,12 @@ end
 function load_local_rockspec(filename, quick)
    assert(type(filename) == "string")
    filename = fs.absolute_name(filename)
-   local rockspec, err = persist.load_into_table(filename, {BRANCH = cfg.branch})  -- temp add BRANCH
+   local rockspec, err = persist.load_into_table(filename)
    if not rockspec then
       return nil, "Could not load rockspec file "..filename.." ("..err..")"
    end
-   if rockspec.BRANCH ~= cfg.branch then
-      return nil, "Invalid rockspec, BRANCH constant was illegally modified by rockspec"
-   else
-      rockspec.BRANCH = nil   -- remove temporary added field
+   if cfg.branch and (type(rockspec.source) == "table") then
+      rockspec.source.branch = cfg.branch
    end
    local globals = err
 

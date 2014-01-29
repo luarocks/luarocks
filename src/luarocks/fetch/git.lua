@@ -12,7 +12,7 @@ local util = require("luarocks.util")
 -- given tag.
 -- @return boolean: Whether Git can clone by tag.
 local function git_can_clone_by_tag(git_cmd)
-   local version_string = io.popen(git_cmd..' --version'):read()
+   local version_string = io.popen(fs.Q(git_cmd)..' --version'):read()
    local major, minor, tiny = version_string:match('(%d-)%.(%d+)%.?(%d*)')
    major, minor, tiny = tonumber(major), tonumber(minor), tonumber(tiny) or 0
    local value = major > 1 or (major == 1 and (minor > 7 or (minor == 7 and tiny >= 10)))
@@ -51,7 +51,7 @@ function get_sources(rockspec, extract, dest_dir, depth)
    local ok, err = fs.change_dir(store_dir)
    if not ok then return nil, err end
 
-   local command = {git_cmd, "clone", depth or "--depth=1", rockspec.source.url, module}
+   local command = {fs.Q(git_cmd), "clone", depth or "--depth=1", rockspec.source.url, module}
    local tag_or_branch = rockspec.source.tag or rockspec.source.branch
    -- If the tag or branch is explicitly set to "master" in the rockspec, then
    -- we can avoid passing it to Git since it's the default.
@@ -69,7 +69,7 @@ function get_sources(rockspec, extract, dest_dir, depth)
    local ok, err = fs.change_dir(module)
    if not ok then return nil, err end
    if tag_or_branch and not git_can_clone_by_tag() then
-      local checkout_command = {git_cmd, "checkout", tag_or_branch}
+      local checkout_command = {fs.Q(git_cmd), "checkout", tag_or_branch}
       if not fs.execute(unpack(checkout_command)) then
          return nil, 'Failed to check out the "' .. tag_or_branch ..'" tag or branch.'
       end
