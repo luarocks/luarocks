@@ -307,6 +307,8 @@ fail_lint_noarg() { $luarocks lint; }
 fail_search_noarg() { $luarocks search; }
 fail_show_noarg() { $luarocks show; }
 fail_unpack_noarg() { $luarocks unpack; }
+fail_remove_noarg() { $luarocks remove; }
+fail_doc_noarg() { $luarocks doc; }
 fail_new_version_noarg() { $luarocks new_version; }
 fail_write_rockspec_noarg() { $luarocks write_rockspec; }
 
@@ -368,7 +370,9 @@ fail_purge_missing_tree() { $luarocks purge --tree="$testing_tree"; }
 test_purge() { $luarocks purge --tree="$testing_sys_tree"; }
 
 test_remove() { $luarocks build luacov ${version_luacov} && $luarocks remove luacov ${version_luacov}; }
-#fail_remove_deps() { $luarocks build luadoc && $luarocks remove luasocket; }
+test_remove_force() { need_luasocket; $luarocks build lualogging && $luarocks remove --force luasocket; }
+fail_remove_deps() { need_luasocket; $luarocks build lualogging && $luarocks remove luasocket; }
+fail_remove_invalid_name() { $luarocks remove invalid.rock; }
 
 test_search_found() { $luarocks search zlib; }
 test_search_missing() { $luarocks search missing_rock; }
@@ -412,6 +416,8 @@ fail_write_rockspec_args() { $luarocks write_rockspec invalid; }
 fail_write_rockspec_args_url() { $luarocks write_rockspec http://example.com/invalid.zip; }
 test_write_rockspec_http() { $luarocks write_rockspec http://luarocks.org/releases/luarocks-2.1.0.tar.gz --lua-version=5.1; }
 test_write_rockspec_basedir() { $luarocks write_rockspec https://github.com/downloads/Olivine-Labs/luassert/luassert-1.2.tar.gz --lua-version=5.1; }
+
+test_doc() { $luarocks install luarepl; $luarocks doc luarepl; }
 
 # Driver #########################################
 
