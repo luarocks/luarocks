@@ -816,9 +816,6 @@ if exists(vars.CONFIG_FILE) then
 end
 local f = io.open(vars.CONFIG_FILE, "w")
 f:write([=[
-rocks_servers = {
-   [[http://luarocks.org/repositories/rocks]]
-}
 rocks_trees = {
 ]=])
 if FORCE_CONFIG then

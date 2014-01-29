@@ -148,6 +148,9 @@ function load_local_rockspec(filename, quick)
    if not rockspec then
       return nil, "Could not load rockspec file "..filename.." ("..err..")"
    end
+   if cfg.branch and (type(rockspec.source) == "table") then
+      rockspec.source.branch = cfg.branch
+   end
    local globals = err
 
    local ok, err = true, nil
