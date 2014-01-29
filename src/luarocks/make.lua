@@ -36,6 +36,10 @@ To install rocks, you'll normally want to use the "install" and
                     be made permanent by setting keep_other_versions=true
                     in the configuration file.
 
+--branch=<name>     Override the `source.branch` field in the loaded
+                    rockspec. Allows to specify a different branch to 
+                    fetch. Particularly for SCM rocks.
+
 ]]
 
 --- Driver function for "make" command.
