@@ -1,4 +1,3 @@
-
 --- Module implementing the LuaRocks "install" command.
 -- Installs binary rocks.
 module("luarocks.install", package.seeall)
@@ -79,11 +78,6 @@ function install_binary_rock(rock_file, deps_mode)
    if deps_mode ~= "none" then
       ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
       if err then return nil, err, errcode end
-   end
-
-   local wrap_bin_scripts = true
-   if rockspec.deploy and rockspec.deploy.wrap_bin_scripts == false then
-      wrap_bin_scripts = false
    end
 
    ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec))
