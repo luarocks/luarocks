@@ -41,7 +41,6 @@ local function open_file(name)
 end
 
 local function get_url(rockspec)
-   local url = rockspec.source.url
    local file, temp_dir, err_code, err_file, err_temp_dir = fetch.fetch_sources(rockspec, false)
    if err_code == "source.dir" then
       file, temp_dir = err_file, err_temp_dir
@@ -54,20 +53,8 @@ local function get_url(rockspec)
    if fetch.is_basic_protocol(rockspec.source.protocol) then
       rockspec.source.md5 = fs.get_md5(file)
    end
-   local ok, err = fs.change_dir(temp_dir)
-   if not ok then return false end
-   fs.unpack_archive(file)
-   local base_dir = fetch.url_to_base_dir(url)
-   if not fs.exists(base_dir) then
-      util.printerr("Directory "..base_dir.." not found")
-      local files = fs.list_dir()
-      if files[1] and fs.is_dir(files[1]) then
-         util.printerr("Found "..files[1])
-         base_dir = files[1]
-      end
-   end
-   fs.pop_dir()
-   return true, base_dir, temp_dir
+   local inferred_dir, found_dir = fetch.find_base_dir(file, temp_dir, rockspec.source.url)
+   return true, found_dir or inferred_dir, temp_dir
 end
 
 local function configure_lua_version(rockspec, luaver)

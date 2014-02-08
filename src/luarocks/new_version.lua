@@ -58,19 +58,13 @@ local function check_url_and_update_md5(out_rs, out_name)
    end
    util.printout("File successfully downloaded. Updating MD5 checksum...")
    out_rs.source.md5 = fs.get_md5(file)
-   local ok, err = fs.change_dir(temp_dir)
-   if not ok then return nil, err end
-   fs.unpack_archive(file)
-   local base_dir = out_rs.source.dir or fetch.url_to_base_dir(out_rs.source.url)
-   if not fs.exists(base_dir) then
-      util.printerr("Directory "..base_dir.." not found")
-      local files = fs.list_dir()
-      if files[1] and fs.is_dir(files[1]) then
-         util.printerr("Found "..files[1])
-         out_rs.source.dir = files[1]
-      end
+   local inferred_dir, found_dir = fetch.find_base_dir(file, temp_dir, out_rs.source.url, out_rs.source.dir)
+   if not inferred_dir then
+      return nil, found_dir
    end
-   fs.pop_dir()
+   if found_dir and found_dir ~= inferred_dir then
+      out_rs.source.dir = found_dir
+   end
    return out_rs.source.md5 ~= old_md5
 end
  

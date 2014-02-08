@@ -86,6 +86,38 @@ function fetch_url_at_temp_dir(url, tmpname, filename)
    end
 end
 
+-- Determine base directory of a fetched URL by extracting its
+-- archive and looking for a directory in the root.
+-- @param file string: absolute local pathname of the fetched file
+-- @param temp_dir string: temporary directory in which URL was fetched.
+-- @param src_url string: URL to use when inferring base directory.
+-- @param src_dir string or nil: expected base directory (inferred
+-- from src_url if not given).
+-- @return (string, string) or (string, nil) or (nil, string):
+-- The inferred base directory and the one actually found (which may
+-- be nil if not found), or nil followed by an error message.
+-- The inferred dir is returned first to avoid confusion with errors,
+-- because it is never nil.
+function find_base_dir(file, temp_dir, src_url, src_dir)
+   local ok, err = fs.change_dir(temp_dir)
+   if not ok then return nil, err end
+   fs.unpack_archive(file)
+   local inferred_dir = src_dir or url_to_base_dir(src_url)
+   local found_dir = nil
+   if fs.exists(inferred_dir) then
+      found_dir = inferred_dir
+   else
+      util.printerr("Directory "..inferred_dir.." not found")
+      local files = fs.list_dir()
+      if files[1] and fs.is_dir(files[1]) then
+         util.printerr("Found "..files[1])
+         found_dir = files[1]
+      end
+   end
+   fs.pop_dir()
+   return inferred_dir, found_dir
+end
+
 --- Obtain a rock and unpack it.
 -- If a directory is not given, a temporary directory will be created,
 -- which will be deleted on program termination.
