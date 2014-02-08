@@ -165,27 +165,18 @@ function delete(arg)
    fs.execute_quiet("if exist "..fs.Q(arg.."\\").." ( RMDIR /S /Q "..fs.Q(arg).." ) else ( DEL /Q /F "..fs.Q(arg).." )")
 end
 
---- List the contents of a directory.
--- @param at string or nil: directory to list (will be the current
--- directory if none is given).
--- @return table: an array of strings with the filenames representing
--- the contents of a directory.
-function list_dir(at)
-   assert(type(at) == "string" or not at)
-   if not at then
-      at = fs.current_dir()
-   end
-   if not fs.is_dir(at) then
-      return {}
-   end
-   local result = {}
+--- Internal implementation function for fs.dir.
+-- Yields a filename on each iteration.
+-- @param at string: directory to list
+-- @return nil
+function dir_iterator(at)
    local pipe = io.popen(command_at(at, fs.Q(vars.LS)))
    for file in pipe:lines() do
-      table.insert(result, file)
+      if file ~= "." and file ~= ".." then
+         coroutine.yield(file)
+      end
    end
    pipe:close()
-
-   return result
 end
 
 --- Recursively scan the contents of a directory.

@@ -614,7 +614,7 @@ function check_external_deps(rockspec, mode)
                      for _, d in ipairs(paths) do
                         if f:match("%*") then
                            local replaced = f:gsub("%.", "%%."):gsub("%*", ".*")
-                           for _, entry in ipairs(fs.list_dir(d)) do
+                           for entry in fs.dir(d) do
                               if entry:match(replaced) then
                                  found = true
                                  break

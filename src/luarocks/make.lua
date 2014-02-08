@@ -51,8 +51,7 @@ function run(...)
    assert(type(rockspec) == "string" or not rockspec)
    
    if not rockspec then
-      local files = fs.list_dir(fs.current_dir())
-      for _, file in pairs(files) do
+      for file in fs.dir() do
          if file:match("rockspec$") then
             if rockspec then
                return nil, "Please specify which rockspec file to use."

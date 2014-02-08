@@ -1,7 +1,8 @@
 
 --- Native Lua implementation of filesystem and platform abstractions,
 -- using LuaFileSystem, LZLib, MD5 and LuaCurl.
-module("luarocks.fs.lua", package.seeall)
+-- module("luarocks.fs.lua")
+local fs_lua = {}
 
 local fs = require("luarocks.fs")
 
@@ -35,7 +36,7 @@ dir_separator = "/"
 -- Adds single quotes and escapes.
 -- @param arg string: Unquoted argument.
 -- @return string: Quoted argument.
-function Q(arg)
+function fs_lua.Q(arg)
    assert(type(arg) == "string")
 
    -- FIXME Unix-specific
@@ -48,7 +49,7 @@ end
 -- for checking the result of subsequent operations.
 -- @param file string: filename to test
 -- @return boolean: true if file exists, false otherwise.
-function is_writable(file)
+function fs_lua.is_writable(file)
    assert(file)
    file = dir.normalize(file)
    local result
@@ -70,7 +71,7 @@ end
 -- @param name string: name pattern to use for avoiding conflicts
 -- when creating temporary directory.
 -- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
-function make_temp_dir(name)
+function fs_lua.make_temp_dir(name)
    assert(type(name) == "string")
    name = dir.normalize(name)
 
@@ -99,7 +100,7 @@ end
 -- @param ... Strings containing additional arguments, which are quoted.
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
-function execute(command, ...)
+function fs_lua.execute(command, ...)
    assert(type(command) == "string")
    return fs.execute_string(quote_args(command, ...))
 end
@@ -112,7 +113,7 @@ end
 -- @param ... Strings containing additional arguments, which will be quoted.
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
-function execute_quiet(command, ...)
+function fs_lua.execute_quiet(command, ...)
    assert(type(command) == "string")
    if cfg.verbose then -- omit silencing output
       return fs.execute_string(quote_args(command, ...))
@@ -126,7 +127,7 @@ end
 -- @param md5sum string: The string with the expected MD5 checksum.
 -- @return boolean: true if the MD5 checksum for 'file' equals 'md5sum', false + msg if not
 -- or if it could not perform the check for any reason.
-function check_md5(file, md5sum)
+function fs_lua.check_md5(file, md5sum)
    file = dir.normalize(file)
    local computed, msg = fs.get_md5(file)
    if not computed then
@@ -137,6 +138,35 @@ function check_md5(file, md5sum)
    else
       return false, "Mismatch MD5 hash for file "..file
    end
+end
+
+--- List the contents of a directory.
+-- @param at string or nil: directory to list (will be the current
+-- directory if none is given).
+-- @return table: an array of strings with the filenames representing
+-- the contents of a directory.
+function fs_lua.list_dir(at)
+   local result = {}
+   for file in fs.dir(at) do
+      result[#result+1] = file
+   end
+   return result
+end
+
+--- Iterate over the contents of a directory.
+-- @param at string or nil: directory to list (will be the current
+-- directory if none is given).
+-- @return function: an iterator function suitable for use with
+-- the for statement.
+function fs_lua.dir(at)
+   if not at then
+      at = fs.current_dir()
+   end
+   at = dir.normalize(at)
+   if not fs.is_dir(at) then
+      return function() end
+   end
+   return coroutine.wrap(function() fs.dir_iterator(at) end)
 end
 
 ---------------------------------------------------------------------
@@ -150,7 +180,7 @@ if lfs_ok then
 -- @param cmd string: No quoting/escaping is applied to the command.
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
-function execute_string(cmd)
+function fs_lua.execute_string(cmd)
    local code = os.execute(cmd)
    return (code == 0 or code == true)
 end
@@ -158,7 +188,7 @@ end
 --- Obtain current directory.
 -- Uses the module's internal dir stack.
 -- @return string: the absolute pathname of the current directory.
-function current_dir()
+function fs_lua.current_dir()
    return lfs.currentdir()
 end
 
@@ -167,7 +197,7 @@ end
 -- semantics of chdir, as it does not handle errors the same way,
 -- but works well for our purposes for now.
 -- @param d string: The directory to switch to.
-function change_dir(d)
+function fs_lua.change_dir(d)
    table.insert(dir_stack, lfs.currentdir())
    d = dir.normalize(d)
    return lfs.chdir(d)
@@ -176,14 +206,14 @@ end
 --- Change directory to root.
 -- Allows leaving a directory (e.g. for deleting it) in
 -- a crossplatform way.
-function change_dir_to_root()
+function fs_lua.change_dir_to_root()
    table.insert(dir_stack, lfs.currentdir())
    lfs.chdir("/") -- works on Windows too
 end
 
 --- Change working directory to the previous in the dir stack.
 -- @return true if a pop ocurred, false if the stack was empty.
-function pop_dir()
+function fs_lua.pop_dir()
    local d = table.remove(dir_stack)
    if d then
       lfs.chdir(d)
@@ -198,7 +228,7 @@ end
 -- too, they are created as well.
 -- @param directory string: pathname of directory to create.
 -- @return boolean or (boolean, string): true on success or (false, error message) on failure.
-function make_dir(directory)
+function fs_lua.make_dir(directory)
    assert(type(directory) == "string")
    directory = dir.normalize(directory)
    local path = nil
@@ -229,7 +259,7 @@ end
 -- Does not return errors (for example, if directory is not empty or
 -- if already does not exist)
 -- @param d string: pathname of directory to remove.
-function remove_dir_if_empty(d)
+function fs_lua.remove_dir_if_empty(d)
    assert(d)
    d = dir.normalize(d)
    lfs.rmdir(d)
@@ -239,7 +269,7 @@ end
 -- Does not return errors (for example, if directory is not empty or
 -- if already does not exist)
 -- @param d string: pathname of directory to remove.
-function remove_dir_tree_if_empty(d)
+function fs_lua.remove_dir_tree_if_empty(d)
    assert(d)
    d = dir.normalize(d)
    for i=1,10 do
@@ -255,7 +285,7 @@ end
 -- or nil to use the source filename permissions
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
-function copy(src, dest, perms)
+function fs_lua.copy(src, dest, perms)
    assert(src and dest)
    src = dir.normalize(src)
    dest = dir.normalize(dest)
@@ -309,7 +339,7 @@ end
 -- @param dest string: Pathname of destination
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
-function copy_contents(src, dest)
+function fs_lua.copy_contents(src, dest)
    assert(src and dest)
    src = dir.normalize(src)
    dest = dir.normalize(dest)
@@ -354,32 +384,21 @@ end
 --- Delete a file or a directory and all its contents.
 -- @param name string: Pathname of source
 -- @return nil
-function delete(name)
+function fs_lua.delete(name)
    name = dir.normalize(name)
    recursive_delete(name)
 end
 
---- List the contents of a directory.
--- @param at string or nil: directory to list (will be the current
--- directory if none is given).
--- @return table: an array of strings with the filenames representing
--- the contents of a directory.
-function list_dir(at)
-   assert(type(at) == "string" or not at)
-   if not at then
-      at = fs.current_dir()
-   end
-   at = dir.normalize(at)
-   if not fs.is_dir(at) then
-      return {}
-   end
-   local result = {}
+--- Internal implementation function for fs.dir.
+-- Yields a filename on each iteration.
+-- @param at string: directory to list
+-- @return nil
+function fs_lua.dir_iterator(at)
    for file in lfs.dir(at) do
       if file ~= "." and file ~= ".." then
-         table.insert(result, file)
+         coroutine.yield(file)
       end
    end
-   return result
 end
 
 --- Implementation function for recursive find.
@@ -405,7 +424,7 @@ end
 -- directory if none is given).
 -- @return table: an array of strings with the filenames representing
 -- the contents of a directory.
-function find(at)
+function fs_lua.find(at)
    assert(type(at) == "string" or not at)
    if not at then
       at = fs.current_dir()
@@ -422,7 +441,7 @@ end
 --- Test for existance of a file.
 -- @param file string: filename to test
 -- @return boolean: true if file exists, false otherwise.
-function exists(file)
+function fs_lua.exists(file)
    assert(file)
    file = dir.normalize(file)
    return type(lfs.attributes(file)) == "table"
@@ -431,7 +450,7 @@ end
 --- Test is pathname is a directory.
 -- @param file string: pathname to test
 -- @return boolean: true if it is a directory, false otherwise.
-function is_dir(file)
+function fs_lua.is_dir(file)
    assert(file)
    file = dir.normalize(file)
    return lfs.attributes(file, "mode") == "directory"
@@ -440,13 +459,13 @@ end
 --- Test is pathname is a regular file.
 -- @param file string: pathname to test
 -- @return boolean: true if it is a file, false otherwise.
-function is_file(file)
+function fs_lua.is_file(file)
    assert(file)
    file = dir.normalize(file)
    return lfs.attributes(file, "mode") == "file"
 end
 
-function set_time(file, time)
+function fs_lua.set_time(file, time)
    file = dir.normalize(file)
    return lfs.touch(file, time)
 end
@@ -459,7 +478,7 @@ end
 
 if zip_ok then
 
-function zip(zipfile, ...)
+function fs_lua.zip(zipfile, ...)
    return lrzip.zip(zipfile, ...)
 end
 
@@ -469,7 +488,7 @@ if unzip_ok then
 --- Uncompress files from a .zip archive.
 -- @param zipfile string: pathname of .zip archive to be extracted.
 -- @return boolean: true on success, false on failure.
-function unzip(zipfile)
+function fs_lua.unzip(zipfile)
    local zipfile, err = luazip.open(zipfile)
    if not zipfile then return nil, err end
    local files = zipfile:files()
@@ -606,7 +625,7 @@ end
 -- filename can be given explicitly as this second argument.
 -- @return (boolean, string): true and the filename on success,
 -- false and the error message on failure.
-function download(url, filename, cache)
+function fs_lua.download(url, filename, cache)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
 
@@ -649,7 +668,7 @@ if md5_ok then
 --- Get the MD5 checksum for a file.
 -- @param file string: The file to be computed.
 -- @return string: The MD5 checksum or nil + error
-function get_md5(file)
+function fs_lua.get_md5(file)
    file = fs.absolute_name(file)
    local file = io.open(file, "rb")
    if not file then return nil, "Failed to open file for reading: "..file end
@@ -678,7 +697,7 @@ local octal_to_rwx = {
    ["7"] = "rwx",
 }
 
-function chmod(file, mode)
+function fs_lua.chmod(file, mode)
    -- LuaPosix (as of 5.1.15) does not support octal notation...
    if mode:sub(1,1) == "0" then
       local new_mode = {}
@@ -691,7 +710,7 @@ function chmod(file, mode)
    return err == 0
 end
 
-function get_permissions(file)
+function fs_lua.get_permissions(file)
    return posix.stat(file, "mode")
 end
 
@@ -704,7 +723,7 @@ end
 --- Apply a patch.
 -- @param patchname string: The filename of the patch.
 -- @param patchdata string or nil: The actual patch as a string.
-function apply_patch(patchname, patchdata)
+function fs_lua.apply_patch(patchname, patchdata)
    local p, all_ok = patch.read_patch(patchname, patchdata)
    if not all_ok then
       return nil, "Failed reading patch "..patchname
@@ -719,7 +738,7 @@ end
 -- @param dest string: Pathname of destination
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
-function move(src, dest)
+function fs_lua.move(src, dest)
    assert(src and dest)
    if fs.exists(dest) and not fs.is_dir(dest) then
       return false, "File already exists: "..dest
@@ -740,7 +759,7 @@ end
 -- @param flags table: the flags table passed to run() drivers.
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
-function check_command_permissions(flags)
+function fs_lua.check_command_permissions(flags)
    local root_dir = path.root_dir(cfg.rocks_dir)
    local ok = true
    local err = ""
@@ -767,3 +786,5 @@ function check_command_permissions(flags)
       return nil, err
    end
 end
+
+return fs_lua

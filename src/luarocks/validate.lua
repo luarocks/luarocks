@@ -85,7 +85,7 @@ local function validate(repo, flags)
    if not fs.exists(repo) then
       return nil, repo.." is not a local repository."
    end
-   for _, file in pairs(fs.list_dir(repo)) do for _=1,1 do
+   for file in fs.dir(repo) do for _=1,1 do
       if file == "manifest" or file == "index.html" then
          break -- continue for
       end
