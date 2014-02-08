@@ -163,8 +163,8 @@ srcdir_luasocket=luasocket-3.0-rc1
 version_cprint=0.1
 verrev_cprint=0.1-1
 
-version_luacov=0.4
-verrev_luacov=0.4-1
+version_luacov=0.5
+verrev_luacov=0.5-1
 version_lxsh=0.8.6
 version_validate_args=1.5.4
 verrev_validate_args=1.5.4-1
