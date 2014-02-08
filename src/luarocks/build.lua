@@ -128,6 +128,24 @@ function apply_patches(rockspec)
    return true
 end
 
+local function install_default_docs(name, version)
+   local patterns = { "readme", "license", "copying" }
+   local dest = dir.path(path.install_dir(name, version), "doc")
+   local has_dir = false
+   for name in fs.dir() do
+      for _, pattern in ipairs(patterns) do
+         if name:lower():match("^"..pattern) then
+            if not has_dir then
+               fs.make_dir(dest)
+               has_dir = true
+            end
+            fs.copy(name, dest)
+            break
+         end
+      end
+   end
+end
+
 --- Build and install a rock given a rockspec.
 -- @param rockspec_file string: local or remote filename of a rockspec.
 -- @param need_to_fetch boolean: true if sources need to be fetched,
@@ -255,18 +273,24 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
       copying_default = true
    end
 
+   local any_docs = false
    for _, copy_dir in pairs(copy_directories) do
       if fs.is_dir(copy_dir) then
          local dest = dir.path(path.install_dir(name, version), copy_dir)
          fs.make_dir(dest)
          fs.copy_contents(copy_dir, dest)
+         any_docs = true
       else
          if not copying_default then
             return nil, "Directory '"..copy_dir.."' not found"
          end
       end
    end
-
+   
+   if not any_docs then
+      install_default_docs(name, version)
+   end
+   
    for _, d in pairs(dirs) do
       fs.remove_dir_if_empty(d.name)
    end
