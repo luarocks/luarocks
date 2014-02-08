@@ -72,6 +72,18 @@ upload_servers = {
       rsync = "localhost/tmp/luarocks_testing",
    },
 }
+external_deps_dirs = {
+   "/usr/local",
+   "/usr",
+   -- These are used for a test that fails, so it
+   -- can point to invalid paths:
+   {
+      prefix = "/opt",
+      bin = "bin",
+      include = "include",
+      lib = { "lib", "lib64" },
+   }
+}
 EOF
 (
    cat $testing_dir/testing_config.lua
@@ -327,8 +339,9 @@ test_build_diffversion() { $luarocks build luacov ${version_luacov}; }
 test_build_command() { $luarocks build stdlib; }
 test_build_install_bin() { $luarocks build luarepl; }
 fail_build_nohttps() { need_luasocket; $luarocks download --rockspec validate-args ${verrev_validate_args} && $luarocks build ./validate-args-${version_validate_args}-1.rockspec && rm ./validate-args-${version_validate_args}-1.rockspec; }
-test_build_https() { need_luasocket; $luarocks download --rockspec validate-args ${verrev_validate_args} && echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx && pwd && ls && $luarocks install $luasec && pwd && ls && $luarocks build ./validate-args-${verrev_validate_args}.rockspec && rm ./validate-args-${verrev_validate_args}.rockspec; }
+test_build_https() { need_luasocket; $luarocks download --rockspec validate-args ${verrev_validate_args} && $luarocks install $luasec && $luarocks build ./validate-args-${verrev_validate_args}.rockspec && rm ./validate-args-${verrev_validate_args}.rockspec; }
 test_build_supported_platforms() { $luarocks build lpty; }
+fail_build_missing_external() { $luarocks build "$testing_dir/testfiles/missing_external-0.1-1.rockspec" INEXISTENT_INCDIR="/invalid/dir"; }
 
 test_build_deps_partial_match() { $luarocks build lrandom; }
 test_build_show_downloads() { export LUAROCKS_CONFIG="$testing_dir/testing_config_show_downloads.lua" && $luarocks build alien; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
