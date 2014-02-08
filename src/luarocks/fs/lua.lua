@@ -602,6 +602,9 @@ local function http_request(url, http, cached)
          if status == 200 and headers["last-modified"] == timestamp then
             return true
          end
+         if not result then
+            return nil, status
+         end
       end
    end
    local result, status, headers, err = request(url, "GET", http)

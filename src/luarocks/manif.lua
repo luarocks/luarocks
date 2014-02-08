@@ -129,15 +129,15 @@ function load_manifest(repo_url)
          end
       end
    else
-      local err
+      local err, errcode
       for _, filename in ipairs(filenames) do
-         pathname, err = fetch_manifest_from(repo_url, filename)
-         if pathname then
+         pathname, err, errcode = fetch_manifest_from(repo_url, filename)
+         if pathname or errcode == "network" then
             break
          end
       end
       if not pathname then 
-         return nil, err
+         return nil, err, errcode
       end
    end
    if pathname:match(".*%.zip$") then

@@ -219,6 +219,7 @@ local defaults = {
         "http://luarocks.logiceditor.com/rocks",
       }
    },
+   disabled_servers = {},
 
    lua_extension = "lua",
    lua_interpreter = site_config.LUA_INTERPRETER or "lua",

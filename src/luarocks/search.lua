@@ -170,9 +170,9 @@ function manifest_search(results, repo, query)
    assert(type(query) == "table")
    
    query_arch_as_table(query)
-   local manifest, err = manif.load_manifest(repo)
+   local manifest, err, errcode = manif.load_manifest(repo)
    if not manifest then
-      return nil, "Failed loading manifest: "..err
+      return nil, err, errcode
    end
    for name, versions in pairs(manifest.repository) do
       for version, items in pairs(versions) do
@@ -194,19 +194,24 @@ function search_repos(query)
 
    local results = {}
    for _, repo in ipairs(cfg.rocks_servers) do
-      if type(repo) == "string" then
-         repo = { repo }
-      end
-      for _, mirror in ipairs(repo) do
-         local protocol, pathname = dir.split_url(mirror)
-         if protocol == "file" then
-            mirror = pathname
+      if not cfg.disabled_servers[repo] then
+         if type(repo) == "string" then
+            repo = { repo }
          end
-         local ok, err = manifest_search(results, mirror, query)
-         if ok then
-            break
-         else
-            util.warning("Failed searching manifest: "..err)
+         for _, mirror in ipairs(repo) do
+            local protocol, pathname = dir.split_url(mirror)
+            if protocol == "file" then
+               mirror = pathname
+            end
+            local ok, err, errcode = manifest_search(results, mirror, query)
+            if errcode == "network" then
+               cfg.disabled_servers[repo] = true
+            end
+            if ok then
+               break
+            else
+               util.warning("Failed searching manifest: "..err)
+            end
          end
       end
    end
