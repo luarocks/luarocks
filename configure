@@ -44,7 +44,10 @@ system's package manager.
 --lua-suffix=SUFFIX         Versioning suffix to use in Lua filenames.
                             Default is "$LUA_SUFFIX" (lua$LUA_SUFFIX...)
 --with-lua=PREFIX           Use Lua from given prefix.
-                            Default is $LUA_DIR
+                            Default is auto-detected (the parent directory of \$LUA_BINDIR).
+--with-lua-bin=DIR          You can also specify Lua's bin dir.
+                            Default is the directory of the auto-detected Lua interpreter,
+                            or \$LUA_DIR/bin if --with-lua is used.
 --with-lua-include=DIR      You can also specify Lua's includes dir.
                             Default is \$LUA_DIR/include
 --with-lua-lib=DIR          You can also specify Lua's libraries dir.
@@ -185,6 +188,11 @@ do
       LUA_DIR="$value"
       LUA_DIR_SET=yes
       ;;
+   --with-lua-bin)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      LUA_BINDIR="$value"
+      LUA_BINDIR_SET=yes
+      ;;
    --with-lua-include)
       [ -n "$value" ] || die "Missing value in flag $key."
       LUA_INCDIR="$value"
@@ -249,7 +257,10 @@ detect_lua_version() {
 
 search_interpreter() {
    LUA_SUFFIX="$1"
-   if [ "$LUA_DIR_SET" = "yes" ]
+   if [ "$LUA_BINDIR_SET" = "yes" ]
+   then
+      find_lua="$LUA_BINDIR"
+   elif [ "$LUA_DIR_SET" = "yes" ]
    then
       if [ -f "$LUA_DIR/bin/lua$suffix" ]
       then
@@ -260,7 +271,7 @@ search_interpreter() {
    fi
    if [ -n "$find_lua" ]
    then
-      echo "Lua interpreter found: $find_lua/lua$suffix..."
+      echo "Lua interpreter: $find_lua/lua$suffix..."
       detect_lua_version "$find_lua/lua$suffix"
       return 0
    fi
@@ -316,7 +327,7 @@ then
    LUA_LIBDIR="$LUA_DIR/lib"
 fi
 
-if [ "$LUA_DIR_SET" = "yes" ]
+if [ "$LUA_DIR_SET" = "yes" -a "$LUA_BINDIR_SET" != "yes" ]
 then
    LUA_BINDIR="$LUA_DIR/bin"
 fi
