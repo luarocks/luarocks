@@ -311,7 +311,6 @@ if detected.windows then
    defaults.variables.LUALIB = "lua"..lua_version..".lib"
    defaults.variables.CFLAGS = "/MD /O2"
    defaults.variables.LIBFLAG = "/dll"
-   defaults.variables.LUALIB = "lua"..lua_version..".lib"
 
    local bins = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM",
       "MKDIR", "MV", "PWD", "RMDIR", "TEST", "UNAME", "WGET" }
