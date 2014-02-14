@@ -267,7 +267,7 @@ local defaults = {
       CMAKE = "cmake",
       SEVENZ = "7z",
 
-      RSYNCFLAGS = "--exclude=.git -Ocavz",
+      RSYNCFLAGS = "--exclude=.git -Oavz",
       STATFLAG = "-c '%a'",
    },
 
