@@ -235,7 +235,7 @@ function load_local_rockspec(filename, quick)
    local base = url_to_base_dir(filebase)
    rockspec.source.dir = rockspec.source.dir
                       or rockspec.source.module
-                      or ((filebase:match(".lua$") or filebase:match(".c$")) and ".")
+                      or ((filebase:match("%.lua$") or filebase:match("%.c$")) and ".")
                       or base
    if rockspec.dependencies then
       for i = 1, #rockspec.dependencies do
