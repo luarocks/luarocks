@@ -611,8 +611,10 @@ local function http_request(url, http, cached)
    if result then
       if cached and headers["last-modified"] then
          local tsfd = io.open(cached..".timestamp", "w")
-         tsfd:write(headers["last-modified"])
-         tsfd:close()
+         if tsfd then
+            tsfd:write(headers["last-modified"])
+            tsfd:close()
+         end
       end
       return table.concat(result)
    else
