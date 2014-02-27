@@ -498,6 +498,14 @@ function fs_lua.unzip(zipfile)
          local ok, err = fs.make_dir(dir.path(fs.current_dir(), file.filename))
          if not ok then return nil, err end
       else
+         local base = dir.dir_name(file.filename)
+         if base ~= "" then
+            base = dir.path(fs.current_dir(), base)
+            if not fs.is_dir(base) then
+               local ok, err = fs.make_dir(base)
+               if not ok then return nil, err end
+            end
+         end
          local rf, err = zipfile:open(file.filename)
          if not rf then zipfile:close(); return nil, err end
          local contents = rf:read("*a")
