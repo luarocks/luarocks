@@ -1,4 +1,3 @@
-
 --- Module for handling manifest files and tables.
 -- Manifest files describe the contents of a LuaRocks tree or server.
 -- They are loaded into manifest tables, which are then used for
@@ -253,7 +252,7 @@ local function update_dependencies(manifest, deps_mode)
                   for miss, err in pairs(missing) do
                      if miss == current then
                         util.printerr("Tree inconsistency detected: "..current.." has no rockspec. "..err)
-                     else
+                     elseif deps_mode ~= "none" then
                         util.printerr("Missing dependency for "..pkg.." "..version..": "..miss)
                      end
                   end
