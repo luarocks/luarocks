@@ -800,4 +800,21 @@ function fs_lua.check_command_permissions(flags)
    end
 end
 
+--- Check whether a file is a Lua script
+-- Either a '.lua' extension, or a shebang with lua interpreter
+-- @param name (string) filename to check
+-- @return true if the filename has a '.lua' extension or the file contains a 
+-- 'lua' interpreter shebang
+function fs_lua.is_lua(name)
+  local is_lua = name:lower():match("%.lua$")  -- .lua extension, so it's a Lua file
+  if not is_lua then  -- check for shebang
+    local file = io.open(name)
+    if file then
+      is_lua = file:read():match("#!.*lua.*")  -- no extension, but a shebang, so it's a Lua file
+      file:close()
+    end
+  end
+  return not (is_lua == nil)
+end
+
 return fs_lua
