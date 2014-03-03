@@ -801,20 +801,16 @@ function fs_lua.check_command_permissions(flags)
 end
 
 --- Check whether a file is a Lua script
--- Either a '.lua' extension, or a shebang with lua interpreter
--- @param name (string) filename to check
--- @return true if the filename has a '.lua' extension or the file contains a 
--- 'lua' interpreter shebang
+-- When the file can be succesfully compiled by the configured
+-- Lua interpreter, it's considered to be a valid Lua file.
+-- @param name filename of file to check
+-- @return boolean true, if it is a Lua script, false otherwise
 function fs_lua.is_lua(name)
-  local is_lua = name:lower():match("%.lua$")  -- .lua extension, so it's a Lua file
-  if not is_lua then  -- check for shebang
-    local file = io.open(name)
-    if file then
-      is_lua = file:read():match("#!.*lua.*")  -- no extension, but a shebang, so it's a Lua file
-      file:close()
-    end
-  end
-  return not (is_lua == nil)
+  name = name:gsub([[%\]],"/")   -- normalize on fw slash to prevent escaping issues
+  local lua = fs.Q(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter))  -- get lua interpreter configured
+  -- execute on configured interpreter, might not be the same as the interpreter LR is run on
+  local result = fs.execute_string(lua..[[ -e "if loadfile(']]..name..[[') then os.exit() else os.exit(1) end"]])
+  return (result == true) 
 end
 
 return fs_lua
