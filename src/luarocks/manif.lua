@@ -131,7 +131,7 @@ function load_manifest(repo_url)
       local err, errcode
       for _, filename in ipairs(filenames) do
          pathname, err, errcode = fetch_manifest_from(repo_url, filename)
-         if pathname or errcode == "network" then
+         if pathname then
             break
          end
       end
