@@ -800,4 +800,17 @@ function fs_lua.check_command_permissions(flags)
    end
 end
 
+--- Check whether a file is a Lua script
+-- When the file can be succesfully compiled by the configured
+-- Lua interpreter, it's considered to be a valid Lua file.
+-- @param name filename of file to check
+-- @return boolean true, if it is a Lua script, false otherwise
+function fs_lua.is_lua(name)
+  name = name:gsub([[%\]],"/")   -- normalize on fw slash to prevent escaping issues
+  local lua = fs.Q(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter))  -- get lua interpreter configured
+  -- execute on configured interpreter, might not be the same as the interpreter LR is run on
+  local result = fs.execute_string(lua..[[ -e "if loadfile(']]..name..[[') then os.exit() else os.exit(1) end"]])
+  return (result == true) 
+end
+
 return fs_lua

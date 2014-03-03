@@ -153,18 +153,12 @@ end
 local function install_binary(source, target, name, version)
    assert(type(source) == "string")
    assert(type(target) == "string")
-
-   local match = source:match("%.lua$")
-   local file, ok, err
-   if not match then
-      file = io.open(source)
-   end
-   if match or (file and file:read():match("^#!.*lua.*")) then
+   
+   if fs.is_lua(source) then
       ok, err = fs.wrap_script(source, target, name, version)
    else
       ok, err = fs.copy_binary(source, target)
    end
-   if file then file:close() end
    return ok, err
 end
 
