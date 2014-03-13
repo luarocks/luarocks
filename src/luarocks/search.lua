@@ -217,7 +217,6 @@ function search_repos(query)
    end
    -- search through rocks in cfg.rocks_provided
    local provided_repo = "provided by VM or rocks_provided"
-   local name, versions
    for name, versions in pairs(cfg.rocks_provided) do
       store_if_match(results, provided_repo, name, versions, "installed", query)
    end

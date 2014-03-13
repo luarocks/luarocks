@@ -12,7 +12,6 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
 local manif = require("luarocks.manif")
-local search = require("luarocks.search")
 local remove = require("luarocks.remove")
 local cfg = require("luarocks.cfg")
 

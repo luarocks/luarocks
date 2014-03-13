@@ -25,7 +25,7 @@ local function die(message, exitcode)
 end
 
 local function replace_tree(flags, args, tree)
-   local tree = dir.normalize(tree)
+   tree = dir.normalize(tree)
    flags["tree"] = tree
    for i = 1, #args do
       if args[i]:match("%-%-tree=") then

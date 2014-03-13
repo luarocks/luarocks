@@ -6,7 +6,6 @@ local search = require("luarocks.search")
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
-local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
 local fetch = require("luarocks.fetch")
 local manif = require("luarocks.manif")
@@ -52,17 +51,6 @@ local function format_text(text)
       paragraphs[n] = word_wrap(line)
    end
    return (table.concat(paragraphs, "\n\n"):gsub("%s$", ""))
-end
-
-local function module_name(mod, filename, name, version, repo, manifest)
-   local base_dir
-   if filename:match("%.lua$") then
-      base_dir = path.deploy_lua_dir(repo)
-   else
-      base_dir = path.deploy_lib_dir(repo)
-   end
-   
-   return dir.path(base_dir, filename)
 end
 
 function pick_installed_rock(name, version, tree)

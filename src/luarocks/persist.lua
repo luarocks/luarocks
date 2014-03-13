@@ -19,7 +19,7 @@ function load_into_table(filename, tbl)
    assert(type(tbl) == "table" or not tbl)
 
    local result, chunk, ran, err
-   local result = tbl or {}
+   result = tbl or {}
    local globals = {}
    local globals_mt = {
       __index = function(t, n)

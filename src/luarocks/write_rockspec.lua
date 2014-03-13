@@ -49,7 +49,6 @@ local function get_url(rockspec)
       return false
    end
    util.printout("File successfully downloaded. Making checksum and checking base dir...")
-   local md5 = nil
    if fetch.is_basic_protocol(rockspec.source.protocol) then
       rockspec.source.md5 = fs.get_md5(file)
    end
