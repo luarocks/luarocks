@@ -140,7 +140,6 @@ function parse_version(vstring)
             version[i] = 0
             break
          end
-         local last = #version
          version[i] = deltas[token] or (token:byte() / 1000)
       end
       vstring = rest

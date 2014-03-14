@@ -58,7 +58,6 @@ function add_context(name, version)
       return nil
    end
 
-   local providers = {}
    for _, tree in ipairs(rocks_trees) do
       local manifest = tree.manifest
 

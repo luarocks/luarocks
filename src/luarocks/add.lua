@@ -5,7 +5,6 @@ module("luarocks.add", package.seeall)
 
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
-local fetch = require("luarocks.fetch")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local index = require("luarocks.index")

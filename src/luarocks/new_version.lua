@@ -4,11 +4,9 @@
 module("luarocks.new_version", package.seeall)
 
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
 local download = require("luarocks.download")
 local fetch = require("luarocks.fetch")
 local persist = require("luarocks.persist")
-local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
 local type_check = require("luarocks.type_check")
 

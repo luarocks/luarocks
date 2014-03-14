@@ -71,7 +71,6 @@ function run(...)
 	Variables from the "variables" table of the configuration file
 	can be overriden with VAR=VALUE assignments.]])
       print_section("COMMANDS")
-      local names = {}
       for name, command in util.sortedpairs(commands) do
          local cmd = require(command)
          util.printout("", name)
