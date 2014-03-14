@@ -79,7 +79,7 @@ function make_rock_manifest(name, version)
          last[last_name] = sum
       end
    end
-   local rock_manifest = { rock_manifest=tree }
+   rock_manifest = { rock_manifest=tree }
    rock_manifest_cache[name.."/"..version] = rock_manifest
    save_table(install_dir, "rock_manifest", rock_manifest )
 end
