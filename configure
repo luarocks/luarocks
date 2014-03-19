@@ -36,7 +36,7 @@ Where to install files installed by rocks, to make the accessible to Lua and
 your \$PATH. Beware of clashes between files installed by LuaRocks and by your
 system's package manager.
 
---rocks-tree=FILE           Root of the local tree of installed rocks.
+--rocks-tree=DIR            Root of the local tree of installed rocks.
                             Default is \$PREFIX
 
 --lua-version=VERSION       Use specific Lua version: 5.1 or 5.2
