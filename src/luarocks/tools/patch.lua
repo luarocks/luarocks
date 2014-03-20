@@ -559,15 +559,15 @@ local function strip_dirs(filename, strip)
   return filename
 end
 
-function patch.apply_patch(patch, strip)
+function patch.apply_patch(the_patch, strip)
   local all_ok = true
-  local total = #patch.source
-  for fileno, filename in ipairs(patch.source) do
+  local total = #the_patch.source
+  for fileno, filename in ipairs(the_patch.source) do
     filename = strip_dirs(filename, strip)
     local continue
     local f2patch = filename
     if not exists(f2patch) then
-      f2patch = strip_dirs(patch.target[fileno], strip)
+      f2patch = strip_dirs(the_patch.target[fileno], strip)
       f2patch = fs.absolute_name(f2patch)
       if not exists(f2patch) then  --FIX:if f2patch nil
         warning(format("source/target file does not exist\n--- %s\n+++ %s",
@@ -588,7 +588,7 @@ function patch.apply_patch(patch, strip)
     info(format("processing %d/%d:\t %s", fileno, total, filename))
 
     -- validate before patching
-    local hunks = patch.hunks[fileno]
+    local hunks = the_patch.hunks[fileno]
     local file = load_file(filename)
     local hunkno = 1
     local hunk = hunks[hunkno]

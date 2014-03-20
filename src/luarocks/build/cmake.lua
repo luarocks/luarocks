@@ -29,9 +29,9 @@ function cmake.run(rockspec)
    
    -- If inline cmake is present create CMakeLists.txt from it.
    if type(build.cmake) == "string" then
-      local cmake = assert(io.open(fs.current_dir().."/CMakeLists.txt", "w"))
-      cmake:write(build.cmake)
-      cmake:close()
+      local cmake_handler = assert(io.open(fs.current_dir().."/CMakeLists.txt", "w"))
+      cmake_handler:write(build.cmake)
+      cmake_handler:close()
    end
 
 

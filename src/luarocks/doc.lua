@@ -1,7 +1,9 @@
 
 --- Module implementing the LuaRocks "doc" command.
 -- Shows documentation for an installed rock.
-module("luarocks.doc", package.seeall)
+--module("luarocks.doc", package.seeall)
+local doc = {}
+package.loaded["luarocks.doc"] = doc
 
 local util = require("luarocks.util")
 local show = require("luarocks.show")
@@ -11,9 +13,9 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local download = require("luarocks.download")
 
-help_summary = "Shows documentation for an installed rock."
+doc.help_summary = "Shows documentation for an installed rock."
 
-help = [[
+doc.help = [[
 <argument> is an existing package name.
 Without any flags, tries to load the documentation
 using a series of heuristics.
@@ -56,7 +58,7 @@ end
 -- @param name or nil: an existing package name.
 -- @param version string or nil: a version may also be passed.
 -- @return boolean: True if succeeded, nil on errors.
-function run(...)
+function doc.run(...)
    local flags, name, version = util.parse_flags(...)
    if not name then
       return nil, "Argument missing. "..util.see_help("doc")
@@ -150,3 +152,5 @@ function run(...)
    return true
 end
 
+
+return doc

@@ -1,7 +1,9 @@
 
 --- Module implementing the LuaRocks "pack" command.
 -- Creates a rock, packing sources or binaries.
-module("luarocks.pack", package.seeall)
+--module("luarocks.pack", package.seeall)
+local pack = {}
+package.loaded["luarocks.pack"] = pack
 
 local path = require("luarocks.path")
 local repos = require("luarocks.repos")
@@ -13,9 +15,9 @@ local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local search = require("luarocks.search")
 
-help_summary = "Create a rock, packing sources or binaries."
-help_arguments = "{<rockspec>|<name> [<version>]}"
-help = [[
+pack.help_summary = "Create a rock, packing sources or binaries."
+pack.help_arguments = "{<rockspec>|<name> [<version>]}"
+pack.help = [[
 Argument may be a rockspec file, for creating a source rock,
 or the name of an installed package, for creating a binary rock.
 In the latter case, the app version may be given as a second
@@ -154,7 +156,7 @@ local function do_pack_binary_rock(name, version)
    return rock_file
 end
 
-function pack_binary_rock(name, version, cmd, ...)
+function pack.pack_binary_rock(name, version, cmd, ...)
 
    -- The --pack-binary-rock option for "luarocks build" basically performs
    -- "luarocks build" on a temporary tree and then "luarocks pack". The
@@ -188,7 +190,7 @@ end
 -- version may also be passed.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-function run(...)
+function pack.run(...)
    local flags, arg, version = util.parse_flags(...)
    assert(type(version) == "string" or not version)
    if type(arg) ~= "string" then
@@ -208,3 +210,5 @@ function run(...)
       return true
    end
 end
+
+return pack

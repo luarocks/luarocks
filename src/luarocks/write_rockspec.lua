@@ -1,5 +1,7 @@
 
-module("luarocks.write_rockspec", package.seeall)
+--module("luarocks.write_rockspec", package.seeall)
+local write_rockspec = {}
+package.loaded["luarocks.write_rockspec"] = write_rockspec
 
 local dir = require("luarocks.dir")
 local fetch = require("luarocks.fetch")
@@ -9,9 +11,9 @@ local persist = require("luarocks.persist")
 local type_check = require("luarocks.type_check")
 local util = require("luarocks.util")
 
-help_summary = "Write a template for a rockspec file."
-help_arguments = "[--output=<file> ...] [<name>] [<version>] {<url>|<path>}"
-help = [[
+write_rockspec.help_summary = "Write a template for a rockspec file."
+write_rockspec.help_arguments = "[--output=<file> ...] [<name>] [<version>] {<url>|<path>}"
+write_rockspec.help = [[
 This command writes an initial version of a rockspec file,
 based on an URL or a local path. You may use a relative path such as '.'.
 If a local path is given, name and version arguments are mandatory.
@@ -188,7 +190,7 @@ local function rockspec_cleanup(rockspec)
    rockspec.name = nil
 end
 
-function run(...)
+function write_rockspec.run(...)
    local flags, name, version, url_or_dir = util.parse_flags(...)
    
    if not name then
@@ -328,3 +330,5 @@ function run(...)
 
    return true
 end
+
+return write_rockspec

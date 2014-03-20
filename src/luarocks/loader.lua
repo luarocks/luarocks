@@ -9,19 +9,21 @@ local global_env = _G
 local package, require, ipairs, pairs, table, type, next, unpack, tostring, error =
       package, require, ipairs, pairs, table, type, next, unpack, tostring, error
 
-module("luarocks.loader")
+--module("luarocks.loader")
+local loader = {}
+package.loaded["luarocks.loader"] = loader
 
 local path = require("luarocks.path")
 local manif_core = require("luarocks.manif_core")
 local deps = require("luarocks.deps")
 local cfg = require("luarocks.cfg")
 
-context = {}
+loader.context = {}
 
 -- Contains a table when rocks trees are loaded,
 -- or 'false' to indicate rocks trees failed to load.
 -- 'nil' indicates rocks trees were not attempted to be loaded yet.
-rocks_trees = nil
+loader.rocks_trees = nil
 
 local function load_rocks_trees() 
    local any_ok = false
@@ -34,10 +36,10 @@ local function load_rocks_trees()
       end
    end
    if not any_ok then
-      rocks_trees = false
+      loader.rocks_trees = false
       return false
    end
-   rocks_trees = trees
+   loader.rocks_trees = trees
    return true
 end
 
@@ -45,20 +47,20 @@ end
 -- chain for loading modules.
 -- @param name string: The name of an installed rock.
 -- @param version string: The version of the rock, in string format
-function add_context(name, version)
+function loader.add_context(name, version)
    -- assert(type(name) == "string")
    -- assert(type(version) == "string")
 
-   if context[name] then
+   if loader.context[name] then
       return
    end
-   context[name] = version
+   loader.context[name] = version
 
-   if not rocks_trees and not load_rocks_trees() then
+   if not loader.rocks_trees and not load_rocks_trees() then
       return nil
    end
 
-   for _, tree in ipairs(rocks_trees) do
+   for _, tree in ipairs(loader.rocks_trees) do
       local manifest = tree.manifest
 
       local pkgdeps
@@ -71,12 +73,12 @@ function add_context(name, version)
       for _, dep in ipairs(pkgdeps) do
          local pkg, constraints = dep.name, dep.constraints
    
-         for _, tree in ipairs(rocks_trees) do
+         for _, tree in ipairs(loader.rocks_trees) do
             local entries = tree.manifest.repository[pkg]
             if entries then
                for version, pkgs in pairs(entries) do
                   if (not constraints) or deps.match_constraints(deps.parse_version(version), constraints) then
-                     add_context(pkg, version)
+                     loader.add_context(pkg, version)
                   end
                end
             end
@@ -107,9 +109,9 @@ end
 -- @return table or (nil, string): The module table as returned by some other loader,
 -- or nil followed by an error message if no other loader managed to load the module.
 local function call_other_loaders(module, name, version, module_name)
-   for i, loader in ipairs(package.loaders) do
-      if loader ~= luarocks_loader then
-         local results = { loader(module_name) }
+   for i, a_loader in ipairs(package.loaders) do
+      if a_loader ~= loader.luarocks_loader then
+         local results = { a_loader(module_name) }
          if type(results[1]) == "function" then
             return unpack(results)
          end
@@ -133,12 +135,12 @@ local function select_module(module, filter_module_name)
    --assert(type(module) == "string")
    --assert(type(filter_module_name) == "function")
 
-   if not rocks_trees and not load_rocks_trees() then
+   if not loader.rocks_trees and not load_rocks_trees() then
       return nil
    end
 
    local providers = {}
-   for _, tree in ipairs(rocks_trees) do
+   for _, tree in ipairs(loader.rocks_trees) do
       local entries = tree.manifest.modules[module]
       if entries then
          for i, entry in ipairs(entries) do
@@ -148,7 +150,7 @@ local function select_module(module, filter_module_name)
                error("Invalid data in manifest file for module "..tostring(module).." (invalid data for "..tostring(name).." "..tostring(version)..")")
             end
             module_name = filter_module_name(module_name, name, version, tree.tree, i)
-            if context[name] == version then
+            if loader.context[name] == version then
                return name, version, module_name
             end
             version = deps.parse_version(version)
@@ -184,7 +186,7 @@ end
 --- Return the pathname of the file that would be loaded for a module.
 -- @param module string: module name (eg. "socket.core")
 -- @return string: filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so")
-function which(module)
+function loader.which(module)
    local name, version, module_name = select_module(module, path.which_i)
    return module_name
 end
@@ -198,14 +200,16 @@ end
 -- @return table: The module table (typically), like in plain
 -- require(). See <a href="http://www.lua.org/manual/5.1/manual.html#pdf-require">require()</a>
 -- in the Lua reference manual for details.
-function luarocks_loader(module)
+function loader.luarocks_loader(module)
    local name, version, module_name = pick_module(module)
    if not name then
       return "No LuaRocks module found for "..module
    else
-      add_context(name, version)
+      loader.add_context(name, version)
       return call_other_loaders(module, name, version, module_name)
    end
 end
 
-table.insert(global_env.package.loaders, 1, luarocks_loader)
+table.insert(global_env.package.loaders, 1, loader.luarocks_loader)
+
+return loader

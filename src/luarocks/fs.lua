@@ -7,7 +7,9 @@
 
 local pairs = pairs
 
-module("luarocks.fs", package.seeall)
+--module("luarocks.fs", package.seeall)
+local fs = {}
+package.loaded["luarocks.fs"] = fs
 
 local cfg = require("luarocks.cfg")
 
@@ -15,7 +17,7 @@ local pack = table.pack or function(...) return { n = select("#", ...), ... } en
 local unpack = table.unpack or unpack
 
 local old_popen, old_exec
-_M.verbose = function()    -- patch io.popen and os.execute to display commands in verbose mode
+fs.verbose = function()    -- patch io.popen and os.execute to display commands in verbose mode
   if old_popen or old_exec then return end
   old_popen = io.popen
   io.popen = function(one, two)
@@ -38,12 +40,12 @@ _M.verbose = function()    -- patch io.popen and os.execute to display commands 
     return unpack(code, 1, code.n)    
   end
 end
-if cfg.verbose then _M.verbose() end
+if cfg.verbose then fs.verbose() end
 
 local function load_fns(fs_table)
    for name, fn in pairs(fs_table) do
-      if not _M[name] then
-         _M[name] = fn
+      if not fs[name] then
+         fs[name] = fn
       end
    end
 end
@@ -67,3 +69,5 @@ load_fns(fs_lua)
 local ok, fs_plat_tools = pcall(require, "luarocks.fs."..loaded_platform..".tools")
 if ok and fs_plat_tools then load_fns(fs_plat_tools) end
 
+
+return fs

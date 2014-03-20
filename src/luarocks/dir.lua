@@ -1,14 +1,16 @@
 
 --- Generic utilities for handling pathnames.
-module("luarocks.dir", package.seeall)
+--module("luarocks.dir", package.seeall)
+local dir = {}
+package.loaded["luarocks.dir"] = dir
 
-separator = "/"
+dir.separator = "/"
 
 --- Strip the path off a path+filename.
 -- @param pathname string: A path+name, such as "/a/b/c"
 -- or "\a\b\c".
 -- @return string: The filename without its path, such as "c".
-function base_name(pathname)
+function dir.base_name(pathname)
    assert(type(pathname) == "string")
 
    local base = pathname:gsub("[/\\]*$", ""):match(".*[/\\]([^/\\]*)")
@@ -20,7 +22,7 @@ end
 -- @return string: The filename without its path, such as "/a/b".
 -- For entries such as "/a/b/", "/a" is returned. If there are
 -- no directory separators in input, "" is returned.
-function dir_name(pathname)
+function dir.dir_name(pathname)
    assert(type(pathname) == "string")
    return (pathname:gsub("/*$", ""):match("(.*)[/]+[^/]*")) or ""
 end
@@ -34,7 +36,7 @@ end
 -- @param ... strings representing directories
 -- @return string: a string with a platform-specific representation
 -- of the path.
-function path(...)
+function dir.path(...)
    local t = {...}
    while t[1] == "" do
       table.remove(t, 1)
@@ -47,7 +49,7 @@ end
 -- For local pathnames, "file" is returned as the protocol.
 -- @param url string: an URL or a local pathname.
 -- @return string, string: the protocol, and the pathname without the protocol.
-function split_url(url)
+function dir.split_url(url)
    assert(type(url) == "string")
    
    local protocol, pathname = url:match("^([^:]*)://(.*)")
@@ -63,9 +65,11 @@ end
 -- forward slashes are used, removing trailing and double slashes
 -- @param url string: an URL or a local pathname.
 -- @return string: Normalized result.
-function normalize(name)
-   local protocol, pathname = split_url(name)
+function dir.normalize(name)
+   local protocol, pathname = dir.split_url(name)
    pathname = pathname:gsub("\\", "/"):gsub("(.)/*$", "%1"):gsub("//", "/")
    if protocol ~= "file" then pathname = protocol .."://"..pathname end
    return pathname
 end
+
+return dir

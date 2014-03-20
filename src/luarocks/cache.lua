@@ -1,14 +1,16 @@
 
 --- Module handling the LuaRocks local cache.
 -- Adds a rock or rockspec to a rocks server.
-module("luarocks.cache", package.seeall)
+--module("luarocks.cache", package.seeall)
+local cache = {}
+package.loaded["luarocks.cache"] = cache
 
 local fs = require("luarocks.fs")
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 
-function get_upload_server(server)
+function cache.get_upload_server(server)
    if not server then server = cfg.upload_server end
    if not server then
       return nil, "No server specified and no default configured with upload_server."
@@ -16,7 +18,7 @@ function get_upload_server(server)
    return server, cfg.upload_servers and cfg.upload_servers[server]
 end
 
-function get_server_urls(server, upload_server)
+function cache.get_server_urls(server, upload_server)
    local download_url = server
    local login_url = nil
    if upload_server then
@@ -32,7 +34,7 @@ function get_server_urls(server, upload_server)
    return download_url, login_url
 end
 
-function split_server_url(server, url, user, password)
+function cache.split_server_url(server, url, user, password)
    local protocol, server_path = dir.split_url(url)
    if server_path:match("@") then
       local credentials
@@ -50,8 +52,8 @@ function split_server_url(server, url, user, password)
    return local_cache, protocol, server_path, user, password
 end
 
-function refresh_local_cache(server, url, user, password)
-   local local_cache, protocol, server_path, user, password = split_server_url(server, url, user, password)
+function cache.refresh_local_cache(server, url, user, password)
+   local local_cache, protocol, server_path, user, password = cache.split_server_url(server, url, user, password)
 
    local ok, err = fs.make_dir(cfg.local_cache)
    if not ok then return nil, err end
@@ -86,3 +88,5 @@ function refresh_local_cache(server, url, user, password)
    end
    return local_cache, protocol, server_path, user, password
 end
+
+return cache

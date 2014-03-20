@@ -1,16 +1,18 @@
 
 --- Module implementing the LuaRocks "list" command.
 -- Lists currently installed rocks.
-module("luarocks.list", package.seeall)
+--module("luarocks.list", package.seeall)
+local list = {}
+package.loaded["luarocks.list"] = list
 
 local search = require("luarocks.search")
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 
-help_summary = "Lists currently installed rocks."
-help_arguments = "[--porcelain] <filter>"
-help = [[
+list.help_summary = "Lists currently installed rocks."
+list.help_arguments = "[--porcelain] <filter>"
+list.help = [[
 <filter> is a substring of a rock name to filter by.
 
 --porcelain   Produce machine-friendly output.
@@ -20,7 +22,7 @@ help = [[
 -- @param filter string or nil: A substring of a rock name to filter by.
 -- @param version string or nil: a version may also be passed.
 -- @return boolean: True if succeeded, nil on errors.
-function run(...)
+function list.run(...)
    local flags, filter, version = util.parse_flags(...)
    local results = {}
    local query = search.make_query(filter and filter:lower() or "", version)
@@ -36,3 +38,5 @@ function run(...)
    search.print_results(results, flags["porcelain"])
    return true
 end
+
+return list
