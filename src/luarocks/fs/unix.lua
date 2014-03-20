@@ -7,7 +7,6 @@ local fs = require("luarocks.fs")
 
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
-local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 
 math.randomseed(os.time())

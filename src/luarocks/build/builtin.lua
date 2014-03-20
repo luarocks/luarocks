@@ -173,11 +173,9 @@ function builtin.run(rockspec)
    end
 
    local ok = true
-   local err = "Build error"
    local built_modules = {}
    local luadir = path.lua_dir(rockspec.name, rockspec.version)
    local libdir = path.lib_dir(rockspec.name, rockspec.version)
-   local docdir = path.doc_dir(rockspec.name, rockspec.version)
    --TODO EXEWRAPPER
    -- On Windows, compiles an .exe for each Lua file in build.install.bin, and
    -- replaces the filename with the .exe name. Strips the .lua extension if it exists,

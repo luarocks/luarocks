@@ -67,7 +67,7 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
    if not fs.execute(unpack(command)) then
       return nil, "Failed cloning git repository."
    end
-   local ok, err = fs.change_dir(module)
+   ok, err = fs.change_dir(module)
    if not ok then return nil, err end
    if tag_or_branch and not git_can_clone_by_tag() then
       local checkout_command = {fs.Q(git_cmd), "checkout", tag_or_branch}

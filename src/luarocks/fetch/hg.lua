@@ -45,7 +45,7 @@ function hg.get_sources(rockspec, extract, dest_dir)
    if not fs.execute(unpack(command)) then
       return nil, "Failed cloning hg repository."
    end
-   local ok, err = fs.change_dir(module)
+   ok, err = fs.change_dir(module)
    if not ok then return nil, err end
 
    fs.delete(dir.path(store_dir, module, ".hg"))

@@ -6,14 +6,13 @@
 -- Code is heavilly based on the Python-based patch.py version 8.06-1
 --   Copyright (c) 2008 rainforce.org, MIT License
 --   Project home: http://code.google.com/p/python-patch/ .
+--   Version 0.1
 
 --module("luarocks.tools.patch", package.seeall)
 local patch = {}
 
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
-
-local version = '0.1'
 
 local io = io
 local os = os
@@ -397,7 +396,6 @@ local function find_hunk(file, h, hno)
     for i=0,#file do
       local found = true
       local location = lineno
-      local total = #h.text - fuzz
       for l, hline in ipairs(h.text) do
         if l > fuzz then
           -- todo: \ No newline at the end of file
@@ -448,9 +446,6 @@ local function load_file(filename)
 end
 
 local function find_hunks(file, hunks)
-  local matched = true
-  local lineno = 1
-  local hno = nil
   for hno, h in ipairs(hunks) do
     find_hunk(file, h, hno)
   end
@@ -459,7 +454,6 @@ end
 local function check_patched(file, hunks)
   local matched = true
   local lineno = 1
-  local hno = nil
   local ok, err = pcall(function()
     if #file == 0 then
       error 'nomatch'
