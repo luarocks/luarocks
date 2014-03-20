@@ -195,12 +195,12 @@ end
 -- @param msg string: the warning message to display.
 function util.warn_if_not_used(var_defs, needed_set, msg)
    needed_set = make_shallow_copy(needed_set)
-   for var,val in pairs(var_defs) do
+   for _, val in pairs(var_defs) do
       for used in val:gmatch(var_format_pattern) do
          needed_set[used] = nil
       end
    end
-   for var,_ in pairs(needed_set) do
+   for var, _ in pairs(needed_set) do
       util.warning(msg:format(var))
    end
 end
