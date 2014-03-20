@@ -771,27 +771,27 @@ if exists(S[[$LUADIR\luarocks\site_config.lua]]) then
 end
 local f = io.open(vars.LUADIR.."\\luarocks\\site_config.lua", "w")
 f:write(S[=[
-module("luarocks.site_config")
-LUA_INCDIR=[[$LUA_INCDIR]]
-LUA_LIBDIR=[[$LUA_LIBDIR]]
-LUA_BINDIR=[[$LUA_BINDIR]]
-LUA_INTERPRETER=[[$LUA_INTERPRETER]]
+local site_config = {}
+site_config.LUA_INCDIR=[[$LUA_INCDIR]]
+site_config.LUA_LIBDIR=[[$LUA_LIBDIR]]
+site_config.LUA_BINDIR=[[$LUA_BINDIR]]
+site_config.LUA_INTERPRETER=[[$LUA_INTERPRETER]]
 ]=])
 if USE_MINGW then
-	f:write("LUAROCKS_UNAME_S=[[MINGW]]\n")
+	f:write("site_config.LUAROCKS_UNAME_S=[[MINGW]]\n")
 else
-	f:write("LUAROCKS_UNAME_S=[[WindowsNT]]\n")
+	f:write("site_config.LUAROCKS_UNAME_S=[[WindowsNT]]\n")
 end
 f:write(S[=[
-LUAROCKS_UNAME_M=[[$UNAME_M]]
-LUAROCKS_SYSCONFIG=[[$SYSCONFDIR\config.lua]]
-LUAROCKS_ROCKS_TREE=[[$ROCKS_TREE]]
-LUAROCKS_PREFIX=[[$PREFIX]]
-LUAROCKS_DOWNLOADER=[[wget]]
-LUAROCKS_MD5CHECKER=[[md5sum]]
+site_config.LUAROCKS_UNAME_M=[[$UNAME_M]]
+site_config.LUAROCKS_SYSCONFIG=[[$SYSCONFDIR\config.lua]]
+site_config.LUAROCKS_ROCKS_TREE=[[$ROCKS_TREE]]
+site_config.LUAROCKS_PREFIX=[[$PREFIX]]
+site_config.LUAROCKS_DOWNLOADER=[[wget]]
+site_config.LUAROCKS_MD5CHECKER=[[md5sum]]
 ]=])
 if FORCE_CONFIG then
-	f:write("local LUAROCKS_FORCE_CONFIG=true\n")
+	f:write("site_config.LUAROCKS_FORCE_CONFIG=true\n")
 end
 if exists(vars.LUADIR.."\\luarocks\\site_config.lua.bak") then
 	for line in io.lines(vars.LUADIR.."\\luarocks\\site_config.lua.bak", "r") do
@@ -800,6 +800,7 @@ if exists(vars.LUADIR.."\\luarocks\\site_config.lua.bak") then
 	end
 	exec(S[[DEL /F /Q "$LUADIR\luarocks\site_config.lua.bak"]])
 end
+f:write("return site_config\n")
 f:close()
 print(S[[Created LuaRocks site-config file: $LUADIR\luarocks\site_config.lua]])
 
