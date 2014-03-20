@@ -4,11 +4,7 @@
 -- inside specific functions) to avoid interdependencies,
 -- as this is used in the bootstrapping stage of luarocks.cfg.
 
-local global_env = _G
-
 module("luarocks.util", package.seeall)
-
-local cfg = require("luarocks.cfg")
 
 local scheduled_functions = {}
 local debug = require("debug")
@@ -374,6 +370,7 @@ function this_program(default)
 end
 
 function deps_mode_help(program)
+   local cfg = require("luarocks.cfg")
    return [[
 --deps-mode=<mode>  How to handle dependencies. Four modes are supported:
                     * all - use all trees from the rocks_trees list
