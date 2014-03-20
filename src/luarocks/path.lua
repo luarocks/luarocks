@@ -7,7 +7,6 @@ module("luarocks.path", package.seeall)
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
-local deps = require("luarocks.deps")
 
 help_summary = "Return the currently configured package path."
 help_arguments = ""
@@ -388,44 +387,5 @@ function which(module_name, filename, name, version, tree, manifest)
       end
    end
    assert(false)
-end
-
---- Driver function for "path" command.
--- @return boolean This function always succeeds.
-function run(...)
-   local flags = util.parse_flags(...)
-   local deps_mode = deps.get_deps_mode(flags)
-   
-   local lr_path, lr_cpath = cfg.package_paths()
-   local bin_dirs = map_trees(deps_mode, deploy_bin_dir)
-
-   if flags["lr-path"] then
-      util.printout(util.remove_path_dupes(lr_path, ';'))
-      return true
-   elseif flags["lr-cpath"] then
-      util.printout(util.remove_path_dupes(lr_cpath, ';'))
-      return true
-   elseif flags["lr-bin"] then
-      local lr_bin = util.remove_path_dupes(table.concat(bin_dirs, cfg.export_path_separator), cfg.export_path_separator)
-      util.printout(util.remove_path_dupes(lr_bin, ';'))
-      return true
-   end
-   
-   if flags["append"] then
-      lr_path = package.path .. ";" .. lr_path
-      lr_cpath = package.cpath .. ";" .. lr_cpath
-   else
-      lr_path =  lr_path.. ";" .. package.path
-      lr_cpath = lr_cpath .. ";" .. package.cpath
-   end
-
-   util.printout(cfg.export_lua_path:format(util.remove_path_dupes(lr_path, ';')))
-   util.printout(cfg.export_lua_cpath:format(util.remove_path_dupes(lr_cpath, ';')))
-   if flags["bin"] then
-      table.insert(bin_dirs, 1, os.getenv("PATH"))
-      local lr_bin = util.remove_path_dupes(table.concat(bin_dirs, cfg.export_path_separator), cfg.export_path_separator)
-      util.printout(cfg.export_path:format(lr_bin))
-   end
-   return true
 end
 

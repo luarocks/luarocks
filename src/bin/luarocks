@@ -1,5 +1,4 @@
 #!/usr/bin/env lua
-
 local loader = require("luarocks.loader")
 local command_line = require("luarocks.command_line")
 
@@ -16,7 +15,7 @@ commands = {
    remove = "luarocks.remove",
    make = "luarocks.make",
    download = "luarocks.download",
-   path = "luarocks.path",
+   path = "luarocks.path_cmd",
    show = "luarocks.show",
    new_version = "luarocks.new_version",
    lint = "luarocks.lint",
