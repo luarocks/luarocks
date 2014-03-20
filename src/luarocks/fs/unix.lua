@@ -1,6 +1,7 @@
 
 --- Unix implementation of filesystem and platform abstractions.
-module("luarocks.fs.unix", package.seeall)
+--module("luarocks.fs.unix", package.seeall)
+local unix = {}
 
 local fs = require("luarocks.fs")
 
@@ -14,7 +15,7 @@ math.randomseed(os.time())
 --- Annotate command string for quiet execution.
 -- @param cmd string: A command-line string.
 -- @return string: The command-line, with silencing annotation.
-function quiet(cmd)
+function unix.quiet(cmd)
    return cmd.." 1> /dev/null 2> /dev/null"
 end
 
@@ -24,7 +25,7 @@ end
 -- pathname absolute, or the current dir in the dir stack if
 -- not given.
 -- @return string: The pathname converted to absolute.
-function absolute_name(pathname, relative_to)
+function unix.absolute_name(pathname, relative_to)
    assert(type(pathname) == "string")
    assert(type(relative_to) == "string" or not relative_to)
 
@@ -43,7 +44,7 @@ end
 -- @param version string: rock version to be used in loader context.
 -- @return boolean or (nil, string): True if succeeded, or nil and
 -- an error message.
-function wrap_script(file, dest, name, version)
+function unix.wrap_script(file, dest, name, version)
    assert(type(file) == "string")
    assert(type(dest) == "string")
    
@@ -72,7 +73,7 @@ end
 -- @param filename string: the file name with full path.
 -- @return boolean: returns true if file is an actual binary
 -- (or if it couldn't check) or false if it is a Lua wrapper.
-function is_actual_binary(filename)
+function unix.is_actual_binary(filename)
    if filename:match("%.lua$") then
       return false
    end
@@ -89,7 +90,7 @@ function is_actual_binary(filename)
    return first ~= "#!"
 end
 
-function copy_binary(filename, dest) 
+function unix.copy_binary(filename, dest) 
    return fs.copy(filename, dest, "0755")
 end
 
@@ -103,6 +104,8 @@ end
 -- which will replace old_file.
 -- @return boolean or (nil, string): True if succeeded, or nil and
 -- an error message.
-function replace_file(old_file, new_file)
+function unix.replace_file(old_file, new_file)
    return os.rename(new_file, old_file)
 end
+
+return unix

@@ -1,6 +1,7 @@
 
 --- A pure-Lua implementation of untar (unpacking .tar archives)
-module("luarocks.tools.tar", package.seeall)
+--module("luarocks.tools.tar", package.seeall)
+local tar = {}
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
@@ -82,7 +83,7 @@ local function read_header_block(block)
    return header
 end
 
-function untar(filename, destdir)
+function tar.untar(filename, destdir)
    assert(type(filename) == "string")
    assert(type(destdir) == "string")
 
@@ -144,3 +145,5 @@ function untar(filename, destdir)
    end
    return true
 end
+
+return tar

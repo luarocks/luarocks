@@ -1,6 +1,7 @@
 
 --- A builtin build system: back-end to provide a portable way of building C-based Lua modules.
-module("luarocks.build.builtin", package.seeall)
+--module("luarocks.build.builtin", package.seeall)
+local builtin = {}
 
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
@@ -45,7 +46,7 @@ end
 -- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string): true if no errors ocurred,
 -- nil and an error message otherwise.
-function run(rockspec)
+function builtin.run(rockspec)
    assert(type(rockspec) == "table")
    local compile_object, compile_library, compile_wrapper_binary --TODO EXEWRAPPER
 
@@ -262,3 +263,5 @@ function run(rockspec)
    end
    return true
 end
+
+return builtin

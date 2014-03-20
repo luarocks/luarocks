@@ -7,7 +7,8 @@
 --   Copyright (c) 2008 rainforce.org, MIT License
 --   Project home: http://code.google.com/p/python-patch/ .
 
-module("luarocks.tools.patch", package.seeall)
+--module("luarocks.tools.patch", package.seeall)
+local patch = {}
 
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
@@ -153,7 +154,7 @@ local function match_linerange(line)
   return m1, m2, m3, m4
 end
 
-function read_patch(filename, data)
+function patch.read_patch(filename, data)
   -- define possible file regions that will direct the parser flow
   local state = 'header'
     -- 'header'    - comments before the patch body
@@ -564,7 +565,7 @@ local function strip_dirs(filename, strip)
   return filename
 end
 
-function apply_patch(patch, strip)
+function patch.apply_patch(patch, strip)
   local all_ok = true
   local total = #patch.source
   for fileno, filename in ipairs(patch.source) do
@@ -705,3 +706,5 @@ function apply_patch(patch, strip)
   -- todo: check for premature eof
   return all_ok
 end
+
+return patch

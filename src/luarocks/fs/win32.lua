@@ -1,7 +1,8 @@
 --- Windows implementation of filesystem and platform abstractions.
 -- Download http://unxutils.sourceforge.net/ for Windows GNU utilities
 -- used by this module.
-module("luarocks.fs.win32", package.seeall)
+--module("luarocks.fs.win32", package.seeall)
+local win32 = {}
 
 local fs = require("luarocks.fs")
 
@@ -21,7 +22,7 @@ os.execute = function(cmd, ...) return _execute(_prefix..cmd, ...) end
 --- Annotate command string for quiet execution.
 -- @param cmd string: A command-line string.
 -- @return string: The command-line, with silencing annotation.
-function quiet(cmd)
+function win32.quiet(cmd)
    return cmd.." 2> NUL 1> NUL"
 end
 
@@ -43,7 +44,7 @@ end
 -- Adds double quotes and escapes.
 -- @param arg string: Unquoted argument.
 -- @return string: Quoted argument.
-function Q(arg)
+function win32.Q(arg)
    assert(type(arg) == "string")
    -- Quote DIR for Windows
    if arg:match("^[%.a-zA-Z]?:?[\\/]")  then
@@ -64,7 +65,7 @@ end
 -- Adds double quotes and escapes.
 -- @param arg string: Unquoted argument.
 -- @return string: Quoted argument.
-function Qb(arg)
+function win32.Qb(arg)
    assert(type(arg) == "string")
    -- Quote DIR for Windows
    if arg:match("^[%.a-zA-Z]?:?[\\/]")  then
@@ -86,7 +87,7 @@ end
 -- pathname absolute, or the current dir in the dir stack if
 -- not given.
 -- @return string: The pathname converted to absolute.
-function absolute_name(pathname, relative_to)
+function win32.absolute_name(pathname, relative_to)
    assert(type(pathname) == "string")
    assert(type(relative_to) == "string" or not relative_to)
 
@@ -107,7 +108,7 @@ end
 -- @param version string: rock version to be used in loader context.
 -- @return boolean or (nil, string): True if succeeded, or nil and
 -- an error message.
-function wrap_script(file, dest, name, version)
+function win32.wrap_script(file, dest, name, version)
    assert(type(file) == "string")
    assert(type(dest) == "string")
 
@@ -128,7 +129,7 @@ function wrap_script(file, dest, name, version)
    return true
 end
 
-function is_actual_binary(name)
+function win32.is_actual_binary(name)
    name = name:lower()
    if name:match("%.bat$") or name:match("%.exe$") then
       return true
@@ -136,7 +137,7 @@ function is_actual_binary(name)
    return false
 end
 
-function copy_binary(filename, dest) 
+function win32.copy_binary(filename, dest) 
    local ok, err = fs.copy(filename, dest)
    if not ok then
       return nil, err
@@ -158,11 +159,11 @@ function copy_binary(filename, dest)
    return true
 end
 
-function chmod(filename, mode)
+function win32.chmod(filename, mode)
    return true
 end
 
-function get_permissions(filename)
+function win32.get_permissions(filename)
    return ""
 end
 
@@ -177,7 +178,7 @@ end
 -- which will replace old_file.
 -- @return boolean or (nil, string): True if succeeded, or nil and
 -- an error message.
-function replace_file(old_file, new_file)
+function win32.replace_file(old_file, new_file)
    os.remove(old_file)
    return os.rename(new_file, old_file)
 end
@@ -188,7 +189,7 @@ end
 -- for checking the result of subsequent operations.
 -- @param file string: filename to test
 -- @return boolean: true if file exists, false otherwise.
-function is_writable(file)
+function win32.is_writable(file)
    assert(file)
    file = dir.normalize(file)
    local result
@@ -212,3 +213,5 @@ function is_writable(file)
    end
    return result
 end
+
+return win32
