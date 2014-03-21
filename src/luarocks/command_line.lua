@@ -3,6 +3,8 @@
 --module("luarocks.command_line", package.seeall)
 local command_line = {}
 
+local unpack = unpack or table.unpack
+
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 local path = require("luarocks.path")

@@ -5,9 +5,10 @@
 -- table in the environment, which records which versions of packages were
 -- used to load previous modules, so that the loader chooses versions
 -- that are declared to be compatible with the ones loaded earlier.
-local global_env = _G
-local package, require, ipairs, pairs, table, type, next, unpack, tostring, error =
-      package, require, ipairs, pairs, table, type, next, unpack, tostring, error
+local loaders = package.loaders or package.searchers
+local package, require, ipairs, pairs, table, type, next, tostring, error =
+      package, require, ipairs, pairs, table, type, next, tostring, error
+local unpack = unpack or table.unpack
 
 --module("luarocks.loader")
 local loader = {}
@@ -109,7 +110,7 @@ end
 -- @return table or (nil, string): The module table as returned by some other loader,
 -- or nil followed by an error message if no other loader managed to load the module.
 local function call_other_loaders(module, name, version, module_name)
-   for i, a_loader in ipairs(package.loaders) do
+   for i, a_loader in ipairs(loaders) do
       if a_loader ~= loader.luarocks_loader then
          local results = { a_loader(module_name) }
          if type(results[1]) == "function" then
@@ -210,6 +211,6 @@ function loader.luarocks_loader(module)
    end
 end
 
-table.insert(global_env.package.loaders, 1, loader.luarocks_loader)
+table.insert(loaders, 1, loader.luarocks_loader)
 
 return loader
