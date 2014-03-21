@@ -3,6 +3,8 @@
 --module("luarocks.fetch.cvs", package.seeall)
 local cvs = {}
 
+local unpack = unpack or table.unpack
+
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")

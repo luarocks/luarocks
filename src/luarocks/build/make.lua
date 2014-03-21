@@ -3,6 +3,8 @@
 --module("luarocks.build.make", package.seeall)
 local make = {}
 
+local unpack = unpack or table.unpack
+
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")

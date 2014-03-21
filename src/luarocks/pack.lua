@@ -5,6 +5,8 @@
 local pack = {}
 package.loaded["luarocks.pack"] = pack
 
+local unpack = unpack or table.unpack
+
 local path = require("luarocks.path")
 local repos = require("luarocks.repos")
 local fetch = require("luarocks.fetch")

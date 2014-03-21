@@ -7,6 +7,8 @@
 --module("luarocks.util", package.seeall)
 local util = {}
 
+local unpack = unpack or table.unpack
+
 local scheduled_functions = {}
 local debug = require("debug")
 

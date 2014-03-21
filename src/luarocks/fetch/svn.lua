@@ -3,6 +3,8 @@
 --module("luarocks.fetch.svn", package.seeall)
 local svn = {}
 
+local unpack = unpack or table.unpack
+
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")

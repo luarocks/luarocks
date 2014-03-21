@@ -3,6 +3,8 @@
 --module("luarocks.build.builtin", package.seeall)
 local builtin = {}
 
+local unpack = unpack or table.unpack
+
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
