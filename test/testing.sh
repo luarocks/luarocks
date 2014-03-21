@@ -21,14 +21,31 @@ then
    shift
 fi
 
+luaversion=5.1.5
+
+if [ "$1" == "--lua" ]
+then
+   shift
+   luaversion=$1
+   shift
+fi
+
 testing_dir="$PWD"
 
-testing_tree="$testing_dir/testing"
-testing_sys_tree="$testing_dir/testing_sys"
-testing_tree_copy="$testing_dir/testing_copy"
-testing_sys_tree_copy="$testing_dir/testing_sys_copy"
-testing_cache="$testing_dir/testing_cache"
-testing_server="$testing_dir/testing_server"
+testing_tree="$testing_dir/testing-$luaversion"
+testing_sys_tree="$testing_dir/testing_sys-$luaversion"
+testing_tree_copy="$testing_dir/testing_copy-$luaversion"
+testing_sys_tree_copy="$testing_dir/testing_sys_copy-$luaversion"
+testing_cache="$testing_dir/testing_cache-$luaversion"
+testing_server="$testing_dir/testing_server-$luaversion"
+
+
+if [ "$1" == "--clean" ]
+then
+   shift
+   rm -rf "$testing_cache"
+   rm -rf "$testing_server"
+fi
 
 [ "$1" ] || rm -f luacov.stats.out
 rm -f luacov.report.out
@@ -42,12 +59,6 @@ rm -rf "$testing_dir/testing_config.lua"
 rm -rf "$testing_dir/testing_config_show_downloads.lua"
 rm -rf "$testing_dir/testing_config_sftp.lua"
 rm -rf "$testing_dir/luacov.config"
-
-if [ "$1" == "--clean" ]
-then
-   rm -rf "$testing_cache"
-   rm -rf "$testing_server"
-fi
 
 mkdir -p "$testing_cache"
 
@@ -126,11 +137,11 @@ export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"
 export LUA_PATH=
 export LUA_CPATH=
 
-luaversion=5.2.3
 if [ "$travis" ]
 then
+   luadir=/tmp/lua-$luaversion
    pushd /tmp
-   if [ ! -e "lua/bin/lua" ]
+   if [ ! -e "$luadir/bin/lua" ]
    then
       mkdir -p lua
       echo "Downloading lua $luaversion..."
@@ -138,11 +149,10 @@ then
       tar zxpf "lua-$luaversion.tar.gz"
       cd "lua-$luaversion"
       echo "Building lua $luaversion..."
-      make linux INSTALL_TOP=/tmp/lua &> /dev/null
-      make install INSTALL_TOP=/tmp/lua &> /dev/null
+      make linux INSTALL_TOP="$luadir" &> /dev/null
+      make install INSTALL_TOP="$luadir" &> /dev/null
    fi
    popd
-   luadir=/tmp/lua
 else
    luadir="/Programs/Lua/Current"
 fi
