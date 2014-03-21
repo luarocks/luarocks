@@ -11,7 +11,9 @@
 -- comparison criteria is the source code of this module, but the
 -- test/test_deps.lua file included with LuaRocks provides some
 -- insights on what these criteria are.
-module("luarocks.deps", package.seeall)
+--module("luarocks.deps", package.seeall)
+local deps = {}
+package.loaded["luarocks.deps"] = deps
 
 local cfg = require("luarocks.cfg")
 local manif_core = require("luarocks.manif_core")
@@ -101,7 +103,7 @@ setmetatable(version_cache, {
 -- @param vstring string: A version number in string format.
 -- @return table or nil: A version table or nil
 -- if the input string contains invalid characters.
-function parse_version(vstring)
+function deps.parse_version(vstring)
    if not vstring then return nil end
    assert(type(vstring) == "string")
 
@@ -153,8 +155,8 @@ end
 -- @param a string: one version.
 -- @param b string: another version.
 -- @return boolean: True if a > b.
-function compare_versions(a, b)
-   return parse_version(a) > parse_version(b)
+function deps.compare_versions(a, b)
+   return deps.parse_version(a) > deps.parse_version(b)
 end
 
 --- Consumes a constraint from a string, converting it to table format.
@@ -170,7 +172,7 @@ local function parse_constraint(input)
 
    local no_upgrade, op, version, rest = input:match("^(@?)([<>=~!]*)%s*([%w%.%_%-]+)[%s,]*(.*)")
    local _op = operators[op]
-   version = parse_version(version)
+   version = deps.parse_version(version)
    if not _op then
       return nil, "Encountered bad constraint operator: '"..tostring(op).."' in '"..input.."'"
    end
@@ -188,7 +190,7 @@ end
 -- @param input string: A list of constraints in string format.
 -- @return table or nil: A table representing the same constraints,
 -- or nil if the input string is invalid.
-function parse_constraints(input)
+function deps.parse_constraints(input)
    assert(type(input) == "string")
 
    local constraints, constraint, oinput = {}, nil, input
@@ -213,12 +215,12 @@ end
 -- as entered in rockspec files.
 -- @return table or nil: A table representing the same dependency relation,
 -- or nil if the input string is invalid.
-function parse_dep(dep)
+function deps.parse_dep(dep)
    assert(type(dep) == "string")
 
    local name, rest = dep:match("^%s*([a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*(.*)")
    if not name then return nil, "failed to extract dependency name from '"..tostring(dep).."'" end
-   local constraints, err = parse_constraints(rest)
+   local constraints, err = deps.parse_constraints(rest)
    if not constraints then return nil, err end
    return { name = name, constraints = constraints }
 end
@@ -228,7 +230,7 @@ end
 -- @param internal boolean or nil: Whether to display versions in their
 -- internal representation format or how they were specified.
 -- @return string: The dependency information pretty-printed as a string.
-function show_version(v, internal)
+function deps.show_version(v, internal)
    assert(type(v) == "table")
    assert(type(internal) == "boolean" or not internal)
 
@@ -242,13 +244,13 @@ end
 -- @param internal boolean or nil: Whether to display versions in their
 -- internal representation format or how they were specified.
 -- @return string: The dependency information pretty-printed as a string.
-function show_dep(dep, internal)
+function deps.show_dep(dep, internal)
    assert(type(dep) == "table")
    assert(type(internal) == "boolean" or not internal)
    
    local pretty = {}
    for _, c in ipairs(dep.constraints) do
-      table.insert(pretty, c.op .. " " .. show_version(c.version, internal))
+      table.insert(pretty, c.op .. " " .. deps.show_version(c.version, internal))
    end
    return dep.name.." "..table.concat(pretty, ", ")
 end
@@ -269,8 +271,8 @@ local function partial_match(version, requested)
    assert(type(version) == "string" or type(version) == "table")
    assert(type(requested) == "string" or type(version) == "table")
 
-   if type(version) ~= "table" then version = parse_version(version) end
-   if type(requested) ~= "table" then requested = parse_version(requested) end
+   if type(version) ~= "table" then version = deps.parse_version(version) end
+   if type(requested) ~= "table" then requested = deps.parse_version(requested) end
    if not version or not requested then return false end
    
    for i, ri in ipairs(requested) do
@@ -288,14 +290,14 @@ end
 -- @param constraints table: An array of constraints in table format.
 -- @return boolean: True if version satisfies all constraints,
 -- false otherwise.
-function match_constraints(version, constraints)
+function deps.match_constraints(version, constraints)
    assert(type(version) == "table")
    assert(type(constraints) == "table")
    local ok = true
    setmetatable(version, version_mt)
    for _, constr in pairs(constraints) do
       if type(constr.version) == "string" then
-         constr.version = parse_version(constr.version)
+         constr.version = deps.parse_version(constr.version)
       end
       local constr_version, constr_op = constr.version, constr.op
       setmetatable(constr_version, version_mt)
@@ -344,8 +346,8 @@ local function match_dep(dep, blacklist, deps_mode)
    end
    local candidates = {}
    for _, vstring in ipairs(versions) do
-      local version = parse_version(vstring)
-      if match_constraints(version, dep.constraints) then
+      local version = deps.parse_version(vstring)
+      if deps.match_constraints(version, dep.constraints) then
          table.insert(candidates, version)
       end
    end
@@ -371,7 +373,7 @@ end
 -- parsed as tables; and a table of "no-upgrade" missing dependencies
 -- (to be used in plugin modules so that a plugin does not force upgrade of
 -- its parent application).
-function match_deps(rockspec, blacklist, deps_mode)
+function deps.match_deps(rockspec, blacklist, deps_mode)
    assert(type(rockspec) == "table")
    assert(type(blacklist) == "table" or not blacklist)
    local matched, missing, no_upgrade = {}, {}, {}
@@ -411,24 +413,24 @@ end
 -- @return boolean or (nil, string, [string]): True if no errors occurred, or
 -- nil and an error message if any test failed, followed by an optional
 -- error code.
-function fulfill_dependencies(rockspec, deps_mode)
+function deps.fulfill_dependencies(rockspec, deps_mode)
 
    local search = require("luarocks.search")
    local install = require("luarocks.install")
 
    if rockspec.supported_platforms then
-      if not platforms_set then
-         platforms_set = values_set(cfg.platforms)
+      if not deps.platforms_set then
+         deps.platforms_set = values_set(cfg.platforms)
       end
       local supported = nil
       for _, plat in pairs(rockspec.supported_platforms) do
          local neg, plat = plat:match("^(!?)(.*)")
          if neg == "!" then
-            if platforms_set[plat] then
+            if deps.platforms_set[plat] then
                return nil, "This rockspec for "..rockspec.package.." does not support "..plat.." platforms."
             end
          else
-            if platforms_set[plat] then
+            if deps.platforms_set[plat] then
                supported = true
             else
                if supported == nil then
@@ -443,22 +445,22 @@ function fulfill_dependencies(rockspec, deps_mode)
       end
    end
 
-   local _, missing, no_upgrade = match_deps(rockspec, nil, deps_mode)
+   local _, missing, no_upgrade = deps.match_deps(rockspec, nil, deps_mode)
 
    if next(no_upgrade) then
       util.printerr("Missing dependencies for "..rockspec.name.." "..rockspec.version..":")
       for _, dep in pairs(no_upgrade) do
-         util.printerr(show_dep(dep))
+         util.printerr(deps.show_dep(dep))
       end
       if next(missing) then
          for _, dep in pairs(missing) do
-            util.printerr(show_dep(dep))
+            util.printerr(deps.show_dep(dep))
          end
       end
       util.printerr()
       for _, dep in pairs(no_upgrade) do
          util.printerr("This version of "..rockspec.name.." is designed for use with")
-         util.printerr(show_dep(dep)..", but is configured to avoid upgrading it")
+         util.printerr(deps.show_dep(dep)..", but is configured to avoid upgrading it")
          util.printerr("automatically. Please upgrade "..dep.name.." with")
          util.printerr("   luarocks install "..dep.name)
          util.printerr("or choose an older version of "..rockspec.name.." with")
@@ -471,7 +473,7 @@ function fulfill_dependencies(rockspec, deps_mode)
       util.printerr()
       util.printerr("Missing dependencies for "..rockspec.name..":")
       for _, dep in pairs(missing) do
-         util.printerr(show_dep(dep))
+         util.printerr(deps.show_dep(dep))
       end
       util.printerr()
 
@@ -480,7 +482,7 @@ function fulfill_dependencies(rockspec, deps_mode)
          if not match_dep(dep, nil, deps_mode) then
             local rock = search.find_suitable_rock(dep)
             if not rock then
-               return nil, "Could not satisfy dependency: "..show_dep(dep)
+               return nil, "Could not satisfy dependency: "..deps.show_dep(dep)
             end
             local ok, err, errcode = install.run(rock)
             if not ok then
@@ -530,7 +532,7 @@ end
 -- if "install" is given, do not scan for headers.
 -- @return boolean or (nil, string): True if no errors occurred, or
 -- nil and an error message if any test failed.
-function check_external_deps(rockspec, mode)
+function deps.check_external_deps(rockspec, mode)
    assert(type(rockspec) == "table")
 
    local fs = require("luarocks.fs")
@@ -668,7 +670,7 @@ end
 -- @param name string: Package name.
 -- @param version string: Package version.
 -- @return (table, table): The results and a table of missing dependencies.
-function scan_deps(results, missing, manifest, name, version, deps_mode)
+function deps.scan_deps(results, missing, manifest, name, version, deps_mode)
    assert(type(results) == "table")
    assert(type(missing) == "table")
    assert(type(manifest) == "table")
@@ -697,14 +699,14 @@ function scan_deps(results, missing, manifest, name, version, deps_mode)
    else
       rockspec = { dependencies = deplist }
    end
-   local matched, failures = match_deps(rockspec, nil, deps_mode)
+   local matched, failures = deps.match_deps(rockspec, nil, deps_mode)
    results[name] = results
    for _, match in pairs(matched) do
-      results, missing = scan_deps(results, missing, manifest, match.name, match.version, deps_mode)
+      results, missing = deps.scan_deps(results, missing, manifest, match.name, match.version, deps_mode)
    end
    if next(failures) then
       for _, failure in pairs(failures) do
-         missing[show_dep(failure)] = "failed"
+         missing[deps.show_dep(failure)] = "failed"
       end
    end
    results[name] = version
@@ -718,11 +720,11 @@ local valid_deps_modes = {
    none = true,
 }
 
-function check_deps_mode_flag(flag)
+function deps.check_deps_mode_flag(flag)
    return valid_deps_modes[flag]
 end
 
-function get_deps_mode(flags)
+function deps.get_deps_mode(flags)
    if flags["deps-mode"] then
       return flags["deps-mode"]
    else
@@ -730,6 +732,8 @@ function get_deps_mode(flags)
    end
 end
 
-function deps_mode_to_flag(deps_mode)
+function deps.deps_mode_to_flag(deps_mode)
    return "--deps-mode="..deps_mode
 end
+
+return deps

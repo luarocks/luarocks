@@ -1,6 +1,9 @@
 
 --- Fetch back-end for retrieving sources from GIT.
-module("luarocks.fetch.git", package.seeall)
+--module("luarocks.fetch.git", package.seeall)
+local git = {}
+
+local unpack = unpack or table.unpack
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
@@ -27,7 +30,7 @@ end
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function get_sources(rockspec, extract, dest_dir, depth)
+function git.get_sources(rockspec, extract, dest_dir, depth)
    assert(type(rockspec) == "table")
    assert(type(dest_dir) == "string" or not dest_dir)
 
@@ -66,7 +69,7 @@ function get_sources(rockspec, extract, dest_dir, depth)
    if not fs.execute(unpack(command)) then
       return nil, "Failed cloning git repository."
    end
-   local ok, err = fs.change_dir(module)
+   ok, err = fs.change_dir(module)
    if not ok then return nil, err end
    if tag_or_branch and not git_can_clone_by_tag() then
       local checkout_command = {fs.Q(git_cmd), "checkout", tag_or_branch}
@@ -81,3 +84,5 @@ function get_sources(rockspec, extract, dest_dir, depth)
    fs.pop_dir()
    return module, store_dir
 end
+
+return git

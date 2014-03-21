@@ -1,6 +1,8 @@
 
 --- Module which builds the index.html page to be used in rocks servers.
-module("luarocks.index", package.seeall)
+--module("luarocks.index", package.seeall)
+local index = {}
+package.loaded["luarocks.index"] = index
 
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
@@ -95,7 +97,7 @@ local index_footer_end = [[
 </html>
 ]]
 
-function format_external_dependencies(rockspec)
+function index.format_external_dependencies(rockspec)
    if rockspec.external_dependencies then
       local deplist = {}
       local listed_set = {}
@@ -123,7 +125,7 @@ function format_external_dependencies(rockspec)
    end
 end
 
-function make_index(repo)
+function index.make_index(repo)
    if not fs.is_dir(repo) then
       return nil, "Cannot access repository at "..repo
    end
@@ -162,7 +164,7 @@ function make_index(repo)
             detailed = descript.detailed or "",
             license = descript.license or "N/A",
             homepage = descript.homepage and ('| <a href="'..descript.homepage..'"'..ext_url_target..'>project homepage</a>') or "",
-            externaldependencies = format_external_dependencies(rockspec)
+            externaldependencies = index.format_external_dependencies(rockspec)
          }
          vars.detailed = vars.detailed:gsub("\n\n", "</p><p>"):gsub("%s+", " ")
          vars.detailed = vars.detailed:gsub("(https?://[a-zA-Z0-9%.%%-_%+%[%]=%?&/$@;:]+)", '<a href="%1"'..ext_url_target..'>%1</a>')
@@ -181,3 +183,5 @@ function make_index(repo)
    out:write(index_footer_end)
    out:close()
 end
+
+return index

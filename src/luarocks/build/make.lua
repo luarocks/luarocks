@@ -1,6 +1,9 @@
 
 --- Build back-end for using Makefile-based packages.
-module("luarocks.build.make", package.seeall)
+--module("luarocks.build.make", package.seeall)
+local make = {}
+
+local unpack = unpack or table.unpack
 
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
@@ -36,7 +39,7 @@ end
 -- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string): true if no errors ocurred,
 -- nil and an error message otherwise.
-function run(rockspec)
+function make.run(rockspec)
    assert(type(rockspec) == "table")
 
    local build = rockspec.build
@@ -90,3 +93,5 @@ function run(rockspec)
    end
    return true
 end
+
+return make

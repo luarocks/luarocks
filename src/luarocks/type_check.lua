@@ -1,11 +1,13 @@
 --- Type-checking functions.
 -- Functions and definitions for doing a basic lint check on files
 -- loaded by LuaRocks.
-module("luarocks.type_check", package.seeall)
+--module("luarocks.type_check", package.seeall)
+local type_check = {}
+package.loaded["luarocks.type_check"] = type_check
 
 local cfg = require("luarocks.cfg")
 
-rockspec_format = "1.0"
+type_check.rockspec_format = "1.0"
 
 local rockspec_types = {
    rockspec_format = "string",
@@ -73,22 +75,22 @@ local rockspec_types = {
    }
 }
 
-rockspec_order = {"rockspec_format", "package", "version", 
+type_check.rockspec_order = {"rockspec_format", "package", "version", 
    { "source", { "url", "tag", "branch", "md5" } },
    { "description", {"summary", "detailed", "homepage", "license" } },
    "supported_platforms", "dependencies", "external_dependencies",
    { "build", {"type", "modules", "copy_directories", "platforms"} },
    "hooks"}
 
-function load_extensions()
-   rockspec_format = "1.1"
+function type_check.load_extensions()
+   type_check.rockspec_format = "1.1"
    rockspec_types.deploy = {
       wrap_bin_scripts = true,
    }
 end
 
 if cfg.use_extensions then
-   load_extensions()
+   type_check.load_extensions()
 end
 
 rockspec_types.build.platforms.ANY = rockspec_types.build
@@ -269,11 +271,11 @@ end
 -- mismatches.
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
-function type_check_rockspec(rockspec, globals)
+function type_check.type_check_rockspec(rockspec, globals)
    assert(type(rockspec) == "table")
    if rockspec.rockspec_format then
       -- relies on global state
-      load_extensions()
+      type_check.load_extensions()
    end
    local ok, err = check_undeclared_globals(globals, rockspec_types)
    if not ok then return nil, err end
@@ -286,9 +288,11 @@ end
 -- mismatches.
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
-function type_check_manifest(manifest, globals)
+function type_check.type_check_manifest(manifest, globals)
    assert(type(manifest) == "table")
    local ok, err = check_undeclared_globals(globals, manifest_types)
    if not ok then return nil, err end
    return type_check_table(manifest, manifest_types, "")
 end
+
+return type_check

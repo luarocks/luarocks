@@ -1,7 +1,9 @@
 
 --- Module implementing the LuaRocks "unpack" command.
 -- Unpack the contents of a rock.
-module("luarocks.unpack", package.seeall)
+--module("luarocks.unpack", package.seeall)
+local unpack = {}
+package.loaded["luarocks.unpack"] = unpack
 
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
@@ -9,9 +11,9 @@ local util = require("luarocks.util")
 local build = require("luarocks.build")
 local dir = require("luarocks.dir")
 
-help_summary = "Unpack the contents of a rock."
-help_arguments = "[--force] {<rock>|<name> [<version>]}"
-help = [[
+unpack.help_summary = "Unpack the contents of a rock."
+unpack.help_arguments = "[--force] {<rock>|<name> [<version>]}"
+unpack.help = [[
 Unpacks the contents of a rock in a newly created directory.
 Argument may be a rock file, or the name of a rock in a rocks server.
 In the latter case, the app version may be given as a second argument.
@@ -145,7 +147,7 @@ end
 -- version may also be passed.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-function run(...)
+function unpack.run(...)
    local flags, name, version = util.parse_flags(...)
 
    assert(type(version) == "string" or not version)
@@ -160,3 +162,5 @@ function run(...)
       return search.act_on_src_or_rockspec(run_unpacker, name, version)
    end
 end
+
+return unpack

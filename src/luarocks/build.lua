@@ -1,7 +1,9 @@
 
 --- Module implementing the LuaRocks "build" command.
 -- Builds a rock, compiling its C parts if any.
-module("luarocks.build", package.seeall)
+--module("luarocks.build", package.seeall)
+local build = {}
+package.loaded["luarocks.build"] = build
 
 local pack = require("luarocks.pack")
 local path = require("luarocks.path")
@@ -15,9 +17,9 @@ local manif = require("luarocks.manif")
 local remove = require("luarocks.remove")
 local cfg = require("luarocks.cfg")
 
-help_summary = "Build/compile a rock."
-help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
-help = [[
+build.help_summary = "Build/compile a rock."
+build.help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
+build.help = [[
 Build and install a rock, compiling its C parts if any.
 Argument may be a rockspec file, a source rock file
 or the name of a rock to be fetched from a repository.
@@ -107,16 +109,16 @@ end
 -- @param rockspec table: A rockspec table.
 -- @return boolean or (nil, string): True if succeeded or 
 -- nil and an error message.
-function apply_patches(rockspec)
+function build.apply_patches(rockspec)
    assert(type(rockspec) == "table")
 
-   local build = rockspec.build
-   if build.extra_files then
-      extract_from_rockspec(build.extra_files)
+   local build_spec = rockspec.build
+   if build_spec.extra_files then
+      extract_from_rockspec(build_spec.extra_files)
    end
-   if build.patches then
-      extract_from_rockspec(build.patches)
-      for patch, patchdata in util.sortedpairs(build.patches) do
+   if build_spec.patches then
+      extract_from_rockspec(build_spec.patches)
+      for patch, patchdata in util.sortedpairs(build_spec.patches) do
          util.printout("Applying patch "..patch.."...")
          local ok, err = fs.apply_patch(tostring(patch), patchdata)
          if not ok then
@@ -157,7 +159,7 @@ end
 -- "none" for no trees.
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
+function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
    assert(type(rockspec_file) == "string")
    assert(type(need_to_fetch) == "boolean")
 
@@ -223,31 +225,31 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
       fs.remove_dir_if_empty(path.versions_dir(name))
    end)
 
-   local build = rockspec.build
+   local build_spec = rockspec.build
    
    if not minimal_mode then
-      ok, err = apply_patches(rockspec)
+      ok, err = build.apply_patches(rockspec)
       if err then
          return nil, err
       end
    end
    
-   if build.type ~= "none" then
+   if build_spec.type ~= "none" then
 
       -- Temporary compatibility
-      if build.type == "module" then
+      if build_spec.type == "module" then
          util.printout("Do not use 'module' as a build type. Use 'builtin' instead.")
-         build.type = "builtin"
+         build_spec.type = "builtin"
       end
 
-      if cfg.accepted_build_types and util.array_contains(cfg.accepted_build_types, build.type) then
-         return nil, "This rockspec uses the '"..build.type.."' build type, which is blocked by the 'accepted_build_types' setting in your LuaRocks configuration."
+      if cfg.accepted_build_types and util.array_contains(cfg.accepted_build_types, build_spec.type) then
+         return nil, "This rockspec uses the '"..build_spec.type.."' build type, which is blocked by the 'accepted_build_types' setting in your LuaRocks configuration."
       end
 
       local build_type
-      ok, build_type = pcall(require, "luarocks.build." .. build.type)
+      ok, build_type = pcall(require, "luarocks.build." .. build_spec.type)
       if not ok or not type(build_type) == "table" then
-         return nil, "Failed initializing build back-end for build type '"..build.type.."': "..build_type
+         return nil, "Failed initializing build back-end for build type '"..build_spec.type.."': "..build_type
       end
   
       ok, err = build_type.run(rockspec)
@@ -256,16 +258,16 @@ function build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
       end
    end
 
-   if build.install then
+   if build_spec.install then
       for id, install_dir in pairs(dirs) do
-         ok, err = install_files(build.install[id], install_dir.name, install_dir.is_module_path)
+         ok, err = install_files(build_spec.install[id], install_dir.name, install_dir.is_module_path)
          if not ok then 
             return nil, err
          end
       end
    end
    
-   local copy_directories = build.copy_directories
+   local copy_directories = build_spec.copy_directories
    local copying_default = false
    if not copy_directories then
       copy_directories = {"doc"}
@@ -340,7 +342,7 @@ end
 -- "order" for all trees with priority >= the current default, "none" for no trees.
 -- @return boolean or (nil, string, [string]): True if build was successful,
 -- or false and an error message and an optional error code.
-function build_rock(rock_file, need_to_fetch, deps_mode)
+function build.build_rock(rock_file, need_to_fetch, deps_mode)
    assert(type(rock_file) == "string")
    assert(type(need_to_fetch) == "boolean")
   
@@ -351,24 +353,24 @@ function build_rock(rock_file, need_to_fetch, deps_mode)
    local rockspec_file = path.rockspec_name_from_rock(rock_file)
    local ok, err = fs.change_dir(unpack_dir)
    if not ok then return nil, err end
-   local ok, err, errcode = build_rockspec(rockspec_file, need_to_fetch, false, deps_mode)
+   local ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode)
    fs.pop_dir()
    return ok, err, errcode
 end
  
 local function do_build(name, version, deps_mode)
    if name:match("%.rockspec$") then
-      return build_rockspec(name, true, false, deps_mode)
+      return build.build_rockspec(name, true, false, deps_mode)
    elseif name:match("%.src%.rock$") then
-      return build_rock(name, false, deps_mode)
+      return build.build_rock(name, false, deps_mode)
    elseif name:match("%.all%.rock$") then
       local install = require("luarocks.install")
       return install.install_binary_rock(name, deps_mode)
    elseif name:match("%.rock$") then
-      return build_rock(name, true, deps_mode)
+      return build.build_rock(name, true, deps_mode)
    elseif not name:match(dir.separator) then
       local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(run, name:lower(), version, deps.deps_mode_to_flag(deps_mode))
+      return search.act_on_src_or_rockspec(build.run, name:lower(), version, deps.deps_mode_to_flag(deps_mode))
    end
    return nil, "Don't know what to do with "..name
 end
@@ -381,7 +383,7 @@ end
 -- also be given.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
-function run(...)
+function build.run(...)
    local flags, name, version = util.parse_flags(...)
    if type(name) ~= "string" then
       return nil, "Argument missing. "..util.see_help("build")
@@ -403,3 +405,5 @@ function run(...)
       return name, version
    end
 end
+
+return build

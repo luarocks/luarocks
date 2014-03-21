@@ -1,7 +1,9 @@
 
 --- Module implementing the luarocks "download" command.
 -- Download a rock from the repository.
-module("luarocks.download", package.seeall)
+--module("luarocks.download", package.seeall)
+local download = {}
+package.loaded["luarocks.download"] = download
 
 local util = require("luarocks.util")
 local path = require("luarocks.path")
@@ -10,10 +12,10 @@ local search = require("luarocks.search")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 
-help_summary = "Download a specific rock file from a rocks server."
-help_arguments = "[--all] [--arch=<arch> | --source | --rockspec] [<name> [<version>]]"
+download.help_summary = "Download a specific rock file from a rocks server."
+download.help_arguments = "[--all] [--arch=<arch> | --source | --rockspec] [<name> [<version>]]"
 
-help = [[
+download.help = [[
 --all          Download all files if there are multiple matches.
 --source       Download .src.rock if available.
 --rockspec     Download .rockspec if available.
@@ -34,7 +36,7 @@ local function get_file(filename)
    end
 end
 
-function download(arch, name, version, all)
+function download.download(arch, name, version, all)
    local results, err
    local query = search.make_query(name, version)
    if arch then query.arch = arch end
@@ -79,7 +81,7 @@ end
 -- version may also be passed.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-function run(...)
+function download.run(...)
    local flags, name, version = util.parse_flags(...)
    
    assert(type(version) == "string" or not version)
@@ -98,6 +100,8 @@ function run(...)
       arch = flags["arch"]
    end
    
-   local dl, err = download(arch, name, version, flags["all"])
+   local dl, err = download.download(arch, name, version, flags["all"])
    return dl and true, err
 end
+
+return download

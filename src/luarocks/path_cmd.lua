@@ -8,6 +8,14 @@ local deps = require("luarocks.deps")
 local cfg = require("luarocks.cfg")
 local path = require("luarocks.path")
 
+path_cmd.help_summary = "Return the currently configured package path."
+path_cmd.help_arguments = ""
+path_cmd.help = [[
+Returns the package path currently configured for this installation
+of LuaRocks, formatted as shell commands to update LUA_PATH and
+LUA_CPATH. (On Unix systems, you may run: eval `luarocks path`)
+]]
+
 --- Driver function for "path" command.
 -- @return boolean This function always succeeds.
 function path_cmd.run(...)

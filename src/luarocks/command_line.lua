@@ -1,6 +1,9 @@
 
 --- Functions for command-line scripts.
-module("luarocks.command_line", package.seeall)
+--module("luarocks.command_line", package.seeall)
+local command_line = {}
+
+local unpack = unpack or table.unpack
 
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
@@ -43,7 +46,7 @@ end
 -- Uses the global table "commands", which contains
 -- the loaded modules representing commands.
 -- @param ... string: Arguments given on the command-line.
-function run_command(...)
+function command_line.run_command(...)
    local args = {...}
    local cmdline_vars = {}
    for i = #args, 1, -1 do
@@ -206,3 +209,5 @@ function run_command(...)
    end
    util.run_scheduled_functions()
 end
+
+return command_line

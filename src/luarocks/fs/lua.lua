@@ -30,7 +30,7 @@ local dir_stack = {}
 
 math.randomseed(os.time())
 
-dir_separator = "/"
+local dir_separator = "/"
 
 --- Quote argument for shell processing.
 -- Adds single quotes and escapes.
@@ -683,10 +683,10 @@ if md5_ok then
 -- @return string: The MD5 checksum or nil + error
 function fs_lua.get_md5(file)
    file = fs.absolute_name(file)
-   local file = io.open(file, "rb")
-   if not file then return nil, "Failed to open file for reading: "..file end
-   local computed = md5.sumhexa(file:read("*a"))
-   file:close()
+   local file_handler = io.open(file, "rb")
+   if not file_handler then return nil, "Failed to open file for reading: "..file end
+   local computed = md5.sumhexa(file_handler:read("*a"))
+   file_handler:close()
    if computed then return computed end
    return nil, "Failed to compute MD5 hash for file "..file
 end

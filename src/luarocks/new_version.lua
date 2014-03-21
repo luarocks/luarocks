@@ -1,7 +1,9 @@
 
 --- Module implementing the LuaRocks "new_version" command.
 -- Utility function that writes a new rockspec, updating data from a previous one.
-module("luarocks.new_version", package.seeall)
+--module("luarocks.new_version", package.seeall)
+local new_version = {}
+package.loaded["luarocks.new_version"] = new_version
 
 local util = require("luarocks.util")
 local download = require("luarocks.download")
@@ -10,9 +12,9 @@ local persist = require("luarocks.persist")
 local fs = require("luarocks.fs")
 local type_check = require("luarocks.type_check")
 
-help_summary = "Auto-write a rockspec for a new version of a rock."
-help_arguments = "{<package>|<rockspec>} [<new_version>] [<new_url>]"
-help = [[
+new_version.help_summary = "Auto-write a rockspec for a new version of a rock."
+new_version.help_arguments = "{<package>|<rockspec>} [<new_version>] [<new_url>]"
+new_version.help = [[
 This is a utility function that writes a new rockspec, updating data
 from a previous one.
 
@@ -102,7 +104,7 @@ local function update_source_section(out_rs, out_name, url, old_ver, new_ver)
    return true
 end
  
-function run(...)
+function new_version.run(...)
    local flags, input, version, url = util.parse_flags(...)
    if not input then
       return nil, "Missing arguments: expected program or rockspec. "..util.see_help("new_version")
@@ -163,3 +165,5 @@ function run(...)
    
    return true
 end
+
+return new_version

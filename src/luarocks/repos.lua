@@ -1,6 +1,8 @@
 
 --- Functions for managing the repository on disk.
-module("luarocks.repos", package.seeall)
+--module("luarocks.repos", package.seeall)
+local repos = {}
+package.loaded["luarocks.repos"] = repos
 
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
@@ -27,7 +29,7 @@ end
 -- @param version string: package version in string format
 -- @return boolean: true if a package is installed,
 -- false otherwise.
-function is_installed(name, version)
+function repos.is_installed(name, version)
    assert(type(name) == "string")
    assert(type(version) == "string")
       
@@ -72,7 +74,7 @@ end
 -- in "foo.bar" format and values are pathnames in architecture-dependent
 -- "foo/bar.so" format. If no modules are found or if package or version
 -- are invalid, an empty table is returned.
-function package_modules(package, version)
+function repos.package_modules(package, version)
    assert(type(package) == "string")
    assert(type(version) == "string")
 
@@ -91,7 +93,7 @@ end
 -- as strings and values are pathnames in architecture-dependent
 -- ".../bin/foo" format. If no modules are found or if package or version
 -- are invalid, an empty table is returned.
-function package_commands(package, version)
+function repos.package_commands(package, version)
    assert(type(package) == "string")
    assert(type(version) == "string")
 
@@ -107,7 +109,7 @@ end
 -- @param version string: version of an installed rock
 -- @return boolean: returns true if rock contains platform-specific
 -- binary executables, or false if it is a pure-Lua rock.
-function has_binaries(name, version)
+function repos.has_binaries(name, version)
    assert(type(name) == "string")
    assert(type(version) == "string")
 
@@ -123,7 +125,7 @@ function has_binaries(name, version)
    return false
 end
 
-function run_hook(rockspec, hook_name)
+function repos.run_hook(rockspec, hook_name)
    assert(type(rockspec) == "table")
    assert(type(hook_name) == "string")
 
@@ -155,11 +157,11 @@ local function install_binary(source, target, name, version)
    assert(type(target) == "string")
    
    if fs.is_lua(source) then
-      ok, err = fs.wrap_script(source, target, name, version)
+      repos.ok, repos.err = fs.wrap_script(source, target, name, version)
    else
-      ok, err = fs.copy_binary(source, target)
+      repos.ok, repos.err = fs.copy_binary(source, target)
    end
-   return ok, err
+   return repos.ok, repos.err
 end
 
 local function resolve_conflict(target, deploy_dir, name, version)
@@ -178,7 +180,7 @@ local function resolve_conflict(target, deploy_dir, name, version)
    end
 end
 
-function should_wrap_bin_scripts(rockspec)
+function repos.should_wrap_bin_scripts(rockspec)
    assert(type(rockspec) == "table")
 
    if cfg.wrap_bin_scripts ~= nil then
@@ -190,7 +192,7 @@ function should_wrap_bin_scripts(rockspec)
    return true
 end
 
-function deploy_files(name, version, wrap_bin_scripts)
+function repos.deploy_files(name, version, wrap_bin_scripts)
    assert(type(name) == "string")
    assert(type(version) == "string")
    assert(type(wrap_bin_scripts) == "boolean")
@@ -269,7 +271,7 @@ end
 -- of another version that provides the same module that
 -- was deleted. This is used during 'purge', as every module
 -- will be eventually deleted.
-function delete_version(name, version, quick)
+function repos.delete_version(name, version, quick)
    assert(type(name) == "string")
    assert(type(version) == "string")
 
@@ -323,3 +325,5 @@ function delete_version(name, version, quick)
    end
    return true
 end
+
+return repos

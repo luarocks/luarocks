@@ -1,6 +1,7 @@
 
 --- fs operations implemented with third-party tools for Unix platform abstractions.
-module("luarocks.fs.unix.tools", package.seeall)
+--module("luarocks.fs.unix.tools", package.seeall)
+local tools = {}
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
@@ -17,7 +18,7 @@ end
 --- Obtain current directory.
 -- Uses the module's internal directory stack.
 -- @return string: the absolute pathname of the current directory.
-function current_dir()
+function tools.current_dir()
    local current = cfg.cache_pwd
    if not current then
       local pipe = io.popen(fs.Q(vars.PWD))
@@ -36,7 +37,7 @@ end
 -- @param cmd string: No quoting/escaping is applied to the command.
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
-function execute_string(cmd)
+function tools.execute_string(cmd)
    local code, err = os.execute(command_at(fs.current_dir(), cmd))
    if code == 0 or code == true then
       return true
@@ -50,7 +51,7 @@ end
 -- semantics of chdir, as it does not handle errors the same way,
 -- but works well for our purposes for now.
 -- @param directory string: The directory to switch to.
-function change_dir(directory)
+function tools.change_dir(directory)
    assert(type(directory) == "string")
    if fs.is_dir(directory) then
       table.insert(dir_stack, directory)
@@ -62,12 +63,12 @@ end
 --- Change directory to root.
 -- Allows leaving a directory (e.g. for deleting it) in
 -- a crossplatform way.
-function change_dir_to_root()
+function tools.change_dir_to_root()
    table.insert(dir_stack, "/")
 end
 
 --- Change working directory to the previous in the directory stack.
-function pop_dir()
+function tools.pop_dir()
    local directory = table.remove(dir_stack)
    return directory ~= nil
 end
@@ -77,7 +78,7 @@ end
 -- too, they are created as well.
 -- @param directory string: pathname of directory to create.
 -- @return boolean: true on success, false on failure.
-function make_dir(directory)
+function tools.make_dir(directory)
    assert(directory)
    local ok, err = fs.execute(vars.MKDIR.." -p", directory)
    if not ok then
@@ -90,7 +91,7 @@ end
 -- Does not return errors (for example, if directory is not empty or
 -- if already does not exist)
 -- @param directory string: pathname of directory to remove.
-function remove_dir_if_empty(directory)
+function tools.remove_dir_if_empty(directory)
    assert(directory)
    fs.execute_quiet(vars.RMDIR, directory)
 end
@@ -99,7 +100,7 @@ end
 -- Does not return errors (for example, if directory is not empty or
 -- if already does not exist)
 -- @param directory string: pathname of directory to remove.
-function remove_dir_tree_if_empty(directory)
+function tools.remove_dir_tree_if_empty(directory)
    assert(directory)
    fs.execute_quiet(vars.RMDIR, "-p", directory)
 end
@@ -110,7 +111,7 @@ end
 -- @param perm string or nil: Permissions for destination file,
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
-function copy(src, dest, perm)
+function tools.copy(src, dest, perm)
    assert(src and dest)
    if fs.execute(vars.CP, src, dest) then
       if perm then
@@ -134,7 +135,7 @@ end
 -- @param dest string: Pathname of destination
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
-function copy_contents(src, dest)
+function tools.copy_contents(src, dest)
    assert(src and dest)
    if fs.execute_quiet(vars.CP.." -pPR "..fs.Q(src).."/* "..fs.Q(dest)) then
       return true
@@ -146,7 +147,7 @@ end
 -- For safety, this only accepts absolute paths.
 -- @param arg string: Pathname of source
 -- @return nil
-function delete(arg)
+function tools.delete(arg)
    assert(arg)
    assert(arg:sub(1,1) == "/")
    fs.execute_quiet(vars.RM, "-rf", arg)
@@ -156,7 +157,7 @@ end
 -- Yields a filename on each iteration.
 -- @param at string: directory to list
 -- @return nil
-function dir_iterator(at)
+function tools.dir_iterator(at)
    local pipe = io.popen(command_at(at, vars.LS))
    for file in pipe:lines() do
       if file ~= "." and file ~= ".." then
@@ -171,7 +172,7 @@ end
 -- directory if none is given).
 -- @return table: an array of strings with the filenames representing
 -- the contents of a directory.
-function find(at)
+function tools.find(at)
    assert(type(at) == "string" or not at)
    if not at then
       at = fs.current_dir()
@@ -193,14 +194,14 @@ end
 -- @param ... Filenames to be stored in the archive are given as
 -- additional arguments.
 -- @return boolean: true on success, false on failure.
-function zip(zipfile, ...)
+function tools.zip(zipfile, ...)
    return fs.execute(vars.ZIP.." -r", zipfile, ...)
 end
 
 --- Uncompress files from a .zip archive.
 -- @param zipfile string: pathname of .zip archive to be extracted.
 -- @return boolean: true on success, false on failure.
-function unzip(zipfile)
+function tools.unzip(zipfile)
    assert(zipfile)
    return fs.execute_quiet(vars.UNZIP, zipfile)
 end
@@ -208,7 +209,7 @@ end
 --- Test is file/directory exists
 -- @param file string: filename to test
 -- @return boolean: true if file exists, false otherwise.
-function exists(file)
+function tools.exists(file)
    assert(file)
    return fs.execute(vars.TEST, "-e", file)
 end
@@ -216,7 +217,7 @@ end
 --- Test is pathname is a directory.
 -- @param file string: pathname to test
 -- @return boolean: true if it is a directory, false otherwise.
-function is_dir(file)
+function tools.is_dir(file)
    assert(file)
    return fs.execute(vars.TEST, "-d", file)
 end
@@ -224,7 +225,7 @@ end
 --- Test is pathname is a regular file.
 -- @param file string: pathname to test
 -- @return boolean: true if it is a regular file, false otherwise.
-function is_file(file)
+function tools.is_file(file)
    assert(file)
    return fs.execute(vars.TEST, "-f", file)
 end
@@ -237,7 +238,7 @@ end
 -- filename can be given explicitly as this second argument.
 -- @return (boolean, string): true and the filename on success,
 -- false and the error message on failure.
-function download(url, filename, cache)
+function tools.download(url, filename, cache)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
 
@@ -267,7 +268,7 @@ function download(url, filename, cache)
    end
 end
 
-function chmod(pathname, mode)
+function tools.chmod(pathname, mode)
    if mode then 
       return fs.execute(vars.CHMOD, mode, pathname)
    else
@@ -277,7 +278,7 @@ end
 
 --- Apply a patch.
 -- @param patchname string: The filename of the patch.
-function apply_patch(patchname)
+function tools.apply_patch(patchname)
    return fs.execute(vars.PATCH.." -p1 -f -i ", patchname)
 end
 
@@ -286,7 +287,7 @@ end
 -- filename extension.
 -- @param archive string: Filename of archive.
 -- @return boolean or (boolean, string): true on success, false and an error message on failure.
-function unpack_archive(archive)
+function tools.unpack_archive(archive)
    assert(type(archive) == "string")
 
    local ok
@@ -318,7 +319,7 @@ local md5_cmd = {
 --- Get the MD5 checksum for a file.
 -- @param file string: The file to be computed.
 -- @return string: The MD5 checksum
-function get_md5(file)
+function tools.get_md5(file)
    local cmd = md5_cmd[cfg.md5checker]
    if not cmd then return nil, "no MD5 checker command configured" end
    local pipe = io.popen(cmd.." "..fs.Q(fs.absolute_name(file)))
@@ -331,13 +332,15 @@ function get_md5(file)
    return nil, "Failed to compute MD5 hash for file "..tostring(fs.absolute_name(file))
 end
 
-function get_permissions(filename)
+function tools.get_permissions(filename)
    local pipe = io.popen(vars.STAT.." "..vars.STATFLAG.." "..fs.Q(filename))
    local ret = pipe:read("*l")
    pipe:close()
    return ret
 end
 
-function browser(url)
+function tools.browser(url)
    return fs.execute(cfg.web_browser, url)
 end
+
+return tools
