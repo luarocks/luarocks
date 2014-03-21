@@ -19,9 +19,13 @@ end
 -- Uses the module's internal directory stack.
 -- @return string: the absolute pathname of the current directory.
 function tools.current_dir()
-   local pipe = io.popen(vars.PWD)
-   local current = pipe:read("*l")
-   pipe:close()
+   local current = cfg.cache_pwd
+   if not current then
+      local pipe = io.popen(fs.Q(vars.PWD))
+      current = pipe:read("*l")
+      pipe:close()
+      cfg.cache_pwd = current
+   end
    for _, directory in ipairs(dir_stack) do
       current = fs.absolute_name(directory, current)
    end
@@ -34,7 +38,7 @@ end
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
 function tools.execute_string(cmd)
-   local code = os.execute(command_at(fs.current_dir(), cmd))
+   local code, err = os.execute(command_at(fs.current_dir(), cmd))
    if code == 0 or code == true then
       return true
    else

@@ -1,16 +1,16 @@
 
---- Module implementing the LuaRocks "path" command.
--- Return the currently configured package path.
-local path_command = {}
+--- @module luarocks.path_cmd
+-- Driver for the `luarocks path` command.
+local path_cmd = {}
 
-local path = require("luarocks.path")
-local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local deps = require("luarocks.deps")
+local cfg = require("luarocks.cfg")
+local path = require("luarocks.path")
 
-path_command.help_summary = "Return the currently configured package path."
-path_command.help_arguments = ""
-path_command.help = [[
+path_cmd.help_summary = "Return the currently configured package path."
+path_cmd.help_arguments = ""
+path_cmd.help = [[
 Returns the package path currently configured for this installation
 of LuaRocks, formatted as shell commands to update LUA_PATH and
 LUA_CPATH. (On Unix systems, you may run: eval `luarocks path`)
@@ -18,7 +18,7 @@ LUA_CPATH. (On Unix systems, you may run: eval `luarocks path`)
 
 --- Driver function for "path" command.
 -- @return boolean This function always succeeds.
-function path_command.run(...)
+function path_cmd.run(...)
    local flags = util.parse_flags(...)
    local deps_mode = deps.get_deps_mode(flags)
    
@@ -55,4 +55,4 @@ function path_command.run(...)
    return true
 end
 
-return path_command
+return path_cmd
