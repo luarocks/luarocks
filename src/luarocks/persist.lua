@@ -34,7 +34,7 @@ function persist.load_into_table(filename, tbl)
    if _VERSION == "Lua 5.1" then -- Lua 5.1
       chunk, err = loadfile(filename)
       if chunk then
-         persist.setfenv(chunk, result)
+         setfenv(chunk, result)
          ran, err = pcall(chunk)
       end
    else -- Lua 5.2
