@@ -321,7 +321,7 @@ function util.sortedpairs(tbl, sort_function)
 end
 
 function util.lua_versions()
-   local versions = { "5.1", "5.2" }
+   local versions = { "5.1", "5.2", "5.3" }
    local i = 0
    return function()
       i = i + 1

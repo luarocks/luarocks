@@ -483,6 +483,11 @@ if cfg.lua_version >= "5.2" then
    defaults.rocks_provided["bit32"] = cfg.lua_version.."-1"
 end
 
+if cfg.lua_version >= "5.3" then
+   -- Lua 5.3+
+   defaults.rocks_provided["utf8"] = cfg.lua_version.."-1"
+end
+
 if package.loaded.jit then
    -- LuaJIT
    local lj_version = package.loaded.jit.version:match("LuaJIT (.*)"):gsub("%-","")

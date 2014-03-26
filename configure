@@ -39,7 +39,7 @@ system's package manager.
 --rocks-tree=DIR            Root of the local tree of installed rocks.
                             Default is \$PREFIX
 
---lua-version=VERSION       Use specific Lua version: 5.1 or 5.2
+--lua-version=VERSION       Use specific Lua version: 5.1, 5.2, or 5.3
                             Default is "$LUA_VERSION"
 --lua-suffix=SUFFIX         Versioning suffix to use in Lua filenames.
                             Default is "$LUA_SUFFIX" (lua$LUA_SUFFIX...)
@@ -177,7 +177,7 @@ do
    --lua-version)
       [ -n "$value" ] || die "Missing value in flag $key."
       LUA_VERSION="$value"
-      [ "$LUA_VERSION" = "5.1" -o "$LUA_VERSION" = "5.2" ] || die "Invalid Lua version in flag $key."
+      [ "$LUA_VERSION" = "5.1" -o "$LUA_VERSION" = "5.2" -o "$LUA_VERSION" = "5.3" ] || die "Invalid Lua version in flag $key."
       LUA_VERSION_SET=yes
       ;;
    --with-lua)
@@ -234,7 +234,7 @@ fi
 
 detect_lua_version() {
    detected_lua=`$1 -e 'print(_VERSION:sub(5))' 2> /dev/null`
-   if [ "$detected_lua" = "5.1" -o "$detected_lua" = "5.2" ]
+   if [ "$detected_lua" = "5.1" -o "$detected_lua" = "5.2" -o "$detected_lua" = "5.3" ]
    then
       echo "Lua version detected: $detected_lua"
       if [ "$LUA_VERSION_SET" != "yes" ]
@@ -275,8 +275,11 @@ then
    elif [ "$LUA_VERSION_SET" = "yes" -a "$LUA_VERSION" = "5.2" ]
    then
       suffixes="5.2 52 -5.2 -52"
+   elif [ "$LUA_VERSION_SET" = "yes" -a "$LUA_VERSION" = "5.3" ]
+   then
+      suffixes="5.3 53 -5.3 -53"
    else
-      suffixes="5.2 52 -5.2 -52 5.1 51 -5.1 -51"
+      suffixes="5.3 53 -5.3 -53 5.2 52 -5.2 -52 5.1 51 -5.1 -51"
    fi
    for suffix in `echo $suffixes` ""
    do
@@ -371,12 +374,14 @@ else
    die "Could not determine processor architecture. 'uname -m' failed."
 fi
 
-if [ "$LUA_VERSION" = "5.2" ]
-then
-   LUA_OTHER_VERSION=5.1
-else
-   LUA_OTHER_VERSION=5.2
-fi
+for v in 5.1 5.2 5.3; do
+  if [ "$v" != "$LUA_VERSION" ]; then
+    if [ -e "$PREFIX/share/lua/$v/luarocks/site_config.lua" ]; then
+      LUA_OTHER_VERSION="$v"
+      break
+    fi
+  fi
+done
 
 LUAROCKS_ROCKS_SUBDIR=/lib/luarocks/rocks
 if [ "$VERSIONED_ROCKS_DIR" = "yes" ]
@@ -388,7 +393,7 @@ then
    echo "Existing installation detected."
    LUAROCKS_ROCKS_SUBDIR=`grep "LUAROCKS_ROCKS_SUBDIR" "$PREFIX/share/lua/$LUA_VERSION/luarocks/site_config.lua" | sed 's,.*=\[\[\(.*\)\]\],\1,'`
    echo "Using previously configured rocks dir: $PREFIX$LUAROCKS_ROCKS_SUBDIR"
-elif [ -e "$PREFIX/share/lua/$LUA_OTHER_VERSION/luarocks/site_config.lua" ]
+elif [ -n "$LUA_OTHER_VERSION" ]
 then
    echo "Existing installation detected for other Lua version ($LUA_OTHER_VERSION)."
    LUAROCKS_ROCKS_SUBDIR=$LUAROCKS_ROCKS_SUBDIR-$LUA_VERSION

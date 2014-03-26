@@ -138,7 +138,7 @@ Configuring the destinations:
                if you create a self contained installation.
                
 Configuring the Lua interpreter:
-/LV [version]  Lua version to use; either 5.1 or 5.2.
+/LV [version]  Lua version to use; either 5.1, 5.2, or 5.3.
                Default is 5.1
 /LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
                If not provided, the installer will search the system
@@ -249,8 +249,10 @@ local function check_flags()
 	if vars.LUA_VERSION ~= "5.1" then
 		if vars.LUA_VERSION == "5.2" then
 			vars.LUA_LIB_NAMES = vars.LUA_LIB_NAMES:gsub("5([%.]?)1", "5%12")
+		elseif vars.LUA_VERSION == "5.3" then
+			vars.LUA_LIB_NAMES = vars.LUA_LIB_NAMES:gsub("5([%.]?)1", "5%13")
 		else
-			die("Bad argument: /LV must either be 5.1 or 5.2")
+			die("Bad argument: /LV must either be 5.1, 5.2, or 5.3")
 		end
 	end
 end
@@ -700,6 +702,9 @@ SETLOCAL
 SET "LUA_PATH=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH%"
 IF NOT "%LUA_PATH_5_2%"=="" (
    SET "LUA_PATH_5_2=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_2%"
+)
+IF NOT "%LUA_PATH_5_3%"=="" (
+   SET "LUA_PATH_5_3=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_3%"
 )
 SET "PATH=$BINDIR;%PATH%"
 "$LUA_INTERPRETER" "$BINDIR\]]..c..[[.lua" %*
