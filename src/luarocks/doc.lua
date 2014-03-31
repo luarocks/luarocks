@@ -129,7 +129,9 @@ function doc.run(...)
          local filename = basename..extension
          local found
          for _, file in ipairs(files) do
-            if file:lower():match(filename) and ((not found) or #file < #found) then
+            if file:lower():match(filename) and
+               ((not found) or #file < #found) and
+               fs.is_file(dir.path(docdir, file)) then
                found = file
             end
          end
