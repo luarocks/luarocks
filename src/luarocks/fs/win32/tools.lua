@@ -269,7 +269,7 @@ function tools.download(url, filename, cache)
          ok = fs.execute(wget_cmd..fs.Q(url).." 2> NUL 1> NUL")
       end
    elseif cfg.downloader == "curl" then
-      ok = fs.execute_string(fs.Q(vars.CURL).." -L --user-agent \""..cfg.user_agent.." via curl\" "..fs.Q(url).." 2> NUL 1> "..fs.Q(filename))
+      ok = fs.execute_string(fs.Q(vars.CURL).." -f -L --user-agent \""..cfg.user_agent.." via curl\" "..fs.Q(url).." 2> NUL 1> "..fs.Q(filename))
    end
    if ok then
       return true, filename
