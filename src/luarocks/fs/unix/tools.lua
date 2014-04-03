@@ -246,20 +246,20 @@ function tools.download(url, filename, cache)
 
    local ok
    if cfg.downloader == "wget" then
-      local wget_cmd = vars.WGET.." --no-check-certificate --no-cache --user-agent='"..cfg.user_agent.." via wget' --quiet "
+      local wget_cmd = fs.Q(vars.WGET).." --no-check-certificate --no-cache --user-agent='"..cfg.user_agent.." via wget' --quiet "
       if cache then
          -- --timestamping is incompatible with --output-document,
          -- but that's not a problem for our use cases.
          fs.change_dir(dir.dir_name(filename))
-         ok = fs.execute(wget_cmd.." --timestamping ", url)
+         ok = fs.execute_quiet(wget_cmd.." --timestamping ", url)
          fs.pop_dir()
       elseif filename then
-         ok = fs.execute(wget_cmd.." --output-document "..fs.Q(filename), url)
+         ok = fs.execute_quiet(wget_cmd.." --output-document ", filename, url)
       else
-         ok = fs.execute(wget_cmd, url)
+         ok = fs.execute_quiet(wget_cmd, url)
       end
    elseif cfg.downloader == "curl" then
-      ok = fs.execute_string(vars.CURL.." -f -L --user-agent '"..cfg.user_agent.." via curl' "..fs.Q(url).." 2> /dev/null 1> "..fs.Q(filename))
+      ok = fs.execute_string(fs.Q(vars.CURL).." -f -k -L --user-agent '"..cfg.user_agent.." via curl' "..fs.Q(url).." 2> /dev/null 1> "..fs.Q(filename))
    end
    if ok then
       return true, filename

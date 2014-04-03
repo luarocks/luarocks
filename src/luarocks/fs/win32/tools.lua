@@ -261,15 +261,15 @@ function tools.download(url, filename, cache)
          -- --timestamping is incompatible with --output-document,
          -- but that's not a problem for our use cases.
          fs.change_dir(dir.dir_name(filename))
-         ok = fs.execute(wget_cmd.." --timestamping "..fs.Q(url).." 2> NUL 1> NUL")
+         ok = fs.execute_quiet(wget_cmd.." --timestamping ", url)
          fs.pop_dir()
       elseif filename then
-         ok = fs.execute(wget_cmd.." --output-document "..fs.Q(filename).." "..fs.Q(url).." 2> NUL 1> NUL")
+         ok = fs.execute_quiet(wget_cmd.." --output-document ", filename, url)
       else
-         ok = fs.execute(wget_cmd..fs.Q(url).." 2> NUL 1> NUL")
+         ok = fs.execute_quiet(wget_cmd, url)
       end
    elseif cfg.downloader == "curl" then
-      ok = fs.execute_string(fs.Q(vars.CURL).." -f -L --user-agent \""..cfg.user_agent.." via curl\" "..fs.Q(url).." 2> NUL 1> "..fs.Q(filename))
+      ok = fs.execute_string(fs.Q(vars.CURL).." -f -k -L --user-agent \""..cfg.user_agent.." via curl\" "..fs.Q(url).." 2> NUL 1> "..fs.Q(filename))
    end
    if ok then
       return true, filename
