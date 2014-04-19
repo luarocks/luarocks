@@ -87,6 +87,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
 
    table.insert(files, "index.html")
    table.insert(files, "index.xml")
+   table.insert(files, "view.xsl")
    table.insert(files, "manifest")
    for ver in util.lua_versions() do
       table.insert(files, "manifest-"..ver)
