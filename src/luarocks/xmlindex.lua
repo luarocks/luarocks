@@ -51,23 +51,27 @@ a.pkg {
 a:hover {
    text-decoration: underline;
 }
+div.title {
+   font-size: 16px;
+}
 div.main {
    font-size: 12px;
    margin-left: 40px;
    margin-right: 40px;
 }
 div.main div {
-  margin-top: 12px;
-  margin-bottom: 12px;
+   margin-top: 12px;
+   margin-bottom: 12px;
 }
 table {
-  border-spacing: 2px 8px;
+   border-spacing: 2px 8px;
 }
 td.package {
    background-color: #f0f0f0;
    vertical-align: top;
 }
 td.version {
+   font-size: 16px;
    background-color: #d0d0d0;
    vertical-align: top;
    text-align: left;
@@ -103,14 +107,13 @@ div.manifest {
 <xsl:template match="package">
   <tr>
     <td class="package">
-      <div>
+      <div class="title">
         <a>
-          <xsl:attribute name="id"><xsl:value-of select="@name" /></xsl:attribute>
-          <xsl:attribute name="name"><xsl:value-of select="@name" /></xsl:attribute>
+          <xsl:attribute name="id">p<xsl:value-of select="@name" /></xsl:attribute>
+          <xsl:attribute name="name">p<xsl:value-of select="@name" /></xsl:attribute>
         </a>
-        <a>
-          <xsl:attribute name="class">pkg</xsl:attribute>
-          <xsl:attribute name="href">#<xsl:value-of select="@name" /></xsl:attribute>
+        <a class="pkg">
+          <xsl:attribute name="href">#p<xsl:value-of select="@name" /></xsl:attribute>
           <b><xsl:apply-templates select="rname" /></b>
         </a> - <xsl:apply-templates select="summary" />
       </div>
@@ -118,14 +121,13 @@ div.manifest {
         <div><xsl:apply-templates select="detailed/*" mode="copy" /></div>
         <xsl:apply-templates select="externaldeps" />
         <div>
-          <font size="-1">
-            <a>
-              <xsl:attribute name="href"><xsl:value-of select="source/@href" /></xsl:attribute>
-              latest sources
-            </a> <xsl:apply-templates select="homepage" /> | License: <xsl:choose>
+          <a>
+            <xsl:attribute name="href"><xsl:value-of select="source/@href" /></xsl:attribute>
+            latest sources
+          </a> <xsl:apply-templates select="homepage" /> | License: <xsl:choose>
             <xsl:when test="license"><xsl:apply-templates select="license" /></xsl:when>
             <xsl:otherwise>N/A</xsl:otherwise>
-          </xsl:choose></font>
+          </xsl:choose>
         </div>
       </div>
     </td>
@@ -135,10 +137,8 @@ div.manifest {
   </tr>
 </xsl:template>
 
-<xsl:template match="@* | node()" mode="copy">
-  <xsl:copy>
-    <xsl:apply-templates select="@* | node()" />
-  </xsl:copy>
+<xsl:template match="p" mode="copy">
+  <p><xsl:apply-templates select="@* | node()" mode="copy" /></p>
 </xsl:template>
 
 <xsl:template match="externaldeps">
