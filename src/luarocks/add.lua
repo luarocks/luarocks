@@ -10,6 +10,7 @@ local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local index = require("luarocks.index")
+local xmlindex = require("luarocks.xmlindex")
 local fs = require("luarocks.fs")
 local cache = require("luarocks.cache")
 
@@ -74,6 +75,8 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    
    util.printout("Updating index.html...")
    index.make_index(local_cache)
+   util.printout("Updating index.xml...")
+   xmlindex.make_index(local_cache)
 
    local login_info = ""
    if user then login_info = " -u "..user end
@@ -83,6 +86,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    end
 
    table.insert(files, "index.html")
+   table.insert(files, "index.xml")
    table.insert(files, "manifest")
    for ver in util.lua_versions() do
       table.insert(files, "manifest-"..ver)
