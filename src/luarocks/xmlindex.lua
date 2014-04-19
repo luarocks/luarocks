@@ -13,7 +13,7 @@ local manif = require("luarocks.manif")
 local ext_url_target = ' target="_blank"'
 
 local index_header = [[
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="iso-8859-1"?>
 <?xml-stylesheet type="text/xsl" href="view.xsl"?>
 <repository>
 ]]
