@@ -248,7 +248,7 @@ function tools.download(url, filename, cache)
    if cfg.downloader == "wget" then
       local wget_cmd = vars.WGET.." --no-check-certificate --no-cache --user-agent='"..cfg.user_agent.." via wget' --quiet "
       if cfg.connection_timeout > 0 then 
-        wget_cmd = wget_cmd .. "--timeout="..tonumber(cfg.connection_timeout).." " 
+        wget_cmd = wget_cmd .. "--timeout="..tonumber(cfg.connection_timeout).." --tries=1 " 
       end
       if cache then
          -- --timestamping is incompatible with --output-document,
