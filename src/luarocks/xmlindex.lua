@@ -109,12 +109,12 @@ div.manifest {
     <td class="package">
       <div class="title">
         <a>
-          <xsl:attribute name="id">p<xsl:value-of select="@name" /></xsl:attribute>
-          <xsl:attribute name="name">p<xsl:value-of select="@name" /></xsl:attribute>
+          <xsl:attribute name="id">p<xsl:value-of select="@id" /></xsl:attribute>
+          <xsl:attribute name="name">p<xsl:value-of select="@id" /></xsl:attribute>
         </a>
         <a class="pkg">
-          <xsl:attribute name="href">#p<xsl:value-of select="@name" /></xsl:attribute>
-          <b><xsl:apply-templates select="rname" /></b>
+          <xsl:attribute name="href">#p<xsl:value-of select="@id" /></xsl:attribute>
+          <b><xsl:apply-templates select="name" /></b>
         </a> - <xsl:apply-templates select="summary" />
       </div>
       <div class="main">
@@ -247,7 +247,7 @@ function xmlindex.make_index(repo)
    out:write(index_header)
    for package, version_list in util.sortedpairs(manifest.repository) do
       local latest_rockspec = nil
-      out:write( "<package name=\"", package, "\">\n  <releases>\n" )
+      out:write( "<package id=\"", package, "\">\n  <releases>\n" )
       for version, data in util.sortedpairs(version_list, deps.compare_versions) do
          out:write( "    <r version=\"", version, "\">\n" )
          table.sort(data, function(a,b) return a.arch < b.arch end)
@@ -267,7 +267,7 @@ function xmlindex.make_index(repo)
       if latest_rockspec then
          local rockspec = persist.load_into_table(dir.path(repo, latest_rockspec))
          local descript = rockspec.description or {}
-         out:write( "  <rname>", rockspec.package, "</rname>\n" )
+         out:write( "  <name>", rockspec.package, "</name>\n" )
          out:write( "  <source href=\"", rockspec.source.url, "\" />\n" )
          if descript.summary then
             local stripped = descript.summary:gsub( "^%s*(.-)%s*$", "%1" )
