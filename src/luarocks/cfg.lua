@@ -523,18 +523,24 @@ local cfg_mt = {
 setmetatable(cfg, cfg_mt)
 
 function cfg.package_paths()
-   local new_path, new_cpath = { extra_luarocks_module_dir }, {}
+   local new_path, new_cpath, new_bin = {}, {}, {}
    for _,tree in ipairs(cfg.rocks_trees) do
      if type(tree) == "string" then
-        table.insert(new_path, 1, tree..cfg.lua_modules_path.."/?.lua;"..tree..cfg.lua_modules_path.."/?/init.lua")
-        table.insert(new_cpath, 1, tree..cfg.lib_modules_path.."/?."..cfg.lib_extension)
+        table.insert(new_path, tree..cfg.lua_modules_path.."/?.lua")
+        table.insert(new_path, tree..cfg.lua_modules_path.."/?/init.lua")
+        table.insert(new_cpath, tree..cfg.lib_modules_path.."/?."..cfg.lib_extension)
+        table.insert(new_bin, tree.."/bin")
      else
-        table.insert(new_path, 1, (tree.lua_dir or tree.root..cfg.lua_modules_path).."/?.lua;"..
-           (tree.lua_dir or tree.root..cfg.lua_modules_path).."/?/init.lua")
-        table.insert(new_cpath, 1, (tree.lib_dir or tree.root..cfg.lib_modules_path).."/?."..cfg.lib_extension)
+        table.insert(new_path, (tree.lua_dir or tree.root..cfg.lua_modules_path).."/?.lua")
+        table.insert(new_path, (tree.lua_dir or tree.root..cfg.lua_modules_path).."/?/init.lua")
+        table.insert(new_cpath, (tree.lib_dir or tree.root..cfg.lib_modules_path).."/?."..cfg.lib_extension)
+        table.insert(new_bin, (tree.bin_dir or tree.root.."/bin"))
      end
    end
-   return table.concat(new_path, ";"), table.concat(new_cpath, ";")
+   if extra_luarocks_module_dir then 
+     table.insert(new_path, extra_luarocks_module_dir)
+   end
+   return table.concat(new_path, ";"), table.concat(new_cpath, ";"), table.concat(new_bin, ";")
 end
 
 function cfg.which_config()
