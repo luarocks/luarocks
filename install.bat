@@ -1,4 +1,5 @@
 rem=rem --[[
+@cd win32
 @setlocal&  set luafile="%~f0" & if exist "%~f0.bat" set luafile="%~f0.bat"
 @lua5.1\bin\lua5.1.exe %luafile% %*&  exit /b ]]
 
