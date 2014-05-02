@@ -257,6 +257,9 @@ function tools.download(url, filename, cache)
    local ok   
    if cfg.downloader == "wget" then
       local wget_cmd = fs.Q(vars.WGET).." --no-check-certificate --no-cache --user-agent=\""..cfg.user_agent.." via wget\" --quiet "
+      if cfg.connection_timeout > 0 then 
+        wget_cmd = wget_cmd .. "--timeout="..tonumber(cfg.connection_timeout).." --tries=1 " 
+      end
       if cache then
          -- --timestamping is incompatible with --output-document,
          -- but that's not a problem for our use cases.
@@ -269,7 +272,11 @@ function tools.download(url, filename, cache)
          ok = fs.execute(wget_cmd..fs.Q(url).." 2> NUL 1> NUL")
       end
    elseif cfg.downloader == "curl" then
-      ok = fs.execute_string(fs.Q(vars.CURL).." -f -L --user-agent \""..cfg.user_agent.." via curl\" "..fs.Q(url).." 2> NUL 1> "..fs.Q(filename))
+      local curl_cmd = vars.CURL.." -f -L --user-agent \""..cfg.user_agent.." via curl\" "
+      if cfg.connection_timeout > 0 then 
+        curl_cmd = curl_cmd .. "--connect-timeout="..tonumber(cfg.connection_timeout).." " 
+      end
+      ok = fs.execute_string(curl_cmd..fs.Q(url).." 2> NUL 1> "..fs.Q(filename))
    end
    if ok then
       return true, filename

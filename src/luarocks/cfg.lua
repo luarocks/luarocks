@@ -227,6 +227,7 @@ local defaults = {
    lua_interpreter = site_config.LUA_INTERPRETER or "lua",
    downloader = site_config.LUAROCKS_DOWNLOADER or "wget",
    md5checker = site_config.LUAROCKS_MD5CHECKER or "md5sum",
+   connection_timeout = 30,  -- 0 = no timeout
 
    variables = {
       MAKE = "make",
