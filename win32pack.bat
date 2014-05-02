@@ -8,7 +8,7 @@ mkdir %1\test
 mkdir %1\src
 xcopy /S/E .\test\*.* %1\test
 xcopy /S/E .\src\*.* %1\src
-xcopy /S/E .\win32\*.* %1
+xcopy /S/E .\win32\*.* %1\win32\
 copy *.* %1
 del %1\configure
 del %1\makedist
