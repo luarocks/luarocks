@@ -7,6 +7,7 @@ package.loaded["luarocks.make_manifest"] = make_manifest
 
 local manif = require("luarocks.manif")
 local index = require("luarocks.index")
+local xmlindex = require("luarocks.xmlindex")
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local deps = require("luarocks.deps")
@@ -43,6 +44,8 @@ function make_manifest.run(...)
    if ok and not flags["local-tree"] then
       util.printout("Generating index.html for "..repo)
       index.make_index(repo)
+      util.printout("Generating index.xml for "..repo)
+      xmlindex.make_index(repo)
    end
    if flags["local-tree"] then
       for luaver in util.lua_versions() do
