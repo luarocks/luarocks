@@ -707,7 +707,7 @@ IF NOT "%LUA_PATH_5_3%"=="" (
    SET "LUA_PATH_5_3=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_3%"
 )
 SET "PATH=$BINDIR;%PATH%"
-"$LUA_INTERPRETER" "$BINDIR\]]..c..[[.lua" %*
+"$LUA_BINDIR\$LUA_INTERPRETER" "$BINDIR\]]..c..[[.lua" %*
 IF NOT "%ERRORLEVEL%"=="2" GOTO EXITLR
 
 REM Permission denied error, try and auto elevate...
