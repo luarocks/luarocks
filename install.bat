@@ -1,6 +1,6 @@
 rem=rem --[[
 @setlocal&  set luafile="%~f0" & if exist "%~f0.bat" set luafile="%~f0.bat"
-@lua5.1\bin\lua5.1.exe %luafile% %*&  exit /b ]]
+@win32\lua5.1\bin\lua5.1.exe %luafile% %*&  exit /b ]]
 
 local vars = {}
 
@@ -38,7 +38,7 @@ local SELFCONTAINED = false
 -- Some helpers
 -- 
 
-local pe = assert(loadfile(".\\bin\\pe-parser.lua"))()
+local pe = assert(loadfile(".\\win32\\bin\\pe-parser.lua"))()
 
 local function die(message)
 	if message then print(message) end
@@ -80,12 +80,12 @@ local function exec(cmd)
 end
 
 local function exists(filename)
-	local cmd = [[.\bin\bin\test -e "]]..filename..[["]]
+	local cmd = [[.\win32\bin\bin\test -e "]]..filename..[["]]
 	return exec(cmd)
 end
 
 local function mkdir (dir)
-	return exec([[.\bin\bin\mkdir -p "]]..dir..[[" >NUL]])
+	return exec([[.\win32\bin\bin\mkdir -p "]]..dir..[[" >NUL]])
 end
 
 -- does the current user have admin priviledges ( = elevated)
@@ -672,7 +672,7 @@ if INSTALL_LUA then
 end
 
 -- Copy the LuaRocks binaries
-if not exec(S[[XCOPY /S bin\*.* "$BINDIR" >NUL]]) then
+if not exec(S[[XCOPY /S win32\bin\*.* "$BINDIR" >NUL]]) then
 	die()
 end
 -- Copy the LuaRocks lua source files
