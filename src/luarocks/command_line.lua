@@ -83,6 +83,15 @@ function command_line.run_command(...)
       fs.verbose()
    end
 
+   if flags["timeout"] then   -- setting it in the config file will kick-in earlier in the process
+      local timeout = tonumber(flags["timeout"])
+      if timeout then
+         cfg.connection_timeout = timeout
+      else
+         die "Argument error: --timeout expects a numeric argument."
+      end
+   end
+
    if flags["version"] then
       util.printout(program.." "..cfg.program_version)
       util.printout(program_description)

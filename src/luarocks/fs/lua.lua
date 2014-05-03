@@ -551,6 +551,9 @@ local function request(url, method, http, loop_control)
       io.write(method.." "..url.." ...\n")
    end
    local dots = 0
+   if cfg.connection_timeout and cfg.connection_timeout > 0 then
+      http.TIMEOUT = cfg.connection_timeout
+   end
    local res, status, headers, err = http.request {
       url = url,
       proxy = proxy,

@@ -66,7 +66,10 @@ function help.run(...)
 	--tree=<tree>          Which tree to operate on.
 	--local                Use the tree in the user's home directory.
 	                       To enable it, see ']]..program..[[ help path'.
-	--verbose              Display verbose output of commands executed.]])
+	--verbose              Display verbose output of commands executed.
+	--timeout=<seconds>    Timeout on network operations, in seconds.
+	                       0 means no timeout (wait forever).
+	                       Default is ]]..cfg.connection_timeout..[[.]])
       print_section("VARIABLES")
       util.printout([[
 	Variables from the "variables" table of the configuration file

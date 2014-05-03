@@ -247,7 +247,7 @@ function tools.download(url, filename, cache)
    local ok
    if cfg.downloader == "wget" then
       local wget_cmd = fs.Q(vars.WGET).." --no-check-certificate --no-cache --user-agent='"..cfg.user_agent.." via wget' --quiet "
-      if cfg.connection_timeout > 0 then 
+      if cfg.connection_timeout and cfg.connection_timeout > 0 then
         wget_cmd = wget_cmd .. "--timeout="..tonumber(cfg.connection_timeout).." --tries=1 " 
       end
       if cache then
@@ -263,7 +263,7 @@ function tools.download(url, filename, cache)
       end
    elseif cfg.downloader == "curl" then
       local curl_cmd = fs.Q(vars.CURL).." -f -k -L --user-agent '"..cfg.user_agent.." via curl' "
-      if cfg.connection_timeout > 0 then 
+      if cfg.connection_timeout and cfg.connection_timeout > 0 then
         curl_cmd = curl_cmd .. "--connect-timeout="..tonumber(cfg.connection_timeout).." " 
       end
       ok = fs.execute_string(curl_cmd..fs.Q(url).." 2> /dev/null 1> "..fs.Q(filename))
