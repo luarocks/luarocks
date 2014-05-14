@@ -1,6 +1,6 @@
 rem=rem --[[
 @setlocal&  set luafile="%~f0" & if exist "%~f0.bat" set luafile="%~f0.bat"
-@lua5.1\bin\lua5.1.exe %luafile% %*&  exit /b ]]
+@win32\lua5.1\bin\lua5.1.exe %luafile% %*&  exit /b ]]
 
 local vars = {}
 
@@ -38,7 +38,7 @@ local SELFCONTAINED = false
 -- Some helpers
 -- 
 
-local pe = assert(loadfile(".\\bin\\pe-parser.lua"))()
+local pe = assert(loadfile(".\\win32\\pe-parser.lua"))()
 
 local function die(message)
 	if message then print(message) end
@@ -80,12 +80,12 @@ local function exec(cmd)
 end
 
 local function exists(filename)
-	local cmd = [[.\bin\bin\test -e "]]..filename..[["]]
+	local cmd = [[.\win32\tools\test -e "]]..filename..[["]]
 	return exec(cmd)
 end
 
 local function mkdir (dir)
-	return exec([[.\bin\bin\mkdir -p "]]..dir..[[" >NUL]])
+	return exec([[.\win32\tools\mkdir -p "]]..dir..[[" >NUL]])
 end
 
 -- does the current user have admin priviledges ( = elevated)
@@ -666,13 +666,22 @@ if INSTALL_LUA then
 	if not exists(vars.LUA_INCDIR) then
 		mkdir(vars.LUA_INCDIR)
 	end
-	exec(S[[COPY lua5.1\bin\*.* "$LUA_BINDIR" >NUL]])
-	exec(S[[COPY lua5.1\include\*.* "$LUA_INCDIR" >NUL]])
+	exec(S[[COPY win32\lua5.1\bin\*.* "$LUA_BINDIR" >NUL]])
+	exec(S[[COPY win32\lua5.1\include\*.* "$LUA_INCDIR" >NUL]])
 	print(S"Installed the LuaRocks bundled Lua interpreter in $LUA_BINDIR")
 end
 
 -- Copy the LuaRocks binaries
-if not exec(S[[XCOPY /S bin\*.* "$BINDIR" >NUL]]) then
+if not exists(S[[$BINDIR\tools]]) then
+	if not mkdir(S[[$BINDIR\tools]]) then
+		die()
+	end
+end
+if not exec(S[[COPY win32\tools\*.* "$BINDIR\tools" >NUL]]) then
+	die()
+end
+-- Copy LR bin helper files
+if not exec(S[[COPY win32\*.* "$BINDIR" >NUL]]) then
 	die()
 end
 -- Copy the LuaRocks lua source files
@@ -870,7 +879,7 @@ if REGISTRY then
 	-- expand template with correct path information
 	print()
 	print([[Loading registry information for ".rockspec" files]])
-	exec( S[[lua5.1\bin\lua5.1.exe "$FULL_PREFIX\LuaRocks.reg.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
+	exec( S[[win32\lua5.1\bin\lua5.1.exe "$FULL_PREFIX\LuaRocks.reg.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
 	exec( S[[regedit /S "$FULL_PREFIX\\LuaRocks.reg"]] )
 end
 
