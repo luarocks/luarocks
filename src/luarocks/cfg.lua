@@ -37,6 +37,15 @@ cfg.major_version = cfg.program_version:match("([^.]%.[^.])")
 
 local persist = require("luarocks.persist")
 
+-- local file existence checker, because we cannot yet use the fs module here (as it relies on this one)
+local function file_exists(name)
+  local f=io.open(name,"r")
+  if f~=nil then 
+    io.close(f) 
+    return true
+  end
+end
+
 cfg.errorcodes = setmetatable({
    OK = 0,
    UNSPECIFIED = 1,
@@ -145,8 +154,18 @@ local err
 sys_config_ok, err = persist.load_into_table(sys_config_file, cfg)
 
 if not sys_config_ok then
+   if file_exists(sys_config_file) then
+     -- file exists, but we failed loading, let's error out...
+     io.stderr:write(err.."\n")
+     os.exit(cfg.errorcodes.UNSPECIFIED)
+   end
    sys_config_file = sys_config_dir.."/config.lua"
    sys_config_ok, err = persist.load_into_table(sys_config_file, cfg)
+   if file_exists(sys_config_file) then
+     -- file exists, but we failed loading, let's error out...
+     io.stderr:write(err.."\n")
+     os.exit(cfg.errorcodes.UNSPECIFIED)
+   end
 end
 if err and sys_config_ok == nil then
    io.stderr:write(err.."\n")
