@@ -33,7 +33,7 @@ argument.
 -- @param rockspec_file string: An URL or pathname for a rockspec file.
 -- @return string or (nil, string): The filename of the resulting
 -- .src.rock file; or nil and an error message.
-local function pack_source_rock(rockspec_file)
+function pack.pack_source_rock(rockspec_file)
    assert(type(rockspec_file) == "string")
 
    local rockspec, err = fetch.load_rockspec(rockspec_file)
@@ -201,7 +201,7 @@ function pack.run(...)
 
    local file, err
    if arg:match(".*%.rockspec") then
-      file, err = pack_source_rock(arg)
+      file, err = pack.pack_source_rock(arg)
    else
       file, err = do_pack_binary_rock(arg, version)
    end
