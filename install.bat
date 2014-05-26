@@ -8,8 +8,10 @@ local vars = {}
 vars.PREFIX = nil
 vars.VERSION = "2.1"
 vars.SYSCONFDIR = nil
-vars.ROCKS_TREE = nil
-vars.SCRIPTS_DIR = nil
+vars.TREE_ROOT = nil
+vars.TREE_BIN = nil
+vars.TREE_LMODULE = nil
+vars.TREE_CMODULE = nil
 vars.LUA_INTERPRETER = nil
 vars.LUA_PREFIX = nil
 vars.LUA_BINDIR = nil
@@ -126,7 +128,11 @@ Configuring the destinations:
 /TREE [dir]    Root of the local tree of installed rocks.
                Default is %PROGRAMFILES%\LuaRocks\systree
 /SCRIPTS [dir] Where to install commandline scripts installed by
-               rocks. Default is {TREE}/bin.
+               rocks. Default is {TREE}\bin.
+/LUAMOD [dir]  Where to install Lua modules installed by rocks.
+               Default is {TREE}\share\lua\{LV}.
+/CMOD [dir]    Where to install c modules installed by rocks.
+               Default is {TREE}\lib\lua\{LV}.
 /CONFIG [dir]  Location where the config file should be installed.
                Default is to follow /P option
 /SELFCONTAINED Creates a self contained installation in a single
@@ -193,9 +199,13 @@ local function parse_options(args)
 		elseif name == "/CONFIG" then
 			vars.SYSCONFDIR = option.value
 		elseif name == "/TREE" then
-			vars.ROCKS_TREE = option.value
+			vars.TREE_ROOT = option.value
 		elseif name == "/SCRIPTS" then
-			vars.SCRIPTS_DIR = option.value
+			vars.TREE_BIN = option.value
+		elseif name == "/LUAMOD" then
+			vars.TREE_LMODULE = option.value
+		elseif name == "/CMOD" then
+			vars.TREE_CMODULE = option.value
 		elseif name == "/LV" then
 			vars.LUA_VERSION = option.value
 		elseif name == "/L" then
@@ -234,8 +244,8 @@ local function check_flags()
 		if not vars.PREFIX then
 			die("Option /P is required when using /SELFCONTAINED")
 		end
-		if vars.SYSCONFDIR or vars.ROCKS_TREE or vars.SCRIPTS_DIR then
-			die("Cannot combine /TREE, /SCRIPTS or /CONFIG with /SELFCONTAINED")
+		if vars.SYSCONFDIR or vars.TREE_ROOT or vars.TREE_BIN or vars.TREE_LMODULE or vars.TREE_CMODULE then
+			die("Cannot combine /TREE, /SCRIPTS, /LUAMOD, /CMOD, or /CONFIG with /SELFCONTAINED")
 		end
 	end
 	if INSTALL_LUA then
@@ -472,6 +482,8 @@ local with_arg = { -- options followed by an argument, others are flags
 	["/CONFIG"] = true,
 	["/TREE"] = true,
 	["/SCRIPTS"] = true,
+	["/LUAMOD"] = true,
+	["/CMOD"] = true,
 	["/LV"] = true,
 	["/LUA"] = true,
 	["/INC"] = true,
@@ -598,10 +610,10 @@ else
 	datapath = os.getenv("ProgramW6432") .. [[\LuaRocks]]
 end
 vars.SYSCONFDIR = vars.SYSCONFDIR or vars.PREFIX
-vars.ROCKS_TREE = vars.ROCKS_TREE or datapath..[[\systree]]
+vars.TREE_ROOT = vars.TREE_ROOT or datapath..[[\systree]]
 if SELFCONTAINED then
 	vars.SYSCONFDIR = vars.PREFIX
-	vars.ROCKS_TREE = vars.PREFIX..[[\systree]]
+	vars.TREE_ROOT = vars.PREFIX..[[\systree]]
 	REGISTRY = false
 end
 
@@ -614,7 +626,7 @@ print(S[[
 Will configure LuaRocks with the following paths:
 LuaRocks        : $FULL_PREFIX
 Config file     : $SYSCONFDIR\config.lua
-Rocktree        : $ROCKS_TREE
+Rocktree        : $TREE_ROOT
 
 Lua interpreter : $LUA_BINDIR\$LUA_INTERPRETER
     binaries    : $LUA_BINDIR
@@ -756,19 +768,19 @@ end
 -- see https://github.com/keplerproject/luarocks/pull/197#issuecomment-30176548
 
 -- configure 'scripts' directory
--- if vars.SCRIPTS_DIR then
--- 	mkdir(vars.SCRIPTS_DIR)
+-- if vars.TREE_BIN then
+-- 	mkdir(vars.TREE_BIN)
 -- 	if not USE_MINGW then
 -- 		-- definitly not for MinGW because of conflicting runtimes
 -- 		-- but is it ok to do it for others???
--- 		exec(S[[COPY lua5.1\bin\*.dll "$SCRIPTS_DIR" >NUL]])
+-- 		exec(S[[COPY lua5.1\bin\*.dll "$TREE_BIN" >NUL]])
 -- 	end
 -- else
 -- 	if not USE_MINGW then
--- 	mkdir(S[[$ROCKS_TREE\bin]])
+-- 	mkdir(S[[$TREE_ROOT\bin]])
 -- 		-- definitly not for MinGW because of conflicting runtimes
 -- 		-- but is it ok to do it for others???
--- 		exec(S[[COPY lua5.1\bin\*.dll "$ROCKS_TREE"\bin >NUL]])
+-- 		exec(S[[COPY lua5.1\bin\*.dll "$TREE_ROOT"\bin >NUL]])
 -- 	end
 -- end
 
@@ -799,7 +811,7 @@ end
 f:write(S[=[
 site_config.LUAROCKS_UNAME_M=[[$UNAME_M]]
 site_config.LUAROCKS_SYSCONFIG=[[$SYSCONFDIR\config.lua]]
-site_config.LUAROCKS_ROCKS_TREE=[[$ROCKS_TREE]]
+site_config.LUAROCKS_ROCKS_TREE=[[$TREE_ROOT]]
 site_config.LUAROCKS_PREFIX=[[$PREFIX]]
 site_config.LUAROCKS_DOWNLOADER=[[wget]]
 site_config.LUAROCKS_MD5CHECKER=[[md5sum]]
@@ -836,12 +848,22 @@ rocks_trees = {
 if FORCE_CONFIG then
 	f:write("    home..[[/luarocks]],\n")
 end
-f:write(S"    { name = [[user]],   root = home..[[/luarocks]] },\n")
-f:write(S"    { name = [[system]], root = [[$ROCKS_TREE]] },\n")
-f:write("}\n")
-if vars.SCRIPTS_DIR then
-	f:write(S"scripts_dir=[[$SCRIPTS_DIR]]\n")
+f:write(S"    { name = [[user]],\n")
+f:write(S"         root    = home..[[/luarocks]],\n")
+f:write(S"    },\n")
+f:write(S"    { name = [[system]],\n")
+f:write(S"         root    = [[$TREE_ROOT]],\n")
+if vars.TREE_BIN then
+  f:write(S"         bin_dir = [[$TREE_BIN]],\n")
 end
+if vars.TREE_CMODULE then
+  f:write(S"         lib_dir = [[$TREE_CMODULE]],\n")
+end
+if vars.TREE_LMODULE then
+  f:write(S"         lua_dir = [[$TREE_LMODULE]],\n")
+end
+f:write(S"    },\n")
+f:write("}\n")
 f:write("variables = {\n")
 if USE_MINGW and vars.LUA_RUNTIME == "MSVCRT" then
 	f:write("    MSVCRT = 'm',   -- make MinGW use MSVCRT.DLL as runtime\n")
@@ -858,11 +880,11 @@ print(S"Created LuaRocks config file: $CONFIG_FILE")
 
 print()
 print("Creating rocktrees...")
-if not exists(vars.ROCKS_TREE) then
-	mkdir(vars.ROCKS_TREE)
-	print(S[[Created system rocktree    : "$ROCKS_TREE"]])
+if not exists(vars.TREE_ROOT) then
+	mkdir(vars.TREE_ROOT)
+	print(S[[Created system rocktree    : "$TREE_ROOT"]])
 else
-	print(S[[System rocktree exists     : "$ROCKS_TREE"]])
+	print(S[[System rocktree exists     : "$TREE_ROOT"]])
 end
 
 vars.APPDATA = os.getenv("APPDATA")
@@ -894,7 +916,9 @@ exec( S[[del "$FULL_PREFIX\pe-parser.lua" >NUL]] )
 -- ***********************************************************
 -- Exit handlers 
 -- ***********************************************************
-
+vars.TREE_BIN     = vars.TREE_BIN     or vars.TREE_ROOT..[[\bin]]
+vars.TREE_LMODULE = vars.TREE_LMODULE or vars.TREE_ROOT..[[\share\lua\]]..vars.LUA_VERSION
+vars.TREE_CMODULE = vars.TREE_CMODULE or vars.TREE_ROOT..[[\lib\lua\]]..vars.LUA_VERSION
 print(S[[
 
 ============================
@@ -914,9 +938,9 @@ Local user rocktree (Note: %APPDATA% is user dependent);
   LUA_PATH :   %APPDATA%\LuaRocks\share\lua\$LUA_VERSION\?.lua;%APPDATA%\LuaRocks\share\lua\$LUA_VERSION\?\init.lua
   LUA_CPATH:   %APPDATA%\LuaRocks\lib\lua\$LUA_VERSION\?.dll
 System rocktree
-  PATH     :   $ROCKS_TREE\bin
-  LUA_PATH :   $ROCKS_TREE\share\lua\$LUA_VERSION\?.lua;$ROCKS_TREE\share\lua\$LUA_VERSION\?\init.lua
-  LUA_CPATH:   $ROCKS_TREE\lib\lua\$LUA_VERSION\?.dll
+  PATH     :   $TREE_BIN
+  LUA_PATH :   $TREE_LMODULE\?.lua;$TREE_LMODULE\?\init.lua
+  LUA_CPATH:   $TREE_CMODULE\?.dll
 
 Note that the %APPDATA% element in the paths above is user specific and it MUST be replaced by its actual value.
 For the current user that value is: $APPDATA.
