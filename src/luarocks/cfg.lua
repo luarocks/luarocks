@@ -233,6 +233,8 @@ local defaults = {
       MAKE = "make",
       CC = "cc",
       LD = "ld",
+      AR = "ar",
+      RANLIB = "ranlib",
 
       CVS = "cvs",
       GIT = "git",
@@ -298,6 +300,7 @@ if detected.windows then
    defaults.platforms = {"win32", "windows" }
    defaults.lib_extension = "dll"
    defaults.external_lib_extension = "dll"
+   defaults.static_lib_extension = "lib"
    defaults.obj_extension = "obj"
    defaults.external_deps_dirs = { "c:/external/" }
    defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/bin"
@@ -311,6 +314,7 @@ if detected.windows then
    defaults.variables.WRAPPER = full_prefix.."\\rclauncher.c"
    defaults.variables.LD = "link"
    defaults.variables.MT = "mt"
+   defaults.variables.AR = "lib"
    defaults.variables.LUALIB = "lua"..cfg.lua_version..".lib"
    defaults.variables.CFLAGS = "/MD /O2"
    defaults.variables.LIBFLAG = "/dll"
@@ -351,11 +355,14 @@ end
 if detected.mingw32 then
    defaults.platforms = { "win32", "mingw32", "windows" }
    defaults.obj_extension = "o"
+   defaults.static_lib_extension = "a"
    defaults.cmake_generator = "MinGW Makefiles"
    defaults.variables.MAKE = "mingw32-make"
    defaults.variables.CC = "mingw32-gcc"
    defaults.variables.RC = "windres"
    defaults.variables.LD = "mingw32-gcc"
+   defaults.variables.AR = "mingw32-gcc-ar"
+   defaults.variables.RANLIB = "mingw32-gcc-ranlib"
    defaults.variables.CFLAGS = "-O2"
    defaults.variables.LIBFLAG = "-shared"
    defaults.external_deps_patterns = {
@@ -375,6 +382,7 @@ end
 
 if detected.unix then
    defaults.lib_extension = "so"
+   defaults.static_lib_extension = "a"
    defaults.external_lib_extension = "so"
    defaults.obj_extension = "o"
    defaults.external_deps_dirs = { "/usr/local", "/usr" }
