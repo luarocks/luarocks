@@ -361,8 +361,8 @@ if detected.mingw32 then
    defaults.variables.CC = "mingw32-gcc"
    defaults.variables.RC = "windres"
    defaults.variables.LD = "mingw32-gcc"
-   defaults.variables.AR = "mingw32-gcc-ar"
-   defaults.variables.RANLIB = "mingw32-gcc-ranlib"
+   defaults.variables.AR = "ar"
+   defaults.variables.RANLIB = "ranlib"
    defaults.variables.CFLAGS = "-O2"
    defaults.variables.LIBFLAG = "-shared"
    defaults.external_deps_patterns = {
