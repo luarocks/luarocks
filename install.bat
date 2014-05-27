@@ -6,7 +6,7 @@ local vars = {}
 
 
 vars.PREFIX = nil
-vars.VERSION = "2.1"
+vars.VERSION = "2.2"
 vars.SYSCONFDIR = nil
 vars.TREE_ROOT = nil
 vars.TREE_BIN = nil
