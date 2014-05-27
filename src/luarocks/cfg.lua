@@ -32,7 +32,7 @@ end
 
 cfg.site_config = site_config
 
-cfg.program_version = "2.1.2"
+cfg.program_version = "2.2.0beta1"
 cfg.major_version = cfg.program_version:match("([^.]%.[^.])")
 
 local persist = require("luarocks.persist")
@@ -214,14 +214,17 @@ local defaults = {
 
    rocks_servers = {
       {
-        "http://www.luarocks.org/repositories/rocks",
-        "http://luarocks.giga.puc-rio.br/",
-        "http://luafr.org/luarocks/rocks",
-        "http://liblua.so/luarocks/repositories/rocks",
-        "http://luarocks.logiceditor.com/rocks",
+        "http://rocks.moonscript.org",
+        "https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/master/",
       }
    },
    disabled_servers = {},
+   
+   upload = {
+      server = "rocks.moonscript.org",
+      tool_version = "0.0.1",
+      api_version = "1",
+   },
 
    lua_extension = "lua",
    lua_interpreter = site_config.LUA_INTERPRETER or "lua",

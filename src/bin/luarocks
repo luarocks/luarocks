@@ -23,6 +23,7 @@ commands = {
    write_rockspec = "luarocks.write_rockspec",
    purge = "luarocks.purge",
    doc = "luarocks.doc",
+   upload = "luarocks.upload",
 }
 
 command_line.run_command(...)
