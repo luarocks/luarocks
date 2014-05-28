@@ -39,6 +39,7 @@ function path_cmd.run(...)
    local deps_mode = deps.get_deps_mode(flags)
    
    local lr_path, lr_cpath, lr_bin = cfg.package_paths()
+   local path_sep = cfg.export_path_separator
 
    if flags["lr-path"] then
       util.printout(util.remove_path_dupes(lr_path, ';'))
@@ -47,24 +48,24 @@ function path_cmd.run(...)
       util.printout(util.remove_path_dupes(lr_cpath, ';'))
       return true
    elseif flags["lr-bin"] then
-      util.printout(util.remove_path_dupes(lr_bin, ';'))
+      util.printout(util.remove_path_dupes(lr_bin, path_sep))
       return true
    end
    
    if flags["append"] then
       lr_path = package.path .. ";" .. lr_path
       lr_cpath = package.cpath .. ";" .. lr_cpath
-      lr_bin = os.getenv("PATH") .. ";" .. lr_bin
+      lr_bin = os.getenv("PATH") .. path_sep .. lr_bin
    else
       lr_path =  lr_path.. ";" .. package.path
       lr_cpath = lr_cpath .. ";" .. package.cpath
-      lr_bin = lr_bin .. ";" .. os.getenv("PATH")
+      lr_bin = lr_bin .. path_sep .. os.getenv("PATH")
    end
 
    util.printout(cfg.export_lua_path:format(util.remove_path_dupes(lr_path, ';')))
    util.printout(cfg.export_lua_cpath:format(util.remove_path_dupes(lr_cpath, ';')))
    if flags["bin"] then
-      util.printout(cfg.export_path:format(util.remove_path_dupes(lr_bin,';')))
+      util.printout(cfg.export_path:format(util.remove_path_dupes(lr_bin, path_sep)))
    end
    return true
 end

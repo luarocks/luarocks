@@ -544,7 +544,7 @@ function cfg.package_paths()
    if extra_luarocks_module_dir then 
      table.insert(new_path, extra_luarocks_module_dir)
    end
-   return table.concat(new_path, ";"), table.concat(new_cpath, ";"), table.concat(new_bin, ";")
+   return table.concat(new_path, ";"), table.concat(new_cpath, ";"), table.concat(new_bin, cfg.export_path_separator)
 end
 
 function cfg.which_config()

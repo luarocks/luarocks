@@ -432,6 +432,7 @@ function util.remove_path_dupes(list, sep)
    local parts = util.split_string(list, sep)
    local final, entries = {}, {}
    for _, part in ipairs(parts) do
+      part = part:gsub("//", "/")
       if not entries[part] then
          table.insert(final, part)
          entries[part] = true
