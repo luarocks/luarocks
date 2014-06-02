@@ -216,6 +216,7 @@ local defaults = {
       {
         "http://rocks.moonscript.org",
         "https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/master/",
+        "http://luafr.org/moonrocks/",
       }
    },
    disabled_servers = {},
