@@ -326,8 +326,8 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    end
 
    local root_dir = path.root_dir(cfg.rocks_dir)
-   util.printout()
    util.printout(name.." "..version.." is now built and installed in "..root_dir.." "..license)
+   util.printout()
    
    util.remove_scheduled_function(rollback)
    return name, version
