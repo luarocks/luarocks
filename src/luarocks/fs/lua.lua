@@ -592,7 +592,7 @@ local function request(url, method, http, loop_control)
             loop_control[url] = true
             return request(location, method, redirect_protocols[protocol], loop_control)
          else
-            return nil, "URL redirected to unsupported protocol - install luasec to get HTTPS support."
+            return nil, "URL redirected to unsupported protocol - install luasec to get HTTPS support.", "https"
          end
       end
       return nil, err
@@ -614,7 +614,7 @@ local function http_request(url, http, cached)
             return true
          end
          if not result then
-            return nil, status
+            return nil, status, headers
          end
       end
    end
@@ -629,9 +629,11 @@ local function http_request(url, http, cached)
       end
       return table.concat(result)
    else
-      return nil, status
+      return nil, status, headers
    end
 end
+
+local downloader_warning = false
 
 --- Download a remote file.
 -- @param url string: URL to be fetched.
@@ -647,19 +649,26 @@ function fs_lua.download(url, filename, cache)
 
    filename = fs.absolute_name(filename or dir.base_name(url))
    
-   local content, err
+   local content, err, https_err
    if util.starts_with(url, "http:") then
-      content, err = http_request(url, http, cache and filename)
+      content, err, https_err = http_request(url, http, cache and filename)
    elseif util.starts_with(url, "ftp:") then
       content, err = ftp.get(url)
    elseif util.starts_with(url, "https:") then
       if luasec_ok then
          content, err = http_request(url, https, cache and filename)
       else
-         err = "Unsupported protocol - install luasec to get HTTPS support."
+         https_err = true
       end
    else
       err = "Unsupported protocol"
+   end
+   if https_err then
+      if not downloader_warning then
+         util.printerr("Warning: falling back to "..cfg.downloader.." - install luasec to get native HTTPS support")
+         downloader_warning = true
+      end
+      return fs.use_downloader(url, filename, cache)
    end
    if cache and content == true then
       return true, filename
@@ -672,6 +681,12 @@ function fs_lua.download(url, filename, cache)
    file:write(content)
    file:close()
    return true, filename
+end
+
+else --...if socket_ok == false then
+
+function fs_lua.download(url, filename, cache)
+   return fs.use_downloader(url, filename, cache)
 end
 
 end

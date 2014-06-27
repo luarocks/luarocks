@@ -17,6 +17,8 @@ local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, 
 local cfg = {}
 package.loaded["luarocks.cfg"] = cfg
 
+local util = require("luarocks.util")
+
 cfg.lua_version = _VERSION:sub(5)
 local version_suffix = cfg.lua_version:gsub("%.", "_")
 
@@ -167,7 +169,6 @@ if not site_config.LUAROCKS_FORCE_CONFIG then
    end
    if home_overrides then
       home_config_ok = true
-      local util = require("luarocks.util")
       if home_overrides.rocks_trees then
          cfg.rocks_trees = nil
       end
@@ -217,12 +218,13 @@ local defaults = {
         "http://rocks.moonscript.org",
         "https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/master/",
         "http://luafr.org/moonrocks/",
+        "http://luarocks.logiceditor.com/rocks",
       }
    },
    disabled_servers = {},
    
    upload = {
-      server = "rocks.moonscript.org",
+      server = "https://rocks.moonscript.org",
       tool_version = "0.0.1",
       api_version = "1",
    },
@@ -527,25 +529,39 @@ local cfg_mt = {
 }
 setmetatable(cfg, cfg_mt)
 
+function cfg.make_paths_from_tree(tree)
+   local lua_path, lib_path, bin_path
+   if type(tree) == "string" then
+      lua_path = tree..cfg.lua_modules_path
+      lib_path = tree..cfg.lib_modules_path
+      bin_path = tree.."/bin"
+   else
+      lua_path = tree.lua_dir or tree.root..cfg.lua_modules_path
+      lib_path = tree.lib_dir or tree.root..cfg.lib_modules_path
+      bin_path = tree.bin_dir or tree.root.."/bin"
+   end
+   return lua_path, lib_path, bin_path
+end
+
 function cfg.package_paths()
    local new_path, new_cpath, new_bin = {}, {}, {}
    for _,tree in ipairs(cfg.rocks_trees) do
-     if type(tree) == "string" then
-        table.insert(new_path, tree..cfg.lua_modules_path.."/?.lua")
-        table.insert(new_path, tree..cfg.lua_modules_path.."/?/init.lua")
-        table.insert(new_cpath, tree..cfg.lib_modules_path.."/?."..cfg.lib_extension)
-        table.insert(new_bin, tree.."/bin")
-     else
-        table.insert(new_path, (tree.lua_dir or tree.root..cfg.lua_modules_path).."/?.lua")
-        table.insert(new_path, (tree.lua_dir or tree.root..cfg.lua_modules_path).."/?/init.lua")
-        table.insert(new_cpath, (tree.lib_dir or tree.root..cfg.lib_modules_path).."/?."..cfg.lib_extension)
-        table.insert(new_bin, (tree.bin_dir or tree.root.."/bin"))
-     end
+      local lua_path, lib_path, bin_path = cfg.make_paths_from_tree(tree)
+      table.insert(new_path, lua_path.."/?.lua")
+      table.insert(new_path, lua_path.."/?/init.lua")
+      table.insert(new_cpath, lib_path.."/?."..cfg.lib_extension)
+      table.insert(new_bin, bin_path)
    end
    if extra_luarocks_module_dir then 
      table.insert(new_path, extra_luarocks_module_dir)
    end
    return table.concat(new_path, ";"), table.concat(new_cpath, ";"), table.concat(new_bin, cfg.export_path_separator)
+end
+
+function cfg.init_package_paths()
+   local lr_path, lr_cpath, lr_bin = cfg.package_paths()
+   package.path = util.remove_path_dupes(package.path .. ";" .. lr_path, ";")
+   package.cpath = util.remove_path_dupes(package.cpath .. ";" .. lr_cpath, ";")
 end
 
 function cfg.which_config()

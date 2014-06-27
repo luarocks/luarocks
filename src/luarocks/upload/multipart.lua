@@ -1,13 +1,18 @@
 
 local multipart = {}
 
-local url = require("socket.url")
-
 local File = {}
 
 local unpack = unpack or table.unpack
 
 math.randomseed(os.time())
+
+-- socket.url.escape(s) from LuaSocket 3.0rc1
+function multipart.url_escape(s)
+   return (string.gsub(s, "([^A-Za-z0-9_])", function(c)
+      return string.format("%%%02x", string.byte(c))
+   end))
+end
 
 function File:mime()
    if not self.mimetype then
@@ -64,7 +69,7 @@ function multipart.encode(params)
    local chunks = {}
    for _, tuple in ipairs(tuples) do
       local k,v = unpack(tuple)
-      k = url.escape(k)
+      k = multipart.url_escape(k)
       local buffer = { 'Content-Disposition: form-data; name="' .. k .. '"' }
       local content
       if type(v) == "table" and v.__class == File then

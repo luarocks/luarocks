@@ -392,7 +392,7 @@ function util.deps_mode_help(program)
 end
 
 function util.see_help(command, program)
-   return "See '"..util.this_program(program or "luarocks")..' help '..command.."'."
+   return "See '"..util.this_program(program or "luarocks")..' help'..(command and " "..command or "").."'."
 end
 
 -- from http://lua-users.org/wiki/SplitJoin

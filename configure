@@ -50,7 +50,7 @@ system's package manager.
 --with-lua-lib=DIR          You can also specify Lua's libraries dir.
                             Default is \$LUA_DIR/lib
 --with-downloader=TOOL      Which tool to use as a downloader.
-                            Valid options are: wget, curl.
+                            Valid options are: curl, wget.
                             Default is to auto-detect.
 --with-md5-checker=TOOL     Which tool to use as a downloader.
                             Valid options are: md5sum, openssl
@@ -349,7 +349,7 @@ fi
 
 if [ "$LUAROCKS_DOWNLOADER_SET" != "yes" ]
 then
-   find_helper "downloader helper program" wget curl fetch
+   find_helper "downloader helper program" curl wget fetch
    LUAROCKS_DOWNLOADER=$HELPER
 fi
 

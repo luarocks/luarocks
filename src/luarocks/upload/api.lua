@@ -5,6 +5,7 @@ local cfg = require("luarocks.cfg")
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local persist = require("luarocks.persist")
+local multipart = require("luarocks.upload.multipart")
 
 local Api = {}
 
@@ -43,7 +44,7 @@ end
 function Api:check_version()
    if not self._server_tool_version then
       local tool_version = cfg.upload.tool_version
-      local res, err = self:request("http://" .. tostring(self.config.server) .. "/api/tool_version", {
+      local res, err = self:request(tostring(self.config.server) .. "/api/tool_version", {
         current = tool_version
       })
       if not res then
@@ -80,12 +81,11 @@ end
 
 function Api:raw_method(path, ...)
    self:check_version()
-   local url = "http://" .. tostring(self.config.server) .. "/api/" .. tostring(cfg.upload.api_version) .. "/" .. tostring(self.config.key) .. "/" .. tostring(path)
+   local url = tostring(self.config.server) .. "/api/" .. tostring(cfg.upload.api_version) .. "/" .. tostring(self.config.key) .. "/" .. tostring(path)
    return self:request(url, ...)
 end
 
 local function encode_query_string(t, sep)
-   local url = require("socket.url")
    if sep == nil then
       sep = "&"
    end
@@ -95,9 +95,9 @@ local function encode_query_string(t, sep)
       if type(k) == "number" and type(v) == "table" then
          k, v = v[1], v[2]
       end
-      buf[i + 1] = url.escape(k)
+      buf[i + 1] = multipart.url_escape(k)
       buf[i + 2] = "="
-      buf[i + 3] = url.escape(v)
+      buf[i + 3] = multipart.url_escape(v)
       buf[i + 4] = sep
       i = i + 4
    end
@@ -116,12 +116,99 @@ local function require_json()
    return nil
 end
 
+local ltn12_ok, ltn12 = pcall(require, "ltn12")
+if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
+
 function Api:request(url, params, post_params)
-   local http_ok, http = pcall(require, "socket.http")
-   local ltn12_ok, ltn12 = pcall(require, "ltn12")
+   local vars = cfg.variables
    local json_ok, json = require_json()
-   if not http_ok then return nil, "LuaSocket is required for this command." end
    if not json_ok then return nil, "A JSON library is required for this command." end
+   
+   if cfg.downloader == "wget" then
+      local curl_ok = fs.execute_quiet(vars.CURL, "--version")
+      if not curl_ok then
+         return nil, "Missing network helper program 'curl'.\nMake sure 'curl' is installed and available from your path."
+      end
+   end
+
+   if not self.config.key then
+      return nil, "Must have API key before performing any actions."
+   end
+   local body
+   local headers = {}
+   if params and next(params) then
+      url = url .. ("?" .. encode_query_string(params))
+   end
+   local method = "GET"
+   local out 
+   local tmpfile = os.tmpname()
+   if post_params then
+      method = "POST"
+      local curl_cmd = fs.Q(vars.CURL).." -f -k -L --user-agent '"..cfg.user_agent.." via curl' "
+      for k,v in pairs(post_params) do
+         local var = v
+         if type(v) == "table" then
+            var = "@"..v.fname
+         end
+         curl_cmd = curl_cmd .. "--form '"..k.."="..var.."' "
+      end
+      if cfg.connection_timeout and cfg.connection_timeout > 0 then
+        curl_cmd = curl_cmd .. "--connect-timeout "..tonumber(cfg.connection_timeout).." " 
+      end
+      ok = fs.execute_string(curl_cmd..fs.Q(url).." 2> /dev/null 1> "..fs.Q(tmpfile))
+   else
+      local ok, err = fs.download(url, tmpfile)
+      if not ok then
+         return nil, "API failure: " .. tostring(err) .. " - " .. tostring(url)
+      end
+   end
+
+   local tmpfd = io.open(tmpfile)
+   if not tmpfd then
+      os.remove(tmpfile)
+      return nil, "API failure reading temporary file - " .. tostring(url)
+   end
+   out = tmpfd:read("*a")
+   tmpfd:close()
+   os.remove(tmpfile)
+
+   if self.debug then
+      util.printout("[" .. tostring(method) .. " via curl] " .. tostring(url) .. " ... ")
+   end
+
+   return json.decode(out)
+end
+
+else -- use LuaSocket and LuaSec
+
+local warned_luasec = false
+
+function Api:request(url, params, post_params)
+   local json_ok, json = require_json()
+   if not json_ok then return nil, "A JSON library is required for this command." end
+   local server = tostring(self.config.server)
+   local http_ok, http
+   local via = "luasocket"
+   if server:match("^https://") then
+      http_ok, http = pcall(require, "ssl.https")
+      if http_ok then
+         via = "luasec"
+      else
+         if not warned_luasec then
+            util.printerr("LuaSec is not available; using plain HTTP. Install 'luasec' to enable HTTPS.")
+            warned_luasec = true
+         end
+         http_ok, http = pcall(require, "socket.http")
+         server = server:gsub("^https", "http")
+         url = url:gsub("^https", "http")
+         via = "luasocket"
+      end
+   else
+      http_ok, http = pcall(require, "socket.http")
+   end
+   if not http_ok then
+      return nil, "Failed loading socket library!"
+   end
    
    if not self.config.key then
       return nil, "Must have API key before performing any actions."
@@ -132,7 +219,6 @@ function Api:request(url, params, post_params)
       url = url .. ("?" .. encode_query_string(params))
    end
    if post_params then
-      local multipart = require("luarocks.upload.multipart")
       local boundary
       body, boundary = multipart.encode(post_params)
       headers["Content-length"] = #body
@@ -140,7 +226,7 @@ function Api:request(url, params, post_params)
    end
    local method = post_params and "POST" or "GET"
    if self.debug then
-      util.printout("[" .. tostring(method) .. "] " .. tostring(url) .. " ... ")
+      util.printout("[" .. tostring(method) .. " via "..via.."] " .. tostring(url) .. " ... ")
    end
    local out = {}
    local _, status = http.request({
@@ -159,6 +245,8 @@ function Api:request(url, params, post_params)
    return json.decode(table.concat(out))
 end
 
+end
+
 function api.new(flags, name)
    local self = {}
    setmetatable(self, { __index = Api })
@@ -169,7 +257,7 @@ function api.new(flags, name)
    self.debug = flags["debug"]
    if not self.config.key then
       return nil, "You need an API key to upload rocks.\n" ..
-                  "Navigate to http://"..self.config.server.."/settings to get a key\n" ..
+                  "Navigate to "..self.config.server.."/settings to get a key\n" ..
                   "and then pass it through the --api-key=<key> flag."
    end
    if flags["api-key"] then

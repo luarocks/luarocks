@@ -128,10 +128,11 @@ end
 -- (eg "luasocket"), the version (eg "2.0.2-1"), the path of the rocks tree
 -- (eg "/usr/local"), and the numeric index of the matching entry, so the
 -- filter function can know if the matching module was the first entry or not.
--- @return string, string, string: name of the rock containing the module
--- (eg. "luasocket"), version of the rock (eg. "2.0.2-1"),
--- name of the module (eg. "socket.core", or "socket.core_2_0_2" if file is
--- stored versioned).
+-- @return string, string, string, (string or table):
+-- * name of the rock containing the module (eg. "luasocket")
+-- * version of the rock (eg. "2.0.2-1")
+-- * name of the module (eg. "socket.core", or "socket.core_2_0_2" if file is stored versioned).
+-- * tree of the module (string or table in `rocks_trees` format)
 local function select_module(module, filter_module_name)
    --assert(type(module) == "string")
    --assert(type(filter_module_name) == "function")
@@ -155,7 +156,7 @@ local function select_module(module, filter_module_name)
                return name, version, module_name
             end
             version = deps.parse_version(version)
-            table.insert(providers, {name = name, version = version, module_name = module_name})
+            table.insert(providers, {name = name, version = version, module_name = module_name, tree = tree})
          end
       end
    end
@@ -163,16 +164,17 @@ local function select_module(module, filter_module_name)
    if next(providers) then
       table.sort(providers, sort_versions)
       local first = providers[1]
-      return first.name, first.version.string, first.module_name
+      return first.name, first.version.string, first.module_name, first.tree
    end
 end
 
 --- Search for a module
 -- @param module string: module name (eg. "socket.core")
--- @return string, string, string: name of the rock containing the module
--- (eg. "luasocket"), version of the rock (eg. "2.0.2-1"),
--- name of the module (eg. "socket.core", or "socket.core_2_0_2" if file is
--- stored versioned).
+-- @return string, string, string, (string or table):
+-- * name of the rock containing the module (eg. "luasocket")
+-- * version of the rock (eg. "2.0.2-1")
+-- * name of the module (eg. "socket.core", or "socket.core_2_0_2" if file is stored versioned).
+-- * tree of the module (string or table in `rocks_trees` format)
 local function pick_module(module)
    return
       select_module(module, function(module_name, name, version, tree, i)
