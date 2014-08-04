@@ -29,7 +29,7 @@ rockspec, and is not guaranteed to be complete or correct.
                       directory with a filename based on given name and version.
 --license="<string>"  A license string, such as "MIT/X11" or "GNU GPL v3".
 --summary="<txt>"     A short one-line description summary.
---description="<txt>" A longer description string.
+--detailed="<txt>"    A longer description string.
 --homepage=<url>      Project homepage.
 --lua-version=<ver>   Supported Lua versions. Accepted values are "5.1", "5.2",
                       "5.3", "5.1,5.2", "5.2,5.3", or "5.1,5.2,5.3".
