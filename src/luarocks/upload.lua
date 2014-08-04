@@ -4,6 +4,7 @@ local upload = {}
 local util = require("luarocks.util")
 local fetch = require("luarocks.fetch")
 local pack = require("luarocks.pack")
+local cfg = require("luarocks.cfg")
 local Api = require("luarocks.upload.api")
 
 upload.help_summary = "Upload a rockspec to the public rocks repository."
@@ -28,6 +29,9 @@ function upload.run(...)
    local api, err = Api.new(flags)
    if not api then
       return nil, err
+   end
+   if cfg.verbose then
+      api.debug = true
    end
 
    local rockspec, err, errcode = fetch.load_rockspec(fname)
