@@ -111,9 +111,15 @@ function fetch.find_base_dir(file, temp_dir, src_url, src_dir)
    else
       util.printerr("Directory "..inferred_dir.." not found")
       local files = fs.list_dir()
-      if files[1] and fs.is_dir(files[1]) then
-         util.printerr("Found "..files[1])
-         found_dir = files[1]
+      if files then
+         table.sort(files)
+         for i,filename in ipairs(files) do
+            if fs.is_dir(filename) then
+               util.printerr("Found "..filename)
+               found_dir = filename
+               break
+            end
+         end
       end
    end
    fs.pop_dir()
