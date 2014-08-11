@@ -2,7 +2,6 @@
 
 -- this should be loaded first.
 local cfg = require("luarocks.cfg")
-cfg.init_package_paths()
 
 local loader = require("luarocks.loader")
 local command_line = require("luarocks.command_line")

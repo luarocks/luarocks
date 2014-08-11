@@ -14,10 +14,12 @@ local unpack = unpack or table.unpack
 local loader = {}
 package.loaded["luarocks.loader"] = loader
 
+local cfg = require("luarocks.cfg")
+cfg.init_package_paths()
+
 local path = require("luarocks.path")
 local manif_core = require("luarocks.manif_core")
 local deps = require("luarocks.deps")
-local cfg = require("luarocks.cfg")
 
 loader.context = {}
 
