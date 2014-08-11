@@ -414,7 +414,7 @@ end
 -- @param name string: Name of a package from the repository.
 -- @param version string: Version of a package from the repository.
 -- @param repo string or nil: Pathname of a local repository. If not given,
--- the default local repository configured as cfg.rocks_dir is used.
+-- the default local repository is used.
 -- @param deps_mode string: Dependency mode: "one" for the current default tree,
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for using the default dependency mode from the configuration.
