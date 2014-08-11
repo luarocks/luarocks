@@ -458,6 +458,9 @@ end
 if detected.freebsd then
    defaults.arch = "freebsd-"..proc
    defaults.platforms = {"unix", "bsd", "freebsd"}
+   defaults.gcc_rpath = false
+   defaults.variables.CC = "cc"
+   defaults.variables.LD = "cc"
 end
 
 if detected.openbsd then
