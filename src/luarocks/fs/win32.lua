@@ -214,4 +214,8 @@ function win32.is_writable(file)
    return result
 end
 
+function win32.tmpname()
+   return os.getenv("TMP")..os.tmpname()
+end
+
 return win32

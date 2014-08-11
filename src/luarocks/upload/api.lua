@@ -141,21 +141,21 @@ function Api:request(url, params, post_params)
    end
    local method = "GET"
    local out 
-   local tmpfile = os.tmpname()
+   local tmpfile = fs.tmpname()
    if post_params then
       method = "POST"
-      local curl_cmd = fs.Q(vars.CURL).." -f -k -L --user-agent '"..cfg.user_agent.." via curl' "
+      local curl_cmd = fs.Q(vars.CURL).." -f -k -L --silent --user-agent \""..cfg.user_agent.." via curl\" "
       for k,v in pairs(post_params) do
          local var = v
          if type(v) == "table" then
             var = "@"..v.fname
          end
-         curl_cmd = curl_cmd .. "--form '"..k.."="..var.."' "
+         curl_cmd = curl_cmd .. "--form \""..k.."="..var.."\" "
       end
       if cfg.connection_timeout and cfg.connection_timeout > 0 then
         curl_cmd = curl_cmd .. "--connect-timeout "..tonumber(cfg.connection_timeout).." " 
       end
-      ok = fs.execute_string(curl_cmd..fs.Q(url).." 2> /dev/null 1> "..fs.Q(tmpfile))
+      ok = fs.execute_string(curl_cmd..fs.Q(url).." -o "..fs.Q(tmpfile))
    else
       local ok, err = fs.download(url, tmpfile)
       if not ok then

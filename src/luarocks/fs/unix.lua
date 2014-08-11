@@ -107,4 +107,8 @@ function unix.replace_file(old_file, new_file)
    return os.rename(new_file, old_file)
 end
 
+function unix.tmpname()
+   return os.tmpname()
+end
+
 return unix
