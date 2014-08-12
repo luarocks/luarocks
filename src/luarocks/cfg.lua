@@ -34,7 +34,7 @@ end
 
 cfg.site_config = site_config
 
-cfg.program_version = "2.2.0beta1"
+cfg.program_version = "2.2.0"
 cfg.major_version = cfg.program_version:match("([^.]%.[^.])")
 
 local persist = require("luarocks.persist")
