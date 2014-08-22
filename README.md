@@ -1,8 +1,13 @@
-This is LuaRocks, a deployment and management system for Lua modules.
+LuaRocks
+========
+
+A package manager for Lua modules.
+
+[![Build Status](https://travis-ci.org/keplerproject/luarocks.png?branch=master)](https://travis-ci.org/keplerproject/luarocks)
 
 Main website: [luarocks.org](http://www.luarocks.org)
 
-LuaRocks allows you to install Lua modules as self-contained packages called
+It allows you to install Lua modules as self-contained packages called
 [*rocks*][1], which also contain version [dependency][2] information. This
 information is used both during installation, so that when one rock is
 requested all rocks it depends on are installed as well, and at run time, so

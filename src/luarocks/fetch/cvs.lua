@@ -1,6 +1,9 @@
 
 --- Fetch back-end for retrieving sources from CVS.
-module("luarocks.fetch.cvs", package.seeall)
+--module("luarocks.fetch.cvs", package.seeall)
+local cvs = {}
+
+local unpack = unpack or table.unpack
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
@@ -13,7 +16,7 @@ local util = require("luarocks.util")
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function get_sources(rockspec, extract, dest_dir)
+function cvs.get_sources(rockspec, extract, dest_dir)
    assert(type(rockspec) == "table")
    assert(type(dest_dir) == "string" or not dest_dir)
 
@@ -43,3 +46,5 @@ function get_sources(rockspec, extract, dest_dir)
    return module, store_dir
 end
 
+
+return cvs

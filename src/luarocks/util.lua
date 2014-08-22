@@ -4,9 +4,10 @@
 -- inside specific functions) to avoid interdependencies,
 -- as this is used in the bootstrapping stage of luarocks.cfg.
 
-local global_env = _G
+--module("luarocks.util", package.seeall)
+local util = {}
 
-module("luarocks.util", package.seeall)
+local unpack = unpack or table.unpack
 
 local scheduled_functions = {}
 local debug = require("debug")
@@ -18,7 +19,7 @@ local debug = require("debug")
 -- @param ... arguments to be passed to function.
 -- @return table: A token representing the scheduled execution,
 -- which can be used to remove the item later from the list.
-function schedule_function(f, ...)
+function util.schedule_function(f, ...)
    assert(type(f) == "function")
    
    local item = { fn = f, args = {...} }
@@ -30,7 +31,7 @@ end
 -- This is useful for cancelling a rollback of a completed operation.
 -- @param item table: The token representing the scheduled function that was
 -- returned from the schedule_function call.
-function remove_scheduled_function(item)
+function util.remove_scheduled_function(item)
    for k, v in pairs(scheduled_functions) do
       if v == item then
          table.remove(scheduled_functions, k)
@@ -44,7 +45,7 @@ end
 -- corresponding cleanup functions. Calling this function will run
 -- these function, erasing temporaries.
 -- Functions are executed in the inverse order they were scheduled.
-function run_scheduled_functions()
+function util.run_scheduled_functions()
    local fs = require("luarocks.fs")
    fs.change_dir_to_root()
    for i = #scheduled_functions, 1, -1 do
@@ -58,7 +59,7 @@ end
 -- so it does not include beginning- and end-of-string markers (^$)
 -- @param s string: The input string
 -- @return string: The equivalent pattern
-function matchquote(s)
+function util.matchquote(s)
    return (s:gsub("[?%-+*%[%].%%()$^]","%%%1"))
 end
 
@@ -67,7 +68,7 @@ end
 -- For example, given "foo", "--tux=beep", "--bla", "bar", "--baz",
 -- it would return the following:
 -- {["bla"] = true, ["tux"] = "beep", ["baz"] = true}, "foo", "bar".
-function parse_flags(...)
+function util.parse_flags(...)
    local args = {...}
    local flags = {}
    for i = #args, 1, -1 do
@@ -92,7 +93,7 @@ end
 -- in the flags table. If no flags are passed as varargs, the
 -- entire flags table is forwarded.
 -- @return string... A variable number of strings
-function forward_flags(flags, ...)
+function util.forward_flags(flags, ...)
    assert(type(flags) == "table")
    local out = {}
    local filter = select('#', ...)
@@ -121,14 +122,14 @@ end
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.
 -- @see platform_overrides
-function deep_merge(dst, src)
+function util.deep_merge(dst, src)
    for k, v in pairs(src) do
       if type(v) == "table" then
          if not dst[k] then
             dst[k] = {}
          end
          if type(dst[k]) == "table" then
-            deep_merge(dst[k], v)
+            util.deep_merge(dst[k], v)
          else
             dst[k] = v
          end
@@ -153,7 +154,7 @@ end
 -- tbl.x are preserved).
 -- @param tbl table or nil: Table which may contain a "platforms" field;
 -- if it doesn't (or if nil is passed), this function does nothing.
-function platform_overrides(tbl)
+function util.platform_overrides(tbl)
    assert(type(tbl) == "table" or not tbl)
    
    local cfg = require("luarocks.cfg")
@@ -203,15 +204,15 @@ end
 -- @param needed_set: a set where keys are the names of
 -- needed variables.
 -- @param msg string: the warning message to display.
-function warn_if_not_used(var_defs, needed_set, msg)
+function util.warn_if_not_used(var_defs, needed_set, msg)
    needed_set = make_shallow_copy(needed_set)
-   for var,val in pairs(var_defs) do
+   for _, val in pairs(var_defs) do
       for used in val:gmatch(var_format_pattern) do
          needed_set[used] = nil
       end
    end
-   for var,_ in pairs(needed_set) do
-      warning(msg:format(var))
+   for var, _ in pairs(needed_set) do
+      util.warning(msg:format(var))
    end
 end
 
@@ -222,7 +223,7 @@ local function warn_failed_matches(line)
    local any_failed = false
    if line:match(var_format_pattern) then
       for unmatched in line:gmatch(var_format_pattern) do
-         warning("unmatched variable " .. unmatched)
+         util.warning("unmatched variable " .. unmatched)
          any_failed = true
       end
    end
@@ -237,7 +238,7 @@ end
 -- @param tbl table: Table to have its string values modified.
 -- @param vars table: Table containing string-string key-value pairs 
 -- representing variables to replace in the strings values of tbl.
-function variable_substitutions(tbl, vars)
+function util.variable_substitutions(tbl, vars)
    assert(type(tbl) == "table")
    assert(type(vars) == "table")
    
@@ -258,7 +259,7 @@ end
 --- Return an array of keys of a table.
 -- @param tbl table: The input table.
 -- @return table: The array of keys.
-function keys(tbl)
+function util.keys(tbl)
    local ks = {}
    for k,_ in pairs(tbl) do
       table.insert(ks, k)
@@ -286,7 +287,7 @@ end
 -- to be used by table.sort when sorting keys.
 -- @see sortedpairs
 local function sortedpairs_iterator(tbl, sort_function)
-   local ks = keys(tbl)
+   local ks = util.keys(tbl)
    if not sort_function or type(sort_function) == "function" then
       table.sort(ks, sort_function or default_sort)
       for _, k in ipairs(ks) do
@@ -324,41 +325,50 @@ end
 -- is a string representing the field name, and the second element is a priority table
 -- for that key.
 -- @return function: the iterator function.
-function sortedpairs(tbl, sort_function)
+function util.sortedpairs(tbl, sort_function)
    return coroutine.wrap(function() sortedpairs_iterator(tbl, sort_function) end)
 end
 
-function starts_with(s, prefix)
+function util.lua_versions()
+   local versions = { "5.1", "5.2", "5.3" }
+   local i = 0
+   return function()
+      i = i + 1
+      return versions[i]
+   end
+end
+
+function util.starts_with(s, prefix)
    return s:sub(1,#prefix) == prefix
 end
 
 --- Print a line to standard output
-function printout(...)
+function util.printout(...)
    io.stdout:write(table.concat({...},"\t"))
    io.stdout:write("\n")
 end
 
 --- Print a line to standard error
-function printerr(...)
+function util.printerr(...)
    io.stderr:write(table.concat({...},"\t"))
    io.stderr:write("\n")
 end
 
 --- Display a warning message.
 -- @param msg string: the warning message
-function warning(msg)
-   printerr("Warning: "..msg)
+function util.warning(msg)
+   util.printerr("Warning: "..msg)
 end
 
-function title(msg, porcelain, underline)
+function util.title(msg, porcelain, underline)
    if porcelain then return end
-   printout()
-   printout(msg)
-   printout((underline or "-"):rep(#msg))
-   printout()
+   util.printout()
+   util.printout(msg)
+   util.printout((underline or "-"):rep(#msg))
+   util.printout()
 end
 
-function this_program(default)
+function util.this_program(default)
    local i = 1
    local last, cur = default, default
    while i do
@@ -371,13 +381,32 @@ function this_program(default)
    return last:sub(2)
 end
 
-function see_help(command, program)
-   return "See '"..this_program(program or "luarocks")..' help '..command.."'."
+function util.deps_mode_help(program)
+   local cfg = require("luarocks.cfg")
+   return [[
+--deps-mode=<mode>  How to handle dependencies. Four modes are supported:
+                    * all - use all trees from the rocks_trees list
+                      for finding dependencies
+                    * one - use only the current tree (possibly set
+                      with --tree)
+                    * order - use trees based on order (use the current
+                      tree and all trees below it on the rocks_trees list)
+                    * none - ignore dependencies altogether.
+                    The default mode may be set with the deps_mode entry
+                    in the configuration file.
+                    The current default is "]]..cfg.deps_mode..[[".
+                    Type ']]..util.this_program(program or "luarocks")..[[' with no arguments to see
+                    your list of rocks trees.
+]]
+end
+
+function util.see_help(command, program)
+   return "See '"..util.this_program(program or "luarocks")..' help'..(command and " "..command or "").."'."
 end
 
 -- from http://lua-users.org/wiki/SplitJoin
 -- by PhilippeLhoste
-function split_string(str, delim, maxNb)
+function util.split_string(str, delim, maxNb)
    -- Eliminate bad cases...
    if string.find(str, delim) == nil then
       return { str }
@@ -406,12 +435,13 @@ end
 -- Example: given ("a;b;c;a;b;d", ";"), returns "a;b;c;d".
 -- @param list string: A path string (from $PATH or package.path)
 -- @param sep string: The separator
-function remove_path_dupes(list, sep)
+function util.remove_path_dupes(list, sep)
    assert(type(list) == "string")
    assert(type(sep) == "string")
-   local parts = split_string(list, sep)
+   local parts = util.split_string(list, sep)
    local final, entries = {}, {}
    for _, part in ipairs(parts) do
+      part = part:gsub("//", "/")
       if not entries[part] then
          table.insert(final, part)
          entries[part] = true
@@ -437,7 +467,7 @@ end
 -- @param name string: is the name of the table (optional)
 -- @param indent string: is a first indentation (optional).
 -- @return string: the pretty-printed table
-function show_table(t, name, indent)
+function util.show_table(t, name, indent)
    local cart     -- a container
    local autoref  -- for self references
 
@@ -503,7 +533,7 @@ function show_table(t, name, indent)
    return cart .. autoref
 end
 
-function array_contains(tbl, value)
+function util.array_contains(tbl, value)
    for _, v in ipairs(tbl) do
       if v == value then
          return true
@@ -511,3 +541,12 @@ function array_contains(tbl, value)
    end
    return false
 end
+
+-- Quote Lua string, analogous to fs.Q.
+-- @param s A string, such as "hello"
+-- @return string: A quoted string, such as '"hello"'
+function util.LQ(s)
+   return ("%q"):format(s)
+end
+
+return util

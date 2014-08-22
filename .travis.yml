@@ -1,0 +1,10 @@
+language: c
+
+compiler: gcc
+
+env:
+  matrix:
+    - LUA_VER=5.1.5
+    - LUA_VER=5.2.3
+
+script: cd test && ./testing.sh --travis --lua $LUA_VER

@@ -34,14 +34,14 @@ if [%1]==[removeall] goto REMOVEALL
 
 REM execute LuaRocks and wait for results
 echo executing: luarocks %*
-call %MYPATH%luarocks %*
+call "%MYPATH%luarocks" %*
 pause
 goto END
 
 :REMOVEALL
 for /f "delims=-" %%a in ("%~n2") do (
     echo executing: luarocks remove %%a
-    %MYPATH%luarocks remove "%%a"
+    "%MYPATH%luarocks" remove "%%a"
     pause
     goto END
 )

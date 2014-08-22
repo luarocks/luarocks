@@ -1,16 +1,12 @@
 
 --- Unix implementation of filesystem and platform abstractions.
-
-local assert, type, table, io, package, math, os, ipairs =
-      assert, type, table, io, package, math, os, ipairs
-
-module("luarocks.fs.unix", package.seeall)
+--module("luarocks.fs.unix", package.seeall)
+local unix = {}
 
 local fs = require("luarocks.fs")
 
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
-local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 
 math.randomseed(os.time())
@@ -18,7 +14,7 @@ math.randomseed(os.time())
 --- Annotate command string for quiet execution.
 -- @param cmd string: A command-line string.
 -- @return string: The command-line, with silencing annotation.
-function quiet(cmd)
+function unix.quiet(cmd)
    return cmd.." 1> /dev/null 2> /dev/null"
 end
 
@@ -28,7 +24,7 @@ end
 -- pathname absolute, or the current dir in the dir stack if
 -- not given.
 -- @return string: The pathname converted to absolute.
-function absolute_name(pathname, relative_to)
+function unix.absolute_name(pathname, relative_to)
    assert(type(pathname) == "string")
    assert(type(relative_to) == "string" or not relative_to)
 
@@ -47,21 +43,22 @@ end
 -- @param version string: rock version to be used in loader context.
 -- @return boolean or (nil, string): True if succeeded, or nil and
 -- an error message.
-function wrap_script(file, dest, name, version)
+function unix.wrap_script(file, dest, name, version)
    assert(type(file) == "string")
    assert(type(dest) == "string")
    
    local base = dir.base_name(file)
    local wrapname = fs.is_dir(dest) and dest.."/"..base or dest
+   local lpath, lcpath = cfg.package_paths()
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
       return nil, "Could not open "..wrapname.." for writing."
    end
    wrapper:write("#!/bin/sh\n\n")
-   wrapper:write('LUA_PATH="'..package.path..';$LUA_PATH"\n')
-   wrapper:write('LUA_CPATH="'..package.cpath..';$LUA_CPATH"\n')
-   wrapper:write('export LUA_PATH LUA_CPATH\n')
-   wrapper:write('exec "'..dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)..'" -lluarocks.loader -e\'luarocks.loader.add_context([['..name..']],[['..version..']])\' "'..file..'" "$@"\n')
+   local lua = dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)
+   local ppaths = "package.path="..util.LQ(lpath..";").."..package.path; package.cpath="..util.LQ(lcpath..";").."..package.cpath"
+   local addctx = "local k,l,_=pcall(require,"..util.LQ("luarocks.loader")..") _=k and l.add_context("..util.LQ(name)..","..util.LQ(version)..")"
+   wrapper:write('exec '..fs.Q(lua)..' -e '..fs.Q(ppaths)..' -e '..fs.Q(addctx)..' '..fs.Q(file)..' "$@"\n')
    wrapper:close()
    if fs.chmod(wrapname, "0755") then
       return true
@@ -75,7 +72,7 @@ end
 -- @param filename string: the file name with full path.
 -- @return boolean: returns true if file is an actual binary
 -- (or if it couldn't check) or false if it is a Lua wrapper.
-function is_actual_binary(filename)
+function unix.is_actual_binary(filename)
    if filename:match("%.lua$") then
       return false
    end
@@ -92,7 +89,7 @@ function is_actual_binary(filename)
    return first ~= "#!"
 end
 
-function copy_binary(filename, dest) 
+function unix.copy_binary(filename, dest) 
    return fs.copy(filename, dest, "0755")
 end
 
@@ -106,6 +103,12 @@ end
 -- which will replace old_file.
 -- @return boolean or (nil, string): True if succeeded, or nil and
 -- an error message.
-function replace_file(old_file, new_file)
+function unix.replace_file(old_file, new_file)
    return os.rename(new_file, old_file)
 end
+
+function unix.tmpname()
+   return os.tmpname()
+end
+
+return unix

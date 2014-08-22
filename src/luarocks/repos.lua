@@ -1,6 +1,8 @@
 
 --- Functions for managing the repository on disk.
-module("luarocks.repos", package.seeall)
+--module("luarocks.repos", package.seeall)
+local repos = {}
+package.loaded["luarocks.repos"] = repos
 
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
@@ -27,7 +29,7 @@ end
 -- @param version string: package version in string format
 -- @return boolean: true if a package is installed,
 -- false otherwise.
-function is_installed(name, version)
+function repos.is_installed(name, version)
    assert(type(name) == "string")
    assert(type(version) == "string")
       
@@ -72,7 +74,7 @@ end
 -- in "foo.bar" format and values are pathnames in architecture-dependent
 -- "foo/bar.so" format. If no modules are found or if package or version
 -- are invalid, an empty table is returned.
-function package_modules(package, version)
+function repos.package_modules(package, version)
    assert(type(package) == "string")
    assert(type(version) == "string")
 
@@ -91,7 +93,7 @@ end
 -- as strings and values are pathnames in architecture-dependent
 -- ".../bin/foo" format. If no modules are found or if package or version
 -- are invalid, an empty table is returned.
-function package_commands(package, version)
+function repos.package_commands(package, version)
    assert(type(package) == "string")
    assert(type(version) == "string")
 
@@ -107,7 +109,7 @@ end
 -- @param version string: version of an installed rock
 -- @return boolean: returns true if rock contains platform-specific
 -- binary executables, or false if it is a pure-Lua rock.
-function has_binaries(name, version)
+function repos.has_binaries(name, version)
    assert(type(name) == "string")
    assert(type(version) == "string")
 
@@ -123,7 +125,7 @@ function has_binaries(name, version)
    return false
 end
 
-function run_hook(rockspec, hook_name)
+function repos.run_hook(rockspec, hook_name)
    assert(type(rockspec) == "table")
    assert(type(hook_name) == "string")
 
@@ -153,19 +155,13 @@ end
 local function install_binary(source, target, name, version)
    assert(type(source) == "string")
    assert(type(target) == "string")
-
-   local match = source:match("%.lua$")
-   local file, ok, err
-   if not match then
-      file = io.open(source)
-   end
-   if match or (file and file:read():match("^#!.*lua.*")) then
-      ok, err = fs.wrap_script(source, target, name, version)
+   
+   if fs.is_lua(source) then
+      repos.ok, repos.err = fs.wrap_script(source, target, name, version)
    else
-      ok, err = fs.copy_binary(source, target)
+      repos.ok, repos.err = fs.copy_binary(source, target)
    end
-   if file then file:close() end
-   return ok, err
+   return repos.ok, repos.err
 end
 
 local function resolve_conflict(target, deploy_dir, name, version)
@@ -184,7 +180,7 @@ local function resolve_conflict(target, deploy_dir, name, version)
    end
 end
 
-function should_wrap_bin_scripts(rockspec)
+function repos.should_wrap_bin_scripts(rockspec)
    assert(type(rockspec) == "table")
 
    if cfg.wrap_bin_scripts ~= nil then
@@ -196,7 +192,7 @@ function should_wrap_bin_scripts(rockspec)
    return true
 end
 
-function deploy_files(name, version, wrap_bin_scripts)
+function repos.deploy_files(name, version, wrap_bin_scripts)
    assert(type(name) == "string")
    assert(type(version) == "string")
    assert(type(wrap_bin_scripts) == "boolean")
@@ -216,7 +212,7 @@ function deploy_files(name, version, wrap_bin_scripts)
                if err == "untracked" then
                   local backup = target
                   repeat
-                     backup = target.."~"
+                     backup = backup.."~"
                   until not fs.exists(backup) -- slight race condition here, but shouldn't be a problem.
                   util.printerr("Warning: "..target.." is not tracked by this installation of LuaRocks. Moving it to "..backup)
                   fs.move(target, backup)
@@ -252,6 +248,21 @@ function deploy_files(name, version, wrap_bin_scripts)
    return ok, err
 end
 
+local function delete_suffixed(filename, suffix)
+   local filenames = { filename }
+   if suffix and suffix ~= "" then filenames = { filename..suffix, filename } end
+   for _, name in ipairs(filenames) do
+      if fs.exists(name) then
+         fs.delete(name)
+         if fs.exists(name) then
+            return nil, "Failed deleting "..name, "fail"
+         end
+         return true, name
+      end
+   end
+   return false, "File not found", "not found"
+end
+
 --- Delete a package from the local repository.
 -- Version numbers are compared as exact string comparison.
 -- @param name string: name of package
@@ -260,32 +271,32 @@ end
 -- of another version that provides the same module that
 -- was deleted. This is used during 'purge', as every module
 -- will be eventually deleted.
-function delete_version(name, version, quick)
+function repos.delete_version(name, version, quick)
    assert(type(name) == "string")
    assert(type(version) == "string")
 
-   local function delete_deployed_file_tree(file_tree, deploy_dir)
+   local function delete_deployed_file_tree(file_tree, deploy_dir, suffix)
       return recurse_rock_manifest_tree(file_tree, 
          function(parent_path, parent_module, file)
             local target = dir.path(deploy_dir, parent_path, file)
             local versioned = path.versioned_name(target, deploy_dir, name, version)
-            if fs.exists(versioned) then
-               local ok = fs.delete(versioned)
+            local ok, name, err = delete_suffixed(versioned, suffix)
+            if ok then
                fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
-               if not ok then return nil, "Failed deleting "..versioned end
-            else
-               local ok = fs.delete(target)
-               if not quick then
-                  local next_name, next_version = manif.find_next_provider(target)
-                  if next_name then
-                     local versioned = path.versioned_name(target, deploy_dir, next_name, next_version)
-                     fs.move(versioned, target)
-                     fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
-                  end
-               end
-               fs.remove_dir_tree_if_empty(dir.dir_name(target))
-               if not ok then return nil, "Failed deleting "..target end
+               return true
             end
+            if err == "fail" then return nil, name end
+            ok, name, err = delete_suffixed(target, suffix)
+            if err == "fail" then return nil, name end
+            if not quick then
+               local next_name, next_version = manif.find_next_provider(target)
+               if next_name then
+                  local versioned = path.versioned_name(name, deploy_dir, next_name, next_version)
+                  fs.move(versioned, name)
+                  fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
+               end
+            end
+            fs.remove_dir_tree_if_empty(dir.dir_name(target))
             return true
          end
       )
@@ -298,7 +309,7 @@ function delete_version(name, version, quick)
    
    local ok, err = true
    if rock_manifest.bin then
-      ok, err = delete_deployed_file_tree(rock_manifest.bin, cfg.deploy_bin_dir)
+      ok, err = delete_deployed_file_tree(rock_manifest.bin, cfg.deploy_bin_dir, cfg.wrapper_suffix)
    end
    if ok and rock_manifest.lua then
       ok, err = delete_deployed_file_tree(rock_manifest.lua, cfg.deploy_lua_dir)
@@ -314,3 +325,5 @@ function delete_version(name, version, quick)
    end
    return true
 end
+
+return repos

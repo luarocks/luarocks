@@ -14,6 +14,7 @@ LUA_BINDIR="/usr/bin"
 LUA_INCDIR="/usr/include"
 LUA_LIBDIR="/usr/lib"
 LUA_VERSION="5.1"
+MULTIARCH_SUBDIR=""
 
 # ----------------------------------------------------------------------------
 # FUNCTION DEFINITIONS
@@ -35,21 +36,24 @@ Where to install files installed by rocks, to make the accessible to Lua and
 your \$PATH. Beware of clashes between files installed by LuaRocks and by your
 system's package manager.
 
---rocks-tree=FILE           Root of the local tree of installed rocks.
+--rocks-tree=DIR            Root of the local tree of installed rocks.
                             Default is \$PREFIX
 
---lua-version=VERSION       Use specific Lua version: 5.1 or 5.2
+--lua-version=VERSION       Use specific Lua version: 5.1, 5.2, or 5.3
                             Default is "$LUA_VERSION"
 --lua-suffix=SUFFIX         Versioning suffix to use in Lua filenames.
                             Default is "$LUA_SUFFIX" (lua$LUA_SUFFIX...)
 --with-lua=PREFIX           Use Lua from given prefix.
-                            Default is $LUA_DIR
+                            Default is auto-detected (the parent directory of \$LUA_BINDIR).
+--with-lua-bin=DIR          You can also specify Lua's bin dir.
+                            Default is the directory of the auto-detected Lua interpreter,
+                            or \$LUA_DIR/bin if --with-lua is used.
 --with-lua-include=DIR      You can also specify Lua's includes dir.
                             Default is \$LUA_DIR/include
 --with-lua-lib=DIR          You can also specify Lua's libraries dir.
                             Default is \$LUA_DIR/lib
 --with-downloader=TOOL      Which tool to use as a downloader.
-                            Valid options are: wget, curl.
+                            Valid options are: curl, wget.
                             Default is to auto-detect.
 --with-md5-checker=TOOL     Which tool to use as a downloader.
                             Valid options are: md5sum, openssl
@@ -176,13 +180,18 @@ do
    --lua-version)
       [ -n "$value" ] || die "Missing value in flag $key."
       LUA_VERSION="$value"
-      [ "$LUA_VERSION" = "5.1" -o "$LUA_VERSION" = "5.2" ] || die "Invalid Lua version in flag $key."
+      [ "$LUA_VERSION" = "5.1" -o "$LUA_VERSION" = "5.2" -o "$LUA_VERSION" = "5.3" ] || die "Invalid Lua version in flag $key."
       LUA_VERSION_SET=yes
       ;;
    --with-lua)
       [ -n "$value" ] || die "Missing value in flag $key."
       LUA_DIR="$value"
       LUA_DIR_SET=yes
+      ;;
+   --with-lua-bin)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      LUA_BINDIR="$value"
+      LUA_BINDIR_SET=yes
       ;;
    --with-lua-include)
       [ -n "$value" ] || die "Missing value in flag $key."
@@ -233,7 +242,7 @@ fi
 
 detect_lua_version() {
    detected_lua=`$1 -e 'print(_VERSION:sub(5))' 2> /dev/null`
-   if [ "$detected_lua" = "5.1" -o "$detected_lua" = "5.2" ]
+   if [ "$detected_lua" = "5.1" -o "$detected_lua" = "5.2" -o "$detected_lua" = "5.3" ]
    then
       echo "Lua version detected: $detected_lua"
       if [ "$LUA_VERSION_SET" != "yes" ]
@@ -248,7 +257,10 @@ detect_lua_version() {
 
 search_interpreter() {
    LUA_SUFFIX="$1"
-   if [ "$LUA_DIR_SET" = "yes" ]
+   if [ "$LUA_BINDIR_SET" = "yes" ]
+   then
+      find_lua="$LUA_BINDIR"
+   elif [ "$LUA_DIR_SET" = "yes" ]
    then
       if [ -f "$LUA_DIR/bin/lua$suffix" ]
       then
@@ -259,7 +271,7 @@ search_interpreter() {
    fi
    if [ -n "$find_lua" ]
    then
-      echo "Lua interpreter found: $find_lua/lua$suffix..."
+      echo "Lua interpreter: $find_lua/lua$suffix..."
       detect_lua_version "$find_lua/lua$suffix"
       return 0
    fi
@@ -270,14 +282,17 @@ if [ "$LUA_SUFFIX_SET" != "yes" ]
 then
    if [ "$LUA_VERSION_SET" = "yes" -a "$LUA_VERSION" = "5.1" ]
    then
-      suffixes="5.1 51"
+      suffixes="5.1 51 -5.1 -51"
    elif [ "$LUA_VERSION_SET" = "yes" -a "$LUA_VERSION" = "5.2" ]
    then
-      suffixes="5.2 52"
+      suffixes="5.2 52 -5.2 -52"
+   elif [ "$LUA_VERSION_SET" = "yes" -a "$LUA_VERSION" = "5.3" ]
+   then
+      suffixes="5.3 53 -5.3 -53"
    else
-      suffixes="5.2 52 5.1 51"
+      suffixes="5.3 53 -5.3 -53 5.2 52 -5.2 -52 5.1 51 -5.1 -51"
    fi
-   for suffix in "" `echo $suffixes` ""
+   for suffix in `echo $suffixes` ""
    do
       search_interpreter "$suffix" && break
    done
@@ -285,9 +300,9 @@ fi
 
 if [ "$LUA_DIR_SET" != "yes" ]
 then
-   echo_n "Looking for Lua... "
-   if [ ! -n "$find_lua" ]
+   if [ -z "$find_lua" ]
    then
+      echo_n "Looking for Lua... "
       find_lua=`find_program lua$LUA_SUFFIX`
    fi
 
@@ -312,7 +327,7 @@ then
    LUA_LIBDIR="$LUA_DIR/lib"
 fi
 
-if [ "$LUA_DIR_SET" = "yes" ]
+if [ "$LUA_DIR_SET" = "yes" -a "$LUA_BINDIR_SET" != "yes" ]
 then
    LUA_BINDIR="$LUA_DIR/bin"
 fi
@@ -345,7 +360,7 @@ fi
 
 if [ "$LUAROCKS_DOWNLOADER_SET" != "yes" ]
 then
-   find_helper "downloader helper program" wget curl fetch
+   find_helper "downloader helper program" curl wget fetch
    LUAROCKS_DOWNLOADER=$HELPER
 fi
 
@@ -376,12 +391,14 @@ else
    die "Could not determine processor architecture. 'uname -m' failed."
 fi
 
-if [ "$LUA_VERSION" = "5.2" ]
-then
-   LUA_OTHER_VERSION=5.1
-else
-   LUA_OTHER_VERSION=5.2
-fi
+for v in 5.1 5.2 5.3; do
+  if [ "$v" != "$LUA_VERSION" ]; then
+    if [ -e "$PREFIX/share/lua/$v/luarocks/site_config.lua" ]; then
+      LUA_OTHER_VERSION="$v"
+      break
+    fi
+  fi
+done
 
 LUAROCKS_ROCKS_SUBDIR=/lib/luarocks/rocks
 if [ "$VERSIONED_ROCKS_DIR" = "yes" ]
@@ -393,13 +410,22 @@ then
    echo "Existing installation detected."
    LUAROCKS_ROCKS_SUBDIR=`grep "LUAROCKS_ROCKS_SUBDIR" "$PREFIX/share/lua/$LUA_VERSION/luarocks/site_config.lua" | sed 's,.*=\[\[\(.*\)\]\],\1,'`
    echo "Using previously configured rocks dir: $PREFIX$LUAROCKS_ROCKS_SUBDIR"
-elif [ -e "$PREFIX/share/lua/$LUA_OTHER_VERSION/luarocks/site_config.lua" ]
+elif [ -n "$LUA_OTHER_VERSION" ]
 then
    echo "Existing installation detected for other Lua version ($LUA_OTHER_VERSION)."
    LUAROCKS_ROCKS_SUBDIR=$LUAROCKS_ROCKS_SUBDIR-$LUA_VERSION
    echo "Using versioned rocks dir: $PREFIX$LUAROCKS_ROCKS_SUBDIR"
 else
    echo "Using unversioned rocks dir: $PREFIX$LUAROCKS_ROCKS_SUBDIR"
+fi
+
+if [ "$LUAROCKS_UNAME_S" = Linux ]
+then
+   GCC_ARCH=`gcc -print-multiarch 2>/dev/null`
+   if [ -n "$GCC_ARCH" -a -d "/usr/lib/$GCC_ARCH" ]
+   then
+      MULTIARCH_SUBDIR="lib/$GCC_ARCH"
+   fi
 fi
 
 if [ -f config.unix ]; then
@@ -433,6 +459,7 @@ LUAROCKS_UNAME_R=$LUAROCKS_UNAME_R
 LUAROCKS_DOWNLOADER=$LUAROCKS_DOWNLOADER
 LUAROCKS_MD5CHECKER=$LUAROCKS_MD5CHECKER
 LUAROCKS_ROCKS_SUBDIR=$LUAROCKS_ROCKS_SUBDIR
+MULTIARCH_SUBDIR=$MULTIARCH_SUBDIR
 
 EOF
 

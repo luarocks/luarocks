@@ -1,31 +1,4 @@
-LuaRocks is free software: it can be used for both academic and commercial
-purposes at absolutely no cost. There are no royalties or GNU-like "copyleft"
-restrictions. LuaRocks qualifies as Open Source software. Its licenses are
-compatible with the GPL. LuaRocks is not in the public domain and the Kepler
-Project keeps its copyright. The legal details are below.
-
-The spirit of the license is that you are free to use LuaRocks for any purpose
-at no cost without having to ask us. The only requirement is that if you do
-use LuaRocks, then you should give us credit by including the appropriate
-copyright notice somewhere in your product or its documentation.
-
-7z.exe and 7z.dll are covered by another license, please see COPYING.7z for
-details.
-
-find.exe, mv.exe, rm.exe, wget.exe, ls.exe, pwd.exe, rmdir.exe, chmod.exe,
-md5sum.exe, test.exe, cp.exe, mkdir.exe, and uname.exe are part of UnxUtils,
-check http://unxutils.sourceforge.net/ for license information.
-
-Files under win32/lua5.1, except for Microsoft.VC80.CRT.manifest and msv*.*,
-are covered by another license, please see COPYING.lua for details.
-
-Microsoft.VC80.CRT.manifest, msvcm80.dll, msvcp80.dll, msvcr80.dll are part
-of the Microsoft Visual C++ 2005 SP1 Redistributable Package (x86) and
-are Copyright Microsoft, Inc. 2007.
-
-------------------------------------------------------------------------------
-
-Copyright 2007-2010 Kepler Project.
+Copyright 2007-2014 Kepler Project.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

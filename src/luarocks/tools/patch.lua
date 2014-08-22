@@ -6,12 +6,13 @@
 -- Code is heavilly based on the Python-based patch.py version 8.06-1
 --   Copyright (c) 2008 rainforce.org, MIT License
 --   Project home: http://code.google.com/p/python-patch/ .
+--   Version 0.1
 
-module("luarocks.tools.patch", package.seeall)
+--module("luarocks.tools.patch", package.seeall)
+local patch = {}
 
 local fs = require("luarocks.fs")
-
-local version = '0.1'
+local util = require("luarocks.util")
 
 local io = io
 local os = os
@@ -45,12 +46,6 @@ local function table_copy(t)
   local t2 = {}
   for k,v in pairs(t) do t2[k] = v end
   return t2
-end
-
--- Returns boolean whether array t contains value v.
-local function array_contains(t, v)
-  for _,v2 in ipairs(t) do if v == v2 then return true end end
-  return false
 end
 
 local function exists(filename)
@@ -158,7 +153,7 @@ local function match_linerange(line)
   return m1, m2, m3, m4
 end
 
-function read_patch(filename, data)
+function patch.read_patch(filename, data)
   -- define possible file regions that will direct the parser flow
   local state = 'header'
     -- 'header'    - comments before the patch body
@@ -284,7 +279,7 @@ function read_patch(filename, data)
     local advance
     if state == 'filenames' then
       if startswith(line, "--- ") then
-        if array_contains(files.source, nextfileno) then
+        if util.array_contains(files.source, nextfileno) then
           all_ok = false
           warning(format("skipping invalid patch for %s",
                          files.source[nextfileno+1]))
@@ -304,7 +299,7 @@ function read_patch(filename, data)
           table.insert(files.source, match)
         end
       elseif not startswith(line, "+++ ") then
-        if array_contains(files.source, nextfileno) then
+        if util.array_contains(files.source, nextfileno) then
           all_ok = false
           warning(format("skipping invalid patch with no target for %s",
                          files.source[nextfileno+1]))
@@ -315,7 +310,7 @@ function read_patch(filename, data)
         end
         state = 'header'
       else
-        if array_contains(files.target, nextfileno) then
+        if util.array_contains(files.target, nextfileno) then
           all_ok = false
           warning(format("skipping invalid patch - double target at line %d",
                          lineno+1))
@@ -354,7 +349,7 @@ function read_patch(filename, data)
     if not advance and state == 'hunkhead' then
       local m1, m2, m3, m4 = match_linerange(line)
       if not m1 then
-        if not array_contains(files.hunks, nextfileno-1) then
+        if not util.array_contains(files.hunks, nextfileno-1) then
           all_ok = false
           warning(format("skipping invalid patch with no hunks for file %s",
                          files.target[nextfileno]))
@@ -401,7 +396,6 @@ local function find_hunk(file, h, hno)
     for i=0,#file do
       local found = true
       local location = lineno
-      local total = #h.text - fuzz
       for l, hline in ipairs(h.text) do
         if l > fuzz then
           -- todo: \ No newline at the end of file
@@ -452,9 +446,6 @@ local function load_file(filename)
 end
 
 local function find_hunks(file, hunks)
-  local matched = true
-  local lineno = 1
-  local hno = nil
   for hno, h in ipairs(hunks) do
     find_hunk(file, h, hno)
   end
@@ -463,7 +454,6 @@ end
 local function check_patched(file, hunks)
   local matched = true
   local lineno = 1
-  local hno = nil
   local ok, err = pcall(function()
     if #file == 0 then
       error 'nomatch'
@@ -569,15 +559,15 @@ local function strip_dirs(filename, strip)
   return filename
 end
 
-function apply_patch(patch, strip)
+function patch.apply_patch(the_patch, strip)
   local all_ok = true
-  local total = #patch.source
-  for fileno, filename in ipairs(patch.source) do
+  local total = #the_patch.source
+  for fileno, filename in ipairs(the_patch.source) do
     filename = strip_dirs(filename, strip)
     local continue
     local f2patch = filename
     if not exists(f2patch) then
-      f2patch = strip_dirs(patch.target[fileno], strip)
+      f2patch = strip_dirs(the_patch.target[fileno], strip)
       f2patch = fs.absolute_name(f2patch)
       if not exists(f2patch) then  --FIX:if f2patch nil
         warning(format("source/target file does not exist\n--- %s\n+++ %s",
@@ -598,7 +588,7 @@ function apply_patch(patch, strip)
     info(format("processing %d/%d:\t %s", fileno, total, filename))
 
     -- validate before patching
-    local hunks = patch.hunks[fileno]
+    local hunks = the_patch.hunks[fileno]
     local file = load_file(filename)
     local hunkno = 1
     local hunk = hunks[hunkno]
@@ -710,3 +700,5 @@ function apply_patch(patch, strip)
   -- todo: check for premature eof
   return all_ok
 end
+
+return patch

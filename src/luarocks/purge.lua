@@ -1,7 +1,9 @@
 
 --- Module implementing the LuaRocks "purge" command.
 -- Remove all rocks from a given tree.
-module("luarocks.purge", package.seeall)
+--module("luarocks.purge", package.seeall)
+local purge = {}
+package.loaded["luarocks.purge"] = purge
 
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
@@ -13,9 +15,9 @@ local manif = require("luarocks.manif")
 local cfg = require("luarocks.cfg")
 local remove = require("luarocks.remove")
 
-help_summary = "Remove all installed rocks from a tree."
-help_arguments = "--tree=<tree> [--old-versions]"
-help = [[
+purge.help_summary = "Remove all installed rocks from a tree."
+purge.help_arguments = "--tree=<tree> [--old-versions]"
+purge.help = [[
 This command removes rocks en masse from a given tree.
 By default, it removes all rocks from a tree.
 
@@ -29,7 +31,7 @@ assume a default tree.
                 overridden with the flag --force.
 ]]
 
-function run(...)
+function purge.run(...)
    local flags = util.parse_flags(...)
    
    local tree = flags["tree"]
@@ -41,6 +43,13 @@ function run(...)
    local results = {}
    local query = search.make_query("")
    query.exact_name = false
+   if not fs.is_dir(tree) then
+      return nil, "Directory not found: "..tree
+   end
+
+   local ok, err = fs.check_command_permissions(flags)
+   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
+
    search.manifest_search(results, path.rocks_dir(tree), query)
 
    local sort = function(a,b) return deps.compare_versions(b,a) end
@@ -68,3 +77,5 @@ function run(...)
    end
    return manif.make_manifest(cfg.rocks_dir, "one")
 end
+
+return purge

@@ -1,6 +1,8 @@
 
 --- Module which builds the index.html page to be used in rocks servers.
-module("luarocks.index", package.seeall)
+--module("luarocks.index", package.seeall)
+local index = {}
+package.loaded["luarocks.index"] = index
 
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
@@ -66,7 +68,7 @@ Lua modules available from this location for use with <a href="http://www.luaroc
 <table class="main">
 ]]
 
-local index_package_start = [[
+local index_package_begin = [[
 <td class="package">
 <p><a name="$anchor"></a><a href="#$anchor" class="pkg"><b>$package</b></a> - $summary<br/>
 </p><blockquote><p>$detailed<br/>
@@ -81,16 +83,21 @@ local index_package_end = [[
 <tr><td colspan="2" class="spacer"></td></tr>
 ]]
 
-local index_footer = [[
+local index_footer_begin = [[
 </table>
 <p class="manifest">
-<a href="manifest">manifest file</a> &bull; <a href="manifest-5.1">Lua 5.1 manifest file</a> &bull; <a href="manifest-5.2">Lua 5.2 manifest file</a>
+<a href="manifest">manifest file</a>
+]]
+local index_manifest_ver = [[
+&bull; <a href="manifest-$VER">Lua $VER manifest file</a> (<a href="manifest-$VER.zip">zip</a>) 
+]]
+local index_footer_end = [[
 </p>
 </body>
 </html>
 ]]
 
-function format_external_dependencies(rockspec)
+function index.format_external_dependencies(rockspec)
    if rockspec.external_dependencies then
       local deplist = {}
       local listed_set = {}
@@ -118,7 +125,7 @@ function format_external_dependencies(rockspec)
    end
 end
 
-function make_index(repo)
+function index.make_index(repo)
    if not fs.is_dir(repo) then
       return nil, "Cannot access repository at "..repo
    end
@@ -128,21 +135,20 @@ function make_index(repo)
    out:write(index_header)
    for package, version_list in util.sortedpairs(manifest.repository) do
       local latest_rockspec = nil
-      local output = index_package_start
+      local output = index_package_begin
       for version, data in util.sortedpairs(version_list, deps.compare_versions) do
          local versions = {}
          output = output..version..':&nbsp;'
          table.sort(data, function(a,b) return a.arch < b.arch end)
          for _, item in ipairs(data) do
-            local link = '<a href="$url">'..item.arch..'</a>'
+            local file
             if item.arch == 'rockspec' then
-               local rs = ("%s-%s.rockspec"):format(package, version)
-               if not latest_rockspec then latest_rockspec = rs end
-               link = link:gsub("$url", rs)
+               file = ("%s-%s.rockspec"):format(package, version)
+               if not latest_rockspec then latest_rockspec = file end
             else
-               link = link:gsub("$url", ("%s-%s.%s.rock"):format(package, version, item.arch))
+               file = ("%s-%s.%s.rock"):format(package, version, item.arch)
             end
-            table.insert(versions, link)
+            table.insert(versions, '<a href="'..file..'">'..item.arch..'</a>')
          end
          output = output .. table.concat(versions, ',&nbsp;') .. '<br/>'
       end
@@ -158,7 +164,7 @@ function make_index(repo)
             detailed = descript.detailed or "",
             license = descript.license or "N/A",
             homepage = descript.homepage and ('| <a href="'..descript.homepage..'"'..ext_url_target..'>project homepage</a>') or "",
-            externaldependencies = format_external_dependencies(rockspec)
+            externaldependencies = index.format_external_dependencies(rockspec)
          }
          vars.detailed = vars.detailed:gsub("\n\n", "</p><p>"):gsub("%s+", " ")
          vars.detailed = vars.detailed:gsub("(https?://[a-zA-Z0-9%.%%-_%+%[%]=%?&/$@;:]+)", '<a href="%1"'..ext_url_target..'>%1</a>')
@@ -170,6 +176,12 @@ function make_index(repo)
       end
       out:write(output)
    end
-   out:write(index_footer)
+   out:write(index_footer_begin)
+   for ver in util.lua_versions() do
+      out:write((index_manifest_ver:gsub("$VER", ver)))
+   end
+   out:write(index_footer_end)
    out:close()
 end
+
+return index

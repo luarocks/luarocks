@@ -1,0 +1,16 @@
+
+This package includes additional Windows components which are under the
+following licenses:
+
+* For 7z.exe and 7z.dll, please see COPYING_7z for details.
+
+* find.exe, mv.exe, wget.exe, ls.exe, pwd.exe, rmdir.exe, md5sum.exe,
+  test.exe, cp.exe, mkdir.exe, and uname.exe are part of UnxUtils, check
+  http://unxutils.sourceforge.net/ for license information.
+
+* Files under win32/lua5.1, except for Microsoft.VC80.CRT.manifest and msv*.*,
+  are covered by another license, please see COPYING_lua for details.
+
+* Microsoft.VC80.CRT.manifest, msvcm80.dll, msvcp80.dll, msvcr80.dll are part
+  of the Microsoft Visual C++ 2005 SP1 Redistributable Package (x86) and are
+  Copyright Microsoft, Inc. 2007.

@@ -1,6 +1,9 @@
 
 --- Functions for command-line scripts.
-module("luarocks.command_line", package.seeall)
+--module("luarocks.command_line", package.seeall)
+local command_line = {}
+
+local unpack = unpack or table.unpack
 
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
@@ -12,7 +15,8 @@ local program = util.this_program("luarocks")
 
 --- Display an error message and exit.
 -- @param message string: The error message.
-local function die(message)
+-- @param exitcode number: the exitcode to use
+local function die(message, exitcode)
    assert(type(message) == "string")
 
    local ok, err = pcall(util.run_scheduled_functions)
@@ -20,7 +24,19 @@ local function die(message)
       util.printerr("\nLuaRocks "..cfg.program_version.." internal bug (please report at luarocks-developers@lists.sourceforge.net):\n"..err)
    end
    util.printerr("\nError: "..message)
-   os.exit(1)
+   os.exit(exitcode or cfg.errorcodes.UNSPECIFIED)
+end
+
+local function replace_tree(flags, args, tree)
+   tree = dir.normalize(tree)
+   flags["tree"] = tree
+   for i = 1, #args do
+      if args[i]:match("%-%-tree=") then
+         args[i] = "--tree="..tree
+         break
+      end
+   end
+   path.use_tree(tree)
 end
 
 --- Main command-line processor.
@@ -30,7 +46,7 @@ end
 -- Uses the global table "commands", which contains
 -- the loaded modules representing commands.
 -- @param ... string: Arguments given on the command-line.
-function run_command(...)
+function command_line.run_command(...)
    local args = {...}
    local cmdline_vars = {}
    for i = #args, 1, -1 do
@@ -61,11 +77,26 @@ function run_command(...)
 
    local command
    
+   if flags["verbose"] then   -- setting it in the config file will kick-in earlier in the process
+      cfg.verbose = true
+      local fs = require("luarocks.fs")
+      fs.verbose()
+   end
+
+   if flags["timeout"] then   -- setting it in the config file will kick-in earlier in the process
+      local timeout = tonumber(flags["timeout"])
+      if timeout then
+         cfg.connection_timeout = timeout
+      else
+         die "Argument error: --timeout expects a numeric argument."
+      end
+   end
+
    if flags["version"] then
       util.printout(program.." "..cfg.program_version)
       util.printout(program_description)
       util.printout()
-      os.exit(0)
+      os.exit(cfg.errorcodes.OK)
    elseif flags["help"] or #nonflags == 0 then
       command = "help"
       args = nonflags
@@ -94,15 +125,35 @@ function run_command(...)
       die("Invalid entry for --deps-mode.")
    end
    
+   if flags["branch"] then
+     if flags["branch"] == true or flags["branch"] == "" then
+       die("Argument error: use --branch=<branch-name>")
+     end
+     cfg.branch = flags["branch"]
+   end
+   
    if flags["tree"] then
       if flags["tree"] == true or flags["tree"] == "" then
          die("Argument error: use --tree=<path>")
       end
-      local fs = require("luarocks.fs")
-      local root_dir = fs.absolute_name(flags["tree"])
-      path.use_tree(root_dir)
+      local named = false
+      for _, tree in ipairs(cfg.rocks_trees) do
+         if type(tree) == "table" and flags["tree"] == tree.name then
+            if not tree.root then
+               die("Configuration error: tree '"..tree.name.."' has no 'root' field.")
+            end
+            replace_tree(flags, args, tree.root)
+            named = true
+            break
+         end
+      end
+      if not named then
+         local fs = require("luarocks.fs")
+         local root_dir = fs.absolute_name(flags["tree"])
+         replace_tree(flags, args, root_dir)
+      end
    elseif flags["local"] then
-      path.use_tree(cfg.home_tree)
+      replace_tree(flags, args, cfg.home_tree)
    else
       local trees = cfg.rocks_trees
       path.use_tree(trees[#trees])
@@ -153,16 +204,19 @@ function run_command(...)
       -- I'm not changing this now to avoid messing with the run()
       -- interface, which I know some people use (even though
       -- I never published it as a public API...)
-      local xp, ok, err = xpcall(function() return commands[command].run(unpack(args)) end, function(err)
+      local cmd = require(commands[command])
+      local xp, ok, err, exitcode = xpcall(function() return cmd.run(unpack(args)) end, function(err)
          die(debug.traceback("LuaRocks "..cfg.program_version
             .." bug (please report at luarocks-developers@lists.sourceforge.net).\n"
             ..err, 2))
       end)
       if xp and (not ok) then
-         die(err)
+         die(err, exitcode)
       end
    else
       die("Unknown command: "..command)
    end
    util.run_scheduled_functions()
 end
+
+return command_line

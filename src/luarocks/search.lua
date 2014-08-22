@@ -1,7 +1,9 @@
 
 --- Module implementing the LuaRocks "search" command.
 -- Queries LuaRocks servers.
-module("luarocks.search", package.seeall)
+--module("luarocks.search", package.seeall)
+local search = {}
+package.loaded["luarocks.search"] = search
 
 local dir = require("luarocks.dir")
 local path = require("luarocks.path")
@@ -10,9 +12,9 @@ local deps = require("luarocks.deps")
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 
-help_summary = "Query the LuaRocks servers."
-help_arguments = "[--source] [--binary] { <name> [<version>] | --all }"
-help = [[
+search.help_summary = "Query the LuaRocks servers."
+search.help_arguments = "[--source] [--binary] { <name> [<version>] | --all }"
+search.help = [[
 --source  Return only rockspecs and source rocks,
           to be used with the "build" command.
 --binary  Return only pure Lua and binary rocks (rocks that can be used
@@ -124,7 +126,7 @@ end
 -- @param table: The results table, where keys are package names and
 -- versions are tables matching version strings to an array of servers.
 -- If a table was given in the "results" parameter, that is the result value.
-function disk_search(repo, query, results)
+function search.disk_search(repo, query, results)
    assert(type(repo) == "string")
    assert(type(query) == "table")
    assert(type(results) == "table" or not results)
@@ -136,17 +138,18 @@ function disk_search(repo, query, results)
    end
    query_arch_as_table(query)
    
-   for _, name in pairs(fs.list_dir(repo)) do
+   for name in fs.dir(repo) do
       local pathname = dir.path(repo, name)
       local rname, rversion, rarch = path.parse_name(name)
-      if fs.is_dir(pathname) then
-         for _, version in pairs(fs.list_dir(pathname)) do
+
+      if rname and (pathname:match(".rockspec$") or pathname:match(".rock$")) then
+         store_if_match(results, repo, rname, rversion, rarch, query)
+      elseif fs.is_dir(pathname) then
+         for version in fs.dir(pathname) do
             if version:match("-%d+$") then
                store_if_match(results, repo, name, version, "installed", query)
             end
          end
-      elseif rname then
-         store_if_match(results, repo, rname, rversion, rarch, query)
       end
    end
    return results
@@ -163,15 +166,15 @@ end
 -- is used. The special value "any" is also recognized, returning all
 -- matches regardless of architecture.
 -- @return true or, in case of errors, nil and an error message.
-function manifest_search(results, repo, query)
+function search.manifest_search(results, repo, query)
    assert(type(results) == "table")
    assert(type(repo) == "string")
    assert(type(query) == "table")
    
    query_arch_as_table(query)
-   local manifest, err = manif.load_manifest(repo)
+   local manifest, err, errcode = manif.load_manifest(repo)
    if not manifest then
-      return nil, "Failed loading manifest: "..err
+      return nil, err, errcode
    end
    for name, versions in pairs(manifest.repository) do
       for version, items in pairs(versions) do
@@ -188,26 +191,36 @@ end
 -- @return table: A table where keys are package names
 -- and values are tables matching version strings to an array of
 -- rocks servers; if no results are found, an empty table is returned.
-function search_repos(query)
+function search.search_repos(query)
    assert(type(query) == "table")
 
    local results = {}
    for _, repo in ipairs(cfg.rocks_servers) do
-      if type(repo) == "string" then
-         repo = { repo }
-      end
-      for _, mirror in ipairs(repo) do
-         local protocol, pathname = dir.split_url(mirror)
-         if protocol == "file" then
-            mirror = pathname
+      if not cfg.disabled_servers[repo] then
+         if type(repo) == "string" then
+            repo = { repo }
          end
-         local ok, err = manifest_search(results, mirror, query)
-         if ok then
-            break
-         else
-            util.warning("Failed searching manifest: "..err)
+         for _, mirror in ipairs(repo) do
+            local protocol, pathname = dir.split_url(mirror)
+            if protocol == "file" then
+               mirror = pathname
+            end
+            local ok, err, errcode = search.manifest_search(results, mirror, query)
+            if errcode == "network" then
+               cfg.disabled_servers[repo] = true
+            end
+            if ok then
+               break
+            else
+               util.warning("Failed searching manifest: "..err)
+            end
          end
       end
+   end
+   -- search through rocks in cfg.rocks_provided
+   local provided_repo = "provided by VM or rocks_provided"
+   for name, versions in pairs(cfg.rocks_provided) do
+      store_if_match(results, provided_repo, name, versions, "installed", query)
    end
    return results
 end
@@ -216,7 +229,7 @@ end
 -- @param name string: The query name.
 -- @param version string or nil: 
 -- @return table: A query in table format
-function make_query(name, version)
+function search.make_query(name, version)
    assert(type(name) == "string")
    assert(type(version) == "string" or not version)
    
@@ -265,14 +278,20 @@ end
 -- @return string or table or (nil, string): URL for matching rock if
 -- a single one was found, a table of candidates if it could not narrow to
 -- a single result, or nil followed by an error message.
-function find_suitable_rock(query)
+function search.find_suitable_rock(query)
    assert(type(query) == "table")
    
-   local results = search_repos(query)
+   local results = search.search_repos(query)
    local first = next(results)
    if not first then
       return nil, "No results matching query were found."
    elseif not next(results, first) then
+      if cfg.rocks_provided[query.name] ~= nil then
+         -- do not install versions that listed in cfg.rocks_provided
+         return nil, "Rock "..query.name..
+                     " "..cfg.rocks_provided[query.name]..
+                     " was found but it is provided by VM or 'rocks_provided' in the config file."
+      end
       return pick_latest_version(query.name, results[first])
    else
       return results
@@ -283,7 +302,7 @@ end
 -- @param results table: A table where keys are package names and versions
 -- are tables matching version strings to an array of rocks servers.
 -- @param porcelain boolean or nil: A flag to force machine-friendly output.
-function print_results(results, porcelain)
+function search.print_results(results, porcelain)
    assert(type(results) == "table")
    assert(type(porcelain) == "boolean" or not porcelain)
    
@@ -293,6 +312,7 @@ function print_results(results, porcelain)
       end
       for version, repos in util.sortedpairs(versions, deps.compare_versions) do
          for _, repo in ipairs(repos) do
+            repo.repo = dir.normalize(repo.repo)
             if porcelain then
                util.printout(package, version, repo.arch, repo.repo)
             else
@@ -337,14 +357,14 @@ end
 -- @param name string: A rock name
 -- @param version string or nil: A version number may also be given.
 -- @return The result of the action function, or nil and an error message. 
-function act_on_src_or_rockspec(action, name, version, ...)
+function search.act_on_src_or_rockspec(action, name, version, ...)
    assert(type(action) == "function")
    assert(type(name) == "string")
    assert(type(version) == "string" or not version)
 
-   local query = make_query(name, version)
+   local query = search.make_query(name, version)
    query.arch = "src|rockspec"
-   local results, err = find_suitable_rock(query)
+   local results, err = search.find_suitable_rock(query)
    if type(results) == "string" then
       return action(results, ...)
    else
@@ -357,7 +377,7 @@ end
 -- @param version string or nil: a version may also be passed.
 -- @return boolean or (nil, string): True if build was successful; nil and an
 -- error message otherwise.
-function run(...)
+function search.run(...)
    local flags, name, version = util.parse_flags(...)
    
    if flags["all"] then
@@ -368,19 +388,21 @@ function run(...)
       return nil, "Enter name and version or use --all. "..util.see_help("search")
    end
    
-   local query = make_query(name:lower(), version)
+   local query = search.make_query(name:lower(), version)
    query.exact_name = false
-   local results, err = search_repos(query)
+   local results, err = search.search_repos(query)
    local porcelain = flags["porcelain"]
    util.title("Search results:", porcelain, "=")
    local sources, binaries = split_source_and_binary_results(results)
    if next(sources) and not flags["binary"] then
       util.title("Rockspecs and source rocks:", porcelain)
-      print_results(sources, porcelain)
+      search.print_results(sources, porcelain)
    end
    if next(binaries) and not flags["source"] then    
       util.title("Binary and pure-Lua rocks:", porcelain)
-      print_results(binaries, porcelain)
+      search.print_results(binaries, porcelain)
    end
    return true
 end
+
+return search

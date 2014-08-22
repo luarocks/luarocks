@@ -1,14 +1,15 @@
-
 --- Type-checking functions.
 -- Functions and definitions for doing a basic lint check on files
 -- loaded by LuaRocks.
-module("luarocks.type_check", package.seeall)
+--module("luarocks.type_check", package.seeall)
+local type_check = {}
+package.loaded["luarocks.type_check"] = type_check
 
 local cfg = require("luarocks.cfg")
 
-rockspec_format = "1.0"
+type_check.rockspec_format = "1.0"
 
-rockspec_types = {
+local rockspec_types = {
    rockspec_format = "string",
    MUST_package = "string",
    MUST_version = "[%w.]+-[%d]+",
@@ -74,15 +75,22 @@ rockspec_types = {
    }
 }
 
-function load_extensions()
-   rockspec_format = "1.1"
+type_check.rockspec_order = {"rockspec_format", "package", "version", 
+   { "source", { "url", "tag", "branch", "md5" } },
+   { "description", {"summary", "detailed", "homepage", "license" } },
+   "supported_platforms", "dependencies", "external_dependencies",
+   { "build", {"type", "modules", "copy_directories", "platforms"} },
+   "hooks"}
+
+function type_check.load_extensions()
+   type_check.rockspec_format = "1.1"
    rockspec_types.deploy = {
       wrap_bin_scripts = true,
    }
 end
 
 if cfg.use_extensions then
-   load_extensions()
+   type_check.load_extensions()
 end
 
 rockspec_types.build.platforms.ANY = rockspec_types.build
@@ -91,7 +99,7 @@ rockspec_types.external_dependencies.platforms.ANY = rockspec_types.external_dep
 rockspec_types.MUST_source.platforms.ANY = rockspec_types.MUST_source
 rockspec_types.hooks.platforms.ANY = rockspec_types.hooks
 
-manifest_types = {
+local manifest_types = {
    MUST_repository = {
       -- packages
       ANY = {
@@ -176,8 +184,10 @@ local function type_check_item(name, item, expected, context)
          return nil, "Type mismatch on field "..context..name..": expected a string"
       end
       if expected ~= "string" then
-         if not item:match("^"..expected.."$") then
-            return nil, "Type mismatch on field "..context..name..": invalid value "..item
+         if item_type ~= "string" then
+            return nil, "Type mismatch on field "..context..name..": expected a string, got a "..type(item)
+         elseif not item:match("^"..expected.."$") then
+            return nil, "Type mismatch on field "..context..name..": invalid value "..item.." does not match '"..expected.."'"
          end
       end
    elseif expected_type == "table" then
@@ -240,18 +250,35 @@ type_check_table = function(tbl, types, context)
    return true
 end
 
+local function check_undeclared_globals(globals, types)
+   local undeclared = {}
+   for glob, _ in pairs(globals) do
+      if not (types[glob] or types["MUST_"..glob]) then
+         table.insert(undeclared, glob)
+      end
+   end
+   if #undeclared == 1 then
+      return nil, "Unknown variable: "..undeclared[1]
+   elseif #undeclared > 1 then
+      return nil, "Unknown variables: "..table.concat(undeclared, ", ")
+   end
+   return true
+end
+
 --- Type check a rockspec table.
 -- Verify the correctness of elements from a 
 -- rockspec table, reporting on unknown fields and type
 -- mismatches.
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
-function type_check_rockspec(rockspec)
+function type_check.type_check_rockspec(rockspec, globals)
    assert(type(rockspec) == "table")
    if rockspec.rockspec_format then
       -- relies on global state
-      load_extensions()
+      type_check.load_extensions()
    end
+   local ok, err = check_undeclared_globals(globals, rockspec_types)
+   if not ok then return nil, err end
    return type_check_table(rockspec, rockspec_types, "")
 end
 
@@ -261,7 +288,11 @@ end
 -- mismatches.
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
-function type_check_manifest(manifest)
+function type_check.type_check_manifest(manifest, globals)
    assert(type(manifest) == "table")
+   local ok, err = check_undeclared_globals(globals, manifest_types)
+   if not ok then return nil, err end
    return type_check_table(manifest, manifest_types, "")
 end
+
+return type_check

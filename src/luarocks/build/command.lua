@@ -1,6 +1,7 @@
 
 --- Build back-end for raw listing of commands in rockspec files.
-module("luarocks.build.command", package.seeall)
+--module("luarocks.build.command", package.seeall)
+local command = {}
 
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
@@ -9,7 +10,7 @@ local util = require("luarocks.util")
 -- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string): true if no errors ocurred,
 -- nil and an error message otherwise.
-function run(rockspec)
+function command.run(rockspec)
    assert(type(rockspec) == "table")
 
    local build = rockspec.build
@@ -30,3 +31,5 @@ function run(rockspec)
    end
    return true
 end
+
+return command

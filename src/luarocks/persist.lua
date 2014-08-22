@@ -3,7 +3,9 @@
 -- saving tables into files.
 -- Implemented separately to avoid interdependencies,
 -- as it is used in the bootstrapping stage of the cfg module.
-module("luarocks.persist", package.seeall)
+--module("luarocks.persist", package.seeall)
+local persist = {}
+package.loaded["luarocks.persist"] = persist
 
 local util = require("luarocks.util")
 
@@ -14,13 +16,22 @@ local util = require("luarocks.util")
 -- loaded values.
 -- @return table or (nil, string): a table with the file's assignments
 -- as fields, or nil and a message in case of errors.
-function load_into_table(filename, tbl)
+function persist.load_into_table(filename, tbl)
    assert(type(filename) == "string")
    assert(type(tbl) == "table" or not tbl)
 
    local result, chunk, ran, err
-   local result = tbl or {}
-   if setfenv then -- Lua 5.1
+   result = tbl or {}
+   local globals = {}
+   local globals_mt = {
+      __index = function(t, n)
+         globals[n] = true
+         return rawget(t, n)
+      end
+   }
+   local save_mt = getmetatable(result)
+   setmetatable(result, globals_mt)
+   if _VERSION == "Lua 5.1" then -- Lua 5.1
       chunk, err = loadfile(filename)
       if chunk then
          setfenv(chunk, result)
@@ -32,6 +43,7 @@ function load_into_table(filename, tbl)
          ran, err = pcall(chunk)
       end
    end
+   setmetatable(result, save_mt)
    
    if not chunk then
       if err:sub(1,5) ~= filename:sub(1,5) then
@@ -42,7 +54,7 @@ function load_into_table(filename, tbl)
    if not ran then
       return nil, "Error running file: "..err
    end
-   return result
+   return result, globals
 end
 
 local write_table
@@ -146,7 +158,7 @@ end
 -- @param tbl table: the table containing the data to be written
 -- @param field_order table: an optional array indicating the order of top-level fields.
 -- @return string
-function save_from_table_to_string(tbl, field_order)
+function persist.save_from_table_to_string(tbl, field_order)
    local out = {buffer = {}}
    function out:write(data) table.insert(self.buffer, data) end
    write_table(out, tbl, field_order)
@@ -162,7 +174,7 @@ end
 -- @param field_order table: an optional array indicating the order of top-level fields.
 -- @return boolean or (nil, string): true if successful, or nil and a
 -- message in case of errors.
-function save_from_table(filename, tbl, field_order)
+function persist.save_from_table(filename, tbl, field_order)
    local out = io.open(filename, "w")
    if not out then
       return nil, "Cannot create file at "..filename
@@ -171,3 +183,5 @@ function save_from_table(filename, tbl, field_order)
    out:close()
    return true
 end
+
+return persist

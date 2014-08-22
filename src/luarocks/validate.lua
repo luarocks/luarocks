@@ -1,6 +1,8 @@
 
 --- Sandboxed test of build/install of all packages in a repository (unfinished and disabled).
-module("luarocks.validate", package.seeall)
+--module("luarocks.validate", package.seeall)
+local validate = {}
+package.loaded["luarocks.validate"] = validate
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
@@ -10,9 +12,9 @@ local build = require("luarocks.build")
 local install = require("luarocks.install")
 local util = require("luarocks.util")
 
-help_summary = "Sandboxed test of build/install of all packages in a repository."
+validate.help_summary = "Sandboxed test of build/install of all packages in a repository."
 
-help = [[
+validate.help = [[
 <argument>, if given, is a local repository pathname.
 ]]
 
@@ -73,7 +75,12 @@ local function validate_rock(file)
    return ok, err, errcode
 end
 
-local function validate(repo, flags)
+function validate.run(...)
+   local flags, repo = util.parse_flags(...)
+   repo = repo or cfg.rocks_dir
+
+   util.printout("Verifying contents of "..repo)
+
    local results = {
       ok = {}
    }
@@ -85,7 +92,7 @@ local function validate(repo, flags)
    if not fs.exists(repo) then
       return nil, repo.." is not a local repository."
    end
-   for _, file in pairs(fs.list_dir(repo)) do for _=1,1 do
+   for file in fs.dir(repo) do for _=1,1 do
       if file == "manifest" or file == "index.html" then
          break -- continue for
       end
@@ -149,12 +156,5 @@ local function validate(repo, flags)
    return true
 end
 
-function run(...)
-   local flags, repo = util.parse_flags(...)
-   repo = repo or cfg.rocks_dir
 
-   util.printout("Verifying contents of "..repo)
-
-   return validate(repo, flags)
-end
-
+return validate

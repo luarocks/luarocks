@@ -1,19 +1,20 @@
 
 --- Module implementing the LuaRocks "new_version" command.
 -- Utility function that writes a new rockspec, updating data from a previous one.
-module("luarocks.new_version", package.seeall)
+--module("luarocks.new_version", package.seeall)
+local new_version = {}
+package.loaded["luarocks.new_version"] = new_version
 
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
 local download = require("luarocks.download")
 local fetch = require("luarocks.fetch")
 local persist = require("luarocks.persist")
-local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
+local type_check = require("luarocks.type_check")
 
-help_summary = "Auto-write a rockspec for a new version of a rock."
-help_arguments = "{<package>|<rockspec>} [<new_version>] [<new_url>]"
-help = [[
+new_version.help_summary = "Auto-write a rockspec for a new version of a rock."
+new_version.help_arguments = "{<package>|<rockspec>} [<new_version>] [<new_url>]"
+new_version.help = [[
 This is a utility function that writes a new rockspec, updating data
 from a previous one.
 
@@ -32,13 +33,6 @@ the new MD5 checksum.
 WARNING: it writes the new rockspec to the current directory,
 overwriting the file if it already exists.
 ]]
-
-local order = {"rockspec_format", "package", "version", 
-   { "source", { "url", "tag", "branch", "md5" } },
-   { "description", {"summary", "detailed", "homepage", "license" } },
-   "supported_platforms", "dependencies", "external_dependencies",
-   { "build", {"type", "modules", "copy_directories", "platforms"} },
-   "hooks"}
 
 local function try_replace(tbl, field, old, new)
    if not tbl[field] then
@@ -64,19 +58,13 @@ local function check_url_and_update_md5(out_rs, out_name)
    end
    util.printout("File successfully downloaded. Updating MD5 checksum...")
    out_rs.source.md5 = fs.get_md5(file)
-   local ok, err = fs.change_dir(temp_dir)
-   if not ok then return nil, err end
-   fs.unpack_archive(file)
-   local base_dir = out_rs.source.dir or fetch.url_to_base_dir(out_rs.source.url)
-   if not fs.exists(base_dir) then
-      util.printerr("Directory "..base_dir.." not found")
-      local files = fs.list_dir()
-      if files[1] and fs.is_dir(files[1]) then
-         util.printerr("Found "..files[1])
-         out_rs.source.dir = files[1]
-      end
+   local inferred_dir, found_dir = fetch.find_base_dir(file, temp_dir, out_rs.source.url, out_rs.source.dir)
+   if not inferred_dir then
+      return nil, found_dir
    end
-   fs.pop_dir()
+   if found_dir and found_dir ~= inferred_dir then
+      out_rs.source.dir = found_dir
+   end
    return out_rs.source.md5 ~= old_md5
 end
  
@@ -116,7 +104,7 @@ local function update_source_section(out_rs, out_name, url, old_ver, new_ver)
    return true
 end
  
-function run(...)
+function new_version.run(...)
    local flags, input, version, url = util.parse_flags(...)
    if not input then
       return nil, "Missing arguments: expected program or rockspec. "..util.see_help("new_version")
@@ -166,7 +154,7 @@ function run(...)
    
    local out_filename = out_name.."-"..new_rockver.."-"..new_rev..".rockspec"
    
-   persist.save_from_table(out_filename, out_rs, order)
+   persist.save_from_table(out_filename, out_rs, type_check.rockspec_order)
    
    util.printout("Wrote "..out_filename)
 
@@ -177,3 +165,5 @@ function run(...)
    
    return true
 end
+
+return new_version

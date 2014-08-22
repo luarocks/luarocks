@@ -61,15 +61,14 @@ mkdir "release-windows"
 mv "$out" "release-windows/$out-win32"
 
 cd "release-unix/$out"
-rm -rf makedist install.bat COPYING.lua COPYING.7z win32 lfw 
+rm -rf makedist install.bat COPYING_lua COPYING_7z COPYING_win win32 lfw .travis.yml .gitignore
 cd ..
 tar czvpf ../"$out.tar.gz" "$out"
 cd ..
 rm -rf "release-unix"
 
 cd "release-windows/$out-win32"
-cp -va win32/* .
-rm -rf makedist Makefile configure lfw win32
+rm -rf makedist Makefile configure lfw .travis.yml .gitignore
 cd ..
 zip -r ../"$out-win32.zip" "$out-win32"
 cd ..

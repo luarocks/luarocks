@@ -1,7 +1,8 @@
-
 --- Module implementing the LuaRocks "install" command.
 -- Installs binary rocks.
-module("luarocks.install", package.seeall)
+--module("luarocks.install", package.seeall)
+local install = {}
+package.loaded["luarocks.install"] = install
 
 local path = require("luarocks.path")
 local repos = require("luarocks.repos")
@@ -13,11 +14,11 @@ local manif = require("luarocks.manif")
 local remove = require("luarocks.remove")
 local cfg = require("luarocks.cfg")
 
-help_summary = "Install a rock."
+install.help_summary = "Install a rock."
 
-help_arguments = "{<rock>|<name> [<version>]}"
+install.help_arguments = "{<rock>|<name> [<version>]}"
 
-help = [[
+install.help = [[
 Argument may be the name of a rock to be fetched from a repository
 or a filename of a locally available rock.
 
@@ -25,7 +26,8 @@ or a filename of a locally available rock.
                     rock after installing a new one. This behavior can
                     be made permanent by setting keep_other_versions=true
                     in the configuration file.
-]]
+]]..util.deps_mode_help()
+
 
 --- Install a binary rock.
 -- @param rock_file string: local or remote filename of a rock.
@@ -34,7 +36,7 @@ or a filename of a locally available rock.
 -- "order" for all trees with priority >= the current default, "none" for no trees.
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function install_binary_rock(rock_file, deps_mode)
+function install.install_binary_rock(rock_file, deps_mode)
    assert(type(rock_file) == "string")
 
    local name, version, arch = path.parse_name(rock_file)
@@ -80,11 +82,6 @@ function install_binary_rock(rock_file, deps_mode)
       if err then return nil, err, errcode end
    end
 
-   local wrap_bin_scripts = true
-   if rockspec.deploy and rockspec.deploy.wrap_bin_scripts == false then
-      wrap_bin_scripts = false
-   end
-
    ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec))
    if err then return nil, err end
 
@@ -120,23 +117,23 @@ end
 -- if returned a result, installs the matching rock.
 -- @param version string: When passing a package name, a version number
 -- may also be given.
--- @return boolean or (nil, string): True if installation was
--- successful, nil and an error message otherwise.
-function run(...)
+-- @return boolean or (nil, string, exitcode): True if installation was
+-- successful, nil and an error message otherwise. exitcode is optionally returned.
+function install.run(...)
    local flags, name, version = util.parse_flags(...)
    if type(name) ~= "string" then
       return nil, "Argument missing. "..util.see_help("install")
    end
 
    local ok, err = fs.check_command_permissions(flags)
-   if not ok then return nil, err end
+   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       util.printout("Using "..name.."... switching to 'build' mode")
       local build = require("luarocks.build")
       return build.run(name, util.forward_flags(flags, "local", "keep", "deps-mode"))
    elseif name:match("%.rock$") then
-      ok, err = install_binary_rock(name, deps.get_deps_mode(flags))
+      ok, err = install.install_binary_rock(name, deps.get_deps_mode(flags))
       if not ok then return nil, err end
       local name, version = ok, err
       if (not flags["keep"]) and not cfg.keep_other_versions then
@@ -152,7 +149,7 @@ function run(...)
       elseif type(results) == "string" then
          local url = results
          util.printout("Installing "..url.."...")
-         return run(url, util.forward_flags(flags))
+         return install.run(url, util.forward_flags(flags))
       else
          util.printout()
          util.printerr("Could not determine which rock to install.")
@@ -162,3 +159,5 @@ function run(...)
       end
    end
 end
+
+return install

@@ -1,22 +1,23 @@
 
 --- Module implementing the luarocks-admin "remove" command.
 -- Removes a rock or rockspec from a rocks server.
-module("luarocks.admin_remove", package.seeall)
+--module("luarocks.admin_remove", package.seeall)
+local admin_remove = {}
+package.loaded["luarocks.admin_remove"] = admin_remove
 
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
-local fetch = require("luarocks.fetch")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local index = require("luarocks.index")
 local fs = require("luarocks.fs")
 local cache = require("luarocks.cache")
 
-help_summary = "Remove a rock or rockspec from a rocks server."
-help_arguments = "[--from=<server>] [--no-refresh] {<rockspec>|<rock>...}"
-help = [[
+admin_remove.help_summary = "Remove a rock or rockspec from a rocks server."
+admin_remove.help_arguments = "[--server=<server>] [--no-refresh] {<rockspec>|<rock>...}"
+admin_remove.help = [[
 Arguments are local files, which may be rockspecs or rocks.
-The flag --from indicates which server to use.
+The flag --server indicates which server to use.
 If not given, the default server set in the upload_server variable
 from the configuration file is used instead.
 The flag --no-refresh indicates the local cache should not be refreshed
@@ -49,7 +50,8 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
       local basename = dir.base_name(rockfile)
       local file = dir.path(local_cache, basename)
       util.printout("Removing file "..file.."...")
-      if fs.delete(file) then
+      fs.delete(file)
+      if not fs.exists(file) then
          nr_files = nr_files + 1
       else
          util.printerr("Failed removing "..file)
@@ -68,7 +70,7 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    index.make_index(local_cache)
 
    local srv, path = server_path:match("([^/]+)(/.+)")
-   local cmd = "rsync -Oavz --delete -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
+   local cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." --delete -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
 
    util.printout(cmd)
    fs.execute(cmd)
@@ -76,7 +78,7 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    return true
 end
 
-function run(...)
+function admin_remove.run(...)
    local files = { util.parse_flags(...) }
    local flags = table.remove(files, 1)
    if #files < 1 then
@@ -87,3 +89,5 @@ function run(...)
    return remove_files_from_server(not flags["no-refresh"], files, server, server_table)
 end
 
+
+return admin_remove

@@ -13,10 +13,14 @@
 local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, tonumber, type, assert, _VERSION =
       rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, tonumber, type, assert, _VERSION
 
-module("luarocks.cfg")
+--module("luarocks.cfg")
+local cfg = {}
+package.loaded["luarocks.cfg"] = cfg
 
-lua_version = _VERSION:sub(5)
-local version_suffix = lua_version:gsub("%.", "_")
+local util = require("luarocks.util")
+
+cfg.lua_version = _VERSION:sub(5)
+local version_suffix = cfg.lua_version:gsub("%.", "_")
 
 -- Load site-local global configurations
 local ok, site_config = pcall(require, "luarocks.site_config_"..version_suffix)
@@ -28,12 +32,27 @@ if not ok then
    site_config = {}
 end
 
-_M.site_config = site_config
+cfg.site_config = site_config
 
-program_version = "2.1.0"
-major_version = program_version:match("([^.]%.[^.])")
+cfg.program_version = "2.2.0beta1"
+cfg.major_version = cfg.program_version:match("([^.]%.[^.])")
 
 local persist = require("luarocks.persist")
+
+cfg.errorcodes = setmetatable({
+   OK = 0,
+   UNSPECIFIED = 1,
+   PERMISSIONDENIED = 2,
+},{
+   __index = function(t, key)
+      local val = rawget(t, key)
+      if not val then
+         error("'"..tostring(key).."' is not a valid errorcode", 2)
+      end
+      return val
+   end
+})
+
 
 local popen_ok, popen_result = pcall(io.popen, "")
 if popen_ok then
@@ -43,7 +62,7 @@ if popen_ok then
 else
    io.stderr:write("Your version of Lua does not support io.popen,\n")
    io.stderr:write("which is required by LuaRocks. Please check your Lua installation.\n")
-   os.exit(1)
+   os.exit(cfg.errorcodes.UNSPECIFIED)
 end
 
 -- System detection:
@@ -131,31 +150,32 @@ end
 local sys_config_file, home_config_file
 local sys_config_dir, home_config_dir
 local sys_config_ok, home_config_ok = false, false
+local extra_luarocks_module_dir
 sys_config_dir = site_config.LUAROCKS_SYSCONFDIR
 if detected.windows then
-   home = os.getenv("APPDATA") or "c:"
+   cfg.home = os.getenv("APPDATA") or "c:"
    sys_config_dir = sys_config_dir or "c:/luarocks"
-   home_config_dir = home.."/luarocks"
-   home_tree = home.."/luarocks/"
+   home_config_dir = cfg.home.."/luarocks"
+   cfg.home_tree = cfg.home.."/luarocks/"
 else
-   home = os.getenv("HOME") or ""
+   cfg.home = os.getenv("HOME") or ""
    sys_config_dir = sys_config_dir or "/etc/luarocks"
-   home_config_dir = home.."/.luarocks"
-   home_tree = home.."/.luarocks/"
+   home_config_dir = cfg.home.."/.luarocks"
+   cfg.home_tree = cfg.home.."/.luarocks/"
 end
 
-variables = {}
-rocks_trees = {}
+cfg.variables = {}
+cfg.rocks_trees = {}
 
-sys_config_file = site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..lua_version..".lua"
+sys_config_file = site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..cfg.lua_version..".lua"
 local err
-sys_config_ok, err = persist.load_into_table(sys_config_file, _M)
+sys_config_ok, err = persist.load_into_table(sys_config_file, cfg)
 
 if not sys_config_ok then
    sys_config_file = sys_config_dir.."/config.lua"
-   sys_config_ok, err = persist.load_into_table(sys_config_file, _M)
+   sys_config_ok, err = persist.load_into_table(sys_config_file, cfg)
 end
-if err and ok == nil then
+if err and sys_config_ok == nil then
    io.stderr:write(err.."\n")
 end
 
@@ -163,25 +183,24 @@ if not site_config.LUAROCKS_FORCE_CONFIG then
    local home_overrides, err
    home_config_file = os.getenv("LUAROCKS_CONFIG_" .. version_suffix) or os.getenv("LUAROCKS_CONFIG")
    if home_config_file then
-      home_overrides, err = persist.load_into_table(home_config_file, { home = home, lua_version = lua_version })
+      home_overrides, err = persist.load_into_table(home_config_file, { home = cfg.home, lua_version = cfg.lua_version })
    else
-      home_config_file = home_config_dir.."/config-"..lua_version..".lua"
-      home_overrides, err = persist.load_into_table(home_config_file, { home = home, lua_version = lua_version })
+      home_config_file = home_config_dir.."/config-"..cfg.lua_version..".lua"
+      home_overrides, err = persist.load_into_table(home_config_file, { home = cfg.home, lua_version = cfg.lua_version })
       if not home_overrides then
          home_config_file = home_config_dir.."/config.lua"
-         home_overrides, err = persist.load_into_table(home_config_file, { home = home, lua_version = lua_version })
+         home_overrides, err = persist.load_into_table(home_config_file, { home = cfg.home, lua_version = cfg.lua_version })
       end
    end
    if home_overrides then
       home_config_ok = true
-      local util = require("luarocks.util")
       if home_overrides.rocks_trees then
-         _M.rocks_trees = nil
+         cfg.rocks_trees = nil
       end
       if home_overrides.rocks_servers then
-         _M.rocks_servers = nil
+         cfg.rocks_servers = nil
       end
-      util.deep_merge(_M, home_overrides)
+      util.deep_merge(cfg, home_overrides)
    else -- nil or false
       home_config_ok = home_overrides
       if err and home_config_ok == nil then
@@ -190,18 +209,18 @@ if not site_config.LUAROCKS_FORCE_CONFIG then
    end
 end
 
-if not next(rocks_trees) then
-   if home_tree then
-      table.insert(rocks_trees, home_tree)
+if not next(cfg.rocks_trees) then
+   if cfg.home_tree then
+      table.insert(cfg.rocks_trees, { name = "user", root = cfg.home_tree } )
    end
    if site_config.LUAROCKS_ROCKS_TREE then
-      table.insert(rocks_trees, site_config.LUAROCKS_ROCKS_TREE)
+      table.insert(cfg.rocks_trees, { name = "system", root = site_config.LUAROCKS_ROCKS_TREE } )
    end
 end
 
 -- Configure defaults:
 
-local root = rocks_trees[#rocks_trees]
+local root = cfg.rocks_trees[#cfg.rocks_trees]
 local defaults = {
 
    local_by_default = false,
@@ -211,8 +230,8 @@ local defaults = {
    hooks_enabled = true,
    deps_mode = "one",
 
-   lua_modules_path = "/share/lua/"..lua_version,
-   lib_modules_path = "/lib/lua/"..lua_version,
+   lua_modules_path = "/share/lua/"..cfg.lua_version,
+   lib_modules_path = "/lib/lua/"..cfg.lua_version,
    rocks_subdir = site_config.LUAROCKS_ROCKS_SUBDIR or "/lib/luarocks/rocks",
 
    system = sys_name,
@@ -224,18 +243,25 @@ local defaults = {
 
    rocks_servers = {
       {
-        "http://www.luarocks.org/repositories/rocks",
-        "http://luarocks.giga.puc-rio.br/",
-        "http://luafr.org/luarocks/rocks",
-        "http://liblua.so/luarocks/repositories/rocks",
+        "https://rocks.moonscript.org",
+        "https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/master/",
+        "http://luafr.org/moonrocks/",
         "http://luarocks.logiceditor.com/rocks",
       }
+   },
+   disabled_servers = {},
+   
+   upload = {
+      server = "https://rocks.moonscript.org",
+      tool_version = "0.0.1",
+      api_version = "1",
    },
 
    lua_extension = "lua",
    lua_interpreter = site_config.LUA_INTERPRETER or "lua",
    downloader = site_config.LUAROCKS_DOWNLOADER or "wget",
    md5checker = site_config.LUAROCKS_MD5CHECKER or "md5sum",
+   connection_timeout = 30,  -- 0 = no timeout
 
    variables = {
       MAKE = "make",
@@ -278,23 +304,27 @@ local defaults = {
       CMAKE = "cmake",
       SEVENZ = "7z",
 
+      RSYNCFLAGS = "--exclude=.git -Oavz",
       STATFLAG = "-c '%a'",
    },
 
-   external_deps_subdirs = {
+   external_deps_subdirs = site_config.LUAROCKS_EXTERNAL_DEPS_SUBDIRS or {
       bin = "bin",
       lib = "lib",
       include = "include"
    },
-   runtime_external_deps_subdirs = {
+   runtime_external_deps_subdirs = site_config.LUAROCKS_RUNTIME_EXTERNAL_DEPS_SUBDIRS or {
       bin = "bin",
       lib = "lib",
       include = "include"
    },
+
+   rocks_provided = {}
 }
 
 if detected.windows then
-   local full_prefix = site_config.LUAROCKS_PREFIX.."\\"..major_version
+   local full_prefix = site_config.LUAROCKS_PREFIX.."\\"..cfg.major_version
+   extra_luarocks_module_dir = full_prefix.."\\lua\\?.lua"
 
    home_config_file = home_config_file and home_config_file:gsub("\\","/")
    defaults.fs_use_modules = false
@@ -304,9 +334,9 @@ if detected.windows then
    defaults.external_lib_extension = "dll"
    defaults.obj_extension = "obj"
    defaults.external_deps_dirs = { "c:/external/" }
-   defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua"..lua_version.."/bin"
-   defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua"..lua_version.."/include"
-   defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua"..lua_version.."/lib"
+   defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/bin"
+   defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/include"
+   defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/lib"
    defaults.cmake_generator = "MinGW Makefiles"
    defaults.makefile = "Makefile.win"
    defaults.variables.MAKE = "nmake"
@@ -315,16 +345,15 @@ if detected.windows then
    defaults.variables.WRAPPER = full_prefix.."\\rclauncher.c"
    defaults.variables.LD = "link"
    defaults.variables.MT = "mt"
-   defaults.variables.LUALIB = "lua"..lua_version..".lib"
+   defaults.variables.LUALIB = "lua"..cfg.lua_version..".lib"
    defaults.variables.CFLAGS = "/MD /O2"
    defaults.variables.LIBFLAG = "/dll"
-   defaults.variables.LUALIB = "lua"..lua_version..".lib"
 
-   local bins = { "SEVENZ", "CHMOD", "CP", "FIND", "LS", "MD5SUM",
-      "MKDIR", "MV", "PWD", "RMDIR", "RM", "TEST", "UNAME", "WGET" }
+   local bins = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM",
+      "MKDIR", "MV", "PWD", "RMDIR", "TEST", "UNAME", "WGET" }
    for _, var in ipairs(bins) do
       if defaults.variables[var] then
-         defaults.variables[var] = full_prefix.."\\"..defaults.variables[var]
+         defaults.variables[var] = full_prefix.."\\tools\\"..defaults.variables[var]
       end
    end
 
@@ -342,7 +371,15 @@ if detected.windows then
    defaults.export_path_separator = ";"
    defaults.export_lua_path = "SET LUA_PATH=%s"
    defaults.export_lua_cpath = "SET LUA_CPATH=%s"
-   defaults.local_cache = home.."/cache/luarocks"
+   defaults.wrapper_suffix = ".bat"
+
+   local localappdata = os.getenv("LOCALAPPDATA")
+   if not localappdata then
+      -- for Windows versions below Vista
+      localappdata = os.getenv("USERPROFILE").."/Local Settings/Application Data"
+   end
+   defaults.local_cache = localappdata.."/LuaRocks/Cache"
+   defaults.web_browser = "start"
 end
 
 if detected.mingw32 then
@@ -399,10 +436,12 @@ if detected.unix then
    defaults.export_path_separator = ":"
    defaults.export_lua_path = "export LUA_PATH='%s'"
    defaults.export_lua_cpath = "export LUA_CPATH='%s'"
-   defaults.local_cache = home.."/.cache/luarocks"
+   defaults.wrapper_suffix = ""
+   defaults.local_cache = cfg.home.."/.cache/luarocks"
    if not defaults.variables.CFLAGS:match("-fPIC") then
       defaults.variables.CFLAGS = defaults.variables.CFLAGS.." -fPIC"
    end
+   defaults.web_browser = "xdg-open"
 end
 
 if detected.cygwin then
@@ -436,6 +475,7 @@ if detected.macosx then
    end
    defaults.variables.CC = "export MACOSX_DEPLOYMENT_TARGET=10."..version.."; gcc"
    defaults.variables.LD = "export MACOSX_DEPLOYMENT_TARGET=10."..version.."; gcc"
+   defaults.web_browser = "open"
 end
 
 if detected.linux then
@@ -446,6 +486,9 @@ end
 if detected.freebsd then
    defaults.arch = "freebsd-"..proc
    defaults.platforms = {"unix", "bsd", "freebsd"}
+   defaults.gcc_rpath = false
+   defaults.variables.CC = "cc"
+   defaults.variables.LD = "cc"
 end
 
 if detected.openbsd then
@@ -470,16 +513,38 @@ defaults.variables.OBJ_EXTENSION = defaults.obj_extension
 defaults.variables.LUAROCKS_PREFIX = site_config.LUAROCKS_PREFIX
 defaults.variables.LUA = site_config.LUA_DIR_SET and (defaults.variables.LUA_BINDIR.."/"..defaults.lua_interpreter) or defaults.lua_interpreter
 
+-- Add built-in modules to rocks_provided
+defaults.rocks_provided["lua"] = cfg.lua_version.."-1"
+
+if cfg.lua_version >= "5.2" then
+   -- Lua 5.2+
+   defaults.rocks_provided["bit32"] = cfg.lua_version.."-1"
+end
+
+if cfg.lua_version >= "5.3" then
+   -- Lua 5.3+
+   defaults.rocks_provided["utf8"] = cfg.lua_version.."-1"
+end
+
+if package.loaded.jit then
+   -- LuaJIT
+   local lj_version = package.loaded.jit.version:match("LuaJIT (.*)"):gsub("%-","")
+   --defaults.rocks_provided["luajit"] = lj_version.."-1"
+   defaults.rocks_provided["luabitop"] = lj_version.."-1"
+end
+
 -- Use defaults:
 
--- Populate values from 'defaults.variables' in 'variables' if they were not
--- already set by user.
-if not _M.variables then
-   _M.variables = {}
-end
-for k,v in pairs(defaults.variables) do
-   if not _M.variables[k] then
-      _M.variables[k] = v
+-- Populate some arrays with values from their 'defaults' counterparts
+-- if they were not already set by user.
+for _, entry in ipairs({"variables", "rocks_provided"}) do
+   if not cfg[entry] then
+      cfg[entry] = {}
+   end
+   for k,v in pairs(defaults[entry]) do
+      if not cfg[entry][k] then
+         cfg[entry][k] = v
+      end
    end
 end
 
@@ -493,34 +558,48 @@ local cfg_mt = {
       return default
    end
 }
-setmetatable(_M, cfg_mt)
+setmetatable(cfg, cfg_mt)
 
-function package_paths()
-   local new_path, new_cpath = {}, {}
-   for _,tree in ipairs(rocks_trees) do
-     if type(tree) == "string" then
-        table.insert(new_path, 1, tree..lua_modules_path.."/?.lua;"..tree..lua_modules_path.."/?/init.lua")
-        table.insert(new_cpath, 1, tree..lib_modules_path.."/?."..lib_extension)
-     else
-        table.insert(new_path, 1, (tree.lua_dir or tree.root..lua_modules_path).."/?.lua;"..
-           (tree.lua_dir or tree.root..lua_modules_path).."/?/init.lua")
-        table.insert(new_cpath, 1, (tree.lib_dir or tree.root..lib_modules_path).."/?."..lib_extension)
-     end
+function cfg.make_paths_from_tree(tree)
+   local lua_path, lib_path, bin_path
+   if type(tree) == "string" then
+      lua_path = tree..cfg.lua_modules_path
+      lib_path = tree..cfg.lib_modules_path
+      bin_path = tree.."/bin"
+   else
+      lua_path = tree.lua_dir or tree.root..cfg.lua_modules_path
+      lib_path = tree.lib_dir or tree.root..cfg.lib_modules_path
+      bin_path = tree.bin_dir or tree.root.."/bin"
    end
-   return table.concat(new_path, ";"), table.concat(new_cpath, ";")
+   return lua_path, lib_path, bin_path
 end
 
-do
-   local new_path, new_cpath = package_paths()
-   package.path = new_path..";"..package.path
-   package.cpath = new_cpath..";"..package.cpath
+function cfg.package_paths()
+   local new_path, new_cpath, new_bin = {}, {}, {}
+   for _,tree in ipairs(cfg.rocks_trees) do
+      local lua_path, lib_path, bin_path = cfg.make_paths_from_tree(tree)
+      table.insert(new_path, lua_path.."/?.lua")
+      table.insert(new_path, lua_path.."/?/init.lua")
+      table.insert(new_cpath, lib_path.."/?."..cfg.lib_extension)
+      table.insert(new_bin, bin_path)
+   end
+   if extra_luarocks_module_dir then 
+     table.insert(new_path, extra_luarocks_module_dir)
+   end
+   return table.concat(new_path, ";"), table.concat(new_cpath, ";"), table.concat(new_bin, cfg.export_path_separator)
 end
 
-function which_config()
+function cfg.init_package_paths()
+   local lr_path, lr_cpath, lr_bin = cfg.package_paths()
+   package.path = util.remove_path_dupes(package.path .. ";" .. lr_path, ";")
+   package.cpath = util.remove_path_dupes(package.cpath .. ";" .. lr_cpath, ";")
+end
+
+function cfg.which_config()
    return sys_config_file, sys_config_ok, home_config_file, home_config_ok
 end
 
-user_agent = "LuaRocks/"..program_version.." "..arch
+cfg.user_agent = "LuaRocks/"..cfg.program_version.." "..cfg.arch
 
 --- Check if platform was detected
 -- Compare a string against the standard system names.
@@ -528,12 +607,14 @@ user_agent = "LuaRocks/"..program_version.." "..arch
 -- deps.match_platform
 -- @param query string: The platform name to check.
 -- @return boolean: true if LuaRocks is currently running on queried platform.
-function is_platform(query)
+function cfg.is_platform(query)
    assert(type(query) == "string")
 
-   for _, platform in ipairs(platforms) do
+   for _, platform in ipairs(cfg.platforms) do
       if platform == query then
          return true
       end
    end
 end
+
+return cfg

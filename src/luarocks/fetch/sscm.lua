@@ -1,6 +1,7 @@
 
 --- Fetch back-end for retrieving sources from Surround SCM Server
-module("luarocks.fetch.sscm", package.seeall)
+--module("luarocks.fetch.sscm", package.seeall)
+local sscm = {}
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
@@ -12,7 +13,7 @@ local dir = require("luarocks.dir")
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function get_sources(rockspec, extract, dest_dir)
+function sscm.get_sources(rockspec, extract, dest_dir)
    assert(type(rockspec) == "table")
    assert(type(dest_dir) == "string" or not dest_dir)
 
@@ -40,3 +41,5 @@ function get_sources(rockspec, extract, dest_dir)
    -- FIXME: This function does not honor the dest_dir parameter.
    return module, working_dir
 end
+
+return sscm
