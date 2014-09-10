@@ -6,72 +6,95 @@ local type_check = {}
 package.loaded["luarocks.type_check"] = type_check
 
 local cfg = require("luarocks.cfg")
+local deps = require("luarocks.deps")
 
-type_check.rockspec_format = "1.0"
+type_check.rockspec_format = "1.1"
+
+local string_1 = { _type = "string" }
+local mandatory_string_1 = { _type = "string", _mandatory = true }
+
+-- Syntax for type-checking tables:
+--
+-- A type-checking table describes typing data for a value.
+-- Any key starting with an underscore has a special meaning:
+-- _type (string) is the Lua type of the value. Default is "table".
+-- _version (string) is the minimum rockspec_version that supports this value. Default is "1.0".
+-- _mandatory (boolean) indicates if the value is a mandatory key in its container table. Default is false.
+-- For "string" types only:
+--    _pattern (string) is the string-matching pattern, valid for string types only. Default is ".*".
+-- For "table" types only:
+--    _any (table) is the type-checking table for unspecified keys, recursively checked.
+--    _more (boolean) indicates that the table accepts unspecified keys and does not type-check them.
+--    Any other string keys that don't start with an underscore represent known keys and are type-checking tables, recursively checked.
 
 local rockspec_types = {
-   rockspec_format = "string",
-   MUST_package = "string",
-   MUST_version = "[%w.]+-[%d]+",
+   rockspec_format = string_1,
+   package = mandatory_string_1,
+   version = { _type = "string", _pattern = "[%w.]+-[%d]+", _mandatory = true },
    description = {
-      summary = "string",
-      detailed = "string",
-      homepage = "string",
-      license = "string",
-      maintainer = "string"
+      summary = string_1,
+      detailed = string_1,
+      homepage = string_1,
+      license = string_1,
+      maintainer = string_1,
    },
    dependencies = {
-      platforms = {},
-      ANY = "string"
+      platforms = {}, -- recursively defined below
+      _any = string_1,
    },
    supported_platforms = {
-      ANY = "string"
+      _any = string_1,
    },
    external_dependencies = {
-      platforms = {},
-      ANY = {
-         program = "string",
-         header = "string",
-         library = "string"
+      platforms = {}, -- recursively defined below
+      _any = {
+         program = string_1,
+         header = string_1,
+         library = string_1,
       }
    },
-   MUST_source = {
-      platforms = {},
-      MUST_url = "string",
-      md5 = "string",
-      file = "string",
-      dir = "string",
-      tag = "string",
-      branch = "string",
-      module = "string",
-      cvs_tag = "string",
-      cvs_module = "string"
+   source = {
+      _mandatory = true,
+      platforms = {}, -- recursively defined below
+      url = mandatory_string_1,
+      md5 = string_1,
+      file = string_1,
+      dir = string_1,
+      tag = string_1,
+      branch = string_1,
+      module = string_1,
+      cvs_tag = string_1,
+      cvs_module = string_1,
    },
    build = {
-      platforms = {},
-      type = "string",
+      platforms = {}, -- recursively defined below
+      type = string_1,
       install = {
          lua = {
-            MORE = true
+            _more = true
          },
          lib = {
-            MORE = true
+            _more = true
          },
          conf = {
-            MORE = true
+            _more = true
          },
          bin = {
-            MORE = true
+            _more = true
          }
       },
       copy_directories = {
-         ANY = "string"
+         _any = string_1,
       },
-      MORE = true
+      _more = true
    },
    hooks = {
-      platforms = {},
-      post_install = "string"
+      platforms = {}, -- recursively defined below
+      post_install = string_1,
+   },
+   deploy = {
+      _version = "1.1",
+      wrap_bin_scripts = { _type = "boolean", _version = "1.1" },
    }
 }
 
@@ -82,69 +105,61 @@ type_check.rockspec_order = {"rockspec_format", "package", "version",
    { "build", {"type", "modules", "copy_directories", "platforms"} },
    "hooks"}
 
-function type_check.load_extensions()
-   type_check.rockspec_format = "1.1"
-   rockspec_types.deploy = {
-      wrap_bin_scripts = true,
-   }
-end
-
-if cfg.use_extensions then
-   type_check.load_extensions()
-end
-
-rockspec_types.build.platforms.ANY = rockspec_types.build
-rockspec_types.dependencies.platforms.ANY = rockspec_types.dependencies
-rockspec_types.external_dependencies.platforms.ANY = rockspec_types.external_dependencies
-rockspec_types.MUST_source.platforms.ANY = rockspec_types.MUST_source
-rockspec_types.hooks.platforms.ANY = rockspec_types.hooks
+rockspec_types.build.platforms._any = rockspec_types.build
+rockspec_types.dependencies.platforms._any = rockspec_types.dependencies
+rockspec_types.external_dependencies.platforms._any = rockspec_types.external_dependencies
+rockspec_types.source.platforms._any = rockspec_types.source
+rockspec_types.hooks.platforms._any = rockspec_types.hooks
 
 local manifest_types = {
-   MUST_repository = {
+   repository = {
+      _mandatory = true,
       -- packages
-      ANY = {
+      _any = {
          -- versions
-         ANY = {
+         _any = {
             -- items
-            ANY = {
-               MUST_arch = "string",
-               modules = { ANY = "string" },
-               commands = { ANY = "string" },
-               dependencies = { ANY = "string" },
+            _any = {
+               arch = mandatory_string_1,
+               modules = { _any = string_1 },
+               commands = { _any = string_1 },
+               dependencies = { _any = string_1 },
                -- TODO: to be extended with more metadata.
             }
          }
       }
    },
-   MUST_modules = {
+   modules = {
+      _mandatory = true,
       -- modules
-      ANY = {
+      _any = {
          -- providers
-         ANY = "string"
+         _any = string_1
       }
    },
-   MUST_commands = {
+   commands = {
+      _mandatory = true,
       -- modules
-      ANY = {
+      _any = {
          -- commands
-         ANY = "string"
+         _any = string_1
       }
    },
    dependencies = {
       -- each module
-      ANY = {
+      _any = {
          -- each version
-         ANY = {
+         _any = {
             -- each dependency
-            ANY = {
-               name = "string",
+            _any = {
+               name = string_1,
                constraints = {
-                  ANY = {
-                     no_upgrade = "boolean",
-                     op = "string",
+                  _any = {
+                     no_upgrade = { _type = "boolean" },
+                     op = string_1,
                      version = {
-                        string = "string",
-                        ANY = 0,
+                        string = string_1,
+                        _any = 0,
                      }
                   }
                }
@@ -154,52 +169,73 @@ local manifest_types = {
    }
 }
 
+local function check_version(version, typetbl, context)
+   local typetbl_version = typetbl._version or "1.0"
+   if deps.compare_versions(typetbl_version, version) then
+      if context == "" then
+         return nil, "Invalid rockspec_format version number in rockspec? Please fix rockspec accordingly."
+      else
+         return nil, context.." is not supported in rockspec format "..version.." (requires version "..typetbl_version.."), please fix the rockspec_format field accordingly."
+      end
+   end
+   return true
+end
+
 local type_check_table
 
 --- Type check an object.
 -- The object is compared against an archetypical value
 -- matching the expected type -- the actual values don't matter,
 -- only their types. Tables are type checked recursively.
--- @param name any: The object name (for error messages).
+-- @param version string: The version of the item.
 -- @param item any: The object being checked.
--- @param expected any: The reference object. In case of a table,
--- its is structured as a type reference table.
+-- @param typetbl any: The type-checking table for the object.
 -- @param context string: A string indicating the "context" where the
--- error occurred (such as the name of the table the item is a part of),
--- to be used by error messages.
+-- error occurred (the full table path), for error messages.
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
 -- @see type_check_table
-local function type_check_item(name, item, expected, context)
-   name = tostring(name)
-
-   local item_type = type(item)
-   local expected_type = type(expected)
+local function type_check_item(version, item, typetbl, context)
+   assert(type(version) == "string")
+   
+   local ok, err = check_version(version, typetbl, context)
+   if not ok then
+      return nil, err
+   end
+   
+   local item_type = type(item) or "nil"
+   local expected_type = typetbl._type or "table"
+   
    if expected_type == "number" then
       if not tonumber(item) then
-         return nil, "Type mismatch on field "..context..name..": expected a number"
+         return nil, "Type mismatch on field "..context..": expected a number"
       end
    elseif expected_type == "string" then
-      if type(item) ~= "string" then
-         return nil, "Type mismatch on field "..context..name..": expected a string"
+      if item_type ~= "string" then
+         return nil, "Type mismatch on field "..context..": expected a string, got "..item_type
       end
-      if expected ~= "string" then
-         if item_type ~= "string" then
-            return nil, "Type mismatch on field "..context..name..": expected a string, got a "..type(item)
-         elseif not item:match("^"..expected.."$") then
-            return nil, "Type mismatch on field "..context..name..": invalid value "..item.." does not match '"..expected.."'"
+      if typetbl._pattern then
+         if not item:match("^"..typetbl._pattern.."$") then
+            return nil, "Type mismatch on field "..context..": invalid value "..item.." does not match '"..expected.."'"
          end
       end
    elseif expected_type == "table" then
       if item_type ~= expected_type then
-         return nil, "Type mismatch on field "..context..name..": expected a table"
+         return nil, "Type mismatch on field "..context..": expected a table"
       else
-         return type_check_table(item, expected, context..name..".")
+         return type_check_table(version, item, typetbl, context)
       end
    elseif item_type ~= expected_type then
-      return nil, "Type mismatch on field "..context..name..": expected a "..expected_type
+      return nil, "Type mismatch on field "..context..": expected "..expected_type
    end
    return true
+end
+
+local function mkfield(context, field)
+   if context == "" then
+      return field
+   end
+   return context.."."..field
 end
 
 --- Type check the contents of a table.
@@ -215,23 +251,31 @@ end
 -- with MUST_, it is mandatory; its absence from the table is
 -- a type error.
 -- Tables are type checked recursively.
+-- @param version string: The version of tbl.
 -- @param tbl table: The table to be type checked.
--- @param types table: The reference table, containing
+-- @param typetbl table: The type-checking table, containing
 -- values for recognized fields in the checked table.
 -- @param context string: A string indicating the "context" where the
 -- error occurred (such as the name of the table the item is a part of),
 -- to be used by error messages.
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
-type_check_table = function(tbl, types, context)
+type_check_table = function(version, tbl, typetbl, context)
+   assert(type(version) == "string")
    assert(type(tbl) == "table")
-   assert(type(types) == "table")
+   assert(type(typetbl) == "table")
+   
+   local ok, err = check_version(version, typetbl, context)
+   if not ok then
+      return nil, err
+   end
+   
    for k, v in pairs(tbl) do
-      local t = types[k] or (type(k) == "string" and types["MUST_"..k]) or types.ANY
+      local t = typetbl[k] or typetbl._any
       if t then 
-         local ok, err = type_check_item(k, v, t, context)
+         local ok, err = type_check_item(version, v, t, mkfield(context, k))
          if not ok then return nil, err end
-      elseif types.MORE then
+      elseif typetbl._more then
          -- Accept unknown field
       else
          if not cfg.accept_unknown_fields then
@@ -239,21 +283,20 @@ type_check_table = function(tbl, types, context)
          end
       end
    end
-   for k, v in pairs(types) do
-      local mandatory_key = k:match("^MUST_(.+)")
-      if mandatory_key then
-         if not tbl[mandatory_key] then
-            return nil, "Mandatory field "..context..mandatory_key.." is missing."
+   for k, v in pairs(typetbl) do
+      if k:sub(1,1) ~= "_" and v._mandatory then
+         if not tbl[k] then
+            return nil, "Mandatory field "..mkfield(context, k).." is missing."
          end
       end
    end
    return true
 end
 
-local function check_undeclared_globals(globals, types)
+local function check_undeclared_globals(globals, typetbl)
    local undeclared = {}
    for glob, _ in pairs(globals) do
-      if not (types[glob] or types["MUST_"..glob]) then
+      if not (typetbl[glob] or typetbl["MUST_"..glob]) then
          table.insert(undeclared, glob)
       end
    end
@@ -273,13 +316,12 @@ end
 -- succeeded, or nil and an error message if it failed.
 function type_check.type_check_rockspec(rockspec, globals)
    assert(type(rockspec) == "table")
-   if rockspec.rockspec_format then
-      -- relies on global state
-      type_check.load_extensions()
+   if not rockspec.rockspec_format then
+      rockspec.rockspec_format = "1.0"
    end
    local ok, err = check_undeclared_globals(globals, rockspec_types)
    if not ok then return nil, err end
-   return type_check_table(rockspec, rockspec_types, "")
+   return type_check_table(rockspec.rockspec_format, rockspec, rockspec_types, "")
 end
 
 --- Type check a manifest table.
@@ -292,7 +334,7 @@ function type_check.type_check_manifest(manifest, globals)
    assert(type(manifest) == "table")
    local ok, err = check_undeclared_globals(globals, manifest_types)
    if not ok then return nil, err end
-   return type_check_table(manifest, manifest_types, "")
+   return type_check_table("1.0", manifest, manifest_types, "")
 end
 
 return type_check
