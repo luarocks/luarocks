@@ -216,7 +216,7 @@ local function type_check_item(version, item, typetbl, context)
       end
       if typetbl._pattern then
          if not item:match("^"..typetbl._pattern.."$") then
-            return nil, "Type mismatch on field "..context..": invalid value "..item.." does not match '"..expected.."'"
+            return nil, "Type mismatch on field "..context..": invalid value "..item.." does not match '"..typetbl._pattern.."'"
          end
       end
    elseif expected_type == "table" then
