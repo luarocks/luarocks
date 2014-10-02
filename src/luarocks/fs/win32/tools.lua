@@ -256,7 +256,7 @@ function tools.use_downloader(url, filename, cache)
 
    local ok   
    if cfg.downloader == "wget" then
-      local wget_cmd = fs.Q(vars.WGET).." --no-check-certificate --no-cache --user-agent=\""..cfg.user_agent.." via wget\" --quiet "
+      local wget_cmd = fs.Q(vars.WGET).." "..vars.WGETNOCERTFLAG.." --no-cache --user-agent=\""..cfg.user_agent.." via wget\" --quiet "
       if cfg.connection_timeout and cfg.connection_timeout > 0 then
         wget_cmd = wget_cmd .. "--timeout="..tonumber(cfg.connection_timeout).." --tries=1 " 
       end
@@ -272,7 +272,7 @@ function tools.use_downloader(url, filename, cache)
          ok = fs.execute_quiet(wget_cmd, url)
       end
    elseif cfg.downloader == "curl" then
-      local curl_cmd = vars.CURL.." -f -k -L --user-agent \""..cfg.user_agent.." via curl\" "
+      local curl_cmd = vars.CURL).." "..vars.CURLNOCERTFLAG.." -f -L --user-agent \""..cfg.user_agent.." via curl\" "
       if cfg.connection_timeout and cfg.connection_timeout > 0 then
         curl_cmd = curl_cmd .. "--connect-timeout "..tonumber(cfg.connection_timeout).." " 
       end

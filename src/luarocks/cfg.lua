@@ -204,6 +204,7 @@ local defaults = {
    fs_use_modules = true,
    hooks_enabled = true,
    deps_mode = "one",
+   check_certificates = false,
 
    lua_modules_path = "/share/lua/"..cfg.lua_version,
    lib_modules_path = "/lib/lua/"..cfg.lua_version,
@@ -278,6 +279,8 @@ local defaults = {
 
       RSYNCFLAGS = "--exclude=.git -Oavz",
       STATFLAG = "-c '%a'",
+      CURLNOCERTFLAG = "",
+      WGETNOCERTFLAG = "",
    },
 
    external_deps_subdirs = site_config.LUAROCKS_EXTERNAL_DEPS_SUBDIRS or {
@@ -531,6 +534,11 @@ local cfg_mt = {
    end
 }
 setmetatable(cfg, cfg_mt)
+
+if not cfg.check_certificates then
+   cfg.variables.CURLNOCERTFLAG = "-k"
+   cfg.variables.WGETNOCERTFLAG = "--no-check-certificate"
+end
 
 function cfg.make_paths_from_tree(tree)
    local lua_path, lib_path, bin_path
