@@ -35,7 +35,8 @@ end
 cfg.site_config = site_config
 
 cfg.program_version = "scm"
-cfg.major_version = cfg.program_version:match("([^.]%.[^.])")
+cfg.program_series = "2.2"
+cfg.major_version = (cfg.program_version:match("([^.]%.[^.])")) or cfg.program_series
 
 local persist = require("luarocks.persist")
 
