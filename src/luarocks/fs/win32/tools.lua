@@ -272,7 +272,7 @@ function tools.use_downloader(url, filename, cache)
          ok = fs.execute_quiet(wget_cmd, url)
       end
    elseif cfg.downloader == "curl" then
-      local curl_cmd = vars.CURL).." "..vars.CURLNOCERTFLAG.." -f -L --user-agent \""..cfg.user_agent.." via curl\" "
+      local curl_cmd = fs.Q(vars.CURL).." "..vars.CURLNOCERTFLAG.." -f -L --user-agent \""..cfg.user_agent.." via curl\" "
       if cfg.connection_timeout and cfg.connection_timeout > 0 then
         curl_cmd = curl_cmd .. "--connect-timeout "..tonumber(cfg.connection_timeout).." " 
       end
