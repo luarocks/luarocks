@@ -227,7 +227,7 @@ local defaults = {
    
    upload = {
       server = "https://rocks.moonscript.org",
-      tool_version = "0.0.1",
+      tool_version = "1.0.0",
       api_version = "1",
    },
 
