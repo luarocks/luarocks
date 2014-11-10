@@ -419,6 +419,10 @@ then
    if [ -n "$GCC_ARCH" -a -d "/usr/lib/$GCC_ARCH" ]
    then
       MULTIARCH_SUBDIR="lib/$GCC_ARCH"
+   elif [ -d "/usr/lib64" ]
+   then
+      # Useful for Fedora systems
+      MULTIARCH_SUBDIR="lib64"
    fi
 fi
 
