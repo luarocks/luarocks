@@ -395,6 +395,7 @@ test_purge() { $luarocks purge --tree="$testing_sys_tree"; }
 test_remove() { $luarocks build luacov ${version_luacov} && $luarocks remove luacov ${version_luacov}; }
 test_remove_force() { need_luasocket; $luarocks build lualogging && $luarocks remove --force luasocket; }
 fail_remove_deps() { need_luasocket; $luarocks build lualogging && $luarocks remove luasocket; }
+fail_remove_missing() { $luarocks remove missing_rock; }
 fail_remove_invalid_name() { $luarocks remove invalid.rock; }
 
 test_search_found() { $luarocks search zlib; }
