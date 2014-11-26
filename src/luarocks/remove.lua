@@ -159,7 +159,7 @@ function remove.run(...)
    local results = {}
    search.manifest_search(results, cfg.rocks_dir, search.make_query(name, version))
    if not results[name] then
-      return nil, "Could not find rock '"..name..(version and " "..version or "").."' in "..cfg.root_dir
+      return nil, "Could not find rock '"..name..(version and " "..version or "").."' in "..path.rocks_tree_to_string(cfg.root_dir)
    end
 
    return remove.remove_search_results(results, name, deps_mode, flags["force"])
