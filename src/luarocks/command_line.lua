@@ -208,7 +208,7 @@ function command_line.run_command(...)
       local xp, ok, err, exitcode = xpcall(function() return cmd.run(unpack(args)) end, function(err)
          die(debug.traceback("LuaRocks "..cfg.program_version
             .." bug (please report at luarocks-developers@lists.sourceforge.net).\n"
-            ..err, 2))
+            ..err, 2), cfg.errorcodes.CRASH)
       end)
       if xp and (not ok) then
          die(err, exitcode)

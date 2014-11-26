@@ -452,8 +452,13 @@ run_tests() {
       echo "-------------------------------------------"
       reset_environment
       if $test
-      then echo "OK: Expected success."
-      else echo "FAIL: Unexpected failure."; exit 1
+      then
+         echo "OK: Expected success."
+      else
+         if [ $? = 99 ]
+         then echo "FAIL: Unexpected crash!"; exit 99
+         fi
+         echo "FAIL: Unexpected failure."; exit 1
       fi
    done
    grep "^fail_$1.*(" < $testing_dir/testing.sh | cut -d'(' -f1 | while read test
@@ -464,7 +469,11 @@ run_tests() {
       reset_environment
       if $test
       then echo "FAIL: Unexpected success."; exit 1
-      else echo "OK: Expected failure."
+      else
+         if [ $? = 99 ]
+         then echo "FAIL: Unexpected crash!"; exit 99
+         fi
+         echo "OK: Expected failure."
       fi
    done
 }

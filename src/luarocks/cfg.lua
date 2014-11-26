@@ -44,6 +44,7 @@ cfg.errorcodes = setmetatable({
    OK = 0,
    UNSPECIFIED = 1,
    PERMISSIONDENIED = 2,
+   CRASH = 99
 },{
    __index = function(t, key)
       local val = rawget(t, key)
