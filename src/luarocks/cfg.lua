@@ -445,8 +445,8 @@ if detected.macosx then
    defaults.variables.STATFLAG = "-f '%A'"
    local version = io.popen("sw_vers -productVersion"):read("*l")
    version = tonumber(version and version:match("^[^.]+%.([^.]+)")) or 3
-   if version >= 5 then
-      version = 5
+   if version >= 10 then
+      version = 10
    else
       defaults.gcc_rpath = false
    end
