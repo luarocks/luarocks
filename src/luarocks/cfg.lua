@@ -446,7 +446,9 @@ if detected.macosx then
    local version = io.popen("sw_vers -productVersion"):read("*l")
    version = tonumber(version and version:match("^[^.]+%.([^.]+)")) or 3
    if version >= 10 then
-      version = 10
+      version = 8
+   elseif version >= 5 then
+	  version = 5
    else
       defaults.gcc_rpath = false
    end
