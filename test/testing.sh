@@ -228,7 +228,7 @@ mkdir -p "$testing_server"
    get "$luarocks_repo/luasocket-${verrev_luasocket}.src.rock"
    get "$luarocks_repo/luasocket-${verrev_luasocket}.rockspec"
    get "$luarocks_repo/luafilesystem-1.6.2-1.src.rock"
-   get "$luarocks_repo/stdlib-41.0.0-1.src.rock"
+   get "$luarocks_repo/stdlib-35-1.src.rock"
    get "$luarocks_repo/luarepl-0.4-1.src.rock"
    get "$luarocks_repo/validate-args-1.5.4-1.rockspec"
    get "$luarocks_repo/luasec-0.5-2.rockspec"
@@ -243,10 +243,12 @@ mkdir -p "$testing_server"
    get "$luarocks_repo/lpeg-0.12-1.src.rock"
    get "$luarocks_repo/luaposix-31-1.src.rock"
    get "$luarocks_repo/md5-1.2-1.src.rock"
-   get "$luarocks_repo/lrandom-20120430.51-1.src.rock"
-   get "$luarocks_repo/lrandom-20120430.52-1.src.rock"
-   get "$luarocks_repo/lrandom-20120430.51-1.rockspec"
-   get "$luarocks_repo/lrandom-20120430.52-1.rockspec"
+   get "$luarocks_repo/lmathx-20120430.51-1.src.rock"
+   get "$luarocks_repo/lmathx-20120430.52-1.src.rock"
+   get "$luarocks_repo/lmathx-20120430.51-1.rockspec"
+   get "$luarocks_repo/lmathx-20120430.52-1.rockspec"
+   get "$luarocks_repo/lmathx-20140620-1.rockspec"
+   get "$luarocks_repo/lmathx-20140620-1.rockspec"
 )
 $luarocks_admin_nocov make_manifest "$testing_server"
 
@@ -356,7 +358,7 @@ test_build_https() { need_luasocket; $luarocks download --rockspec validate-args
 test_build_supported_platforms() { $luarocks build lpty; }
 fail_build_missing_external() { $luarocks build "$testing_dir/testfiles/missing_external-0.1-1.rockspec" INEXISTENT_INCDIR="/invalid/dir"; }
 
-test_build_deps_partial_match() { $luarocks build lrandom; }
+test_build_deps_partial_match() { $luarocks build lmathx; }
 test_build_show_downloads() { export LUAROCKS_CONFIG="$testing_dir/testing_config_show_downloads.lua" && $luarocks build alien; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
 
 test_download_all() { $luarocks download --all validate-args && rm validate-args-*; }
