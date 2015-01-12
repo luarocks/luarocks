@@ -44,6 +44,7 @@ cfg.errorcodes = setmetatable({
    OK = 0,
    UNSPECIFIED = 1,
    PERMISSIONDENIED = 2,
+   CONFIGFILE = 3,
    CRASH = 99
 },{
    __index = function(t, key)
@@ -145,28 +146,29 @@ cfg.variables = {}
 cfg.rocks_trees = {}
 
 sys_config_file = site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..cfg.lua_version..".lua"
-local err
-sys_config_ok, err = persist.load_into_table(sys_config_file, cfg)
+local err, errcode
+sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, cfg)
 
-if not sys_config_ok then
+if (not sys_config_ok) and errcode ~= "run" then
    sys_config_file = sys_config_dir.."/config.lua"
-   sys_config_ok, err = persist.load_into_table(sys_config_file, cfg)
+   sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, cfg)
 end
-if err and sys_config_ok == nil then
+if (not sys_config_ok) and errcode ~= "open" then
    io.stderr:write(err.."\n")
+   os.exit(cfg.errorcodes.CONFIGFILE)
 end
 
 if not site_config.LUAROCKS_FORCE_CONFIG then
-   local home_overrides, err
+   local home_overrides, err, errcode
    home_config_file = os.getenv("LUAROCKS_CONFIG_" .. version_suffix) or os.getenv("LUAROCKS_CONFIG")
    if home_config_file then
-      home_overrides, err = persist.load_into_table(home_config_file, { home = cfg.home, lua_version = cfg.lua_version })
+      home_overrides, err, errcode = persist.load_into_table(home_config_file, { home = cfg.home, lua_version = cfg.lua_version })
    else
       home_config_file = home_config_dir.."/config-"..cfg.lua_version..".lua"
-      home_overrides, err = persist.load_into_table(home_config_file, { home = cfg.home, lua_version = cfg.lua_version })
-      if not home_overrides then
+      home_overrides, err, errcode = persist.load_into_table(home_config_file, { home = cfg.home, lua_version = cfg.lua_version })
+      if (not home_overrides) and (not errcode == "run") then
          home_config_file = home_config_dir.."/config.lua"
-         home_overrides, err = persist.load_into_table(home_config_file, { home = cfg.home, lua_version = cfg.lua_version })
+         home_overrides, err, errcode = persist.load_into_table(home_config_file, { home = cfg.home, lua_version = cfg.lua_version })
       end
    end
    if home_overrides then
@@ -178,10 +180,11 @@ if not site_config.LUAROCKS_FORCE_CONFIG then
          cfg.rocks_servers = nil
       end
       util.deep_merge(cfg, home_overrides)
-   else -- nil or false
+   else
       home_config_ok = home_overrides
-      if err and home_config_ok == nil then
+      if errcode ~= "open" then
          io.stderr:write(err.."\n")
+         os.exit(cfg.errorcodes.CONFIGFILE)
       end
    end
 end
