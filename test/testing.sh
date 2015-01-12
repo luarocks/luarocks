@@ -32,6 +32,7 @@ fi
 
 testing_dir="$PWD"
 
+testing_lrprefix="$testing_dir/testing_lrprefix-$luaversion"
 testing_tree="$testing_dir/testing-$luaversion"
 testing_sys_tree="$testing_dir/testing_sys-$luaversion"
 testing_tree_copy="$testing_dir/testing_copy-$luaversion"
@@ -51,6 +52,7 @@ fi
 rm -f luacov.report.out
 rm -rf /tmp/luarocks_testing
 mkdir /tmp/luarocks_testing
+rm -rf "$testing_lrprefix"
 rm -rf "$testing_tree"
 rm -rf "$testing_sys_tree"
 rm -rf "$testing_tree_copy"
@@ -173,8 +175,8 @@ srcdir_luasocket=luasocket-3.0-rc1
 version_cprint=0.1
 verrev_cprint=0.1-1
 
-version_luacov=0.5
-verrev_luacov=0.5-1
+version_luacov=0.7
+verrev_luacov=${version_luacov}-1
 version_lxsh=0.8.6
 version_validate_args=1.5.4
 verrev_validate_args=1.5.4-1
@@ -183,7 +185,7 @@ verrev_lxsh=${version_lxsh}-2
 luasec=luasec
 
 cd ..
-./configure --with-lua="$luadir"
+./configure --with-lua="$luadir" --prefix="$testing_lrprefix"
 make clean
 make src/luarocks/site_config.lua
 make dev
@@ -217,8 +219,7 @@ luarocks_admin_nocov="run_lua --nocov luarocks-admin"
 mkdir -p "$testing_server"
 (
    cd "$testing_server"
-   luarocks_repo="http://luarocks.org/repositories/rocks"
-   luarocks_scm_repo="http://luarocks.org/repositories/rocks-scm"
+   luarocks_repo="http://rocks.moonscript.org"
    get() { [ -e `basename "$1"` ] || wget -c "$1"; }
    get "$luarocks_repo/luacov-${verrev_luacov}.src.rock"
    get "$luarocks_repo/luacov-${verrev_luacov}.rockspec"
@@ -230,7 +231,7 @@ mkdir -p "$testing_server"
    get "$luarocks_repo/stdlib-35-1.src.rock"
    get "$luarocks_repo/luarepl-0.4-1.src.rock"
    get "$luarocks_repo/validate-args-1.5.4-1.rockspec"
-   get "$luarocks_scm_repo/luasec-scm-1.rockspec"
+   get "$luarocks_repo/luasec-0.5-2.rockspec"
    get "$luarocks_repo/luabitop-1.0.2-1.rockspec"
    get "$luarocks_repo/lpty-1.0.1-1.src.rock"
    get "$luarocks_repo/cprint-${verrev_cprint}.src.rock"
