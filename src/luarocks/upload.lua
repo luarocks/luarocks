@@ -54,7 +54,7 @@ function upload.run(...)
    end
 
    local rock_fname
-   if not flags["skip-pack"] then
+   if not flags["skip-pack"] and not rockspec.version:match("^scm") then
       util.printout("Packing " .. tostring(rockspec.package))
       rock_fname, err = pack.pack_source_rock(fname)
       if not rock_fname then
