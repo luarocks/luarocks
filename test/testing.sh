@@ -323,6 +323,8 @@ fail_unknown_command() { $luarocks unknown_command; }
 
 test_empty_list() { $luarocks list; }
 
+fail_bad_sysconfig() { local err=0; local scdir="$testing_lrprefix/etc/luarocks/"; mkdir -p "$scdir"; local sysconfig="$scdir/config.lua"; echo "aoeui" > "$sysconfig"; echo $sysconfig; $luarocks list; err=$?; rm "$sysconfig"; return "$err"; }
+
 fail_build_noarg() { $luarocks build; }
 fail_download_noarg() { $luarocks download; }
 fail_install_noarg() { $luarocks install; }
