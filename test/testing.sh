@@ -173,7 +173,7 @@ verrev_luasocket=${version_luasocket}-1
 srcdir_luasocket=luasocket-3.0-rc1
 
 version_cprint=0.1
-verrev_cprint=0.1-1
+verrev_cprint=0.1-2
 
 version_luacov=0.7
 verrev_luacov=${version_luacov}-1
