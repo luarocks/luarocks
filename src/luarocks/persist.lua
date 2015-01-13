@@ -14,8 +14,12 @@ local function run_file(filename, env)
    if not fd then
       return nil, err, "open"
    end
-   local str = fd:read("*a"):gsub("^#![^\n]*\n", "")   
+   local str, err = fd:read("*a")
    fd:close()
+   if not str then
+      return nil, err, "open"
+   end
+   str = str:gsub("^#![^\n]*\n", "")
    local chunk, ran
    if _VERSION == "Lua 5.1" then -- Lua 5.1
       chunk, err = loadstring(str, filename)
