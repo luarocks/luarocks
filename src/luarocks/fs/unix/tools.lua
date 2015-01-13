@@ -12,7 +12,7 @@ local dir_stack = {}
 local vars = cfg.variables
 
 local function command_at(directory, cmd)
-   return "cd " .. fs.Q(directory) .. " && " .. cmd
+   return "cd " .. fs.Q(fs.absolute_name(directory)) .. " && " .. cmd
 end
 
 --- Obtain current directory.
