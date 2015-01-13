@@ -239,9 +239,9 @@ mkdir -p "$testing_server"
    get "$luarocks_repo/wsapi-1.6-1.src.rock"
    get "$luarocks_repo/lxsh-${verrev_lxsh}.src.rock"
    get "$luarocks_repo/abelhas-1.0-1.rockspec"
-   get "$luarocks_repo/lzlib-0.4.work3-1.src.rock"
+   get "$luarocks_repo/lzlib-0.4.1.53-1.src.rock"
    get "$luarocks_repo/lpeg-0.12-1.src.rock"
-   get "$luarocks_repo/luaposix-31-1.src.rock"
+   get "$luarocks_repo/luaposix-33.2.1-1.src.rock"
    get "$luarocks_repo/md5-1.2-1.src.rock"
    get "$luarocks_repo/lmathx-20120430.51-1.src.rock"
    get "$luarocks_repo/lmathx-20120430.52-1.src.rock"
@@ -496,7 +496,11 @@ run_with_full_environment() {
    echo "==========================================="
    echo "Running with full environment"
    echo "==========================================="
-   build_environment luacov luafilesystem luasocket luabitop luaposix md5 lzlib
+   
+   local bitop=
+   [ "$luaversion" = "5.1.5" ] && bitop=luabitop
+   
+   build_environment luacov luafilesystem luasocket $bitop luaposix md5 lzlib
    run_tests $1
 }
 
