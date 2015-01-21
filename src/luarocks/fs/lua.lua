@@ -732,7 +732,7 @@ function fs_lua.chmod(file, mode)
    -- LuaPosix (as of 5.1.15) does not support octal notation...
    if mode:sub(1,1) == "0" then
       local new_mode = {}
-      for c in mode:sub(2):gmatch(".") do
+      for c in mode:sub(-3):gmatch(".") do
          table.insert(new_mode, octal_to_rwx[c])
       end
       mode = table.concat(new_mode)
