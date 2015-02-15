@@ -9,7 +9,6 @@ local persist = require("luarocks.persist")
 local type_check = require("luarocks.type_check")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
 local path = require("luarocks.path")
 
 manif_core.manifest_cache = {}
