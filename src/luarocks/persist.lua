@@ -54,8 +54,7 @@ function persist.load_into_table(filename, tbl)
    assert(type(filename) == "string")
    assert(type(tbl) == "table" or not tbl)
 
-   local result, ok, err
-   result = tbl or {}
+   local result = tbl or {}
    local globals = {}
    local globals_mt = {
       __index = function(t, n)
@@ -66,7 +65,7 @@ function persist.load_into_table(filename, tbl)
    local save_mt = getmetatable(result)
    setmetatable(result, globals_mt)
    
-   ok, err, errcode = run_file(filename, result)
+   local ok, err, errcode = run_file(filename, result)
    
    setmetatable(result, save_mt)
 
