@@ -149,7 +149,7 @@ end
 -- plus an error message.
 function tools.copy_contents(src, dest)
    assert(src and dest)
-   if fs.execute_quiet(fs.Q(vars.CP).." -dR "..src.."\\*.* "..fs.Q(dest)) then
+   if fs.execute_quiet(fs.Q(vars.CP), "-dR", src.."\\*.*", dest) then
       return true
    else
       return false, "Failed copying "..src.." to "..dest
