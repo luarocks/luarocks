@@ -339,6 +339,8 @@ function path.map_trees(deps_mode, fn, ...)
    return result
 end
 
+local is_src_extension = { [".lua"] = true, [".tl"] = true, [".tld"] = true, [".moon"] = true }
+
 --- Return the pathname of the file that would be loaded for a module, indexed.
 -- @param module_name string: module name (eg. "socket.core")
 -- @param name string: name of the package (eg. "luasocket")
@@ -349,7 +351,8 @@ end
 -- @return string: filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so")
 function path.which_i(module_name, name, version, tree, i)
    local deploy_dir
-   if module_name:match("%.lua$") then
+   local extension = module_name:match("%.[a-z]+$")
+   if is_src_extension[extension] then
       deploy_dir = path.deploy_lua_dir(tree)
       module_name = dir.path(deploy_dir, module_name)
    else
