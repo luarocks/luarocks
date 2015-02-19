@@ -177,7 +177,7 @@ do
       LUA_SUFFIX="$value"
       LUA_SUFFIX_SET=yes
       ;;
-   --lua-version)
+   --lua-version|--with-lua-version)
       [ -n "$value" ] || die "Missing value in flag $key."
       LUA_VERSION="$value"
       [ "$LUA_VERSION" = "5.1" -o "$LUA_VERSION" = "5.2" -o "$LUA_VERSION" = "5.3" ] || die "Invalid Lua version in flag $key."
@@ -250,7 +250,7 @@ detect_lua_version() {
          LUA_VERSION=$detected_lua
       elif [ "$LUA_VERSION" != "$detected_lua" ]
       then
-         die "This clashes with the value of --with-lua-version. Please check your configuration."
+         die "This clashes with the value of --lua-version. Please check your configuration."
       fi
    fi
 }
