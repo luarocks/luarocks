@@ -21,7 +21,7 @@ local function die(message, exitcode)
 
    local ok, err = pcall(util.run_scheduled_functions)
    if not ok then
-      util.printerr("\nLuaRocks "..cfg.program_version.." internal bug (please report at luarocks-developers@lists.sourceforge.net):\n"..err)
+      util.printerr("\nLuaRocks "..cfg.program_version.." internal bug (please report at https://github.com/keplerproject/luarocks/issues):\n"..err)
    end
    util.printerr("\nError: "..message)
    os.exit(exitcode or cfg.errorcodes.UNSPECIFIED)
