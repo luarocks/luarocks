@@ -200,7 +200,6 @@ end
 
 -- Configure defaults:
 
-local root = cfg.rocks_trees[#cfg.rocks_trees]
 local defaults = {
 
    local_by_default = false,
