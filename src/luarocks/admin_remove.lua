@@ -46,7 +46,7 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    if not ok then return nil, err end
    
    local nr_files = 0
-   for i, rockfile in ipairs(rockfiles) do
+   for _, rockfile in ipairs(rockfiles) do
       local basename = dir.base_name(rockfile)
       local file = dir.path(local_cache, basename)
       util.printout("Removing file "..file.."...")

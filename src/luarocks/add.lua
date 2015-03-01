@@ -50,7 +50,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    if not ok then return nil, err end
    
    local files = {}
-   for i, rockfile in ipairs(rockfiles) do
+   for _, rockfile in ipairs(rockfiles) do
       if fs.exists(rockfile) then
          util.printout("Copying file "..rockfile.." to "..local_cache.."...")
          local absolute = fs.absolute_name(rockfile)

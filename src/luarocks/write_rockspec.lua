@@ -219,7 +219,7 @@ function write_rockspec.run(...)
          version = flags["tag"]:gsub("^v", "")
       end
    end
-   
+
    local protocol, pathname = dir.split_url(url_or_dir)
    if not fetch.is_basic_protocol(protocol) then
       if not name then

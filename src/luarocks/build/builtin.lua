@@ -74,7 +74,7 @@ function builtin.run(rockspec)
          add_flags(extras, "-I%s", incdirs)
          return execute(variables.CC.." "..variables.CFLAGS, "-c", "-o", object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
       end
-      compile_library = function(library, objects, libraries, libdirs, name)
+      compile_library = function(library, objects, libraries, libdirs)
          local extras = { unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
          add_flags(extras, "-l%s", libraries)
@@ -170,7 +170,7 @@ function builtin.run(rockspec)
          end
          return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, "-L"..variables.LUA_LIBDIR, unpack(extras))
       end
-      compile_wrapper_binary = function(fullname, name) return true, name end
+      compile_wrapper_binary = function(_, name) return true, name end
       --TODO EXEWRAPPER
    end
 

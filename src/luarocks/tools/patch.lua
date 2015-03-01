@@ -22,8 +22,8 @@ local format = string.format
 
 -- logging
 local debugmode = false
-local function debug(s) end
-local function info(s) end
+local function debug(_) end
+local function info(_) end
 local function warning(s) io.stderr:write(s .. '\n') end
 
 -- Returns boolean whether string s2 starts with string s.
@@ -57,27 +57,30 @@ end
 local function isfile() return true end --FIX?
 
 local function read_file(filename)
-  local fh, err, oserr = io.open(filename, 'rb')
+  local fh, data, err, oserr
+  fh, err, oserr = io.open(filename, 'rb')
   if not fh then return fh, err, oserr end
-  local data, err, oserr = fh:read'*a'
+  data, err, oserr = fh:read'*a'
   fh:close()
   if not data then return nil, err, oserr end
   return data
 end
 
 local function write_file(filename, data)
-  local fh, err, oserr = io.open(filename 'wb')
+  local fh, status, err, oserr
+  fh, err, oserr = io.open(filename 'wb')
   if not fh then return fh, err, oserr end
-  local status, err, oserr = fh:write(data)
+  status, err, oserr = fh:write(data)
   fh:close()
   if not status then return nil, err, oserr end
   return true
 end
 
 local function file_copy(src, dest)
-  local data, err, oserr = read_file(src)
+  local data, status, err, oserr
+  data, err, oserr = read_file(src)
   if not data then return data, err, oserr end
-  local status, err, oserr = write_file(dest)
+  status, err, oserr = write_file(dest)
   if not status then return status, err, oserr end
   return true
 end
@@ -420,7 +423,7 @@ local function find_hunk(file, h, hno)
         end
         h.startsrc = location
         h.starttgt = h.starttgt + offset
-        for i=1,fuzz do
+        for _=1,fuzz do
            table.remove(h.text, 1)
            table.remove(h.text, #h.text)
         end
@@ -532,7 +535,7 @@ local function patch_hunks(srcname, tgtname, hunks)
         local line2write = hline:sub(2)
         -- detect if line ends are consistent in source file
         local sum = 0
-        for k,v in pairs(lineends) do if v > 0 then sum=sum+1 end end
+        for _,v in pairs(lineends) do if v > 0 then sum=sum+1 end end
         if sum == 1 then
           local newline
           for k,v in pairs(lineends) do if v ~= 0 then newline = k end end
@@ -553,7 +556,7 @@ end
 
 local function strip_dirs(filename, strip)
   if strip == nil then return filename end
-  for i=1,strip do
+  for _=1,strip do
     filename=filename:gsub("^[^/]*/", "")
   end
   return filename
@@ -593,7 +596,6 @@ function patch.apply_patch(the_patch, strip)
     local hunkno = 1
     local hunk = hunks[hunkno]
     local hunkfind = {}
-    local hunkreplace = {}
     local validhunks = 0
     local canpatch = false
     local hunklineno
@@ -610,15 +612,10 @@ function patch.apply_patch(the_patch, strip)
       elseif lineno == hunk.startsrc then
         hunkfind = {}
         for _,x in ipairs(hunk.text) do
-        if x:sub(1,1) == ' ' or x:sub(1,1) == '-' then
-          hunkfind[#hunkfind+1] = endlstrip(x:sub(2))
-        end end
-        hunkreplace = {}
-        for _,x in ipairs(hunk.text) do
-        if x:sub(1,1) == ' ' or x:sub(1,1) == '+' then
-          hunkreplace[#hunkreplace+1] = endlstrip(x:sub(2))
-        end end
-        --pprint(hunkreplace)
+          if x:sub(1,1) == ' ' or x:sub(1,1) == '-' then
+            hunkfind[#hunkfind+1] = endlstrip(x:sub(2))
+          end
+        end
         hunklineno = 1
 
         -- todo \ No newline at end of file

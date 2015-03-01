@@ -10,7 +10,7 @@ local dir = require("luarocks.dir")
 
 local function number_to_bytestring(number, nbytes)
    local out = {}
-   for i = 1, nbytes do
+   for _ = 1, nbytes do
       local byte = number % 256
       table.insert(out, string.char(byte))
       number = (number - byte) / 256
@@ -237,7 +237,7 @@ function zip.zip(zipfile, ...)
       end
    end
 
-   local ok = zw:close()
+   ok = zw:close()
    if not ok then
       return false, "error closing "..zipfile
    end
