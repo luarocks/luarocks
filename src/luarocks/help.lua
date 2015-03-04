@@ -100,7 +100,7 @@ function help.run(...)
       end
    else
       command = command:gsub("-", "_")
-      local cmd = require(commands[command])
+      local cmd = commands[command] and require(commands[command])
       if cmd then
          local arguments = cmd.help_arguments or "<argument>"
          print_banner()

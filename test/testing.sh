@@ -365,6 +365,7 @@ test_download_all() { $luarocks download --all validate-args && rm validate-args
 test_download_rockspecversion() { $luarocks download --rockspec validate-args ${verrev_validate_args} && rm validate-args-*; }
 
 test_help() { $luarocks help; }
+fail_help_invalid() { $luarocks help invalid; }
 
 test_install_binaryrock() { $luarocks build --pack-binary-rock cprint && $luarocks install ./cprint-${verrev_cprint}.${platform}.rock && rm ./cprint-${verrev_cprint}.${platform}.rock; }
 test_install_with_bin() { $luarocks install wsapi; }
