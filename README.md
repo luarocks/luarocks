@@ -16,7 +16,7 @@ LuaRocks supports both local and [remote][3] repositories, and multiple local
 rocks trees. You can [download][4] and install LuaRocks on [Unix][5] and
 [Windows][6].
 
-LuaRocks is free software and uses the same [license][7] as Lua 5.1.
+LuaRocks is free software and uses the same [license][7] as Lua 5.x.
 
 [1]: http://luarocks.org/en/Types_of_rocks
 [2]: http://luarocks.org/en/Dependencies
