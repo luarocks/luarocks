@@ -357,6 +357,7 @@ test_build_nohttps() { need_luasocket; $luarocks download --rockspec validate-ar
 test_build_https() { need_luasocket; $luarocks download --rockspec validate-args ${verrev_validate_args} && $luarocks install $luasec && $luarocks build ./validate-args-${verrev_validate_args}.rockspec && rm ./validate-args-${verrev_validate_args}.rockspec; }
 test_build_supported_platforms() { $luarocks build lpty; }
 fail_build_missing_external() { $luarocks build "$testing_dir/testfiles/missing_external-0.1-1.rockspec" INEXISTENT_INCDIR="/invalid/dir"; }
+fail_build_invalidpatch() { need_luasocket; $luarocks build "$testing_dir/testfiles/invalid_patch-0.1-1.rockspec"; }
 
 test_build_deps_partial_match() { $luarocks build lmathx; }
 test_build_show_downloads() { export LUAROCKS_CONFIG="$testing_dir/testing_config_show_downloads.lua" && $luarocks build alien; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
@@ -370,6 +371,7 @@ fail_help_invalid() { $luarocks help invalid; }
 test_install_binaryrock() { $luarocks build --pack-binary-rock cprint && $luarocks install ./cprint-${verrev_cprint}.${platform}.rock && rm ./cprint-${verrev_cprint}.${platform}.rock; }
 test_install_with_bin() { $luarocks install wsapi; }
 fail_install_notazipfile() { $luarocks install "$testing_dir/testfiles/not_a_zipfile-1.0-1.src.rock"; }
+fail_install_invalidpatch() { need_luasocket; $luarocks install "$testing_dir/testfiles/invalid_patch-0.1-1.rockspec"; }
 
 test_lint_ok() { $luarocks download --rockspec validate-args ${verrev_validate_args} && $luarocks lint ./validate-args-${verrev_validate_args}.rockspec && rm ./validate-args-${verrev_validate_args}.rockspec; }
 fail_lint_type_mismatch_string() { $luarocks lint "$testing_dir/testfiles/type_mismatch_string-1.0-1.rockspec"; }
@@ -416,6 +418,7 @@ test_unpack_download() { rm -rf ./cprint-${verrev_cprint} && $luarocks unpack cp
 test_unpack_src() { rm -rf ./cprint-${verrev_cprint} && $luarocks download --src cprint && $luarocks unpack ./cprint-${verrev_cprint}.src.rock && rm -rf ./cprint-${verrev_cprint}; }
 test_unpack_rockspec() { rm -rf ./cprint-${verrev_cprint} && $luarocks download --rockspec cprint && $luarocks unpack ./cprint-${verrev_cprint}.rockspec && rm -rf ./cprint-${verrev_cprint}; }
 test_unpack_binary() { rm -rf ./cprint-${verrev_cprint} && $luarocks build cprint && $luarocks pack cprint && $luarocks unpack ./cprint-${verrev_cprint}.${platform}.rock && rm -rf ./cprint-${verrev_cprint}; }
+fail_unpack_invalidpatch() { need_luasocket; $luarocks unpack "$testing_dir/testfiles/invalid_patch-0.1-1.rockspec"; }
 
 test_admin_help() { $luarocks_admin help; }
 
