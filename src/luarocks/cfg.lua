@@ -265,7 +265,6 @@ local defaults = {
       FIND = "find",
       TEST = "test",
       CHMOD = "chmod",
-      PATCH = "patch",
 
       ZIP = "zip",
       UNZIP = "unzip -n",

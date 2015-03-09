@@ -283,12 +283,6 @@ function tools.chmod(pathname, mode)
    end
 end
 
---- Apply a patch.
--- @param patchname string: The filename of the patch.
-function tools.apply_patch(patchname)
-   return fs.execute(vars.PATCH.." -p1 -f -i ", patchname)
-end
-
 --- Unpack an archive.
 -- Extract the contents of an archive, detecting its format by
 -- filename extension.
