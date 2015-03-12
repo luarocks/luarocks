@@ -443,6 +443,7 @@ if detected.macosx then
    defaults.arch = "macosx-"..proc
    defaults.platforms = {"unix", "bsd", "macosx"}
    defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
+   defaults.variables.STAT = "/usr/bin/stat"
    defaults.variables.STATFLAG = "-f '%A'"
    local version = io.popen("sw_vers -productVersion"):read("*l")
    version = tonumber(version and version:match("^[^.]+%.([^.]+)")) or 3
