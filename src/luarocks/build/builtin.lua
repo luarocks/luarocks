@@ -196,7 +196,9 @@ function builtin.run(rockspec)
      end
    end
    
-   
+   if not build.modules then
+      return nil, "Missing build.modules table"
+   end
    for name, info in pairs(build.modules) do
       local moddir = path.module_to_path(name)
       if type(info) == "string" then
