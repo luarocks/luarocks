@@ -34,7 +34,7 @@ end
 
 cfg.site_config = site_config
 
-cfg.program_version = "scm"
+cfg.program_version = "2.2.1"
 cfg.program_series = "2.2"
 cfg.major_version = (cfg.program_version:match("([^.]%.[^.])")) or cfg.program_series
 

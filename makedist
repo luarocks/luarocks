@@ -68,7 +68,7 @@ cd ..
 rm -rf "release-unix"
 
 cd "release-windows/$out-win32"
-rm -rf makedist Makefile configure lfw .travis.yml .gitignore
+rm -rf makedist Makefile configure lfw .travis.yml .gitignore test
 cd ..
 zip -r ../"$out-win32.zip" "$out-win32"
 cd ..
