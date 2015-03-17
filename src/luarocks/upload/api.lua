@@ -121,7 +121,7 @@ if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
 
 local function redact_api_url(url)
    url = tostring(url)
-   return (url:gsub(".*/api/[^/]+/[^/]+", ""))
+   return (url:gsub(".*/api/[^/]+/[^/]+", "")) or ""
 end
 
 function Api:request(url, params, post_params)
