@@ -1,2 +1,4 @@
 /config.*
 /src/luarocks/site_config.lua
+/test/testing_*
+/test/luacov.*
