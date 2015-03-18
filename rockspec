@@ -33,6 +33,7 @@ build = {
    build_pass=false,
    install_variables = {
       BINDIR="$(BINDIR)",
-      LUADIR="$(LUADIR)"
+      LUADIR="$(LUADIR)",
+      LUA="$(LUA)",
    }
 }
