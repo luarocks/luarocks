@@ -227,7 +227,7 @@ local defaults = {
       }
    },
    disabled_servers = {},
-   
+
    upload = {
       server = "https://rocks.moonscript.org",
       tool_version = "1.0.0",
@@ -315,7 +315,7 @@ if detected.windows then
    defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/bin"
    defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/include"
    defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/lib"
-   defaults.cmake_generator = "MinGW Makefiles"
+
    defaults.makefile = "Makefile.win"
    defaults.variables.MAKE = "nmake"
    defaults.variables.CC = "cl"
@@ -363,7 +363,6 @@ end
 if detected.mingw32 then
    defaults.platforms = { "win32", "mingw32", "windows" }
    defaults.obj_extension = "o"
-   defaults.cmake_generator = "MinGW Makefiles"
    defaults.variables.MAKE = "mingw32-make"
    defaults.variables.CC = "mingw32-gcc"
    defaults.variables.RC = "windres"
@@ -394,7 +393,6 @@ if detected.unix then
    defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR or "/usr/local/include"
    defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR or "/usr/local/lib"
    defaults.variables.CFLAGS = "-O2"
-   defaults.cmake_generator = "Unix Makefiles"
    defaults.platforms = { "unix" }
    defaults.variables.CC = "gcc"
    defaults.variables.LD = "gcc"
@@ -426,7 +424,6 @@ if detected.cygwin then
    defaults.lib_extension = "so" -- can be overridden in the config file for mingw builds
    defaults.arch = "cygwin-"..proc
    defaults.platforms = {"unix", "cygwin"}
-   defaults.cmake_generator = "Unix Makefiles"
    defaults.variables.CC = "echo -llua | xargs gcc"
    defaults.variables.LD = "echo -llua | xargs gcc"
    defaults.variables.LIBFLAG = "-shared"
@@ -569,7 +566,7 @@ function cfg.package_paths()
       table.insert(new_cpath, lib_path.."/?."..cfg.lib_extension)
       table.insert(new_bin, bin_path)
    end
-   if extra_luarocks_module_dir then 
+   if extra_luarocks_module_dir then
      table.insert(new_path, extra_luarocks_module_dir)
    end
    return table.concat(new_path, ";"), table.concat(new_cpath, ";"), table.concat(new_bin, cfg.export_path_separator)
