@@ -1,7 +1,9 @@
 package = "LuaRocks"
-local VER = "scm"
-local REV = "1"
-version = VER.."-"..REV
+local VER = "scm-1"
+
+source = {
+   url = "--this rockspec is used by `make bootstrap` only--",
+}
 
 description = {
    summary = "A deployment and management system for Lua modules.",
@@ -21,10 +23,6 @@ description = {
 
 dependencies = {
    "lua >= 5.1"
-}
-
-source = {
-   url = "http://luarocks.org/releases/luarocks-"..VER..".tar.gz",
 }
 
 build = {

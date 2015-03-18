@@ -1,31 +1,15 @@
 
 include config.unix
+include Makefile.setup.inc
+include Makefile.install.inc
 
 .PHONY: all build dev build_bins luadoc check_makefile cleanup_bins clean \
- install_bins install_luas install_site_config write_sysconfig \
- install bootstrap install_rock
+ install_site_config write_sysconfig install bootstrap install_rock
 
-DESTDIR =
-PREFIX ?= /usr/local
 ROCKS_TREE ?= $(PREFIX)
 SYSCONFDIR ?= $(PREFIX)/etc/luarocks
-BINDIR ?= $(PREFIX)/bin
-LUADIR ?= $(PREFIX)/share/lua/$(LUA_VERSION)/
 LUA_DIR ?= /usr/local
 LUA_BINDIR ?= $(LUA_DIR)/bin
-
-BIN_FILES = luarocks luarocks-admin
-LUAROCKS_FILES = fs/unix/tools.lua fs/unix.lua fs/win32/tools.lua fs/win32.lua \
-fs/lua.lua persist.lua list.lua require.lua repos.lua dir.lua make_manifest.lua \
-command_line.lua install.lua build/command.lua build/cmake.lua build/make.lua \
-build/builtin.lua fetch/cvs.lua fetch/git.lua fetch/sscm.lua tools/patch.lua \
-fetch/svn.lua tools/zip.lua tools/tar.lua pack.lua type_check.lua make.lua \
-remove.lua fs.lua manif.lua add.lua deps.lua build.lua search.lua show.lua \
-manif_core.lua fetch.lua unpack.lua validate.lua cfg.lua download.lua \
-help.lua util.lua index.lua cache.lua refresh_cache.lua loader.lua \
-admin_remove.lua fetch/hg.lua fetch/git_file.lua new_version.lua lint.lua \
-purge.lua path.lua path_cmd.lua write_rockspec.lua doc.lua upload.lua \
-upload/api.lua upload/multipart.lua fetch/git_http.lua
 
 CONFIG_FILE = $(SYSCONFDIR)/config-$(LUA_VERSION).lua
 
@@ -138,25 +122,6 @@ cleanup_bins:
 
 clean: cleanup_bins
 	rm -f src/luarocks/site_config.lua
-
-install_bins:
-	mkdir -p "$(DESTDIR)$(BINDIR)"
-	cd src/bin && \
-	luaver="$(LUA_VERSION)" && [ -n "$$luaver" ] || luaver=`$(LUA) -e 'print(_VERSION:sub(5))'`; \
-	for f in $(BIN_FILES); \
-	do \
-	   cp "$$f" "$(DESTDIR)$(BINDIR)/$$f-$$luaver"; \
-	   ln -nfs "$$f-$$luaver" "$(DESTDIR)$(BINDIR)/$$f"; \
-	done
-
-install_luas:
-	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
-	cd src/luarocks && for f in $(LUAROCKS_FILES); \
-	do \
-	   d="$(DESTDIR)$(LUADIR)/luarocks"/`dirname "$$f"` && \
-	   mkdir -p "$$d" && \
-	   cp "$$f" "$$d" || exit 1; \
-	done
 
 install_site_config: src/luarocks/site_config.lua
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
