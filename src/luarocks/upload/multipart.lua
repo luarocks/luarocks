@@ -26,7 +26,7 @@ function File:mime()
 end
 
 function File:content()
-   local fd = io.open(self.fname)
+   local fd = io.open(self.fname, "rb")
    if not fd then
       return nil, "Failed to open file: "..self.fname
    end
