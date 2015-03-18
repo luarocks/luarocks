@@ -1,5 +1,4 @@
-LuaRocks
-========
+<p align="center"><a href="http://luarocks.org"><img border="0" src="http://keplerproject.github.io/luarocks/luarocks.png" alt="LuaRocks" width="500px"></a></p>
 
 A package manager for Lua modules.
 
