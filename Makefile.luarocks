@@ -1,0 +1,15 @@
+
+include Makefile.setup.inc
+include Makefile.install.inc
+
+.PHONY: all install copy_site_config
+
+all:
+	@echo This Makefile is used by the LuaRocks rockspec for upgrading itself.
+
+install: install_bins install_luas copy_site_config
+
+copy_site_config:
+	luaver="$(LUA_VERSION)" && [ -n "$$luaver" ] || luaver=`$(LUA) -e 'print(_VERSION:sub(5))'`; \
+	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"; \
+	cp $(LUAROCKS_PREFIX)/share/lua/$$luaver/luarocks/site_config.lua "$(DESTDIR)$(LUADIR)/luarocks"

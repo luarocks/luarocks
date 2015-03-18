@@ -39,8 +39,8 @@ do
       cp "$i" "$out/$dir"
       if echo "$i" | grep -v "/bin/" | grep -q "^src/"
       then
-         grep -qw `basename "$i"` Makefile || { 
-            echo "Missing ref in makefile: $i"
+         grep -qw `basename "$i"` Makefile.setup.inc || {
+            echo "Missing ref in Makefile.setup.inc: $i"
             touch "missing_ref"
             exit 1
          }
@@ -68,7 +68,7 @@ cd ..
 rm -rf "release-unix"
 
 cd "release-windows/$out-win32"
-rm -rf makedist Makefile configure lfw .travis.yml .gitignore test
+rm -rf makedist Makefile* configure lfw .travis.yml .gitignore test
 cd ..
 zip -r ../"$out-win32.zip" "$out-win32"
 cd ..
