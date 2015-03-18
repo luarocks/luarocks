@@ -256,22 +256,23 @@ detect_lua_version() {
 }
 
 search_interpreter() {
-   LUA_SUFFIX="$1"
+   suffix="$1"
    if [ "$LUA_BINDIR_SET" = "yes" ]
    then
       find_lua="$LUA_BINDIR"
    elif [ "$LUA_DIR_SET" = "yes" ]
    then
-      if [ -f "$LUA_DIR/bin/lua$LUA_SUFFIX" ]
+      if [ -f "$LUA_DIR/bin/lua$suffix" ]
       then
          find_lua="$LUA_DIR/bin"
       fi
    else
-      find_lua=`find_program lua$LUA_SUFFIX`
+      find_lua=`find_program lua$suffix`
    fi
-   if [ -n "$find_lua" -a -x "$find_lua/lua$LUA_SUFFIX" ]
+   if [ -n "$find_lua" -a -x "$find_lua/lua$suffix" ]
    then
-      echo "Lua interpreter found: $find_lua/lua$LUA_SUFFIX..."
+      echo "Lua interpreter found: $find_lua/lua$suffix..."
+      LUA_SUFFIX=$suffix
       detect_lua_version "$find_lua/lua$LUA_SUFFIX"
       return 0
    fi
@@ -292,9 +293,13 @@ then
    else
       suffixes="5.3 53 -5.3 -53 5.2 52 -5.2 -52 5.1 51 -5.1 -51"
    fi
+   lua_interp_found=no
    for suffix in "" `echo $suffixes`
    do
-      search_interpreter "$suffix" && break
+      search_interpreter "$suffix" && {
+         lua_interp_found=yes
+         break
+      }
    done
 fi
 
@@ -313,7 +318,7 @@ then
       echo "lua$LUA_SUFFIX found in \$PATH: $find_lua"
    else
       echo "lua$LUA_SUFFIX not found in \$PATH."
-      die "You may want to use the flags --with-lua and/or --lua-suffix. See --help."
+      die "You may want to use the flags --with-lua, --with-lua-bin and/or --lua-suffix. See --help."
    fi
 fi
 
@@ -330,6 +335,18 @@ fi
 if [ "$LUA_DIR_SET" = "yes" -a "$LUA_BINDIR_SET" != "yes" ]
 then
    LUA_BINDIR="$LUA_DIR/bin"
+fi
+
+if [ "$lua_interp_found" != "yes" ]
+then
+   echo_n "Checking Lua interpreter... "
+   if [ -x "$LUA_BINDIR/lua$LUA_SUFFIX" ]
+   then
+      echo "lua$LUA_SUFFIX found in $LUA_BINDIR"
+   else
+      echo "lua$LUA_SUFFIX not found (looked in $LUA_BINDIR)"
+      die "You may want to use the flag --with-lua or --with-lua-bin. See --help."
+   fi
 fi
 
 echo_n "Checking Lua includes... "
