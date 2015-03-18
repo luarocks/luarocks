@@ -146,9 +146,5 @@ install: install_bins install_luas install_site_config write_sysconfig
 bootstrap: src/luarocks/site_config.lua install_site_config write_sysconfig cleanup_bins
 	'$(LUA_BINDIR)/lua$(LUA_SUFFIX)' -e "package.path=[[$(SAFEPWD)/src/?.lua;]]..package.path" src/bin/luarocks make rockspec --tree="$(PREFIX)"
 
-copy_site_config:
-	luaver="$(LUA_VERSION)" && [ -n "$$luaver" ] || luaver=`$(LUA) -e 'print(_VERSION:sub(5))'`; \
-	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"; \
-	cp $(LUAROCKS_PREFIX)/share/lua/$$luaver/luarocks/site_config.lua "$(DESTDIR)$(LUADIR)/luarocks"
+install_rock: install_bins install_luas
 
-install_rock: install_bins install_luas copy_site_config
