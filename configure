@@ -292,7 +292,7 @@ then
    else
       suffixes="5.3 53 -5.3 -53 5.2 52 -5.2 -52 5.1 51 -5.1 -51"
    fi
-   for suffix in `echo $suffixes` ""
+   for suffix in "" `echo $suffixes`
    do
       search_interpreter "$suffix" && break
    done
