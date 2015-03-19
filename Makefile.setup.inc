@@ -15,5 +15,6 @@ manif_core.lua fetch.lua unpack.lua validate.lua cfg.lua download.lua \
 help.lua util.lua index.lua cache.lua refresh_cache.lua loader.lua \
 admin_remove.lua fetch/hg.lua fetch/git_file.lua new_version.lua lint.lua \
 purge.lua path.lua path_cmd.lua write_rockspec.lua doc.lua upload.lua \
-upload/api.lua upload/multipart.lua fetch/git_http.lua
+upload/api.lua upload/multipart.lua fetch/git_http.lua fetch/hg_http.lua \
+fetch/hg_https.lua fetch/hg_ssh.lua
 
