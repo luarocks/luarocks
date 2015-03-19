@@ -1,7 +1,5 @@
 
 include config.unix
-include Makefile.setup.inc
-include Makefile.install.inc
 
 .PHONY: all build dev build_bins luadoc check_makefile cleanup_bins clean \
  install_site_config write_sysconfig install bootstrap install_rock
@@ -21,6 +19,9 @@ all:
 	@echo "- Type 'make bootstrap':"
 	@echo "  to install LuaRocks in $(PREFIX) as a rock."
 	@echo
+
+include Makefile.setup.inc
+include Makefile.install.inc
 
 build: src/luarocks/site_config.lua build_bins
 	@echo
