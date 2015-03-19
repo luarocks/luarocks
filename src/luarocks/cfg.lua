@@ -158,17 +158,25 @@ if (not sys_config_ok) and errcode ~= "open" then
    os.exit(cfg.errorcodes.CONFIGFILE)
 end
 
+local env_for_config_file = {
+   home = cfg.home,
+   lua_version = cfg.lua_version,
+   platform = util.make_shallow_copy(detected),
+   processor = proc,
+}
+
 if not site_config.LUAROCKS_FORCE_CONFIG then
+
    local home_overrides, err, errcode
    home_config_file = os.getenv("LUAROCKS_CONFIG_" .. version_suffix) or os.getenv("LUAROCKS_CONFIG")
    if home_config_file then
-      home_overrides, err, errcode = persist.load_into_table(home_config_file, { home = cfg.home, lua_version = cfg.lua_version })
+      home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file)
    else
       home_config_file = home_config_dir.."/config-"..cfg.lua_version..".lua"
-      home_overrides, err, errcode = persist.load_into_table(home_config_file, { home = cfg.home, lua_version = cfg.lua_version })
+      home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file)
       if (not home_overrides) and (not errcode == "run") then
          home_config_file = home_config_dir.."/config.lua"
-         home_overrides, err, errcode = persist.load_into_table(home_config_file, { home = cfg.home, lua_version = cfg.lua_version })
+         home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file)
       end
    end
    if home_overrides then
@@ -447,7 +455,7 @@ if detected.macosx then
    if version >= 10 then
       version = 8
    elseif version >= 5 then
-	  version = 5
+      version = 5
    else
       defaults.gcc_rpath = false
    end

@@ -177,7 +177,7 @@ local var_format_pattern = "%$%((%a[%a%d_]+)%)"
 -- the original table (ie, does not copy recursively).
 -- @param tbl table: the input table
 -- @return table: a new table with the same contents.
-local function make_shallow_copy(tbl)
+function util.make_shallow_copy(tbl)
    local copy = {}
    for k,v in pairs(tbl) do
       copy[k] = v
@@ -196,7 +196,7 @@ end
 -- needed variables.
 -- @param msg string: the warning message to display.
 function util.warn_if_not_used(var_defs, needed_set, msg)
-   needed_set = make_shallow_copy(needed_set)
+   needed_set = util.make_shallow_copy(needed_set)
    for _, val in pairs(var_defs) do
       for used in val:gmatch(var_format_pattern) do
          needed_set[used] = nil
