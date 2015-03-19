@@ -139,7 +139,7 @@ else
    cfg.home = os.getenv("HOME") or ""
    sys_config_dir = sys_config_dir or "/etc/luarocks"
    home_config_dir = cfg.home.."/.luarocks"
-   cfg.home_tree = cfg.home.."/.luarocks/"
+   cfg.home_tree = (os.getenv("USER") ~= "root") and cfg.home.."/.luarocks/"
 end
 
 cfg.variables = {}

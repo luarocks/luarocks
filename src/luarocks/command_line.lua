@@ -153,6 +153,11 @@ function command_line.run_command(...)
          replace_tree(flags, args, root_dir)
       end
    elseif flags["local"] then
+      if not cfg.home_tree then
+         die("The --local flag is meant for operating in a user's home directory.\n"..
+             "You are running as a superuser, which is intended for system-wide operation.\n"..
+             "To force using the superuser's home, use --tree explicitly.")
+      end
       replace_tree(flags, args, cfg.home_tree)
    else
       local trees = cfg.rocks_trees
