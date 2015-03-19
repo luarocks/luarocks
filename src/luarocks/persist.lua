@@ -9,8 +9,14 @@ package.loaded["luarocks.persist"] = persist
 
 local util = require("luarocks.util")
 
+--- Load and run a Lua file in an environment.
+-- @param filename string: the name of the file.
+-- @param env table: the environment table.
+-- @return (true, any) or (nil, string, string): true and the return value
+-- of the file, or nil, an error message and an error code ("open", "load"
+-- or "run") in case of errors.
 local function run_file(filename, env)
-   local fd, err, errno = io.open(filename)
+   local fd, err = io.open(filename)
    if not fd then
       return nil, err, "open"
    end
@@ -28,7 +34,7 @@ local function run_file(filename, env)
          ran, err = pcall(chunk)
       end
    else -- Lua 5.2
-      chunk, err = loadfile(filename, "t", env)
+      chunk, err = load(str, filename, "t", env)
       if chunk then
          ran, err = pcall(chunk)
       end
@@ -47,9 +53,10 @@ end
 -- @param filename string: the name of the file.
 -- @param tbl table or nil: if given, this table is used to store
 -- loaded values.
--- @return table or (nil, string, string): a table with the file's assignments
--- as fields, or nil, an error message and an error code ("load" or "run")
--- in case of errors.
+-- @return (table, table) or (nil, string, string): a table with the file's
+-- assignments as fields and set of undefined globals accessed in file,
+-- or nil, an error message and an error code ("open", "load" or "run") in
+-- case of errors.
 function persist.load_into_table(filename, tbl)
    assert(type(filename) == "string")
    assert(type(tbl) == "table" or not tbl)
@@ -57,9 +64,8 @@ function persist.load_into_table(filename, tbl)
    local result = tbl or {}
    local globals = {}
    local globals_mt = {
-      __index = function(t, n)
-         globals[n] = true
-         return rawget(t, n)
+      __index = function(t, k)
+         globals[k] = true
       end
    }
    local save_mt = getmetatable(result)
