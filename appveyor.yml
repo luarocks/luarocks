@@ -1,0 +1,50 @@
+version: 2.2.1.{build}-test
+
+os:
+- Windows Server 2012 R2
+
+shallow_clone: true
+
+environment:
+  LUAURL: http://www.lua.org/ftp
+  LUAROCKS_REPO: http://rocks.moonscript.org
+  #LUA_VER: 5.3.0
+  #LUA_SHORTV: 5.3
+
+  matrix:
+  - LUA_VER: 5.3.0
+    LUA_SHORTV: 5.3
+
+  - LUA_VER: 5.2.4
+    LUA_SHORTV: 5.2
+
+  - LUA_VER: 5.1.5
+    LUA_SHORTV: 5.1
+
+init:
+- appveyor DownloadFile %LUAURL%/lua-%LUA_VER%.tar.gz
+- 7z x lua-%LUA_VER%.tar.gz
+- 7z x lua-%LUA_VER%.tar
+- cd lua-%LUA_VER%
+- appveyor DownloadFile https://github.com/Tieske/luawinmake/archive/master.zip
+- 7z x master.zip
+- if not exist etc mkdir etc
+- mv luawinmake-master\etc\winmake.bat %APPVEYOR_BUILD_FOLDER%\lua-%LUA_VER%\etc\winmake.bat
+- '"C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86'
+- etc\winmake.bat
+- etc\winmake.bat install c:\lua%LUA_VER%
+- cd %APPVEYOR_BUILD_FOLDER%
+
+build_script:
+- install.bat /LUA c:\lua%LUA_VER% /Q /LV %LUA_SHORTV%
+- set PATH=%PATH%;C:\Program Files (x86)\LuaRocks\2.2
+- set LUA_PATH="C:\Program Files (x86)\LuaRocks\2.2\lua\?.lua;C:\Program Files (x86)\LuaRocks\2.2\lua\?\init.lua;C:\Program Files (x86)\LuaRocks\systree\share\lua\%LUA_SHORTV%\?.lua;C:\Program Files (x86)\LuaRocks\systree\share\lua\%LUA_SHORTV%\?\init.lua"
+- set LUA_CPATH="C:\Program Files (x86)\LuaRocks\systree\lib\lua\%LUA_SHORTV%\?.dll"
+- luarocks
+- cd test
+# split this to a different file
+# test_version
+- luarocks --version
+# test_build_command
+- appveyor DownloadFile %LUAROCKS_REPO%/stdlib-41.0.0-1.src.rock
+- luarocks build stdlib
