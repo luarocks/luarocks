@@ -346,6 +346,8 @@ fail_lint_invalid() { $luarocks lint invalid; }
 fail_show_invalid() { $luarocks show invalid; }
 fail_new_version_invalid() { $luarocks new_version invalid; }
 
+fail_inexistent_dir() { mkdir idontexist; cd idontexist; rmdir ../idontexist; $luarocks; err=$?; cd ..; return $err; }
+
 fail_make_norockspec() { $luarocks make; }
 
 fail_build_blank_arg() { $luarocks build --tree="" lpeg; }

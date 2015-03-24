@@ -10,6 +10,7 @@ local cfg = require("luarocks.cfg")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
+local fs = require("luarocks.fs")
 
 local program = util.this_program("luarocks")
 
@@ -79,7 +80,6 @@ function command_line.run_command(...)
    
    if flags["verbose"] then   -- setting it in the config file will kick-in earlier in the process
       cfg.verbose = true
-      local fs = require("luarocks.fs")
       fs.verbose()
    end
 
@@ -200,6 +200,10 @@ function command_line.run_command(...)
       for k, v in pairs(cmdline_vars) do
          cfg.variables[k] = v
       end
+   end
+   
+   if not fs.exists(".") then
+      die("Current directory does not exist. Please run LuaRocks from an existing directory.")
    end
    
    if commands[command] then

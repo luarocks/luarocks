@@ -39,7 +39,7 @@ end
 function tools.current_dir()
    local current = cfg.cache_pwd
    if not current then
-      local pipe = io.popen(fs.Q(vars.PWD))
+      local pipe = io.popen(fs.Q(vars.PWD).. " 2> NUL")
       current = pipe:read("*l")
       pipe:close()
       cfg.cache_pwd = current
@@ -56,7 +56,9 @@ end
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
 function tools.execute_string(cmd)
-   cmd = command_at(fs.current_dir(), cmd)
+   local current = fs.current_dir()
+   if not current then return false end
+   cmd = command_at(current, cmd)
    local code = os.execute(cmd)
    if code == 0 or code == true then
       return true
