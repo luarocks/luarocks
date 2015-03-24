@@ -21,7 +21,7 @@ Without any flags, tries to load the documentation
 using a series of heuristics.
 With these flags, return only the desired information:
 
---homepage  Open the home page of project.
+--home      Open the home page of project.
 --list      List documentation files only.
 
 For more information about a rock, see the 'show' command.
@@ -75,7 +75,7 @@ function doc.run(...)
    if not rockspec then return nil,err end
    local descript = rockspec.description or {}
 
-   if flags["homepage"] then
+   if flags["home"] then
       return show_homepage(descript.homepage, name, version)
    end
 

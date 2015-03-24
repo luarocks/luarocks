@@ -417,6 +417,7 @@ test_search_missing() { $luarocks search missing_rock; }
 
 test_show() { $luarocks show luacov; }
 test_show_modules() { $luarocks show --modules luacov; }
+test_show_home() { $luarocks show --home luacov; }
 test_show_depends() { need_luasocket; $luarocks install $luasec && $luarocks show luasec; }
 test_show_oldversion() { $luarocks install luacov ${version_luacov} && $luarocks show luacov ${version_luacov}; }
 
