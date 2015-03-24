@@ -83,18 +83,20 @@ local function detect_description(rockspec)
    fd:close()
    local paragraph = data:match("\n\n([^%[].-)\n\n")
    if not paragraph then paragraph = data:match("\n\n(.*)") end
+   local summary, detailed
    if paragraph then
       if #paragraph < 80 then
-         rockspec.description.summary = paragraph:gsub("\n", "")
-         rockspec.description.detailed = paragraph
+         summary = paragraph:gsub("\n", "")
+         detailed = paragraph
       else
-         local summary = paragraph:gsub("\n", " "):match("([^.]*%.) ")
+         local found_summary = paragraph:gsub("\n", " "):match("([^.]*%.) ")
          if summary then
-            rockspec.description.summary = summary:gsub("\n", "")
+            summary = found_summary:gsub("\n", "")
          end
-         rockspec.description.detailed = paragraph
+         detailed = paragraph
       end
    end
+   return summary, detailed
 end
 
 local function detect_mit_license(data)
@@ -312,7 +314,11 @@ function write_rockspec.run(...)
    local ok, err = fs.change_dir(local_dir)
    if not ok then return nil, "Failed reaching files from project - error entering directory "..local_dir end
 
-   detect_description(rockspec)
+   if (not flags["summary"]) or (not flags["detailed"]) then
+      local summary, detailed = detect_description(rockspec)
+      rockspec.description.summary = flags["summary"] or summary
+      rockspec.description.detailed = flags["detailed"] or detailed
+   end
 
    local is_mit = show_license(rockspec)
    
