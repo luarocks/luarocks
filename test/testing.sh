@@ -319,9 +319,13 @@ need_luasocket() { need luasocket $verrev_luasocket; }
 
 test_version() { $luarocks --version; }
 
-fail_arg_server() { $luarocks --server; }
-fail_arg_only_server() { $luarocks --only-server; }
 fail_unknown_command() { $luarocks unknown_command; }
+
+fail_arg_boolean_parameter() { $luarocks --porcelain=invalid; }
+fail_arg_boolean_unknown() { $luarocks --invalid-flag; }
+fail_arg_string_no_parameter() { $luarocks --server; }
+fail_arg_string_followed_by_flag() { $luarocks --server --porcelain; }
+fail_arg_string_unknown() { $luarocks --invalid-flag=abc; }
 
 test_empty_list() { $luarocks list; }
 

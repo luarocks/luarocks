@@ -64,6 +64,9 @@ function command_line.run_command(...)
    end
    local nonflags = { util.parse_flags(unpack(args)) }
    local flags = table.remove(nonflags, 1)
+   if flags.ERROR then
+      die(flags.ERROR.." See --help.")
+   end
    
    if flags["from"] then flags["server"] = flags["from"] end
    if flags["only-from"] then flags["only-server"] = flags["only-from"] end
@@ -126,16 +129,10 @@ function command_line.run_command(...)
    end
    
    if flags["branch"] then
-     if flags["branch"] == true or flags["branch"] == "" then
-       die("Argument error: use --branch=<branch-name>")
-     end
      cfg.branch = flags["branch"]
    end
    
    if flags["tree"] then
-      if flags["tree"] == true or flags["tree"] == "" then
-         die("Argument error: use --tree=<path>")
-      end
       local named = false
       for _, tree in ipairs(cfg.rocks_trees) do
          if type(tree) == "table" and flags["tree"] == tree.name then
@@ -178,17 +175,11 @@ function command_line.run_command(...)
    cfg.variables.SCRIPTS_DIR = cfg.deploy_bin_dir
 
    if flags["server"] then
-      if flags["server"] == true then
-         die("Argument error: use --server=<url>")
-      end
       local protocol, path = dir.split_url(flags["server"])
       table.insert(cfg.rocks_servers, 1, protocol.."://"..path)
    end
    
    if flags["only-server"] then
-      if flags["only-server"] == true then
-         die("Argument error: use --only-server=<url>")
-      end
       cfg.rocks_servers = { flags["only-server"] }
    end
 

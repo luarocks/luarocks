@@ -209,10 +209,6 @@ function write_rockspec.run(...)
    elseif not url_or_dir then
       url_or_dir = version
    end
-
-   if flags["tag"] == true then
-      return nil, "Incorrect usage: --tag requires an argument. "..util.see_help("write_rockspec")
-   end
    
    if flags["tag"] then
       if not version then

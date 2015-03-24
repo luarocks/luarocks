@@ -63,6 +63,63 @@ function util.matchquote(s)
    return (s:gsub("[?%-+*%[%].%%()$^]","%%%1"))
 end
 
+local supported_flags = {
+   ["all"] = true,
+   ["api-key"] = "<key>",
+   ["append"] = true,
+   ["arch"] = "<arch>",
+   ["bin"] = true,
+   ["binary"] = true,
+   ["branch"] = "<branch-name>",
+   ["debug"] = true,
+   ["deps"] = true,
+   ["deps-mode"] = "<mode>",
+   ["detailed"] = "\"<text>\"",
+   ["extensions"] = true,
+   ["force"] = true,
+   ["from"] = "<server>",
+   ["help"] = true,
+   ["home"] = true,
+   ["homepage"] = true,
+   ["keep"] = true,
+   ["lib"] = true,
+   ["license"] = "\"<text>\"",
+   ["list"] = true,
+   ["local"] = true,
+   ["local-tree"] = true,
+   ["lr-bin"] = true,
+   ["lr-cpath"] = true,
+   ["lr-path"] = true,
+   ["lua-version"] = "<vers>",
+   ["modules"] = true,
+   ["mversion"] = true,
+   ["no-refresh"] = true,
+   ["nodeps"] = true,
+   ["old-versions"] = true,
+   ["only-from"] = "<server>",
+   ["only-server"] = "<server>",
+   ["only-sources"] = "<url>",
+   ["only-sources-from"] = "<url>",
+   ["outdated"] = true,
+   ["output"] = "<file>",
+   ["pack-binary-rock"] = true,
+   ["porcelain"] = true,
+   ["quick"] = true,
+   ["rock-dir"] = true,
+   ["rock-tree"] = true,
+   ["rockspec"] = true,
+   ["server"] = "<server>",
+   ["skip-pack"] = true,
+   ["source"] = true,
+   ["summary"] = "\"<text>\"",
+   ["tag"] = "<tag>",
+   ["timeout"] = "<seconds>",
+   ["to"] = "<path>",
+   ["tree"] = "<path>",
+   ["verbose"] = true,
+   ["version"] = true,
+}
+
 --- Extract flags from an arguments list.
 -- Given string arguments, extract flag arguments into a flags set.
 -- For example, given "foo", "--tux=beep", "--bla", "bar", "--baz",
@@ -71,19 +128,53 @@ end
 function util.parse_flags(...)
    local args = {...}
    local flags = {}
-   for i = #args, 1, -1 do
+   local i = 1
+   local out = {}
+   local ignore_flags = false
+   while i <= #args do
       local flag = args[i]:match("^%-%-(.*)")
-      if flag then
+      if flag == "--" then
+         ignore_flags = true
+      end
+      if flag and not ignore_flags then
          local var,val = flag:match("([a-z_%-]*)=(.*)")
          if val then
-            flags[var] = val
+            local vartype = supported_flags[var]
+            if type(vartype) == "string" then
+               flags[var] = val
+            else
+               if vartype then
+                  return { ERROR = "Invalid argument: flag --"..var.." does not take an parameter." }
+               else
+                  return { ERROR = "Invalid argument: unknown flag --"..var.."." }
+               end
+            end
          else
-            flags[flag] = true
+            local var = flag
+            local vartype = supported_flags[var]
+            if type(vartype) == "string" then
+               i = i + 1
+               local val = args[i]
+               if not val then
+                  return { ERROR = "Invalid argument: flag --"..var.."="..vartype.." expects a parameter." }
+               end
+               if val:match("^%-%-.*") then
+                  return { ERROR = "Invalid argument: flag --"..var.."="..vartype.." expects a parameter (if you really want to pass "..val.." as an argument to --"..var..", use --"..var.."="..val..")." }
+               else
+                  flags[var] = val
+               end
+            elseif vartype == true then
+               flags[var] = true
+            else
+               return { ERROR = "Invalid argument: unknown flag --"..var.."." }
+            end
          end
-         table.remove(args, i)
+      else
+         table.insert(out, args[i])
       end
+      i = i + 1
    end
-   return flags, unpack(args)
+   return flags, unpack(out)
 end
 
 --- Build a sequence of flags for forwarding from one command to
