@@ -63,6 +63,12 @@ function util.matchquote(s)
    return (s:gsub("[?%-+*%[%].%%()$^]","%%%1"))
 end
 
+--- List of supported arguments.
+-- Arguments that take no parameters are marked with the boolean true.
+-- Arguments that take a parameter are marked with a descriptive string.
+-- Arguments that may take an empty string are described in quotes,
+-- (as in the value for --detailed="<text>").
+-- For all other string values, it means the parameter is mandatory.
 local supported_flags = {
    ["all"] = true,
    ["api-key"] = "<key>",
@@ -80,7 +86,7 @@ local supported_flags = {
    ["from"] = "<server>",
    ["help"] = true,
    ["home"] = true,
-   ["homepage"] = "<url>",
+   ["homepage"] = "\"<url>\"",
    ["keep"] = true,
    ["lib"] = "<library>",
    ["license"] = "\"<text>\"",
@@ -141,6 +147,9 @@ function util.parse_flags(...)
          if val then
             local vartype = supported_flags[var]
             if type(vartype) == "string" then
+               if val == "" and vartype:sub(1,1) ~= '"' then
+                  return { ERROR = "Invalid argument: parameter to flag --"..var.."="..vartype.." cannot be empty." }
+               end
                flags[var] = val
             else
                if vartype then
@@ -161,6 +170,9 @@ function util.parse_flags(...)
                if val:match("^%-%-.*") then
                   return { ERROR = "Invalid argument: flag --"..var.."="..vartype.." expects a parameter (if you really want to pass "..val.." as an argument to --"..var..", use --"..var.."="..val..")." }
                else
+                  if val == "" and vartype:sub(1,1) ~= '"' then
+                     return { ERROR = "Invalid argument: parameter to flag --"..var.."="..vartype.." cannot be empty." }
+                  end
                   flags[var] = val
                end
             elseif vartype == true then
