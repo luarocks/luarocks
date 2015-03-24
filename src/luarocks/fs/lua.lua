@@ -207,8 +207,13 @@ end
 -- Allows leaving a directory (e.g. for deleting it) in
 -- a crossplatform way.
 function fs_lua.change_dir_to_root()
-   table.insert(dir_stack, lfs.currentdir())
+   local current = lfs.currentdir()
+   if not current then
+      return false
+   end
+   table.insert(dir_stack, current)
    lfs.chdir("/") -- works on Windows too
+   return true
 end
 
 --- Change working directory to the previous in the dir stack.

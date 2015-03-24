@@ -192,8 +192,8 @@ function command_line.run_command(...)
          cfg.variables[k] = v
       end
    end
-   
-   if not fs.exists(".") then
+
+   if not fs.current_dir() then
       die("Current directory does not exist. Please run LuaRocks from an existing directory.")
    end
    
