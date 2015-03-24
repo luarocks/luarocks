@@ -193,7 +193,7 @@ function command_line.run_command(...)
       end
    end
 
-   if not fs.current_dir() then
+   if not fs.current_dir() or fs.current_dir() == "" then
       die("Current directory does not exist. Please run LuaRocks from an existing directory.")
    end
    
