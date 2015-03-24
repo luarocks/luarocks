@@ -208,7 +208,7 @@ end
 -- a crossplatform way.
 function fs_lua.change_dir_to_root()
    local current = lfs.currentdir()
-   if not current then
+   if not current or current == "" then
       return false
    end
    table.insert(dir_stack, current)
