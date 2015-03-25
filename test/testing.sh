@@ -180,6 +180,8 @@ version_lxsh=0.8.6
 version_validate_args=1.5.4
 verrev_validate_args=1.5.4-1
 verrev_lxsh=${version_lxsh}-2
+version_abelhas=1.0
+verrev_abelhas=${version_abelhas}-1
 
 luasec=luasec
 
@@ -237,7 +239,7 @@ mkdir -p "$testing_server"
    get "$luarocks_repo/cprint-${verrev_cprint}.rockspec"
    get "$luarocks_repo/wsapi-1.6-1.src.rock"
    get "$luarocks_repo/lxsh-${verrev_lxsh}.src.rock"
-   get "$luarocks_repo/abelhas-1.0-1.rockspec"
+   get "$luarocks_repo/abelhas-${verrev_abelhas}.rockspec"
    get "$luarocks_repo/lzlib-0.4.1.53-1.src.rock"
    get "$luarocks_repo/lpeg-0.12-1.src.rock"
    get "$luarocks_repo/luaposix-33.2.1-1.src.rock"
@@ -407,7 +409,7 @@ test_path_lr_bin() { $luarocks path --lr-bin; }
 fail_purge_missing_tree() { $luarocks purge --tree="$testing_tree"; }
 test_purge() { $luarocks purge --tree="$testing_sys_tree"; }
 
-test_remove() { $luarocks build luacov ${version_luacov} && $luarocks remove luacov ${version_luacov}; }
+test_remove() { $luarocks build abelhas ${version_abelhas} && $luarocks remove abelhas ${version_abelhas}; }
 test_remove_force() { need_luasocket; $luarocks build lualogging && $luarocks remove --force luasocket; }
 fail_remove_deps() { need_luasocket; $luarocks build lualogging && $luarocks remove luasocket; }
 fail_remove_missing() { $luarocks remove missing_rock; }
@@ -511,9 +513,8 @@ run_with_full_environment() {
    
    local bitop=
    [ "$luaversion" = "5.1.5" ] && bitop=luabitop
-   [ "$travis" ] && luacov_coveralls=luacov-coveralls
    
-   build_environment luacov $luacov_coveralls luafilesystem luasocket $bitop luaposix md5 lzlib
+   build_environment luacov luafilesystem luasocket $bitop luaposix md5 lzlib
    run_tests $1
 }
 
@@ -529,6 +530,7 @@ $testing_sys_tree/bin/luacov -c $testing_dir/luacov.config src/luarocks src/bin
 
 if [ "$travis" ]
 then
+   build_environment luacov luacov-coveralls
    $testing_sys_tree/bin/luacov-coveralls
    grep "Summary" -B1 -A1000 $testing_dir/luacov.report.out
 else
