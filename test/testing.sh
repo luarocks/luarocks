@@ -40,7 +40,6 @@ testing_sys_tree_copy="$testing_dir/testing_sys_copy-$luaversion"
 testing_cache="$testing_dir/testing_cache-$luaversion"
 testing_server="$testing_dir/testing_server-$luaversion"
 
-
 if [ "$1" == "--clean" ]
 then
    shift
@@ -248,7 +247,9 @@ mkdir -p "$testing_server"
    get "$luarocks_repo/lmathx-20120430.51-1.rockspec"
    get "$luarocks_repo/lmathx-20120430.52-1.rockspec"
    get "$luarocks_repo/lmathx-20140620-1.rockspec"
-   get "$luarocks_repo/lmathx-20140620-1.rockspec"
+   get "$luarocks_repo/lua-path-0.2.3-1.rockspec"
+   get "$luarocks_repo/lua-cjson-2.1.0-1.rockspec"
+   get "$luarocks_repo/luacov-coveralls-0.1.1-1.rockspec"
 )
 $luarocks_admin_nocov make_manifest "$testing_server"
 
@@ -510,8 +511,9 @@ run_with_full_environment() {
    
    local bitop=
    [ "$luaversion" = "5.1.5" ] && bitop=luabitop
+   [ "$travis" ] && luacov_coveralls=luacov-coveralls
    
-   build_environment luacov luafilesystem luasocket $bitop luaposix md5 lzlib
+   build_environment luacov $luacov_coveralls luafilesystem luasocket $bitop luaposix md5 lzlib
    run_tests $1
 }
 
@@ -527,6 +529,7 @@ $testing_sys_tree/bin/luacov -c $testing_dir/luacov.config src/luarocks src/bin
 
 if [ "$travis" ]
 then
+   $testing_sys_tree/bin/luacov-coveralls
    grep "Summary" -B1 -A1000 $testing_dir/luacov.report.out
 else
    cat "$testing_dir/luacov.report.out"
