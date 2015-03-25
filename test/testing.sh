@@ -531,9 +531,8 @@ $testing_sys_tree/bin/luacov -c $testing_dir/luacov.config src/luarocks src/bin
 if [ "$travis" ]
 then
    build_environment luacov luacov-coveralls
-   ( cd $testing_dir; $testing_sys_tree/bin/luacov-coveralls )
+   ( cd $testing_dir; $testing_sys_tree/bin/luacov-coveralls || exit 0 )
    grep "Summary" -B1 -A1000 $testing_dir/luacov.report.out
 else
    cat "$testing_dir/luacov.report.out"
 fi
-
