@@ -78,7 +78,7 @@ rocks_servers = {
 }
 local_cache = "$testing_cache"
 upload_server = "testing"
-upload_user = "hisham"
+upload_user = "$USER"
 upload_servers = {
    testing = {
       rsync = "localhost/tmp/luarocks_testing",
@@ -108,7 +108,7 @@ rocks_trees = {
 }
 local_cache = "$testing_cache"
 upload_server = "testing"
-upload_user = "hisham"
+upload_user = "$USER"
 upload_servers = {
    testing = {
       sftp = "localhost/tmp/luarocks_testing",
@@ -154,6 +154,10 @@ then
       make install INSTALL_TOP="$luadir" &> /dev/null
    fi
    popd
+   [ -e ~/.ssh/id_rsa.pub ] || ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
+   cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+   chmod og-wx ~/.ssh/authorized_keys
+   ssh-keyscan localhost >> ~/.ssh/known_hosts
 else
    luadir="/Programs/Lua/Current"
 fi
@@ -439,19 +443,21 @@ test_unpack_src() { rm -rf ./cprint-${verrev_cprint} && $luarocks download --sou
 test_unpack_rockspec() { rm -rf ./cprint-${verrev_cprint} && $luarocks download --rockspec cprint && $luarocks unpack ./cprint-${verrev_cprint}.rockspec && rm -rf ./cprint-${verrev_cprint}; }
 test_unpack_binary() { rm -rf ./cprint-${verrev_cprint} && $luarocks build cprint && $luarocks pack cprint && $luarocks unpack ./cprint-${verrev_cprint}.${platform}.rock && rm -rf ./cprint-${verrev_cprint}; }
 fail_unpack_invalidpatch() { need_luasocket; $luarocks unpack "$testing_dir/testfiles/invalid_patch-0.1-1.rockspec"; }
+fail_unpack_invalidrockspec() { need_luasocket; $luarocks unpack "invalid.rockspec"; }
 
 fail_upload_invalidrockspec() { $luarocks upload "invalid.rockspec"; }
+fail_upload_invalidkey() { $luarocks upload --api-key="invalid" "invalid.rockspec"; }
 
 test_admin_help() { $luarocks_admin help; }
 
 test_admin_make_manifest() { $luarocks_admin make_manifest; }
-test_admin_add_rsync() { if [ "$travis" ]; then return; fi; $luarocks_admin --server=testing add "$testing_server/luasocket-${verrev_luasocket}.src.rock"; }
-test_admin_add_sftp() { if [ "$travis" ]; then return; fi; export LUAROCKS_CONFIG="$testing_dir/testing_config_sftp.lua" && $luarocks_admin --server=testing add ./luasocket-${verrev_luasocket}.src.rock; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
+test_admin_add_rsync() { $luarocks_admin --server=testing add "$testing_server/luasocket-${verrev_luasocket}.src.rock"; }
+test_admin_add_sftp() { export LUAROCKS_CONFIG="$testing_dir/testing_config_sftp.lua" && $luarocks_admin --server=testing add ./luasocket-${verrev_luasocket}.src.rock; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
 fail_admin_add_missing() { $luarocks_admin --server=testing add; }
 fail_admin_invalidserver() { $luarocks_admin --server=invalid add "$testing_server/luasocket-${verrev_luasocket}.src.rock"; }
-fail_admin_invalidrock() { if [ "$travis" ]; then return 1; fi; $luarocks_admin --server=testing add invalid; }
-test_admin_refresh_cache() { if [ "$travis" ]; then return; fi; $luarocks_admin --server=testing refresh_cache; }
-test_admin_remove() { if [ "$travis" ]; then return; fi; $luarocks_admin --server=testing remove luasocket-${verrev_luasocket}.src.rock; }
+fail_admin_invalidrock() { $luarocks_admin --server=testing add invalid; }
+test_admin_refresh_cache() { $luarocks_admin --server=testing refresh_cache; }
+test_admin_remove() { $luarocks_admin --server=testing remove luasocket-${verrev_luasocket}.src.rock; }
 fail_admin_remove_missing() { $luarocks_admin --server=testing remove; }
 
 fail_deps_mode_invalid_arg() { $luarocks remove luacov --deps-mode; }
