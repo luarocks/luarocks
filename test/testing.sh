@@ -360,6 +360,10 @@ fail_inexistent_dir() { mkdir idontexist; cd idontexist; rmdir ../idontexist; $l
 
 fail_make_norockspec() { $luarocks make; }
 
+fail_build_permissions() { $luarocks build --tree=/usr lpeg; }
+fail_build_permissions_parent() { $luarocks build --tree=/usr/invalid lpeg; }
+
+test_build_verbose() { $luarocks build --verbose lpeg; }
 fail_build_blank_arg() { $luarocks build --tree="" lpeg; }
 test_build_withpatch() { need_luasocket; $luarocks build luadoc; }
 test_build_diffversion() { $luarocks build luacov ${version_luacov}; }
@@ -384,6 +388,9 @@ test_install_binaryrock() { $luarocks build --pack-binary-rock cprint && $luaroc
 test_install_with_bin() { $luarocks install wsapi; }
 fail_install_notazipfile() { $luarocks install "$testing_dir/testfiles/not_a_zipfile-1.0-1.src.rock"; }
 fail_install_invalidpatch() { need_luasocket; $luarocks install "$testing_dir/testfiles/invalid_patch-0.1-1.rockspec"; }
+fail_install_invalid_filename() { $luarocks install "invalid.rock"; }
+fail_install_invalid_arch() { $luarocks install "foo-1.0-1.impossible-x86.rock"; }
+test_install_reinstall() { $luarocks install "$testing_cache/luasocket-$verrev_luasocket.$platform.rock"; $luarocks install --deps-mode=none "$testing_cache/luasocket-$verrev_luasocket.$platform.rock"; }
 
 test_lint_ok() { $luarocks download --rockspec validate-args ${verrev_validate_args} && $luarocks lint ./validate-args-${verrev_validate_args}.rockspec && rm ./validate-args-${verrev_validate_args}.rockspec; }
 fail_lint_type_mismatch_string() { $luarocks lint "$testing_dir/testfiles/type_mismatch_string-1.0-1.rockspec"; }
@@ -533,10 +540,9 @@ run_all_tests $1
 
 if [ "$travis" ]
 then
-   build_environment luacov luafilesystem luacov-coveralls
-   echo "( cd $testing_dir && $testing_sys_tree/bin/luacov-coveralls || echo ok )"
    if [ "$TRAVIS" ]
    then
+      build_environment luacov luafilesystem luacov-coveralls
       ( cd $testing_dir; $testing_sys_tree/bin/luacov-coveralls || echo "ok" )
    fi
    $testing_sys_tree/bin/luacov -c $testing_dir/luacov.config src/luarocks src/bin
