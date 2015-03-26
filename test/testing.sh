@@ -160,6 +160,10 @@ then
    ssh-keyscan localhost >> ~/.ssh/known_hosts
 else
    luadir="/Programs/Lua/Current"
+   if [ ! -e "$luadir" ]
+   then
+      luadir="/usr/local"
+   fi
 fi
 
 if [ `uname -m` = i686 ]
@@ -389,12 +393,17 @@ test_help() { $luarocks help; }
 fail_help_invalid() { $luarocks help invalid; }
 
 test_install_binaryrock() { $luarocks build --pack-binary-rock cprint && $luarocks install ./cprint-${verrev_cprint}.${platform}.rock && rm ./cprint-${verrev_cprint}.${platform}.rock; }
+test_install_only_server() { $luarocks install --only-server "$testing_cache" luasocket; }
 test_install_with_bin() { $luarocks install wsapi; }
 fail_install_notazipfile() { $luarocks install "$testing_dir/testfiles/not_a_zipfile-1.0-1.src.rock"; }
 fail_install_invalidpatch() { need_luasocket; $luarocks install "$testing_dir/testfiles/invalid_patch-0.1-1.rockspec"; }
 fail_install_invalid_filename() { $luarocks install "invalid.rock"; }
 fail_install_invalid_arch() { $luarocks install "foo-1.0-1.impossible-x86.rock"; }
 test_install_reinstall() { $luarocks install "$testing_cache/luasocket-$verrev_luasocket.$platform.rock"; $luarocks install --deps-mode=none "$testing_cache/luasocket-$verrev_luasocket.$platform.rock"; }
+
+fail_local_root() { USER=root $luarocks install --local luasocket; }
+
+test_site_config() { mv ../src/luarocks/site_config.lua ../src/luarocks/site_config.lua.tmp; $luarocks; mv ../src/luarocks/site_config.lua.tmp ../src/luarocks/site_config.lua; }
 
 test_lint_ok() { $luarocks download --rockspec validate-args ${verrev_validate_args} && $luarocks lint ./validate-args-${verrev_validate_args}.rockspec && rm ./validate-args-${verrev_validate_args}.rockspec; }
 fail_lint_type_mismatch_string() { $luarocks lint "$testing_dir/testfiles/type_mismatch_string-1.0-1.rockspec"; }
