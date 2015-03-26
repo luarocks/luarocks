@@ -371,6 +371,7 @@ end
 if detected.mingw32 then
    defaults.platforms = { "win32", "mingw32", "windows" }
    defaults.obj_extension = "o"
+   defaults.cmake_generator = "MinGW Makefiles"
    defaults.variables.MAKE = "mingw32-make"
    defaults.variables.CC = "mingw32-gcc"
    defaults.variables.RC = "windres"
@@ -401,6 +402,7 @@ if detected.unix then
    defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR or "/usr/local/include"
    defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR or "/usr/local/lib"
    defaults.variables.CFLAGS = "-O2"
+   defaults.cmake_generator = "Unix Makefiles"
    defaults.platforms = { "unix" }
    defaults.variables.CC = "gcc"
    defaults.variables.LD = "gcc"
@@ -432,6 +434,7 @@ if detected.cygwin then
    defaults.lib_extension = "so" -- can be overridden in the config file for mingw builds
    defaults.arch = "cygwin-"..proc
    defaults.platforms = {"unix", "cygwin"}
+   defaults.cmake_generator = "Unix Makefiles"
    defaults.variables.CC = "echo -llua | xargs gcc"
    defaults.variables.LD = "echo -llua | xargs gcc"
    defaults.variables.LIBFLAG = "-shared"
