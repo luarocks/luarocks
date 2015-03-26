@@ -154,6 +154,9 @@ then
       make install INSTALL_TOP="$luadir" &> /dev/null
    fi
    popd
+   [ -e ~/.ssh/id_rsa.pub ] || ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
+   cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+   chmod og-wx ~/.ssh/authorized_keys
 else
    luadir="/Programs/Lua/Current"
 fi
