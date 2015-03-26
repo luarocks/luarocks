@@ -249,9 +249,9 @@ mkdir -p "$testing_server"
    get "$luarocks_repo/lmathx-20120430.51-1.rockspec"
    get "$luarocks_repo/lmathx-20120430.52-1.rockspec"
    get "$luarocks_repo/lmathx-20140620-1.rockspec"
-   get "$luarocks_repo/lua-path-0.2.3-1.rockspec"
-   get "$luarocks_repo/lua-cjson-2.1.0-1.rockspec"
-   get "$luarocks_repo/luacov-coveralls-0.1.1-1.rockspec"
+   get "$luarocks_repo/lua-path-0.2.3-1.src.rock"
+   get "$luarocks_repo/lua-cjson-2.1.0-1.src.rock"
+   get "$luarocks_repo/luacov-coveralls-0.1.1-1.src.rock"
 )
 $luarocks_admin_nocov make_manifest "$testing_server"
 
@@ -276,6 +276,8 @@ build_environment() {
          $luarocks_nocov pack --tree="$testing_sys_tree" $package; mv $package-*.rock "$testing_cache"
       }
    done
+   export LUA_PATH=
+   export LUA_CPATH=
    eval `$luarocks_noecho_nocov path --bin`
    cp -a "$testing_tree" "$testing_tree_copy"
    cp -a "$testing_sys_tree" "$testing_sys_tree_copy"
@@ -526,13 +528,14 @@ run_all_tests() {
 run_all_tests $1
 #run_with_minimal_environment $1
 
-$testing_sys_tree/bin/luacov -c $testing_dir/luacov.config src/luarocks src/bin
-
 if [ "$travis" ]
 then
-   build_environment luacov luacov-coveralls
-   ( cd $testing_dir; $testing_sys_tree/bin/luacov-coveralls || exit 0 )
+   build_environment luacov luafilesystem luacov-coveralls
+   echo "( cd $testing_dir && $testing_sys_tree/bin/luacov-coveralls || echo ok )"
+   ( cd $testing_dir; $testing_sys_tree/bin/luacov-coveralls || echo "ok" )
+   $testing_sys_tree/bin/luacov -c $testing_dir/luacov.config src/luarocks src/bin
    grep "Summary" -B1 -A1000 $testing_dir/luacov.report.out
 else
+   $testing_sys_tree/bin/luacov -c $testing_dir/luacov.config src/luarocks src/bin
    cat "$testing_dir/luacov.report.out"
 fi
