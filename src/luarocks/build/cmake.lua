@@ -37,6 +37,9 @@ function cmake.run(rockspec)
 
    -- Execute cmake with variables.
    local args = ""
+   if cfg.cmake_generator then
+      args = args .. ' -G"'..cfg.cmake_generator.. '"'
+   end
    for k,v in pairs(variables) do
       args = args .. ' -D' ..k.. '="' ..v.. '"'
    end
