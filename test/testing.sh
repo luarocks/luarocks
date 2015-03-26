@@ -343,6 +343,7 @@ fail_lint_noarg() { $luarocks lint; }
 fail_search_noarg() { $luarocks search; }
 fail_show_noarg() { $luarocks show; }
 fail_unpack_noarg() { $luarocks unpack; }
+fail_upload_noarg() { $luarocks upload; }
 fail_remove_noarg() { $luarocks remove; }
 fail_doc_noarg() { $luarocks doc; }
 fail_new_version_noarg() { $luarocks new_version; }
@@ -431,6 +432,8 @@ test_unpack_src() { rm -rf ./cprint-${verrev_cprint} && $luarocks download --sou
 test_unpack_rockspec() { rm -rf ./cprint-${verrev_cprint} && $luarocks download --rockspec cprint && $luarocks unpack ./cprint-${verrev_cprint}.rockspec && rm -rf ./cprint-${verrev_cprint}; }
 test_unpack_binary() { rm -rf ./cprint-${verrev_cprint} && $luarocks build cprint && $luarocks pack cprint && $luarocks unpack ./cprint-${verrev_cprint}.${platform}.rock && rm -rf ./cprint-${verrev_cprint}; }
 fail_unpack_invalidpatch() { need_luasocket; $luarocks unpack "$testing_dir/testfiles/invalid_patch-0.1-1.rockspec"; }
+
+fail_upload_invalidrockspec() { $luarocks upload "invalid.rockspec"; }
 
 test_admin_help() { $luarocks_admin help; }
 
@@ -532,7 +535,10 @@ if [ "$travis" ]
 then
    build_environment luacov luafilesystem luacov-coveralls
    echo "( cd $testing_dir && $testing_sys_tree/bin/luacov-coveralls || echo ok )"
-   ( cd $testing_dir; $testing_sys_tree/bin/luacov-coveralls || echo "ok" )
+   if [ "$TRAVIS" ]
+   then
+      ( cd $testing_dir; $testing_sys_tree/bin/luacov-coveralls || echo "ok" )
+   fi
    $testing_sys_tree/bin/luacov -c $testing_dir/luacov.config src/luarocks src/bin
    grep "Summary" -B1 -A1000 $testing_dir/luacov.report.out
 else
