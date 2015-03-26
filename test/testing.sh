@@ -393,7 +393,6 @@ test_help() { $luarocks help; }
 fail_help_invalid() { $luarocks help invalid; }
 
 test_install_binaryrock() { $luarocks build --pack-binary-rock cprint && $luarocks install ./cprint-${verrev_cprint}.${platform}.rock && rm ./cprint-${verrev_cprint}.${platform}.rock; }
-test_install_only_server() { need_luasocket; $luarocks install --only-server "$testing_cache" luasocket; }
 test_install_with_bin() { $luarocks install wsapi; }
 fail_install_notazipfile() { $luarocks install "$testing_dir/testfiles/not_a_zipfile-1.0-1.src.rock"; }
 fail_install_invalidpatch() { need_luasocket; $luarocks install "$testing_dir/testfiles/invalid_patch-0.1-1.rockspec"; }
