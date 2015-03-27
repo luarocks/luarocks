@@ -15,6 +15,9 @@ if "%LUA_VER%" NEQ "" (
 	set LUA_SHORTV=5.1
 )
 
+:: unless we specify a platform on appveyor.yaml, we won't get this variable
+if not defined platform set platform=x86
+
 :: defines LUA_DIR so Cmake can find this Lua install
 if "%LUA%"=="luajit" (
 	set LUA_DIR=c:\lua\%platform%\lj%LJ_SHORTV%
