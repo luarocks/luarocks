@@ -1,0 +1,33 @@
+version: 2.2.1.{build}-test
+
+os:
+- Windows Server 2012 R2
+
+shallow_clone: true
+
+environment:
+  LUAROCKS_VER: 2.2.1
+
+  matrix:
+  - LUA_VER: 5.1.5
+  - LUA_VER: 5.2.4
+  - LUA_VER: 5.3.0
+  - LJ_VER: 2.0.3
+  - LJ_VER: 2.1
+
+init:
+# Setup Lua development/build environment
+# Make VS 2013 command line tools available
+- call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" %platform%
+
+install:
+# Setup Lua development/build environment
+- call .appveyor\install.bat
+
+build_script:
+- call .appveyor\build.bat
+
+test_script:
+- echo "Testing..."
+- cd test
+- call testing.bat
