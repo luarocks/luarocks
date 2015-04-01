@@ -2,7 +2,7 @@
 
 A package manager for Lua modules.
 
-[![Build Status](https://travis-ci.org/keplerproject/luarocks.png?branch=master)](https://travis-ci.org/keplerproject/luarocks)
+[![Build Status](https://travis-ci.org/keplerproject/luarocks.png?branch=master)](https://travis-ci.org/keplerproject/luarocks) [![Coverage Status](https://coveralls.io/repos/keplerproject/luarocks/badge.svg?branch=master)](https://coveralls.io/r/keplerproject/luarocks?branch=master)
 
 Main website: [luarocks.org](http://www.luarocks.org)
 
