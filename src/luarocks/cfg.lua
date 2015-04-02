@@ -332,8 +332,8 @@ if detected.windows then
    defaults.variables.LD = "link"
    defaults.variables.MT = "mt"
    defaults.variables.LUALIB = "lua"..cfg.lua_version..".lib"
-   defaults.variables.CFLAGS = "/MD /O2"
-   defaults.variables.LIBFLAG = "/dll"
+   defaults.variables.CFLAGS = "/nologo /MD /O2"
+   defaults.variables.LIBFLAG = "/nologo /dll"
 
    local bins = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM",
       "MKDIR", "MV", "PWD", "RMDIR", "TEST", "UNAME", "WGET" }
