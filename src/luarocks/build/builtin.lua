@@ -138,7 +138,7 @@ function builtin.run(rockspec)
          local resname = basename..".res"
          local wrapname = basename..".exe"
          make_rc(fullname, fullbasename..".rc")
-         local ok = execute(variables.RC, "-r", "-fo"..resname, rcname)
+         local ok = execute(variables.RC, "-nologo", "-r", "-fo"..resname, rcname)
          if not ok then return ok end
          ok = execute(variables.CC.." "..variables.CFLAGS, "-c", "-Fo"..object,
                       "-I"..variables.LUA_INCDIR, variables.WRAPPER)
