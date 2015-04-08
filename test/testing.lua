@@ -1,14 +1,31 @@
 
+local variables = {}
+
+-- Expand variables in the format $foo or ${foo} according
+-- to the variables table.
 local function expand_variables(str)
-   -- TODO
-   return str
+   return str:gsub("%$({?)([A-Za-z0-9_]+)(}?)", function(o, v, c)
+      return #o <= #c and (variables[v] or "") .. (#o < #c and c or "")
+   end)
 end
 
 -- @param cmd command to run
 -- @param envtable optional table of temporary environment variables
 local function run(cmd, envtable)
    cmd = expand_variables(cmd)
-   -- TODO
+   local env = {}
+   for var, val in pairs(envtable) do
+      table.insert(env, var.."='"..expand_variables(val).."' ")
+   end
+   local code = os.execute(table.concat(env)..cmd)
+   return (code == 0 or code == true)
+end
+
+local function cd_run(dir, cmd, envtable)
+   return run("cd "..dir.." && "..cmd, envtable)
+end
+
+local function run_get_contents(cmd)
 end
 
 local function mkdir(dirname)
@@ -16,10 +33,26 @@ local function mkdir(dirname)
    -- TODO
 end
 
+local function rm_rf(...)
+   -- TODO
+end
+
+local function mv(src, dst)
+   -- TODO
+end
+
+local function exists(filename)
+   filename = expand_variables(filename)
+   -- TODO
+end
+
+local function glob(patt)
+   -- TODO
+end
+
 local function rm(...)
    for _, filename in ipairs {...} do
       filename = expand_variables(filename)
-      -- TODO globbing
       -- TODO
    end
    return true
@@ -35,6 +68,10 @@ local function file_set_contents(filename, contents)
    return true
 end
 
+local function need_luasocket()
+   -- TODO
+end
+
 local tests = {
 
    test_version = function() return run "$luarocks --version" end,
@@ -46,14 +83,10 @@ local tests = {
    fail_arg_string_unknown = function() return run "$luarocks --invalid-flag=abc" end,
    test_empty_list = function() return run "$luarocks list" end,
    fail_bad_sysconfig = function()
-      local err=0
-      local scdir=testing_lrprefix.."/etc/luarocks/"
-      mkdir(scdir)
-      local sysconfig=scdir.."/config.lua"
-      file_set_contents(sysconfig, "aoeui")
-      local err = run "$luarocks list"
-      rm(sysconfig)
-      return err
+      mkdir "$testing_lrprefix/etc/luarocks"
+      file_set_contents("$testing_lrprefix/etc/luarocks/config.lua", "aoeui")
+      return run "$luarocks list"
+         and rm "$testing_lrprefix/etc/luarocks/config.lua"
    end,
    fail_build_noarg = function() return run "$luarocks build" end,
    fail_download_noarg = function() return run "$luarocks download" end,
@@ -88,16 +121,16 @@ local tests = {
    test_build_install_bin = function() return run "$luarocks build luarepl" end,
    test_build_nohttps = function()
       need_luasocket()
-      return (run "$luarocks download --rockspec validate-args ${verrev_validate_args}")
-         and (run "$luarocks build ./validate-args-${version_validate_args}-1.rockspec")
-         and (rm "./validate-args-${version_validate_args}-1.rockspec")
+      return run "$luarocks download --rockspec validate-args ${verrev_validate_args}"
+         and run "$luarocks build ./validate-args-${version_validate_args}-1.rockspec"
+         and rm "./validate-args-${version_validate_args}-1.rockspec"
    end,
    test_build_https = function()
       need_luasocket()
-      return (run "$luarocks download --rockspec validate-args ${verrev_validate_args}")
-         and (run "$luarocks install luasec")
-         and (run "$luarocks build ./validate-args-${verrev_validate_args}.rockspec")
-         and (rm "./validate-args-${verrev_validate_args}.rockspec")
+      return run "$luarocks download --rockspec validate-args ${verrev_validate_args}"
+         and run "$luarocks install luasec"
+         and run "$luarocks build ./validate-args-${verrev_validate_args}.rockspec"
+         and rm "./validate-args-${verrev_validate_args}.rockspec"
    end,
    test_build_supported_platforms = function() return run "$luarocks build lpty" end,
    fail_build_missing_external = function() return run '$luarocks build "$testing_dir/testfiles/missing_external-0.1-1.rockspec" INEXISTENT_INCDIR="/invalid/dir"' end,
@@ -111,11 +144,11 @@ local tests = {
    end,
    test_download_all = function()
       return run "$luarocks download --all validate-args"
-         and rm "validate-args-*"
+         and rm(glob("validate-args-*"))
    end,
    test_download_rockspecversion = function()
       return run "$luarocks download --rockspec validate-args ${verrev_validate_args}"
-         and rm "validate-args-*"
+         and rm(glob("validate-args-*"))
    end,
    test_help = function() return run "$luarocks help" end,
    fail_help_invalid = function() return run "$luarocks help invalid" end,
@@ -179,30 +212,30 @@ local tests = {
       rm_rf "./luasocket-${verrev_luasocket}"
       run "$luarocks download --source luasocket"
       run "$luarocks unpack ./luasocket-${verrev_luasocket}.src.rock"
-      local ok = at_run("luasocket-${verrev_luasocket}/${srcdir_luasocket}", "$luarocks make")
+      local ok = cd_run("luasocket-${verrev_luasocket}/${srcdir_luasocket}", "$luarocks make")
       rm_rf "./luasocket-${verrev_luasocket}"
       return ok
    end,
    test_new_version = function()
       return run "$luarocks download --rockspec luacov ${version_luacov}"
          and run "$luarocks new_version ./luacov-${version_luacov}-1.rockspec 0.2"
-         and rm "./luacov-0.*"
+         and rm(glob("./luacov-0.*"))
    end,
    test_new_version_url = function()
       return run "$luarocks download --rockspec abelhas 1.0"
          and run "$luarocks new_version ./abelhas-1.0-1.rockspec 1.1 https://github.com/downloads/ittner/abelhas/abelhas-1.1.tar.gz"
-         and rm "./abelhas-*"
+         and rm(glob("./abelhas-*"))
    end,
    test_pack = function()
       return run "$luarocks list"
          and run "$luarocks pack luacov"
-         and rm "./luacov-*.rock"
+         and rm(glob("./luacov-*.rock"))
    end,
    test_pack_src = function()
       return run "$luarocks install luasec"
          and run "$luarocks download --rockspec luasocket"
          and run "$luarocks pack ./luasocket-${verrev_luasocket}.rockspec"
-         and rm "./luasocket-${version_luasocket}-*.rock"
+         and rm(glob("./luasocket-${version_luasocket}-*.rock"))
    end,
    test_path = function() return run "$luarocks path --bin" end,
    test_path_lr_path = function() return run "$luarocks path --lr-path" end,
@@ -288,7 +321,6 @@ local tests = {
    fail_admin_remove_missing = function() return run "$luarocks_admin --server=testing remove" end,
    fail_deps_mode_invalid_arg = function() return run "$luarocks remove luacov --deps-mode" end,
 
-   -- TODO:
    test_deps_mode_one = function()
       return run '$luarocks build --tree="system" lpeg'
          and run '$luarocks list'
