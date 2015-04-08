@@ -82,11 +82,17 @@ local tests = {
    fail_arg_string_followed_by_flag = function() return run "$luarocks --server --porcelain" end,
    fail_arg_string_unknown = function() return run "$luarocks --invalid-flag=abc" end,
    test_empty_list = function() return run "$luarocks list" end,
-   fail_bad_sysconfig = function()
+   fail_sysconfig_err = function()
       mkdir "$testing_lrprefix/etc/luarocks"
       file_set_contents("$testing_lrprefix/etc/luarocks/config.lua", "aoeui")
       return run "$luarocks list"
          and rm "$testing_lrprefix/etc/luarocks/config.lua"
+   end,
+   fail_sysconfig_default_err = function()
+      mkdir "$testing_lrprefix/etc/luarocks"
+      file_set_contents("$testing_lrprefix/etc/luarocks/config-$luashortversion.lua", "aoeui")
+      return run "$luarocks list"
+         and rm "$testing_lrprefix/etc/luarocks/config-$luashortversion.lua"
    end,
    fail_build_noarg = function() return run "$luarocks build" end,
    fail_download_noarg = function() return run "$luarocks download" end,

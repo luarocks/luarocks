@@ -30,6 +30,8 @@ then
    shift
 fi
 
+luashortversion=`echo $luaversion | cut -d. -f 1-2`
+
 testing_dir="$PWD"
 
 testing_lrprefix="$testing_dir/testing_lrprefix-$luaversion"
@@ -342,7 +344,8 @@ fail_arg_string_unknown() { $luarocks --invalid-flag=abc; }
 
 test_empty_list() { $luarocks list; }
 
-fail_bad_sysconfig() { local err=0; local scdir="$testing_lrprefix/etc/luarocks/"; mkdir -p "$scdir"; local sysconfig="$scdir/config.lua"; echo "aoeui" > "$sysconfig"; echo $sysconfig; $luarocks list; err=$?; rm "$sysconfig"; return "$err"; }
+fail_sysconfig_err() { local err=0; local scdir="$testing_lrprefix/etc/luarocks/"; mkdir -p "$scdir"; local sysconfig="$scdir/config.lua"; echo "aoeui" > "$sysconfig"; echo $sysconfig; $luarocks list; err=$?; rm "$sysconfig"; return "$err"; }
+fail_sysconfig_default_err() { local err=0; local scdir="$testing_lrprefix/etc/luarocks/"; mkdir -p "$scdir"; local sysconfig="$scdir/config-$luashortversion.lua"; echo "aoeui" > "$sysconfig"; echo $sysconfig; $luarocks list; err=$?; rm "$sysconfig"; return "$err"; }
 
 fail_build_noarg() { $luarocks build; }
 fail_download_noarg() { $luarocks download; }
