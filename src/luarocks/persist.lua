@@ -53,10 +53,10 @@ end
 -- @param filename string: the name of the file.
 -- @param tbl table or nil: if given, this table is used to store
 -- loaded values.
--- @return (table, table) or (nil, string, string): a table with the file's
--- assignments as fields and set of undefined globals accessed in file,
--- or nil, an error message and an error code ("open", "load" or "run") in
--- case of errors.
+-- @return table or (nil, string, string): a table with the file's assignments
+-- as fields, or nil, an error message and an error code ("open"; couldn't open the file,
+-- "load"; compile-time error, or "run"; run-time error)
+-- in case of errors.
 function persist.load_into_table(filename, tbl)
    assert(type(filename) == "string")
    assert(type(tbl) == "table" or not tbl)
