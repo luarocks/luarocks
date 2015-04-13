@@ -112,7 +112,7 @@ local tests = {
    fail_lint_invalid = function() return run "$luarocks lint invalid" end,
    fail_show_invalid = function() return run "$luarocks show invalid" end,
    fail_new_version_invalid = function() return run "$luarocks new_version invalid" end,
-   fail_list_invalidtree = function() return run "$luarocks --tree=/some/invalid/tree list" end,
+   test_list_invalidtree = function() return run "$luarocks --tree=/some/invalid/tree list" end,
    fail_inexistent_dir = function()
       -- Unix only?
       return run "mkdir idontexist; cd idontexist; rmdir ../idontexist; $luarocks; err=$?; cd ..; return $err"

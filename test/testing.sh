@@ -367,7 +367,7 @@ fail_lint_invalid() { $luarocks lint invalid; }
 fail_show_invalid() { $luarocks show invalid; }
 fail_new_version_invalid() { $luarocks new_version invalid; }
 
-fail_list_invalidtree() { $luarocks --tree=/some/invalid/tree list; }
+test_list_invalidtree() { $luarocks --tree=/some/invalid/tree list; }
 
 fail_inexistent_dir() { mkdir idontexist; cd idontexist; rmdir ../idontexist; $luarocks; err=$?; cd ..; return $err; }
 
