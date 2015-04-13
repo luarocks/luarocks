@@ -11,6 +11,7 @@ local deps = require("luarocks.deps")
 type_check.rockspec_format = "1.1"
 
 local string_1 = { _type = "string" }
+local number_1 = { _type = "number" }
 local mandatory_string_1 = { _type = "string", _mandatory = true }
 
 -- Syntax for type-checking tables:
@@ -159,7 +160,7 @@ local manifest_types = {
                      op = string_1,
                      version = {
                         string = string_1,
-                        _any = 0,
+                        _any = number_1,
                      }
                   }
                }
