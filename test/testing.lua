@@ -143,15 +143,15 @@ local tests = {
    test_build_only_deps_rockspec = function()
       return run "$luarocks download --rockspec lxsh ${verrev_lxsh}"
          and run "$luarocks build ./lxsh-${verrev_lxsh}.rockspec --only-deps"
-         and run "$luarocks show lxsh; [ $? -ne 0 ]; };"
+         and (not run "$luarocks show lxsh")
    end,
    test_build_only_deps_src_rock = function()
       return run "$luarocks download --source lxsh ${verrev_lxsh}"
          and run "$luarocks build ./lxsh-${verrev_lxsh}.src.rock --only-deps"
-         and run "$luarocks show lxsh; [ $? -ne 0 ]; };"
+         and (not run "$luarocks show lxsh")
    end,
-   test_build_only_deps = function() return run "$luarocks build luasec --only-deps" and run "$luarocks show luasec; [ $? -ne 0 ]; };" end,
-   test_install_only_deps = function() return run "$luarocks install lxsh ${verrev_lxsh} --only-deps" and run "$luarocks show lxsh; [ $? -ne 0 ]; };" end,
+   test_build_only_deps = function() return run "$luarocks build luasec --only-deps" and (not run "$luarocks show luasec") end,
+   test_install_only_deps = function() return run "$luarocks install lxsh ${verrev_lxsh} --only-deps" and (not run "$luarocks show lxsh") end,
    fail_build_missing_external = function() return run '$luarocks build "$testing_dir/testfiles/missing_external-0.1-1.rockspec" INEXISTENT_INCDIR="/invalid/dir"' end,
    fail_build_invalidpatch = function()
       need_luasocket()

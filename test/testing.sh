@@ -263,7 +263,6 @@ mkdir -p "$testing_server"
    get "$luarocks_repo/lua-path-0.2.3-1.src.rock"
    get "$luarocks_repo/lua-cjson-2.1.0-1.src.rock"
    get "$luarocks_repo/luacov-coveralls-0.1.1-1.src.rock"
-   get "$luarocks_repo/luacov-coveralls-0.1.1-1.src.rock"
 )
 $luarocks_admin_nocov make_manifest "$testing_server"
 

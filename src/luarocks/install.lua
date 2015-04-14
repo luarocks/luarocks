@@ -143,7 +143,7 @@ function install.install_binary_rock_deps(rock_file, deps_mode)
    if err then return nil, err, errcode end
 
    util.printout()
-   util.printout("Succesfully nstalling dependencies for " ..name.." "..version)
+   util.printout("Succesfully installed dependencies for " ..name.." "..version)
 
    return name, version
 end
