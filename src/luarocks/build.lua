@@ -378,7 +378,8 @@ local function do_build(name, version, deps_mode, build_only_deps)
       return build.build_rock(name, false, deps_mode, build_only_deps)
    elseif name:match("%.all%.rock$") then
       local install = require("luarocks.install")
-      return install.install_binary_rock(name, deps_mode)
+      local install_fun = build_only_deps and install.install_binary_rock_deps or install.install_binary_rock
+      return install_fun(name, deps_mode)
    elseif name:match("%.rock$") then
       return build.build_rock(name, true, deps_mode, build_only_deps)
    elseif not name:match(dir.separator) then
