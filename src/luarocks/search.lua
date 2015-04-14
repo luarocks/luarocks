@@ -155,10 +155,11 @@ function search.disk_search(repo, query, results)
    return results
 end
 
---- Perform search on a rocks server.
+--- Perform search on a rocks server or tree.
 -- @param results table: The results table, where keys are package names and
 -- versions are tables matching version strings to an array of servers.
--- @param repo string: The URL of the rocks server.
+-- @param repo string: The URL of a rocks server or
+-- the pathname of a rocks tree (as returned by path.rocks_dir()).
 -- @param query table: A table describing the query in dependency
 -- format (for example, {name = "filesystem", exact_name = false,
 -- constraints = {op = "~>", version = {1,0}}}, arch = "rockspec").
