@@ -249,6 +249,7 @@ mkdir -p "$testing_server"
    get "$luarocks_repo/cprint-${verrev_cprint}.rockspec"
    get "$luarocks_repo/wsapi-1.6-1.src.rock"
    get "$luarocks_repo/lxsh-${verrev_lxsh}.src.rock"
+   get "$luarocks_repo/lxsh-${verrev_lxsh}.rockspec"
    get "$luarocks_repo/abelhas-${verrev_abelhas}.rockspec"
    get "$luarocks_repo/lzlib-0.4.1.53-1.src.rock"
    get "$luarocks_repo/lpeg-0.12-1.src.rock"
@@ -385,6 +386,10 @@ test_build_install_bin() { $luarocks build luarepl; }
 test_build_nohttps() { need_luasocket; $luarocks download --rockspec validate-args ${verrev_validate_args} && $luarocks build ./validate-args-${version_validate_args}-1.rockspec && rm ./validate-args-${version_validate_args}-1.rockspec; }
 test_build_https() { need_luasocket; $luarocks download --rockspec validate-args ${verrev_validate_args} && $luarocks install $luasec && $luarocks build ./validate-args-${verrev_validate_args}.rockspec && rm ./validate-args-${verrev_validate_args}.rockspec; }
 test_build_supported_platforms() { $luarocks build lpty; }
+test_build_only_deps_rockspec() { $luarocks download --rockspec lxsh ${verrev_lxsh} && $luarocks build ./lxsh-${verrev_lxsh}.rockspec --only-deps && { $luarocks show lxsh; [ $? -ne 0 ]; }; }
+test_build_only_deps_src_rock() { $luarocks download --source lxsh ${verrev_lxsh} && $luarocks build ./lxsh-${verrev_lxsh}.src.rock --only-deps && { $luarocks show lxsh; [ $? -ne 0 ]; }; }
+test_build_only_deps() { $luarocks build luasec --only-deps && { $luarocks show luasec; [ $? -ne 0 ]; }; }
+test_install_only_deps() { $luarocks install lxsh ${verrev_lxsh} --only-deps && { $luarocks show lxsh; [ $? -ne 0 ]; }; }
 fail_build_missing_external() { $luarocks build "$testing_dir/testfiles/missing_external-0.1-1.rockspec" INEXISTENT_INCDIR="/invalid/dir"; }
 fail_build_invalidpatch() { need_luasocket; $luarocks build "$testing_dir/testfiles/invalid_patch-0.1-1.rockspec"; }
 

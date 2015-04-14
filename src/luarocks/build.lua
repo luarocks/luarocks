@@ -37,6 +37,8 @@ or the name of a rock to be fetched from a repository.
                     rockspec. Allows to specify a different branch to 
                     fetch. Particularly for SCM rocks.
 
+--only-deps         Installs only the dependencies of the rock.
+
 ]]..util.deps_mode_help()
 
 --- Install files to a given location.
@@ -157,9 +159,10 @@ end
 -- @param deps_mode string: Dependency mode: "one" for the current default tree,
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for no trees.
+-- @param build_only_deps boolean: true to build the listed dependencies only.
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode)
+function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode, build_only_deps)
    assert(type(rockspec_file) == "string")
    assert(type(need_to_fetch) == "boolean")
 
@@ -181,13 +184,19 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       end
    end
 
+   local name, version = rockspec.name, rockspec.version
+   if build_only_deps then
+      util.printout("Stopping after installing dependencies for " ..name.." "..version)
+      util.printout()
+      return name, version
+   end   
+
    local ok
    ok, err, errcode = deps.check_external_deps(rockspec, "build")
    if err then
       return nil, err, errcode
    end
 
-   local name, version = rockspec.name, rockspec.version
    if repos.is_installed(name, version) then
       repos.delete_version(name, version)
    end
@@ -341,9 +350,10 @@ end
 -- @param deps_mode: string: Which trees to check dependencies for:
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
+-- @param build_only_deps boolean: true to build the listed dependencies only.
 -- @return boolean or (nil, string, [string]): True if build was successful,
 -- or false and an error message and an optional error code.
-function build.build_rock(rock_file, need_to_fetch, deps_mode)
+function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
    assert(type(rock_file) == "string")
    assert(type(need_to_fetch) == "boolean")
 
@@ -356,24 +366,25 @@ function build.build_rock(rock_file, need_to_fetch, deps_mode)
    local rockspec_file = path.rockspec_name_from_rock(rock_file)
    ok, err = fs.change_dir(unpack_dir)
    if not ok then return nil, err end
-   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode)
+   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps)
    fs.pop_dir()
    return ok, err, errcode
 end
  
-local function do_build(name, version, deps_mode)
+local function do_build(name, version, deps_mode, build_only_deps)
    if name:match("%.rockspec$") then
-      return build.build_rockspec(name, true, false, deps_mode)
+      return build.build_rockspec(name, true, false, deps_mode, build_only_deps)
    elseif name:match("%.src%.rock$") then
-      return build.build_rock(name, false, deps_mode)
+      return build.build_rock(name, false, deps_mode, build_only_deps)
    elseif name:match("%.all%.rock$") then
       local install = require("luarocks.install")
-      return install.install_binary_rock(name, deps_mode)
+      local install_fun = build_only_deps and install.install_binary_rock_deps or install.install_binary_rock
+      return install_fun(name, deps_mode)
    elseif name:match("%.rock$") then
-      return build.build_rock(name, true, deps_mode)
+      return build.build_rock(name, true, deps_mode, build_only_deps)
    elseif not name:match(dir.separator) then
       local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(build.run, name:lower(), version, deps.deps_mode_to_flag(deps_mode))
+      return search.act_on_src_or_rockspec(build.run, name:lower(), version, deps.deps_mode_to_flag(deps_mode), build_only_deps and "--only-deps")
    end
    return nil, "Don't know what to do with "..name
 end
@@ -398,9 +409,12 @@ function build.run(...)
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
-      ok, err = do_build(name, version, deps.get_deps_mode(flags))
+      ok, err = do_build(name, version, deps.get_deps_mode(flags), flags["only-deps"])
       if not ok then return nil, err end
       local name, version = ok, err
+      if flags["only-deps"] then
+         return name, version
+      end
       if (not flags["keep"]) and not cfg.keep_other_versions then
          local ok, err = remove.remove_other_versions(name, version, flags["force"])
          if not ok then util.printerr(err) end

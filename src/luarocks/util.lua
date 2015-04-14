@@ -102,6 +102,7 @@ local supported_flags = {
    ["no-refresh"] = true,
    ["nodeps"] = true,
    ["old-versions"] = true,
+   ["only-deps"] = true,
    ["only-from"] = "<server>",
    ["only-server"] = "<server>",
    ["only-sources"] = "<url>",
