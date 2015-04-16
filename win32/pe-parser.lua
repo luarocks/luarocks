@@ -1,7 +1,11 @@
 ---------------------------------------------------------------------------------------
 -- Lua module to parse a Portable Executable (.exe , .dll, etc.) file and extract metadata.
 --
--- Version 0.1, [copyright (c) 2013 - Thijs Schreijer](http://www.thijsschreijer.nl)
+-- NOTE: numerical information is extracted as strings (hex) to prevent numerical overflows in
+-- case of 64 bit fields (bit/flag fields). Pointer arithmetic is still done numerically, so for
+-- very large files this could lead to undefined results. Use with care!
+--
+-- Version 0.3, [copyright (c) 2013-2015 Thijs Schreijer](http://www.thijsschreijer.nl)
 -- @name pe-parser
 -- @class module
 
@@ -238,7 +242,7 @@ local function readstring(f)
 end
 
 --- Parses a file and extracts the information.
--- All numbers are delivered as "string" types containing hex values, see `toHex` and `toDec` conversion functions.
+-- All numbers are delivered as "string" types containing hex values (to prevent numerical overflows in case of 64bit sizes or bit-fields), see `toHex` and `toDec` conversion functions.
 -- @return table with data, or nil + error
 -- @usage local pe = require("pe-parser")
 -- local obj = pe.parse("c:\lua\lua.exe")
@@ -524,9 +528,9 @@ function M.msvcrt(infile)
   
   for i, dll in ipairs(obj.DataDirectory.ImportTable) do
     dll = dll.Name:upper()
-	  local result = dll:match('(MSVCR%d*)%.DLL')
+	  local result = dll:match('(MSVCR%d*D?)%.DLL')
 	  if not result then
-	    result = dll:match('(MSVCRT)%.DLL')
+	    result = dll:match('(MSVCRTD?)%.DLL')
 	  end
     -- success, found it return name + binary where it was found
     if result then return result, infile end
