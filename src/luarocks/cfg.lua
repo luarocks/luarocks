@@ -599,11 +599,6 @@ cfg.http_proxy = os.getenv("http_proxy")
 cfg.https_proxy = os.getenv("https_proxy")
 cfg.no_proxy = os.getenv("no_proxy")
 
--- make sure that no_proxy is not 'alone'
-if cfg.no_proxy and not (cfg.https_proxy or cfg.http_proxy) then
-   cfg.no_proxy = nil
-end
-
 --- Check if platform was detected
 -- @param query string: The platform name to check.
 -- @return boolean: true if LuaRocks is currently running on queried platform.
