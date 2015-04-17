@@ -545,7 +545,7 @@ local redirect_protocols = {
 local function request(url, method, http, loop_control)
    local result = {}
    
-   local proxy = cfg.proxy
+   local proxy = cfg.http_proxy
    if type(proxy) ~= "string" then proxy = nil end
    -- LuaSocket's http.request crashes when given URLs missing the scheme part.
    if proxy and not proxy:find("://") then
@@ -660,7 +660,7 @@ function fs_lua.download(url, filename, cache)
    elseif util.starts_with(url, "ftp:") then
       content, err = ftp.get(url)
    elseif util.starts_with(url, "https:") then
-      if luasec_ok then
+      if luasec_ok and not cfg.https_proxy then
          content, err = http_request(url, https, cache and filename)
       else
          https_err = true

@@ -595,6 +595,9 @@ end
 
 cfg.user_agent = "LuaRocks/"..cfg.program_version.." "..cfg.arch
 
+cfg.http_proxy = os.getenv("http_proxy")
+cfg.https_proxy = os.getenv("https_proxy")
+
 --- Check if platform was detected
 -- @param query string: The platform name to check.
 -- @return boolean: true if LuaRocks is currently running on queried platform.
