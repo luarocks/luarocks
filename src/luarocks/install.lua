@@ -26,6 +26,8 @@ or a filename of a locally available rock.
                     rock after installing a new one. This behavior can
                     be made permanent by setting keep_other_versions=true
                     in the configuration file.
+
+--only-deps         Installs only the dependencies of the rock.
 ]]..util.deps_mode_help()
 
 
@@ -109,6 +111,43 @@ function install.install_binary_rock(rock_file, deps_mode)
    return name, version
 end
 
+--- Installs the dependencies of a binary rock.
+-- @param rock_file string: local or remote filename of a rock.
+-- @param deps_mode: string: Which trees to check dependencies for:
+-- "one" for the current default tree, "all" for all trees,
+-- "order" for all trees with priority >= the current default, "none" for no trees.
+-- @return (string, string) or (nil, string, [string]): Name and version of
+-- the rock whose dependencies were installed if succeeded or nil and an error message 
+-- followed by an error code.
+function install.install_binary_rock_deps(rock_file, deps_mode)
+   assert(type(rock_file) == "string")
+
+   local name, version, arch = path.parse_name(rock_file)
+   if not name then
+      return nil, "Filename "..rock_file.." does not match format 'name-version-revision.arch.rock'."
+   end
+   
+   if arch ~= "all" and arch ~= cfg.arch then
+      return nil, "Incompatible architecture "..arch, "arch"
+   end
+
+   local ok, err, errcode = fetch.fetch_and_unpack_rock(rock_file, path.install_dir(name, version))
+   if not ok then return nil, err, errcode end
+   
+   local rockspec, err, errcode = fetch.load_rockspec(path.rockspec_file(name, version))
+   if err then
+      return nil, "Failed loading rockspec for installed package: "..err, errcode
+   end
+
+   ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+   if err then return nil, err, errcode end
+
+   util.printout()
+   util.printout("Succesfully installed dependencies for " ..name.." "..version)
+
+   return name, version
+end
+
 --- Driver function for the "install" command.
 -- @param name string: name of a binary rock. If an URL or pathname
 -- to a binary rock is given, fetches and installs it. If a rockspec or a
@@ -131,12 +170,16 @@ function install.run(...)
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       util.printout("Using "..name.."... switching to 'build' mode")
       local build = require("luarocks.build")
-      return build.run(name, util.forward_flags(flags, "local", "keep", "deps-mode"))
+      return build.run(name, util.forward_flags(flags, "local", "keep", "deps-mode", "only-deps"))
    elseif name:match("%.rock$") then
-      ok, err = install.install_binary_rock(name, deps.get_deps_mode(flags))
+      if flags["only-deps"] then
+         ok, err = install.install_binary_rock_deps(name, deps.get_deps_mode(flags))
+      else
+         ok, err = install.install_binary_rock(name, deps.get_deps_mode(flags))
+      end
       if not ok then return nil, err end
       local name, version = ok, err
-      if (not flags["keep"]) and not cfg.keep_other_versions then
+      if (not flags["only-deps"]) and (not flags["keep"]) and not cfg.keep_other_versions then
          local ok, err = remove.remove_other_versions(name, version, flags["force"])
          if not ok then util.printerr(err) end
       end
