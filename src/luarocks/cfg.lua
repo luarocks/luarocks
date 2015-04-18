@@ -228,7 +228,7 @@ local defaults = {
 
    rocks_servers = {
       {
-        "https://rocks.moonscript.org",
+        "https://luarocks.org",
         "https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/master/",
         "http://luafr.org/moonrocks/",
         "http://luarocks.logiceditor.com/rocks",
