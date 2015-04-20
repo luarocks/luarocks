@@ -32,7 +32,7 @@ fs.verbose = function()    -- patch io.popen and os.execute to display commands 
   old_exec = os.execute
   os.execute = function(cmd)
     -- redact api keys if present
-    print("\nos.execute: ", cmd:gsub("(/api/[^/]+/)([^/]+)/", function(cap, key) return cap.."<redacted>/" end))
+    print("\nos.execute: ", (cmd:gsub("(/api/[^/]+/)([^/]+)/", function(cap, key) return cap.."<redacted>/" end)) )
     local code = pack(old_exec(cmd))
     print("Results: "..tostring(code.n))
     for i = 1,code.n do
