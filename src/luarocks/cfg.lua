@@ -237,7 +237,7 @@ local defaults = {
    disabled_servers = {},
 
    upload = {
-      server = "https://rocks.moonscript.org",
+      server = "https://luarocks.org",
       tool_version = "1.0.0",
       api_version = "1",
    },
