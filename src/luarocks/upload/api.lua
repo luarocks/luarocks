@@ -21,6 +21,11 @@ function Api:load_config()
    local upload_conf = upload_config_file()
    if not upload_conf then return nil end
    local cfg, err = persist.load_into_table(upload_conf)
+   -- forces transition from old url to the new one
+   if cfg.server:match("^http[s?]://rocks.moonscript.org") then
+      cfg.server = "https://luarocks.org"
+      persist.save_from_table(upload_conf, cfg)
+   end
    return cfg
 end
 
