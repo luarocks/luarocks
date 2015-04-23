@@ -132,7 +132,7 @@ function build.apply_patches(rockspec)
 end
 
 local function install_default_docs(name, version)
-   local patterns = { "readme", "license", "copying" }
+   local patterns = { "readme", "license", "copying", ".*%.md" }
    local dest = dir.path(path.install_dir(name, version), "doc")
    local has_dir = false
    for file in fs.dir() do
