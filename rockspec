@@ -1,5 +1,6 @@
 package = "LuaRocks"
-local VER = "scm-1"
+local VER = "2.2.2"
+version = VER .. "-1"
 
 source = {
    url = "--this rockspec is used by `make bootstrap` only--",
