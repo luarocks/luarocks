@@ -729,7 +729,8 @@ IF NOT "%LUA_PATH_5_3%"=="" (
 )
 SET "PATH=$BINDIR;%PATH%"
 "$LUA_BINDIR\$LUA_INTERPRETER" "$BINDIR\]]..c..[[.lua" %*
-IF NOT "%ERRORLEVEL%"=="2" GOTO EXITLR
+SET EXITCODE=%ERRORLEVEL%
+IF NOT "%EXITCODE%"=="2" GOTO EXITLR
 
 REM Permission denied error, try and auto elevate...
 REM already an admin? (checking to prevent loops)
@@ -758,7 +759,7 @@ ECHO Now retrying as a priviledged user...
 PowerShell -Command (New-Object -com 'Shell.Application').ShellExecute('%TMPFILE%', '', '', 'runas')
 
 :EXITLR
-ENDLOCAL
+exit /b %EXITCODE% 
 ]])
 	f:close()
 	print(S"Created LuaRocks command: $BINDIR\\"..c..".bat")
