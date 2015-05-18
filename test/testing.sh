@@ -497,6 +497,17 @@ fail_write_rockspec_args_url() { $luarocks write_rockspec http://example.com/inv
 test_write_rockspec_http() { $luarocks write_rockspec http://luarocks.org/releases/luarocks-2.1.0.tar.gz --lua-version=5.1; }
 test_write_rockspec_basedir() { $luarocks write_rockspec https://github.com/downloads/Olivine-Labs/luassert/luassert-1.2.tar.gz --lua-version=5.1; }
 
+fail_config_noflags() { $luarocks config; }
+test_config_lua_incdir() { $luarocks config --lua-incdir; }
+test_config_lua_libdir() { $luarocks config --lua-libdir; }
+test_config_lua_ver() { $luarocks config --lua-ver; }
+fail_config_system_config() { rm -f "$testing_lrprefix/etc/luarocks/config.lua"; $luarocks config --system-config; }
+test_config_system_config() { mkdir -p "$testing_lrprefix/etc/luarocks"; touch "$testing_lrprefix/etc/luarocks/config.lua"; $luarocks config --system-config; err=$?; rm -f "$testing_lrprefix/etc/luarocks/config.lua"; return $err; }
+fail_config_system_config_invalid() { mkdir -p "$testing_lrprefix/etc/luarocks"; echo "if if if" > "$testing_lrprefix/etc/luarocks/config.lua"; $luarocks config --system-config; err=$?; rm -f "$testing_lrprefix/etc/luarocks/config.lua"; return $err; }
+test_config_user_config() { $luarocks config --user-config; }
+fail_config_user_config() { LUAROCKS_CONFIG="/missing_file.lua" $luarocks config --user-config; }
+test_config_rock_trees() { $luarocks config --rock-trees; }
+
 test_doc() { $luarocks install luarepl; $luarocks doc luarepl; }
 
 # Driver #########################################

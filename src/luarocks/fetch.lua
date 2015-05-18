@@ -193,9 +193,8 @@ function fetch.load_local_rockspec(filename, quick)
    end
    local globals = err
 
-   local ok, err = true, nil
    if not quick then
-      ok, err = type_check.type_check_rockspec(rockspec, globals)
+      local ok, err = type_check.type_check_rockspec(rockspec, globals)
       if not ok then
          return nil, filename..": "..err
       end

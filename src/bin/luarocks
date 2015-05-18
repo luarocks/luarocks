@@ -27,6 +27,7 @@ commands = {
    purge = "luarocks.purge",
    doc = "luarocks.doc",
    upload = "luarocks.upload",
+   config = "luarocks.config_cmd",
 }
 
 command_line.run_command(...)

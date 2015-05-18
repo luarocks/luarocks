@@ -146,16 +146,17 @@ cfg.variables = {}
 cfg.rocks_trees = {}
 
 sys_config_file = site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..cfg.lua_version..".lua"
-local err, errcode
-sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, cfg)
-
-if (not sys_config_ok) and errcode == "open" then -- file not found, so try alternate file
-   sys_config_file = sys_config_dir.."/config.lua"
+do
+   local err, errcode
    sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, cfg)
-end
-if (not sys_config_ok) and errcode ~= "open" then -- either "load" or "run"; bad config file, bail out with error
-   io.stderr:write(err.."\n")
-   os.exit(cfg.errorcodes.CONFIGFILE)
+   if (not sys_config_ok) and errcode == "open" then -- file not found, so try alternate file
+      sys_config_file = sys_config_dir.."/config.lua"
+      sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, cfg)
+   end
+   if (not sys_config_ok) and errcode ~= "open" then -- either "load" or "run"; bad config file, bail out with error
+      io.stderr:write(err.."\n")
+      os.exit(cfg.errorcodes.CONFIGFILE)
+   end
 end
 
 local env_for_config_file = {
@@ -590,7 +591,16 @@ function cfg.init_package_paths()
 end
 
 function cfg.which_config()
-   return sys_config_file, sys_config_ok, home_config_file, home_config_ok
+   return {
+      system = {
+         file = sys_config_file,
+         ok = sys_config_ok,
+      },
+      user = {
+         file = home_config_file,
+         ok = home_config_ok,
+      }
+   }
 end
 
 cfg.user_agent = "LuaRocks/"..cfg.program_version.." "..cfg.arch
