@@ -319,7 +319,7 @@ local function look_for_interpreter (directory)
 			return true
 		end
 	end
-	print("      No Lua interpreter found")
+	--print("      No Lua interpreter found")
 	return false
 end
 
