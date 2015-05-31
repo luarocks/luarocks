@@ -169,10 +169,14 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    local rockspec, err, errcode = fetch.load_rockspec(rockspec_file)
    if err then
       return nil, err, errcode
-   elseif not rockspec.build then
-      return nil, "Rockspec error: build table not specified"
-   elseif not rockspec.build.type then
-      return nil, "Rockspec error: build type not specified"
+   end
+
+   if not build_only_deps then
+      if not rockspec.build then
+         return nil, "Rockspec error: build table not specified"
+      elseif not rockspec.build.type then
+         return nil, "Rockspec error: build type not specified"
+      end
    end
 
    if deps_mode == "none" then
@@ -189,7 +193,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       util.printout("Stopping after installing dependencies for " ..name.." "..version)
       util.printout()
       return name, version
-   end   
+   end
 
    local ok
    ok, err, errcode = deps.check_external_deps(rockspec, "build")
