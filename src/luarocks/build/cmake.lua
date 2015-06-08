@@ -35,7 +35,6 @@ function cmake.run(rockspec)
       cmake_handler:close()
    end
 
-
    -- Execute cmake with variables.
    local args = ""
    if cfg.cmake_generator then
@@ -43,6 +42,11 @@ function cmake.run(rockspec)
    end
    for k,v in pairs(variables) do
       args = args .. ' -D' ..k.. '="' ..v.. '"'
+   end
+
+   -- Generate 64 bit build if appropiate.
+   if not not cfg.arch:match("%-x86_64$") then
+      args = args .. " -DCMAKE_GENERATOR_PLATFORM=x64"
    end
 
    if not fs.execute_string(rockspec.variables.CMAKE.." -H. -Bbuild.luarocks "..args) then
