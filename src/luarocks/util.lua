@@ -280,6 +280,31 @@ function util.platform_overrides(tbl)
    tbl.platforms = nil
 end
 
+--- Perform version-specific overrides on a table.
+-- This works exactly like platform-specific overrides, with the
+-- exception that the keys of the "versions" table are matched against
+-- the cfg.lua_version field.  If a match is found, all fields in the
+-- matched table overwrite those of tbl, as for platform-specific
+-- overrides.
+-- @param tbl table or nil: Table which may contain a "versions" field;
+-- if it doesn't (or if nil is passed), this function does nothing.
+function util.version_overrides(tbl)
+   assert(type(tbl) == "table" or not tbl)
+
+   local cfg = require("luarocks.cfg")
+
+   if not tbl then return end
+
+   if tbl.versions then
+      local version = cfg.lua_version
+      local version_tbl = tbl.versions[version]
+      if version_tbl then
+         util.deep_merge(tbl, version_tbl)
+      end
+   end
+   tbl.versions = nil
+end
+
 local var_format_pattern = "%$%((%a[%a%d_]+)%)"
 
 --- Create a new shallow copy of a table: a new table with

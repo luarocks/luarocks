@@ -212,6 +212,12 @@ function fetch.load_local_rockspec(filename, quick)
    util.platform_overrides(rockspec.source)
    util.platform_overrides(rockspec.hooks)
 
+   util.version_overrides(rockspec.build)
+   util.version_overrides(rockspec.dependencies)
+   util.version_overrides(rockspec.external_dependencies)
+   util.version_overrides(rockspec.source)
+   util.version_overrides(rockspec.hooks)
+
    local basename = dir.base_name(filename)
    if basename == "rockspec" then
       rockspec.name = rockspec.package:lower()
