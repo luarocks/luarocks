@@ -145,6 +145,14 @@ end
 cfg.variables = {}
 cfg.rocks_trees = {}
 
+-- some extras for the global enviornment in the config files;
+cfg.os_getenv = os.getenv
+cfg.__dump_env = function()
+  -- debug function, calling it from a config file will show all 
+  -- available globals to that config file
+  print(util.show_table(cfg, "global environment"))
+end
+
 sys_config_file = site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..cfg.lua_version..".lua"
 do
    local err, errcode
@@ -159,11 +167,18 @@ do
    end
 end
 
-local env_for_config_file = {
+local env_for_config_file
+env_for_config_file = {
    home = cfg.home,
    lua_version = cfg.lua_version,
    platform = util.make_shallow_copy(detected),
    processor = proc,
+   os_getenv = os.getenv, 
+   __dump_env = function()
+     -- debug function, calling it from a config file will show all 
+     -- available globals to that config file
+     print(util.show_table(env_for_config_file, "global environment"))
+   end,
 }
 
 if not site_config.LUAROCKS_FORCE_CONFIG then
