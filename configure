@@ -394,6 +394,12 @@ then
 else
    die "Could not determine operating system. 'uname -s' failed."
 fi
+if uname -r
+then
+   LUAROCKS_UNAME_R=`uname -r`
+else
+   die "Could not determine operating system version. 'uname -r' failed."
+fi
 echo_n "Configuring for architecture... "
 if uname -m
 then
@@ -470,6 +476,7 @@ LUA_BINDIR=$LUA_BINDIR
 FORCE_CONFIG=$FORCE_CONFIG
 LUAROCKS_UNAME_M=$LUAROCKS_UNAME_M
 LUAROCKS_UNAME_S=$LUAROCKS_UNAME_S
+LUAROCKS_UNAME_R=$LUAROCKS_UNAME_R
 LUAROCKS_DOWNLOADER=$LUAROCKS_DOWNLOADER
 LUAROCKS_MD5CHECKER=$LUAROCKS_MD5CHECKER
 LUAROCKS_ROCKS_SUBDIR=$LUAROCKS_ROCKS_SUBDIR

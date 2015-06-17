@@ -71,56 +71,81 @@ end
 -- System detection:
 
 local detected = {}
-local system,proc
+local sys_name,sys_version,proc
 
 -- A proper installation of LuaRocks will hardcode the system
 -- and proc values with site_config.LUAROCKS_UNAME_S and site_config.LUAROCKS_UNAME_M,
 -- so that this detection does not run every time. When it is
 -- performed, we use the Unix way to identify the system,
 -- even on Windows (assuming UnxUtils or Cygwin).
-system = site_config.LUAROCKS_UNAME_S or io.popen("uname -s"):read("*l")
-proc = site_config.LUAROCKS_UNAME_M or io.popen("uname -m"):read("*l")
-if proc:match("i[%d]86") then
-   proc = "x86"
-elseif proc:match("amd64") or proc:match("x86_64") then
-   proc = "x86_64"
-elseif proc:match("Power Macintosh") then
-   proc = "powerpc"
+sys_name = site_config.LUAROCKS_UNAME_S or io.popen("uname -s"):read("*l")
+if not sys_name then
+   if os.getenv("OS") == "Windows_NT" then
+      sys_name = "Windows"
+      proc = os.getenv("PROCESSOR_ARCHITECTURE")
+      local windows_ver = io.popen("ver"):read("*l")
+      if windows_ver then
+         sys_name,sys_version = windows_ver:match("(Windows[^%[]*)%[.- (%d+%.%d[^%]]*)%]")
+      end
+   else
+      proc = "unknown"
+   end
+else
+   sys_version = site_config.LUAROCKS_UNAME_R or io.popen("uname -r"):read("*l")
+   proc = site_config.LUAROCKS_UNAME_M or io.popen("uname -m"):read("*l")
 end
 
-if system == "FreeBSD" then
-   detected.unix = true
-   detected.freebsd = true
-   detected.bsd = true
-elseif system == "OpenBSD" then
-   detected.unix = true
-   detected.openbsd = true
-   detected.bsd = true
-elseif system == "NetBSD" then
-   detected.unix = true
-   detected.netbsd = true
-   detected.bsd = true
-elseif system == "Darwin" then
-   detected.unix = true
-   detected.macosx = true
-   detected.bsd = true
-elseif system == "Linux" then
-   detected.unix = true
-   detected.linux = true
-elseif system == "SunOS" then
-   detected.unix = true
-   detected.solaris = true
-elseif system and system:match("^CYGWIN") then
-   detected.unix = true
-   detected.cygwin = true
-elseif system and system:match("^Windows") then
-   detected.windows = true
-elseif system and system:match("^MINGW") then
-   detected.windows = true
-   detected.mingw32 = true
+if proc and proc ~= "" then
+   if proc:match("i[%d]86") then
+      proc = "x86"
+   elseif proc:match("amd64") or proc:match("x86_64") then
+      proc = "x86_64"
+   elseif proc:match("Power Macintosh") then
+      proc = "powerpc"
+   end
 else
-   detected.unix = true
-   -- Fall back to Unix in unknown systems.
+   proc = "unknown"
+end
+
+if sys_version == "" then
+   sys_version = nil
+end
+
+if sys_name then
+   if sys_name == "FreeBSD" then
+      detected.unix = true
+      detected.freebsd = true
+      detected.bsd = true
+   elseif sys_name == "OpenBSD" then
+      detected.unix = true
+      detected.openbsd = true
+      detected.bsd = true
+   elseif sys_name == "NetBSD" then
+      detected.unix = true
+      detected.netbsd = true
+      detected.bsd = true
+   elseif sys_name == "Darwin" then
+      detected.unix = true
+      detected.macosx = true
+      detected.bsd = true
+   elseif sys_name == "Linux" then
+      detected.unix = true
+      detected.linux = true
+   elseif sys_name == "SunOS" then
+      detected.unix = true
+      detected.solaris = true
+   elseif sys_name:match("^CYGWIN") then
+      detected.unix = true
+      detected.cygwin = true
+   elseif sys_name:match("^Windows") then
+      detected.windows = true
+   elseif sys_name:match("^MINGW") then
+      detected.windows = true
+      detected.mingw32 = true
+   else
+      detected.unix = true
+      -- Fall back to Unix in unknown systems.
+   end
 end
 
 -- Path configuration:
@@ -223,7 +248,10 @@ local defaults = {
    lib_modules_path = "/lib/lua/"..cfg.lua_version,
    rocks_subdir = site_config.LUAROCKS_ROCKS_SUBDIR or "/lib/luarocks/rocks",
 
+   system = sys_name,
+   system_version = sys_version,
    arch = "unknown",
+   platforms = {},
    lib_extension = "unknown",
    obj_extension = "unknown",
 
@@ -316,7 +344,7 @@ if detected.windows then
    home_config_file = home_config_file and home_config_file:gsub("\\","/")
    defaults.fs_use_modules = false
    defaults.arch = "win32-"..proc
-   defaults.platforms = {"win32", "windows" }
+   defaults.platforms = { "win32", "windows" }
    defaults.lib_extension = "dll"
    defaults.external_lib_extension = "dll"
    defaults.obj_extension = "obj"
@@ -370,7 +398,7 @@ if detected.windows then
 end
 
 if detected.mingw32 then
-   defaults.platforms = { "win32", "mingw32", "windows" }
+   defaults.platforms = { "win32", "windows", "mingw32" }
    defaults.obj_extension = "o"
    defaults.cmake_generator = "MinGW Makefiles"
    defaults.variables.MAKE = "mingw32-make"
@@ -610,6 +638,9 @@ cfg.https_proxy = os.getenv("https_proxy")
 cfg.no_proxy = os.getenv("no_proxy")
 
 --- Check if platform was detected
+-- Compare a string against the standard system names.
+-- If you want to match the full system name or version then use
+-- deps.match_platform
 -- @param query string: The platform name to check.
 -- @return boolean: true if LuaRocks is currently running on queried platform.
 function cfg.is_platform(query)

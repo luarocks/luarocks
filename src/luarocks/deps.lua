@@ -395,6 +395,30 @@ function deps.match_deps(rockspec, blacklist, deps_mode)
    return matched, missing, no_upgrade
 end
 
+--- Match a platform dependency to the system name and version
+-- @param plat string: A platform dependency as a string.
+-- @return number, string: The index and name of the platform type
+-- that was successfully matched against. The index is from the
+-- cfg.platforms list or one past the length for the canonical
+-- system name cfg.system.
+function deps.match_platform(plat)
+   assert(type(plat) == "string")
+
+   local dep, err = deps.parse_dep(plat)
+   if not dep then return nil, err end
+   local version = deps.parse_version(cfg.system_version)
+   for index, platform in ipairs(cfg.platforms) do
+      if platform == dep.name then
+         if deps.match_constraints(version, dep.constraints) then
+           return index, platform
+         end
+      end
+   end
+   if cfg.system:lower():match("^"..dep.name:lower()) and deps.match_constraints(version, dep.constraints) then
+      return #cfg.platforms + 1, cfg.system
+   end
+end
+
 --- Return a set of values of a table.
 -- @param tbl table: The input table.
 -- @return table: The array of keys.
@@ -419,29 +443,26 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
    local install = require("luarocks.install")
 
    if rockspec.supported_platforms then
-      if not deps.platforms_set then
-         deps.platforms_set = values_set(cfg.platforms)
-      end
       local supported = nil
       for _, plat in pairs(rockspec.supported_platforms) do
          local neg, plat = plat:match("^(!?)(.*)")
          if neg == "!" then
-            if deps.platforms_set[plat] then
-               return nil, "This rockspec for "..rockspec.package.." does not support "..plat.." platforms."
+            local ix, plat_name = match_platform(plat)
+            if ix then
+               return nil, "This rockspec for "..rockspec.package.." does not support "..plat_name.." platforms."
             end
          else
-            if deps.platforms_set[plat] then
-               supported = true
-            else
-               if supported == nil then
+            if supported ~= true then
+               if match_platform(plat) then
+                  supported = true
+               else
                   supported = false
                end
             end
          end
       end
       if supported == false then
-         local plats = table.concat(cfg.platforms, ", ")
-         return nil, "This rockspec for "..rockspec.package.." does not support "..plats.." platforms."
+         return nil, "This rockspec for "..rockspec.package.." does not support "..cfg.system.." platforms."
       end
    end
 
