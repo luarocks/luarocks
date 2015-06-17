@@ -40,6 +40,10 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
    -- Strip off .git from base name if present
    module = module:gsub("%.git$", "")
 
+   if not fs.execute_quiet(git_cmd, "--version") then
+      return nil, "'"..git_cmd.."' program not found. Is git installed? You may want to edit variables.GIT"
+   end
+
    local store_dir
    if not dest_dir then
       store_dir = fs.make_temp_dir(name_version)
