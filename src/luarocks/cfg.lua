@@ -145,7 +145,7 @@ end
 cfg.variables = {}
 cfg.rocks_trees = {}
 
--- some extras for the global enviornment in the config files;
+-- some extras for the global environment in the config files;
 cfg.os_getenv = os.getenv
 cfg.__dump_env = function()
   -- debug function, calling it from a config file will show all 
