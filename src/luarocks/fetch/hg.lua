@@ -21,9 +21,13 @@ function hg.get_sources(rockspec, extract, dest_dir)
    assert(type(dest_dir) == "string" or not dest_dir)
 
    local hg_cmd = rockspec.variables.HG
+   if not fs.execute_quiet(hg_cmd, "--version") then
+      return nil, "'"..hg_cmd.."' program not found. Is Mercurial installed? You may want to edit variables.HG"
+   end
+
    local name_version = rockspec.name .. "-" .. rockspec.version
    -- Strip off special hg:// protocol type
-   local url = rockspec.source.url:gsub("^hg://", "") 
+   local url = rockspec.source.url:gsub("^hg://", "")
 
    local module = dir.base_name(url)
 
