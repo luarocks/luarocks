@@ -145,28 +145,7 @@ end
 cfg.variables = {}
 cfg.rocks_trees = {}
 
--- some extras for the global environment in the config files;
-cfg.os_getenv = os.getenv
-cfg.__dump_env = function()
-  -- debug function, calling it from a config file will show all 
-  -- available globals to that config file
-  print(util.show_table(cfg, "global environment"))
-end
-
-sys_config_file = site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..cfg.lua_version..".lua"
-do
-   local err, errcode
-   sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, cfg)
-   if (not sys_config_ok) and errcode == "open" then -- file not found, so try alternate file
-      sys_config_file = sys_config_dir.."/config.lua"
-      sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, cfg)
-   end
-   if (not sys_config_ok) and errcode ~= "open" then -- either "load" or "run"; bad config file, bail out with error
-      io.stderr:write(err.."\n")
-      os.exit(cfg.errorcodes.CONFIGFILE)
-   end
-end
-
+-- The global environment in the config files;
 local env_for_config_file
 env_for_config_file = {
    home = cfg.home,
@@ -174,12 +153,26 @@ env_for_config_file = {
    platform = util.make_shallow_copy(detected),
    processor = proc,
    os_getenv = os.getenv, 
-   __dump_env = function()
+   dump_env = function()
      -- debug function, calling it from a config file will show all 
      -- available globals to that config file
      print(util.show_table(env_for_config_file, "global environment"))
    end,
 }
+
+sys_config_file = site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..cfg.lua_version..".lua"
+do
+   local err, errcode
+   sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, env_for_config_file)
+   if (not sys_config_ok) and errcode == "open" then -- file not found, so try alternate file
+      sys_config_file = sys_config_dir.."/config.lua"
+      sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, env_for_config_file)
+   end
+   if (not sys_config_ok) and errcode ~= "open" then -- either "load" or "run"; bad config file, bail out with error
+      io.stderr:write(err.."\n")
+      os.exit(cfg.errorcodes.CONFIGFILE)
+   end
+end
 
 if not site_config.LUAROCKS_FORCE_CONFIG then
 
