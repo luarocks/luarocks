@@ -21,8 +21,9 @@ function cvs.get_sources(rockspec, extract, dest_dir)
    assert(type(dest_dir) == "string" or not dest_dir)
 
    local cvs_cmd = rockspec.variables.CVS
-   if not fs.execute_quiet(cvs_cmd, "--version") then
-      return nil, "'"..cvs_cmd.."' program not found. Is CVS installed? You may want to edit variables.CVS"
+   local ok, err_msg = fs.is_tool_available(cvs_cmd, "CVS")
+   if not ok then
+      return nil, err_msg
    end
 
    local name_version = rockspec.name .. "-" .. rockspec.version

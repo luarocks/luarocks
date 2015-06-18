@@ -122,6 +122,27 @@ function fs_lua.execute_quiet(command, ...)
    end
 end
 
+--- Checks if the given tool is available.
+-- The tool is executed using a flag, usually just to ask its version.
+-- @param tool_cmd string: The command to be used to check the tool's presence (e.g. hg in case of Mercurial)
+-- @param tool_name string: The actual name of the tool (e.g. Mercurial)
+-- @param arg string: The flag to pass to the tool. '--version' by default.
+function fs_lua.is_tool_available(tool_cmd, tool_name, arg)
+   assert(type(tool_cmd) == "string")
+   assert(type(tool_name) == "string")
+
+   arg = arg or "--version"
+   assert(type(arg) == "string")
+
+   if not fs.execute_quiet(tool_cmd, arg) then
+      local msg = "'%s' program not found. Make sure %s is installed and is available in your PATH " ..
+                  "(or you may want to edit the 'variables.%s' value in file 'config.lua')"
+      return nil, msg:format(tool_cmd, tool_name, tool_cmd:upper())
+   else
+      return true
+   end
+end
+
 --- Check the MD5 checksum for a file.
 -- @param file string: The file to be checked.
 -- @param md5sum string: The string with the expected MD5 checksum.

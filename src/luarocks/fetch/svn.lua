@@ -21,8 +21,9 @@ function svn.get_sources(rockspec, extract, dest_dir)
    assert(type(dest_dir) == "string" or not dest_dir)
 
    local svn_cmd = rockspec.variables.SVN
-   if not fs.execute_quiet(svn_cmd, "--version") then
-      return nil, "'"..svn_cmd.."' program not found. Is Subversion installed? You may want to edit variables.SVN"
+   local ok, err_msg = fs.is_tool_available(svn_cmd, "--version", "Subversion")
+   if not ok then
+      return nil, err_msg
    end
 
    local name_version = rockspec.name .. "-" .. rockspec.version
