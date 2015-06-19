@@ -23,8 +23,9 @@ function cmake.run(rockspec)
 
    util.variable_substitutions(variables, rockspec.variables)
 
-   if not fs.execute_quiet(rockspec.variables.CMAKE, "--help") then
-      return nil, "'"..rockspec.variables.CMAKE.."' program not found. Is cmake installed? You may want to edit variables.CMAKE"
+   local ok, err_msg = fs.is_tool_available(rockspec.variables.CMAKE, "CMake")
+   if not ok then
+      return nil, err_msg
    end
 
    -- If inline cmake is present create CMakeLists.txt from it.

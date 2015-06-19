@@ -20,9 +20,15 @@ function cvs.get_sources(rockspec, extract, dest_dir)
    assert(type(rockspec) == "table")
    assert(type(dest_dir) == "string" or not dest_dir)
 
+   local cvs_cmd = rockspec.variables.CVS
+   local ok, err_msg = fs.is_tool_available(cvs_cmd, "CVS")
+   if not ok then
+      return nil, err_msg
+   end
+
    local name_version = rockspec.name .. "-" .. rockspec.version
    local module = rockspec.source.module or dir.base_name(rockspec.source.url)
-   local command = {rockspec.variables.CVS, "-d"..rockspec.source.pathname, "export", module}
+   local command = {cvs_cmd, "-d"..rockspec.source.pathname, "export", module}
    if rockspec.source.tag then
       table.insert(command, 4, "-r")
       table.insert(command, 5, rockspec.source.tag)
