@@ -12,6 +12,7 @@ local deps = require("luarocks.deps")
 local persist = require("luarocks.persist")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
+local addon = require("luarocks.addon")
 
 function fetch.is_basic_protocol(protocol, remote)
    return protocol == "http" or protocol == "https" or protocol == "ftp" or (not remote and protocol == "file")
@@ -305,6 +306,8 @@ function fetch.load_local_rockspec(filename, quick)
          return nil, filename..": "..err
       end
    end
+
+   addon.handle_rockspec(original_rockspec)
 
    return rockspec
 end

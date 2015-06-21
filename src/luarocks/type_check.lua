@@ -182,6 +182,37 @@ local manifest_types = {
    }
 }
 
+--- Add a new field, potentially recursively, to tbl.
+-- @param tbl table: the table.
+-- @param field string: a dot-separated string specyfing the path to access
+-- the field.
+-- @param value: the value to add.
+-- @param context string: the previous part of field, used in error message.
+-- @return boolean or (nil, string): true if the named field does not exist
+-- but its parent does, or nil and a message otherwise.
+local function add_field(tbl, field, value, context)
+   local i = field:find("%.")
+   if i then
+      local k = field:sub(1, i-1)
+      local subtbl = tbl[k]
+      if type(subtbl) ~= "table" then
+         return nil, "Field "..context..k.." does not exist or is not a table"
+      end
+      return add_field(subtbl, field:sub(i+1), value, context..field:sub(1,i))
+   end
+   if tbl[field] then
+      return nil, "Field "..context..field.." already exists"
+   end
+   tbl[field] = value
+end
+
+--- Add a new field to rockspec_types. Must not conflict with existing field.
+-- @param field string: see add_field.
+-- @return boolean or (nil, string), see add_field.
+function type_check.add_rockspec_field(field, typetbl)
+   add_field(rockspec_types, field, typetbl, "")
+end
+
 local function check_version(version, typetbl, context)
    local typetbl_version = typetbl._version or "1.0"
    if deps.compare_versions(typetbl_version, version) then
