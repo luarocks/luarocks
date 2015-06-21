@@ -295,6 +295,18 @@ function util.make_shallow_copy(tbl)
    return copy
 end
 
+--- Create a new copy of a table where the values copied recursively.
+function util.make_deep_value_copy(tbl)
+   if type(tbl) ~= "table" then
+      return tbl
+   end
+   local copy = {}
+   for k, v in pairs(tbl) do
+      copy[k] = util.make_deep_value_copy(v)
+   end
+   return copy
+end
+
 -- Check if a set of needed variables are referenced
 -- somewhere in a list of definitions, warning the user
 -- about any unused ones. Each key in needed_set should

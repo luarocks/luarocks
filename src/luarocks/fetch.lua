@@ -208,9 +208,14 @@ function fetch.load_local_rockspec(filename, quick)
    end
    local globals = err
 
+   local original_rockspec
+
    if not quick then
+      -- Save the original rockspec for the second type check. Some fields of
+      -- rockspec will be transformed later.
+      original_rockspec = util.make_deep_value_copy(rockspec)
       -- Always accept unknown fields since there may be fields registered by
-      -- addons.
+      -- addons. We will type check again after addons get loaded.
       local accept_unknown_fields = cfg.accept_unknown_fields
       cfg.accept_unknown_fields = true
       local ok, err = type_check.type_check_rockspec(rockspec, globals)
@@ -292,11 +297,12 @@ function fetch.load_local_rockspec(filename, quick)
       end
    end
 
-   -- Now that addons are loaded, type check the rockspec again
+   -- Now that addons are loaded, type check the rockspec again.
    if not quick and not cfg.accept_unknown_fields then
-      -- XXX We should type check the rockspec again, disallowing unknown
-      -- fields. However since rockspec.{build,}dependencies have been parsed
-      -- the check will always fail.
+      local ok, err = type_check.type_check_rockspec(original_rockspec, globals)
+      if not ok then
+         return nil, filename..": "..err
+      end
    end
 
    return rockspec
