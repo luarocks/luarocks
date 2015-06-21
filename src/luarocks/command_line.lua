@@ -40,6 +40,17 @@ local function replace_tree(flags, args, tree)
    path.use_tree(tree)
 end
 
+--- Given a command name, find the corresponding module. This can either be a
+-- module named in the global commands table, or an addon.
+local function find_command(name)
+   -- Look for builtin command
+   local cmd = commands[name]
+   if cmd then return require(cmd) end
+   -- Look for addon command
+   local ok, cmd = pcall(require, "luarocks.addon."..name)
+   return ok and cmd or nil
+end
+
 --- Main command-line processor.
 -- Parses input arguments and calls the appropriate driver function
 -- to execute the action requested on the command-line, forwarding
@@ -197,14 +208,14 @@ function command_line.run_command(...)
       die("Current directory does not exist. Please run LuaRocks from an existing directory.")
    end
    
-   if commands[command] then
+   local cmd = find_command(command)
+   if cmd then
       -- TODO the interface of run should be modified, to receive the
       -- flags table and the (possibly unpacked) nonflags arguments.
       -- This would remove redundant parsing of arguments.
       -- I'm not changing this now to avoid messing with the run()
       -- interface, which I know some people use (even though
       -- I never published it as a public API...)
-      local cmd = require(commands[command])
       local xp, ok, err, exitcode = xpcall(function() return cmd.run(unpack(args)) end, function(err)
          die(debug.traceback("LuaRocks "..cfg.program_version
             .." bug (please report at https://github.com/keplerproject/luarocks/issues).\n"
