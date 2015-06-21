@@ -291,7 +291,8 @@ function fetch.load_local_rockspec(filename, quick)
       for _, addon in ipairs(rockspec.addons) do
          local ok, mod = pcall(require, "luarocks.addon."..addon)
          if not ok then
-            return nil, filename..": cannot load addon "..addon
+            local err = mod
+            return nil, filename..": cannot load addon "..addon..": "..err
          end
          mod.load()
       end
