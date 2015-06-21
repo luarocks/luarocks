@@ -321,27 +321,6 @@ local function check_undeclared_globals(globals, typetbl)
    return true
 end
 
---- Type check a specific field of a rockspec table.
--- This is used to to type check the "build_dependencies" and "addon" fields
--- of the rockspec, which must be type checked before other fields.
-function type_check.type_check_rockspec_field(rockspec, field)
-   -- Unknown field
-   if not rockspec_types[field] then
-      if not cfg.accept_unknown_fields then
-         return nil, "Unknown field "..field
-      end
-      return true
-   end
-   -- Missing field
-   if not rockspec[field] then
-      if rockspec_types[field]._mandatory then
-         return nil, "Mandatory field "..field.." is missing."
-      end
-      return true
-   end
-   return type_check_item(rockspec.rockspec_format or "1.0", rockspec[field], rockspec_types[field], "")
-end
-
 --- Type check a rockspec table.
 -- Verify the correctness of elements from a 
 -- rockspec table, reporting on unknown fields and type
