@@ -373,12 +373,14 @@ end
 -- parsed as tables; and a table of "no-upgrade" missing dependencies
 -- (to be used in plugin modules so that a plugin does not force upgrade of
 -- its parent application).
-function deps.match_deps(rockspec, blacklist, deps_mode)
+function deps.match_deps(rockspec, blacklist, deps_mode, builddep)
    assert(type(rockspec) == "table")
    assert(type(blacklist) == "table" or not blacklist)
    local matched, missing, no_upgrade = {}, {}, {}
    
-   for _, dep in ipairs(rockspec.dependencies) do
+   local dependencies = builddep and rockspec.build_dependencies or rockspec.dependencies
+
+   for _, dep in ipairs(dependencies) do
       local found = match_dep(dep, blacklist and blacklist[dep.name] or nil, deps_mode)
       if found then
          if not cfg.rocks_provided[dep.name] then
@@ -410,10 +412,11 @@ end
 -- Packages are installed using the LuaRocks "install" command.
 -- Aborts the program if a dependency could not be fulfilled.
 -- @param rockspec table: A rockspec in table format.
+-- @param builddep boolean: true if trying to fulfill build-time dependencies.
 -- @return boolean or (nil, string, [string]): True if no errors occurred, or
 -- nil and an error message if any test failed, followed by an optional
 -- error code.
-function deps.fulfill_dependencies(rockspec, deps_mode)
+function deps.fulfill_dependencies(rockspec, deps_mode, builddep)
 
    local search = require("luarocks.search")
    local install = require("luarocks.install")
@@ -445,7 +448,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
       end
    end
 
-   local _, missing, no_upgrade = deps.match_deps(rockspec, nil, deps_mode)
+   local _, missing, no_upgrade = deps.match_deps(rockspec, nil, deps_mode, builddep)
 
    if next(no_upgrade) then
       util.printerr("Missing dependencies for "..rockspec.name.." "..rockspec.version..":")

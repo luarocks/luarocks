@@ -39,6 +39,14 @@ local rockspec_types = {
       license = string_1,
       maintainer = string_1,
    },
+   build_dependencies = {
+      platforms = {}, -- recursively defined below
+      _any = string_1,
+   },
+   addons = {
+      platforms = {}, -- recursively defined below
+      _any = string_1,
+   },
    dependencies = {
       platforms = {}, -- recursively defined below
       _any = string_1,
@@ -102,10 +110,14 @@ local rockspec_types = {
 type_check.rockspec_order = {"rockspec_format", "package", "version", 
    { "source", { "url", "tag", "branch", "md5" } },
    { "description", {"summary", "detailed", "homepage", "license" } },
-   "supported_platforms", "dependencies", "external_dependencies",
+   "supported_platforms",
+   "build_dependencies", "addons",
+   "dependencies", "external_dependencies",
    { "build", {"type", "modules", "copy_directories", "platforms"} },
    "hooks"}
 
+rockspec_types.build_dependencies.platforms._any = rockspec_types.build_dependencies
+rockspec_types.addons.platforms._any = rockspec_types.addons
 rockspec_types.build.platforms._any = rockspec_types.build
 rockspec_types.dependencies.platforms._any = rockspec_types.dependencies
 rockspec_types.external_dependencies.platforms._any = rockspec_types.external_dependencies
@@ -307,6 +319,27 @@ local function check_undeclared_globals(globals, typetbl)
       return nil, "Unknown variables: "..table.concat(undeclared, ", ")
    end
    return true
+end
+
+--- Type check a specific field of a rockspec table.
+-- This is used to to type check the "build_dependencies" and "addon" fields
+-- of the rockspec, which must be type checked before other fields.
+function type_check.type_check_rockspec_field(rockspec, field)
+   -- Unknown field
+   if not rockspec_types[field] then
+      if not cfg.accept_unknown_fields then
+         return nil, "Unknown field "..field
+      end
+      return true
+   end
+   -- Missing field
+   if not rockspec[field] then
+      if rockspec_types[field]._mandatory then
+         return nil, "Mandatory field "..field.." is missing."
+      end
+      return true
+   end
+   return type_check_item(rockspec.rockspec_format or "1.0", rockspec[field], rockspec_types[field], "")
 end
 
 --- Type check a rockspec table.

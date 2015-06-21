@@ -174,6 +174,21 @@ function fetch.url_to_base_dir(url)
    return base:gsub("%.[^.]*$", ""):gsub("%.tar$", "")
 end
 
+local function parse_deps(rockspec, field)
+   if rockspec[field] then
+      for i = 1, #rockspec[field] do
+         local parsed, err = deps.parse_dep(rockspec[field][i])
+         if not parsed then
+            return nil, "Parse error processing dependency '"..rockspec[field][i].."': "..tostring(err)
+         end
+         rockspec[field][i] = parsed
+      end
+   else
+      rockspec[field] = {}
+   end
+   return true
+end
+
 --- Back-end function that actually loads the local rockspec.
 -- Performs some validation and postprocessing of the rockspec contents.
 -- @param filename string: The local filename of the rockspec file.
@@ -194,7 +209,12 @@ function fetch.load_local_rockspec(filename, quick)
    local globals = err
 
    if not quick then
+      -- Always accept unknown fields since there may be fields registered by
+      -- addons.
+      local accept_unknown_fields = cfg.accept_unknown_fields
+      cfg.accept_unknown_fields = true
       local ok, err = type_check.type_check_rockspec(rockspec, globals)
+      cfg.accept_unknown_fields = accept_unknown_fields
       if not ok then
          return nil, filename..": "..err
       end
@@ -206,6 +226,7 @@ function fetch.load_local_rockspec(filename, quick)
       end
    end
 
+   util.platform_overrides(rockspec.addons)
    util.platform_overrides(rockspec.build)
    util.platform_overrides(rockspec.dependencies)
    util.platform_overrides(rockspec.external_dependencies)
@@ -244,19 +265,38 @@ function fetch.load_local_rockspec(filename, quick)
                       or rockspec.source.module
                       or ((filebase:match("%.lua$") or filebase:match("%.c$")) and ".")
                       or base
-   if rockspec.dependencies then
-      for i = 1, #rockspec.dependencies do
-         local parsed, err = deps.parse_dep(rockspec.dependencies[i])
-         if not parsed then
-            return nil, "Parse error processing dependency '"..rockspec.dependencies[i].."': "..tostring(err)
-         end
-         rockspec.dependencies[i] = parsed
-      end
-   else
-      rockspec.dependencies = {}
+   local ok, err = parse_deps(rockspec, "build_dependencies")
+   if not ok then
+      return nil, err
+   end
+   local ok, err = parse_deps(rockspec, "dependencies")
+   if not ok then
+      return nil, err
    end
    if not quick then
       path.configure_paths(rockspec)
+   end
+
+   -- Fulfill build_dependencies
+   -- XXX ignores depmode from command line
+   deps.fulfill_dependencies(rockspec, cfg.deps_mode, true)
+
+   -- Load addons
+   if rockspec.addons then
+      for _, addon in ipairs(rockspec.addons) do
+         local ok, mod = pcall(require, "luarocks.addon."..addon)
+         if not ok then
+            return nil, filename..": cannot load addon "..addon
+         end
+         mod.load()
+      end
+   end
+
+   -- Now that addons are loaded, type check the rockspec again
+   if not quick and not cfg.accept_unknown_fields then
+      -- XXX We should type check the rockspec again, disallowing unknown
+      -- fields. However since rockspec.{build,}dependencies have been parsed
+      -- the check will always fail.
    end
 
    return rockspec
