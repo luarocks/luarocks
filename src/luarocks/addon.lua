@@ -16,7 +16,7 @@ function addon.register_hook(name, callback)
    if not hook_registry[name] then
       return nil, "No hook called "..name
    end
-   hook_registry[name][#hook_registry[name]] = callback
+   hook_registry[name][#hook_registry[name]+1] = callback
 end
 
 function addon.trigger_hook(name, ...)
