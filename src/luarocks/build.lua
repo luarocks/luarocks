@@ -16,6 +16,7 @@ local deps = require("luarocks.deps")
 local manif = require("luarocks.manif")
 local remove = require("luarocks.remove")
 local cfg = require("luarocks.cfg")
+local addon = require("luarocks.addon")
 
 build.help_summary = "Build/compile a rock."
 build.help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
@@ -174,6 +175,8 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    elseif not rockspec.build.type then
       return nil, "Rockspec error: build type not specified"
    end
+
+   addon.trigger_hook("build.before")
 
    if deps_mode == "none" then
       util.printerr("Warning: skipping dependency checks.")
@@ -339,6 +342,8 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    util.printout(name.." "..version.." is now built and installed in "..root_dir.." "..license)
    util.printout()
    
+   addon.trigger_hook("build.after")
+
    util.remove_scheduled_function(rollback)
    return name, version
 end
