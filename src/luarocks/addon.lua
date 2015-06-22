@@ -52,7 +52,10 @@ end
 function addon.handle_rockspec(rockspec)
    for k, v in pairs(rockspec_field_registry) do
       if v.callback then
-         v.callback(get(rockspec, k))
+         field_value = get(rockspec, k)
+         if field_value then
+            v.callback(field_value)
+         end
       end
    end
 end
