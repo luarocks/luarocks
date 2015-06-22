@@ -60,4 +60,11 @@ function addon.handle_rockspec(rockspec)
    end
 end
 
+--- Reset the addon registries.
+-- TODO: Augmentations to rockspec_types are not yet reset.
+function addon.reset()
+   hook_registry = {}
+   rockspec_field_registry = {}
+end
+
 return addon

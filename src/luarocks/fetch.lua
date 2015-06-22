@@ -291,6 +291,7 @@ function fetch.load_local_rockspec(filename, quick)
    end
 
    -- Load addons
+   addon.reset()
    if rockspec.addons then
       for _, addon in ipairs(rockspec.addons) do
          local ok, mod = pcall(require, "luarocks.addon."..addon)
