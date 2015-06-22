@@ -285,7 +285,10 @@ function fetch.load_local_rockspec(filename, quick)
 
    -- Fulfill build_dependencies
    -- XXX ignores depmode from command line
-   deps.fulfill_dependencies(rockspec, cfg.deps_mode, true)
+   local ok, err = deps.fulfill_dependencies(rockspec, cfg.deps_mode, true)
+   if not ok then
+      return nil, err
+   end
 
    -- Load addons
    if rockspec.addons then
