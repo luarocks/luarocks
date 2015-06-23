@@ -295,16 +295,25 @@ function util.make_shallow_copy(tbl)
    return copy
 end
 
---- Create a new copy of a table where the values copied recursively.
-function util.make_deep_value_copy(tbl)
+local function make_deep_value_copy(tbl, memo)
    if type(tbl) ~= "table" then
       return tbl
    end
+   if memo[tbl] then
+      return memo[tbl]
+   end
    local copy = {}
+   memo[tbl] = copy
    for k, v in pairs(tbl) do
-      copy[k] = util.make_deep_value_copy(v)
+      copy[k] = make_deep_value_copy(v, memo)
    end
    return copy
+end
+
+--- Create a new copy of a table where the values copied recursively.
+-- This function deals with recursive structures correctly.
+function util.make_deep_value_copy(tbl)
+   return make_deep_value_copy(tbl, {})
 end
 
 -- Check if a set of needed variables are referenced
