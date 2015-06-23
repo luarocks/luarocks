@@ -11,13 +11,13 @@ local hook_registry
 local rockspec_field_registry
 
 --- Reset the addon registries.
--- TODO: Augmentations to rockspec_types are not yet reset.
 function addon.reset()
    hook_registry = {}
    for i, h in ipairs(available_hooks) do
       hook_registry[h] = {}
    end
    rockspec_field_registry = {}
+   type_check.reset_rockspec_types()
 end
 
 addon.reset()

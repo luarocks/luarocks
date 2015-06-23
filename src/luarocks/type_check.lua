@@ -7,6 +7,7 @@ package.loaded["luarocks.type_check"] = type_check
 
 local cfg = require("luarocks.cfg")
 local deps = require("luarocks.deps")
+local util = require("luarocks.util")
 
 type_check.rockspec_format = "1.1"
 
@@ -181,6 +182,12 @@ local manifest_types = {
       }
    }
 }
+
+local original_rockspec_types = util.make_deep_value_copy(rockspec_types)
+
+function type_check.reset_rockspec_types()
+   rockspec_types = original_rockspec_types
+end
 
 --- Add a new field, potentially recursively, to tbl.
 -- @param tbl table: the table.
