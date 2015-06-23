@@ -76,4 +76,19 @@ function addon.handle_rockspec(rockspec)
    end
 end
 
+function addon.load(name)
+   local modname = "luarocks.addon."..name
+   package.loaded[modname] = nil
+   local ok, err = pcall(require, modname)
+   if not ok then
+      return nil, err
+   end
+   local mod = err
+   local ok, err = pcall(mod.load)
+   if not ok then
+      return nil, err
+   end
+   return true
+end
+
 return addon
