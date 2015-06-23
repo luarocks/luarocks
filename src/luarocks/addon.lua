@@ -7,10 +7,20 @@ local type_check = require("luarocks.type_check")
 local available_hooks = {
    "build.before", "build.after"
 }
-local hook_registry = {}
-for i, h in ipairs(available_hooks) do
-   hook_registry[h] = {}
+local hook_registry
+local rockspec_field_registry
+
+--- Reset the addon registries.
+-- TODO: Augmentations to rockspec_types are not yet reset.
+function addon.reset()
+   hook_registry = {}
+   for i, h in ipairs(available_hooks) do
+      hook_registry[h] = {}
+   end
+   rockspec_field_registry = {}
 end
+
+addon.reset()
 
 function addon.register_hook(name, callback)
    if not hook_registry[name] then
@@ -27,8 +37,6 @@ function addon.trigger_hook(name, ...)
       cb(...)
    end
 end
-
-local rockspec_field_registry = {}
 
 function addon.register_rockspec_field(name, typetbl, callback)
    if rockspec_field_registry[name] then
@@ -58,13 +66,6 @@ function addon.handle_rockspec(rockspec)
          end
       end
    end
-end
-
---- Reset the addon registries.
--- TODO: Augmentations to rockspec_types are not yet reset.
-function addon.reset()
-   hook_registry = {}
-   rockspec_field_registry = {}
 end
 
 return addon
