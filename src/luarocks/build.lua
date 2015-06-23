@@ -176,8 +176,6 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       return nil, "Rockspec error: build type not specified"
    end
 
-   addon.trigger_hook("build.before")
-
    if deps_mode == "none" then
       util.printerr("Warning: skipping dependency checks.")
    else
@@ -221,7 +219,9 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       end
       fs.change_dir(rockspec.source.dir)
    end
-   
+
+   addon.trigger_hook("build.before")
+
    local dirs = {
       lua = { name = path.lua_dir(name, version), is_module_path = true },
       lib = { name = path.lib_dir(name, version), is_module_path = true },
