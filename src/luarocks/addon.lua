@@ -33,8 +33,12 @@ function addon.trigger_hook(name, ...)
    if not hook_registry[name] then
       return nil, "No hook called "..name
    end
-   for i, cb in ipairs(hook_registry[name]) do
-      cb(...)
+   for i, callback in ipairs(hook_registry[name]) do
+      local ok, err = pcall(callback, ...)
+      if not ok then
+         -- TODO include the name of addon in the error message
+         print("Addon hook for "..name.." failed: "..err)
+      end
    end
 end
 
@@ -62,7 +66,11 @@ function addon.handle_rockspec(rockspec)
       if v.callback then
          field_value = get(rockspec, k)
          if field_value then
-            v.callback(field_value)
+            local ok, err = pcall(v.callback, field_value)
+            if not ok then
+               -- TODO include the name of addon in the error message
+               print("Addon callback for rockspec field "..k.." failed: "..err)
+            end
          end
       end
    end
