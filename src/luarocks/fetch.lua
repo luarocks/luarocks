@@ -37,11 +37,11 @@ function fetch.fetch_url(url, filename, cache)
    if protocol == "file" then
       return fs.absolute_name(pathname)
    elseif fetch.is_basic_protocol(protocol, true) then
-      local ok, filename = fs.download(url, filename, cache)
+      local ok, name = fs.download(url, filename, cache)
       if not ok then
          return nil, "Failed downloading "..url..(filename and " - "..filename or ""), "network"
       end
-      return filename
+      return name
    else
       return nil, "Unsupported protocol "..protocol
    end
