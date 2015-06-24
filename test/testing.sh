@@ -419,6 +419,7 @@ test_lint_ok() { $luarocks download --rockspec validate-args ${verrev_validate_a
 fail_lint_type_mismatch_string() { $luarocks lint "$testing_dir/testfiles/type_mismatch_string-1.0-1.rockspec"; }
 fail_lint_type_mismatch_version() { $luarocks lint "$testing_dir/testfiles/type_mismatch_version-1.0-1.rockspec"; }
 fail_lint_type_mismatch_table() { $luarocks lint "$testing_dir/testfiles/type_mismatch_table-1.0-1.rockspec"; }
+fail_lint_no_build_table() { $luarocks lint "$testing_dir/testfiles/no_build_table-0.1-1.rockspec"; }
 
 test_list() { $luarocks list; }
 test_list_porcelain() { $luarocks list --porcelain; }

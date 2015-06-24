@@ -203,6 +203,7 @@ local tests = {
    fail_lint_type_mismatch_string = function() return run '$luarocks lint "$testing_dir/testfiles/type_mismatch_string-1.0-1.rockspec"' end,
    fail_lint_type_mismatch_version = function() return run '$luarocks lint "$testing_dir/testfiles/type_mismatch_version-1.0-1.rockspec"' end,
    fail_lint_type_mismatch_table = function() return run '$luarocks lint "$testing_dir/testfiles/type_mismatch_table-1.0-1.rockspec"' end,
+   fail_lint_no_build_table = function() return run '$luarocks lint "$testing_dir/testfiles/no_build_table-0.1-1.rockspec"' end,
    test_list = function() return run "$luarocks list" end,
    test_list_porcelain = function() return run "$luarocks list --porcelain" end,
    test_make_with_rockspec = function()
