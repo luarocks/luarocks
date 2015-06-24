@@ -175,17 +175,13 @@ function fetch.url_to_base_dir(url)
    return base:gsub("%.[^.]*$", ""):gsub("%.tar$", "")
 end
 
-local function parse_deps(rockspec, field)
-   if rockspec[field] then
-      for i = 1, #rockspec[field] do
-         local parsed, err = deps.parse_dep(rockspec[field][i])
-         if not parsed then
-            return nil, "Parse error processing dependency '"..rockspec[field][i].."': "..tostring(err)
-         end
-         rockspec[field][i] = parsed
+local function parse_deps(dependencies)
+   for i = 1, #dependencies do
+      local parsed, err = deps.parse_dep(dependencies[i])
+      if not parsed then
+         return nil, "Parse error processing dependency '"..dependencies[i].."': "..tostring(err)
       end
-   else
-      rockspec[field] = {}
+      dependencies[i] = parsed
    end
    return true
 end
@@ -271,14 +267,18 @@ function fetch.load_local_rockspec(filename, quick)
                       or rockspec.source.module
                       or ((filebase:match("%.lua$") or filebase:match("%.c$")) and ".")
                       or base
-   local ok, err = parse_deps(rockspec, "build_dependencies")
+
+   rockspec.dependencies = rockspec.dependencies or {}
+   local ok, err = parse_deps(rockspec.dependencies)
    if not ok then
       return nil, err
    end
-   local ok, err = parse_deps(rockspec, "dependencies")
+   rockspec.build_dependencies = rockspec.build_dependencies or {}
+   local ok, err = parse_deps(rockspec.build_dependencies)
    if not ok then
       return nil, err
    end
+
    if not quick then
       path.configure_paths(rockspec)
    end
