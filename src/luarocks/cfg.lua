@@ -32,8 +32,6 @@ if not ok then
    site_config = {}
 end
 
-cfg.site_config = site_config
-
 cfg.program_version = "scm"
 cfg.program_series = "2.2"
 cfg.major_version = (cfg.program_version:match("([^.]%.[^.])")) or cfg.program_series
@@ -87,6 +85,7 @@ elseif proc:match("amd64") or proc:match("x86_64") then
 elseif proc:match("Power Macintosh") then
    proc = "powerpc"
 end
+cfg.target_cpu = proc
 
 if system == "FreeBSD" then
    detected.unix = true
@@ -151,7 +150,8 @@ env_for_config_file = {
    home = cfg.home,
    lua_version = cfg.lua_version,
    platform = util.make_shallow_copy(detected),
-   processor = proc,
+   processor = cfg.target_cpu,   -- remains for compat reasons
+   target_cpu = cfg.target_cpu,  -- replaces `processor`
    os_getenv = os.getenv, 
    dump_env = function()
      -- debug function, calling it from a config file will show all 
@@ -322,7 +322,7 @@ if detected.windows then
 
    home_config_file = home_config_file and home_config_file:gsub("\\","/")
    defaults.fs_use_modules = false
-   defaults.arch = "win32-"..proc
+   defaults.arch = "win32-"..cfg.target_cpu 
    defaults.platforms = {"win32", "windows" }
    defaults.lib_extension = "dll"
    defaults.external_lib_extension = "dll"
@@ -440,7 +440,7 @@ end
 
 if detected.cygwin then
    defaults.lib_extension = "so" -- can be overridden in the config file for mingw builds
-   defaults.arch = "cygwin-"..proc
+   defaults.arch = "cygwin-"..cfg.target_cpu
    defaults.platforms = {"unix", "cygwin"}
    defaults.cmake_generator = "Unix Makefiles"
    defaults.variables.CC = "echo -llua | xargs gcc"
@@ -456,7 +456,7 @@ end
 if detected.macosx then
    defaults.variables.MAKE = "make"
    defaults.external_lib_extension = "dylib"
-   defaults.arch = "macosx-"..proc
+   defaults.arch = "macosx-"..cfg.target_cpu
    defaults.platforms = {"unix", "bsd", "macosx"}
    defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
    defaults.variables.STAT = "/usr/bin/stat"
@@ -476,12 +476,12 @@ if detected.macosx then
 end
 
 if detected.linux then
-   defaults.arch = "linux-"..proc
+   defaults.arch = "linux-"..cfg.target_cpu
    defaults.platforms = {"unix", "linux"}
 end
 
 if detected.freebsd then
-   defaults.arch = "freebsd-"..proc
+   defaults.arch = "freebsd-"..cfg.target_cpu
    defaults.platforms = {"unix", "bsd", "freebsd"}
    defaults.gcc_rpath = false
    defaults.variables.CC = "cc"
@@ -489,17 +489,17 @@ if detected.freebsd then
 end
 
 if detected.openbsd then
-   defaults.arch = "openbsd-"..proc
+   defaults.arch = "openbsd-"..cfg.target_cpu
    defaults.platforms = {"unix", "bsd", "openbsd"}
 end
 
 if detected.netbsd then
-   defaults.arch = "netbsd-"..proc
+   defaults.arch = "netbsd-"..cfg.target_cpu
    defaults.platforms = {"unix", "bsd", "netbsd"}
 end
 
 if detected.solaris then
-   defaults.arch = "solaris-"..proc
+   defaults.arch = "solaris-"..cfg.target_cpu
    defaults.platforms = {"unix", "solaris"}
    defaults.variables.MAKE = "gmake"
 end
