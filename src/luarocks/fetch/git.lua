@@ -40,6 +40,11 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
    -- Strip off .git from base name if present
    module = module:gsub("%.git$", "")
 
+   local ok, err_msg = fs.is_tool_available(git_cmd, "Git")
+   if not ok then
+      return nil, err_msg
+   end
+
    local store_dir
    if not dest_dir then
       store_dir = fs.make_temp_dir(name_version)

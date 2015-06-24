@@ -90,7 +90,7 @@ local function mkdir (dir)
 	return exec([[.\win32\tools\mkdir -p "]]..dir..[[" >NUL]])
 end
 
--- does the current user have admin priviledges ( = elevated)
+-- does the current user have admin privileges ( = elevated)
 local function permission()
 	return exec("net session >NUL 2>&1") -- fails if not admin
 end
@@ -175,7 +175,7 @@ Other options:
 /F             Remove installation directory if it already exists.
 /NOREG         Do not load registry info to register '.rockspec'
                extension with LuaRocks commands (right-click).
-/NOADMIN       The installer requires admin priviledges. If not
+/NOADMIN       The installer requires admin privileges. If not
                available it will elevate a new process. Use this
                switch to prevent elevation, but make sure the
                destination paths are all accessible for the current
@@ -319,7 +319,7 @@ local function look_for_interpreter (directory)
 			return true
 		end
 	end
-	print("      No Lua interpreter found")
+	--print("      No Lua interpreter found")
 	return false
 end
 
@@ -550,12 +550,12 @@ check_flags()
 
 if not permission() then
 	if not NOADMIN then
-		-- must elevate the process with admin priviledges
+		-- must elevate the process with admin privileges
         if not exec("PowerShell /? >NUL 2>&1") then
           -- powershell is not available, so error out
-          die("No administrative priviledges detected and cannot auto-elevate. Please run with admin priviledges or use the /NOADMIN switch")
+          die("No administrative privileges detected and cannot auto-elevate. Please run with admin privileges or use the /NOADMIN switch")
         end
-		print("Need admin priviledges, now elevating a new process to continue installing...")
+		print("Need admin privileges, now elevating a new process to continue installing...")
 		local runner = os.getenv("TEMP").."\\".."LuaRocks_Installer.bat"
 		local f = io.open(runner, "w")
 		f:write("@echo off\n")
@@ -567,13 +567,13 @@ if not permission() then
 		f:close()
 		-- run the created temp batch file in elevated mode
 		exec("PowerShell -Command (New-Object -com 'Shell.Application').ShellExecute('"..runner.."', '', '', 'runas')\n")
-		print("Now exiting unpriviledged installer")
+		print("Now exiting unprivileged installer")
        	os.exit()  -- exit here, the newly created elevated process will do the installing
 	else
-		print("Attempting to install without admin priviledges...")
+		print("Attempting to install without admin privileges...")
 	end
 else
-	print("Admin priviledges available for installing")
+	print("Admin privileges available for installing")
 end
 
 vars.PREFIX = vars.PREFIX or os.getenv("PROGRAMFILES")..[[\LuaRocks]]
@@ -755,7 +755,7 @@ ECHO ECHO Press any key to close this window... >> "%TMPFILE%"
 ECHO PAUSE ^> NUL                               >> "%TMPFILE%"
 ECHO DEL "%TMPFILE%"                            >> "%TMPFILE%"
 
-ECHO Now retrying as a priviledged user...
+ECHO Now retrying as a privileged user...
 PowerShell -Command (New-Object -com 'Shell.Application').ShellExecute('%TMPFILE%', '', '', 'runas')
 
 :EXITLR

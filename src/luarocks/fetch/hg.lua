@@ -21,9 +21,14 @@ function hg.get_sources(rockspec, extract, dest_dir)
    assert(type(dest_dir) == "string" or not dest_dir)
 
    local hg_cmd = rockspec.variables.HG
+   local ok, err_msg = fs.is_tool_available(hg_cmd, "Mercurial")
+   if not ok then
+      return nil, err_msg
+   end
+
    local name_version = rockspec.name .. "-" .. rockspec.version
    -- Strip off special hg:// protocol type
-   local url = rockspec.source.url:gsub("^hg://", "") 
+   local url = rockspec.source.url:gsub("^hg://", "")
 
    local module = dir.base_name(url)
 
