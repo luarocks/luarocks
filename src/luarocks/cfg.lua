@@ -630,13 +630,4 @@ function cfg.is_platform(query)
    end
 end
 
---[[
-function cfg.dump()
-  for k,v in pairs(defaults) do
-    if cfg[k] then end -- nothing todo, just touch it and the __index will make a local copy in `cfg` 
-  end
-  print(util.show_table(cfg, "Dump of `cfg` table:"))
-end
-cfg.dump() --]]
-
 return cfg
