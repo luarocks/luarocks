@@ -182,7 +182,9 @@ do
       io.stderr:write(err.."\n")
       os.exit(cfg.errorcodes.CONFIGFILE)
    end
-   merge_overrides(sys_config_ok)
+   if sys_config_ok then 
+      merge_overrides(sys_config_ok)
+   end
 end
 
 if not site_config.LUAROCKS_FORCE_CONFIG then
