@@ -296,7 +296,7 @@ function fetch.load_local_rockspec(filename, quick)
       for _, name in ipairs(rockspec.addons) do
          local ok, err = addon.load(name)
          if not ok then
-            return nil, filename..": cannot load addon "..addon..": "..err
+            return nil, filename..": cannot load addon "..name..": "..err
          end
       end
    end
