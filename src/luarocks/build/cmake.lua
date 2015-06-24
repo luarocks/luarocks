@@ -41,7 +41,7 @@ function cmake.run(rockspec)
    -- Try to pick the best generator. With msvc and x64, CMake does not select it by default so we need to be explicit.
    if cfg.is_platform("mingw32") and cfg.cmake_generator then
       args = args .. ' -G"'..cfg.cmake_generator.. '"'
-   elseif cfg.is_platform("windows") and cfg.arch:match("%-x86_64$") then
+   elseif cfg.is_platform("windows") and cfg.target_cpu:match("x86_64$") then
       args = args .. " -DCMAKE_GENERATOR_PLATFORM=x64"
    end
 
