@@ -7,7 +7,7 @@ sudo: false
 env:
   matrix:
     - LUA_VER=5.1.5
-    - LUA_VER=5.2.3
-    - LUA_VER=5.3.0
+    - LUA_VER=5.2.4
+    - LUA_VER=5.3.1
 
 script: cd test && ./testing.sh --travis --lua $LUA_VER
