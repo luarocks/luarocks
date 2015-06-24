@@ -217,7 +217,7 @@ end
 -- @param field string: see add_field.
 -- @return boolean or (nil, string), see add_field.
 function type_check.add_rockspec_field(field, typetbl)
-   add_field(rockspec_types, field, typetbl, "")
+   return add_field(rockspec_types, field, typetbl, "")
 end
 
 local function check_version(version, typetbl, context)
