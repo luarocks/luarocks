@@ -87,7 +87,8 @@ local rockspec_types = {
       copy_directories = {
          _any = string_1,
       },
-      _more = true
+      _more = true,
+      _mandatory = true
    },
    hooks = {
       platforms = {}, -- recursively defined below
