@@ -159,6 +159,16 @@ env_for_config_file = {
      print(util.show_table(env_for_config_file, "global environment"))
    end,
 }
+-- Merge values from config files read into the `cfg` table
+local merge_overrides = function(overrides)
+   if overrides.rocks_trees then
+      cfg.rocks_trees = nil
+   end
+   if overrides.rocks_servers then
+      cfg.rocks_servers = nil
+   end
+   util.deep_merge(cfg, overrides)
+end
 
 sys_config_file = site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..cfg.lua_version..".lua"
 do
@@ -172,6 +182,7 @@ do
       io.stderr:write(err.."\n")
       os.exit(cfg.errorcodes.CONFIGFILE)
    end
+   merge_overrides(sys_config_ok)
 end
 
 if not site_config.LUAROCKS_FORCE_CONFIG then
@@ -190,13 +201,7 @@ if not site_config.LUAROCKS_FORCE_CONFIG then
    end
    if home_overrides then
       home_config_ok = true
-      if home_overrides.rocks_trees then
-         cfg.rocks_trees = nil
-      end
-      if home_overrides.rocks_servers then
-         cfg.rocks_servers = nil
-      end
-      util.deep_merge(cfg, home_overrides)
+      merge_overrides(home_overrides)
    else
       home_config_ok = home_overrides
       if errcode ~= "open" then
@@ -220,6 +225,7 @@ end
 local defaults = {
 
    local_by_default = false,
+   use_extensions = false,
    accept_unknown_fields = false,
    fs_use_modules = true,
    hooks_enabled = true,
