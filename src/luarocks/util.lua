@@ -81,7 +81,6 @@ local supported_flags = {
    ["deps"] = true,
    ["deps-mode"] = "<mode>",
    ["detailed"] = "\"<text>\"",
-   ["extensions"] = true,
    ["force"] = true,
    ["from"] = "<server>",
    ["help"] = true,

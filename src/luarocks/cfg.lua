@@ -212,7 +212,6 @@ end
 local defaults = {
 
    local_by_default = false,
-   use_extensions = false,
    accept_unknown_fields = false,
    fs_use_modules = true,
    hooks_enabled = true,
