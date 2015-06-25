@@ -124,8 +124,8 @@ else
 end
 
 -- Path configuration:
-
 local sys_config_file, home_config_file
+local sys_config_file_default, home_config_file_default
 local sys_config_dir, home_config_dir
 local sys_config_ok, home_config_ok = false, false
 local extra_luarocks_module_dir
@@ -173,48 +173,54 @@ local merge_overrides = function(overrides)
    util.deep_merge(cfg, overrides)
 end
 
-sys_config_file = site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..cfg.lua_version..".lua"
-do
-   local err, errcode
-   sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, env_for_config_file())
-   if (not sys_config_ok) and errcode == "open" then -- file not found, so try alternate file
-      sys_config_file = sys_config_dir.."/config.lua"
-      sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, env_for_config_file())
-   end
-   if (not sys_config_ok) and errcode ~= "open" then -- either "load" or "run"; bad config file, bail out with error
-      io.stderr:write(err.."\n")
-      os.exit(cfg.errorcodes.CONFIGFILE)
-   end
-   if sys_config_ok then 
-      merge_overrides(sys_config_ok)
-   end
-end
-
-if not site_config.LUAROCKS_FORCE_CONFIG then
-
-   local home_overrides, err, errcode
-   home_config_file = os.getenv("LUAROCKS_CONFIG_" .. version_suffix) or os.getenv("LUAROCKS_CONFIG")
-   if home_config_file then
-      home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file())
-   else
-      home_config_file = home_config_dir.."/config-"..cfg.lua_version..".lua"
-      home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file())
-      if (not home_overrides) and (not errcode == "run") then
-         home_config_file = home_config_dir.."/config.lua"
-         home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file())
-      end
-   end
-   if home_overrides then
-      home_config_ok = true
-      merge_overrides(home_overrides)
-   else
-      home_config_ok = home_overrides
-      if errcode ~= "open" then
+-- load config file from a list until first succesful one. Info is 
+-- added to `cfg` module table, returns filepath of succesfully loaded
+-- file or nil if it failed
+local load_config_file = function(list)
+   for _, filepath in ipairs(list) do
+      local result, err, errcode = persist.load_into_table(filepath, env_for_config_file())
+      if (not result) and errcode ~= "open" then
+         -- errcode is either "load" or "run"; bad config file, so error out
          io.stderr:write(err.."\n")
          os.exit(cfg.errorcodes.CONFIGFILE)
       end
+      if result then
+         -- succes in loading and running, merge contents and exit
+         merge_overrides(result)
+         return filepath
+      end
    end
+   return nil -- nothing was loaded
 end
+
+
+-- Load system configuration file
+do 
+   sys_config_file_default = sys_config_dir.."/config.lua"
+   sys_config_file = load_config_file({
+      site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..cfg.lua_version..".lua",
+      sys_config_file_default,
+   })
+   sys_config_ok = (sys_config_file ~= nil)
+end
+
+-- Load user configuration file (if allowed)
+if not site_config.LUAROCKS_FORCE_CONFIG then
+  
+   home_config_file_default = home_config_dir.."/config.lua"
+   local list = {
+      os.getenv("LUAROCKS_CONFIG_" .. version_suffix) or os.getenv("LUAROCKS_CONFIG"),
+      home_config_dir.."/config-"..cfg.lua_version..".lua",
+      home_config_file_default,
+   }
+   -- first entry might be a silent nil, check and remove if so
+   if not list[1] then table.remove(list, 1) end
+   
+   home_config_file = load_config_file(list)
+   home_config_ok = (home_config_file ~= nil)
+
+end
+
 
 if not next(cfg.rocks_trees) then
    if cfg.home_tree then
@@ -610,11 +616,11 @@ end
 function cfg.which_config()
    return {
       system = {
-         file = sys_config_file,
+         file = sys_config_file or sys_config_file_default,
          ok = sys_config_ok,
       },
       user = {
-         file = home_config_file,
+         file = home_config_file or home_config_file_default,
          ok = home_config_ok,
       }
    }
