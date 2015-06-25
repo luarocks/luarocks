@@ -159,6 +159,15 @@ function deps.compare_versions(a, b)
    return deps.parse_version(a) > deps.parse_version(b)
 end
 
+--- Check if rockspec format version satisfies version requirement.
+-- @param rockspec table: The rockspec table.
+-- @param version string: required version.
+-- @return boolean: true if rockspec format matches version or is newer, false otherwise.
+function deps.format_is_at_least(rockspec, version)
+   local rockspec_format = rockspec.rockspec_format or "1.0"
+   return deps.parse_version(rockspec_format) >= deps.parse_version(version)
+end
+
 --- Consumes a constraint from a string, converting it to table format.
 -- For example, a string ">= 1.0, > 2.0" is converted to a table in the
 -- format {op = ">=", version={1,0}} and the rest, "> 2.0", is returned

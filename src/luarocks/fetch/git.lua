@@ -110,15 +110,18 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
       end
    end
 
-   command = {fs.Q(git_cmd), "submodule", "update", "--init", "--recursive"}
+   -- Fetching git submodules is supported only when rockspec format is >= 3.0.
+   if deps.format_is_at_least(rockspec, "3.0") then
+      command = {fs.Q(git_cmd), "submodule", "update", "--init", "--recursive"}
 
-   if git_supports_shallow_submodules(git_cmd) then
-      -- Fetch only the last commit of each submodule.
-      table.insert(command, 5, "--depth=1")
-   end
+      if git_supports_shallow_submodules(git_cmd) then
+         -- Fetch only the last commit of each submodule.
+         table.insert(command, 5, "--depth=1")
+      end
 
-   if not fs.execute(unpack(command)) then
-      return nil, 'Failed to fetch submodules.'
+      if not fs.execute(unpack(command)) then
+         return nil, 'Failed to fetch submodules.'
+      end
    end
 
    fs.delete(dir.path(store_dir, module, ".git"))
