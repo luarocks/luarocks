@@ -64,7 +64,7 @@ end
 function addon.handle_rockspec(rockspec)
    for k, v in pairs(rockspec_field_registry) do
       if v.callback then
-         field_value = get(rockspec, k)
+         local field_value = get(rockspec, k)
          if field_value then
             local ok, err = pcall(v.callback, field_value)
             if not ok then
