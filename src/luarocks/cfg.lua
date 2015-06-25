@@ -144,39 +144,44 @@ end
 cfg.variables = {}
 cfg.rocks_trees = {}
 
--- The global environment in the config files;
-local env_for_config_file
-env_for_config_file = {
-   home = cfg.home,
-   lua_version = cfg.lua_version,
-   platform = util.make_shallow_copy(detected),
-   processor = cfg.target_cpu,   -- remains for compat reasons
-   target_cpu = cfg.target_cpu,  -- replaces `processor`
-   os_getenv = os.getenv, 
-   dump_env = function()
-     -- debug function, calling it from a config file will show all 
-     -- available globals to that config file
-     print(util.show_table(env_for_config_file, "global environment"))
-   end,
-}
+-- Create global environment for the config files;
+local env_for_config_file = function() 
+   local e 
+   e = {
+      home = cfg.home,
+      lua_version = cfg.lua_version,
+      platform = util.make_shallow_copy(detected),
+      processor = cfg.target_cpu,   -- remains for compat reasons
+      target_cpu = cfg.target_cpu,  -- replaces `processor`
+      os_getenv = os.getenv, 
+      dump_env = function()
+         -- debug function, calling it from a config file will show all 
+         -- available globals to that config file
+         print(util.show_table(e, "global environment"))
+      end,
+   }
+   return e
+end
+
 -- Merge values from config files read into the `cfg` table
 local merge_overrides = function(overrides)
-   if overrides.rocks_trees then
-      cfg.rocks_trees = nil
-   end
-   if overrides.rocks_servers then
-      cfg.rocks_servers = nil
-   end
+   -- remove some stuff we do not want to integrate
+   overrides.os_getenv = nil
+   overrides.dump_env = nil
+   -- remove tables to be copied verbatim instead of deeply merged
+   if overrides.rocks_trees   then cfg.rocks_trees   = nil end
+   if overrides.rocks_servers then cfg.rocks_servers = nil end
+   -- perform actual merge
    util.deep_merge(cfg, overrides)
 end
 
 sys_config_file = site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..cfg.lua_version..".lua"
 do
    local err, errcode
-   sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, env_for_config_file)
+   sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, env_for_config_file())
    if (not sys_config_ok) and errcode == "open" then -- file not found, so try alternate file
       sys_config_file = sys_config_dir.."/config.lua"
-      sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, env_for_config_file)
+      sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, env_for_config_file())
    end
    if (not sys_config_ok) and errcode ~= "open" then -- either "load" or "run"; bad config file, bail out with error
       io.stderr:write(err.."\n")
@@ -192,13 +197,13 @@ if not site_config.LUAROCKS_FORCE_CONFIG then
    local home_overrides, err, errcode
    home_config_file = os.getenv("LUAROCKS_CONFIG_" .. version_suffix) or os.getenv("LUAROCKS_CONFIG")
    if home_config_file then
-      home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file)
+      home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file())
    else
       home_config_file = home_config_dir.."/config-"..cfg.lua_version..".lua"
-      home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file)
+      home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file())
       if (not home_overrides) and (not errcode == "run") then
          home_config_file = home_config_dir.."/config.lua"
-         home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file)
+         home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file())
       end
    end
    if home_overrides then
