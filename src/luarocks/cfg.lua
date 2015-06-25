@@ -35,6 +35,9 @@ end
 cfg.program_version = "scm"
 cfg.program_series = "2.2"
 cfg.major_version = (cfg.program_version:match("([^.]%.[^.])")) or cfg.program_series
+cfg.variables = {}
+cfg.rocks_trees = {}
+cfg.platform = {}
 
 local persist = require("luarocks.persist")
 
@@ -68,57 +71,55 @@ end
 
 -- System detection:
 
-local detected = {}
-local system,proc
-
 -- A proper installation of LuaRocks will hardcode the system
 -- and proc values with site_config.LUAROCKS_UNAME_S and site_config.LUAROCKS_UNAME_M,
 -- so that this detection does not run every time. When it is
 -- performed, we use the Unix way to identify the system,
 -- even on Windows (assuming UnxUtils or Cygwin).
-system = site_config.LUAROCKS_UNAME_S or io.popen("uname -s"):read("*l")
-proc = site_config.LUAROCKS_UNAME_M or io.popen("uname -m"):read("*l")
+local system = site_config.LUAROCKS_UNAME_S or io.popen("uname -s"):read("*l")
+local proc = site_config.LUAROCKS_UNAME_M or io.popen("uname -m"):read("*l")
 if proc:match("i[%d]86") then
-   proc = "x86"
+   cfg.target_cpu = "x86"
 elseif proc:match("amd64") or proc:match("x86_64") then
-   proc = "x86_64"
+   cfg.target_cpu = "x86_64"
 elseif proc:match("Power Macintosh") then
-   proc = "powerpc"
+   cfg.target_cpu = "powerpc"
+ else
+   cfg.target_cpu = proc
 end
-cfg.target_cpu = proc
 
 if system == "FreeBSD" then
-   detected.unix = true
-   detected.freebsd = true
-   detected.bsd = true
+   cfg.platform.unix = true
+   cfg.platform.freebsd = true
+   cfg.platform.bsd = true
 elseif system == "OpenBSD" then
-   detected.unix = true
-   detected.openbsd = true
-   detected.bsd = true
+   cfg.platform.unix = true
+   cfg.platform.openbsd = true
+   cfg.platform.bsd = true
 elseif system == "NetBSD" then
-   detected.unix = true
-   detected.netbsd = true
-   detected.bsd = true
+   cfg.platform.unix = true
+   cfg.platform.netbsd = true
+   cfg.platform.bsd = true
 elseif system == "Darwin" then
-   detected.unix = true
-   detected.macosx = true
-   detected.bsd = true
+   cfg.platform.unix = true
+   cfg.platform.macosx = true
+   cfg.platform.bsd = true
 elseif system == "Linux" then
-   detected.unix = true
-   detected.linux = true
+   cfg.platform.unix = true
+   cfg.platform.linux = true
 elseif system == "SunOS" then
-   detected.unix = true
-   detected.solaris = true
+   cfg.platform.unix = true
+   cfg.platform.solaris = true
 elseif system and system:match("^CYGWIN") then
-   detected.unix = true
-   detected.cygwin = true
+   cfg.platform.unix = true
+   cfg.platform.cygwin = true
 elseif system and system:match("^Windows") then
-   detected.windows = true
+   cfg.platform.windows = true
 elseif system and system:match("^MINGW") then
-   detected.windows = true
-   detected.mingw32 = true
+   cfg.platform.windows = true
+   cfg.platform.mingw32 = true
 else
-   detected.unix = true
+   cfg.platform.unix = true
    -- Fall back to Unix in unknown systems.
 end
 
@@ -129,7 +130,7 @@ local sys_config_dir, home_config_dir
 local sys_config_ok, home_config_ok = false, false
 local extra_luarocks_module_dir
 sys_config_dir = site_config.LUAROCKS_SYSCONFDIR
-if detected.windows then
+if cfg.platform.windows then
    cfg.home = os.getenv("APPDATA") or "c:"
    sys_config_dir = sys_config_dir or "c:/luarocks"
    home_config_dir = cfg.home.."/luarocks"
@@ -141,16 +142,13 @@ else
    cfg.home_tree = (os.getenv("USER") ~= "root") and cfg.home.."/.luarocks/"
 end
 
-cfg.variables = {}
-cfg.rocks_trees = {}
-
 -- Create global environment for the config files;
 local env_for_config_file = function() 
    local e 
    e = {
       home = cfg.home,
       lua_version = cfg.lua_version,
-      platform = util.make_shallow_copy(detected),
+      platform = util.make_shallow_copy(cfg.platform),
       processor = cfg.target_cpu,   -- remains for compat reasons
       target_cpu = cfg.target_cpu,  -- replaces `processor`
       os_getenv = os.getenv, 
@@ -328,7 +326,7 @@ local defaults = {
    rocks_provided = {}
 }
 
-if detected.windows then
+if cfg.platform.windows then
    local full_prefix = (site_config.LUAROCKS_PREFIX or (os.getenv("PROGRAMFILES")..[[\LuaRocks]])).."\\"..cfg.major_version
    extra_luarocks_module_dir = full_prefix.."\\lua\\?.lua"
 
@@ -388,7 +386,7 @@ if detected.windows then
    defaults.web_browser = "start"
 end
 
-if detected.mingw32 then
+if cfg.platform.mingw32 then
    defaults.platforms = { "win32", "mingw32", "windows" }
    defaults.obj_extension = "o"
    defaults.cmake_generator = "MinGW Makefiles"
@@ -413,7 +411,7 @@ if detected.mingw32 then
 
 end
 
-if detected.unix then
+if cfg.platform.unix then
    defaults.lib_extension = "so"
    defaults.external_lib_extension = "so"
    defaults.obj_extension = "o"
@@ -450,7 +448,7 @@ if detected.unix then
    defaults.web_browser = "xdg-open"
 end
 
-if detected.cygwin then
+if cfg.platform.cygwin then
    defaults.lib_extension = "so" -- can be overridden in the config file for mingw builds
    defaults.arch = "cygwin-"..cfg.target_cpu
    defaults.platforms = {"unix", "cygwin"}
@@ -460,12 +458,12 @@ if detected.cygwin then
    defaults.variables.LIBFLAG = "-shared"
 end
 
-if detected.bsd then
+if cfg.platform.bsd then
    defaults.variables.MAKE = "gmake"
    defaults.variables.STATFLAG = "-f '%OLp'"
 end
 
-if detected.macosx then
+if cfg.platform.macosx then
    defaults.variables.MAKE = "make"
    defaults.external_lib_extension = "dylib"
    defaults.arch = "macosx-"..cfg.target_cpu
@@ -487,12 +485,12 @@ if detected.macosx then
    defaults.web_browser = "open"
 end
 
-if detected.linux then
+if cfg.platform.linux then
    defaults.arch = "linux-"..cfg.target_cpu
    defaults.platforms = {"unix", "linux"}
 end
 
-if detected.freebsd then
+if cfg.platform.freebsd then
    defaults.arch = "freebsd-"..cfg.target_cpu
    defaults.platforms = {"unix", "bsd", "freebsd"}
    defaults.gcc_rpath = false
@@ -500,17 +498,17 @@ if detected.freebsd then
    defaults.variables.LD = "cc"
 end
 
-if detected.openbsd then
+if cfg.platform.openbsd then
    defaults.arch = "openbsd-"..cfg.target_cpu
    defaults.platforms = {"unix", "bsd", "openbsd"}
 end
 
-if detected.netbsd then
+if cfg.platform.netbsd then
    defaults.arch = "netbsd-"..cfg.target_cpu
    defaults.platforms = {"unix", "bsd", "netbsd"}
 end
 
-if detected.solaris then
+if cfg.platform.solaris then
    defaults.arch = "solaris-"..cfg.target_cpu
    defaults.platforms = {"unix", "solaris"}
    defaults.variables.MAKE = "gmake"
