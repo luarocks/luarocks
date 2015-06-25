@@ -37,7 +37,7 @@ cfg.program_series = "2.2"
 cfg.major_version = (cfg.program_version:match("([^.]%.[^.])")) or cfg.program_series
 cfg.variables = {}
 cfg.rocks_trees = {}
-cfg.platform = {}
+cfg.platforms = {}
 
 local persist = require("luarocks.persist")
 
@@ -89,37 +89,39 @@ elseif proc:match("Power Macintosh") then
 end
 
 if system == "FreeBSD" then
-   cfg.platform.unix = true
-   cfg.platform.freebsd = true
-   cfg.platform.bsd = true
+   cfg.platforms.unix = true
+   cfg.platforms.freebsd = true
+   cfg.platforms.bsd = true
 elseif system == "OpenBSD" then
-   cfg.platform.unix = true
-   cfg.platform.openbsd = true
-   cfg.platform.bsd = true
+   cfg.platforms.unix = true
+   cfg.platforms.openbsd = true
+   cfg.platforms.bsd = true
 elseif system == "NetBSD" then
-   cfg.platform.unix = true
-   cfg.platform.netbsd = true
-   cfg.platform.bsd = true
+   cfg.platforms.unix = true
+   cfg.platforms.netbsd = true
+   cfg.platforms.bsd = true
 elseif system == "Darwin" then
-   cfg.platform.unix = true
-   cfg.platform.macosx = true
-   cfg.platform.bsd = true
+   cfg.platforms.unix = true
+   cfg.platforms.macosx = true
+   cfg.platforms.bsd = true
 elseif system == "Linux" then
-   cfg.platform.unix = true
-   cfg.platform.linux = true
+   cfg.platforms.unix = true
+   cfg.platforms.linux = true
 elseif system == "SunOS" then
-   cfg.platform.unix = true
-   cfg.platform.solaris = true
+   cfg.platforms.unix = true
+   cfg.platforms.solaris = true
 elseif system and system:match("^CYGWIN") then
-   cfg.platform.unix = true
-   cfg.platform.cygwin = true
+   cfg.platforms.unix = true
+   cfg.platforms.cygwin = true
 elseif system and system:match("^Windows") then
-   cfg.platform.windows = true
+   cfg.platforms.windows = true
+   cfg.platforms.win32 = true
 elseif system and system:match("^MINGW") then
-   cfg.platform.windows = true
-   cfg.platform.mingw32 = true
+   cfg.platforms.windows = true
+   cfg.platforms.mingw32 = true
+   cfg.platforms.win32 = true
 else
-   cfg.platform.unix = true
+   cfg.platforms.unix = true
    -- Fall back to Unix in unknown systems.
 end
 
@@ -130,7 +132,7 @@ local sys_config_dir, home_config_dir
 local sys_config_ok, home_config_ok = false, false
 local extra_luarocks_module_dir
 sys_config_dir = site_config.LUAROCKS_SYSCONFDIR
-if cfg.platform.windows then
+if cfg.platforms.windows then
    cfg.home = os.getenv("APPDATA") or "c:"
    sys_config_dir = sys_config_dir or "c:/luarocks"
    home_config_dir = cfg.home.."/luarocks"
@@ -148,7 +150,7 @@ local env_for_config_file = function()
    e = {
       home = cfg.home,
       lua_version = cfg.lua_version,
-      platform = util.make_shallow_copy(cfg.platform),
+      platforms = util.make_shallow_copy(cfg.platforms),
       processor = cfg.target_cpu,   -- remains for compat reasons
       target_cpu = cfg.target_cpu,  -- replaces `processor`
       os_getenv = os.getenv, 
@@ -231,8 +233,15 @@ if not next(cfg.rocks_trees) then
    end
 end
 
--- Configure defaults:
 
+-- update platforms list; keyed -> array
+do
+   local lst = {} -- use temp array to not confuse `pairs` in loop
+   for plat in pairs(cfg.platforms) do table.insert(lst, plat) end
+   util.deep_merge(cfg.platforms, lst)
+end
+
+-- Configure defaults:
 local defaults = {
 
    local_by_default = false,
@@ -332,14 +341,13 @@ local defaults = {
    rocks_provided = {}
 }
 
-if cfg.platform.windows then
+if cfg.platforms.windows then
    local full_prefix = (site_config.LUAROCKS_PREFIX or (os.getenv("PROGRAMFILES")..[[\LuaRocks]])).."\\"..cfg.major_version
    extra_luarocks_module_dir = full_prefix.."\\lua\\?.lua"
 
    home_config_file = home_config_file and home_config_file:gsub("\\","/")
    defaults.fs_use_modules = false
    defaults.arch = "win32-"..cfg.target_cpu 
-   defaults.platforms = {"win32", "windows" }
    defaults.lib_extension = "dll"
    defaults.external_lib_extension = "dll"
    defaults.obj_extension = "obj"
@@ -392,8 +400,7 @@ if cfg.platform.windows then
    defaults.web_browser = "start"
 end
 
-if cfg.platform.mingw32 then
-   defaults.platforms = { "win32", "mingw32", "windows" }
+if cfg.platforms.mingw32 then
    defaults.obj_extension = "o"
    defaults.cmake_generator = "MinGW Makefiles"
    defaults.variables.MAKE = "mingw32-make"
@@ -417,7 +424,7 @@ if cfg.platform.mingw32 then
 
 end
 
-if cfg.platform.unix then
+if cfg.platforms.unix then
    defaults.lib_extension = "so"
    defaults.external_lib_extension = "so"
    defaults.obj_extension = "o"
@@ -427,7 +434,6 @@ if cfg.platform.unix then
    defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR or "/usr/local/lib"
    defaults.variables.CFLAGS = "-O2"
    defaults.cmake_generator = "Unix Makefiles"
-   defaults.platforms = { "unix" }
    defaults.variables.CC = "gcc"
    defaults.variables.LD = "gcc"
    defaults.gcc_rpath = true
@@ -454,26 +460,24 @@ if cfg.platform.unix then
    defaults.web_browser = "xdg-open"
 end
 
-if cfg.platform.cygwin then
+if cfg.platforms.cygwin then
    defaults.lib_extension = "so" -- can be overridden in the config file for mingw builds
    defaults.arch = "cygwin-"..cfg.target_cpu
-   defaults.platforms = {"unix", "cygwin"}
    defaults.cmake_generator = "Unix Makefiles"
    defaults.variables.CC = "echo -llua | xargs gcc"
    defaults.variables.LD = "echo -llua | xargs gcc"
    defaults.variables.LIBFLAG = "-shared"
 end
 
-if cfg.platform.bsd then
+if cfg.platforms.bsd then
    defaults.variables.MAKE = "gmake"
    defaults.variables.STATFLAG = "-f '%OLp'"
 end
 
-if cfg.platform.macosx then
+if cfg.platforms.macosx then
    defaults.variables.MAKE = "make"
    defaults.external_lib_extension = "dylib"
    defaults.arch = "macosx-"..cfg.target_cpu
-   defaults.platforms = {"unix", "bsd", "macosx"}
    defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
    defaults.variables.STAT = "/usr/bin/stat"
    defaults.variables.STATFLAG = "-f '%A'"
@@ -491,32 +495,28 @@ if cfg.platform.macosx then
    defaults.web_browser = "open"
 end
 
-if cfg.platform.linux then
+if cfg.platforms.linux then
    defaults.arch = "linux-"..cfg.target_cpu
-   defaults.platforms = {"unix", "linux"}
 end
 
-if cfg.platform.freebsd then
+if cfg.platforms.freebsd then
    defaults.arch = "freebsd-"..cfg.target_cpu
-   defaults.platforms = {"unix", "bsd", "freebsd"}
    defaults.gcc_rpath = false
    defaults.variables.CC = "cc"
    defaults.variables.LD = "cc"
 end
 
-if cfg.platform.openbsd then
+if cfg.platforms.openbsd then
    defaults.arch = "openbsd-"..cfg.target_cpu
-   defaults.platforms = {"unix", "bsd", "openbsd"}
 end
 
-if cfg.platform.netbsd then
+if cfg.platforms.netbsd then
    defaults.arch = "netbsd-"..cfg.target_cpu
-   defaults.platforms = {"unix", "bsd", "netbsd"}
 end
 
-if cfg.platform.solaris then
+if cfg.platforms.solaris then
    defaults.arch = "solaris-"..cfg.target_cpu
-   defaults.platforms = {"unix", "solaris"}
+   --defaults.platforms = {"unix", "solaris"}
    defaults.variables.MAKE = "gmake"
 end
 
