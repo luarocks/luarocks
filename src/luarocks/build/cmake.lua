@@ -35,14 +35,18 @@ function cmake.run(rockspec)
       cmake_handler:close()
    end
 
-
    -- Execute cmake with variables.
    local args = ""
+   
+   -- Try to pick the best generator. With msvc and x64, CMake does not select it by default so we need to be explicit.
    if cfg.cmake_generator then
       args = args .. ' -G"'..cfg.cmake_generator.. '"'
+   elseif cfg.is_platform("windows") and cfg.target_cpu:match("x86_64$") then
+      args = args .. " -DCMAKE_GENERATOR_PLATFORM=x64"
    end
+
    for k,v in pairs(variables) do
-      args = args .. ' -D' ..k.. '="' ..v.. '"'
+      args = args .. ' -D' ..k.. '="' ..tostring(v).. '"'
    end
 
    if not fs.execute_string(rockspec.variables.CMAKE.." -H. -Bbuild.luarocks "..args) then
