@@ -492,6 +492,7 @@ test_deps_mode_make_order_sys() { $luarocks build --tree="$testing_tree" lpeg &&
 
 test_write_rockspec() { $luarocks write_rockspec git://github.com/keplerproject/luarocks; }
 test_write_rockspec_lib() { $luarocks write_rockspec git://github.com/mbalmer/luafcgi --lib=fcgi --license="3-clause BSD" --lua-version=5.1,5.2; }
+test_write_rockspec_format() { $luarocks write_rockspec git://github.com/keplerproject/luarocks --rockspec-format=1.1 --lua-version=5.1,5.2; }
 test_write_rockspec_fullargs() { $luarocks write_rockspec git://github.com/keplerproject/luarocks --lua-version=5.1,5.2 --license="MIT/X11" --homepage="http://www.luarocks.org" --summary="A package manager for Lua modules"; }
 fail_write_rockspec_args() { $luarocks write_rockspec invalid; }
 fail_write_rockspec_args_url() { $luarocks write_rockspec http://example.com/invalid.zip; }
