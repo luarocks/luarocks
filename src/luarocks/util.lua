@@ -118,6 +118,7 @@ local supported_flags = {
    ["rock-tree"] = true,
    ["rock-trees"] = true,
    ["rockspec"] = true,
+   ["rockspec-format"] = "<ver>",
    ["server"] = "<server>",
    ["skip-pack"] = true,
    ["source"] = true,
