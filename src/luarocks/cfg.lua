@@ -257,6 +257,12 @@ do
    local lst = {} -- use temp array to not confuse `pairs` in loop
    for plat in pairs(cfg.platforms) do 
       if cfg.platforms[plat] then  -- entries set to 'false' skipped
+         if not platform_order[plat] then
+            local pl = ""
+            for k,_ in pairs(platform_order) do pl = pl .. ", " .. k end
+            io.stderr:write("Bad platform given; "..tostring(plat)..". Valid entries are: "..pl:sub(3,-1) ..".\n")
+            os.exit(cfg.errorcodes.CONFIGFILE)
+         end
          table.insert(lst, plat)
       else
          cfg.platforms[plat] = nil
