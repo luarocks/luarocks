@@ -50,6 +50,10 @@ local function glob(patt)
    -- TODO
 end
 
+local function touch(filename)
+   -- TODO
+end
+
 local function rm(...)
    for _, filename in ipairs {...} do
       filename = expand_variables(filename)
@@ -397,7 +401,7 @@ local tests = {
       local found = run_get_contents '$luarocks_noecho list --tree="$testing_sys_tree" --porcelain lpeg'
       rm_rf "./lxsh-${verrev_lxsh}"
       return found ~= ""
-   end,   
+   end,
    test_write_rockspec = function() return run "$luarocks write_rockspec git://github.com/keplerproject/luarocks" end,
    test_write_rockspec_lib = function() return run '$luarocks write_rockspec git://github.com/mbalmer/luafcgi --lib=fcgi --license="3-clause BSD" --lua-version=5.1,5.2' end,
    test_write_rockspec_fullargs = function() return run '$luarocks write_rockspec git://github.com/keplerproject/luarocks --lua-version=5.1,5.2 --license="MIT/X11" --homepage="http://www.luarocks.org" --summary="A package manager for Lua modules"' end,
@@ -405,6 +409,33 @@ local tests = {
    fail_write_rockspec_args_url = function() return run "$luarocks write_rockspec http://example.com/invalid.zip" end,
    test_write_rockspec_http = function() return run "$luarocks write_rockspec http://luarocks.org/releases/luarocks-2.1.0.tar.gz --lua-version=5.1" end,
    test_write_rockspec_basedir = function() return run "$luarocks write_rockspec https://github.com/downloads/Olivine-Labs/luassert/luassert-1.2.tar.gz --lua-version=5.1" end,
+
+   fail_config_noflags = function() return run "$luarocks config; " end,
+   test_config_lua_incdir = function() return run "$luarocks config --lua-incdir; " end,
+   test_config_lua_libdir = function() return run "$luarocks config --lua-libdir; " end,
+   test_config_lua_ver = function() return run "$luarocks config --lua-ver; " end,
+   fail_config_system_config = function()
+      return rm "$testing_lrprefix/etc/luarocks/config.lua"
+         and run "$luarocks config --system-config; "
+   end,
+   test_config_system_config = function()
+      local ok = mkdir "$testing_lrprefix/etc/luarocks"
+         and touch "$testing_lrprefix/etc/luarocks/config.lua"
+         and run "$luarocks config --system-config; "
+      rm "$testing_lrprefix/etc/luarocks/config.lua"
+      return ok
+   end,
+   fail_config_system_config_invalid = function()
+      local ok = mkdir "$testing_lrprefix/etc/luarocks"
+         and run "echo 'if if if' > '$testing_lrprefix/etc/luarocks/config.lua' ;"
+         and run "$luarocks config --system-config"
+      rm "$testing_lrprefix/etc/luarocks/config.lua"
+      return ok
+   end,
+   test_config_user_config = function() return run "$luarocks config --user-config; " end,
+   fail_config_user_config = function() return run "LUAROCKS_CONFIG='/missing_file.lua' $luarocks config --user-config; " end,
+   test_config_rock_trees = function() return run "$luarocks config --rock-trees;" end,
+   test_config_help = function() return run "$luarocks help config;" end,
    test_doc = function()
       return run "$luarocks install luarepl"
          and run "$luarocks doc luarepl"
