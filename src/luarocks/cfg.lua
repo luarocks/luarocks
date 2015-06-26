@@ -125,6 +125,24 @@ else
    -- Fall back to Unix in unknown systems.
 end
 
+-- Set order for platform overrides
+local platform_order = {
+   -- Unixes
+   unix = 1,
+   bsd = 2, 
+   solaris = 3,
+   netbsd = 4,
+   openbsd = 5,
+   freebsd = 6,
+   linux = 7,
+   macosx = 8,
+   cygwin = 9,
+   -- Windows
+   win32 = 10,
+   mingw32 = 11,
+   windows = 12 }
+
+
 -- Path configuration:
 local sys_config_file, home_config_file
 local sys_config_file_default, home_config_file_default
@@ -237,7 +255,15 @@ end
 -- update platforms list; keyed -> array
 do
    local lst = {} -- use temp array to not confuse `pairs` in loop
-   for plat in pairs(cfg.platforms) do table.insert(lst, plat) end
+   for plat in pairs(cfg.platforms) do 
+      if cfg.platforms[plat] then  -- entries set to 'false' skipped
+         table.insert(lst, plat)
+      else
+         cfg.platforms[plat] = nil
+      end
+   end
+   -- platform overrides depent on the order, so set priorities
+   table.sort(lst, function(key1, key2) return platform_order[key1] < platform_order[key2] end)
    util.deep_merge(cfg.platforms, lst)
 end
 
