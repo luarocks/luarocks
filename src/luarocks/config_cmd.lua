@@ -6,7 +6,7 @@ local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 
-config_cmd.help_summary = "Queries information about the LuaRocks configuration."
+config_cmd.help_summary = "Query information about the LuaRocks configuration."
 config_cmd.help_arguments = "<flag>"
 config_cmd.help = [[
 --lua-incdir     Path to Lua header files.
