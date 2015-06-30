@@ -11,7 +11,7 @@ local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 
-list.help_summary = "Lists currently installed rocks."
+list.help_summary = "List currently installed rocks."
 list.help_arguments = "[--porcelain] <filter>"
 list.help = [[
 <filter> is a substring of a rock name to filter by.

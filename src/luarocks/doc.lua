@@ -13,7 +13,7 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local download = require("luarocks.download")
 
-doc.help_summary = "Shows documentation for an installed rock."
+doc.help_summary = "Show documentation for an installed rock."
 
 doc.help = [[
 <argument> is an existing package name.
