@@ -509,6 +509,7 @@ fail_config_system_config_invalid() { mkdir -p "$testing_lrprefix/etc/luarocks";
 test_config_user_config() { $luarocks config --user-config; }
 fail_config_user_config() { LUAROCKS_CONFIG="/missing_file.lua" $luarocks config --user-config; }
 test_config_rock_trees() { $luarocks config --rock-trees; }
+test_config_help() { $luarocks help config; }
 
 test_doc() { $luarocks install luarepl; $luarocks doc luarepl; }
 
