@@ -24,18 +24,19 @@ If a repository URL is given with no version, it creates an 'scm' rock.
 Note that the generated file is a _starting point_ for writing a
 rockspec, and is not guaranteed to be complete or correct.
 
---output=<file>       Write the rockspec with the given filename.
-                      If not given, a file is written in the current
-                      directory with a filename based on given name and version.
---license="<string>"  A license string, such as "MIT/X11" or "GNU GPL v3".
---summary="<txt>"     A short one-line description summary.
---detailed="<txt>"    A longer description string.
---homepage=<url>      Project homepage.
---lua-version=<ver>   Supported Lua versions. Accepted values are "5.1", "5.2",
-                      "5.3", "5.1,5.2", "5.2,5.3", or "5.1,5.2,5.3".
---tag=<tag>           Tag to use. Will attempt to extract version number from it.
---lib=<lib>[,<lib>]   A comma-separated list of libraries that C files need to
-                      link to.
+--output=<file>          Write the rockspec with the given filename.
+                         If not given, a file is written in the current
+                         directory with a filename based on given name and version.
+--license="<string>"     A license string, such as "MIT/X11" or "GNU GPL v3".
+--summary="<txt>"        A short one-line description summary.
+--detailed="<txt>"       A longer description string.
+--homepage=<url>         Project homepage.
+--lua-version=<ver>      Supported Lua versions. Accepted values are "5.1", "5.2",
+                         "5.3", "5.1,5.2", "5.2,5.3", or "5.1,5.2,5.3".
+--rockspec-format=<ver>  Rockspec format version, such as "1.0" or "1.1".
+--tag=<tag>              Tag to use. Will attempt to extract version number from it.
+--lib=<lib>[,<lib>]      A comma-separated list of libraries that C files need to
+                         link to.
 ]]
 
 local function open_file(name)
@@ -246,6 +247,7 @@ function write_rockspec.run(...)
    end
 
    local rockspec = {
+      rockspec_format = flags["rockspec-format"],
       package = name,
       name = name:lower(),
       version = version.."-1",
