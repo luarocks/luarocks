@@ -8,7 +8,7 @@ package.loaded["luarocks.type_check"] = type_check
 local cfg = require("luarocks.cfg")
 local deps = require("luarocks.deps")
 
-type_check.rockspec_format = "1.1"
+type_check.rockspec_format = "3.0"
 
 local string_1 = { _type = "string" }
 local number_1 = { _type = "number" }
