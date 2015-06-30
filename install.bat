@@ -360,7 +360,7 @@ local function look_for_headers (directory)
 		die(S"lua.h not found in $LUA_INCDIR")
 	end
 
-	for _, e in ipairs{ [[\]], [[\include\]]} do
+	for _, e in ipairs{ S([[\include\lua\$LUA_VERSION]]), S([[\include\$LUA_VERSION]]), [[\]], [[\include\]]} do
 		print("    checking for "..directory..e.."\\lua.h")
 		if exists(directory..e.."\\lua.h") then
 			vars.LUA_INCDIR = directory..e
@@ -811,7 +811,7 @@ else
 end
 f:write(S[=[
 site_config.LUAROCKS_UNAME_M=[[$UNAME_M]]
-site_config.LUAROCKS_SYSCONFIG=[[$SYSCONFDIR\config.lua]]
+site_config.LUAROCKS_SYSCONFIG=[[$SYSCONFDIR\config-$LUA_VERSION.lua]]
 site_config.LUAROCKS_ROCKS_TREE=[[$TREE_ROOT]]
 site_config.LUAROCKS_PREFIX=[[$PREFIX]]
 site_config.LUAROCKS_DOWNLOADER=[[wget]]
@@ -832,12 +832,12 @@ f:close()
 print(S[[Created LuaRocks site-config file: $LUADIR\luarocks\site_config.lua]])
 
 -- create config file
-vars.CONFIG_FILE = vars.SYSCONFDIR.."\\config.lua"
+vars.CONFIG_FILE = vars.SYSCONFDIR..S"\\config-$LUA_VERSION.lua"
 if not exists(vars.SYSCONFDIR) then
 	mkdir(vars.SYSCONFDIR)
 end
 if exists(vars.CONFIG_FILE) then
-	local nname = backup(vars.CONFIG_FILE, "config.bak")
+	local nname = backup(vars.CONFIG_FILE, S"config-$LUA_VERSION.bak")
 	print("***************")
 	print(S"*** WARNING *** LuaRocks config file already exists: '$CONFIG_FILE'. The old file has been renamed to '"..nname.."'")
 	print("***************")
