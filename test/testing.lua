@@ -400,6 +400,7 @@ local tests = {
    end,   
    test_write_rockspec = function() return run "$luarocks write_rockspec git://github.com/keplerproject/luarocks" end,
    test_write_rockspec_lib = function() return run '$luarocks write_rockspec git://github.com/mbalmer/luafcgi --lib=fcgi --license="3-clause BSD" --lua-version=5.1,5.2' end,
+   test_write_rockspec_format = function() return run '$luarocks write_rockspec git://github.com/keplerproject/luarocks --rockspec-format=1.1 --lua-version=5.1,5.2' end,
    test_write_rockspec_fullargs = function() return run '$luarocks write_rockspec git://github.com/keplerproject/luarocks --lua-version=5.1,5.2 --license="MIT/X11" --homepage="http://www.luarocks.org" --summary="A package manager for Lua modules"' end,
    fail_write_rockspec_args = function() return run "$luarocks write_rockspec invalid" end,
    fail_write_rockspec_args_url = function() return run "$luarocks write_rockspec http://example.com/invalid.zip" end,
