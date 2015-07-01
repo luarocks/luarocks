@@ -511,6 +511,19 @@ fail_config_user_config() { LUAROCKS_CONFIG="/missing_file.lua" $luarocks config
 test_config_rock_trees() { $luarocks config --rock-trees; }
 test_config_help() { $luarocks help config; }
 
+# Tests for https://github.com/keplerproject/luarocks/issues/375
+test_fetch_base_dir() { $lua <<EOF
+   local fetch = require "luarocks.fetch"
+
+   assert("v0.3" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2/archive/v0.3.zip"))
+   assert("lua-compat-5.2" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2.zip"))
+   assert("lua-compat-5.2" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2.tar.gz"))
+   assert("lua-compat-5.2" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2.tar.bz2"))
+   assert("parser.moon" == fetch.url_to_base_dir("git://github.com/Cirru/parser.moon"))
+   assert("v0.3" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2/archive/v0.3"))
+EOF
+}
+
 test_doc() { $luarocks install luarepl; $luarocks doc luarepl; }
 
 # Driver #########################################

@@ -441,5 +441,17 @@ local tests = {
       return run "$luarocks install luarepl"
          and run "$luarocks doc luarepl"
    end,
+
+   -- Tests for https://github.com/keplerproject/luarocks/issues/375
+   test_fetch_base_dir = function()
+      local fetch = require "luarocks.fetch"
+
+      return assert("v0.3" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2/archive/v0.3.zip"))
+         and assert("lua-compat-5.2" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2.zip"))
+         and assert("lua-compat-5.2" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2.tar.gz"))
+         and assert("lua-compat-5.2" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2.tar.bz2"))
+         and assert("parser.moon" == fetch.url_to_base_dir("git://github.com/Cirru/parser.moon"))
+         and assert("v0.3" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2/archive/v0.3"))
+   end
    
 }
