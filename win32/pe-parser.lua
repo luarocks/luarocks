@@ -5,7 +5,7 @@
 -- case of 64 bit fields (bit/flag fields). Pointer arithmetic is still done numerically, so for
 -- very large files this could lead to undefined results. Use with care!
 --
--- Version 0.3, [copyright (c) 2013-2015 Thijs Schreijer](http://www.thijsschreijer.nl)
+-- Version 0.4, [copyright (c) 2013-2015 Thijs Schreijer](http://www.thijsschreijer.nl)
 -- @name pe-parser
 -- @class module
 
@@ -531,6 +531,9 @@ function M.msvcrt(infile)
 	  local result = dll:match('(MSVCR%d*D?)%.DLL')
 	  if not result then
 	    result = dll:match('(MSVCRTD?)%.DLL')
+	  end
+	  if not result then
+	    result = dll:match('(VCRUNTIME%d*D?)%.DLL')
 	  end
     -- success, found it return name + binary where it was found
     if result then return result, infile end
