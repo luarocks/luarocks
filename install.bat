@@ -583,6 +583,7 @@ vars.LIBDIR = vars.FULL_PREFIX
 vars.LUADIR = S"$FULL_PREFIX\\lua"
 vars.INCDIR = S"$FULL_PREFIX\\include"
 vars.LUA_SHORTV = vars.LUA_VERSION:gsub("%.", "")
+vars.SYSCONFFILENAME = S"config-$LUA_VERSION.lua"
 
 if INSTALL_LUA then
 	if vars.LUA_VERSION ~= "5.1" then
@@ -625,7 +626,7 @@ print(S[[
 
 Will configure LuaRocks with the following paths:
 LuaRocks        : $FULL_PREFIX
-Config file     : $SYSCONFDIR\config.lua
+Config file     : $SYSCONFDIR\$SYSCONFFILENAME
 Rocktree        : $TREE_ROOT
 
 Lua interpreter : $LUA_BINDIR\$LUA_INTERPRETER
@@ -811,7 +812,7 @@ else
 end
 f:write(S[=[
 site_config.LUAROCKS_UNAME_M=[[$UNAME_M]]
-site_config.LUAROCKS_SYSCONFIG=[[$SYSCONFDIR\config-$LUA_VERSION.lua]]
+site_config.LUAROCKS_SYSCONFIG=[[$SYSCONFDIR\$SYSCONFFILENAME]]
 site_config.LUAROCKS_ROCKS_TREE=[[$TREE_ROOT]]
 site_config.LUAROCKS_PREFIX=[[$PREFIX]]
 site_config.LUAROCKS_DOWNLOADER=[[wget]]
@@ -832,7 +833,7 @@ f:close()
 print(S[[Created LuaRocks site-config file: $LUADIR\luarocks\site_config.lua]])
 
 -- create config file
-vars.CONFIG_FILE = vars.SYSCONFDIR..S"\\config-$LUA_VERSION.lua"
+vars.CONFIG_FILE = vars.SYSCONFDIR.."\\"..vars.SYSCONFFILENAME
 if not exists(vars.SYSCONFDIR) then
 	mkdir(vars.SYSCONFDIR)
 end
