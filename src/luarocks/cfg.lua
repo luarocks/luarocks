@@ -35,6 +35,9 @@ end
 cfg.program_version = "scm"
 cfg.program_series = "2.2"
 cfg.major_version = (cfg.program_version:match("([^.]%.[^.])")) or cfg.program_series
+cfg.variables = {}
+cfg.rocks_trees = {}
+cfg.platforms = {}
 
 local persist = require("luarocks.persist")
 
@@ -68,68 +71,86 @@ end
 
 -- System detection:
 
-local detected = {}
-local system,proc
-
 -- A proper installation of LuaRocks will hardcode the system
 -- and proc values with site_config.LUAROCKS_UNAME_S and site_config.LUAROCKS_UNAME_M,
 -- so that this detection does not run every time. When it is
 -- performed, we use the Unix way to identify the system,
 -- even on Windows (assuming UnxUtils or Cygwin).
-system = site_config.LUAROCKS_UNAME_S or io.popen("uname -s"):read("*l")
-proc = site_config.LUAROCKS_UNAME_M or io.popen("uname -m"):read("*l")
+local system = site_config.LUAROCKS_UNAME_S or io.popen("uname -s"):read("*l")
+local proc = site_config.LUAROCKS_UNAME_M or io.popen("uname -m"):read("*l")
 if proc:match("i[%d]86") then
-   proc = "x86"
+   cfg.target_cpu = "x86"
 elseif proc:match("amd64") or proc:match("x86_64") then
-   proc = "x86_64"
+   cfg.target_cpu = "x86_64"
 elseif proc:match("Power Macintosh") then
-   proc = "powerpc"
+   cfg.target_cpu = "powerpc"
+ else
+   cfg.target_cpu = proc
 end
-cfg.target_cpu = proc
 
 if system == "FreeBSD" then
-   detected.unix = true
-   detected.freebsd = true
-   detected.bsd = true
+   cfg.platforms.unix = true
+   cfg.platforms.freebsd = true
+   cfg.platforms.bsd = true
 elseif system == "OpenBSD" then
-   detected.unix = true
-   detected.openbsd = true
-   detected.bsd = true
+   cfg.platforms.unix = true
+   cfg.platforms.openbsd = true
+   cfg.platforms.bsd = true
 elseif system == "NetBSD" then
-   detected.unix = true
-   detected.netbsd = true
-   detected.bsd = true
+   cfg.platforms.unix = true
+   cfg.platforms.netbsd = true
+   cfg.platforms.bsd = true
 elseif system == "Darwin" then
-   detected.unix = true
-   detected.macosx = true
-   detected.bsd = true
+   cfg.platforms.unix = true
+   cfg.platforms.macosx = true
+   cfg.platforms.bsd = true
 elseif system == "Linux" then
-   detected.unix = true
-   detected.linux = true
+   cfg.platforms.unix = true
+   cfg.platforms.linux = true
 elseif system == "SunOS" then
-   detected.unix = true
-   detected.solaris = true
+   cfg.platforms.unix = true
+   cfg.platforms.solaris = true
 elseif system and system:match("^CYGWIN") then
-   detected.unix = true
-   detected.cygwin = true
+   cfg.platforms.unix = true
+   cfg.platforms.cygwin = true
 elseif system and system:match("^Windows") then
-   detected.windows = true
+   cfg.platforms.windows = true
+   cfg.platforms.win32 = true
 elseif system and system:match("^MINGW") then
-   detected.windows = true
-   detected.mingw32 = true
+   cfg.platforms.windows = true
+   cfg.platforms.mingw32 = true
+   cfg.platforms.win32 = true
 else
-   detected.unix = true
+   cfg.platforms.unix = true
    -- Fall back to Unix in unknown systems.
 end
 
--- Path configuration:
+-- Set order for platform overrides
+local platform_order = {
+   -- Unixes
+   unix = 1,
+   bsd = 2, 
+   solaris = 3,
+   netbsd = 4,
+   openbsd = 5,
+   freebsd = 6,
+   linux = 7,
+   macosx = 8,
+   cygwin = 9,
+   -- Windows
+   win32 = 10,
+   mingw32 = 11,
+   windows = 12 }
 
+
+-- Path configuration:
 local sys_config_file, home_config_file
+local sys_config_file_default, home_config_file_default
 local sys_config_dir, home_config_dir
 local sys_config_ok, home_config_ok = false, false
 local extra_luarocks_module_dir
 sys_config_dir = site_config.LUAROCKS_SYSCONFDIR
-if detected.windows then
+if cfg.platforms.windows then
    cfg.home = os.getenv("APPDATA") or "c:"
    sys_config_dir = sys_config_dir or "c:/luarocks"
    home_config_dir = cfg.home.."/luarocks"
@@ -141,16 +162,13 @@ else
    cfg.home_tree = (os.getenv("USER") ~= "root") and cfg.home.."/.luarocks/"
 end
 
-cfg.variables = {}
-cfg.rocks_trees = {}
-
 -- Create global environment for the config files;
 local env_for_config_file = function() 
    local e 
    e = {
       home = cfg.home,
       lua_version = cfg.lua_version,
-      platform = util.make_shallow_copy(detected),
+      platforms = util.make_shallow_copy(cfg.platforms),
       processor = cfg.target_cpu,   -- remains for compat reasons
       target_cpu = cfg.target_cpu,  -- replaces `processor`
       os_getenv = os.getenv, 
@@ -175,48 +193,54 @@ local merge_overrides = function(overrides)
    util.deep_merge(cfg, overrides)
 end
 
-sys_config_file = site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..cfg.lua_version..".lua"
-do
-   local err, errcode
-   sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, env_for_config_file())
-   if (not sys_config_ok) and errcode == "open" then -- file not found, so try alternate file
-      sys_config_file = sys_config_dir.."/config.lua"
-      sys_config_ok, err, errcode = persist.load_into_table(sys_config_file, env_for_config_file())
-   end
-   if (not sys_config_ok) and errcode ~= "open" then -- either "load" or "run"; bad config file, bail out with error
-      io.stderr:write(err.."\n")
-      os.exit(cfg.errorcodes.CONFIGFILE)
-   end
-   if sys_config_ok then 
-      merge_overrides(sys_config_ok)
-   end
-end
-
-if not site_config.LUAROCKS_FORCE_CONFIG then
-
-   local home_overrides, err, errcode
-   home_config_file = os.getenv("LUAROCKS_CONFIG_" .. version_suffix) or os.getenv("LUAROCKS_CONFIG")
-   if home_config_file then
-      home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file())
-   else
-      home_config_file = home_config_dir.."/config-"..cfg.lua_version..".lua"
-      home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file())
-      if (not home_overrides) and (not errcode == "run") then
-         home_config_file = home_config_dir.."/config.lua"
-         home_overrides, err, errcode = persist.load_into_table(home_config_file, env_for_config_file())
-      end
-   end
-   if home_overrides then
-      home_config_ok = true
-      merge_overrides(home_overrides)
-   else
-      home_config_ok = home_overrides
-      if errcode ~= "open" then
+-- load config file from a list until first succesful one. Info is 
+-- added to `cfg` module table, returns filepath of succesfully loaded
+-- file or nil if it failed
+local load_config_file = function(list)
+   for _, filepath in ipairs(list) do
+      local result, err, errcode = persist.load_into_table(filepath, env_for_config_file())
+      if (not result) and errcode ~= "open" then
+         -- errcode is either "load" or "run"; bad config file, so error out
          io.stderr:write(err.."\n")
          os.exit(cfg.errorcodes.CONFIGFILE)
       end
+      if result then
+         -- succes in loading and running, merge contents and exit
+         merge_overrides(result)
+         return filepath
+      end
    end
+   return nil -- nothing was loaded
 end
+
+
+-- Load system configuration file
+do 
+   sys_config_file_default = sys_config_dir.."/config.lua"
+   sys_config_file = load_config_file({
+      site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..cfg.lua_version..".lua",
+      sys_config_file_default,
+   })
+   sys_config_ok = (sys_config_file ~= nil)
+end
+
+-- Load user configuration file (if allowed)
+if not site_config.LUAROCKS_FORCE_CONFIG then
+  
+   home_config_file_default = home_config_dir.."/config.lua"
+   local list = {
+      os.getenv("LUAROCKS_CONFIG_" .. version_suffix) or os.getenv("LUAROCKS_CONFIG"),
+      home_config_dir.."/config-"..cfg.lua_version..".lua",
+      home_config_file_default,
+   }
+   -- first entry might be a silent nil, check and remove if so
+   if not list[1] then table.remove(list, 1) end
+   
+   home_config_file = load_config_file(list)
+   home_config_ok = (home_config_file ~= nil)
+
+end
+
 
 if not next(cfg.rocks_trees) then
    if cfg.home_tree then
@@ -227,8 +251,29 @@ if not next(cfg.rocks_trees) then
    end
 end
 
--- Configure defaults:
 
+-- update platforms list; keyed -> array
+do
+   local lst = {} -- use temp array to not confuse `pairs` in loop
+   for plat in pairs(cfg.platforms) do 
+      if cfg.platforms[plat] then  -- entries set to 'false' skipped
+         if not platform_order[plat] then
+            local pl = ""
+            for k,_ in pairs(platform_order) do pl = pl .. ", " .. k end
+            io.stderr:write("Bad platform given; "..tostring(plat)..". Valid entries are: "..pl:sub(3,-1) ..".\n")
+            os.exit(cfg.errorcodes.CONFIGFILE)
+         end
+         table.insert(lst, plat)
+      else
+         cfg.platforms[plat] = nil
+      end
+   end
+   -- platform overrides depent on the order, so set priorities
+   table.sort(lst, function(key1, key2) return platform_order[key1] < platform_order[key2] end)
+   util.deep_merge(cfg.platforms, lst)
+end
+
+-- Configure defaults:
 local defaults = {
 
    local_by_default = false,
@@ -328,14 +373,13 @@ local defaults = {
    rocks_provided = {}
 }
 
-if detected.windows then
+if cfg.platforms.windows then
    local full_prefix = (site_config.LUAROCKS_PREFIX or (os.getenv("PROGRAMFILES")..[[\LuaRocks]])).."\\"..cfg.major_version
    extra_luarocks_module_dir = full_prefix.."\\lua\\?.lua"
 
    home_config_file = home_config_file and home_config_file:gsub("\\","/")
    defaults.fs_use_modules = false
    defaults.arch = "win32-"..cfg.target_cpu 
-   defaults.platforms = {"win32", "windows" }
    defaults.lib_extension = "dll"
    defaults.external_lib_extension = "dll"
    defaults.obj_extension = "obj"
@@ -388,8 +432,7 @@ if detected.windows then
    defaults.web_browser = "start"
 end
 
-if detected.mingw32 then
-   defaults.platforms = { "win32", "mingw32", "windows" }
+if cfg.platforms.mingw32 then
    defaults.obj_extension = "o"
    defaults.cmake_generator = "MinGW Makefiles"
    defaults.variables.MAKE = "mingw32-make"
@@ -413,7 +456,7 @@ if detected.mingw32 then
 
 end
 
-if detected.unix then
+if cfg.platforms.unix then
    defaults.lib_extension = "so"
    defaults.external_lib_extension = "so"
    defaults.obj_extension = "o"
@@ -423,7 +466,6 @@ if detected.unix then
    defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR or "/usr/local/lib"
    defaults.variables.CFLAGS = "-O2"
    defaults.cmake_generator = "Unix Makefiles"
-   defaults.platforms = { "unix" }
    defaults.variables.CC = "gcc"
    defaults.variables.LD = "gcc"
    defaults.gcc_rpath = true
@@ -450,26 +492,24 @@ if detected.unix then
    defaults.web_browser = "xdg-open"
 end
 
-if detected.cygwin then
+if cfg.platforms.cygwin then
    defaults.lib_extension = "so" -- can be overridden in the config file for mingw builds
    defaults.arch = "cygwin-"..cfg.target_cpu
-   defaults.platforms = {"unix", "cygwin"}
    defaults.cmake_generator = "Unix Makefiles"
    defaults.variables.CC = "echo -llua | xargs gcc"
    defaults.variables.LD = "echo -llua | xargs gcc"
    defaults.variables.LIBFLAG = "-shared"
 end
 
-if detected.bsd then
+if cfg.platforms.bsd then
    defaults.variables.MAKE = "gmake"
    defaults.variables.STATFLAG = "-f '%OLp'"
 end
 
-if detected.macosx then
+if cfg.platforms.macosx then
    defaults.variables.MAKE = "make"
    defaults.external_lib_extension = "dylib"
    defaults.arch = "macosx-"..cfg.target_cpu
-   defaults.platforms = {"unix", "bsd", "macosx"}
    defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
    defaults.variables.STAT = "/usr/bin/stat"
    defaults.variables.STATFLAG = "-f '%A'"
@@ -487,32 +527,28 @@ if detected.macosx then
    defaults.web_browser = "open"
 end
 
-if detected.linux then
+if cfg.platforms.linux then
    defaults.arch = "linux-"..cfg.target_cpu
-   defaults.platforms = {"unix", "linux"}
 end
 
-if detected.freebsd then
+if cfg.platforms.freebsd then
    defaults.arch = "freebsd-"..cfg.target_cpu
-   defaults.platforms = {"unix", "bsd", "freebsd"}
    defaults.gcc_rpath = false
    defaults.variables.CC = "cc"
    defaults.variables.LD = "cc"
 end
 
-if detected.openbsd then
+if cfg.platforms.openbsd then
    defaults.arch = "openbsd-"..cfg.target_cpu
-   defaults.platforms = {"unix", "bsd", "openbsd"}
 end
 
-if detected.netbsd then
+if cfg.platforms.netbsd then
    defaults.arch = "netbsd-"..cfg.target_cpu
-   defaults.platforms = {"unix", "bsd", "netbsd"}
 end
 
-if detected.solaris then
+if cfg.platforms.solaris then
    defaults.arch = "solaris-"..cfg.target_cpu
-   defaults.platforms = {"unix", "solaris"}
+   --defaults.platforms = {"unix", "solaris"}
    defaults.variables.MAKE = "gmake"
 end
 
@@ -612,11 +648,11 @@ end
 function cfg.which_config()
    return {
       system = {
-         file = sys_config_file,
+         file = sys_config_file or sys_config_file_default,
          ok = sys_config_ok,
       },
       user = {
-         file = home_config_file,
+         file = home_config_file or home_config_file_default,
          ok = home_config_ok,
       }
    }
