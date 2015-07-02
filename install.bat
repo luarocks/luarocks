@@ -794,10 +794,11 @@ print()
 print("Configuring LuaRocks...")
 
 -- Create a site-config file
-if exists(S[[$LUADIR\luarocks\site_config.lua]]) then
-	exec(S[[RENAME "$LUADIR\luarocks\site_config.lua" site_config.lua.bak]])
+local site_config = S("site_config_$LUA_VERSION"):gsub("%.","_")
+if exists(S([[$LUADIR\luarocks\]]..site_config..[[.lua]])) then
+	exec(S([[RENAME "$LUADIR\luarocks\]]..site_config..[[.lua" site_config.lua.bak]]))
 end
-local f = io.open(vars.LUADIR.."\\luarocks\\site_config.lua", "w")
+local f = io.open(vars.LUADIR.."\\luarocks\\"..site_config..".lua", "w")
 f:write(S[=[
 local site_config = {}
 site_config.LUA_INCDIR=[[$LUA_INCDIR]]
@@ -821,16 +822,16 @@ site_config.LUAROCKS_MD5CHECKER=[[md5sum]]
 if FORCE_CONFIG then
 	f:write("site_config.LUAROCKS_FORCE_CONFIG=true\n")
 end
-if exists(vars.LUADIR.."\\luarocks\\site_config.lua.bak") then
-	for line in io.lines(vars.LUADIR.."\\luarocks\\site_config.lua.bak", "r") do
+if exists(vars.LUADIR.."\\luarocks\\"..site_config..".lua.bak") then
+	for line in io.lines(vars.LUADIR.."\\luarocks\\"..site_config..".lua.bak", "r") do
 		f:write(line)
 		f:write("\n")
 	end
-	exec(S[[DEL /F /Q "$LUADIR\luarocks\site_config.lua.bak"]])
+	exec(S([[DEL /F /Q "$LUADIR\luarocks\]]..site_config..[[.lua.bak"]]))
 end
 f:write("return site_config\n")
 f:close()
-print(S[[Created LuaRocks site-config file: $LUADIR\luarocks\site_config.lua]])
+print(S([[Created LuaRocks site-config file: $LUADIR\luarocks\]]..site_config..[[.lua]]))
 
 -- create config file
 vars.CONFIG_FILE = vars.SYSCONFDIR.."\\"..vars.SYSCONFFILENAME
