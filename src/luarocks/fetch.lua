@@ -309,7 +309,7 @@ function fetch.load_local_rockspec(filename, quick)
       end
    end
 
-   addon.handle_rockspec(original_rockspec)
+   addon.handle_rockspec(rockspec)
 
    return rockspec
 end

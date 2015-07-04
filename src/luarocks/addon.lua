@@ -66,7 +66,7 @@ function addon.handle_rockspec(rockspec)
       if v.callback then
          local field_value = get(rockspec, k)
          if field_value then
-            local ok, err = pcall(v.callback, field_value)
+            local ok, err = pcall(v.callback, field_value, rockspec)
             if not ok then
                -- TODO include the name of addon in the error message
                print("Addon callback for rockspec field "..k.." failed: "..err)
