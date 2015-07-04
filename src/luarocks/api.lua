@@ -18,11 +18,12 @@ function api.load_rockspec(filename, location)
    return fetch.load_rockspec(filename, location)
 end
 
--- Expose everything in luarocks.fs except the verbose function.
-for k, v in pairs(fs) do
-   if k ~= "verbose" then
-      api[k] = v
-   end
+local fs_exposure = {
+   "is_writable", "make_temp_dir", "execute", "execute_quiet", "list_dir",
+   "exists"
+}
+for i, k in ipairs(fs_exposure) do
+   api[k] = fs[k]
 end
 
 return api
