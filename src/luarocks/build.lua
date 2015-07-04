@@ -220,7 +220,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       fs.change_dir(rockspec.source.dir)
    end
 
-   addon.trigger_hook("build.before")
+   addon.trigger_hook("build.before", rockspec)
 
    local dirs = {
       lua = { name = path.lua_dir(name, version), is_module_path = true },
@@ -342,7 +342,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    util.printout(name.." "..version.." is now built and installed in "..root_dir.." "..license)
    util.printout()
    
-   addon.trigger_hook("build.after")
+   addon.trigger_hook("build.after", rockspec)
 
    util.remove_scheduled_function(rollback)
    return name, version
