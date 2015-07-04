@@ -10,6 +10,35 @@ local available_hooks = {
 local hook_registry
 local rockspec_field_registry
 
+--- Make sure luarocks.api is loaded. Otherwise when using
+-- pcall_with_restricted_require, require calls in luarocks.api itself will be
+-- blocked. This is not what we want.
+require("luarocks.api")
+
+local original_require = require
+--- Block require calls to luarocks modules except luarocks.api and
+-- luarocks.addon.*. This is intended to prevent addon authors from
+-- accidentally using the internal APIs and not as a real sandboxing
+-- mechanism; it can be easily worked around by e.g. calling the package
+-- searchers directly.
+local function restricted_require(modname)
+   if modname:sub(1, 9) == "luarocks." and modname ~= "luarocks.api" then
+      local info = debug.getinfo(2, "Sl")
+      error(string.format(
+         "Attempting to require LuaRocks internal module %s: %s:%d. "..
+         "Only use luarocks.api to access LuaRocks facilities.",
+         modname, info.short_src, info.currentline))
+   end
+   return original_require(modname)
+end
+
+local function pcall_with_restricted_require(f, ...)
+   require = restricted_require
+   ret = {pcall(f, ...)}
+   require = original_require
+   return unpack(ret)
+end
+
 --- Reset the addon registries.
 function addon.reset()
    hook_registry = {}
@@ -34,7 +63,7 @@ function addon.trigger_hook(name, ...)
       return nil, "No hook called "..name
    end
    for i, callback in ipairs(hook_registry[name]) do
-      local ok, err = pcall(callback, ...)
+      local ok, err = pcall_with_restricted_require(callback, ...)
       if not ok then
          -- TODO include the name of addon in the error message
          print("Addon hook for "..name.." failed: "..err)
@@ -66,7 +95,7 @@ function addon.handle_rockspec(rockspec)
       if v.callback then
          local field_value = get(rockspec, k)
          if field_value then
-            local ok, err = pcall(v.callback, field_value, rockspec)
+            local ok, err = pcall_with_restricted_require(v.callback, field_value, rockspec)
             if not ok then
                -- TODO include the name of addon in the error message
                print("Addon callback for rockspec field "..k.." failed: "..err)
@@ -79,12 +108,12 @@ end
 function addon.load(name)
    local modname = "luarocks.addon."..name
    package.loaded[modname] = nil
-   local ok, err = pcall(require, modname)
+   local ok, err = pcall_with_restricted_require(require, modname)
    if not ok then
       return nil, err
    end
    local mod = err
-   local ok, err = pcall(mod.load)
+   local ok, err = pcall_with_restricted_require(mod.load)
    if not ok then
       return nil, err
    end
