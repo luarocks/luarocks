@@ -291,7 +291,7 @@ function fetch.load_local_rockspec(filename, quick)
    end
 
    -- Load addons
-   addon.reset()
+   addon.set_rockspec(rockspec)
    if rockspec.addons then
       for _, name in ipairs(rockspec.addons) do
          local ok, err = addon.load(name)
@@ -309,7 +309,7 @@ function fetch.load_local_rockspec(filename, quick)
       end
    end
 
-   addon.handle_rockspec(rockspec)
+   addon.call_field_callbacks()
 
    return rockspec
 end

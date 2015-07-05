@@ -3,12 +3,11 @@ local addon = {}
 package.loaded["luarocks.addon"] = addon
 
 local type_check = require("luarocks.type_check")
+local util = require("luarocks.util")
 
 local available_hooks = {
    "build.before", "build.after"
 }
-local hook_registry
-local rockspec_field_registry
 
 local original_require = require
 --- Block require calls to luarocks modules except luarocks.api and
@@ -34,30 +33,32 @@ local function pcall_with_restricted_require(f, ...)
    return unpack(ret)
 end
 
---- Reset the addon registries.
-function addon.reset()
-   hook_registry = {}
+local current_rockspec
+
+--- Set the given rockspec as the current rockspec and initialize empty
+-- registries in it.
+function addon.set_rockspec(rockspec)
+   current_rockspec = rockspec
+   rockspec.hook_registry = {}
    for i, h in ipairs(available_hooks) do
-      hook_registry[h] = {}
+      rockspec.hook_registry[h] = {}
    end
-   rockspec_field_registry = {}
-   type_check.reset_rockspec_types()
+   rockspec.field_registry = {}
+   rockspec.types = util.make_deep_value_copy(type_check.rockspec_types)
 end
 
-addon.reset()
-
 function addon.register_hook(name, callback)
-   if not hook_registry[name] then
+   if not current_rockspec.hook_registry[name] then
       return nil, "No hook called "..name
    end
-   hook_registry[name][#hook_registry[name]+1] = callback
+   current_rockspec.hook_registry[name][#current_rockspec.hook_registry[name]+1] = callback
 end
 
 function addon.trigger_hook(name, ...)
-   if not hook_registry[name] then
+   if not current_rockspec.hook_registry[name] then
       return nil, "No hook called "..name
    end
-   for i, callback in ipairs(hook_registry[name]) do
+   for i, callback in ipairs(current_rockspec.hook_registry[name]) do
       local ok, err = pcall_with_restricted_require(callback, ...)
       if not ok then
          -- TODO include the name of addon in the error message
@@ -66,12 +67,36 @@ function addon.trigger_hook(name, ...)
    end
 end
 
+--- Add a new field, potentially recursively, to tbl.
+-- @param tbl table: the table.
+-- @param field string: a dot-separated string specyfing the path to access
+-- the field.
+-- @param value: the value to add.
+-- @param context string: the previous part of field, used in error message.
+-- @return boolean or (nil, string): true if the named field does not exist
+-- but its parent does, or nil and a message otherwise.
+local function add_field(tbl, field, value, context)
+   local i = field:find("%.")
+   if i then
+      local k = field:sub(1, i-1)
+      local subtbl = tbl[k]
+      if type(subtbl) ~= "table" then
+         return nil, "Field "..context..k.." does not exist or is not a table"
+      end
+      return add_field(subtbl, field:sub(i+1), value, context..field:sub(1,i))
+   end
+   if tbl[field] then
+      return nil, "Field "..context..field.." already exists"
+   end
+   tbl[field] = value
+end
+
 function addon.register_rockspec_field(name, typetbl, callback)
-   if rockspec_field_registry[name] then
+   if current_rockspec.field_registry[name] then
       return nil, "Rockspec field "..name.." already registered"
    end
-   rockspec_field_registry[name] = {callback = callback}
-   return type_check.add_rockspec_field(name, typetbl)
+   current_rockspec.field_registry[name] = {callback = callback}
+   return add_field(current_rockspec.types, name, typetbl, "")
 end
 
 local function get(tbl, field)
@@ -85,12 +110,12 @@ local function get(tbl, field)
    return tbl[field]
 end
 
-function addon.handle_rockspec(rockspec)
-   for k, v in pairs(rockspec_field_registry) do
+function addon.call_field_callbacks()
+   for k, v in pairs(current_rockspec.field_registry) do
       if v.callback then
-         local field_value = get(rockspec, k)
+         local field_value = get(current_rockspec, k)
          if field_value then
-            local ok, err = pcall_with_restricted_require(v.callback, field_value, rockspec)
+            local ok, err = pcall_with_restricted_require(v.callback, field_value, current_rockspec)
             if not ok then
                -- TODO include the name of addon in the error message
                print("Addon callback for rockspec field "..k.." failed: "..err)
