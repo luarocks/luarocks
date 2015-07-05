@@ -419,6 +419,7 @@ test_lint_ok() { $luarocks download --rockspec validate-args ${verrev_validate_a
 fail_lint_type_mismatch_string() { $luarocks lint "$testing_dir/testfiles/type_mismatch_string-1.0-1.rockspec"; }
 fail_lint_type_mismatch_version() { $luarocks lint "$testing_dir/testfiles/type_mismatch_version-1.0-1.rockspec"; }
 fail_lint_type_mismatch_table() { $luarocks lint "$testing_dir/testfiles/type_mismatch_table-1.0-1.rockspec"; }
+fail_lint_no_build_table() { $luarocks lint "$testing_dir/testfiles/no_build_table-0.1-1.rockspec"; }
 
 test_list() { $luarocks list; }
 test_list_porcelain() { $luarocks list --porcelain; }
@@ -491,6 +492,7 @@ test_deps_mode_make_order_sys() { $luarocks build --tree="$testing_tree" lpeg &&
 
 test_write_rockspec() { $luarocks write_rockspec git://github.com/keplerproject/luarocks; }
 test_write_rockspec_lib() { $luarocks write_rockspec git://github.com/mbalmer/luafcgi --lib=fcgi --license="3-clause BSD" --lua-version=5.1,5.2; }
+test_write_rockspec_format() { $luarocks write_rockspec git://github.com/keplerproject/luarocks --rockspec-format=1.1 --lua-version=5.1,5.2; }
 test_write_rockspec_fullargs() { $luarocks write_rockspec git://github.com/keplerproject/luarocks --lua-version=5.1,5.2 --license="MIT/X11" --homepage="http://www.luarocks.org" --summary="A package manager for Lua modules"; }
 fail_write_rockspec_args() { $luarocks write_rockspec invalid; }
 fail_write_rockspec_args_url() { $luarocks write_rockspec http://example.com/invalid.zip; }
@@ -507,6 +509,20 @@ fail_config_system_config_invalid() { mkdir -p "$testing_lrprefix/etc/luarocks";
 test_config_user_config() { $luarocks config --user-config; }
 fail_config_user_config() { LUAROCKS_CONFIG="/missing_file.lua" $luarocks config --user-config; }
 test_config_rock_trees() { $luarocks config --rock-trees; }
+test_config_help() { $luarocks help config; }
+
+# Tests for https://github.com/keplerproject/luarocks/issues/375
+test_fetch_base_dir() { $lua <<EOF
+   local fetch = require "luarocks.fetch"
+
+   assert("v0.3" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2/archive/v0.3.zip"))
+   assert("lua-compat-5.2" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2.zip"))
+   assert("lua-compat-5.2" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2.tar.gz"))
+   assert("lua-compat-5.2" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2.tar.bz2"))
+   assert("parser.moon" == fetch.url_to_base_dir("git://github.com/Cirru/parser.moon"))
+   assert("v0.3" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2/archive/v0.3"))
+EOF
+}
 
 test_doc() { $luarocks install luarepl; $luarocks doc luarepl; }
 

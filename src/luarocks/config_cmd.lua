@@ -6,6 +6,22 @@ local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 
+config_cmd.help_summary = "Query information about the LuaRocks configuration."
+config_cmd.help_arguments = "<flag>"
+config_cmd.help = [[
+--lua-incdir     Path to Lua header files.
+
+--lua-libdir     Path to Lua library files.
+
+--lua-ver        Lua version (in major.minor format). e.g. 5.1
+
+--system-config  Location of the system config file.
+
+--user-config    Location of the user config file.
+
+--rock-trees     Rocks trees in use. First the user tree, then the system tree.
+]]
+
 local function config_file(conf)
    print(dir.normalize(conf.file))
    if conf.ok then
@@ -39,7 +55,6 @@ function config_cmd.run(...)
    if flags["user-config"] then
       return config_file(conf.user)
    end
-
    if flags["rock-trees"] then
       for _, tree in ipairs(cfg.rocks_trees) do
       	if type(tree) == "string" then

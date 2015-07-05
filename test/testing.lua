@@ -50,6 +50,10 @@ local function glob(patt)
    -- TODO
 end
 
+local function touch(filename)
+   -- TODO
+end
+
 local function rm(...)
    for _, filename in ipairs {...} do
       filename = expand_variables(filename)
@@ -203,6 +207,7 @@ local tests = {
    fail_lint_type_mismatch_string = function() return run '$luarocks lint "$testing_dir/testfiles/type_mismatch_string-1.0-1.rockspec"' end,
    fail_lint_type_mismatch_version = function() return run '$luarocks lint "$testing_dir/testfiles/type_mismatch_version-1.0-1.rockspec"' end,
    fail_lint_type_mismatch_table = function() return run '$luarocks lint "$testing_dir/testfiles/type_mismatch_table-1.0-1.rockspec"' end,
+   fail_lint_no_build_table = function() return run '$luarocks lint "$testing_dir/testfiles/no_build_table-0.1-1.rockspec"' end,
    test_list = function() return run "$luarocks list" end,
    test_list_porcelain = function() return run "$luarocks list --porcelain" end,
    test_make_with_rockspec = function()
@@ -396,17 +401,57 @@ local tests = {
       local found = run_get_contents '$luarocks_noecho list --tree="$testing_sys_tree" --porcelain lpeg'
       rm_rf "./lxsh-${verrev_lxsh}"
       return found ~= ""
-   end,   
+   end,
    test_write_rockspec = function() return run "$luarocks write_rockspec git://github.com/keplerproject/luarocks" end,
    test_write_rockspec_lib = function() return run '$luarocks write_rockspec git://github.com/mbalmer/luafcgi --lib=fcgi --license="3-clause BSD" --lua-version=5.1,5.2' end,
+   test_write_rockspec_format = function() return run '$luarocks write_rockspec git://github.com/keplerproject/luarocks --rockspec-format=1.1 --lua-version=5.1,5.2' end,
    test_write_rockspec_fullargs = function() return run '$luarocks write_rockspec git://github.com/keplerproject/luarocks --lua-version=5.1,5.2 --license="MIT/X11" --homepage="http://www.luarocks.org" --summary="A package manager for Lua modules"' end,
    fail_write_rockspec_args = function() return run "$luarocks write_rockspec invalid" end,
    fail_write_rockspec_args_url = function() return run "$luarocks write_rockspec http://example.com/invalid.zip" end,
    test_write_rockspec_http = function() return run "$luarocks write_rockspec http://luarocks.org/releases/luarocks-2.1.0.tar.gz --lua-version=5.1" end,
    test_write_rockspec_basedir = function() return run "$luarocks write_rockspec https://github.com/downloads/Olivine-Labs/luassert/luassert-1.2.tar.gz --lua-version=5.1" end,
+
+   fail_config_noflags = function() return run "$luarocks config; " end,
+   test_config_lua_incdir = function() return run "$luarocks config --lua-incdir; " end,
+   test_config_lua_libdir = function() return run "$luarocks config --lua-libdir; " end,
+   test_config_lua_ver = function() return run "$luarocks config --lua-ver; " end,
+   fail_config_system_config = function()
+      return rm "$testing_lrprefix/etc/luarocks/config.lua"
+         and run "$luarocks config --system-config; "
+   end,
+   test_config_system_config = function()
+      local ok = mkdir "$testing_lrprefix/etc/luarocks"
+         and touch "$testing_lrprefix/etc/luarocks/config.lua"
+         and run "$luarocks config --system-config; "
+      rm "$testing_lrprefix/etc/luarocks/config.lua"
+      return ok
+   end,
+   fail_config_system_config_invalid = function()
+      local ok = mkdir "$testing_lrprefix/etc/luarocks"
+         and run "echo 'if if if' > '$testing_lrprefix/etc/luarocks/config.lua' ;"
+         and run "$luarocks config --system-config"
+      rm "$testing_lrprefix/etc/luarocks/config.lua"
+      return ok
+   end,
+   test_config_user_config = function() return run "$luarocks config --user-config; " end,
+   fail_config_user_config = function() return run "LUAROCKS_CONFIG='/missing_file.lua' $luarocks config --user-config; " end,
+   test_config_rock_trees = function() return run "$luarocks config --rock-trees;" end,
+   test_config_help = function() return run "$luarocks help config;" end,
    test_doc = function()
       return run "$luarocks install luarepl"
          and run "$luarocks doc luarepl"
    end,
+
+   -- Tests for https://github.com/keplerproject/luarocks/issues/375
+   test_fetch_base_dir = function()
+      local fetch = require "luarocks.fetch"
+
+      return assert("v0.3" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2/archive/v0.3.zip"))
+         and assert("lua-compat-5.2" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2.zip"))
+         and assert("lua-compat-5.2" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2.tar.gz"))
+         and assert("lua-compat-5.2" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2.tar.bz2"))
+         and assert("parser.moon" == fetch.url_to_base_dir("git://github.com/Cirru/parser.moon"))
+         and assert("v0.3" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2/archive/v0.3"))
+   end
    
 }

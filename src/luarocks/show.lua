@@ -11,7 +11,7 @@ local path = require("luarocks.path")
 local deps = require("luarocks.deps")
 local fetch = require("luarocks.fetch")
 local manif = require("luarocks.manif")
-show.help_summary = "Shows information about an installed rock."
+show.help_summary = "Show information about an installed rock."
 
 show.help = [[
 <argument> is an existing package name.
