@@ -10,11 +10,6 @@ local available_hooks = {
 local hook_registry
 local rockspec_field_registry
 
---- Make sure luarocks.api is loaded. Otherwise when using
--- pcall_with_restricted_require, require calls in luarocks.api itself will be
--- blocked. This is not what we want.
-require("luarocks.api")
-
 local original_require = require
 --- Block require calls to luarocks modules except luarocks.api and
 -- luarocks.addon.*. This is intended to prevent addon authors from
@@ -119,5 +114,10 @@ function addon.load(name)
    end
    return true
 end
+
+-- Make sure luarocks.api is loaded. Otherwise when using
+-- pcall_with_restricted_require, require calls in luarocks.api itself will be
+-- blocked. This is not what we want.
+require("luarocks.api")
 
 return addon
