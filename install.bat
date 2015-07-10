@@ -8,6 +8,8 @@ local vars = {}
 vars.PREFIX = nil
 vars.VERSION = "2.2"
 vars.SYSCONFDIR = nil
+vars.SYSCONFFILENAME = nil
+vars.CONFIG_FILE = nil
 vars.TREE_ROOT = nil
 vars.TREE_BIN = nil
 vars.TREE_LMODULE = nil
@@ -360,7 +362,14 @@ local function look_for_headers (directory)
 		die(S"lua.h not found in $LUA_INCDIR")
 	end
 
-	for _, e in ipairs{ [[\]], [[\include\]]} do
+	for _, e in ipairs{ 
+        S([[\include\lua\$LUA_VERSION]]), 
+        S([[\include\lua$LUA_SHORTV]]), 
+        S([[\include\lua$LUA_VERSION]]), 
+        S([[\include\$LUA_VERSION]]), 
+        [[\include\]],
+        [[\]], 
+      } do
 		print("    checking for "..directory..e.."\\lua.h")
 		if exists(directory..e.."\\lua.h") then
 			vars.LUA_INCDIR = directory..e
@@ -610,6 +619,8 @@ else
 	datapath = os.getenv("ProgramW6432") .. [[\LuaRocks]]
 end
 vars.SYSCONFDIR = vars.SYSCONFDIR or vars.PREFIX
+vars.SYSCONFFILENAME = S"config-$LUA_VERSION.lua"
+vars.CONFIG_FILE = vars.SYSCONFDIR.."\\"..vars.SYSCONFFILENAME
 vars.TREE_ROOT = vars.TREE_ROOT or datapath..[[\systree]]
 if SELFCONTAINED then
 	vars.SYSCONFDIR = vars.PREFIX
@@ -625,7 +636,7 @@ print(S[[
 
 Will configure LuaRocks with the following paths:
 LuaRocks        : $FULL_PREFIX
-Config file     : $SYSCONFDIR\config.lua
+Config file     : $CONFIG_FILE
 Rocktree        : $TREE_ROOT
 
 Lua interpreter : $LUA_BINDIR\$LUA_INTERPRETER
@@ -793,10 +804,11 @@ print()
 print("Configuring LuaRocks...")
 
 -- Create a site-config file
-if exists(S[[$LUADIR\luarocks\site_config.lua]]) then
-	exec(S[[RENAME "$LUADIR\luarocks\site_config.lua" site_config.lua.bak]])
+local site_config = S("site_config_$LUA_VERSION"):gsub("%.","_")
+if exists(S([[$LUADIR\luarocks\]]..site_config..[[.lua]])) then
+	exec(S([[RENAME "$LUADIR\luarocks\]]..site_config..[[.lua" site_config.lua.bak]]))
 end
-local f = io.open(vars.LUADIR.."\\luarocks\\site_config.lua", "w")
+local f = io.open(vars.LUADIR.."\\luarocks\\"..site_config..".lua", "w")
 f:write(S[=[
 local site_config = {}
 site_config.LUA_INCDIR=[[$LUA_INCDIR]]
@@ -811,7 +823,7 @@ else
 end
 f:write(S[=[
 site_config.LUAROCKS_UNAME_M=[[$UNAME_M]]
-site_config.LUAROCKS_SYSCONFIG=[[$SYSCONFDIR\config.lua]]
+site_config.LUAROCKS_SYSCONFIG=[[$CONFIG_FILE]]
 site_config.LUAROCKS_ROCKS_TREE=[[$TREE_ROOT]]
 site_config.LUAROCKS_PREFIX=[[$PREFIX]]
 site_config.LUAROCKS_DOWNLOADER=[[wget]]
@@ -820,24 +832,23 @@ site_config.LUAROCKS_MD5CHECKER=[[md5sum]]
 if FORCE_CONFIG then
 	f:write("site_config.LUAROCKS_FORCE_CONFIG=true\n")
 end
-if exists(vars.LUADIR.."\\luarocks\\site_config.lua.bak") then
-	for line in io.lines(vars.LUADIR.."\\luarocks\\site_config.lua.bak", "r") do
+if exists(vars.LUADIR.."\\luarocks\\"..site_config..".lua.bak") then
+	for line in io.lines(vars.LUADIR.."\\luarocks\\"..site_config..".lua.bak", "r") do
 		f:write(line)
 		f:write("\n")
 	end
-	exec(S[[DEL /F /Q "$LUADIR\luarocks\site_config.lua.bak"]])
+	exec(S([[DEL /F /Q "$LUADIR\luarocks\]]..site_config..[[.lua.bak"]]))
 end
 f:write("return site_config\n")
 f:close()
-print(S[[Created LuaRocks site-config file: $LUADIR\luarocks\site_config.lua]])
+print(S([[Created LuaRocks site-config file: $LUADIR\luarocks\]]..site_config..[[.lua]]))
 
 -- create config file
-vars.CONFIG_FILE = vars.SYSCONFDIR.."\\config.lua"
 if not exists(vars.SYSCONFDIR) then
 	mkdir(vars.SYSCONFDIR)
 end
 if exists(vars.CONFIG_FILE) then
-	local nname = backup(vars.CONFIG_FILE, "config.bak")
+	local nname = backup(vars.CONFIG_FILE, vars.SYSCONFFILENAME..".bak")
 	print("***************")
 	print(S"*** WARNING *** LuaRocks config file already exists: '$CONFIG_FILE'. The old file has been renamed to '"..nname.."'")
 	print("***************")

@@ -216,10 +216,10 @@ end
 
 -- Load system configuration file
 do 
-   sys_config_file_default = sys_config_dir.."/config.lua"
+   sys_config_file_default = sys_config_dir.."/config-"..cfg.lua_version..".lua"
    sys_config_file = load_config_file({
-      site_config.LUAROCKS_SYSCONFIG or sys_config_dir.."/config-"..cfg.lua_version..".lua",
-      sys_config_file_default,
+      site_config.LUAROCKS_SYSCONFIG or sys_config_file_default,
+      sys_config_dir.."/config.lua",
    })
    sys_config_ok = (sys_config_file ~= nil)
 end
@@ -227,11 +227,11 @@ end
 -- Load user configuration file (if allowed)
 if not site_config.LUAROCKS_FORCE_CONFIG then
   
-   home_config_file_default = home_config_dir.."/config.lua"
+   home_config_file_default = home_config_dir.."/config-"..cfg.lua_version..".lua"
    local list = {
       os.getenv("LUAROCKS_CONFIG_" .. version_suffix) or os.getenv("LUAROCKS_CONFIG"),
-      home_config_dir.."/config-"..cfg.lua_version..".lua",
       home_config_file_default,
+      home_config_dir.."/config.lua",
    }
    -- first entry might be a silent nil, check and remove if so
    if not list[1] then table.remove(list, 1) end
