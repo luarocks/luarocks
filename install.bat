@@ -97,7 +97,7 @@ local function permission()
 	return exec("net session >NUL 2>&1") -- fails if not admin
 end
 
--- rename file (full path) to backup (name only), appending number if required
+-- rename filename (full path) to backupname (name only), appending number if required
 -- returns the new name (name only)
 local function backup(filename, backupname)
 	local path = filename:match("(.+)%\\.-$").."\\"
@@ -255,7 +255,7 @@ local function check_flags()
 			die("Cannot combine option /L with any of /LUA /BIN /LIB /INC")
 		end
 		if vars.LUA_VERSION ~= "5.1" then
-			die("Bundled Lua version is 5.1, cannot install 5.2")
+			die("Bundled Lua version is 5.1, cannot install "..vars.LUA_VERSION)
 		end
 	end
 	if vars.LUA_VERSION ~= "5.1" then
