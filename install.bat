@@ -8,6 +8,7 @@ local vars = {}
 vars.PREFIX = nil
 vars.VERSION = "2.2"
 vars.SYSCONFDIR = nil
+vars.CONFBACKUPDIR = nil
 vars.SYSCONFFILENAME = nil
 vars.CONFIG_FILE = nil
 vars.TREE_ROOT = nil
@@ -79,7 +80,7 @@ end
 
 local function exec(cmd)
 	--print(cmd)
-	local status = os.execute(cmd)
+	local status = os.execute("type NUL && "..cmd)
 	return (status == 0 or status == true) -- compat 5.1/5.2
 end
 
@@ -479,6 +480,29 @@ local function look_for_lua_install ()
 	return false
 end
 
+-- backup config[x.x].lua[.bak] and site_config[_x_x].lua
+local function backup_config_files()
+  local temppath
+  while not temppath do
+    temppath = os.getenv("temp").."\\LR-config-backup-"..tostring(math.random(10000))
+    if exists(temppath) then temppath = nil end
+  end
+  print("'"..temppath.."'")
+  vars.CONFBACKUPDIR = temppath
+  mkdir(vars.CONFBACKUPDIR)
+  exec(S[[COPY "$PREFIX\config*.*" "$CONFBACKUPDIR" >NUL]])
+  exec(S[[COPY "$FULL_PREFIX\lua\luarocks\site_config*.*" "$CONFBACKUPDIR" >NUL]])
+end
+
+-- restore previously backed up config files
+local function restore_config_files()
+  if not vars.CONFBACKUPDIR then return end -- there is no backup to restore
+  exec(S[[COPY "$CONFBACKUPDIR\config*.*" "$PREFIX" >NUL]])
+  exec(S[[COPY "$CONFBACKUPDIR\site_config*.*" "$FULL_PREFIX\lua\luarocks" >NUL]])
+  -- cleanup
+  exec(S[[RD /S /Q "$CONFBACKUPDIR"]])
+  vars.CONFBACKUPDIR = nil
+end
 
 -- ***********************************************************
 -- Installer script start
@@ -664,14 +688,16 @@ print([[
 -- ***********************************************************
 -- Install LuaRocks files
 -- ***********************************************************
-if FORCE then
-	print(S"Removing $FULL_PREFIX...")
-	exec(S[[RD /S /Q "$FULL_PREFIX"]])
-	print()
-end
 
 if exists(vars.FULL_PREFIX) then
-	die(S"$FULL_PREFIX exists. Use /F to force removal and reinstallation.")
+  if not FORCE then
+    die(S"$FULL_PREFIX exists. Use /F to force removal and reinstallation.")
+  else
+    backup_config_files()
+    print(S"Removing $FULL_PREFIX...")
+    exec(S[[RD /S /Q "$FULL_PREFIX"]])
+    print()
+  end
 end
 
 print(S"Installing LuaRocks in $FULL_PREFIX...")
@@ -776,37 +802,21 @@ exit /b %EXITCODE%
 	print(S"Created LuaRocks command: $BINDIR\\"..c..".bat")
 end
 
--- part below was commented out as its purpose was unclear
--- see https://github.com/keplerproject/luarocks/pull/197#issuecomment-30176548
-
--- configure 'scripts' directory
--- if vars.TREE_BIN then
--- 	mkdir(vars.TREE_BIN)
--- 	if not USE_MINGW then
--- 		-- definitly not for MinGW because of conflicting runtimes
--- 		-- but is it ok to do it for others???
--- 		exec(S[[COPY lua5.1\bin\*.dll "$TREE_BIN" >NUL]])
--- 	end
--- else
--- 	if not USE_MINGW then
--- 	mkdir(S[[$TREE_ROOT\bin]])
--- 		-- definitly not for MinGW because of conflicting runtimes
--- 		-- but is it ok to do it for others???
--- 		exec(S[[COPY lua5.1\bin\*.dll "$TREE_ROOT"\bin >NUL]])
--- 	end
--- end
-
 -- ***********************************************************
 -- Configure LuaRocks
 -- ***********************************************************
 
+restore_config_files()
 print()
 print("Configuring LuaRocks...")
 
 -- Create a site-config file
 local site_config = S("site_config_$LUA_VERSION"):gsub("%.","_")
 if exists(S([[$LUADIR\luarocks\]]..site_config..[[.lua]])) then
-	exec(S([[RENAME "$LUADIR\luarocks\]]..site_config..[[.lua" site_config.lua.bak]]))
+	local nname = backup(S([[$LUADIR\luarocks\]]..site_config..[[.lua]]), site_config..".lua.bak")
+	print("***************")
+	print("*** WARNING *** LuaRocks site_config file already exists: '"..site_config..".lua'. The old file has been renamed to '"..nname.."'")
+	print("***************")
 end
 local f = io.open(vars.LUADIR.."\\luarocks\\"..site_config..".lua", "w")
 f:write(S[=[
@@ -831,13 +841,6 @@ site_config.LUAROCKS_MD5CHECKER=[[md5sum]]
 ]=])
 if FORCE_CONFIG then
 	f:write("site_config.LUAROCKS_FORCE_CONFIG=true\n")
-end
-if exists(vars.LUADIR.."\\luarocks\\"..site_config..".lua.bak") then
-	for line in io.lines(vars.LUADIR.."\\luarocks\\"..site_config..".lua.bak", "r") do
-		f:write(line)
-		f:write("\n")
-	end
-	exec(S([[DEL /F /Q "$LUADIR\luarocks\]]..site_config..[[.lua.bak"]]))
 end
 f:write("return site_config\n")
 f:close()
