@@ -487,18 +487,17 @@ local function backup_config_files()
     temppath = os.getenv("temp").."\\LR-config-backup-"..tostring(math.random(10000))
     if exists(temppath) then temppath = nil end
   end
-  print("'"..temppath.."'")
   vars.CONFBACKUPDIR = temppath
   mkdir(vars.CONFBACKUPDIR)
   exec(S[[COPY "$PREFIX\config*.*" "$CONFBACKUPDIR" >NUL]])
-  exec(S[[COPY "$FULL_PREFIX\lua\luarocks\site_config*.*" "$CONFBACKUPDIR" >NUL]])
+  exec(S[[COPY "$PREFIX\lua\luarocks\site_config*.*" "$CONFBACKUPDIR" >NUL]])
 end
 
 -- restore previously backed up config files
 local function restore_config_files()
   if not vars.CONFBACKUPDIR then return end -- there is no backup to restore
   exec(S[[COPY "$CONFBACKUPDIR\config*.*" "$PREFIX" >NUL]])
-  exec(S[[COPY "$CONFBACKUPDIR\site_config*.*" "$FULL_PREFIX\lua\luarocks" >NUL]])
+  exec(S[[COPY "$CONFBACKUPDIR\site_config*.*" "$PREFIX\lua\luarocks" >NUL]])
   -- cleanup
   exec(S[[RD /S /Q "$CONFBACKUPDIR"]])
   vars.CONFBACKUPDIR = nil
@@ -610,11 +609,10 @@ else
 end
 
 vars.PREFIX = vars.PREFIX or os.getenv("PROGRAMFILES")..[[\LuaRocks]]
-vars.FULL_PREFIX = S"$PREFIX\\$VERSION"
-vars.BINDIR = vars.FULL_PREFIX
-vars.LIBDIR = vars.FULL_PREFIX
-vars.LUADIR = S"$FULL_PREFIX\\lua"
-vars.INCDIR = S"$FULL_PREFIX\\include"
+vars.BINDIR = vars.PREFIX
+vars.LIBDIR = vars.PREFIX
+vars.LUADIR = S"$PREFIX\\lua"
+vars.INCDIR = S"$PREFIX\\include"
 vars.LUA_SHORTV = vars.LUA_VERSION:gsub("%.", "")
 
 if INSTALL_LUA then
@@ -659,7 +657,7 @@ print(S[[
 ==========================
 
 Will configure LuaRocks with the following paths:
-LuaRocks        : $FULL_PREFIX
+LuaRocks        : $PREFIX
 Config file     : $CONFIG_FILE
 Rocktree        : $TREE_ROOT
 
@@ -689,18 +687,18 @@ print([[
 -- Install LuaRocks files
 -- ***********************************************************
 
-if exists(vars.FULL_PREFIX) then
+if exists(vars.PREFIX) then
   if not FORCE then
-    die(S"$FULL_PREFIX exists. Use /F to force removal and reinstallation.")
+    die(S"$PREFIX exists. Use /F to force removal and reinstallation.")
   else
     backup_config_files()
-    print(S"Removing $FULL_PREFIX...")
-    exec(S[[RD /S /Q "$FULL_PREFIX"]])
+    print(S"Removing $PREFIX...")
+    exec(S[[RD /S /Q "$PREFIX"]])
     print()
   end
 end
 
-print(S"Installing LuaRocks in $FULL_PREFIX...")
+print(S"Installing LuaRocks in $PREFIX...")
 if not exists(vars.BINDIR) then
 	if not mkdir(vars.BINDIR) then
 		die()
@@ -916,17 +914,17 @@ if REGISTRY then
 	-- expand template with correct path information
 	print()
 	print([[Loading registry information for ".rockspec" files]])
-	exec( S[[win32\lua5.1\bin\lua5.1.exe "$FULL_PREFIX\LuaRocks.reg.lua" "$FULL_PREFIX\LuaRocks.reg.template"]] )
-	exec( S[[regedit /S "$FULL_PREFIX\\LuaRocks.reg"]] )
+	exec( S[[win32\lua5.1\bin\lua5.1.exe "$PREFIX\LuaRocks.reg.lua" "$PREFIX\LuaRocks.reg.template"]] )
+	exec( S[[regedit /S "$PREFIX\\LuaRocks.reg"]] )
 end
 
 -- ***********************************************************
 -- Cleanup
 -- ***********************************************************
 -- remove regsitry related files, no longer needed
-exec( S[[del "$FULL_PREFIX\LuaRocks.reg.*" >NUL]] )
+exec( S[[del "$PREFIX\LuaRocks.reg.*" >NUL]] )
 -- remove pe-parser module
-exec( S[[del "$FULL_PREFIX\pe-parser.lua" >NUL]] )
+exec( S[[del "$PREFIX\pe-parser.lua" >NUL]] )
 
 -- ***********************************************************
 -- Exit handlers 
@@ -946,8 +944,8 @@ Lua interpreter;
   PATH     :   $LUA_BINDIR
   PATHEXT  :   .LUA
 LuaRocks;
-  PATH     :   $FULL_PREFIX
-  LUA_PATH :   $FULL_PREFIX\lua\?.lua;$FULL_PREFIX\lua\?\init.lua
+  PATH     :   $PREFIX
+  LUA_PATH :   $PREFIX\lua\?.lua;$PREFIX\lua\?\init.lua
 Local user rocktree (Note: %APPDATA% is user dependent);
   PATH     :   %APPDATA%\LuaRocks\bin
   LUA_PATH :   %APPDATA%\LuaRocks\share\lua\$LUA_VERSION\?.lua;%APPDATA%\LuaRocks\share\lua\$LUA_VERSION\?\init.lua
