@@ -122,9 +122,6 @@ local function print_help()
 Installs LuaRocks.
 
 /P [dir]       Where to install LuaRocks. 
-               Note that version; $VERSION, will be appended to this
-               path, so "/P c:\luarocks\" will install in 
-               "c:\luarocks\$VERSION\"
                Default is %PROGRAMFILES%\LuaRocks
 
 Configuring the destinations:
