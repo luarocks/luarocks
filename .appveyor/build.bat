@@ -47,6 +47,7 @@ set LUA_PATH=%LUA_PATH%;%LR_SYSTREE%\share\lua\%LUA_SHORTV%\?\init.lua
 set LUA_CPATH=%LR_SYSTREE%\lib\lua\%LUA_SHORTV%\?.dll
 
 call luarocks --version || call :die "Error with LuaRocks installation"
+cd && dir
 call luarocks list
 
 
