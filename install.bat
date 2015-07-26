@@ -125,8 +125,9 @@ Installs LuaRocks.
                Default is %PROGRAMFILES%\LuaRocks
 
 Configuring the destinations:
-/TREE [dir]    Root of the local tree of installed rocks.
-               Default is %PROGRAMFILES%\LuaRocks\systree
+/TREE [dir]    Root of the local system tree of installed rocks.
+               Default is {BIN}\..\ if {BIN} ends with '\bin'
+               otherwise it is {BIN}\systree. 
 /SCRIPTS [dir] Where to install commandline scripts installed by
                rocks. Default is {TREE}\bin.
 /LUAMOD [dir]  Where to install Lua modules installed by rocks.
