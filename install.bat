@@ -630,17 +630,23 @@ else
     vars.UNAME_M = get_architecture()  -- can only do when installation was found
 end
 
-local datapath
-if vars.UNAME_M == "x86" then
-	datapath = os.getenv("PROGRAMFILES") .. [[\LuaRocks]]
-else
-	-- our target interpreter is 64bit, so the tree (with binaries) should go into 64bit program files
-	datapath = os.getenv("ProgramW6432") .. [[\LuaRocks]]
+-- check location of system tree
+if not vars.TREE_ROOT then
+  -- no system tree location given, so we need to construct a default value
+  if vars.LUA_BINDIR:lower():match([[([\/]+bin[\/]*)$]]) then
+    -- lua binary is located in a 'bin' subdirectory, so assume
+    -- default Lua layout and match rocktree on top
+    vars.TREE_ROOT = vars.LUA_BINDIR:lower():gsub([[[\/]+bin[\/]*$]], [[\]])
+  else
+    -- no 'bin', so use a named tree next to the Lua executable
+    vars.TREE_ROOT = vars.LUA_BINDIR .. [[\systree]]
+  end
 end
+
+local datapath
 vars.SYSCONFDIR = vars.SYSCONFDIR or vars.PREFIX
 vars.SYSCONFFILENAME = S"config-$LUA_VERSION.lua"
 vars.CONFIG_FILE = vars.SYSCONFDIR.."\\"..vars.SYSCONFFILENAME
-vars.TREE_ROOT = vars.TREE_ROOT or datapath..[[\systree]]
 if SELFCONTAINED then
 	vars.SYSCONFDIR = vars.PREFIX
 	vars.TREE_ROOT = vars.PREFIX..[[\systree]]
