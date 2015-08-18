@@ -1,8 +1,5 @@
 version: 2.2.1.{build}-test
 
-os:
-- Windows Server 2012 R2
-
 shallow_clone: true
 
 environment:
@@ -17,8 +14,8 @@ environment:
 
 init:
 # Setup Lua development/build environment
-# Make VS 2013 command line tools available
-- call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" %platform%
+# Make VS 2015 command line tools available
+- call "%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %platform%
 
 install:
 # Setup Lua development/build environment
