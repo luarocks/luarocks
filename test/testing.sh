@@ -161,7 +161,7 @@ then
    chmod og-wx ~/.ssh/authorized_keys
    ssh-keyscan localhost >> ~/.ssh/known_hosts
 else
-   luadir="/Programs/Lua/Current"
+   luadir="/Programs/Lua/$luaversion"
    if [ ! -e "$luadir" ]
    then
       luadir="/usr/local"
@@ -184,7 +184,7 @@ srcdir_luasocket=luasocket-3.0-rc1
 version_cprint=0.1
 verrev_cprint=0.1-2
 
-version_luacov=0.7
+version_luacov=0.8
 verrev_luacov=${version_luacov}-1
 version_lxsh=0.8.6
 version_validate_args=1.5.4
@@ -242,7 +242,7 @@ mkdir -p "$testing_server"
    get "$luarocks_repo/stdlib-41.0.0-1.src.rock"
    get "$luarocks_repo/luarepl-0.4-1.src.rock"
    get "$luarocks_repo/validate-args-1.5.4-1.rockspec"
-   get "$luarocks_repo/luasec-0.5-2.rockspec"
+   get "https://raw.githubusercontent.com/brunoos/luasec/master/luasec-0.6alpha-1.rockspec"
    get "$luarocks_repo/luabitop-1.0.2-1.rockspec"
    get "$luarocks_repo/lpty-1.0.1-1.src.rock"
    get "$luarocks_repo/cprint-${verrev_cprint}.src.rock"
