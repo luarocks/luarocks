@@ -40,7 +40,7 @@ system's package manager.
                             Default is \$PREFIX
 
 --lua-version=VERSION       Use specific Lua version: 5.1, 5.2, or 5.3
-                            Default is "$LUA_VERSION"
+                            Default is auto-detected.
 --lua-suffix=SUFFIX         Versioning suffix to use in Lua filenames.
                             Default is "$LUA_SUFFIX" (lua$LUA_SUFFIX...)
 --with-lua=PREFIX           Use Lua from given prefix.
