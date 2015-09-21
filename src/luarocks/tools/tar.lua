@@ -143,6 +143,7 @@ function tar.untar(filename, destdir)
       util.printout()
       --]]
    end
+   tar_handle:close()
    return true
 end
 
