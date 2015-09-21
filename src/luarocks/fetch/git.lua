@@ -96,7 +96,7 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
       if git_can_clone_by_tag(git_cmd) then
          -- The argument to `--branch` can actually be a branch or a tag as of
          -- Git 1.7.10.
-         table.insert(command, 4, "--branch=" .. tag_or_branch)
+         table.insert(command, 3, "--branch=" .. tag_or_branch)
       end
    end
    if not fs.execute(unpack(command)) then

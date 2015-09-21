@@ -170,8 +170,13 @@ function fetch.fetch_and_unpack_rock(rock_file, dest)
 end
 
 function fetch.url_to_base_dir(url)
+   -- for extensions like foo.tar.gz, "gz" is stripped first
+   local known_exts = {}
+   for _, ext in ipairs{"zip", "git", "tgz", "tar", "gz", "bz2"} do
+      known_exts[ext] = ""
+   end
    local base = dir.base_name(url)
-   return base:gsub("%.[^.]*$", ""):gsub("%.tar$", "")
+   return (base:gsub("%.([^.]*)$", known_exts):gsub("%.tar", ""))
 end
 
 --- Back-end function that actually loads the local rockspec.
