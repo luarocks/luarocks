@@ -346,4 +346,9 @@ function tools.browser(url)
    return fs.execute(cfg.web_browser, url)
 end
 
+function tools.set_time(file, time)
+   file = dir.normalize(file)
+   return fs.execute(vars.TOUCH, "-d", "@"..tostring(time), file)
+end
+
 return tools

@@ -349,6 +349,7 @@ local defaults = {
       OPENSSL = "openssl",
       MD5 = "md5",
       STAT = "stat",
+      TOUCH = "touch",
 
       CMAKE = "cmake",
       SEVENZ = "7z",
