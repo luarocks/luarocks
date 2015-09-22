@@ -31,9 +31,10 @@ local function octal_to_number(octal)
    local number = 0
    for i = #octal,1,-1 do
       local digit = tonumber(octal:sub(i,i)) 
-      if not digit then break end
-      number = number + (digit * 8^exp)
-      exp = exp + 1
+      if digit then
+         number = number + (digit * 8^exp)
+         exp = exp + 1
+      end
    end
    return number
 end
