@@ -247,7 +247,10 @@ function fetch.load_local_rockspec(filename, quick)
    local base = fetch.url_to_base_dir(filebase)
    rockspec.source.dir = rockspec.source.dir
                       or rockspec.source.module
-                      or ((filebase:match("%.lua$") or filebase:match("%.c$")) and ".")
+                      or ( (filebase:match("%.lua$") or filebase:match("%.c$"))
+                           and (deps.format_is_at_least(rockspec, "3.0")
+                                and (fetch.is_basic_protocol(protocol) and "." or base)
+                                or  ".") )
                       or base
    if rockspec.dependencies then
       for i = 1, #rockspec.dependencies do
