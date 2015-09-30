@@ -523,8 +523,8 @@ if cfg.platforms.macosx then
    else
       defaults.gcc_rpath = false
    end
-   defaults.variables.CC = "export MACOSX_DEPLOYMENT_TARGET=10."..version.."; gcc"
-   defaults.variables.LD = "export MACOSX_DEPLOYMENT_TARGET=10."..version.."; gcc"
+   defaults.variables.CC = "env MACOSX_DEPLOYMENT_TARGET=10."..version.." gcc"
+   defaults.variables.LD = "env MACOSX_DEPLOYMENT_TARGET=10."..version.." gcc"
    defaults.web_browser = "open"
 end
 
