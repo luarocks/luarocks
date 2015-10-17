@@ -200,8 +200,13 @@ function patch.read_patch(filename, data)
     if state == 'hunkbody' then
       -- skip hunkskip and hunkbody code until definition of hunkhead read
 
+      if line:match"^[\r\n]*$" then
+          -- prepend space to empty lines to interpret them as context properly
+          line = " " .. line
+      end
+
       -- process line first
-      if line:match"^[- +\\]" or line:match"^[\r\n]*$" then
+      if line:match"^[- +\\]" then
           -- gather stats about line endings
           local he = files.hunkends[nextfileno]
           if endswith(line, "\r\n") then
