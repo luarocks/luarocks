@@ -252,6 +252,11 @@ function fetch.load_local_rockspec(filename, quick)
                                 and (fetch.is_basic_protocol(protocol) and "." or base)
                                 or  ".") )
                       or base
+
+   rockspec.rocks_provided = (deps.format_is_at_least(rockspec, "3.0")
+                              and cfg.rocks_provided_3_0
+                              or  cfg.rocks_provided)
+
    if rockspec.dependencies then
       for i = 1, #rockspec.dependencies do
          local parsed, err = deps.parse_dep(rockspec.dependencies[i])

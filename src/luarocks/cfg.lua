@@ -371,7 +371,8 @@ local defaults = {
       include = "include"
    },
 
-   rocks_provided = {}
+   rocks_provided = {},
+   rocks_provided_3_0 = {},
 }
 
 if cfg.platforms.windows then
@@ -575,8 +576,8 @@ end
 if package.loaded.jit then
    -- LuaJIT
    local lj_version = package.loaded.jit.version:match("LuaJIT (.*)"):gsub("%-","")
-   --defaults.rocks_provided["luajit"] = lj_version.."-1"
    defaults.rocks_provided["luabitop"] = lj_version.."-1"
+   defaults.rocks_provided_3_0["luajit"] = lj_version.."-1"
 end
 
 -- Use defaults:
@@ -593,6 +594,7 @@ for _, entry in ipairs({"variables", "rocks_provided"}) do
       end
    end
 end
+setmetatable(defaults.rocks_provided_3_0, { __index = cfg.rocks_provided })
 
 -- For values not set in the config file, use values from the 'defaults' table.
 local cfg_mt = {

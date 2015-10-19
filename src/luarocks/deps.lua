@@ -327,16 +327,20 @@ end
 -- @param dep table: A dependency parsed in table format.
 -- @param blacklist table: Versions that can't be accepted. Table where keys
 -- are program versions and values are 'true'.
+-- @param provided table: A table of auto-dependencies provided 
+-- by this Lua implementation for the given dependency.
 -- @return table or nil: A table containing fields 'name' and 'version'
 -- representing an installed rock which matches the given dependency,
 -- or nil if it could not be matched.
-local function match_dep(dep, blacklist, deps_mode)
+local function match_dep(dep, blacklist, deps_mode, rocks_provided)
    assert(type(dep) == "table")
-
-   local versions = cfg.rocks_provided[dep.name]
-   if cfg.rocks_provided[dep.name] then
+   assert(type(rocks_provided) == "table")
+  
+   local versions
+   local provided = rocks_provided[dep.name]
+   if provided then
       -- provided rocks have higher priority than manifest's rocks
-      versions = { cfg.rocks_provided[dep.name] }
+      versions = { provided }
    else
       versions = manif_core.get_versions(dep.name, deps_mode)
    end
@@ -388,9 +392,9 @@ function deps.match_deps(rockspec, blacklist, deps_mode)
    local matched, missing, no_upgrade = {}, {}, {}
    
    for _, dep in ipairs(rockspec.dependencies) do
-      local found = match_dep(dep, blacklist and blacklist[dep.name] or nil, deps_mode)
+      local found = match_dep(dep, blacklist and blacklist[dep.name] or nil, deps_mode, rockspec.rocks_provided)
       if found then
-         if not cfg.rocks_provided[dep.name] then
+         if not rockspec.rocks_provided[dep.name] then
             matched[dep] = found
          end
       else
@@ -488,7 +492,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
 
       for _, dep in pairs(missing) do
          -- Double-check in case dependency was filled during recursion.
-         if not match_dep(dep, nil, deps_mode) then
+         if not match_dep(dep, nil, deps_mode, rockspec.rocks_provided) then
             local rock = search.find_suitable_rock(dep)
             if not rock then
                return nil, "Could not satisfy dependency: "..deps.show_dep(dep)
@@ -708,7 +712,7 @@ function deps.scan_deps(results, missing, manifest, name, version, deps_mode)
       end
       dependencies_name[version] = rockspec.dependencies
    else
-      rockspec = { dependencies = deplist }
+      rockspec = { dependencies = deplist, rocks_provided = {} }
    end
    local matched, failures = deps.match_deps(rockspec, nil, deps_mode)
    results[name] = results

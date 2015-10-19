@@ -224,6 +224,7 @@ luarocks_noecho="run_lua --noecho luarocks"
 luarocks_noecho_nocov="run_lua --noecho --nocov luarocks"
 luarocks_admin="run_lua luarocks-admin"
 luarocks_admin_nocov="run_lua --nocov luarocks-admin"
+luajit_luarocks="luajit -e require('luacov.runner')('$testing_dir/luacov.config') $basedir/bin/luarocks"
 
 ###################################################
 
@@ -522,6 +523,13 @@ test_fetch_base_dir() { $lua <<EOF
    assert("parser.moon" == fetch.url_to_base_dir("git://github.com/Cirru/parser.moon"))
    assert("v0.3" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2/archive/v0.3"))
 EOF
+}
+
+test_luajit_dependency() { 
+   $luajit_luarocks build "$testing_dir/testfiles/luajit-success-1.0-1.rockspec"
+}
+fail_luajit_dependency() { 
+   $luajit_luarocks build "$testing_dir/testfiles/luajit-fail-1.0-1.rockspec"
 }
 
 test_doc() { $luarocks install luarepl; $luarocks doc luarepl; }
