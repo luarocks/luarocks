@@ -409,6 +409,25 @@ local function get_architecture()
 	return proc
 end
 
+-- uses vars.LUA_RUNTIME and vars.UNAME_M
+local function get_compiler_env_cmd()
+  local major, minor = vars.LUA_RUNTIME:match('^MSVCR(%d+)(%d)$')
+  if not major then return "" end
+  local key = "HKEY_LOCAL_MACHINE\\SOFTWARE%s\\Microsoft\\VisualStudio\\%d.%d"
+  local hostarch64 = os.getenv("ProgramFiles(x86)")~=nil -- 'PROCESSOR_ARCHITECTURE' will always return 'x86' if interpreter is 32 bit.
+  key = key:format(hostarch64 and "\\Wow6432Node" or "", major, minor)
+
+  local h = io.popen('reg query "'..key..'" /v InstallDir 2>NUL')
+  local output = h:read('*a')
+  h:close()
+
+  local msvcdir = output:match("REG_SZ%s+(.+)\\Common7\\IDE")
+  if not msvcdir then return "" end
+  local msvcarch = vars.UNAME_M=="x86_64" and " x86_amd64" or ""
+
+  return ('call "%s\\VC\\vcvarsall.bat"%s'):format(msvcdir, msvcarch)
+end
+
 local function look_for_lua_install ()
 	print("Looking for Lua interpreter")
 	local directories
@@ -627,6 +646,7 @@ if SELFCONTAINED then
 	vars.TREE_ROOT = vars.PREFIX..[[\systree]]
 	REGISTRY = false
 end
+vars.COMPILER_ENV_CMD = get_compiler_env_cmd(vars.LUA_RUNTIME, vars.UNAME_M)
 
 print(S[[
 
@@ -731,6 +751,7 @@ for _, c in ipairs{"luarocks", "luarocks-admin"} do
 	f:write(S[[
 @ECHO OFF
 SETLOCAL
+$COMPILER_ENV_CMD
 SET "LUA_PATH=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH%"
 IF NOT "%LUA_PATH_5_2%"=="" (
    SET "LUA_PATH_5_2=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_2%"
