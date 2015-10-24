@@ -409,23 +409,40 @@ local function get_architecture()
 	return proc
 end
 
--- uses vars.LUA_RUNTIME and vars.UNAME_M
-local function get_compiler_env_cmd()
-  local major, minor = vars.LUA_RUNTIME:match('^MSVCR(%d+)(%d)$')
-  if not major then return "" end
-  local key = "HKEY_LOCAL_MACHINE\\SOFTWARE%s\\Microsoft\\VisualStudio\\%d.%d"
-  local hostarch64 = os.getenv("ProgramFiles(x86)")~=nil -- 'PROCESSOR_ARCHITECTURE' will always return 'x86' if interpreter is 32 bit.
-  key = key:format(hostarch64 and "\\Wow6432Node" or "", major, minor)
-
-  local h = io.popen('reg query "'..key..'" /v InstallDir 2>NUL')
+-- get a string value from windows registry.
+local function get_registry(key, value)
+  local h = io.popen('reg query "'..key..'" /v '..value..' 2>NUL')
   local output = h:read('*a')
   h:close()
 
-  local msvcdir = output:match("REG_SZ%s+(.+)\\Common7\\IDE")
-  if not msvcdir then return "" end
-  local msvcarch = vars.UNAME_M=="x86_64" and " x86_amd64" or ""
+  return output:match('REG_SZ%s+([^\n]+)')
+end
 
-  return ('call "%s\\VC\\vcvarsall.bat"%s'):format(msvcdir, msvcarch)
+local function visual_studio_registry_key(major, minor)
+  local key = "HKEY_LOCAL_MACHINE\\SOFTWARE%s\\Microsoft\\VisualStudio\\%d.%d\\Setup\\VC"
+  -- os.getenv('PROCESSOR_ARCHITECTURE') will always return 'x86' if lua interpreter is 32 bit.
+  local hostarch64 = os.getenv("ProgramFiles(x86)")~=nil
+  return key:format(hostarch64 and "\\Wow6432Node" or "", major, minor)
+end
+
+-- returns the batch command to setup msvc compiler path.
+-- requires vars.LUA_RUNTIME and vars.UNAME_M to be set before calling this function.
+local function get_vc_env_setup_cmd()
+  -- 1. check installed lua runtime version
+  local major, minor = vars.LUA_RUNTIME:match('^MSVCR(%d+)(%d)$')
+  if not major then return "" end
+
+  -- 2. check if required VC version is in registry
+  local product_dir = get_registry(visual_studio_registry_key(major, minor), 'ProductDir')
+
+  if not product_dir then return "" end
+
+  -- 4. check VC batch file exists
+  local relative_path = vars.UNAME_M=="x86_64" and "bin\\amd64\\vcvars64.bat" or "bin\\vcvars32.bat"
+  local full_path = product_dir .. relative_path
+  if not exists(full_path) then return "" end
+
+  return ('call "%s"'):format(full_path)
 end
 
 local function look_for_lua_install ()
@@ -646,7 +663,7 @@ if SELFCONTAINED then
 	vars.TREE_ROOT = vars.PREFIX..[[\systree]]
 	REGISTRY = false
 end
-vars.COMPILER_ENV_CMD = get_compiler_env_cmd(vars.LUA_RUNTIME, vars.UNAME_M)
+vars.COMPILER_ENV_CMD = get_vc_env_setup_cmd(vars.LUA_RUNTIME, vars.UNAME_M)
 
 print(S[[
 
