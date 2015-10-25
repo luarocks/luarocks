@@ -30,7 +30,15 @@ then
    shift
 fi
 
-luashortversion=`echo $luaversion | cut -d. -f 1-2`
+is_jit=`[ "${luaversion::3}" = "jit" ] && echo 1`
+
+if [ "$is_jit" ]
+then
+   luashortversion=5.1
+   luajitversion=${luaversion:4}
+else
+   luashortversion=`echo $luaversion | cut -d. -f 1-2`
+fi
 
 testing_dir="$PWD"
 
@@ -147,13 +155,27 @@ then
    if [ ! -e "$luadir/bin/lua" ]
    then
       mkdir -p lua
-      echo "Downloading lua $luaversion..."
-      wget "http://www.lua.org/ftp/lua-$luaversion.tar.gz" &> /dev/null
-      tar zxpf "lua-$luaversion.tar.gz"
-      cd "lua-$luaversion"
-      echo "Building lua $luaversion..."
-      make linux INSTALL_TOP="$luadir" &> /dev/null
-      make install INSTALL_TOP="$luadir" &> /dev/null
+      cd lua
+      if [ "$is_jit" = 1 ]
+      then
+         echo "Downloading LuaJIT $luajitversion..."
+         #rm -f "LuaJIT-$luajitversion.tar.gz"
+         wget -c "http://luajit.org/download/LuaJIT-$luajitversion.tar.gz" &> /dev/null
+         tar zxpf "LuaJIT-$luajitversion.tar.gz"
+         cd "LuaJIT-$luajitversion"
+         echo "Building LuaJIT $luajitversion..."
+         make PREFIX="$luadir" &> /dev/null
+         make install PREFIX="$luadir" &> /dev/null
+      else
+         echo "Downloading Lua $luaversion..."
+         #rm -f "lua-$luaversion.tar.gz"
+         wget -c "http://www.lua.org/ftp/lua-$luaversion.tar.gz" &> /dev/null
+         tar zxpf "lua-$luaversion.tar.gz"
+         cd "lua-$luaversion"
+         echo "Building Lua $luaversion..."
+         make linux INSTALL_TOP="$luadir" &> /dev/null
+         make install INSTALL_TOP="$luadir" &> /dev/null
+      fi
    fi
    popd
    [ -e ~/.ssh/id_rsa.pub ] || ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
@@ -161,7 +183,13 @@ then
    chmod og-wx ~/.ssh/authorized_keys
    ssh-keyscan localhost >> ~/.ssh/known_hosts
 else
-   luadir="/Programs/Lua/$luaversion"
+   if [ "$is_jit" = 1 ]
+   then
+      luadir="/Programs/LuaJIT/$luajitversion"
+echo HELLO $luadir
+   else
+      luadir="/Programs/Lua/$luaversion"
+   fi
    if [ ! -e "$luadir" ]
    then
       luadir="/usr/local"
@@ -175,7 +203,13 @@ else
    platform="linux-x86_64"
 fi
 
-lua="$luadir/bin/lua"
+if [ "$is_jit" = 1 ]
+then
+   lua="$luadir/bin/luajit"
+   luarocks_configure_extra_args="--lua-suffix=jit --with-lua-include=$luadir/include/luajit-2.0"
+else
+   lua="$luadir/bin/lua"
+fi
 
 version_luasocket=3.0rc1
 verrev_luasocket=${version_luasocket}-1
@@ -196,7 +230,7 @@ verrev_abelhas=${version_abelhas}-1
 luasec=luasec
 
 cd ..
-./configure --with-lua="$luadir" --prefix="$testing_lrprefix"
+./configure --with-lua="$luadir" --prefix="$testing_lrprefix" $luarocks_configure_extra_args
 make clean
 make src/luarocks/site_config.lua
 make dev
@@ -525,11 +559,17 @@ test_fetch_base_dir() { $lua <<EOF
 EOF
 }
 
-test_luajit_dependency() { 
-   $luajit_luarocks build "$testing_dir/testfiles/luajit-success-1.0-1.rockspec"
+test_luajit_dependency() {
+   if [ "$is_jit" = 1 ]
+   then $luarocks build "$testing_dir/testfiles/luajit-success-1.0-1.rockspec"
+   else true
+   fi
 }
 fail_luajit_dependency() { 
-   $luajit_luarocks build "$testing_dir/testfiles/luajit-fail-1.0-1.rockspec"
+   if [ "$is_jit" = 1 ]
+   then $luarocks build "$testing_dir/testfiles/luajit-fail-1.0-1.rockspec"
+   else false
+   fi
 }
 
 test_doc() { $luarocks install luarepl; $luarocks doc luarepl; }
