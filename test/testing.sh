@@ -30,9 +30,9 @@ then
    shift
 fi
 
-is_jit=`[ "${luaversion::3}" = "jit" ] && echo 1`
+is_jit=`[ "${luaversion::3}" = "jit" ] && echo 1 || echo 0`
 
-if [ "$is_jit" ]
+if [ "$is_jit" = 1 ]
 then
    luashortversion=5.1
    luajitversion=${luaversion:4}
