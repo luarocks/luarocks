@@ -452,6 +452,9 @@ local function get_msvc_env_setup_cmd()
 		return ('call "%s"'):format(full_path)
 	end
 
+	-- 3. TODO: add support for Windows SDKs here.
+
+	-- finaly, we can't detect more, just don't setup the msvc compiler in luarocks.bat.
 	return ""
 end
 
