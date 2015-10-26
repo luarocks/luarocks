@@ -436,6 +436,8 @@ end
 -- returns the batch command to setup msvc compiler path.
 -- requires vars.LUA_RUNTIME and vars.UNAME_M to be set before calling this function.
 local function get_msvc_env_setup_cmd()
+	if USE_MINGW then return "" end -- Don't setup msvc for MinGW.
+
 	local product_dir = get_visual_studio_directory()
 	local x64 = vars.UNAME_M=="x86_64"
 
