@@ -228,17 +228,33 @@ end
 if not site_config.LUAROCKS_FORCE_CONFIG then
   
    home_config_file_default = home_config_dir.."/config-"..cfg.lua_version..".lua"
-   local list = {
-      os.getenv("LUAROCKS_CONFIG_" .. version_suffix) or os.getenv("LUAROCKS_CONFIG"),
-      home_config_file_default,
-      home_config_dir.."/config.lua",
-   }
-   -- first entry might be a silent nil, check and remove if so
-   if not list[1] then table.remove(list, 1) end
    
-   home_config_file = load_config_file(list)
-   home_config_ok = (home_config_file ~= nil)
+   local config_env_var   = "LUAROCKS_CONFIG_" .. version_suffix
+   local config_env_value = os.getenv(config_env_var)
+   if not config_env_value then
+      config_env_var   = "LUAROCKS_CONFIG"
+      config_env_value = os.getenv(config_env_var)
+   end
+   
+   -- first try environment provided file, so we can explicitly warn when it is missing
+   if config_env_value then 
+      local list = { config_env_value }
+      home_config_file = load_config_file(list)
+      home_config_ok = (home_config_file ~= nil)
+      if not home_config_ok then
+         io.stderr:write("Warning: could not load configuration file `"..config_env_value.."` given in environment variable "..config_env_var.."\n")
+      end
+   end
 
+   -- try the alternative defaults if there was no environment specified file or it didn't work
+   if not home_config_ok then
+      local list = {
+         home_config_file_default,
+         home_config_dir.."/config.lua",
+      }
+      home_config_file = load_config_file(list)
+      home_config_ok = (home_config_file ~= nil)
+   end
 end
 
 
