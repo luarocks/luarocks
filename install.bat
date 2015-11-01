@@ -411,48 +411,84 @@ end
 
 -- get a string value from windows registry.
 local function get_registry(key, value)
-	local h = io.popen('reg query "'..key..'" /v '..value..' 2>NUL')
-	local output = h:read('*a')
-	h:close()
+	local keys = {key}
+	local key64, replaces = key:gsub("(%u+\\SOFTWARE\\)", "\1Wow6432Node\\", 1)
+	if replaces == 0 then
+		key64, replaces = key:gsub("(%u+\\Software\\)", "\1Wow6432Node\\", 1)
+	end
 
-	return output:match('REG_SZ%s+([^\n]+)')
-end
+	if replaces == 1 then
+		table.insert(keys, 1, key64)
+	end
 
-local function visual_studio_registry_key(major, minor)
-	local key = "HKLM\\SOFTWARE%s\\Microsoft\\VisualStudio\\%d.%d\\Setup\\VC"
-	-- os.getenv('PROCESSOR_ARCHITECTURE') will always return 'x86' if lua interpreter is 32 bit.
-	local hostx64 = os.getenv("ProgramFiles(x86)")~=nil
-	return key:format(hostx64 and "\\Wow6432Node" or "", major, minor)
+	for _, k in ipairs(keys) do
+		local h = io.popen('reg query "'..k..'" /v '..value..' 2>NUL')
+		local output = h:read('*a')
+		h:close()
+
+		local v = output:match('REG_SZ%s+([^\n]+)')
+		if v then
+			return v
+		end
+	end
+	return nil
 end
 
 -- requires vars.LUA_RUNTIME to be set before calling this function.
 local function get_visual_studio_directory()
 	local major, minor = vars.LUA_RUNTIME:match('VCR%u*(%d+)(%d)$') -- MSVCR<x><y> or VCRUNTIME<x><y>
 	if not major then return "" end
-
-	return get_registry(visual_studio_registry_key(major, minor), 'ProductDir')
+	local key = ("HKLM\\SOFTWARE\\Microsoft\\VisualStudio\\%d.%d\\Setup\\VC"):format(major, minor)
+	return get_registry(key, 'ProductDir')
 end
 
+-- requires vars.LUA_RUNTIME to be set before calling this function.
+local function get_windows_sdk_directory()
+	-- Only v7.1 and v6.1 shipped with compilers
+	-- Other versions requires a separate  installation of Visual Studio.
+	-- see https://github.com/keplerproject/luarocks/pull/443#issuecomment-152792516
+	local wsdks = {
+		["MSVCR100"] = "v7.1", -- shipped with Visual Studio 2010 compilers.
+		["MSVCR90"] = "v6.1", -- shipped with Visual Studio 2008 compilers.
+	}
+	local wsdkver = wsdks[vars.LUA_RUNTIME]
+	if not wsdkver then
+		return nil
+	end
+
+	local key = "HKLM\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\"..wsdkver
+	return get_registry(key, 'InstallationFolder')
+end
 -- returns the batch command to setup msvc compiler path.
 -- requires vars.LUA_RUNTIME and vars.UNAME_M to be set before calling this function.
 local function get_msvc_env_setup_cmd()
-	local product_dir = get_visual_studio_directory()
 	local x64 = vars.UNAME_M=="x86_64"
 
-	-- 1. try vcvarsall.bat
-	local vcvarsall = product_dir .. 'vcvarsall.bat'
-	if exists(vcvarsall) then
-		return ('call "%s"%s'):format(vcvarsall, x64 and ' amd64' or '')
+	-- 1. try visual studio command line tools
+	local vcdir = get_visual_studio_directory()
+	if vcdir then
+		-- 1.1. try vcvarsall.bat
+		local vcvarsall = vcdir .. 'vcvarsall.bat'
+		if exists(vcvarsall) then
+			return ('call "%s"%s'):format(vcvarsall, x64 and ' amd64' or '')
+		end
+
+		-- 1.2. try vcvars32.bat / vcvars64.bat
+		local relative_path = x64 and "bin\\amd64\\vcvars64.bat" or "bin\\vcvars32.bat"
+		local full_path = vcdir .. relative_path
+		if exists(full_path) then
+			return ('call "%s"'):format(full_path)
+		end
 	end
 
-	-- 2. try vcvars32.bat / vcvars64.bat
-	local relative_path = x64 and "bin\\amd64\\vcvars64.bat" or "bin\\vcvars32.bat"
-	local full_path = product_dir .. relative_path
-	if exists(full_path) then
-		return ('call "%s"'):format(full_path)
+	-- 2. try for Windows SDKs command line tools.
+	local wsdkdir = get_windows_sdk_directory()
+	if wsdkdir then
+		local setenv = wsdkdir.."Bin\\SetEnv.cmd"
+		if exists(setenv) then
+			return ("call \"%s\" /Release /%s"):format(setenv, x64 and "x64" or "x86")
+		end
 	end
-
-	-- 3. TODO: add support for Windows SDKs here.
 
 	-- finaly, we can't detect more, just don't setup the msvc compiler in luarocks.bat.
 	return ""
