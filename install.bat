@@ -412,21 +412,18 @@ end
 -- get a string value from windows registry.
 local function get_registry(key, value)
 	local keys = {key}
-	local key64, replaces = key:gsub("(%u+\\SOFTWARE\\)", "\1Wow6432Node\\", 1)
-	if replaces == 0 then
-		key64, replaces = key:gsub("(%u+\\Software\\)", "\1Wow6432Node\\", 1)
-	end
+	local key64, replaced = key:gsub("(%u+\\Software\\)", "\1Wow6432Node\\", 1)
 
-	if replaces == 1 then
-		table.insert(keys, 1, key64)
+	if replaced == 1 then
+		keys = {key64, key}
 	end
 
 	for _, k in ipairs(keys) do
 		local h = io.popen('reg query "'..k..'" /v '..value..' 2>NUL')
-		local output = h:read('*a')
+		local output = h:read("*a")
 		h:close()
 
-		local v = output:match('REG_SZ%s+([^\n]+)')
+		local v = output:match("REG_SZ%s+([^\n]+)")
 		if v then
 			return v
 		end
@@ -437,9 +434,16 @@ end
 -- requires vars.LUA_RUNTIME to be set before calling this function.
 local function get_visual_studio_directory()
 	local major, minor = vars.LUA_RUNTIME:match('VCR%u*(%d+)(%d)$') -- MSVCR<x><y> or VCRUNTIME<x><y>
-	if not major then return "" end
-	local key = ("HKLM\\SOFTWARE\\Microsoft\\VisualStudio\\%d.%d\\Setup\\VC"):format(major, minor)
-	return get_registry(key, 'ProductDir')
+	if not major then return nil end
+	local keys = {
+		"HKLM\\Software\\Microsoft\\VisualStudio\\%d.%d\\Setup\\VC",
+		"HKLM\\Software\\Microsoft\\VCExpress\\%d.%d\\Setup\\VS"
+	}
+	for _, key in ipairs(keys) do
+		local vcdir = get_registry(key:format(major, minor), "ProductDir")
+		if vcdir then return vcdir end
+	end
+	return nil
 end
 
 -- requires vars.LUA_RUNTIME to be set before calling this function.
@@ -456,8 +460,8 @@ local function get_windows_sdk_directory()
 		return nil
 	end
 
-	local key = "HKLM\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\"..wsdkver
-	return get_registry(key, 'InstallationFolder')
+	local key = "HKLM\\Software\\Microsoft\\Microsoft SDKs\\Windows\\"..wsdkver
+	return get_registry(key, "InstallationFolder")
 end
 -- returns the batch command to setup msvc compiler path.
 -- requires vars.LUA_RUNTIME and vars.UNAME_M to be set before calling this function.
@@ -486,7 +490,7 @@ local function get_msvc_env_setup_cmd()
 	if wsdkdir then
 		local setenv = wsdkdir.."Bin\\SetEnv.cmd"
 		if exists(setenv) then
-			return ("call \"%s\" /Release /%s"):format(setenv, x64 and "x64" or "x86")
+			return ('call "%s" /Release /%s'):format(setenv, x64 and "x64" or "x86")
 		end
 	end
 
