@@ -820,7 +820,7 @@ for _, c in ipairs{"luarocks", "luarocks-admin"} do
 	local f = io.open(vars.BINDIR.."\\"..c..".bat", "w")
 	f:write(S[[
 @ECHO OFF
-SETLOCAL
+SETLOCAL ENABLEDELAYEDEXPANSION ENABLEEXTENSIONS
 $COMPILER_ENV_CMD
 SET "LUA_PATH=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH%"
 IF NOT "%LUA_PATH_5_2%"=="" (
