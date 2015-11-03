@@ -431,8 +431,8 @@ local function get_registry(key, value)
 	return nil
 end
 
--- requires vars.LUA_RUNTIME to be set before calling this function.
 local function get_visual_studio_directory()
+	assert(type(vars.LUA_RUNTIME)=="string", "requires vars.LUA_RUNTIME to be set before calling this function.")
 	local major, minor = vars.LUA_RUNTIME:match('VCR%u*(%d+)(%d)$') -- MSVCR<x><y> or VCRUNTIME<x><y>
 	if not major then return nil end
 	local keys = {
@@ -446,8 +446,8 @@ local function get_visual_studio_directory()
 	return nil
 end
 
--- requires vars.LUA_RUNTIME to be set before calling this function.
 local function get_windows_sdk_directory()
+	assert(type(vars.LUA_RUNTIME) == "string", "requires vars.LUA_RUNTIME to be set before calling this function.")
 	-- Only v7.1 and v6.1 shipped with compilers
 	-- Other versions requires a separate  installation of Visual Studio.
 	-- see https://github.com/keplerproject/luarocks/pull/443#issuecomment-152792516
@@ -464,8 +464,8 @@ local function get_windows_sdk_directory()
 	return get_registry(key, "InstallationFolder")
 end
 -- returns the batch command to setup msvc compiler path.
--- requires vars.LUA_RUNTIME and vars.UNAME_M to be set before calling this function.
 local function get_msvc_env_setup_cmd()
+	assert(type(vars.UNAME_M) == "string", "requires vars.UNAME_M to be set before calling this function.")
 	local x64 = vars.UNAME_M=="x86_64"
 
 	-- 1. try visual studio command line tools
