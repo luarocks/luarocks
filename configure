@@ -71,26 +71,7 @@ EOF
 # Helper functions
 
 find_program() {
-   path="$PATH"
-   item="`echo "$path" | sed 's/\([^:]*\):.*/\1/'`"
-   path="`echo "$path" | sed -n 's/[^:]*::*\(.*\)/\1/p'`"
-   found="no"
-   while [ -n "$item" ]
-   do
-      if [ -f "$item/$1" ]
-      then
-         found="yes"
-         break
-      fi
-      item="`echo "$path" | sed 's/\([^:]*\):.*/\1/'`"
-      path="`echo "$path" | sed -n 's/[^:]*::*\(.*\)/\1/p'`"
-   done
-   if [ "$found" = "yes" ]
-   then
-      echo "$item"
-   else
-      echo ""
-   fi
+    which "$1" 2>/dev/null
 }
 
 die() {
