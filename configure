@@ -71,7 +71,7 @@ EOF
 # Helper functions
 
 find_program() {
-    which "$1" 2>/dev/null
+    command -v "$1" 2>/dev/null
 }
 
 die() {
