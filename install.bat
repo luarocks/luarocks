@@ -8,6 +8,7 @@ local vars = {}
 vars.PREFIX = nil
 vars.VERSION = "2.2"
 vars.SYSCONFDIR = nil
+vars.SYSCONFFORCE = nil
 vars.CONFBACKUPDIR = nil
 vars.SYSCONFFILENAME = nil
 vars.CONFIG_FILE = nil
@@ -199,6 +200,7 @@ local function parse_options(args)
 			vars.PREFIX = option.value
 		elseif name == "/CONFIG" then
 			vars.SYSCONFDIR = option.value
+			vars.SYSCONFFORCE = true
 		elseif name == "/TREE" then
 			vars.TREE_ROOT = option.value
 		elseif name == "/SCRIPTS" then
@@ -650,6 +652,7 @@ vars.SYSCONFFILENAME = S"config-$LUA_VERSION.lua"
 vars.CONFIG_FILE = vars.SYSCONFDIR.."\\"..vars.SYSCONFFILENAME
 if SELFCONTAINED then
 	vars.SYSCONFDIR = vars.PREFIX
+	vars.SYSCONFFORCE = true
 	vars.TREE_ROOT = vars.PREFIX..[[\systree]]
 	REGISTRY = false
 end
@@ -835,7 +838,6 @@ else
 end
 f:write(S[=[
 site_config.LUAROCKS_UNAME_M=[[$UNAME_M]]
-site_config.LUAROCKS_SYSCONFIG=[[$CONFIG_FILE]]
 site_config.LUAROCKS_ROCKS_TREE=[[$TREE_ROOT]]
 site_config.LUAROCKS_PREFIX=[[$PREFIX]]
 site_config.LUAROCKS_DOWNLOADER=[[wget]]
@@ -843,6 +845,9 @@ site_config.LUAROCKS_MD5CHECKER=[[md5sum]]
 ]=])
 if FORCE_CONFIG then
 	f:write("site_config.LUAROCKS_FORCE_CONFIG=true\n")
+end
+if vars.SYSCONFFORCE then  -- only write this value when explcitly given, otherwise rely on defaults
+	f:write("site_config.LUAROCKS_SYSCONFIG=[[$CONFIG_FILE]]\n")
 end
 f:write("return site_config\n")
 f:close()
