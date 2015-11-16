@@ -18,9 +18,8 @@ if not defined LUAROCKS_VER set LUAROCKS_VER=2.2.1
 set LUAROCKS_SHORTV=%LUAROCKS_VER:~0,3%
 
 if not defined LR_EXTERNAL set LR_EXTERNAL=c:\external
-if not defined LUAROCKS_INSTALL set LUAROCKS_INSTALL=%LUA_DIR%\LuaRocks
-if not defined LR_ROOT set LR_ROOT=%LUAROCKS_INSTALL%\%LUAROCKS_SHORTV%
-if not defined LR_SYSTREE set LR_SYSTREE=%LUAROCKS_INSTALL%\systree
+if not defined LR_ROOT set LR_ROOT=%LUA_DIR%\LuaRocks
+if not defined LR_SYSTREE set LR_SYSTREE=%LR_ROOT%\systree
 
 ::
 :: =========================================================
@@ -35,7 +34,7 @@ if not exist %LUA_DIR%\bin\%LUA%.exe call :die "Missing Lua interpreter at %LUA_
 :: =========================================================
 
 cd %APPVEYOR_BUILD_FOLDER%
-call install.bat /LUA %LUA_DIR% /Q /LV %LUA_SHORTV% /P "%LUAROCKS_INSTALL%" /TREE "%LR_SYSTREE%"
+call install.bat /LUA %LUA_DIR% /Q /LV %LUA_SHORTV% /P "%LR_ROOT%" /TREE "%LR_SYSTREE%"
 
 if not exist "%LR_ROOT%" call :die "LuaRocks not found at %LR_ROOT%"
 
