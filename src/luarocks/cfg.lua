@@ -228,24 +228,31 @@ end
 if not site_config.LUAROCKS_FORCE_CONFIG then
   
    home_config_file_default = home_config_dir.."/config-"..cfg.lua_version..".lua"
-
+   
    local config_env_var   = "LUAROCKS_CONFIG_" .. version_suffix
    local config_env_value = os.getenv(config_env_var)
    if not config_env_value then
       config_env_var   = "LUAROCKS_CONFIG"
       config_env_value = os.getenv(config_env_var)
    end
-   if config_env_value then
-      home_config_ok = load_config_file({ config_env_value })
+   
+   -- first try environment provided file, so we can explicitly warn when it is missing
+   if config_env_value then 
+      local list = { config_env_value }
+      home_config_file = load_config_file(list)
+      home_config_ok = (home_config_file ~= nil)
       if not home_config_ok then
-         io.stderr:write("Warning: could not load file "..config_env_value.." given in environment variable "..config_env_var)
+         io.stderr:write("Warning: could not load configuration file `"..config_env_value.."` given in environment variable "..config_env_var.."\n")
       end
-      home_config_file = config_env_var
-   else
-      home_config_file = load_config_file({
+   end
+
+   -- try the alternative defaults if there was no environment specified file or it didn't work
+   if not home_config_ok then
+      local list = {
          home_config_file_default,
          home_config_dir.."/config.lua",
-      })
+      }
+      home_config_file = load_config_file(list)
       home_config_ok = (home_config_file ~= nil)
    end
 end
@@ -385,7 +392,7 @@ local defaults = {
 }
 
 if cfg.platforms.windows then
-   local full_prefix = (site_config.LUAROCKS_PREFIX or (os.getenv("PROGRAMFILES")..[[\LuaRocks]])).."\\"..cfg.major_version
+   local full_prefix = (site_config.LUAROCKS_PREFIX or (os.getenv("PROGRAMFILES")..[[\LuaRocks]]))
    extra_luarocks_module_dir = full_prefix.."\\lua\\?.lua"
 
    home_config_file = home_config_file and home_config_file:gsub("\\","/")
