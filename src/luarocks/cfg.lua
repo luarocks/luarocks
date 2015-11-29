@@ -76,8 +76,8 @@ end
 -- so that this detection does not run every time. When it is
 -- performed, we use the Unix way to identify the system,
 -- even on Windows (assuming UnxUtils or Cygwin).
-local system = site_config.LUAROCKS_UNAME_S or io.popen("uname -s"):read("*l")
-local proc = site_config.LUAROCKS_UNAME_M or io.popen("uname -m"):read("*l")
+local system = site_config.LUAROCKS_UNAME_S or util.popen_read("uname -s")
+local proc = site_config.LUAROCKS_UNAME_M or util.popen_read("uname -m")
 if proc:match("i[%d]86") then
    cfg.target_cpu = "x86"
 elseif proc:match("amd64") or proc:match("x86_64") then
@@ -531,7 +531,7 @@ if cfg.platforms.macosx then
    defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
    defaults.variables.STAT = "/usr/bin/stat"
    defaults.variables.STATFLAG = "-f '%A'"
-   local version = io.popen("sw_vers -productVersion"):read("*l")
+   local version = util.popen_read("sw_vers -productVersion")
    version = tonumber(version and version:match("^[^.]+%.([^.]+)")) or 3
    if version >= 10 then
       version = 8

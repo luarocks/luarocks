@@ -9,6 +9,20 @@ local util = {}
 
 local unpack = unpack or table.unpack
 
+--- Run a process and read a its output.
+-- Equivalent to io.popen(cmd):read("*l"), except that it 
+-- closes the fd right away.
+-- @param cmd string: The command to execute
+-- @param spec string: "*l" by default, to read a single line.
+-- May be used to read more, passing, for instance, "*a".
+-- @return string: the output of the program.
+function popen_read(cmd, spec)
+   local fd = io.open(cmd)
+   local out = fd:read(spec or "*l")
+   fd:close()
+   return out
+end
+
 local scheduled_functions = {}
 local debug = require("debug")
 

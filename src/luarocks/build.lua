@@ -149,6 +149,31 @@ local function install_default_docs(name, version)
    end
 end
 
+local function check_macosx_deployment_target(rockspec)
+   local target = rockspec.build.macosx_deployment_target
+   local function minor(version) 
+      return tonumber(version and version:match("^[^.]+%.([^.]+)"))
+   end
+   local function patch_variable(var, target)
+      if rockspec.variables[var]:match("MACOSX_DEPLOYMENT_TARGET") then
+         rockspec.variables[var] = (rockspec.variables[var]):gsub("MACOSX_DEPLOYMENT_TARGET=[^ ]*", "MACOSX_DEPLOYMENT_TARGET="..target)
+      else
+         rockspec.variables[var] = "env MACOSX_DEPLOYMENT_TARGET="..target.." "..rockspec.variables[var]
+      end
+   end
+   if cfg.platforms.macosx and deps.format_is_at_least(rockspec, "3.0") and target then
+      local version = util.popen_read("sw_vers -productVersion")
+      local versionminor = minor(version)
+      local targetminor = minor(target)
+      if targetminor > versionminor then
+         return nil, ("This rock requires Mac OSX 10.%d, and you are running 10.%d."):format(targetminor, versionminor)
+      end
+      patch_variable("CC", target)
+      patch_variable("LD", target)
+   end
+   return true
+end
+
 --- Build and install a rock given a rockspec.
 -- @param rockspec_file string: local or remote filename of a rockspec.
 -- @param need_to_fetch boolean: true if sources need to be fetched,
@@ -242,6 +267,11 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       if err then
          return nil, err
       end
+   end
+   
+   ok, err = check_macosx_deployment_target(rockspec)
+   if not ok then
+      return nil, err
    end
    
    if build_spec.type ~= "none" then
