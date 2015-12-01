@@ -29,11 +29,13 @@ vars.LUA_SHORTV = nil   -- "51"
 vars.LUA_LIB_NAMES = "lua5.1.lib lua51.lib lua5.1.dll lua51.dll liblua.dll.a"
 vars.LUA_RUNTIME = nil
 vars.UNAME_M = nil
+vars.COMPILER_ENV_CMD = nil
 
 local FORCE = false
 local FORCE_CONFIG = false
 local INSTALL_LUA = false
 local USE_MINGW = false
+local USE_MSVC_MANUAL = false
 local REGISTRY = true
 local NOADMIN = false
 local PROMPT = true
@@ -166,7 +168,14 @@ Configuring the Lua interpreter:
                (/LUA, /INC, /LIB, /BIN cannot be used with /L)
 
 Compiler configuration:
-/MW            Use mingw as build system instead of MSVC
+               By default the installer will try to determine the 
+               Microsoft toolchain to use. And will automatically use 
+               a setup command to initialize that toolchain when 
+               LuaRocks is run. If it cannot find it, it will default 
+               to the /MSVC switch.
+/MSVC          Use MS toolchain, without a setup command (tools must
+               be in your path)
+/MW            Use mingw as build system (tools must be in your path)
 
 Other options:
 /FORCECONFIG   Use a single config location. Do not use the
@@ -213,6 +222,8 @@ local function parse_options(args)
 			INSTALL_LUA = true
 		elseif name == "/MW" then
 			USE_MINGW = true
+		elseif name == "/MSVC" then
+			USE_MSVC_MANUAL = true
 		elseif name == "/LUA" then
 			vars.LUA_PREFIX = option.value
 		elseif name == "/LIB" then
@@ -266,6 +277,9 @@ local function check_flags()
 			die("Bad argument: /LV must either be 5.1, 5.2, or 5.3")
 		end
 	end
+  if USE_MSVC_MANUAL and USE_MINGW then
+    die("Cannot combine option /MSVC and /MW")
+  end
 end
 
 -- ***********************************************************
@@ -433,14 +447,22 @@ end
 local function get_visual_studio_directory()
 	assert(type(vars.LUA_RUNTIME)=="string", "requires vars.LUA_RUNTIME to be set before calling this function.")
 	local major, minor = vars.LUA_RUNTIME:match('VCR%u*(%d+)(%d)$') -- MSVCR<x><y> or VCRUNTIME<x><y>
-	if not major then return nil end
+	if not major then 
+    print(S[[    Cannot auto-detect Visual Studio version from $LUA_RUNTIME]])
+    return nil 
+  end
 	local keys = {
 		"HKLM\\Software\\Microsoft\\VisualStudio\\%d.%d\\Setup\\VC",
 		"HKLM\\Software\\Microsoft\\VCExpress\\%d.%d\\Setup\\VS"
 	}
 	for _, key in ipairs(keys) do
-		local vcdir = get_registry(key:format(major, minor), "ProductDir")
-		if vcdir then return vcdir end
+    local versionedkey = key:format(major, minor)
+		local vcdir = get_registry(versionedkey, "ProductDir")
+    print("    checking: "..versionedkey)
+		if vcdir then 
+      print("        Found: "..vcdir)
+      return vcdir 
+    end
 	end
 	return nil
 end
@@ -452,18 +474,32 @@ local function get_windows_sdk_directory()
 	-- see https://github.com/keplerproject/luarocks/pull/443#issuecomment-152792516
 	local wsdks = {
 		["MSVCR100"] = "v7.1", -- shipped with Visual Studio 2010 compilers.
+		["MSVCR100D"] = "v7.1", -- shipped with Visual Studio 2010 compilers.
 		["MSVCR90"] = "v6.1", -- shipped with Visual Studio 2008 compilers.
+		["MSVCR90D"] = "v6.1", -- shipped with Visual Studio 2008 compilers.
 	}
 	local wsdkver = wsdks[vars.LUA_RUNTIME]
 	if not wsdkver then
+    print(S[[    Cannot auto-detect Windows SDK version from $LUA_RUNTIME]])
 		return nil
 	end
 
 	local key = "HKLM\\Software\\Microsoft\\Microsoft SDKs\\Windows\\"..wsdkver
-	return get_registry(key, "InstallationFolder")
+  print("   checking: "..key)
+  local dir = get_registry(key, "InstallationFolder")
+  if dir then
+    print("        Found: "..dir)
+    return dir
+  end
+  print("        No SDK found")
+	return nil
 end
+
 -- returns the batch command to setup msvc compiler path.
+-- or an empty string (eg. "") if not found
 local function get_msvc_env_setup_cmd()
+  print(S[[Looking for Microsoft toolchain matching runtime $LUA_RUNTIME and architecture $UNAME_M]])
+
 	assert(type(vars.UNAME_M) == "string", "requires vars.UNAME_M to be set before calling this function.")
 	local x64 = vars.UNAME_M=="x86_64"
 
@@ -493,7 +529,7 @@ local function get_msvc_env_setup_cmd()
 		end
 	end
 
-	-- finaly, we can't detect more, just don't setup the msvc compiler in luarocks.bat.
+	-- finally, we can't detect more, just don't setup the msvc compiler in luarocks.bat.
 	return ""
 end
 
@@ -742,7 +778,7 @@ if SELFCONTAINED then
 	vars.TREE_ROOT = vars.PREFIX..[[\systree]]
 	REGISTRY = false
 end
-vars.COMPILER_ENV_CMD = USE_MINGW and "" or get_msvc_env_setup_cmd()
+vars.COMPILER_ENV_CMD = (USE_MINGW and "") or (USE_MSVC_MANUAL and "") or get_msvc_env_setup_cmd()
 
 print(S[[
 
@@ -761,11 +797,20 @@ Lua interpreter : $LUA_BINDIR\$LUA_INTERPRETER
     includes    : $LUA_INCDIR
     architecture: $UNAME_M
     binary link : $LUA_LIBNAME with runtime $LUA_RUNTIME.dll
-
 ]])
 
+if USE_MINGW then
+  print("Compiler        : MinGW (make sure it is in your path before using LuaRocks)")
+else
+  if vars.COMPILER_ENV_CMD == "" then
+    print("Compiler        : Micorosft (make sure it is in your path before using LuaRocks)")
+  else
+    print(S[[Compiler        : Microsoft, using; $COMPILER_ENV_CMD]])
+  end
+end
+
 if PROMPT then
-	print("Press <ENTER> to start installing, or press <CTRL>+<C> to abort. Use install /? for installation options.")
+	print("\nPress <ENTER> to start installing, or press <CTRL>+<C> to abort. Use install /? for installation options.")
 	io.read()
 end
 
