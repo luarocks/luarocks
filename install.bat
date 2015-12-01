@@ -502,6 +502,7 @@ local function get_msvc_env_setup_cmd()
 
 	assert(type(vars.UNAME_M) == "string", "requires vars.UNAME_M to be set before calling this function.")
 	local x64 = vars.UNAME_M=="x86_64"
+  local debug = vars.LUA_RUNTIME:find("D$")  -- runtime ending with "D" is a debug runtime
 
 	-- 1. try visual studio command line tools
 	local vcdir = get_visual_studio_directory()
@@ -525,7 +526,7 @@ local function get_msvc_env_setup_cmd()
 	if wsdkdir then
 		local setenv = wsdkdir.."Bin\\SetEnv.cmd"
 		if exists(setenv) then
-			return ('call "%s" /Release /%s'):format(setenv, x64 and "x64" or "x86")
+			return ('call "%s" /%s /%s'):format(setenv, debug and "Debug" or "Release" ,x64 and "x64" or "x86")
 		end
 	end
 
