@@ -803,7 +803,7 @@ if USE_MINGW then
   print("Compiler        : MinGW (make sure it is in your path before using LuaRocks)")
 else
   if vars.COMPILER_ENV_CMD == "" then
-    print("Compiler        : Micorosft (make sure it is in your path before using LuaRocks)")
+    print("Compiler        : Microsoft (make sure it is in your path before using LuaRocks)")
   else
     print(S[[Compiler        : Microsoft, using; $COMPILER_ENV_CMD]])
   end
