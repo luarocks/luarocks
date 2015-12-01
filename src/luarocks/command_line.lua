@@ -154,6 +154,7 @@ function command_line.run_command(...)
              "You are running as a superuser, which is intended for system-wide operation.\n"..
              "To force using the superuser's home, use --tree explicitly.")
       end
+      args[#args + 1] = "--tree="..cfg.home_tree
       replace_tree(flags, args, cfg.home_tree)
    else
       local trees = cfg.rocks_trees
