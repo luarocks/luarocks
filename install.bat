@@ -408,6 +408,95 @@ local function get_architecture()
 	return proc
 end
 
+-- get a string value from windows registry.
+local function get_registry(key, value)
+	local keys = {key}
+	local key64, replaced = key:gsub("(%u+\\Software\\)", "\1Wow6432Node\\", 1)
+
+	if replaced == 1 then
+		keys = {key64, key}
+	end
+
+	for _, k in ipairs(keys) do
+		local h = io.popen('reg query "'..k..'" /v '..value..' 2>NUL')
+		local output = h:read("*a")
+		h:close()
+
+		local v = output:match("REG_SZ%s+([^\n]+)")
+		if v then
+			return v
+		end
+	end
+	return nil
+end
+
+local function get_visual_studio_directory()
+	assert(type(vars.LUA_RUNTIME)=="string", "requires vars.LUA_RUNTIME to be set before calling this function.")
+	local major, minor = vars.LUA_RUNTIME:match('VCR%u*(%d+)(%d)$') -- MSVCR<x><y> or VCRUNTIME<x><y>
+	if not major then return nil end
+	local keys = {
+		"HKLM\\Software\\Microsoft\\VisualStudio\\%d.%d\\Setup\\VC",
+		"HKLM\\Software\\Microsoft\\VCExpress\\%d.%d\\Setup\\VS"
+	}
+	for _, key in ipairs(keys) do
+		local vcdir = get_registry(key:format(major, minor), "ProductDir")
+		if vcdir then return vcdir end
+	end
+	return nil
+end
+
+local function get_windows_sdk_directory()
+	assert(type(vars.LUA_RUNTIME) == "string", "requires vars.LUA_RUNTIME to be set before calling this function.")
+	-- Only v7.1 and v6.1 shipped with compilers
+	-- Other versions requires a separate  installation of Visual Studio.
+	-- see https://github.com/keplerproject/luarocks/pull/443#issuecomment-152792516
+	local wsdks = {
+		["MSVCR100"] = "v7.1", -- shipped with Visual Studio 2010 compilers.
+		["MSVCR90"] = "v6.1", -- shipped with Visual Studio 2008 compilers.
+	}
+	local wsdkver = wsdks[vars.LUA_RUNTIME]
+	if not wsdkver then
+		return nil
+	end
+
+	local key = "HKLM\\Software\\Microsoft\\Microsoft SDKs\\Windows\\"..wsdkver
+	return get_registry(key, "InstallationFolder")
+end
+-- returns the batch command to setup msvc compiler path.
+local function get_msvc_env_setup_cmd()
+	assert(type(vars.UNAME_M) == "string", "requires vars.UNAME_M to be set before calling this function.")
+	local x64 = vars.UNAME_M=="x86_64"
+
+	-- 1. try visual studio command line tools
+	local vcdir = get_visual_studio_directory()
+	if vcdir then
+		-- 1.1. try vcvarsall.bat
+		local vcvarsall = vcdir .. 'vcvarsall.bat'
+		if exists(vcvarsall) then
+			return ('call "%s"%s'):format(vcvarsall, x64 and ' amd64' or '')
+		end
+
+		-- 1.2. try vcvars32.bat / vcvars64.bat
+		local relative_path = x64 and "bin\\amd64\\vcvars64.bat" or "bin\\vcvars32.bat"
+		local full_path = vcdir .. relative_path
+		if exists(full_path) then
+			return ('call "%s"'):format(full_path)
+		end
+	end
+
+	-- 2. try for Windows SDKs command line tools.
+	local wsdkdir = get_windows_sdk_directory()
+	if wsdkdir then
+		local setenv = wsdkdir.."Bin\\SetEnv.cmd"
+		if exists(setenv) then
+			return ('call "%s" /Release /%s'):format(setenv, x64 and "x64" or "x86")
+		end
+	end
+
+	-- finaly, we can't detect more, just don't setup the msvc compiler in luarocks.bat.
+	return ""
+end
+
 local function look_for_lua_install ()
 	print("Looking for Lua interpreter")
 	local directories
@@ -653,6 +742,7 @@ if SELFCONTAINED then
 	vars.TREE_ROOT = vars.PREFIX..[[\systree]]
 	REGISTRY = false
 end
+vars.COMPILER_ENV_CMD = USE_MINGW and "" or get_msvc_env_setup_cmd()
 
 print(S[[
 
@@ -758,7 +848,8 @@ for _, c in ipairs{"luarocks", "luarocks-admin"} do
 	local f = io.open(vars.BINDIR.."\\"..c..".bat", "w")
 	f:write(S[[
 @ECHO OFF
-SETLOCAL
+SETLOCAL ENABLEDELAYEDEXPANSION ENABLEEXTENSIONS
+$COMPILER_ENV_CMD
 SET "LUA_PATH=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH%"
 IF NOT "%LUA_PATH_5_2%"=="" (
    SET "LUA_PATH_5_2=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_2%"
