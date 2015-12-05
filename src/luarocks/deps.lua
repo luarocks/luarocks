@@ -545,7 +545,7 @@ function deps.check_external_deps(rockspec, mode)
       subdirs = cfg.runtime_external_deps_subdirs
    end
    if rockspec.external_dependencies then
-      for name, ext_files in pairs(rockspec.external_dependencies) do
+      for name, ext_files in util.sortedpairs(rockspec.external_dependencies) do
          local ok = true
          local failed_files = {program = {}, header = {}, library = {}}
          local failed_dirname
@@ -578,7 +578,7 @@ function deps.check_external_deps(rockspec, mode)
                end
                prefix = prefix.prefix
             end
-            for dirname, dirdata in pairs(dirs) do
+            for dirname, dirdata in util.sortedpairs(dirs) do
                local paths
                local path_var_value = vars[name.."_"..dirname]
                if path_var_value then
