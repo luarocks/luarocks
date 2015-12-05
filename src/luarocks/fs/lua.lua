@@ -134,10 +134,10 @@ function fs_lua.is_tool_available(tool_cmd, tool_name, arg)
    arg = arg or "--version"
    assert(type(arg) == "string")
 
-   if not fs.execute_quiet(tool_cmd, arg) then
+   if not fs.execute_quiet(fs.Q(tool_cmd), arg) then
       local msg = "'%s' program not found. Make sure %s is installed and is available in your PATH " ..
-                  "(or you may want to edit the 'variables.%s' value in file 'config.lua')"
-      return nil, msg:format(tool_cmd, tool_name, tool_cmd:upper())
+                  "(or you may want to edit the 'variables.%s' value in file '%s')"
+      return nil, msg:format(tool_cmd, tool_name, tool_name:upper(), cfg.which_config().nearest)
    else
       return true
    end
@@ -833,10 +833,19 @@ function fs_lua.check_command_permissions(flags)
          break
       end
    end
-   local root_parent = dir.dir_name(root_dir)
-   if ok and not fs.exists(root_dir) and not fs.is_writable(root_parent) then
-      ok = false
-      err = root_dir.." does not exist and your user does not have write permissions in " .. root_parent
+   if ok and not fs.exists(root_dir) then
+      local root = fs.root_of(root_dir)
+      local parent = root_dir
+      repeat
+         parent = dir.dir_name(parent)
+         if parent == "" then
+            parent = root
+         end
+      until parent == root or fs.exists(parent)
+      if not fs.is_writable(parent) then
+         ok = false
+         err = root_dir.." does not exist and your user does not have write permissions in " .. parent
+      end
    end
    if ok then
       return true

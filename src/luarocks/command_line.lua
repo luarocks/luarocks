@@ -31,11 +31,16 @@ end
 local function replace_tree(flags, args, tree)
    tree = dir.normalize(tree)
    flags["tree"] = tree
+   local added = false
    for i = 1, #args do
       if args[i]:match("%-%-tree=") then
          args[i] = "--tree="..tree
+         added = true
          break
       end
+   end
+   if not added then
+      args[#args + 1] = "--tree="..tree
    end
    path.use_tree(tree)
 end

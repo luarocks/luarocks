@@ -149,7 +149,7 @@ local sys_config_file_default, home_config_file_default
 local sys_config_dir, home_config_dir
 local sys_config_ok, home_config_ok = false, false
 local extra_luarocks_module_dir
-sys_config_dir = site_config.LUAROCKS_SYSCONFDIR
+sys_config_dir = site_config.LUAROCKS_SYSCONFDIR or site_config.LUAROCKS_PREFIX
 if cfg.platforms.windows then
    cfg.home = os.getenv("APPDATA") or "c:"
    sys_config_dir = sys_config_dir or "c:/luarocks"
@@ -665,7 +665,7 @@ function cfg.init_package_paths()
 end
 
 function cfg.which_config()
-   return {
+   local ret = {
       system = {
          file = sys_config_file or sys_config_file_default,
          ok = sys_config_ok,
@@ -675,6 +675,8 @@ function cfg.which_config()
          ok = home_config_ok,
       }
    }
+   ret.nearest = (ret.user.ok and ret.user.file) or ret.system.file
+   return ret
 end
 
 cfg.user_agent = "LuaRocks/"..cfg.program_version.." "..cfg.arch
