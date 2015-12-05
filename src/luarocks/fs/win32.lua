@@ -18,7 +18,6 @@ local _popen, _execute = io.popen, os.execute
 io.popen = function(cmd, ...) return _popen(_prefix..cmd, ...) end
 os.execute = function(cmd, ...) return _execute(_prefix..cmd, ...) end
 
-
 --- Annotate command string for quiet execution.
 -- @param cmd string: A command-line string.
 -- @return string: The command-line, with silencing annotation.
@@ -26,6 +25,7 @@ function win32.quiet(cmd)
    return cmd.." 2> NUL 1> NUL"
 end
 
+local drive_letter = "[%.a-zA-Z]?:?[\\/]"
 
 local win_escape_chars = {
   ["%"] = "%%",
@@ -47,7 +47,7 @@ end
 function win32.Q(arg)
    assert(type(arg) == "string")
    -- Quote DIR for Windows
-   if arg:match("^[%.a-zA-Z]?:?[\\/]")  then
+   if arg:match("^"..drive_letter)  then
       arg = arg:gsub("/", "\\")
    end
    if arg == "\\" then
@@ -68,7 +68,7 @@ end
 function win32.Qb(arg)
    assert(type(arg) == "string")
    -- Quote DIR for Windows
-   if arg:match("^[%.a-zA-Z]?:?[\\/]")  then
+   if arg:match("^"..drive_letter)  then
       arg = arg:gsub("/", "\\")
    end
    if arg == "\\" then
@@ -92,13 +92,19 @@ function win32.absolute_name(pathname, relative_to)
    assert(type(relative_to) == "string" or not relative_to)
 
    relative_to = relative_to or fs.current_dir()
-   -- FIXME I'm not sure this first \\ should be there at all.
-   -- What are the Windows rules for drive letters?
-   if pathname:match("^[\\.a-zA-Z]?:?[\\/]") then
+   if pathname:match("^"..drive_letter) then
       return pathname
    else
       return relative_to .. "/" .. pathname
    end
+end
+
+--- Return the root directory for the given path.
+-- For example, for "c:\hello", returns "c:\"
+-- @param pathname string: pathname to use.
+-- @return string: The root of the given pathname.
+function win32.root_of(pathname)
+   return (fs.absolute_name(pathname):match("^("..drive_letter..")"))
 end
 
 --- Create a wrapper to make a script executable from the command-line.

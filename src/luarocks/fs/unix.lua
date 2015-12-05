@@ -36,6 +36,14 @@ function unix.absolute_name(pathname, relative_to)
    end
 end
 
+--- Return the root directory for the given path.
+-- In Unix, root is always "/".
+-- @param pathname string: pathname to use.
+-- @return string: The root of the given pathname.
+function unix.root_of(_)
+   return "/"
+end
+
 --- Create a wrapper to make a script executable from the command-line.
 -- @param file string: Pathname of script to be made executable.
 -- @param dest string: Directory where to put the wrapper.
