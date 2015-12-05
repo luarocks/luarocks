@@ -545,10 +545,11 @@ function deps.check_external_deps(rockspec, mode)
       subdirs = cfg.runtime_external_deps_subdirs
    end
    if rockspec.external_dependencies then
-      for name, files in pairs(rockspec.external_dependencies) do
+      for name, ext_files in util.sortedpairs(rockspec.external_dependencies) do
          local ok = true
-         local failed_file = nil
-         local failed_dirname = nil
+         local failed_files = {program = {}, header = {}, library = {}}
+         local failed_dirname
+         local failed_testfile
          for _, extdir in ipairs(cfg.external_deps_dirs) do
             ok = true
             local prefix = vars[name.."_DIR"]
@@ -577,7 +578,7 @@ function deps.check_external_deps(rockspec, mode)
                end
                prefix = prefix.prefix
             end
-            for dirname, dirdata in pairs(dirs) do
+            for dirname, dirdata in util.sortedpairs(dirs) do
                local paths
                local path_var_value = vars[name.."_"..dirname]
                if path_var_value then
@@ -591,7 +592,7 @@ function deps.check_external_deps(rockspec, mode)
                   paths = { dir.path(prefix, dirdata.subdir) }
                end
                dirdata.dir = paths[1]
-               local file = files[dirdata.testfile]
+               local file = ext_files[dirdata.testfile]
                if file then
                   local files = {}
                   if not file:match("%.") then
@@ -606,19 +607,23 @@ function deps.check_external_deps(rockspec, mode)
                      table.insert(files, file)
                   end
                   local found = false
-                  failed_file = nil
-                  for _, f in pairs(files) do
-                  
+                  for _, f in ipairs(files) do
+
                      -- small convenience hack
                      if f:match("%.so$") or f:match("%.dylib$") or f:match("%.dll$") then
                         f = f:gsub("%.[^.]+$", "."..cfg.external_lib_extension)
                      end
-                     
+
+                     local pattern
+                     if f:match("%*") then
+                        pattern = f:gsub("%.", "%%."):gsub("%*", ".*")
+                        f = "matching "..f
+                     end
+
                      for _, d in ipairs(paths) do
-                        if f:match("%*") then
-                           local replaced = f:gsub("%.", "%%."):gsub("%*", ".*")
+                        if pattern then
                            for entry in fs.dir(d) do
-                              if entry:match(replaced) then
+                              if entry:match(pattern) then
                                  found = true
                                  break
                               end
@@ -629,21 +634,18 @@ function deps.check_external_deps(rockspec, mode)
                         if found then
                            dirdata.dir = d
                            break
+                        else
+                           table.insert(failed_files[dirdata.testfile], f.." in "..d)
                         end
                      end
                      if found then
                         break
-                     else
-                        if failed_file then
-                           failed_file = failed_file .. ", or " .. f
-                        else
-                           failed_file = f
-                        end
                      end
                   end
                   if not found then
                      ok = false
                      failed_dirname = dirname
+                     failed_testfile = dirdata.testfile
                      break
                   end
                end
@@ -657,7 +659,20 @@ function deps.check_external_deps(rockspec, mode)
             end
          end
          if not ok then
-            return nil, "Could not find expected file "..failed_file.." for "..name.." -- you may have to install "..name.." in your system and/or pass "..name.."_DIR or "..name.."_"..failed_dirname.." to the luarocks command. Example: luarocks install "..rockspec.name.." "..name.."_DIR=/usr/local", "dependency"
+            local lines = {"Could not find "..failed_testfile.." file for "..name}
+
+            local failed_paths = {}
+            for _, failed_file in ipairs(failed_files[failed_testfile]) do
+               if not failed_paths[failed_file] then
+                  failed_paths[failed_file] = true
+                  table.insert(lines, "  No file "..failed_file)
+               end
+            end
+
+            table.insert(lines, "You may have to install "..name.." in your system and/or pass "..name.."_DIR or "..name.."_"..failed_dirname.." to the luarocks command.")
+            table.insert(lines, "Example: luarocks install "..rockspec.name.." "..name.."_DIR=/usr/local")
+
+            return nil, table.concat(lines, "\n"), "dependency"
          end
       end
    end
