@@ -32,7 +32,7 @@ if not ok then
    site_config = {}
 end
 
-cfg.program_version = "scm"
+cfg.program_version = "2.2.3"
 cfg.program_series = "2.2"
 cfg.major_version = (cfg.program_version:match("([^.]%.[^.])")) or cfg.program_series
 cfg.variables = {}
