@@ -71,7 +71,11 @@ EOF
 # Helper functions
 
 find_program() {
-    command -v "$1" 2>/dev/null
+   prog=`command -v "$1" 2>/dev/null`
+   if [ -n "$prog" ]
+   then
+      dirname "$prog"
+   fi
 }
 
 die() {
