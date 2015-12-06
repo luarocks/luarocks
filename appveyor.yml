@@ -1,9 +1,9 @@
-version: 2.2.1.{build}-test
+version: 2.3.0.{build}-test
 
 shallow_clone: true
 
 environment:
-  LUAROCKS_VER: 2.2.1
+  LUAROCKS_VER: 2.3.0
 
   matrix:
   - LUA_VER: 5.1.5
