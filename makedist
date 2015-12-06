@@ -16,13 +16,40 @@ make clean || exit 1
 
 grep -q "\"$1\"" rockspec || {
    echo
-   echo "Version in rockspec is incorrect. Please fix it."
+   echo "version in rockspec is incorrect. Please fix it."
    exit 1
 }
 
 grep -q "program_version = \"$1\"" src/luarocks/cfg.lua || {
    echo
-   echo "Version in src/luarocks/cfg.lua is incorrect. Please fix it."
+   echo "program_version in src/luarocks/cfg.lua is incorrect. Please fix it."
+   exit 1
+}
+
+grep -q "version: $1\\." appveyor.yml || {
+   echo
+   echo "version in appveyor.yml is incorrect. Please fix it."
+   exit 1
+}
+
+grep -q "LUAROCKS_VER: $1" appveyor.yml || {
+   echo
+   echo "LUAROCKS_VER in appveyor.yml is incorrect. Please fix it."
+   exit 1
+}
+
+# e.g. if $1 is "2.3.0", $program_series is "2.3"
+program_series=${1%.*}
+
+grep -q "program_series = \"$program_series\"" src/luarocks/cfg.lua || {
+   echo
+   echo "program_series in src/luarocks/cfg.lua is incorrect. Please fix it."
+   exit 1
+}
+
+grep -q "vars.VERSION = \"$program_series\"" install.bat || {
+   echo
+   echo "vars.VERSION in install.bat is incorrect. Please fix it."
    exit 1
 }
 
