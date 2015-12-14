@@ -183,8 +183,42 @@ function Api:request(url, params, post_params)
    return json.decode(out)
 end
 
--- Use luasocket if available
-if pcall(require, "ltn12") then
+if pcall(require, "http.request") then -- Use lua-http if available
+
+local http_request = require "http.request"
+
+function Api:request(url, params, post_params)
+   local json_ok, json = require_json()
+   if not json_ok then return nil, "A JSON library is required for this command." end
+   if not self.config.key then
+      return nil, "Must have API key before performing any actions."
+   end
+   if params and next(params) then
+      url = url .. ("?" .. encode_query_string(params))
+   end
+   local req = http_request.new_from_uri(url)
+   if post_params then
+      req.headers:upsert(":method", "POST")
+      local body, boundary = multipart.encode(post_params)
+      req.headers:set_body(body)
+      req.headers:upsert("content-type", "multipart/form-data; boundary=" .. tostring(boundary))
+   end
+   local headers, stream = req:go()
+   if headers == nil then
+      return nil, stream
+   end
+   local status = headers:get(":status")
+   if status ~= "200" then
+      return nil, "API returned " .. status .. " - " .. redact_api_url(url)
+   end
+   local out, err = stream:get_body_as_string()
+   if out == nil then
+      return nil, err
+   end
+   return json.decode(out)
+end
+
+elseif pcall(require, "ltn12") then -- Use luasocket if available
 
 local ltn12 = require "ltn12"
 local warned_luasec = false
