@@ -120,9 +120,6 @@ local function redact_api_url(url)
    return (url:gsub(".*/api/[^/]+/[^/]+", "")) or ""
 end
 
-local ltn12_ok, ltn12 = pcall(require, "ltn12")
-if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
-
 function Api:request(url, params, post_params)
    local vars = cfg.variables
    local json_ok, json = require_json()
@@ -186,8 +183,10 @@ function Api:request(url, params, post_params)
    return json.decode(out)
 end
 
-else -- use LuaSocket and LuaSec
+-- Use luasocket if available
+if pcall(require, "ltn12") then
 
+local ltn12 = require "ltn12"
 local warned_luasec = false
 
 function Api:request(url, params, post_params)
