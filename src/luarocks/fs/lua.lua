@@ -11,10 +11,11 @@ local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 
-local socket_ok, zip_ok, unzip_ok, lfs_ok, md5_ok, posix_ok, _
-local http, ftp, lrzip, luazip, lfs, md5, posix
+local http_request_ok, socket_ok, zip_ok, unzip_ok, lfs_ok, md5_ok, posix_ok, _
+local http_request, http, ftp, lrzip, luazip, lfs, md5, posix
 
 if cfg.fs_use_modules then
+   http_request_ok, http_request = pcall(require, "http.request")
    socket_ok, http = pcall(require, "socket.http")
    _, ftp = pcall(require, "socket.ftp")
    zip_ok, lrzip = pcall(require, "luarocks.tools.zip")
@@ -572,6 +573,81 @@ function fs_lua.download(url, filename, cache)
    filename = fs.absolute_name(filename or dir.base_name(url))
    local scheme = dir.split_url(url)
    return download_handlers[scheme](url, filename, cache)
+end
+
+-- Try lua-http first
+if http_request_ok then
+local ce = require "cqueues.errno"
+function download_handlers.http(url, filename, cache)
+   local req = http_request.new_from_uri(url)
+   req.headers:upsert("user-agent", cfg.user_agent.." via LuaSocket")
+   if cache then
+      local tsfd = io.open(filename..".timestamp", "r")
+      if tsfd then
+         local timestamp = tsfd:read("*a")
+         tsfd:close()
+         req.headers:upsert(":method", "HEAD")
+         local headers, stream = req:go(cfg.connection_timeout)
+         if not headers then
+            if type(stream) == "number" then
+               stream = ce.strerror(stream)
+            end
+            return false, stream
+         end
+         if headers:get(":status") == "200" and headers:get("last-modified") == timestamp then
+            return true, filename
+         end
+      end
+   end
+   req.headers:upsert(":method", "GET")
+   local headers, stream = req:go(cfg.connection_timeout)
+   if not headers then
+      if type(stream) == "number" then
+         stream = ce.strerror(stream)
+      end
+      return false, stream
+   end
+   local file do -- Open output file
+      local err
+      file, err = io.open(filename, "wb")
+      if not file then
+         return false, err
+      end
+   end
+   local dots = 0
+   while true do
+      local chunk, err = stream:get_next_chunk()
+      if chunk == nil then
+         if err == ce.EPIPE then
+            break
+         else
+            return false, err
+         end
+      end
+      if cfg.show_downloads then
+         io.write(".")
+         io.flush()
+         dots = dots + 1
+         if dots == 70 then
+            io.write("\n")
+            dots = 0
+         end
+      end
+      local ok, err2 = file:write(chunk)
+      if not ok then
+         return false, err2
+      end
+   end
+   if cache and headers:has("last-modified") then
+      local tsfd = io.open(filename..".timestamp", "w")
+      if tsfd then
+         tsfd:write(headers:get("last-modified"))
+         tsfd:close()
+      end
+   end
+   return true, filename
+end
+download_handlers.https = download_handlers.http
 end
 
 ---------------------------------------------------------------------
