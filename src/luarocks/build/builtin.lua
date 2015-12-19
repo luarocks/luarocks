@@ -202,7 +202,7 @@ function builtin.run(rockspec)
    for name, info in pairs(build.modules) do
       local moddir = path.module_to_path(name)
       if type(info) == "string" then
-         local ext = info:match(".([^.]+)$")
+         local ext = info:match("%.([^.]+)$")
          if ext == "lua" then
             local filename = dir.base_name(info)
             if info:match("init%.lua$") and not name:match("%.init$") then
@@ -226,7 +226,7 @@ function builtin.run(rockspec)
          if info[1] then sources = info end
          if type(sources) == "string" then sources = {sources} end
          for _, source in ipairs(sources) do
-            local object = source:gsub(".[^.]*$", "."..cfg.obj_extension)
+            local object = source:gsub("%.[^.]*$", "."..cfg.obj_extension)
             if not object then
                object = source.."."..cfg.obj_extension
             end
