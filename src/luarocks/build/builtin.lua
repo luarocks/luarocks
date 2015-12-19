@@ -174,7 +174,7 @@ function builtin.run(rockspec)
       --TODO EXEWRAPPER
    end
 
-   local ok = true
+   local ok, err
    local built_modules = {}
    local luadir = path.lua_dir(rockspec.name, rockspec.version)
    local libdir = path.lib_dir(rockspec.name, rockspec.version)
@@ -236,11 +236,10 @@ function builtin.run(rockspec)
             end
             table.insert(objects, object)
          end
-         if not ok then break end
          local module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)
          if moddir ~= "" then
             module_name = dir.path(moddir, module_name)
-            local ok, err = fs.make_dir(moddir)
+            ok, err = fs.make_dir(moddir)
             if not ok then return nil, err end
          end
          built_modules[module_name] = dir.path(libdir, module_name)
@@ -252,13 +251,13 @@ function builtin.run(rockspec)
    end
    for name, dest in pairs(built_modules) do
       fs.make_dir(dir.dir_name(dest))
-      ok = fs.copy(name, dest)
+      ok, err = fs.copy(name, dest)
       if not ok then
-         return nil, "Failed installing "..name.." in "..dest
+         return nil, "Failed installing "..name.." in "..dest..": "..err
       end
    end
    if fs.is_dir("lua") then
-      local ok, err = fs.copy_contents("lua", luadir)
+      ok, err = fs.copy_contents("lua", luadir)
       if not ok then
          return nil, "Failed copying contents of 'lua' directory: "..err
       end
