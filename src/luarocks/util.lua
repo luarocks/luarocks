@@ -16,8 +16,8 @@ local unpack = unpack or table.unpack
 -- @param spec string: "*l" by default, to read a single line.
 -- May be used to read more, passing, for instance, "*a".
 -- @return string: the output of the program.
-function popen_read(cmd, spec)
-   local fd = io.open(cmd)
+function util.popen_read(cmd, spec)
+   local fd = io.popen(cmd)
    local out = fd:read(spec or "*l")
    fd:close()
    return out
