@@ -355,7 +355,27 @@ function fetch.get_sources(rockspec, extract, dest_dir)
       if not ok then return nil, err end
       fs.unpack_archive(rockspec.source.file)
       if not fs.exists(rockspec.source.dir) then
-         return nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file, "source.dir", source_file, store_dir
+
+         -- if rockspec.source.dir can't be found, see if we only have one
+         -- directory in store_dir.  If that's the case, assume it's what
+         -- we're looking for.
+         -- Ideally, we'd only do this if rockspec.source.dir was not
+         -- defined in the rockspec, but load_local_repository already
+         -- set it to an inferred value if it wasn't set there, so we
+         -- can't tell its status in the rockspec.
+         local files = fs.list_dir()
+         local dir_count, found_dir = 0
+         for _, f in ipairs(files) do
+            if fs.is_dir(f) then
+               dir_count = dir_count + 1
+               found_dir = f
+            end
+         end
+         if dir_count == 1 then
+            rockspec.source.dir = found_dir
+         else
+            return nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file, "source.dir", source_file, store_dir
+         end
       end
       fs.pop_dir()
    end
