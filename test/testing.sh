@@ -160,8 +160,8 @@ then
       then
          echo "Downloading LuaJIT $luajitversion..."
          #rm -f "LuaJIT-$luajitversion.tar.gz"
-         wget -c "http://luajit.org/download/LuaJIT-$luajitversion.tar.gz" &> /dev/null
-         tar zxpf "LuaJIT-$luajitversion.tar.gz"
+         wget -c "https://github.com/LuaJIT/LuaJIT/archive/v$luajitversion.tar.gz" &> /dev/null
+         tar zxpf "v$luajitversion.tar.gz"
          cd "LuaJIT-$luajitversion"
          echo "Building LuaJIT $luajitversion..."
          make PREFIX="$luadir" &> /dev/null
