@@ -245,6 +245,7 @@ function fetch.load_local_rockspec(filename, quick)
    rockspec.local_filename = filename
    local filebase = rockspec.source.file or rockspec.source.url
    local base = fetch.url_to_base_dir(filebase)
+   rockspec.source.dir_set = rockspec.source.dir ~= nil
    rockspec.source.dir = rockspec.source.dir
                       or rockspec.source.module
                       or ( (filebase:match("%.lua$") or filebase:match("%.c$"))
@@ -356,14 +357,11 @@ function fetch.get_sources(rockspec, extract, dest_dir)
       fs.unpack_archive(rockspec.source.file)
       if not fs.exists(rockspec.source.dir) then
 
-         -- if rockspec.source.dir can't be found, see if we only have one
+         -- If rockspec.source.dir can't be found, see if we only have one
          -- directory in store_dir.  If that's the case, assume it's what
          -- we're looking for.
-         -- Ideally, we'd only do this if rockspec.source.dir was not
-         -- defined in the rockspec, but load_local_repository already
-         -- set it to an inferred value if it wasn't set there, so we
-         -- can't tell its status in the rockspec.
-         -- In any case, we only do this with rockspecs newer than 3.0.
+         -- We only do this if the rockspec source.dir was not set, and only
+         -- with rockspecs newer than 3.0.
          local dir_count, found_dir = 0
 
          if deps.format_is_at_least(rockspec, "3.0") then
