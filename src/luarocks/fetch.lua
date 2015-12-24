@@ -364,7 +364,7 @@ function fetch.get_sources(rockspec, extract, dest_dir)
          -- with rockspecs newer than 3.0.
          local dir_count, found_dir = 0
 
-         if deps.format_is_at_least(rockspec, "3.0") then
+         if not rockspec.source.dir_set and deps.format_is_at_least(rockspec, "3.0") then
             local files = fs.list_dir()
             for _, f in ipairs(files) do
                if fs.is_dir(f) then
