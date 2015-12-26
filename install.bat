@@ -983,7 +983,7 @@ if FORCE_CONFIG then
 	f:write("site_config.LUAROCKS_FORCE_CONFIG=true\n")
 end
 if vars.SYSCONFFORCE then  -- only write this value when explcitly given, otherwise rely on defaults
-	f:write("site_config.LUAROCKS_SYSCONFIG=[[$CONFIG_FILE]]\n")
+	f:write(S("site_config.LUAROCKS_SYSCONFIG=[[$CONFIG_FILE]]\n"))
 end
 f:write("return site_config\n")
 f:close()
