@@ -727,7 +727,10 @@ function deps.scan_deps(results, missing, manifest, name, version, deps_mode)
       end
       dependencies_name[version] = rockspec.dependencies
    else
-      rockspec = { dependencies = deplist, rocks_provided = {} }
+      rockspec = {
+         dependencies = deplist,
+         rocks_provided = setmetatable({}, { __index = cfg.rocks_provided_3_0 })
+      }
    end
    local matched, failures = deps.match_deps(rockspec, nil, deps_mode)
    results[name] = results
