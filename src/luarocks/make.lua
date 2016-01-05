@@ -54,7 +54,7 @@ function make.run(...)
    
    if not rockspec then
       for file in fs.dir() do
-         if file:match("rockspec$") then
+         if file:match("rockspec$") and fs.is_file(file) then
             if rockspec then
                return nil, "Please specify which rockspec file to use."
             else
