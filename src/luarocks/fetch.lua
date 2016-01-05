@@ -371,7 +371,7 @@ function fetch.fetch_sources(rockspec, extract, dest_dir)
    local protocol = rockspec.source.protocol
    local ok, proto
    if fetch.is_basic_protocol(protocol) then
-      proto = require("luarocks.fetch")
+      proto = fetch
    else
       ok, proto = pcall(require, "luarocks.fetch."..protocol:gsub("[+-]", "_"))
       if not ok then
