@@ -395,6 +395,53 @@ function deps.match_deps(rockspec, blacklist, deps_mode)
    return matched, missing, no_upgrade
 end
 
+--- Decide what to do about a dependency.
+-- @param dep: dependency table.
+-- @param install_mode: string "install", "upgrade" or "satisfy".
+-- "install" means: always install latest possible version.
+-- "upgrade" means: install latest possible version unless it's already installed.
+-- "satisfy" means: install latest possible version unless any version is installed.
+-- @return nil if installation is not needed, else string describing installation action
+-- (can be "new", "upgrade" or "reinstall").
+function deps.diagnose_dependency(dep, deps_mode, install_mode)
+   assert(type(dep) == "table")
+   local installed = match_dep(dep, nil, deps_mode)
+
+   if installed and (install_mode == "satisfy" or cfg.rocks_provided[dep.name]) then
+      return
+   end
+
+   if install_mode == "install" then
+      return installed and "reinstall" or "new"
+   end
+
+   if installed and install_mode == "upgrade" then
+      local search = require("luarocks.search")
+      local url, latest_version = search.find_suitable_rock(dep)
+
+      if url and not deps.compare_versions(latest_version, installed.version) then
+         return
+      end
+
+      -- If there was an error in search, fallthrough, it will be detected when attempting to install.
+   end
+
+   return installed and "upgrade" or "new"
+end
+
+local function list_deps(dependencies, actions, action, header)
+   for _, dep in ipairs(dependencies) do
+      if actions[dep] == action then
+         if header then
+            util.printerr(header)
+            header = nil
+         end
+
+         util.printerr(deps.show_dep(dep))
+      end
+   end
+end
+
 --- Return a set of values of a table.
 -- @param tbl table: The input table.
 -- @return table: The array of keys.
@@ -413,8 +460,8 @@ end
 -- @return boolean or (nil, string, [string]): True if no errors occurred, or
 -- nil and an error message if any test failed, followed by an optional
 -- error code.
-function deps.fulfill_dependencies(rockspec, deps_mode)
-
+function deps.fulfill_dependencies(rockspec, deps_mode, install_mode)
+   install_mode = install_mode or "satisfy"
    local search = require("luarocks.search")
    local install = require("luarocks.install")
 
@@ -445,52 +492,63 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
       end
    end
 
-   local _, missing, no_upgrade = deps.match_deps(rockspec, nil, deps_mode)
+   local deps_to_install = {}
+   local actions = {}
 
-   if next(no_upgrade) then
-      util.printerr("Missing dependencies for "..rockspec.name.." "..rockspec.version..":")
-      for _, dep in pairs(no_upgrade) do
-         util.printerr(deps.show_dep(dep))
+   for _, dep in ipairs(rockspec.dependencies) do
+      local action = deps.diagnose_dependency(dep, deps_mode, install_mode)
+
+      if action then
+         table.insert(deps_to_install, dep)
+         actions[dep] = action
       end
-      if next(missing) then
-         for _, dep in pairs(missing) do
-            util.printerr(deps.show_dep(dep))
-         end
-      end
+   end
+
+   if #deps_to_install > 0 then
       util.printerr()
-      for _, dep in pairs(no_upgrade) do
+   end
+
+   local header = " dependencies for "..rockspec.name.." "..rockspec.version..":"
+   list_deps(deps_to_install, actions, "new", "Missing"..header)
+   list_deps(deps_to_install, actions, "upgrade", "Upgrading"..header)
+   list_deps(deps_to_install, actions, "reinstall", "Reinstalling"..header)
+
+   if #deps_to_install > 0 then
+      util.printerr()
+   end
+
+   local have_unupgradable_dep = false
+
+   for _, dep in ipairs(deps_to_install) do
+      if dep.constraints[1] and dep.constraints[1].no_upgrade then
          util.printerr("This version of "..rockspec.name.." is designed for use with")
          util.printerr(deps.show_dep(dep)..", but is configured to avoid upgrading it")
          util.printerr("automatically. Please upgrade "..dep.name.." with")
          util.printerr("   luarocks install "..dep.name)
          util.printerr("or choose an older version of "..rockspec.name.." with")
          util.printerr("   luarocks search "..rockspec.name)
+         have_unupgradable_dep = true
       end
+   end
+
+   if have_unupgradable_dep then
       return nil, "Failed matching dependencies."
    end
 
-   if next(missing) then
-      util.printerr()
-      util.printerr("Missing dependencies for "..rockspec.name..":")
-      for _, dep in pairs(missing) do
-         util.printerr(deps.show_dep(dep))
-      end
-      util.printerr()
-
-      for _, dep in pairs(missing) do
-         -- Double-check in case dependency was filled during recursion.
-         if not match_dep(dep, nil, deps_mode) then
-            local rock_url = search.find_suitable_rock(dep)
-            if not rock_url then
-               return nil, "Could not satisfy dependency: "..deps.show_dep(dep)
-            end
-            local ok, err = install.install_by_url(rock_url)
-            if not ok then
-               return nil, "Failed installing dependency: "..rock_url.." - "..err
-            end
+   for _, dep in ipairs(deps_to_install) do
+      -- Double-check in case dependency was filled during recursion.
+      if deps.diagnose_dependency(dep, deps_mode, install_mode) then
+         local rock_url = search.find_suitable_rock(dep)
+         if not rock_url then
+            return nil, "Could not satisfy dependency: "..deps.show_dep(dep)
+         end
+         local ok, err = install.install_by_url(rock_url, {deps_install_mode = install_mode})
+         if not ok then
+            return nil, "Failed installing dependency: "..rock_url.." - "..err
          end
       end
    end
+
    return true
 end
 
