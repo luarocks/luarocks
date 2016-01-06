@@ -38,7 +38,7 @@ or a filename of a locally available rock.
 -- "order" for all trees with priority >= the current default, "none" for no trees.
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function install.install_binary_rock(rock_file, deps_mode)
+function install.install_binary_rock(rock_file, deps_mode, deps_install_mode)
    assert(type(rock_file) == "string")
 
    local name, version, arch = path.parse_name(rock_file)
@@ -80,7 +80,7 @@ function install.install_binary_rock(rock_file, deps_mode)
    end
 
    if deps_mode ~= "none" then
-      ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+      ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode, deps_install_mode)
       if err then return nil, err, errcode end
    end
 
@@ -119,7 +119,7 @@ end
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- the rock whose dependencies were installed if succeeded or nil and an error message 
 -- followed by an error code.
-function install.install_binary_rock_deps(rock_file, deps_mode)
+function install.install_binary_rock_deps(rock_file, deps_mode, install_mode)
    assert(type(rock_file) == "string")
 
    local name, version, arch = path.parse_name(rock_file)
@@ -139,7 +139,7 @@ function install.install_binary_rock_deps(rock_file, deps_mode)
       return nil, "Failed loading rockspec for installed package: "..err, errcode
    end
 
-   ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+   ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode, install_mode)
    if err then return nil, err, errcode end
 
    util.printout()
@@ -151,6 +151,8 @@ end
 --- Install a rock by url.
 -- @param url string: rock or rockspec url or path.
 -- @param options table (optional): table with command-line flags.
+-- Can also contain deps_install_mode applied to the rock dependencies (recursively):
+-- "install" to always reinstall, "upgrade" to upgrade to latest version, "satisfy" to only install if missing.
 -- @return (string, string) or (nil, string): name and version
 -- of installed rock if successful, nil and error message otherwise.
 function install.install_by_url(url, options)
@@ -166,15 +168,15 @@ function install.install_by_url(url, options)
       local build_only_deps = options["only-deps"]
 
       if url:match("%.rockspec$") then
-         name, version = build.build_rockspec(url, true, false, deps_mode, build_only_deps)
+         name, version = build.build_rockspec(url, true, false, deps_mode, build_only_deps, options.deps_install_mode)
       else
-         name, version = build.build_rock(url, false, deps_mode, build_only_deps)
+         name, version = build.build_rock(url, false, deps_mode, build_only_deps, options.deps_install_mode)
       end
    elseif url:match("%.rock$") then
       if options["only-deps"] then
-         name, version = install.install_binary_rock_deps(url, deps_mode)
+         name, version = install.install_binary_rock_deps(url, deps_mode, options.deps_install_mode)
       else
-         name, version = install.install_binary_rock(url, deps_mode)
+         name, version = install.install_binary_rock(url, deps_mode, options.deps_install_mode)
       end
    else
       return nil, "Don't know what to do with "..url

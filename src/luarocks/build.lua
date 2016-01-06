@@ -160,9 +160,11 @@ end
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for no trees.
 -- @param build_only_deps boolean: true to build the listed dependencies only.
+-- @param deps_install_mode string: Dependency install mode: "install" to always reinstall,
+-- "upgrade" to upgrade to latest version, "satisfy" to only install if missing.
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode, build_only_deps)
+function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode, build_only_deps, deps_install_mode)
    assert(type(rockspec_file) == "string")
    assert(type(need_to_fetch) == "boolean")
 
@@ -178,7 +180,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    if deps_mode == "none" then
       util.printerr("Warning: skipping dependency checks.")
    else
-      local ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+      local ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode, deps_install_mode)
       if err then
          return nil, err, errcode
       end
@@ -351,9 +353,12 @@ end
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
 -- @param build_only_deps boolean: true to build the listed dependencies only.
+-- @param deps_install_mode string: Dependency install mode: "install" to always reinstall,
+-- "upgrade" to upgrade to latest version, "satisfy" to only install if missing.
 -- @return boolean or (nil, string, [string]): True if build was successful,
+
 -- or false and an error message and an optional error code.
-function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
+function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps, deps_install_mode)
    assert(type(rock_file) == "string")
    assert(type(need_to_fetch) == "boolean")
 
@@ -366,7 +371,7 @@ function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
    local rockspec_file = path.rockspec_name_from_rock(rock_file)
    ok, err = fs.change_dir(unpack_dir)
    if not ok then return nil, err end
-   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps)
+   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps, deps_install_mode)
    fs.pop_dir()
    return ok, err, errcode
 end
