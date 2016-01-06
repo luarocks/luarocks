@@ -222,6 +222,15 @@ function install.install_by_name(name, options)
          util.printout("Latest possible version of "..name.." already installed.")
       end
 
+      if options.deps_install_mode and options.deps_install_mode ~= "satisfy" then
+         local manif_core = require("luarocks.manif_core")
+         local versions = manif_core.get_versions(name, deps_mode)
+         local version = versions[#versions]
+         local rockspec = fetch.load_rockspec(path.rockspec_file(name, version))
+         local ok, err = deps.fulfill_dependencies(rockspec, deps_mode, options.deps_install_mode)
+         if not ok then return nil, err end
+      end
+
       return true
    end
 
