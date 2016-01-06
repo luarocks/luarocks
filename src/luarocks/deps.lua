@@ -429,7 +429,9 @@ function deps.diagnose_dependency(dep, deps_mode, install_mode)
    return installed and "upgrade" or "new"
 end
 
-local function list_deps(dependencies, actions, action, header)
+local function list_deps(dependencies, actions, action, header, parent)
+   local ok = true
+
    for _, dep in ipairs(dependencies) do
       if actions[dep] == action then
          if header then
@@ -438,8 +440,20 @@ local function list_deps(dependencies, actions, action, header)
          end
 
          util.printerr(deps.show_dep(dep))
+
+         if action and dep.constraints[1] and dep.constraints[1].no_upgrade then
+            util.printerr("This version of "..parent.." is designed for use with")
+            util.printerr(deps.show_dep(dep)..", but is configured to avoid upgrading it")
+            util.printerr("automatically. Please upgrade "..dep.name.." with")
+            util.printerr("   luarocks install "..dep.name)
+            util.printerr("or choose an older version of "..parent.." with")
+            util.printerr("   luarocks search "..parent)
+            ok = false
+         end
       end
    end
+
+   return ok
 end
 
 --- Return a set of values of a table.
@@ -498,7 +512,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode, install_mode)
    for _, dep in ipairs(rockspec.dependencies) do
       local action = deps.diagnose_dependency(dep, deps_mode, install_mode)
 
-      if action then
+      if action or (install_mode ~= "satisfy" and not cfg.rocks_provided[dep.name]) then
          table.insert(deps_to_install, dep)
          actions[dep] = action
       end
@@ -509,43 +523,39 @@ function deps.fulfill_dependencies(rockspec, deps_mode, install_mode)
    end
 
    local header = " dependencies for "..rockspec.name.." "..rockspec.version..":"
-   list_deps(deps_to_install, actions, "new", "Missing"..header)
-   list_deps(deps_to_install, actions, "upgrade", "Upgrading"..header)
-   list_deps(deps_to_install, actions, "reinstall", "Reinstalling"..header)
+   local ok_new = list_deps(deps_to_install, actions, "new", "Missing"..header, rockspec.name)
+   local ok_upgrade = list_deps(deps_to_install, actions, "upgrade", "Upgrading"..header, rockspec.name)
+   local ok_reinstall = list_deps(deps_to_install, actions, "reinstall", "Reinstalling"..header, rockspec.name)
+   local ok_recurse = list_deps(deps_to_install, actions, nil, "Up-to-date"..header, rockspec.name)
+
+   if not (ok_new and ok_upgrade and ok_reinstall and ok_recurse) then
+      return nil, "Failed matching dependencies."
+   end
 
    if #deps_to_install > 0 then
       util.printerr()
    end
 
-   local have_unupgradable_dep = false
-
    for _, dep in ipairs(deps_to_install) do
-      if dep.constraints[1] and dep.constraints[1].no_upgrade then
-         util.printerr("This version of "..rockspec.name.." is designed for use with")
-         util.printerr(deps.show_dep(dep)..", but is configured to avoid upgrading it")
-         util.printerr("automatically. Please upgrade "..dep.name.." with")
-         util.printerr("   luarocks install "..dep.name)
-         util.printerr("or choose an older version of "..rockspec.name.." with")
-         util.printerr("   luarocks search "..rockspec.name)
-         have_unupgradable_dep = true
-      end
-   end
-
-   if have_unupgradable_dep then
-      return nil, "Failed matching dependencies."
-   end
-
-   for _, dep in ipairs(deps_to_install) do
-      -- Double-check in case dependency was filled during recursion.
-      if deps.diagnose_dependency(dep, deps_mode, install_mode) then
-         local rock_url = search.find_suitable_rock(dep)
-         if not rock_url then
-            return nil, "Could not satisfy dependency: "..deps.show_dep(dep)
+      if actions[dep] then
+         -- Double-check in case dependency was filled during recursion.
+         if deps.diagnose_dependency(dep, deps_mode, install_mode) then
+            local rock_url = search.find_suitable_rock(dep)
+            if not rock_url then
+               return nil, "Could not satisfy dependency: "..deps.show_dep(dep)
+            end
+            local ok, err = install.install_by_url(rock_url, {deps_install_mode = install_mode})
+            if not ok then
+               return nil, "Failed installing dependency: "..rock_url.." - "..err
+            end
          end
-         local ok, err = install.install_by_url(rock_url, {deps_install_mode = install_mode})
-         if not ok then
-            return nil, "Failed installing dependency: "..rock_url.." - "..err
-         end
+      else
+         -- Don't reinstall the dependency, only recurse.
+         local fetch = require("luarocks.fetch")
+         local installed = match_dep(dep, nil, deps_mode)
+         local dep_rockspec = fetch.load_rockspec(path.rockspec_file(installed.name, installed.version))
+         local ok, err = deps.fulfill_dependencies(dep_rockspec, deps_mode, install_mode)
+         if not ok then return nil, err end
       end
    end
 
