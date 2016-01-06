@@ -153,8 +153,7 @@ end
 -- @param options table (optional): table with command-line flags.
 -- Can also contain deps_install_mode applied to the rock dependencies (recursively):
 -- "install" to always reinstall, "upgrade" to upgrade to latest version, "satisfy" to only install if missing.
--- @return (string, string) or (nil, string): name and version
--- of installed rock if successful, nil and error message otherwise.
+-- @return true if successful, nil and error message otherwise.
 function install.install_by_url(url, options)
    assert(type(url) == "string")
    options = options or {}
@@ -191,22 +190,42 @@ function install.install_by_url(url, options)
       if not ok then util.printerr(err) end
    end
 
-   return name, version
+   return true
 end
 
 --- Install a rock by name.
 -- @param name string: name of the rock.
 -- @param options table (optional): table with command-line flags.
--- Additionally may contain version.
--- @return (string, string) or (nil, string): name and version
--- of installed rock if successful, nil and error message otherwise.
+-- Additionally may contain version and also install_mode (applied to the rock itself)
+-- and deps_install_mode (applied to the rock dependencies recursively):
+-- "install" to always reinstall, "upgrade" to upgrade to latest version, "satisfy" to only install if missing.
+-- @return true if successful, nil and error message otherwise.
 function install.install_by_name(name, options)
    assert(type(name) == "string")
    options = options or {}
    assert(type(options) == "table")
+   local deps_mode = deps.get_deps_mode(options)
+   local install_mode = options.install_mode or "install"
 
    local search = require("luarocks.search")
-   local results, err = search.find_suitable_rock(search.make_query(name:lower(), options.version))
+   local dep = search.make_query(name:lower(), options.version)
+   local action = deps.diagnose_dependency(dep, deps_mode, install_mode)
+
+   if not action then
+      if install_mode == "satisfy" or options.version then
+         if options.version then
+            name = name.." "..options.version
+         end
+
+         util.printout(name.." already installed.")
+      else
+         util.printout("Latest possible version of "..name.." already installed.")
+      end
+
+      return true
+   end
+
+   local results, err = search.find_suitable_rock(dep)
 
    if not results then
       return nil, err
