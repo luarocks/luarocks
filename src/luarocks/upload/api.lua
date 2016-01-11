@@ -138,9 +138,9 @@ function Api:request(url, params, post_params)
    if not json_ok then return nil, "A JSON library is required for this command. "..json end
    
    if cfg.downloader == "wget" then
-      local curl_ok = fs.execute_quiet(vars.CURL, "--version")
+      local curl_ok, err = fs.is_tool_available(vars.CURL, "curl")
       if not curl_ok then
-         return nil, "Missing network helper program 'curl'.\nMake sure 'curl' is installed and available from your path."
+         return nil, err
       end
    end
 
