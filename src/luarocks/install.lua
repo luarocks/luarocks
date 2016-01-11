@@ -222,9 +222,8 @@ function install.install_by_name(name, options)
          util.printout("Latest possible version of "..name.." already installed.")
       end
 
-      if options.deps_install_mode and options.deps_install_mode ~= "satisfy" then
-         local ok, err = deps.process_rock_dependencies(dep, deps_mode, options.deps_install_mode)
-         if not ok then return nil, err end
+      if deps_mode ~= "none" and options.deps_install_mode and options.deps_install_mode ~= "satisfy" then
+         return deps.process_rock_dependencies(dep, deps_mode, options.deps_install_mode)
       end
 
       return true
