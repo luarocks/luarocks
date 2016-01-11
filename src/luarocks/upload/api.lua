@@ -199,6 +199,7 @@ function Api:request(url, params, post_params)
    local req = http_request.new_from_uri(url)
    if post_params then
       req.headers:upsert(":method", "POST")
+      req.headers:upsert("user-agent", cfg.user_agent.." via lua-http")
       local body, boundary = multipart.encode(post_params)
       req.headers:set_body(body)
       req.headers:upsert("content-type", "multipart/form-data; boundary=" .. tostring(boundary))
