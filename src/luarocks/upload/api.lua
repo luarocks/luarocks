@@ -201,7 +201,7 @@ local warned_luasec = false
 
 function Api:request(url, params, post_params)
    local json_ok, json = require_json()
-   if not json_ok then return nil, "A JSON library is required for this command." end
+   if not json_ok then return nil, "A JSON library is required for this command. "..json end
    local server = tostring(self.config.server)
    local http_ok, http
    local via = "luasocket"
