@@ -621,6 +621,7 @@ function download_handlers.http(url, filename, cache)
          if err == ce.EPIPE then
             break
          else
+            file:close()
             return false, err
          end
       end
@@ -635,9 +636,11 @@ function download_handlers.http(url, filename, cache)
       end
       local ok, err2 = file:write(chunk)
       if not ok then
+         file:close()
          return false, err2
       end
    end
+   file:close()
    if cache and headers:has("last-modified") then
       local tsfd = io.open(filename..".timestamp", "w")
       if tsfd then
