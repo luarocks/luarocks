@@ -722,7 +722,7 @@ local function request(url, method, http, loop_control)
             loop_control[url] = true
             return request(location, method, redirect_protocols[protocol], loop_control)
          else
-            return nil, "URL redirected to unsupported protocol - install luasec to get HTTPS support.", "https"
+            return nil, "URL redirected to unsupported protocol - install lua-http ('http') or luasec to get HTTPS support.", "https"
          end
       end
       return nil, err
