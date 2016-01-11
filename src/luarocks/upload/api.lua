@@ -120,69 +120,6 @@ local function redact_api_url(url)
    return (url:gsub(".*/api/[^/]+/[^/]+", "")) or ""
 end
 
-function Api:request(url, params, post_params)
-   local vars = cfg.variables
-   local json_ok, json = require_json()
-   if not json_ok then return nil, "A JSON library is required for this command." end
-   
-   if cfg.downloader == "wget" then
-      local curl_ok = fs.execute_quiet(vars.CURL, "--version")
-      if not curl_ok then
-         return nil, "Missing network helper program 'curl'.\nMake sure 'curl' is installed and available from your path."
-      end
-   end
-
-   if not self.config.key then
-      return nil, "Must have API key before performing any actions."
-   end
-   local body
-   local headers = {}
-   if params and next(params) then
-      url = url .. ("?" .. encode_query_string(params))
-   end
-   local method = "GET"
-   local out 
-   local tmpfile = fs.tmpname()
-   if post_params then
-      method = "POST"
-      local curl_cmd = fs.Q(vars.CURL).." -f -k -L --silent --user-agent \""..cfg.user_agent.." via curl\" "
-      for k,v in pairs(post_params) do
-         local var = v
-         if type(v) == "table" then
-            var = "@"..v.fname
-         end
-         curl_cmd = curl_cmd .. "--form \""..k.."="..var.."\" "
-      end
-      if cfg.connection_timeout and cfg.connection_timeout > 0 then
-        curl_cmd = curl_cmd .. "--connect-timeout "..tonumber(cfg.connection_timeout).." " 
-      end
-      local ok = fs.execute_string(curl_cmd..fs.Q(url).." -o "..fs.Q(tmpfile))
-      if not ok then
-         return nil, "API failure: " .. redact_api_url(url)
-      end
-   else
-      local ok, err = fs.download(url, tmpfile)
-      if not ok then
-         return nil, "API failure: " .. tostring(err) .. " - " .. redact_api_url(url)
-      end
-   end
-
-   local tmpfd = io.open(tmpfile)
-   if not tmpfd then
-      os.remove(tmpfile)
-      return nil, "API failure reading temporary file - " .. redact_api_url(url)
-   end
-   out = tmpfd:read("*a")
-   tmpfd:close()
-   os.remove(tmpfile)
-
-   if self.debug then
-      util.printout("[" .. tostring(method) .. " via curl] " .. redact_api_url(url) .. " ... ")
-   end
-
-   return json.decode(out)
-end
-
 if pcall(require, "http.request") then -- Use lua-http if available
 
 local http_request = require "http.request"
@@ -284,6 +221,69 @@ function Api:request(url, params, post_params)
       return nil, "API returned " .. tostring(status) .. " - " .. redact_api_url(url)
    end
    return json.decode(table.concat(out))
+end
+
+else -- Fallback to curl
+
+function Api:request(url, params, post_params)
+   local vars = cfg.variables
+   local json_ok, json = require_json()
+   if not json_ok then return nil, "A JSON library is required for this command." end
+
+   if cfg.downloader == "wget" then
+      local curl_ok = fs.execute_quiet(vars.CURL, "--version")
+      if not curl_ok then
+         return nil, "Missing network helper program 'curl'.\nMake sure 'curl' is installed and available from your path."
+      end
+   end
+
+   if not self.config.key then
+      return nil, "Must have API key before performing any actions."
+   end
+   if params and next(params) then
+      url = url .. ("?" .. encode_query_string(params))
+   end
+   local method = "GET"
+   local out
+   local tmpfile = fs.tmpname()
+   if post_params then
+      method = "POST"
+      local curl_cmd = fs.Q(vars.CURL).." -f -k -L --silent --user-agent \""..cfg.user_agent.." via curl\" "
+      for k,v in pairs(post_params) do
+         local var = v
+         if type(v) == "table" then
+            var = "@"..v.fname
+         end
+         curl_cmd = curl_cmd .. "--form \""..k.."="..var.."\" "
+      end
+      if cfg.connection_timeout and cfg.connection_timeout > 0 then
+        curl_cmd = curl_cmd .. "--connect-timeout "..tonumber(cfg.connection_timeout).." "
+      end
+      local ok = fs.execute_string(curl_cmd..fs.Q(url).." -o "..fs.Q(tmpfile))
+      if not ok then
+         return nil, "API failure: " .. redact_api_url(url)
+      end
+   else
+      local ok, err = fs.download(url, tmpfile)
+      if not ok then
+         return nil, "API failure: " .. tostring(err) .. " - " .. redact_api_url(url)
+      end
+   end
+
+   local tmpfd = io.open(tmpfile)
+   if not tmpfd then
+      os.remove(tmpfile)
+      return nil, "API failure reading temporary file - " .. redact_api_url(url)
+   end
+   out = tmpfd:read("*a")
+   tmpfd:close()
+   os.remove(tmpfile)
+
+   if self.debug then
+      util.printout("[" .. tostring(method) .. " via curl] " .. redact_api_url(url) .. " ... ")
+   end
+
+   return json.decode(out)
 end
 
 end
