@@ -467,6 +467,19 @@ local function values_set(tbl)
    return set
 end
 
+--- Upgrade or reinstall dependencies of an installed rock.
+-- @param dep table: requirement that the rock satisfies.
+-- @param install_mode string: "upgrade" for upgrade, "install" for reinstallation.
+-- @return true on success, (nil, error message) otherwise.
+function deps.process_rock_dependencies(dep, deps_mode, install_mode)
+   local fetch = require("luarocks.fetch")
+   local installed = assert(match_dep(dep, nil, deps_mode))
+   local dep_rockspec = assert(fetch.load_local_rockspec(path.rockspec_file(installed.name, installed.version)))
+   local action = install_mode == "install" and "Reinstalling" or "Upgrading"
+   util.printout(action.." dependencies of "..installed.name.." "..installed.version)
+   return deps.fulfill_dependencies(dep_rockspec, deps_mode, install_mode)
+end
+
 --- Check dependencies of a rock and attempt to install any missing ones.
 -- Packages are installed using the LuaRocks "install" command.
 -- Aborts the program if a dependency could not be fulfilled.
@@ -551,10 +564,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode, install_mode)
          end
       else
          -- Don't reinstall the dependency, only recurse.
-         local fetch = require("luarocks.fetch")
-         local installed = match_dep(dep, nil, deps_mode)
-         local dep_rockspec = fetch.load_rockspec(path.rockspec_file(installed.name, installed.version))
-         local ok, err = deps.fulfill_dependencies(dep_rockspec, deps_mode, install_mode)
+         local ok, err = deps.process_rock_dependencies(dep, deps_mode, install_mode)
          if not ok then return nil, err end
       end
    end
