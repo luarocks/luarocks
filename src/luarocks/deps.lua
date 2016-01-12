@@ -485,7 +485,7 @@ function deps.fulfill_requirement(dep, flags, install_mode, deps_install_mode, b
 
          util.printout()
          util.printout("Installing "..url)
-         local ok, err = install.install_by_url(url, parent and {} or flags, blacklist)
+         local ok, err = install.install_by_url(url, parent and {} or flags, deps_install_mode, blacklist)
          if not ok and parent then
             err = ("Failed installing dependency from %s: %s"):format(url, err)
          end
@@ -522,8 +522,6 @@ end
 -- nil and an error message if any test failed, followed by an optional
 -- error code.
 function deps.fulfill_dependencies(rockspec, deps_mode, install_mode, blacklist)
-   install_mode = install_mode or "satisfy"
-
    if rockspec.supported_platforms then
       if not deps.platforms_set then
          deps.platforms_set = values_set(cfg.platforms)

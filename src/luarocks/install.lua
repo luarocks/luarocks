@@ -154,7 +154,7 @@ end
 -- @param blacklist table: set of rock names + versions that shouldn't be processed.
 -- @return (string, string) or (nil, string): name and version
 -- of installed rock if successful, nil and error message otherwise.
-function install.install_by_url(url, flags, blacklist)
+function install.install_by_url(url, flags, deps_install_mode, blacklist)
    assert(type(url) == "string")
    assert(type(flags) == "table")
    local name, version
@@ -166,15 +166,15 @@ function install.install_by_url(url, flags, blacklist)
       local build_only_deps = flags["only-deps"]
 
       if url:match("%.rockspec$") then
-         name, version = build.build_rockspec(url, true, false, deps_mode, build_only_deps, nil, blacklist)
+         name, version = build.build_rockspec(url, true, false, deps_mode, build_only_deps, deps_install_mode, blacklist)
       else
-         name, version = build.build_rock(url, false, deps_mode, build_only_deps, nil, blacklist)
+         name, version = build.build_rock(url, false, deps_mode, build_only_deps, deps_install_mode, blacklist)
       end
    elseif url:match("%.rock$") then
       if flags["only-deps"] then
-         name, version = install.install_binary_rock_deps(url, deps_mode, nil, blacklist)
+         name, version = install.install_binary_rock_deps(url, deps_mode, deps_install_mode, blacklist)
       else
-         name, version = install.install_binary_rock(url, deps_mode, nil, blacklist)
+         name, version = install.install_binary_rock(url, deps_mode, deps_install_mode, blacklist)
       end
    else
       return nil, "Don't know what to do with "..url
@@ -212,7 +212,7 @@ function install.run(...)
    if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
 
    if name:match("%.rockspec$") or name:match("%.rock$") then
-      return install.install_by_url(name, flags)
+      return install.install_by_url(name, flags, "satisfy", {})
    else
       local search = require("luarocks.search")
       local req = search.make_query(name:lower(), version)
