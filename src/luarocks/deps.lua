@@ -485,7 +485,7 @@ function deps.fulfill_requirement(dep, flags, install_mode, deps_install_mode, b
 
          util.printout()
          util.printout("Installing "..url)
-         local ok, err = install.install_by_url(url, flags, blacklist)
+         local ok, err = install.install_by_url(url, parent and {} or flags, blacklist)
          if not ok and parent then
             err = ("Failed installing dependency from %s: %s"):format(url, err)
          end
@@ -552,7 +552,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode, install_mode, blacklist)
    end
 
    for _, dep in ipairs(rockspec.dependencies) do
-      local ok, err = deps.fulfill_requirement(dep, deps_mode, install_mode, install_mode, blacklist, rockspec)
+      local ok, err = deps.fulfill_requirement(dep, {["deps-mode"] = deps_mode}, install_mode, install_mode, blacklist, rockspec)
       if not ok then return nil, err end
    end
 
