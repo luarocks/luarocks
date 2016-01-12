@@ -420,7 +420,11 @@ function deps.fulfill_requirement(dep, deps_mode, install_mode, deps_install_mod
    local fetch = require("luarocks.fetch")
    local install = require("luarocks.install")
 
-   -- TODO: handle deps_mode == "none" somehow.
+   local no_deps = deps_mode == "none"
+   if no_deps then
+      deps_mode = cfg.deps_mode
+   end
+
    local installed = match_dep(dep, nil, deps_mode)
    local need_to_install = true
    local up_to_date = false
@@ -486,14 +490,15 @@ function deps.fulfill_requirement(dep, deps_mode, install_mode, deps_install_mod
             err = ("Failed installing dependency from %s: %s"):format(url, err)
          end
          return ok, err
+      elseif no_deps then
+         util.printerr("Warning: skipping dependency checks.")
       else
          local installed_rockspec = assert(fetch.load_local_rockspec(path.rockspec_file(installed.name, installed.version)))
-         -- TODO: it seems that deps_mode shouldn't actually be forwarded.
-         return deps.fulfill_dependencies(installed_rockspec, deps_mode, deps_install_mode)
+         return deps.fulfill_dependencies(installed_rockspec, cfg.deps_mode, deps_install_mode)
       end
-   else
-      return true
    end
+
+   return true
 end
 
 --- Return a set of values of a table.
