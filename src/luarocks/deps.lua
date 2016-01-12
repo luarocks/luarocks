@@ -415,11 +415,12 @@ end
 -- @param parent table?: if provided, the requirement is processed as a dependency of
 -- this rockspec.
 -- @return true or (nil, string): true on sucess, nil + error message otherwise.
-function deps.fulfill_requirement(dep, deps_mode, install_mode, deps_install_mode, blacklist, parent)
+function deps.fulfill_requirement(dep, flags, install_mode, deps_install_mode, blacklist, parent)
    local search = require("luarocks.search")
    local fetch = require("luarocks.fetch")
    local install = require("luarocks.install")
 
+   local deps_mode = deps.get_deps_mode(flags)
    local no_deps = deps_mode == "none"
    if no_deps then
       deps_mode = cfg.deps_mode
@@ -484,8 +485,7 @@ function deps.fulfill_requirement(dep, deps_mode, install_mode, deps_install_mod
 
          util.printout()
          util.printout("Installing "..url)
-         -- TODO: forward flags properly.
-         local ok, err = install.run(url)
+         local ok, err = install.install_by_url(url, flags)
          if not ok and parent then
             err = ("Failed installing dependency from %s: %s"):format(url, err)
          end
