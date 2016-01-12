@@ -511,13 +511,13 @@ end
 -- Packages are installed using the LuaRocks "install" command.
 -- Aborts the program if a dependency could not be fulfilled.
 -- @param rockspec table: A rockspec in table format.
+-- @param install_mode string: mode for installing the dependencies, applied recursively.
+-- @param blacklist table: set of rock names + versions that shouldn't be processed.
 -- @return boolean or (nil, string, [string]): True if no errors occurred, or
 -- nil and an error message if any test failed, followed by an optional
 -- error code.
-function deps.fulfill_dependencies(rockspec, deps_mode)
-
-   local search = require("luarocks.search")
-   local install = require("luarocks.install")
+function deps.fulfill_dependencies(rockspec, deps_mode, install_mode, blacklist)
+   install_mode = install_mode or "satisfy"
 
    if rockspec.supported_platforms then
       if not deps.platforms_set then
@@ -528,7 +528,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
          local neg, plat = plat:match("^(!?)(.*)")
          if neg == "!" then
             if deps.platforms_set[plat] then
-               return nil, "This rockspec for "..rockspec.package.." does not support "..plat.." platforms."
+               return nil, "The rockspec for "..rockspec.package.." does not support "..plat.." platforms."
             end
          else
             if deps.platforms_set[plat] then
@@ -542,56 +542,15 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
       end
       if supported == false then
          local plats = table.concat(cfg.platforms, ", ")
-         return nil, "This rockspec for "..rockspec.package.." does not support "..plats.." platforms."
+         return nil, "The rockspec for "..rockspec.package.." does not support "..plats.." platforms."
       end
    end
 
-   local _, missing, no_upgrade = deps.match_deps(rockspec, nil, deps_mode)
-
-   if next(no_upgrade) then
-      util.printerr("Missing dependencies for "..rockspec.name.." "..rockspec.version..":")
-      for _, dep in pairs(no_upgrade) do
-         util.printerr(deps.show_dep(dep))
-      end
-      if next(missing) then
-         for _, dep in pairs(missing) do
-            util.printerr(deps.show_dep(dep))
-         end
-      end
-      util.printerr()
-      for _, dep in pairs(no_upgrade) do
-         util.printerr("This version of "..rockspec.name.." is designed for use with")
-         util.printerr(deps.show_dep(dep)..", but is configured to avoid upgrading it")
-         util.printerr("automatically. Please upgrade "..dep.name.." with")
-         util.printerr("   luarocks install "..dep.name)
-         util.printerr("or choose an older version of "..rockspec.name.." with")
-         util.printerr("   luarocks search "..rockspec.name)
-      end
-      return nil, "Failed matching dependencies."
+   for _, dep in ipairs(rockspec.dependencies) do
+      local ok, err = deps.fulfill_requirement(dep, deps_mode, install_mode, install_mode, blacklist, rockspec)
+      if not ok then return nil, err end
    end
 
-   if next(missing) then
-      util.printerr()
-      util.printerr("Missing dependencies for "..rockspec.name..":")
-      for _, dep in pairs(missing) do
-         util.printerr(deps.show_dep(dep))
-      end
-      util.printerr()
-
-      for _, dep in pairs(missing) do
-         -- Double-check in case dependency was filled during recursion.
-         if not match_dep(dep, nil, deps_mode) then
-            local url, err = search.find_suitable_rock(dep)
-            if not url then
-               return nil, "Could not satisfy dependency "..deps.show_dep(dep)..": "..err
-            end
-            local ok, err, errcode = install.run(url, deps.deps_mode_to_flag(deps_mode))
-            if not ok then
-               return nil, "Failed installing dependency: "..url.." - "..err, errcode
-            end
-         end
-      end
-   end
    return true
 end
 
