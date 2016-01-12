@@ -399,6 +399,103 @@ function deps.match_deps(rockspec, blacklist, deps_mode)
    return matched, missing, no_upgrade
 end
 
+local function installed_status(dep)
+   return cfg.rocks_provided[dep.name] and "provided by VM" or "installed"
+end
+
+--- Satisfy a requirement.
+-- The requirement and its dependencies are processed using one of three
+-- modes: "install", "upgrade" and "satisfy".
+-- "install" always installs latest matching version.
+-- "upgrade" installs latest matching version if it's not installed already.
+-- "satisfy" installs latest matching version if no matching version is installed.
+-- @param install_mode string: mode for installing the requirement itself.
+-- @param deps_install_mode string: mode for installing depedencies, applied recursively.
+-- @param blacklist table: set of rock names + versions that shouldn't be processed.
+-- @param parent table?: if provided, the requirement is processed as a dependency of
+-- this rockspec.
+-- @return true or (nil, string): true on sucess, nil + error message otherwise.
+function deps.fulfill_requirement(dep, deps_mode, install_mode, deps_install_mode, blacklist, parent)
+   local search = require("luarocks.search")
+   local fetch = require("luarocks.fetch")
+   local install = require("luarocks.install")
+
+   -- TODO: handle deps_mode == "none" somehow.
+   local installed = match_dep(dep, nil, deps_mode)
+   local need_to_install = true
+   local up_to_date = false
+   local url, latest_version
+
+   if installed then
+      if install_mode == "satisfy" or cfg.rocks_provided[dep.name] then
+         if not parent then
+            util.printout(("%s %s is already %s"):format(dep.name, installed.version, installed_status(dep)))
+         end
+         need_to_install = false
+      end
+   end
+
+   if need_to_install then
+      url, latest_version = search.find_suitable_rock(dep)
+      up_to_date = install_mode == "upgrade" and installed
+      up_to_date = up_to_date and url and not deps.compare_versions(latest_version, installed.version)
+
+      if up_to_date then
+         if not parent then
+            util.printout(("%s %s is up-to-date"):format(dep.name, installed.version))
+         end
+         need_to_install = false
+      end
+   end
+
+   local blacklist_key = dep.name:lower().." "..(need_to_install and latest_version or installed.version)
+
+   if not blacklist[blacklist_key] and (need_to_install or deps_install_mode ~= "satisfy") then
+      if parent then
+         local any_installed = match_dep(search.make_query(dep.name), nil, deps_mode)
+         local status = up_to_date and "up-to-date" or (any_installed and any_installed.version.." "..installed_status(dep))
+         util.printout(("%s %s depends on %s (%s)"):format(parent.name, parent.version, deps.show_dep(dep), status or "missing"))
+
+         if dep.constraints[1] and dep.constraints[1].no_upgrade then
+            util.printerr("This version of "..parent.name.." is designed for use with")
+            util.printerr(deps.show_dep(dep)..", but is configured to avoid upgrading it")
+            util.printerr("automatically. Please upgrade "..dep.name.." with")
+            util.printerr("   luarocks install "..dep.name)
+            util.printerr("or choose an older version of "..parent.name.." with")
+            util.printerr("   luarocks search "..parent.name)
+            return nil, "Failed matching dependencies"
+         end
+      end
+
+      blacklist[blacklist_key] = true
+
+      if need_to_install then
+         if not url then
+            local err = latest_version
+            if parent then
+               err = ("Couldn't satisfy dependency '%s': %s"):format(deps.show_dep(dep), err)
+            end
+            return nil, err
+         end
+
+         util.printout()
+         util.printout("Installing "..url)
+         -- TODO: forward flags properly.
+         local ok, err = install.run(url)
+         if not ok and parent then
+            err = ("Failed installing dependency from %s: %s"):format(url, err)
+         end
+         return ok, err
+      else
+         local installed_rockspec = assert(fetch.load_local_rockspec(path.rockspec_file(installed.name, installed.version)))
+         -- TODO: it seems that deps_mode shouldn't actually be forwarded.
+         return deps.fulfill_dependencies(installed_rockspec, deps_mode, deps_install_mode)
+      end
+   else
+      return true
+   end
+end
+
 --- Return a set of values of a table.
 -- @param tbl table: The input table.
 -- @return table: The array of keys.
