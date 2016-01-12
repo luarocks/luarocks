@@ -164,7 +164,7 @@ end
 -- @param build_only_deps boolean: true to build the listed dependencies only.
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode, build_only_deps)
+function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode, build_only_deps, deps_install_mode, blacklist)
    assert(type(rockspec_file) == "string")
    assert(type(need_to_fetch) == "boolean")
 
@@ -180,7 +180,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    if deps_mode == "none" then
       util.printerr("Warning: skipping dependency checks.")
    else
-      local ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+      local ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode, deps_install_mode, blacklist)
       if err then
          return nil, err, errcode
       end
@@ -355,7 +355,7 @@ end
 -- @param build_only_deps boolean: true to build the listed dependencies only.
 -- @return boolean or (nil, string, [string]): True if build was successful,
 -- or false and an error message and an optional error code.
-function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
+function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps, deps_install_mode, blacklist)
    assert(type(rock_file) == "string")
    assert(type(need_to_fetch) == "boolean")
 
@@ -368,7 +368,7 @@ function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
    local rockspec_file = path.rockspec_name_from_rock(rock_file)
    ok, err = fs.change_dir(unpack_dir)
    if not ok then return nil, err end
-   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps)
+   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps, deps_install_mode, blacklist)
    fs.pop_dir()
    return ok, err, errcode
 end
@@ -381,7 +381,7 @@ local function do_build(name, version, deps_mode, build_only_deps)
    elseif name:match("%.all%.rock$") then
       local install = require("luarocks.install")
       local install_fun = build_only_deps and install.install_binary_rock_deps or install.install_binary_rock
-      return install_fun(name, deps_mode)
+      return install_fun(name, deps_mode, nil, {})
    elseif name:match("%.rock$") then
       return build.build_rock(name, true, deps_mode, build_only_deps)
    elseif not name:match(dir.separator) then

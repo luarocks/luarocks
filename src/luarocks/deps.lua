@@ -485,7 +485,7 @@ function deps.fulfill_requirement(dep, flags, install_mode, deps_install_mode, b
 
          util.printout()
          util.printout("Installing "..url)
-         local ok, err = install.install_by_url(url, flags)
+         local ok, err = install.install_by_url(url, flags, blacklist)
          if not ok and parent then
             err = ("Failed installing dependency from %s: %s"):format(url, err)
          end

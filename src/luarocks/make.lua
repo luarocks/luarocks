@@ -128,7 +128,7 @@ function make.run(...)
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
-      ok, err = build.build_rockspec(rockspec, false, true, deps.get_deps_mode(flags))
+      ok, err = build.build_rockspec(rockspec, false, true, deps.get_deps_mode(flags), nil, {})
       if not ok then return nil, err end
       local name, version = ok, err
       if (not flags["keep"]) and not cfg.keep_other_versions then
