@@ -455,7 +455,7 @@ function deps.fulfill_requirement(dep, flags, install_mode, deps_install_mode, b
 
    local blacklist_key = dep.name:lower().." "..(need_to_install and latest_version or installed.version)
 
-   if not blacklist[blacklist_key] and (need_to_install or deps_install_mode ~= "satisfy") then
+   if not blacklist[blacklist_key] and (need_to_install or (deps_install_mode ~= "satisfy" and not cfg.rocks_provided[dep.name])) then
       if parent then
          local any_installed = match_dep(search.make_query(dep.name), nil, deps_mode)
          local status = up_to_date and "up-to-date" or (any_installed and any_installed.version.." "..installed_status(dep))
@@ -494,7 +494,7 @@ function deps.fulfill_requirement(dep, flags, install_mode, deps_install_mode, b
          util.printerr("Warning: skipping dependency checks.")
       else
          local installed_rockspec = assert(fetch.load_local_rockspec(path.rockspec_file(installed.name, installed.version)))
-         return deps.fulfill_dependencies(installed_rockspec, cfg.deps_mode, deps_install_mode)
+         return deps.fulfill_dependencies(installed_rockspec, cfg.deps_mode, deps_install_mode, blacklist)
       end
    end
 
