@@ -225,7 +225,7 @@ luarocks_admin_nocov="run_lua --nocov luarocks-admin"
 mkdir -p "$testing_server"
 (
    cd "$testing_server"
-   luarocks_repo="http://rocks.moonscript.org"
+   luarocks_repo="https://luarocks.org"
    get() { [ -e `basename "$1"` ] || wget -c "$1"; }
    get "$luarocks_repo/luacov-${verrev_luacov}.src.rock"
    get "$luarocks_repo/luacov-${verrev_luacov}.rockspec"
