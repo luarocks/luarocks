@@ -6,8 +6,8 @@
 -- used to load previous modules, so that the loader chooses versions
 -- that are declared to be compatible with the ones loaded earlier.
 local loaders = package.loaders or package.searchers
-local package, require, ipairs, pairs, table, type, next, tostring, error =
-      package, require, ipairs, pairs, table, type, next, tostring, error
+local package, require, ipairs, table, type, next, tostring, error =
+      package, require, ipairs, table, type, next, tostring, error
 local unpack = unpack or table.unpack
 
 --module("luarocks.loader")
@@ -20,6 +20,7 @@ cfg.init_package_paths()
 local path = require("luarocks.path")
 local manif_core = require("luarocks.manif_core")
 local deps = require("luarocks.deps")
+local util = require("luarocks.util")
 
 loader.context = {}
 
@@ -79,7 +80,7 @@ function loader.add_context(name, version)
          for _, tree in ipairs(loader.rocks_trees) do
             local entries = tree.manifest.repository[pkg]
             if entries then
-               for version, pkgs in pairs(entries) do
+               for version, pkgs in util.sortedpairs(entries, deps.compare_versions) do
                   if (not constraints) or deps.match_constraints(deps.parse_version(version), constraints) then
                      loader.add_context(pkg, version)
                   end
