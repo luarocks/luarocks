@@ -111,7 +111,7 @@ function help.run(...)
          print_section("SEE ALSO")
          util.printout("","'"..program.." help' for general options and configuration.\n")
       else
-         return nil, "Unknown command '"..command.."'"
+         return nil, "Unknown command: "..command
       end
    end
    return true

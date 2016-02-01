@@ -119,20 +119,15 @@ upload_servers = {
 EOF
 cat <<EOF > $testing_dir/luacov.config
 return {
-  ["configfile"] = ".luacov",
-  ["statsfile"] = "$testing_dir/luacov.stats.out",
-  ["reportfile"] = "$testing_dir/luacov.report.out",
-  runreport = false,
-  deletestats = false,
-  ["include"] = {},
-  ["exclude"] = {
-    "luacov$",
-    "luacov%.reporter$",
-    "luacov%.defaults$",
-    "luacov%.runner$",
-    "luacov%.stats$",
-    "luacov%.tick$",
-  },
+   statsfile = "$testing_dir/luacov.stats.out",
+   reportfile = "$testing_dir/luacov.report.out",
+   modules = {
+      ["luarocks"] = "src/bin/luarocks",
+      ["luarocks-admin"] = "src/bin/luarocks-admin",
+      ["luarocks.*"] = "src",
+      ["luarocks.*.*"] = "src",
+      ["luarocks.*.*.*"] = "src"
+   }
 }
 EOF
 
@@ -184,7 +179,7 @@ srcdir_luasocket=luasocket-3.0-rc1
 version_cprint=0.1
 verrev_cprint=0.1-2
 
-version_luacov=0.8
+version_luacov=0.9.1
 verrev_luacov=${version_luacov}-1
 version_lxsh=0.8.6
 version_validate_args=1.5.4
@@ -230,7 +225,7 @@ luarocks_admin_nocov="run_lua --nocov luarocks-admin"
 mkdir -p "$testing_server"
 (
    cd "$testing_server"
-   luarocks_repo="http://rocks.moonscript.org"
+   luarocks_repo="https://luarocks.org"
    get() { [ -e `basename "$1"` ] || wget -c "$1"; }
    get "$luarocks_repo/luacov-${verrev_luacov}.src.rock"
    get "$luarocks_repo/luacov-${verrev_luacov}.rockspec"
@@ -591,16 +586,18 @@ run_all_tests() {
 run_all_tests $1
 #run_with_minimal_environment $1
 
+cd "$testing_dir/.."
+
 if [ "$travis" ]
 then
    if [ "$TRAVIS" ]
    then
       build_environment luacov luafilesystem luacov-coveralls
-      ( cd $testing_dir; $testing_sys_tree/bin/luacov-coveralls || echo "ok" )
+      $testing_sys_tree/bin/luacov-coveralls -c "$testing_dir/luacov.config" || echo "ok"
    fi
-   $testing_sys_tree/bin/luacov -c $testing_dir/luacov.config src/luarocks src/bin
-   grep "Summary" -B1 -A1000 $testing_dir/luacov.report.out
+   $testing_sys_tree/bin/luacov -c "$testing_dir/luacov.config"
+   grep "Summary" -B1 -A1000 "$testing_dir/luacov.report.out"
 else
-   $testing_sys_tree/bin/luacov -c $testing_dir/luacov.config src/luarocks src/bin
+   $testing_sys_tree/bin/luacov -c "$testing_dir/luacov.config"
    cat "$testing_dir/luacov.report.out"
 fi
