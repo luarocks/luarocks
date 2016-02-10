@@ -16,6 +16,7 @@ local deps = require("luarocks.deps")
 local manif = require("luarocks.manif")
 local remove = require("luarocks.remove")
 local cfg = require("luarocks.cfg")
+local unpack = table.unpack or unpack
 
 build.help_summary = "Build/compile a rock."
 build.help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
@@ -386,8 +387,10 @@ local function do_build(name, version, deps_mode, build_only_deps, deps_install_
       return build.build_rock(name, true, deps_mode, build_only_deps, deps_install_mode, {})
    elseif not name:match(dir.separator) then
       local search = require("luarocks.search")
-      -- TODO: forward deps_install_mode here somehow.
-      return search.act_on_src_or_rockspec(build.run, name:lower(), version, deps.deps_mode_to_flag(deps_mode), build_only_deps and "--only-deps")
+      local args = {deps.deps_mode_to_flag(deps_mode)}
+      table.insert(args, build_only_deps and "--only-deps" or nil)
+      table.insert(args, deps.deps_install_mode_to_flag(deps_install_mode) or nil)
+      return search.act_on_src_or_rockspec(build.run, name:lower(), version, unpack(args))
    end
    return nil, "Don't know what to do with "..name
 end
@@ -412,7 +415,8 @@ function build.run(...)
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
-      ok, err = do_build(name, version, deps.get_deps_mode(flags), flags["only-deps"], "satisfy")
+      local _, deps_install_mode = deps.get_install_modes(flags)
+      ok, err = do_build(name, version, deps.get_deps_mode(flags), flags["only-deps"], deps_install_mode)
       if not ok then return nil, err end
       local name, version = ok, err
       if flags["only-deps"] then

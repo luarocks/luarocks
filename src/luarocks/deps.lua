@@ -829,8 +829,35 @@ function deps.get_deps_mode(flags)
    end
 end
 
+function deps.get_install_modes(flags)
+   local install_mode, deps_install_mode
+
+   if flags["upgrade"] then
+      install_mode = "upgrade"
+   elseif flags["lazy"] then
+      install_mode = "satisfy"
+   else
+      install_mode = "install"
+   end
+
+   if flags["upgrade-deps"] then
+      deps_install_mode = "upgrade"
+   elseif flags["reinstall-deps"] then
+      deps_install_mode = "install"
+   else
+      deps_install_mode = "satisfy"
+   end
+
+   return install_mode, deps_install_mode
+end
+
 function deps.deps_mode_to_flag(deps_mode)
    return "--deps-mode="..deps_mode
+end
+
+function deps.deps_install_mode_to_flag(deps_install_mode)
+   return deps_install_mode == "upgrade" and "--upgrade-deps" or
+      deps_install_mode == "install" and "--reinstall-deps"
 end
 
 return deps

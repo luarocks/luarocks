@@ -210,12 +210,14 @@ function install.run(...)
    local ok, err = fs.check_command_permissions(flags)
    if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
 
+   local install_mode, deps_install_mode = deps.get_install_modes(flags)
+
    if name:match("%.rockspec$") or name:match("%.rock$") then
-      return install.install_by_url(name, flags, "satisfy", {})
+      return install.install_by_url(name, flags, deps_install_mode, {})
    else
       local search = require("luarocks.search")
       local req = search.make_query(name:lower(), version)
-      return deps.fulfill_requirement(req, flags, "install", "satisfy", {})
+      return deps.fulfill_requirement(req, flags, install_mode, deps_install_mode, {})
    end
 end
 
