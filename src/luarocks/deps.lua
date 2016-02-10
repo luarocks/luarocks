@@ -434,7 +434,8 @@ function deps.fulfill_requirement(dep, flags, install_mode, deps_install_mode, b
    if installed then
       if install_mode == "satisfy" or cfg.rocks_provided[dep.name] then
          if not parent then
-            util.printout(("%s %s is already %s"):format(dep.name, installed.version, installed_status(dep)))
+            util.printout(("%s %s is already %s"):format(
+               dep.name, installed.version, installed_status(dep)))
          end
          need_to_install = false
       end
@@ -442,8 +443,8 @@ function deps.fulfill_requirement(dep, flags, install_mode, deps_install_mode, b
 
    if need_to_install then
       url, latest_version = search.find_suitable_rock(dep)
-      up_to_date = install_mode == "upgrade" and installed
-      up_to_date = up_to_date and url and not deps.compare_versions(latest_version, installed.version)
+      local do_upgrade = install_mode == "upgrade" and installed
+      up_to_date = do_upgrade and url and not deps.compare_versions(latest_version, installed.version)
 
       if up_to_date then
          if not parent then
@@ -453,13 +454,25 @@ function deps.fulfill_requirement(dep, flags, install_mode, deps_install_mode, b
       end
    end
 
-   local blacklist_key = dep.name:lower().." "..(need_to_install and latest_version or installed.version)
+   local version_to_install = need_to_install and latest_version or installed.version
+   local blacklist_key = dep.name:lower().." "..version_to_install
 
-   if not blacklist[blacklist_key] and (need_to_install or (deps_install_mode ~= "satisfy" and not cfg.rocks_provided[dep.name])) then
+   if blacklist[blacklist_key] then
+      -- Already handled this dependency.
+      return true
+   end
+
+   -- Process the dependency only if it needs to be installed or its dependencies are to be
+   -- handled recursively.
+   if need_to_install or (deps_install_mode ~= "satisfy" and not cfg.rocks_provided[dep.name]) then
       if parent then
+         -- Show a nice label depending on whether the rock is installed already.
          local any_installed = match_dep(search.make_query(dep.name), nil, deps_mode)
-         local status = up_to_date and "up-to-date" or (any_installed and any_installed.version.." "..installed_status(dep))
-         util.printout(("%s %s depends on %s (%s)"):format(parent.name, parent.version, deps.show_dep(dep), status or "missing"))
+         local up_to_date_label = up_to_date and "up-to-date"
+         local installed_label = any_installed and any_installed.version.." "..installed_status(dep)
+         local status = up_to_date_label or installed_label or "missing"
+         util.printout(("%s %s depends on %s (%s)"):format(
+            parent.name, parent.version, deps.show_dep(dep), status))
 
          if dep.constraints[1] and dep.constraints[1].no_upgrade then
             util.printerr("This version of "..parent.name.." is designed for use with")
@@ -476,6 +489,7 @@ function deps.fulfill_requirement(dep, flags, install_mode, deps_install_mode, b
 
       if need_to_install then
          if not url then
+            -- search.find_suitable_rock must have returned an error.
             local err = latest_version
             if parent then
                err = ("Couldn't satisfy dependency '%s': %s"):format(deps.show_dep(dep), err)
@@ -493,7 +507,8 @@ function deps.fulfill_requirement(dep, flags, install_mode, deps_install_mode, b
       elseif no_deps then
          util.printerr("Warning: skipping dependency checks.")
       else
-         local installed_rockspec = assert(fetch.load_local_rockspec(path.rockspec_file(installed.name, installed.version)))
+         local installed_rockspec = assert(fetch.load_local_rockspec(
+            path.rockspec_file(installed.name, installed.version)))
          return deps.fulfill_dependencies(installed_rockspec, cfg.deps_mode, deps_install_mode, blacklist)
       end
    end
