@@ -11,10 +11,11 @@ local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 
-local socket_ok, zip_ok, unzip_ok, lfs_ok, md5_ok, posix_ok, _
-local http, ftp, lrzip, luazip, lfs, md5, posix
+local http_request_ok, socket_ok, zip_ok, unzip_ok, lfs_ok, md5_ok, posix_ok, _
+local http_request, http, ftp, lrzip, luazip, lfs, md5, posix
 
 if cfg.fs_use_modules then
+   http_request_ok, http_request = pcall(require, "http.request")
    socket_ok, http = pcall(require, "socket.http")
    _, ftp = pcall(require, "socket.ftp")
    zip_ok, lrzip = pcall(require, "luarocks.tools.zip")
@@ -550,10 +551,113 @@ end
 end
 
 ---------------------------------------------------------------------
+-- Download function
+---------------------------------------------------------------------
+
+-- Default to native downloader
+local download_handlers = setmetatable({}, {__index = function()
+      return fs.use_downloader
+end;})
+
+--- Download a remote file.
+-- @param url string: URL to be fetched.
+-- @param filename string or nil: this function attempts to detect the
+-- resulting local filename of the remote file as the basename of the URL;
+-- if that is not correct (due to a redirection, for example), the local
+-- filename can be given explicitly as this second argument.
+-- @return (boolean, string): true and the filename on success,
+-- false and the error message on failure.
+function fs_lua.download(url, filename, cache)
+   assert(type(url) == "string")
+   assert(type(filename) == "string" or not filename)
+   filename = fs.absolute_name(filename or dir.base_name(url))
+   local scheme = dir.split_url(url)
+   return download_handlers[scheme](url, filename, cache)
+end
+
+-- Try lua-http first
+if http_request_ok then
+local ce = require "cqueues.errno"
+function download_handlers.http(url, filename, cache)
+   local req = http_request.new_from_uri(url)
+   req.headers:upsert("user-agent", cfg.user_agent.." via LuaSocket")
+   if cache then
+      local tsfd = io.open(filename..".timestamp", "r")
+      if tsfd then
+         local timestamp = tsfd:read("*a")
+         tsfd:close()
+         req.headers:upsert(":method", "HEAD")
+         local headers, stream = req:go(cfg.connection_timeout)
+         if not headers then
+            if type(stream) == "number" then
+               stream = ce.strerror(stream)
+            end
+            return false, stream
+         end
+         if headers:get(":status") == "200" and headers:get("last-modified") == timestamp then
+            return true, filename
+         end
+      end
+   end
+   req.headers:upsert(":method", "GET")
+   local headers, stream = req:go(cfg.connection_timeout)
+   if not headers then
+      if type(stream) == "number" then
+         stream = ce.strerror(stream)
+      end
+      return false, stream
+   end
+   local file do -- Open output file
+      local err
+      file, err = io.open(filename, "wb")
+      if not file then
+         return false, err
+      end
+   end
+   local dots = 0
+   while true do
+      local chunk, err = stream:get_next_chunk()
+      if chunk == nil then
+         if err == ce.EPIPE then
+            break
+         else
+            file:close()
+            return false, err
+         end
+      end
+      if cfg.show_downloads then
+         io.write(".")
+         io.flush()
+         dots = dots + 1
+         if dots == 70 then
+            io.write("\n")
+            dots = 0
+         end
+      end
+      local ok, err2 = file:write(chunk)
+      if not ok then
+         file:close()
+         return false, err2
+      end
+   end
+   file:close()
+   if cache and headers:has("last-modified") then
+      local tsfd = io.open(filename..".timestamp", "w")
+      if tsfd then
+         tsfd:write(headers:get("last-modified"))
+         tsfd:close()
+      end
+   end
+   return true, filename
+end
+download_handlers.https = download_handlers.http
+end
+
+---------------------------------------------------------------------
 -- LuaSocket functions
 ---------------------------------------------------------------------
 
-if socket_ok then
+if socket_ok and cfg.no_proxy then -- delegate to the configured downloader so we don't have to deal with whitelists
 
 local ltn12 = require("ltn12")
 local luasec_ok, https = pcall(require, "ssl.https")
@@ -565,14 +669,14 @@ local redirect_protocols = {
 
 local function request(url, method, http, loop_control)
    local result = {}
-   
+
    local proxy = cfg.http_proxy
    if type(proxy) ~= "string" then proxy = nil end
    -- LuaSocket's http.request crashes when given URLs missing the scheme part.
    if proxy and not proxy:find("://") then
       proxy = "http://" .. proxy
    end
-   
+
    if cfg.show_downloads then
       io.write(method.." "..url.." ...\n")
    end
@@ -618,7 +722,7 @@ local function request(url, method, http, loop_control)
             loop_control[url] = true
             return request(location, method, redirect_protocols[protocol], loop_control)
          else
-            return nil, "URL redirected to unsupported protocol - install luasec to get HTTPS support.", "https"
+            return nil, "URL redirected to unsupported protocol - install lua-http ('http') or luasec to get HTTPS support.", "https"
          end
       end
       return nil, err
@@ -661,47 +765,7 @@ end
 
 local downloader_warning = false
 
---- Download a remote file.
--- @param url string: URL to be fetched.
--- @param filename string or nil: this function attempts to detect the
--- resulting local filename of the remote file as the basename of the URL;
--- if that is not correct (due to a redirection, for example), the local
--- filename can be given explicitly as this second argument.
--- @return (boolean, string): true and the filename on success,
--- false and the error message on failure.
-function fs_lua.download(url, filename, cache)
-   assert(type(url) == "string")
-   assert(type(filename) == "string" or not filename)
-
-   filename = fs.absolute_name(filename or dir.base_name(url))
-
-   -- delegate to the configured downloader so we don't have to deal with whitelists
-   if cfg.no_proxy then
-      return fs.use_downloader(url, filename, cache)
-   end
-   
-   local content, err, https_err
-   if util.starts_with(url, "http:") then
-      content, err, https_err = http_request(url, http, cache and filename)
-   elseif util.starts_with(url, "ftp:") then
-      content, err = ftp.get(url)
-   elseif util.starts_with(url, "https:") then
-      -- skip LuaSec when proxy is enabled since it is not supported
-      if luasec_ok and not cfg.https_proxy then
-         content, err = http_request(url, https, cache and filename)
-      else
-         https_err = true
-      end
-   else
-      err = "Unsupported protocol"
-   end
-   if https_err then
-      if not downloader_warning then
-         util.printerr("Warning: falling back to "..cfg.downloader.." - install luasec to get native HTTPS support")
-         downloader_warning = true
-      end
-      return fs.use_downloader(url, filename, cache)
-   end
+local function postamble(filename, cache, content, err)
    if cache and content == true then
       return true, filename
    end
@@ -715,13 +779,36 @@ function fs_lua.download(url, filename, cache)
    return true, filename
 end
 
-else --...if socket_ok == false then
-
-function fs_lua.download(url, filename, cache)
-   return fs.use_downloader(url, filename, cache)
+if not rawget(download_handlers, "http") then
+   function download_handlers.http(url, filename, cache)
+      local content, err, https_err = http_request(url, http, cache and filename)
+      if https_err then
+         if not downloader_warning then
+            util.printerr("Warning: falling back to "..cfg.downloader.." - install luasec to get native HTTPS support")
+            downloader_warning = true
+         end
+         return fs.use_downloader(url, filename, cache)
+      end
+      return postamble(filename, cache, content, err)
+   end
 end
 
+-- skip LuaSec when proxy is enabled since it is not supported
+if luasec_ok and not rawget(download_handlers, "https") and not cfg.https_proxy then
+   function download_handlers.https(url, filename, cache)
+      local content, err = http_request(url, https, cache and filename)
+      return postamble(filename, cache, content, err)
+   end
 end
+
+if not rawget(download_handlers, "ftp") then
+   function download_handlers.ftp(url, filename, cache)
+      local content, err = ftp.get(url)
+      return postamble(filename, cache, content, err)
+   end
+end
+end
+
 ---------------------------------------------------------------------
 -- MD5 functions
 ---------------------------------------------------------------------
