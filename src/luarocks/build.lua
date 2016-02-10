@@ -373,19 +373,20 @@ function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps, 
    return ok, err, errcode
 end
  
-local function do_build(name, version, deps_mode, build_only_deps)
+local function do_build(name, version, deps_mode, build_only_deps, deps_install_mode)
    if name:match("%.rockspec$") then
-      return build.build_rockspec(name, true, false, deps_mode, build_only_deps)
+      return build.build_rockspec(name, true, false, deps_mode, build_only_deps, deps_install_mode, {})
    elseif name:match("%.src%.rock$") then
-      return build.build_rock(name, false, deps_mode, build_only_deps)
+      return build.build_rock(name, false, deps_mode, build_only_deps, deps_install_mode, {})
    elseif name:match("%.all%.rock$") then
       local install = require("luarocks.install")
       local install_fun = build_only_deps and install.install_binary_rock_deps or install.install_binary_rock
-      return install_fun(name, deps_mode, nil, {})
+      return install_fun(name, deps_mode, deps_install_mode, {})
    elseif name:match("%.rock$") then
-      return build.build_rock(name, true, deps_mode, build_only_deps)
+      return build.build_rock(name, true, deps_mode, build_only_deps, deps_install_mode, {})
    elseif not name:match(dir.separator) then
       local search = require("luarocks.search")
+      -- TODO: forward deps_install_mode here somehow.
       return search.act_on_src_or_rockspec(build.run, name:lower(), version, deps.deps_mode_to_flag(deps_mode), build_only_deps and "--only-deps")
    end
    return nil, "Don't know what to do with "..name
@@ -411,7 +412,7 @@ function build.run(...)
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
-      ok, err = do_build(name, version, deps.get_deps_mode(flags), flags["only-deps"])
+      ok, err = do_build(name, version, deps.get_deps_mode(flags), flags["only-deps"], "satisfy")
       if not ok then return nil, err end
       local name, version = ok, err
       if flags["only-deps"] then
