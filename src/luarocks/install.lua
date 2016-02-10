@@ -161,7 +161,6 @@ function install.install_by_url(url, flags, deps_install_mode, blacklist)
    local deps_mode = deps.get_deps_mode(flags)
 
    if url:match("%.rockspec$") or url:match("%.src%.rock$") then
-      util.printout("Using "..url.."... switching to 'build' mode")
       local build = require("luarocks.build")
       local build_only_deps = flags["only-deps"]
 
