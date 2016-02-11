@@ -77,9 +77,6 @@ local function update_source_section(out_rs, out_name, url, old_ver, new_ver)
    if new_ver == old_ver then
       return true
    end
-   if not out_rs.source then
-      return nil, "'source' table is missing. Invalid rockspec?"
-   end
    if out_rs.source.dir then
       try_replace(out_rs.source, "dir", old_ver, new_ver)
    end
