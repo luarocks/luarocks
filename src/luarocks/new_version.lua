@@ -107,7 +107,7 @@ end
 function new_version.run(...)
    local flags, input, version, url = util.parse_flags(...)
    if not input then
-      return nil, "Missing arguments: expected program or rockspec. "..util.see_help("new_version")
+      return nil, "Missing argument: expected package or rockspec. "..util.see_help("new_version")
    end
    assert(type(input) == "string")
    
