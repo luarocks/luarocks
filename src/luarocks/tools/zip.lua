@@ -1,12 +1,34 @@
 
 --- A Lua implementation of .zip file archiving (used for creating .rock files),
--- using only lzlib.
---module("luarocks.tools.zip", package.seeall)
+-- using only lzlib or lua-lzib.
 local zip = {}
 
 local zlib = require("zlib")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
+
+-- zlib module can be provided by both lzlib and lua-lzib packages.
+-- Create a compatibility layer.
+local zlib_compress, zlib_crc32
+if zlib._VERSION:match "^lua%-zlib" then
+   function zlib_compress(data)
+      return (zlib.deflate()(data, "finish"))
+   end
+
+   function zlib_crc32(data)
+      return zlib.crc32()(data)
+   end
+elseif zlib._VERSION:match "^lzlib" then
+   function zlib_compress(data)
+      return zlib.compress(data)
+   end
+
+   function zlib_crc32(data)
+      return zlib.crc32(zlib.crc32(), data)
+   end
+else
+   error("unknown zlib library", 0)
+end
 
 local function number_to_bytestring(number, nbytes)
    local out = {}
@@ -31,32 +53,28 @@ local function zipwriter_open_new_file_in_zip(self, filename)
    self.local_file_header = lfh
    lfh.last_mod_file_time = 0 -- TODO
    lfh.last_mod_file_date = 0 -- TODO
-   lfh.crc32 = 0 -- initial value
-   lfh.compressed_size = 0 -- unknown yet
-   lfh.uncompressed_size = 0 -- unknown yet
    lfh.file_name_length = #filename
    lfh.extra_field_length = 0
    lfh.file_name = filename:gsub("\\", "/")
    lfh.external_attr = 0 -- TODO properly store permissions
    self.in_open_file = true
-   self.data = {}
    return true
 end
 
 --- Write data to the file currently being stored in the zipfile.
 -- @param self handle of the zipfile being written.
--- @param buf string containing data to be written.
+-- @param data string containing full contents of the file.
 -- @return true if succeeded, nil in case of failure.
-local function zipwriter_write_file_in_zip(self, buf)
+local function zipwriter_write_file_in_zip(self, data)
    if not self.in_open_file then
       return nil
    end
    local lfh = self.local_file_header
-   local cbuf = zlib.compress(buf):sub(3, -5)
-   lfh.crc32 = zlib.crc32(lfh.crc32, buf)
-   lfh.compressed_size = lfh.compressed_size + #cbuf
-   lfh.uncompressed_size = lfh.uncompressed_size + #buf
-   table.insert(self.data, cbuf)
+   local compressed = zlib_compress(data):sub(3, -5)
+   lfh.crc32 = zlib_crc32(data)
+   lfh.compressed_size = #compressed
+   lfh.uncompressed_size = #data
+   self.data = compressed
    return true
 end
 
@@ -86,10 +104,8 @@ local function zipwriter_close_file_in_zip(self)
    zh:write(number_to_bytestring(lfh.extra_field_length, 2))
    zh:write(lfh.file_name)
 
-   -- File data   
-   for _, cbuf in ipairs(self.data) do
-      zh:write(cbuf)
-   end
+   -- File data
+   zh:write(self.data)
    
    -- Data descriptor
    zh:write(number_to_bytestring(lfh.crc32, 4))
@@ -117,12 +133,12 @@ local function zipwriter_add(self, file)
       end
    end
    if ok then
-      local buf = fin:read("*a")
-      if not buf then
+      local data = fin:read("*a")
+      if not data then
          err = "error reading "..file
          ok = false
       else
-         ok = self:write_file_in_zip(buf)
+         ok = self:write_file_in_zip(data)
          if not ok then
             err = "error in writing "..file.." in the zipfile"
          end
