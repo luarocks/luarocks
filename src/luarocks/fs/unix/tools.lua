@@ -351,4 +351,22 @@ function tools.set_time(file, time)
    return fs.execute(vars.TOUCH, "-d", "@"..tostring(time), file)
 end
 
+--- Create a temporary directory.
+-- @param name string: name pattern to use for avoiding conflicts
+-- when creating temporary directory.
+-- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
+function tools.make_temp_dir(name)
+   assert(type(name) == "string")
+   name = dir.normalize(name)
+
+   local template = (os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-XXXXXX"
+   local pipe = io.popen(vars.MKTEMP.." -d "..fs.Q(template))
+   local dirname = pipe:read("*l")
+   pipe:close()
+   if dirname and dirname:match("^/") then
+      return dirname
+   end
+   return nil, "Failed to create temporary directory "..tostring(dirname)
+end
+
 return tools

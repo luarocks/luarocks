@@ -10,6 +10,8 @@ local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 
+math.randomseed(os.time())
+
 -- Monkey patch io.popen and os.execute to make sure quoting
 -- works as expected.
 -- See http://lua-users.org/lists/lua-l/2013-11/msg00367.html
@@ -219,6 +221,23 @@ function win32.is_writable(file)
       if fh then fh:close() end
    end
    return result
+end
+
+--- Create a temporary directory.
+-- @param name string: name pattern to use for avoiding conflicts
+-- when creating temporary directory.
+-- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
+function win32.make_temp_dir(name)
+   assert(type(name) == "string")
+   name = dir.normalize(name)
+
+   local temp_dir = os.getenv("TMP") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-" .. tostring(math.floor(math.random() * 10000))
+   local ok, err = fs.make_dir(temp_dir)
+   if ok then
+      return temp_dir
+   else
+      return nil, err
+   end
 end
 
 function win32.tmpname()
