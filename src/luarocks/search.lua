@@ -244,11 +244,11 @@ function search.make_query(name, version)
    return query
 end
 
---- Get the URL for the latest in a set of versions.
+--- Get the URL and version for the latest in a set of versions.
 -- @param name string: The package name to be used in the URL.
 -- @param versions table: An array of version informations, as stored
 -- in search results tables.
--- @return string or nil: the URL for the latest version if one could
+-- @return (string, string) or nil: the URL and the version for the latest version if one could
 -- be picked, or nil.
 local function pick_latest_version(name, versions)
    assert(type(name) == "string")
@@ -269,14 +269,14 @@ local function pick_latest_version(name, versions)
             pick = i
          end
       end
-      return path.make_url(items[pick].repo, name, version, items[pick].arch)
+      return path.make_url(items[pick].repo, name, version, items[pick].arch), version
    end
    return nil
 end
 
 --- Attempt to get a single URL for a given search.
 -- @param query table: A dependency query.
--- @return string or table or (nil, string): URL for matching rock if
+-- @return (string, string) or table or (nil, string): URL and version for matching rock if
 -- a single one was found, a table of candidates if it could not narrow to
 -- a single result, or nil followed by an error message.
 function search.find_suitable_rock(query)

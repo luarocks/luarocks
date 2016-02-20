@@ -38,7 +38,7 @@ or a filename of a locally available rock.
 -- "order" for all trees with priority >= the current default, "none" for no trees.
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function install.install_binary_rock(rock_file, deps_mode)
+function install.install_binary_rock(rock_file, deps_mode, deps_install_mode)
    assert(type(rock_file) == "string")
 
    local name, version, arch = path.parse_name(rock_file)
@@ -80,7 +80,7 @@ function install.install_binary_rock(rock_file, deps_mode)
    end
 
    if deps_mode ~= "none" then
-      ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+      ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode, deps_install_mode)
       if err then return nil, err, errcode end
    end
 
@@ -119,7 +119,7 @@ end
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- the rock whose dependencies were installed if succeeded or nil and an error message 
 -- followed by an error code.
-function install.install_binary_rock_deps(rock_file, deps_mode)
+function install.install_binary_rock_deps(rock_file, deps_mode, install_mode)
    assert(type(rock_file) == "string")
 
    local name, version, arch = path.parse_name(rock_file)
@@ -139,13 +139,111 @@ function install.install_binary_rock_deps(rock_file, deps_mode)
       return nil, "Failed loading rockspec for installed package: "..err, errcode
    end
 
-   ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+   ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode, install_mode)
    if err then return nil, err, errcode end
 
    util.printout()
    util.printout("Succesfully installed dependencies for " ..name.." "..version)
 
    return name, version
+end
+
+--- Install a rock by url.
+-- @param url string: rock or rockspec url or path.
+-- @param options table (optional): table with command-line flags.
+-- Can also contain deps_install_mode applied to the rock dependencies (recursively):
+-- "install" to always reinstall, "upgrade" to upgrade to latest version, "satisfy" to only install if missing.
+-- @return true if successful, nil and error message otherwise.
+function install.install_by_url(url, options)
+   assert(type(url) == "string")
+   options = options or {}
+   assert(type(options) == "table")
+   local deps_mode = deps.get_deps_mode(options)
+   local name, version
+
+   if url:match("%.rockspec$") or url:match("%.src%.rock$") then
+      util.printout("Using "..url.."... switching to 'build' mode")
+      local build = require("luarocks.build")
+      local build_only_deps = options["only-deps"]
+
+      if url:match("%.rockspec$") then
+         name, version = build.build_rockspec(url, true, false, deps_mode, build_only_deps, options.deps_install_mode)
+      else
+         name, version = build.build_rock(url, false, deps_mode, build_only_deps, options.deps_install_mode)
+      end
+   elseif url:match("%.rock$") then
+      if options["only-deps"] then
+         name, version = install.install_binary_rock_deps(url, deps_mode, options.deps_install_mode)
+      else
+         name, version = install.install_binary_rock(url, deps_mode, options.deps_install_mode)
+      end
+   else
+      return nil, "Don't know what to do with "..url
+   end
+
+   if not name then
+      return nil, version
+   end
+
+   if (not options["only-deps"]) and (not options["keep"]) and not cfg.keep_other_versions then
+      local ok, err = remove.remove_other_versions(name, version, options["force"])
+      if not ok then util.printerr(err) end
+   end
+
+   return true
+end
+
+--- Install a rock by name.
+-- @param name string: name of the rock.
+-- @param options table (optional): table with command-line flags.
+-- Additionally may contain version and also install_mode (applied to the rock itself)
+-- and deps_install_mode (applied to the rock dependencies recursively):
+-- "install" to always reinstall, "upgrade" to upgrade to latest version, "satisfy" to only install if missing.
+-- @return true if successful, nil and error message otherwise.
+function install.install_by_name(name, options)
+   assert(type(name) == "string")
+   options = options or {}
+   assert(type(options) == "table")
+   local deps_mode = deps.get_deps_mode(options)
+   local install_mode = options.install_mode or "install"
+
+   local search = require("luarocks.search")
+   local dep = search.make_query(name:lower(), options.version)
+   local action = deps.diagnose_dependency(dep, deps_mode, install_mode)
+
+   if not action then
+      if install_mode == "satisfy" or options.version then
+         if options.version then
+            name = name.." "..options.version
+         end
+
+         util.printout(name.." already installed.")
+      else
+         util.printout("Latest possible version of "..name.." already installed.")
+      end
+
+      if deps_mode ~= "none" and options.deps_install_mode and options.deps_install_mode ~= "satisfy" then
+         return deps.process_rock_dependencies(dep, deps_mode, options.deps_install_mode)
+      end
+
+      return true
+   end
+
+   local results, err = search.find_suitable_rock(dep)
+
+   if not results then
+      return nil, err
+   elseif type(results) == "string" then
+      local url = results
+      util.printout("Installing "..url.."...")
+      return install.install_by_url(url, options)
+   else
+      util.printout()
+      util.printerr("Could not determine which rock to install.")
+      util.title("Search results:")
+      search.print_results(results)
+      return nil, next(results) and "Please narrow your query." or "No results found."
+   end
 end
 
 --- Driver function for the "install" command.
@@ -167,39 +265,11 @@ function install.run(...)
    local ok, err = fs.check_command_permissions(flags)
    if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
 
-   if name:match("%.rockspec$") or name:match("%.src%.rock$") then
-      util.printout("Using "..name.."... switching to 'build' mode")
-      local build = require("luarocks.build")
-      return build.run(name, util.forward_flags(flags, "local", "keep", "deps-mode", "only-deps"))
-   elseif name:match("%.rock$") then
-      if flags["only-deps"] then
-         ok, err = install.install_binary_rock_deps(name, deps.get_deps_mode(flags))
-      else
-         ok, err = install.install_binary_rock(name, deps.get_deps_mode(flags))
-      end
-      if not ok then return nil, err end
-      local name, version = ok, err
-      if (not flags["only-deps"]) and (not flags["keep"]) and not cfg.keep_other_versions then
-         local ok, err = remove.remove_other_versions(name, version, flags["force"])
-         if not ok then util.printerr(err) end
-      end
-      return name, version
+   if name:match("%.rockspec$") or name:match("%.rock$") then
+      return install.install_by_url(name, flags)
    else
-      local search = require("luarocks.search")
-      local results, err = search.find_suitable_rock(search.make_query(name:lower(), version))
-      if err then
-         return nil, err
-      elseif type(results) == "string" then
-         local url = results
-         util.printout("Installing "..url.."...")
-         return install.run(url, util.forward_flags(flags))
-      else
-         util.printout()
-         util.printerr("Could not determine which rock to install.")
-         util.title("Search results:")
-         search.print_results(results)
-         return nil, (next(results) and "Please narrow your query." or "No results found.")
-      end
+      flags.version = version
+      return install.install_by_name(name, flags)
    end
 end
 
