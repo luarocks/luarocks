@@ -247,12 +247,16 @@ end
 function deps.show_dep(dep, internal)
    assert(type(dep) == "table")
    assert(type(internal) == "boolean" or not internal)
-   
-   local pretty = {}
-   for _, c in ipairs(dep.constraints) do
-      table.insert(pretty, c.op .. " " .. deps.show_version(c.version, internal))
+
+   if #dep.constraints > 0 then
+      local pretty = {}
+      for _, c in ipairs(dep.constraints) do
+         table.insert(pretty, c.op .. " " .. deps.show_version(c.version, internal))
+      end
+      return dep.name.." "..table.concat(pretty, ", ")
+   else
+      return dep.name
    end
-   return dep.name.." "..table.concat(pretty, ", ")
 end
 
 --- A more lenient check for equivalence between versions.

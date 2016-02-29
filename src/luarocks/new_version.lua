@@ -1,9 +1,7 @@
 
 --- Module implementing the LuaRocks "new_version" command.
 -- Utility function that writes a new rockspec, updating data from a previous one.
---module("luarocks.new_version", package.seeall)
 local new_version = {}
-package.loaded["luarocks.new_version"] = new_version
 
 local util = require("luarocks.util")
 local download = require("luarocks.download")
@@ -13,7 +11,7 @@ local fs = require("luarocks.fs")
 local type_check = require("luarocks.type_check")
 
 new_version.help_summary = "Auto-write a rockspec for a new version of a rock."
-new_version.help_arguments = "{<package>|<rockspec>} [<new_version>] [<new_url>]"
+new_version.help_arguments = "[--tag=<tag>] {<package>|<rockspec>} [<new_version>] [<new_url>]"
 new_version.help = [[
 This is a utility function that writes a new rockspec, updating data
 from a previous one.
@@ -21,14 +19,19 @@ from a previous one.
 If a package name is given, it downloads the latest rockspec from the
 default server. If a rockspec is given, it uses it instead.
 
-If the version number is not given, it only increments the revision
-number of the given (or downloaded) rockspec.
+If the version number is not given and tag is passed using --tag,
+it is used as the version, with 'v' removed from beginning.
+Otherwise, it only increments the revision number of the given
+(or downloaded) rockspec.
 
 If a URL is given, it replaces the one from the old rockspec with the
 given URL. If a URL is not given and a new version is given, it tries
 to guess the new URL by replacing occurrences of the version number
 in the URL or tag. It also tries to download the new URL to determine
 the new MD5 checksum.
+
+If a tag is given, it replaces the one from the old rockspec. If there is
+an old tag but no new one passed, it is guessed in the same way URL is.
 
 WARNING: it writes the new rockspec to the current directory,
 overwriting the file if it already exists.
@@ -48,37 +51,53 @@ local function try_replace(tbl, field, old, new)
    return false
 end
 
-local function check_url_and_update_md5(out_rs, out_name)
-   local old_md5 = out_rs.source.md5
-   out_rs.source.md5 = nil
-   local file, temp_dir = fetch.fetch_url_at_temp_dir(out_rs.source.url, "luarocks-new-version-"..out_name)
+-- Try to download source file using URL from a rockspec.
+-- If it specified MD5, update it.
+-- @return (true, false) if MD5 was not specified or it stayed same,
+-- (true, true) if MD5 changed, (nil, string) on error.
+local function check_url_and_update_md5(out_rs)
+   local file, temp_dir = fetch.fetch_url_at_temp_dir(out_rs.source.url, "luarocks-new-version-"..out_rs.package)
    if not file then
       util.printerr("Warning: invalid URL - "..temp_dir)
-      return true
+      return true, false
    end
-   util.printout("File successfully downloaded. Updating MD5 checksum...")
-   out_rs.source.md5 = fs.get_md5(file)
+
    local inferred_dir, found_dir = fetch.find_base_dir(file, temp_dir, out_rs.source.url, out_rs.source.dir)
    if not inferred_dir then
       return nil, found_dir
    end
+
    if found_dir and found_dir ~= inferred_dir then
       out_rs.source.dir = found_dir
    end
-   return out_rs.source.md5 ~= old_md5
+
+   if file then
+      if out_rs.source.md5 then
+         util.printout("File successfully downloaded. Updating MD5 checksum...")
+         local new_md5, err = fs.get_md5(file)
+         if not new_md5 then
+            return nil, err
+         end
+         local old_md5 = out_rs.source.md5
+         out_rs.source.md5 = new_md5
+         return true, new_md5 ~= old_md5
+      else
+         util.printout("File successfully downloaded.")
+         return true, false
+      end
+   end
 end
  
-local function update_source_section(out_rs, out_name, url, old_ver, new_ver)
+local function update_source_section(out_rs, url, tag, old_ver, new_ver)
+   if tag then
+      out_rs.source.tag = tag
+   end
    if url then
       out_rs.source.url = url
-      check_url_and_update_md5(out_rs, out_name)
-      return true
+      return check_url_and_update_md5(out_rs)
    end
    if new_ver == old_ver then
       return true
-   end
-   if not out_rs.source then
-      return nil, "'source' table is missing. Invalid rockspec?"
    end
    if out_rs.source.dir then
       try_replace(out_rs.source, "dir", old_ver, new_ver)
@@ -86,20 +105,19 @@ local function update_source_section(out_rs, out_name, url, old_ver, new_ver)
    if out_rs.source.file then
       try_replace(out_rs.source, "file", old_ver, new_ver)
    end
-   local ok = try_replace(out_rs.source, "url", old_ver, new_ver)
-   if ok then
-      check_url_and_update_md5(out_rs, out_name)
+   if try_replace(out_rs.source, "url", old_ver, new_ver) then
+      return check_url_and_update_md5(out_rs)
+   end
+   if tag or try_replace(out_rs.source, "tag", old_ver, new_ver) then
       return true
    end
-   ok = try_replace(out_rs.source, "tag", old_ver, new_ver)
+   -- Couldn't replace anything significant, use the old URL.
+   local ok, md5_changed = check_url_and_update_md5(out_rs)
    if not ok then
-      ok = check_url_and_update_md5(out_rs, out_name)
-      if ok then
-         util.printerr("Warning: URL is the same, but MD5 has changed. Old rockspec is broken.")
-      end
+      return nil, md5_changed
    end
-   if not ok then
-      return nil, "Failed to determine the location of the new version."
+   if md5_changed then
+      util.printerr("Warning: URL is the same, but MD5 has changed. Old rockspec is broken.")
    end
    return true
 end
@@ -107,7 +125,7 @@ end
 function new_version.run(...)
    local flags, input, version, url = util.parse_flags(...)
    if not input then
-      return nil, "Missing arguments: expected program or rockspec. "..util.see_help("new_version")
+      return nil, "Missing argument: expected package or rockspec. "..util.see_help("new_version")
    end
    assert(type(input) == "string")
    
@@ -127,6 +145,10 @@ function new_version.run(...)
 
    local old_ver, old_rev = valid_rs.version:match("(.*)%-(%d+)$")
    local new_ver, new_rev
+
+   if flags.tag and not version then
+      version = flags.tag:gsub("^v", "")
+   end
    
    if version then
       new_ver, new_rev = version:match("(.*)%-(%d+)$")
@@ -145,7 +167,7 @@ function new_version.run(...)
    local out_name = out_rs.package:lower()
    out_rs.version = new_rockver.."-"..new_rev
 
-   local ok, err = update_source_section(out_rs, out_name, url, old_ver, new_ver)
+   local ok, err = update_source_section(out_rs, url, flags.tag, old_ver, new_ver)
    if not ok then return nil, err end
 
    if out_rs.build and out_rs.build.type == "module" then
