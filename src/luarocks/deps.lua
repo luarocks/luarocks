@@ -488,7 +488,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
             if not rock then
                return nil, "Could not satisfy dependency: "..deps.show_dep(dep)
             end
-            local ok, err, errcode = install.run(rock)
+            local ok, err, errcode = install.run(rock, deps.deps_mode_to_flag(deps_mode))
             if not ok then
                return nil, "Failed installing dependency: "..rock.." - "..err, errcode
             end
