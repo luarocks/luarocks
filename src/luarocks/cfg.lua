@@ -120,6 +120,9 @@ elseif system and system:match("^MINGW") then
    cfg.platforms.windows = true
    cfg.platforms.mingw32 = true
    cfg.platforms.win32 = true
+elseif system and system:match("^MXE") then
+   cfg.platforms.unix = true
+   cfg.platforms.mxe = true
 else
    cfg.platforms.unix = true
    -- Fall back to Unix in unknown systems.
@@ -137,6 +140,7 @@ local platform_order = {
    linux = 7,
    macosx = 8,
    cygwin = 9,
+   mxe = 13,
    -- Windows
    win32 = 10,
    mingw32 = 11,
@@ -507,6 +511,44 @@ if cfg.platforms.unix then
       defaults.variables.CFLAGS = defaults.variables.CFLAGS.." -fPIC"
    end
    defaults.web_browser = "xdg-open"
+end
+
+if cfg.platforms.mxe then
+   local MXE_ROOT, MXE_TARGET =
+      assert(site_config.LUAROCKS_PREFIX:match('^(.*)/usr/([^/]+)$'))
+   defaults.lib_extension = "dll"
+   defaults.external_lib_extension = "dll"
+   defaults.obj_extension = "obj"
+   defaults.external_deps_dirs = { site_config.LUAROCKS_PREFIX }
+   defaults.arch = "mxe-" .. MXE_TARGET
+   defaults.platforms = {"unix", "mxe"}
+   -- LUA_INCDIR and LUA_LIBDIR are defined in site_config.lua
+   defaults.variables.LUA_BINDIR = site_config.LUAROCKS_PREFIX .. "/bin"
+   defaults.cmake_generator = "Unix Makefiles"
+   defaults.variables.MAKE = os.getenv("MAKE")
+   defaults.variables.CMAKE = MXE_ROOT .. "/usr/bin/" .. MXE_TARGET .. "-cmake"
+   defaults.variables.CC = MXE_ROOT .. "/usr/bin/" .. MXE_TARGET .. "-gcc"
+   defaults.variables.LD = defaults.variables.CC
+   defaults.variables.CFLAGS = "-O2"
+   defaults.variables.LIBFLAG = "-shared"
+   defaults.variables.LUALIB = "liblua.dll.a"
+
+   defaults.export_path = "SET PATH=%s"
+   defaults.export_path_separator = ";"
+   defaults.export_lua_path = "SET LUA_PATH=%s"
+   defaults.export_lua_cpath = "SET LUA_CPATH=%s"
+   defaults.wrapper_suffix = ".bat"
+
+   defaults.external_deps_patterns = {
+      bin = { "?.exe", "?.bat" },
+      lib = { "?.dll.a", "lib?.dll.a" },
+      include = { "?.h" }
+   }
+   defaults.runtime_external_deps_patterns = {
+      bin = { "?.exe", "?.bat" },
+      lib = { "?.dll", "lib?.dll" },
+      include = { "?.h" }
+   }
 end
 
 if cfg.platforms.cygwin then
