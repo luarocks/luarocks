@@ -120,6 +120,9 @@ elseif system and system:match("^MINGW") then
    cfg.platforms.windows = true
    cfg.platforms.mingw32 = true
    cfg.platforms.win32 = true
+elseif system == "Haiku" then
+   cfg.platforms.unix = true
+   cfg.platforms.haiku = true
 else
    cfg.platforms.unix = true
    -- Fall back to Unix in unknown systems.
@@ -137,11 +140,11 @@ local platform_order = {
    linux = 7,
    macosx = 8,
    cygwin = 9,
+   haiku = 10,
    -- Windows
-   win32 = 10,
-   mingw32 = 11,
-   windows = 12 }
-
+   win32 = 11,
+   mingw32 = 12,
+   windows = 13 }
 
 -- Path configuration:
 local sys_config_file, home_config_file
