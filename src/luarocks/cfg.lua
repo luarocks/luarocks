@@ -113,6 +113,10 @@ elseif system == "SunOS" then
 elseif system and system:match("^CYGWIN") then
    cfg.platforms.unix = true
    cfg.platforms.cygwin = true
+elseif system and system:match("^MSYS") then
+   cfg.platforms.unix = true
+   cfg.platforms.msys = true
+   cfg.platforms.cygwin = true
 elseif system and system:match("^Windows") then
    cfg.platforms.windows = true
    cfg.platforms.win32 = true
@@ -137,10 +141,11 @@ local platform_order = {
    linux = 7,
    macosx = 8,
    cygwin = 9,
+   msys = 10,
    -- Windows
-   win32 = 10,
-   mingw32 = 11,
-   windows = 12 }
+   win32 = 11,
+   mingw32 = 12,
+   windows = 13 }
 
 
 -- Path configuration:
@@ -517,6 +522,23 @@ if cfg.platforms.cygwin then
    defaults.variables.LD = "echo -llua | xargs gcc"
    defaults.variables.LIBFLAG = "-shared"
 end
+
+if cfg.platforms.msys then
+   -- msys is basically cygwin made out of mingw, meaning the subsytem is unixish
+   -- enough, yet we can freely mix with native win32
+   defaults.external_deps_patterns = {
+      bin = { "?.exe", "?.bat", "?" },
+      lib = { "lib?.so", "lib?.so.*", "lib?.dll.a", "?.dll.a",
+              "lib?.a", "lib?.dll", "?.dll", "?.lib" },
+      include = { "?.h" }
+   }
+   defaults.runtime_external_deps_patterns = {
+      bin = { "?.exe", "?.bat" },
+      lib = { "lib?.so", "?.dll", "lib?.dll" },
+      include = { "?.h" }
+   }
+end
+
 
 if cfg.platforms.bsd then
    defaults.variables.MAKE = "gmake"
