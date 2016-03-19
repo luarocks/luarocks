@@ -341,6 +341,7 @@ fail_arg_string_followed_by_flag() { $luarocks --server --porcelain; }
 fail_arg_string_unknown() { $luarocks --invalid-flag=abc; }
 
 test_empty_list() { $luarocks list; }
+test_list_outdated() { $luarocks list --outdated; }
 
 fail_sysconfig_err() { local err=0; local scdir="$testing_lrprefix/etc/luarocks/"; mkdir -p "$scdir"; local sysconfig="$scdir/config.lua"; echo "aoeui" > "$sysconfig"; echo $sysconfig; $luarocks list; err=$?; rm "$sysconfig"; return "$err"; }
 fail_sysconfig_default_err() { local err=0; local scdir="$testing_lrprefix/etc/luarocks/"; mkdir -p "$scdir"; local sysconfig="$scdir/config-$luashortversion.lua"; echo "aoeui" > "$sysconfig"; echo $sysconfig; $luarocks list; err=$?; rm "$sysconfig"; return "$err"; }
@@ -524,6 +525,8 @@ EOF
 }
 
 test_doc() { $luarocks install luarepl; $luarocks doc luarepl; }
+test_doc_home() { $luarocks install luacov; $luarocks doc luacov --home; }
+fail_doc_invalid() { $luarocks doc invalid; }
 
 # Driver #########################################
 
