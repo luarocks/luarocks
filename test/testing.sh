@@ -450,6 +450,9 @@ fail_remove_invalid_name() { $luarocks remove invalid.rock; }
 
 test_search_found() { $luarocks search zlib; }
 test_search_missing() { $luarocks search missing_rock; }
+test_search_version() { $luarocks search zlib 1.1; }
+test_search_all() { $luarocks search --all; }
+fail_search_nostring() { $var=123; $luarocks search $var; }
 
 test_show() { $luarocks show luacov; }
 test_show_modules() { $luarocks show --modules luacov; }
