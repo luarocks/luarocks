@@ -278,28 +278,26 @@ local function pick_latest_version(name, versions)
    return nil
 end
 
---- Attempt to get a single URL for a given search.
--- @param query table: A dependency query.
--- @return string or table or (nil, string): URL for matching rock if
--- a single one was found, a table of candidates if it could not narrow to
--- a single result, or nil followed by an error message.
+--- Attempt to get a single URL for a given search for a rock.
+-- @param query table: A dependency query matching a single rock.
+-- @return string or (nil, string): URL for latest matching version
+-- of the rock if it was found, or nil followed by an error message.
 function search.find_suitable_rock(query)
    assert(type(query) == "table")
    
    local results = search.search_repos(query)
-   local first = next(results)
-   if not first then
+   local first_rock = next(results)
+   if not first_rock then
       return nil, "No results matching query were found."
-   elseif not next(results, first) then
-      if cfg.rocks_provided[query.name] ~= nil then
-         -- do not install versions that listed in cfg.rocks_provided
-         return nil, "Rock "..query.name..
-                     " "..cfg.rocks_provided[query.name]..
-                     " was found but it is provided by VM or 'rocks_provided' in the config file."
-      end
-      return pick_latest_version(query.name, results[first])
+   elseif next(results, first_rock) then
+      -- Shouldn't happen as query must match only one package.
+      return nil, "Several rocks matched query."
+   elseif cfg.rocks_provided[query.name] ~= nil then
+      -- Do not install versions listed in cfg.rocks_provided.
+      return nil, "Rock "..query.name.." "..cfg.rocks_provided[query.name]..
+         " was found but it is provided by VM or 'rocks_provided' in the config file."
    else
-      return results
+      return pick_latest_version(query.name, results[first_rock])
    end
 end
 
@@ -369,12 +367,11 @@ function search.act_on_src_or_rockspec(action, name, version, ...)
 
    local query = search.make_query(name, version)
    query.arch = "src|rockspec"
-   local results, err = search.find_suitable_rock(query)
-   if type(results) == "string" then
-      return action(results, ...)
-   else
+   local url, err = search.find_suitable_rock(query)
+   if not url then
       return nil, "Could not find a result named "..name..(version and " "..version or "").."."
    end
+   return action(url, ...)
 end
 
 --- Driver function for "search" command.
