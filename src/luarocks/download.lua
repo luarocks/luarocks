@@ -43,15 +43,17 @@ function download.download(arch, name, version, all)
    if all then
       if name == "" then query.exact_name = false end
       local results = search.search_repos(query)
-
-      if next(results) then
-         local all_ok = true
-         local any_err = ""
-         for name, result in pairs(results) do
-            for version, items in pairs(result) do
-               for _, item in ipairs(items) do
-                  local url = path.make_url(item.repo, name, version, item.arch)
-                  local ok, err = get_file(url)
+      local has_result = false
+      local all_ok = true
+      local any_err = ""
+      for name, result in pairs(results) do
+         for version, items in pairs(result) do
+            for _, item in ipairs(items) do
+               -- Ignore provided rocks.
+               if item.arch ~= "installed" then
+                  has_result = true
+                  local filename = path.make_url(item.repo, name, version, item.arch)
+                  local ok, err = get_file(filename)
                   if not ok then
                      all_ok = false
                      any_err = any_err .. "\n" .. err
@@ -59,6 +61,9 @@ function download.download(arch, name, version, all)
                end
             end
          end
+      end
+
+      if has_result then
          return all_ok, any_err
       end
    else
