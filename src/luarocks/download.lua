@@ -37,26 +37,21 @@ local function get_file(filename)
 end
 
 function download.download(arch, name, version, all)
-   local results, err
    local query = search.make_query(name, version)
    if arch then query.arch = arch end
+
    if all then
       if name == "" then query.exact_name = false end
-      results = search.search_repos(query)
-   else
-      results, err = search.find_suitable_rock(query)
-   end
-   if type(results) == "string" then
-      return get_file(results)
-   elseif type(results) == "table" and next(results) then
-      if all then
+      local results = search.search_repos(query)
+
+      if next(results) then
          local all_ok = true
          local any_err = ""
          for name, result in pairs(results) do
-            for version, versions in pairs(result) do
-               for _,items in pairs(versions) do
-                  local filename = path.make_url(items.repo, name, version, items.arch)
-                  local ok, err = get_file(filename)
+            for version, items in pairs(result) do
+               for _, item in ipairs(items) do
+                  local url = path.make_url(item.repo, name, version, item.arch)
+                  local ok, err = get_file(url)
                   if not ok then
                      all_ok = false
                      any_err = any_err .. "\n" .. err
@@ -65,11 +60,11 @@ function download.download(arch, name, version, all)
             end
          end
          return all_ok, any_err
-      else
-         util.printerr("Multiple search results were returned.")
-         util.title("Search results:")
-         search.print_results(results)
-         return nil, "Please narrow your query or use --all."
+      end
+   else
+      local url = search.find_suitable_rock(query)
+      if url then
+         return get_file(url)
       end
    end
    return nil, "Could not find a result named "..name..(version and " "..version or "").."."
