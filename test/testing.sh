@@ -376,6 +376,8 @@ fail_build_permissions() { $luarocks build --tree=/usr lpeg; }
 fail_build_permissions_parent() { $luarocks build --tree=/usr/invalid lpeg; }
 
 test_build_verbose() { $luarocks build --verbose lpeg; }
+test_build_timeout() { $luarocks --timeout=10; }
+fail_build_timeout() { $luarocks --timeout=abc; }
 fail_build_blank_arg() { $luarocks build --tree="" lpeg; }
 test_build_withpatch() { need_luasocket; $luarocks build luadoc; }
 test_build_diffversion() { $luarocks build luacov ${version_luacov}; }
