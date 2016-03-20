@@ -450,6 +450,9 @@ fail_remove_invalid_name() { $luarocks remove invalid.rock; }
 
 test_search_found() { $luarocks search zlib; }
 test_search_missing() { $luarocks search missing_rock; }
+test_search_version() { $luarocks search zlib 1.1; }
+test_search_all() { $luarocks search --all; }
+fail_search_nostring() { $var=123; $luarocks search $var; }
 
 test_show() { $luarocks show luacov; }
 test_show_modules() { $luarocks show --modules luacov; }
@@ -478,6 +481,7 @@ fail_admin_invalidrock() { $luarocks_admin --server=testing add invalid; }
 test_admin_refresh_cache() { $luarocks_admin --server=testing refresh_cache; }
 test_admin_remove() { $luarocks_admin --server=testing remove luasocket-${verrev_luasocket}.src.rock; }
 fail_admin_remove_missing() { $luarocks_admin --server=testing remove; }
+fail_admin_split_server_url() { $luarocks_admin --server="localhost@/tmp/luarocks_testing" add "$testing_server/luasocket-${verrev_luasocket}.src.rock"; }
 
 fail_deps_mode_invalid_arg() { $luarocks remove luacov --deps-mode; }
 test_deps_mode_one() { $luarocks build --tree="system" lpeg && $luarocks list && $luarocks build --deps-mode=one --tree="$testing_tree" lxsh && [ `$luarocks_noecho list --tree="$testing_tree" --porcelain lpeg | wc -l` = 1 ]; }
