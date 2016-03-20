@@ -369,7 +369,7 @@ function search.act_on_src_or_rockspec(action, name, version, ...)
    query.arch = "src|rockspec"
    local url, err = search.find_suitable_rock(query)
    if not url then
-      return nil, "Could not find a result named "..name..(version and " "..version or "").."."
+      return nil, "Could not find a result named "..name..(version and " "..version or "")..": "..err
    end
    return action(url, ...)
 end
