@@ -86,6 +86,7 @@ local tests = {
    fail_arg_string_followed_by_flag = function() return run "$luarocks --server --porcelain" end,
    fail_arg_string_unknown = function() return run "$luarocks --invalid-flag=abc" end,
    test_empty_list = function() return run "$luarocks list" end,
+   test_list_outdated = function () return run "$luarocks list --outdated" end,
    fail_sysconfig_err = function()
       mkdir "$testing_lrprefix/etc/luarocks"
       file_set_contents("$testing_lrprefix/etc/luarocks/config.lua", "aoeui")
@@ -441,6 +442,11 @@ local tests = {
       return run "$luarocks install luarepl"
          and run "$luarocks doc luarepl"
    end,
+   test_doc_home = function()
+      return run "$luarocks install luacov"
+         and run "$luarocks doc luacov --home"
+   end,
+   fail_doc_invalid = function () return run "$luarocks doc invalid" end,
 
    -- Tests for https://github.com/keplerproject/luarocks/issues/375
    test_fetch_base_dir = function()
