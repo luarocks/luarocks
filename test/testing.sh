@@ -377,7 +377,11 @@ fail_build_permissions_parent() { $luarocks build --tree=/usr/invalid lpeg; }
 
 test_build_verbose() { $luarocks build --verbose lpeg; }
 test_build_timeout() { $luarocks --timeout=10; }
-fail_build_timeout() { $luarocks --timeout=abc; }
+fail_build_timeout_invalid() { $luarocks --timeout=abc; }
+test_build_branch() { $luarocks build --branch=master lpeg; }
+fail_build_invalid_entry_deps_mode() { $luarocks build --deps-mode=123 lpeg; }
+test_build_only_server() { $luarocks --only-server=testing; }
+test_build_only_sources() { $luarocks build --only-sources="http://example.com" lpeg; }
 fail_build_blank_arg() { $luarocks build --tree="" lpeg; }
 test_build_withpatch() { need_luasocket; $luarocks build luadoc; }
 test_build_diffversion() { $luarocks build luacov ${version_luacov}; }
