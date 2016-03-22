@@ -90,6 +90,16 @@ function show.pick_installed_rock(name, version, tree)
    return name, version, repo, repo_url
 end
 
+local function installed_rock_label(name, tree)
+   local installed, version
+   if cfg.rocks_provided[name] then
+      installed, version = true, cfg.rocks_provided[name]
+   else
+      installed, version = show.pick_installed_rock(name, nil, tree)
+   end
+   return installed and "(using "..version..")" or "(missing)"
+end
+
 --- Driver function for "show" command.
 -- @param name or nil: an existing package name.
 -- @param version string or nil: a version may also be passed.
@@ -145,10 +155,26 @@ function show.run(...)
             util.printout("\t"..mod.." ("..path.which(mod, filename, name, version, repo, manifest)..")")
          end
       end
-      if next(minfo.dependencies) then
+      local direct_deps = {}
+      if #rockspec.dependencies > 0 then
          util.printout()
          util.printout("Depends on:")
-         util.printout("\t"..keys_as_string(minfo.dependencies, "\n\t"))
+         for _, dep in ipairs(rockspec.dependencies) do
+            direct_deps[dep.name] = true
+            util.printout("\t"..deps.show_dep(dep).." "..installed_rock_label(dep.name, flags["tree"]))
+         end
+      end
+      local has_indirect_deps
+      for dep_name in util.sortedpairs(minfo.dependencies) do
+         if not direct_deps[dep_name] then
+            if not has_indirect_deps then
+               util.printout()
+               util.printout("Indirectly pulling:")
+               has_indirect_deps = true
+            end
+
+            util.printout("\t"..dep_name.." "..installed_rock_label(dep_name, flags["tree"]))
+         end
       end
       util.printout()
    end
