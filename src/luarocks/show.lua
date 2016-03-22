@@ -28,7 +28,9 @@ With these flags, return only the desired information:
 ]]
 
 local function keys_as_string(t, sep)
-    return table.concat(util.keys(t), sep or " ")
+   local keys = util.keys(t)
+   table.sort(keys)
+   return table.concat(keys, sep or " ")
 end
 
 local function word_wrap(line) 
