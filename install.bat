@@ -427,7 +427,7 @@ end
 -- get a string value from windows registry.
 local function get_registry(key, value)
 	local keys = {key}
-	local key64, replaced = key:gsub("(%u+\\Software\\)", "\1Wow6432Node\\", 1)
+	local key64, replaced = key:gsub("(%u+\\Software\\)", "%1Wow6432Node\\", 1)
 
 	if replaced == 1 then
 		keys = {key64, key}
