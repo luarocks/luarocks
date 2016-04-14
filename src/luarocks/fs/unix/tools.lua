@@ -295,9 +295,9 @@ function tools.unpack_archive(archive)
 
    local ok
    if archive:match("%.tar%.gz$") or archive:match("%.tgz$") then
-         ok = fs.execute_string(vars.GUNZIP.." -c "..archive.."|"..vars.TAR.." -xf -")
+      ok = fs.execute_string(vars.GUNZIP.." -c "..fs.Q(archive).." | "..vars.TAR.." -xf -")
    elseif archive:match("%.tar%.bz2$") then
-         ok = fs.execute_string(vars.BUNZIP2.." -c "..archive.."|tar -xf -")
+      ok = fs.execute_string(vars.BUNZIP2.." -c "..fs.Q(archive).." | "..vars.TAR.." -xf -")
    elseif archive:match("%.zip$") then
       ok = fs.execute(vars.UNZIP, archive)
    elseif archive:match("%.lua$") or archive:match("%.c$") then
