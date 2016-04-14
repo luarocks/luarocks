@@ -293,13 +293,19 @@ end
 function tools.unpack_archive(archive)
    assert(type(archive) == "string")
 
+   local pipe_to_tar = " | "..vars.TAR.." -xf -"
+
+   if not cfg.verbose then
+      pipe_to_tar = " 2> /dev/null"..fs.quiet(pipe_to_tar)
+   end
+
    local ok
    if archive:match("%.tar%.gz$") or archive:match("%.tgz$") then
-      ok = fs.execute_string(vars.GUNZIP.." -c "..fs.Q(archive).." | "..vars.TAR.." -xf -")
+      ok = fs.execute_string(vars.GUNZIP.." -c "..fs.Q(archive)..pipe_to_tar)
    elseif archive:match("%.tar%.bz2$") then
-      ok = fs.execute_string(vars.BUNZIP2.." -c "..fs.Q(archive).." | "..vars.TAR.." -xf -")
+      ok = fs.execute_string(vars.BUNZIP2.." -c "..fs.Q(archive)..pipe_to_tar)
    elseif archive:match("%.zip$") then
-      ok = fs.execute(vars.UNZIP, archive)
+      ok = fs.execute_quiet(vars.UNZIP, archive)
    elseif archive:match("%.lua$") or archive:match("%.c$") then
       -- Ignore .lua and .c files; they don't need to be extracted.
       return true
