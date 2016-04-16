@@ -342,44 +342,45 @@ end
 local is_src_extension = { [".lua"] = true, [".tl"] = true, [".tld"] = true, [".moon"] = true }
 
 --- Return the pathname of the file that would be loaded for a module, indexed.
--- @param module_name string: module name (eg. "socket.core")
+-- @param file_name string: module file name as in manifest (eg. "socket/core.so")
 -- @param name string: name of the package (eg. "luasocket")
 -- @param version string: version number (eg. "2.0.2-1")
 -- @param tree string: repository path (eg. "/usr/local")
 -- @param i number: the index, 1 if version is the current default, > 1 otherwise.
 -- This is done this way for use by select_module in luarocks.loader.
 -- @return string: filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so")
-function path.which_i(module_name, name, version, tree, i)
+function path.which_i(file_name, name, version, tree, i)
    local deploy_dir
-   local extension = module_name:match("%.[a-z]+$")
+   local extension = file_name:match("%.[a-z]+$")
    if is_src_extension[extension] then
       deploy_dir = path.deploy_lua_dir(tree)
-      module_name = dir.path(deploy_dir, module_name)
+      file_name = dir.path(deploy_dir, file_name)
    else
       deploy_dir = path.deploy_lib_dir(tree)
-      module_name = dir.path(deploy_dir, module_name)
+      file_name = dir.path(deploy_dir, file_name)
    end
    if i > 1 then
-      module_name = path.versioned_name(module_name, deploy_dir, name, version)
+      file_name = path.versioned_name(file_name, deploy_dir, name, version)
    end
-   return module_name
+   return file_name
 end
 
 --- Return the pathname of the file that would be loaded for a module, 
 -- returning the versioned pathname if given version is not the default version
 -- in the given manifest.
 -- @param module_name string: module name (eg. "socket.core")
+-- @param file_name string: module file name as in manifest (eg. "socket/core.so")
 -- @param name string: name of the package (eg. "luasocket")
 -- @param version string: version number (eg. "2.0.2-1")
 -- @param tree string: repository path (eg. "/usr/local")
 -- @param manifest table: the manifest table for the tree.
 -- @return string: filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so")
-function path.which(module_name, filename, name, version, tree, manifest)
+function path.which(module_name, file_name, name, version, tree, manifest)
    local versions = manifest.modules[module_name]
    assert(versions)
    for i, name_version in ipairs(versions) do
       if name_version == name.."/"..version then
-         return path.which_i(filename, name, version, tree, i):gsub("//", "/")
+         return path.which_i(file_name, name, version, tree, i):gsub("//", "/")
       end
    end
    assert(false)

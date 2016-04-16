@@ -256,12 +256,16 @@ end
 function deps.show_dep(dep, internal)
    assert(type(dep) == "table")
    assert(type(internal) == "boolean" or not internal)
-   
-   local pretty = {}
-   for _, c in ipairs(dep.constraints) do
-      table.insert(pretty, c.op .. " " .. deps.show_version(c.version, internal))
+
+   if #dep.constraints > 0 then
+      local pretty = {}
+      for _, c in ipairs(dep.constraints) do
+         table.insert(pretty, c.op .. " " .. deps.show_version(c.version, internal))
+      end
+      return dep.name.." "..table.concat(pretty, ", ")
+   else
+      return dep.name
    end
-   return dep.name.." "..table.concat(pretty, ", ")
 end
 
 --- A more lenient check for equivalence between versions.
@@ -493,13 +497,13 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
       for _, dep in pairs(missing) do
          -- Double-check in case dependency was filled during recursion.
          if not match_dep(dep, nil, deps_mode, rockspec.rocks_provided) then
-            local rock = search.find_suitable_rock(dep)
-            if not rock then
+            local url, err = search.find_suitable_rock(dep)
+            if not url then
                return nil, "Could not satisfy dependency: "..deps.show_dep(dep)
             end
-            local ok, err, errcode = install.run(rock)
+            local ok, err, errcode = install.run(url, deps.deps_mode_to_flag(deps_mode))
             if not ok then
-               return nil, "Failed installing dependency: "..rock.." - "..err, errcode
+               return nil, "Failed installing dependency: "..url.." - "..err, errcode
             end
          end
       end

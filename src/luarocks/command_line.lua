@@ -144,7 +144,6 @@ function command_line.run_command(...)
          end
       end
       if not named then
-         local fs = require("luarocks.fs")
          local root_dir = fs.absolute_name(flags["tree"])
          replace_tree(flags, args, root_dir)
       end

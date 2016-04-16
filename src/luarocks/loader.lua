@@ -6,8 +6,8 @@
 -- used to load previous modules, so that the loader chooses versions
 -- that are declared to be compatible with the ones loaded earlier.
 local loaders = package.loaders or package.searchers
-local package, require, ipairs, pairs, table, type, next, tostring, error =
-      package, require, ipairs, pairs, table, type, next, tostring, error
+local package, require, ipairs, table, type, next, tostring, error =
+      package, require, ipairs, table, type, next, tostring, error
 local unpack = unpack or table.unpack
 
 --module("luarocks.loader")
@@ -20,6 +20,7 @@ cfg.init_package_paths()
 local path = require("luarocks.path")
 local manif_core = require("luarocks.manif_core")
 local deps = require("luarocks.deps")
+local util = require("luarocks.util")
 
 loader.context = {}
 
@@ -79,7 +80,7 @@ function loader.add_context(name, version)
          for _, tree in ipairs(loader.rocks_trees) do
             local entries = tree.manifest.repository[pkg]
             if entries then
-               for version, pkgs in pairs(entries) do
+               for version, pkgs in util.sortedpairs(entries, deps.compare_versions) do
                   if (not constraints) or deps.match_constraints(deps.parse_version(version), constraints) then
                      loader.add_context(pkg, version)
                   end
@@ -125,17 +126,17 @@ end
 
 --- Search for a module in the rocks trees
 -- @param module string: module name (eg. "socket.core")
--- @param filter_module_name function(string, string, string, string, number):
--- a function that takes the module name (eg "socket.core"), the rock name
+-- @param filter_file_name function(string, string, string, string, number):
+-- a function that takes the module file name (eg "socket/core.so"), the rock name
 -- (eg "luasocket"), the version (eg "2.0.2-1"), the path of the rocks tree
 -- (eg "/usr/local"), and the numeric index of the matching entry, so the
 -- filter function can know if the matching module was the first entry or not.
 -- @return string, string, string, (string or table):
 -- * name of the rock containing the module (eg. "luasocket")
 -- * version of the rock (eg. "2.0.2-1")
--- * name of the module (eg. "socket.core", or "socket.core_2_0_2" if file is stored versioned).
+-- * return value of filter_file_name
 -- * tree of the module (string or table in `rocks_trees` format)
-local function select_module(module, filter_module_name)
+local function select_module(module, filter_file_name)
    --assert(type(module) == "string")
    --assert(type(filter_module_name) == "function")
 
@@ -149,16 +150,16 @@ local function select_module(module, filter_module_name)
       if entries then
          for i, entry in ipairs(entries) do
             local name, version = entry:match("^([^/]*)/(.*)$")
-            local module_name = tree.manifest.repository[name][version][1].modules[module]
-            if type(module_name) ~= "string" then
+            local file_name = tree.manifest.repository[name][version][1].modules[module]
+            if type(file_name) ~= "string" then
                error("Invalid data in manifest file for module "..tostring(module).." (invalid data for "..tostring(name).." "..tostring(version)..")")
             end
-            module_name = filter_module_name(module_name, name, version, tree.tree, i)
+            file_name = filter_file_name(file_name, name, version, tree.tree, i)
             if loader.context[name] == version then
-               return name, version, module_name
+               return name, version, file_name
             end
             version = deps.parse_version(version)
-            table.insert(providers, {name = name, version = version, module_name = module_name, tree = tree})
+            table.insert(providers, {name = name, version = version, module_name = file_name, tree = tree})
          end
       end
    end
@@ -179,12 +180,11 @@ end
 -- * tree of the module (string or table in `rocks_trees` format)
 local function pick_module(module)
    return
-      select_module(module, function(module_name, name, version, tree, i)
+      select_module(module, function(file_name, name, version, tree, i)
          if i > 1 then
-            module_name = path.versioned_name(module_name, "", name, version)
+            file_name = path.versioned_name(file_name, "", name, version)
          end
-         module_name = path.path_to_module(module_name)
-         return module_name
+         return path.path_to_module(file_name)
       end)
 end
 
@@ -192,8 +192,8 @@ end
 -- @param module string: module name (eg. "socket.core")
 -- @return string: filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so")
 function loader.which(module)
-   local name, version, module_name = select_module(module, path.which_i)
-   return module_name
+   local _, _, file_name = select_module(module, path.which_i)
+   return file_name
 end
 
 --- Package loader for LuaRocks support.

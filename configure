@@ -101,7 +101,7 @@ find_helper() {
       fi
       shift
    done
-   echo "Could not find a $explanation. Tried: $tried."
+   echo "Could not find $explanation. Tried: $tried."
    die "Make sure one of them is installed and available in your PATH."
 }
 
@@ -362,15 +362,17 @@ fi
 
 if [ "$LUAROCKS_DOWNLOADER_SET" != "yes" ]
 then
-   find_helper "downloader helper program" curl wget fetch
+   find_helper "a downloader helper program" curl wget fetch
    LUAROCKS_DOWNLOADER=$HELPER
 fi
 
 if [ "$LUAROCKS_MD5CHECKER_SET" != "yes" ]
 then
-   find_helper "MD5 checksum calculator" md5sum openssl md5
+   find_helper "a MD5 checksum calculator" md5sum openssl md5
    LUAROCKS_MD5CHECKER=$HELPER
 fi
+
+find_helper "an 'unzip' program" unzip
 
 echo_n "Configuring for system... "
 if uname -s

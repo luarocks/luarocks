@@ -728,6 +728,14 @@ end
 
 if md5_ok then
 
+-- Support the interface of lmd5 by lhf in addition to md5 by Roberto
+-- and the keplerproject.
+if not md5.sumhexa and md5.digest then
+   md5.sumhexa = function(msg)
+      return md5.digest(msg)
+   end
+end
+
 --- Get the MD5 checksum for a file.
 -- @param file string: The file to be computed.
 -- @return string: The MD5 checksum or nil + error

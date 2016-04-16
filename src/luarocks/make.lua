@@ -9,6 +9,8 @@ package.loaded["luarocks.make"] = make
 
 local build = require("luarocks.build")
 local fs = require("luarocks.fs")
+local dir = require("luarocks.dir")
+local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 local fetch = require("luarocks.fetch")
@@ -22,8 +24,11 @@ make.help = [[
 Builds sources in the current directory, but unlike "build",
 it does not fetch sources, etc., assuming everything is 
 available in the current directory. If no argument is given,
-look for a rockspec in the current directory. If more than one
-is found, you must specify which to use, through the command-line.
+it looks for a rockspec in the current directory and in "rockspec/"
+and "rockspecs/" subdirectories, picking the rockspec with newest version
+or without version name. If rockspecs for different rocks are found
+or there are several rockspecs without version, you must specify which to use,
+through the command-line.
 
 This command is useful as a tool for debugging rockspecs. 
 To install rocks, you'll normally want to use the "install" and
@@ -44,6 +49,33 @@ To install rocks, you'll normally want to use the "install" and
 
 ]]
 
+--- Collect rockspecs located in a subdirectory.
+-- @param versions table: A table mapping rock names to newest rockspec versions.
+-- @param paths table: A table mapping rock names to newest rockspec paths.
+-- @param unnamed_paths table: An array of rockspec paths that don't contain rock
+-- name and version in regular format.
+-- @param subdir string: path to subdirectory.
+local function collect_rockspecs(versions, paths, unnamed_paths, subdir)
+   if fs.is_dir(subdir) then
+      for file in fs.dir(subdir) do
+         file = dir.path(subdir, file)
+
+         if file:match("rockspec$") and fs.is_file(file) then
+            local rock, version = path.parse_name(file)
+
+            if rock then
+               if not versions[rock] or deps.compare_versions(version, versions[rock]) then
+                  versions[rock] = version
+                  paths[rock] = file
+               end
+            else
+               table.insert(unnamed_paths, file)
+            end
+         end
+      end
+   end
+end
+
 --- Driver function for "make" command.
 -- @param name string: A local rockspec.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
@@ -53,17 +85,34 @@ function make.run(...)
    assert(type(rockspec) == "string" or not rockspec)
    
    if not rockspec then
-      for file in fs.dir() do
-         if file:match("rockspec$") then
-            if rockspec then
+      -- Try to infer default rockspec name.
+      local versions, paths, unnamed_paths = {}, {}, {}
+      -- Look for rockspecs in some common locations.
+      collect_rockspecs(versions, paths, unnamed_paths, ".")
+      collect_rockspecs(versions, paths, unnamed_paths, "rockspec")
+      collect_rockspecs(versions, paths, unnamed_paths, "rockspecs")
+
+      if #unnamed_paths > 0 then
+         -- There are rockspecs not following "name-version.rockspec" format.
+         -- More than one are ambiguous.
+         if #unnamed_paths > 1 then
+            return nil, "Please specify which rockspec file to use."
+         else
+            rockspec = unnamed_paths[1]
+         end
+      else
+         local rock = next(versions)
+
+         if rock then
+            -- If there are rockspecs for multiple rocks it's ambiguous.
+            if next(versions, rock) then
                return nil, "Please specify which rockspec file to use."
             else
-               rockspec = file
+               rockspec = paths[rock]
             end
+         else
+            return nil, "Argument missing: please specify a rockspec to use on current directory."
          end
-      end
-      if not rockspec then
-         return nil, "Argument missing: please specify a rockspec to use on current directory."
       end
    end
    if not rockspec:match("rockspec$") then
