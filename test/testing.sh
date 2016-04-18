@@ -449,6 +449,7 @@ test_path() { $luarocks path --bin; }
 test_path_lr_path() { $luarocks path --lr-path; }
 test_path_lr_cpath() { $luarocks path --lr-cpath; }
 test_path_lr_bin() { $luarocks path --lr-bin; }
+test_path_with_tree() { $luarocks path --tree=lua_modules; }
 
 fail_purge_missing_tree() { $luarocks purge --tree="$testing_tree"; }
 fail_purge_tree_notstring() { $luarocks purge --tree=1; }

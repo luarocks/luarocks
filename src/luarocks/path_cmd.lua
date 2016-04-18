@@ -37,7 +37,7 @@ function path_cmd.run(...)
    local flags = util.parse_flags(...)
    local deps_mode = deps.get_deps_mode(flags)
    
-   local lr_path, lr_cpath, lr_bin = cfg.package_paths()
+   local lr_path, lr_cpath, lr_bin = cfg.package_paths(flags["tree"])
    local path_sep = cfg.export_path_separator
 
    if flags["lr-path"] then
