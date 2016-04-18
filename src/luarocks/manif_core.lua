@@ -18,16 +18,18 @@ manif_core.manifest_cache = {}
 -- @param file string: The local filename of the manifest file.
 -- @param repo_url string: The repository identifier.
 -- @param quick boolean: If given, skips type checking.
+-- @return table or (nil, string, string): the manifest or nil,
+-- error message and error code ("open", "load", "run" or "type").
 function manif_core.manifest_loader(file, repo_url, quick)
-   local manifest, err = persist.load_into_table(file)
+   local manifest, err, errcode = persist.load_into_table(file)
    if not manifest then
-      return nil, "Failed loading manifest for "..repo_url..": "..err
+      return nil, "Failed loading manifest for "..repo_url..": "..err, errcode
    end
    local globals = err
    if not quick then
       local ok, err = type_check.type_check_manifest(manifest, globals)
       if not ok then
-         return nil, "Error checking manifest: "..err
+         return nil, "Error checking manifest: "..err, "type"
       end
    end
 
@@ -39,8 +41,8 @@ end
 -- All functions that use manifest tables assume they were obtained
 -- through either this function or load_manifest.
 -- @param repo_url string: URL or pathname for the repository.
--- @return table or (nil, string): A table representing the manifest,
--- or nil followed by an error message.
+-- @return table or (nil, string, string): A table representing the manifest,
+-- or nil followed by an error message and an error code, see manifest_loader.
 function manif_core.load_local_manifest(repo_url)
    assert(type(repo_url) == "string")
 

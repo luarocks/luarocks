@@ -170,7 +170,7 @@ end
 -- If the arch field is omitted, the local architecture (cfg.arch)
 -- is used. The special value "any" is also recognized, returning all
 -- matches regardless of architecture.
--- @return true or, in case of errors, nil and an error message.
+-- @return true or, in case of errors, nil, an error message and an optional error code.
 function search.manifest_search(results, repo, query)
    assert(type(results) == "table")
    assert(type(repo) == "string")
