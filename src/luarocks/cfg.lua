@@ -362,6 +362,7 @@ local defaults = {
       FIND = "find",
       TEST = "test",
       CHMOD = "chmod",
+      MKTEMP = "mktemp",
 
       ZIP = "zip",
       UNZIP = "unzip -n",
