@@ -10,6 +10,7 @@ local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local build = require("luarocks.build")
 local dir = require("luarocks.dir")
+local cfg = require("luarocks.cfg")
 
 unpack.help_summary = "Unpack the contents of a rock."
 unpack.help_arguments = "[--force] {<rock>|<name> [<version>]}"
@@ -128,7 +129,7 @@ local function run_unpacker(file, force)
    end
    if kind == "src" or kind == "rockspec" then
       if rockspec.source.dir ~= "." then
-         local ok = fs.copy(rockspec.local_filename, rockspec.source.dir)
+         local ok = fs.copy(rockspec.local_filename, rockspec.source.dir, cfg.perm_read)
          if not ok then
             return nil, "Failed copying unpacked rockspec into unpacked source directory."
          end

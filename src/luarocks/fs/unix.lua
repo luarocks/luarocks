@@ -66,7 +66,7 @@ function unix.wrap_script(file, dest, name, version)
    local addctx = "local k,l,_=pcall(require,"..util.LQ("luarocks.loader")..") _=k and l.add_context("..util.LQ(name)..","..util.LQ(version)..")"
    wrapper:write('exec '..fs.Q(lua)..' -e '..fs.Q(ppaths)..' -e '..fs.Q(addctx)..' '..fs.Q(file)..' "$@"\n')
    wrapper:close()
-   if fs.chmod(wrapname, "0755") then
+   if fs.chmod(wrapname, cfg.perm_exec) then
       return true
    else
       return nil, "Could not make "..wrapname.." executable."
@@ -96,7 +96,7 @@ function unix.is_actual_binary(filename)
 end
 
 function unix.copy_binary(filename, dest) 
-   return fs.copy(filename, dest, "0755")
+   return fs.copy(filename, dest, cfg.perm_exec)
 end
 
 --- Move a file on top of the other.
