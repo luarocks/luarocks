@@ -93,8 +93,8 @@ function list.run(...)
    
    local results = {}
    for _, tree in ipairs(trees) do
-      local ok, err = search.manifest_search(results, path.rocks_dir(tree), query)
-      if not ok then
+      local ok, err, errcode = search.manifest_search(results, path.rocks_dir(tree), query)
+      if not ok and errcode ~= "open" then
          util.warning(err)
       end
    end

@@ -213,7 +213,7 @@ srcdir_luasocket=luasocket-3.0-rc1
 version_cprint=0.1
 verrev_cprint=0.1-2
 
-version_luacov=0.9.1
+version_luacov=0.11.0
 verrev_luacov=${version_luacov}-1
 version_lxsh=0.8.6
 version_validate_args=1.5.4
@@ -364,7 +364,6 @@ need() {
 need_luasocket() { need luasocket $verrev_luasocket; }
 
 # Tests #########################################
-
 test_version() { $luarocks --version; }
 
 fail_unknown_command() { $luarocks unknown_command; }
@@ -445,6 +444,7 @@ test_download_rockspecversion() { $luarocks download --rockspec validate-args ${
 test_help() { $luarocks help; }
 fail_help_invalid() { $luarocks help invalid; }
 
+test_install_only_deps() { $luarocks install --only-deps "$testing_cache/luasocket-$verrev_luasocket.$platform.rock"; }
 test_install_binaryrock() { $luarocks build --pack-binary-rock cprint && $luarocks install ./cprint-${verrev_cprint}.${platform}.rock && rm ./cprint-${verrev_cprint}.${platform}.rock; }
 test_install_with_bin() { $luarocks install wsapi; }
 fail_install_notazipfile() { $luarocks install "$testing_dir/testfiles/not_a_zipfile-1.0-1.src.rock"; }
@@ -484,9 +484,12 @@ test_path() { $luarocks path --bin; }
 test_path_lr_path() { $luarocks path --lr-path; }
 test_path_lr_cpath() { $luarocks path --lr-cpath; }
 test_path_lr_bin() { $luarocks path --lr-bin; }
+test_path_with_tree() { $luarocks path --tree=lua_modules; }
 
 fail_purge_missing_tree() { $luarocks purge --tree="$testing_tree"; }
+fail_purge_tree_notstring() { $luarocks purge --tree=1; }
 test_purge() { $luarocks purge --tree="$testing_sys_tree"; }
+test_purge_oldversions() { $luarocks purge --old-versions --tree="$testing_sys_tree"; }
 
 test_remove() { $luarocks build abelhas ${version_abelhas} && $luarocks remove abelhas ${version_abelhas}; }
 test_remove_force() { need_luasocket; $luarocks build lualogging && $luarocks remove --force luasocket; }
@@ -520,6 +523,9 @@ fail_unpack_invalidrockspec() { need_luasocket; $luarocks unpack "invalid.rocksp
 
 fail_upload_invalidrockspec() { $luarocks upload "invalid.rockspec"; }
 fail_upload_invalidkey() { $luarocks upload --api-key="invalid" "invalid.rockspec"; }
+fail_upload_skippack() { $luarocks upload --api-key="invalid" --skip-pack "luacov-${verrev_luacov}.rockspec"; }
+fail_upload_force() { $luarocks install lua-cjson && $luarocks upload --api-key="invalid" --force "luacov-${verrev_luacov}.rockspec" && $luarocks remove lua-cjson; }
+
 
 test_admin_help() { $luarocks_admin help; }
 
@@ -595,6 +601,9 @@ fail_luajit_dependency() {
 test_doc() { $luarocks install luarepl; $luarocks doc luarepl; }
 test_doc_home() { $luarocks install luacov; $luarocks doc luacov --home; }
 fail_doc_invalid() { $luarocks doc invalid; }
+test_doc_list() { $luarocks install luacov; $luarocks doc luacov --list; }
+test_doc_local() { $luarocks install luacov; $luarocks doc luacov --local; }
+test_doc_porcelain() { $luarocks install luacov; $luarocks doc luacov --porcelain; }
 
 # Driver #########################################
 
