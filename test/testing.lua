@@ -266,6 +266,7 @@ local tests = {
    test_path_lr_path = function() return run "$luarocks path --lr-path" end,
    test_path_lr_cpath = function() return run "$luarocks path --lr-cpath" end,
    test_path_lr_bin = function() return run "$luarocks path --lr-bin" end,
+   test_path_with_tree = function() return run "$luarocks path --tree=lua_modules" end,
    fail_purge_missing_tree = function() return run '$luarocks purge --tree="$testing_tree"' end,
    test_purge = function() return run '$luarocks purge --tree="$testing_sys_tree"' end,
    test_remove = function()

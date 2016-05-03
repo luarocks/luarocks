@@ -666,17 +666,23 @@ function cfg.make_paths_from_tree(tree)
    return lua_path, lib_path, bin_path
 end
 
-function cfg.package_paths()
+function cfg.package_paths(current)
    local new_path, new_cpath, new_bin = {}, {}, {}
-   for _,tree in ipairs(cfg.rocks_trees) do
+   local function add_tree_to_paths(tree)
       local lua_path, lib_path, bin_path = cfg.make_paths_from_tree(tree)
       table.insert(new_path, lua_path.."/?.lua")
       table.insert(new_path, lua_path.."/?/init.lua")
       table.insert(new_cpath, lib_path.."/?."..cfg.lib_extension)
       table.insert(new_bin, bin_path)
    end
+   if current then
+      add_tree_to_paths(current)
+   end
+   for _,tree in ipairs(cfg.rocks_trees) do
+      add_tree_to_paths(tree)
+   end
    if extra_luarocks_module_dir then
-     table.insert(new_path, extra_luarocks_module_dir)
+      table.insert(new_path, extra_luarocks_module_dir)
    end
    return table.concat(new_path, ";"), table.concat(new_cpath, ";"), table.concat(new_bin, cfg.export_path_separator)
 end
