@@ -68,16 +68,18 @@ function builtin.run(rockspec)
    end
 
    if cfg.is_platform("mingw32") then
-      compile_object = function(object, source, defines, incdirs)
+      compile_object = function(object, source, defines, incdirs, rawflags)
          local extras = {}
          add_flags(extras, "-D%s", defines)
          add_flags(extras, "-I%s", incdirs)
+         add_flags(extras, "%s", rawflags)
          return execute(variables.CC.." "..variables.CFLAGS, "-c", "-o", object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
       end
-      compile_library = function(library, objects, libraries, libdirs)
+      compile_library = function(library, objects, libraries, libdirs, rawflags)
          local extras = { unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
          add_flags(extras, "-l%s", libraries)
+         add_flags(extras, "%s", rawflags)
          extras[#extras+1] = dir.path(variables.LUA_LIBDIR, variables.LUALIB)
          extras[#extras+1] = "-l" .. (variables.MSVCRT or "m")
          local ok = execute(variables.LD.." "..variables.LIBFLAG, "-o", library, unpack(extras))
@@ -100,16 +102,18 @@ function builtin.run(rockspec)
          return ok, wrapname
       end
    elseif cfg.is_platform("win32") then
-      compile_object = function(object, source, defines, incdirs)
+      compile_object = function(object, source, defines, incdirs, rawflags)
          local extras = {}
          add_flags(extras, "-D%s", defines)
          add_flags(extras, "-I%s", incdirs)
+         add_flags(extras, "%s", rawflags)
          return execute(variables.CC.." "..variables.CFLAGS, "-c", "-Fo"..object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
       end
-      compile_library = function(library, objects, libraries, libdirs, name)
+      compile_library = function(library, objects, libraries, libdirs, rawflags, name)
          local extras = { unpack(objects) }
          add_flags(extras, "-libpath:%s", libdirs)
          add_flags(extras, "%s.lib", libraries)
+         add_flags(extras, "%s", rawflags)
          local basename = dir.base_name(library):gsub(".[^.]*$", "")
          local deffile = basename .. ".def"
          local def = io.open(dir.path(fs.current_dir(), deffile), "w+")
@@ -152,19 +156,21 @@ function builtin.run(rockspec)
          return ok, wrapname
       end
    else
-      compile_object = function(object, source, defines, incdirs)
+      compile_object = function(object, source, defines, incdirs, rawflags)
          local extras = {}
          add_flags(extras, "-D%s", defines)
          add_flags(extras, "-I%s", incdirs)
+         add_flags(extras, "%s", rawflags)
          return execute(variables.CC.." "..variables.CFLAGS, "-I"..variables.LUA_INCDIR, "-c", source, "-o", object, unpack(extras))
       end
-      compile_library = function (library, objects, libraries, libdirs)
+      compile_library = function (library, objects, libraries, libdirs, rawflags)
          local extras = { unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
          if cfg.gcc_rpath then
             add_flags(extras, "-Wl,-rpath,%s:", libdirs)
          end
          add_flags(extras, "-l%s", libraries)
+         add_flags(extras, "%s", rawflags)
          if cfg.is_platform("cygwin") then
             add_flags(extras, "-l%s", {"lua"})
          end
@@ -230,7 +236,7 @@ function builtin.run(rockspec)
             if not object then
                object = source.."."..cfg.obj_extension
             end
-            ok = compile_object(object, source, info.defines, info.incdirs)
+            ok = compile_object(object, source, info.defines, info.incdirs, info.cflags)
             if not ok then
                return nil, "Failed compiling object "..object
             end
@@ -243,7 +249,7 @@ function builtin.run(rockspec)
             if not ok then return nil, err end
          end
          built_modules[module_name] = dir.path(libdir, module_name)
-         ok = compile_library(module_name, objects, info.libraries, info.libdirs, name)
+         ok = compile_library(module_name, objects, info.libraries, info.libdirs, info.lflags, name)
          if not ok then
             return nil, "Failed compiling module "..module_name
          end
