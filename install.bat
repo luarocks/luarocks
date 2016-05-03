@@ -508,17 +508,22 @@ local function get_msvc_env_setup_cmd()
 	-- 1. try visual studio command line tools
 	local vcdir = get_visual_studio_directory()
 	if vcdir then
-		-- 1.1. try vcvarsall.bat
-		local vcvarsall = vcdir .. 'vcvarsall.bat'
-		if exists(vcvarsall) then
-			return ('call "%s"%s'):format(vcvarsall, x64 and ' amd64' or '')
-		end
-
-		-- 1.2. try vcvars32.bat / vcvars64.bat
-		local relative_path = x64 and "bin\\amd64\\vcvars64.bat" or "bin\\vcvars32.bat"
-		local full_path = vcdir .. relative_path
-		if exists(full_path) then
-			return ('call "%s"'):format(full_path)
+		local vcvars_bats = {
+			x86 = {
+				"bin\\vcvars32.bat", -- prefers native compiler
+				"bin\\amd64_x86\\vcvarsamd64_x86.bat"-- then cross compiler
+			},
+			x86_64 = {
+				"bin\\amd64\\vcvars64.bat", -- prefers native compiler
+				"bin\\x86_amd64\\vcvarsx86_amd64.bat" -- then cross compiler
+			}
+		}
+		assert(vcvars_bats[vars.UNAME_M], "vars.UNAME_M: only x86 and x86_64 are supported")
+		for _, bat in ipairs(vcvars_bats[vars.UNAME_M]) do
+			local full_path = vcdir .. bat
+			if exists(full_path) then
+				return ('call "%s"'):format(full_path)
+			end
 		end
 	end
 
