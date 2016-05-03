@@ -486,7 +486,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
          if not match_dep(dep, nil, deps_mode) then
             local url, err = search.find_suitable_rock(dep)
             if not url then
-               return nil, "Could not satisfy dependency: "..deps.show_dep(dep)
+               return nil, "Could not satisfy dependency "..deps.show_dep(dep)..": "..err
             end
             local ok, err, errcode = install.run(url, deps.deps_mode_to_flag(deps_mode))
             if not ok then

@@ -39,6 +39,7 @@ end
 function download.download(arch, name, version, all)
    local query = search.make_query(name, version)
    if arch then query.arch = arch end
+   local search_err
 
    if all then
       if name == "" then query.exact_name = false end
@@ -67,12 +68,14 @@ function download.download(arch, name, version, all)
          return all_ok, any_err
       end
    else
-      local url = search.find_suitable_rock(query)
+      local url
+      url, search_err = search.find_suitable_rock(query)
       if url then
          return get_file(url)
       end
    end
-   return nil, "Could not find a result named "..name..(version and " "..version or "").."."
+   return nil, "Could not find a result named "..name..(version and " "..version or "")..
+      (search_err and ": "..search_err or ".")
 end
 
 --- Driver function for the "download" command.
