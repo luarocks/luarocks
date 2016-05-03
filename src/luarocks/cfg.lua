@@ -604,13 +604,11 @@ defaults.variables.LUA = site_config.LUA_DIR_SET and (defaults.variables.LUA_BIN
 -- Add built-in modules to rocks_provided
 defaults.rocks_provided["lua"] = cfg.lua_version.."-1"
 
-if cfg.lua_version >= "5.2" then
-   -- Lua 5.2+
+if bit32 then -- Lua 5.2+
    defaults.rocks_provided["bit32"] = cfg.lua_version.."-1"
 end
 
-if cfg.lua_version >= "5.3" then
-   -- Lua 5.3+
+if utf8 then -- Lua 5.3+
    defaults.rocks_provided["utf8"] = cfg.lua_version.."-1"
 end
 
