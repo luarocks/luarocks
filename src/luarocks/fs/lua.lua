@@ -774,13 +774,7 @@ function fs_lua.make_temp_dir(name)
    assert(type(name) == "string")
    name = dir.normalize(name)
 
-   local template = (os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-XXXXXX"
-   local temp_dir, err = posix.mkdtemp(template)
-   if temp_dir then
-      return temp_dir
-   else
-      return nil, err
-   end
+   return posix.mkdtemp((os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-XXXXXX")
 end
 
 end
