@@ -245,6 +245,7 @@ function fetch.load_local_rockspec(filename, quick)
    rockspec.local_filename = filename
    local filebase = rockspec.source.file or rockspec.source.url
    local base = fetch.url_to_base_dir(filebase)
+   rockspec.source.dir_set = rockspec.source.dir ~= nil
    rockspec.source.dir = rockspec.source.dir
                       or rockspec.source.module
                       or ( (filebase:match("%.lua$") or filebase:match("%.c$"))
@@ -355,7 +356,29 @@ function fetch.get_sources(rockspec, extract, dest_dir)
       if not ok then return nil, err end
       fs.unpack_archive(rockspec.source.file)
       if not fs.exists(rockspec.source.dir) then
-         return nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file, "source.dir", source_file, store_dir
+
+         -- If rockspec.source.dir can't be found, see if we only have one
+         -- directory in store_dir.  If that's the case, assume it's what
+         -- we're looking for.
+         -- We only do this if the rockspec source.dir was not set, and only
+         -- with rockspecs newer than 3.0.
+         local dir_count, found_dir = 0
+
+         if not rockspec.source.dir_set and deps.format_is_at_least(rockspec, "3.0") then
+            local files = fs.list_dir()
+            for _, f in ipairs(files) do
+               if fs.is_dir(f) then
+                  dir_count = dir_count + 1
+                  found_dir = f
+               end
+            end
+         end
+
+         if dir_count == 1 then
+            rockspec.source.dir = found_dir
+         else
+            return nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file, "source.dir", source_file, store_dir
+         end
       end
       fs.pop_dir()
    end
