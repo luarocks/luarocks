@@ -7,29 +7,10 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.cfg")
 
-local dir_stack = {}
-
 local vars = cfg.variables
 
 local function command_at(directory, cmd)
    return "cd " .. fs.Q(fs.absolute_name(directory)) .. " && " .. cmd
-end
-
---- Obtain current directory.
--- Uses the module's internal directory stack.
--- @return string: the absolute pathname of the current directory.
-function tools.current_dir()
-   local current = cfg.cache_pwd
-   if not current then
-      local pipe = io.popen(fs.quiet_stderr(fs.Q(vars.PWD)))
-      current = pipe:read("*l")
-      pipe:close()
-      cfg.cache_pwd = current
-   end
-   for _, directory in ipairs(dir_stack) do
-      current = fs.absolute_name(directory, current)
-   end
-   return current
 end
 
 --- Run the given command.
@@ -46,33 +27,6 @@ function tools.execute_string(cmd)
    else
       return false
    end
-end
-
---- Change the current directory.
--- Uses the module's internal directory stack. This does not have exact
--- semantics of chdir, as it does not handle errors the same way,
--- but works well for our purposes for now.
--- @param directory string: The directory to switch to.
-function tools.change_dir(directory)
-   assert(type(directory) == "string")
-   if fs.is_dir(directory) then
-      table.insert(dir_stack, directory)
-      return true
-   end
-   return nil, "directory not found: "..directory
-end
-
---- Change directory to root.
--- Allows leaving a directory (e.g. for deleting it) in
--- a crossplatform way.
-function tools.change_dir_to_root()
-   table.insert(dir_stack, "/")
-end
-
---- Change working directory to the previous in the directory stack.
-function tools.pop_dir()
-   local directory = table.remove(dir_stack)
-   return directory ~= nil
 end
 
 --- Create a directory if it does not already exist.

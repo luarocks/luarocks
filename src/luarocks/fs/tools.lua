@@ -8,6 +8,53 @@ local cfg = require("luarocks.cfg")
 
 local vars = cfg.variables
 
+local dir_stack = {}
+
+--- Obtain current directory.
+-- Uses the module's internal directory stack.
+-- @return string: the absolute pathname of the current directory.
+function tools.current_dir()
+   local current = cfg.cache_pwd
+   if not current then
+      local pipe = io.popen(fs.quiet_stderr(fs.Q(vars.PWD)))
+      current = pipe:read("*l")
+      pipe:close()
+      cfg.cache_pwd = current
+   end
+   for _, directory in ipairs(dir_stack) do
+      current = fs.absolute_name(directory, current)
+   end
+   return current
+end
+
+--- Change the current directory.
+-- Uses the module's internal directory stack. This does not have exact
+-- semantics of chdir, as it does not handle errors the same way,
+-- but works well for our purposes for now.
+-- @param directory string: The directory to switch to.
+-- @return boolean or (nil, string): true if successful, (nil, error message) if failed.
+function tools.change_dir(directory)
+   assert(type(directory) == "string")
+   if fs.is_dir(directory) then
+      table.insert(dir_stack, directory)
+      return true
+   end
+   return nil, "directory not found: "..directory
+end
+
+--- Change directory to root.
+-- Allows leaving a directory (e.g. for deleting it) in
+-- a crossplatform way.
+function tools.change_dir_to_root()
+   table.insert(dir_stack, "/")
+end
+
+--- Change working directory to the previous in the directory stack.
+function tools.pop_dir()
+   local directory = table.remove(dir_stack)
+   return directory ~= nil
+end
+
 --- Download a remote file.
 -- @param url string: URL to be fetched.
 -- @param filename string or nil: this function attempts to detect the
