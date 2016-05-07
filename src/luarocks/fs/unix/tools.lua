@@ -9,7 +9,11 @@ local cfg = require("luarocks.cfg")
 
 local vars = cfg.variables
 
-local function command_at(directory, cmd)
+--- Adds prefix to command to make it run from a directory.
+-- @param directory string: Path to a directory.
+-- @param cmd string: A command-line string.
+-- @return string: The command-line with prefix.
+function tools.command_at(directory, cmd)
    return "cd " .. fs.Q(fs.absolute_name(directory)) .. " && " .. cmd
 end
 
@@ -21,7 +25,7 @@ end
 function tools.execute_string(cmd)
    local current = fs.current_dir()
    if not current then return false end
-   local code, err = os.execute(command_at(current, cmd))
+   local code, err = os.execute(fs.command_at(current, cmd))
    if code == 0 or code == true then
       return true
    else
@@ -114,7 +118,7 @@ end
 -- @param at string: directory to list
 -- @return nil
 function tools.dir_iterator(at)
-   local pipe = io.popen(command_at(at, vars.LS))
+   local pipe = io.popen(fs.command_at(at, vars.LS))
    for file in pipe:lines() do
       if file ~= "." and file ~= ".." then
          coroutine.yield(file)
@@ -137,7 +141,7 @@ function tools.find(at)
       return {}
    end
    local result = {}
-   local pipe = io.popen(command_at(at, fs.quiet_stderr(vars.FIND.." *")))
+   local pipe = io.popen(fs.command_at(at, fs.quiet_stderr(vars.FIND.." *")))
    for file in pipe:lines() do
       table.insert(result, file)
    end
