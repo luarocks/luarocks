@@ -21,7 +21,7 @@ end
 function tools.current_dir()
    local current = cfg.cache_pwd
    if not current then
-      local pipe = io.popen(fs.Q(vars.PWD).." 2> /dev/null")
+      local pipe = io.popen(fs.quiet_stderr(fs.Q(vars.PWD)))
       current = pipe:read("*l")
       pipe:close()
       cfg.cache_pwd = current
@@ -183,7 +183,7 @@ function tools.find(at)
       return {}
    end
    local result = {}
-   local pipe = io.popen(command_at(at, vars.FIND.." * 2>/dev/null"))
+   local pipe = io.popen(command_at(at, fs.quiet_stderr(vars.FIND.." *")))
    for file in pipe:lines() do
       table.insert(result, file)
    end
@@ -268,7 +268,7 @@ function tools.use_downloader(url, filename, cache)
       if cfg.connection_timeout and cfg.connection_timeout > 0 then
         curl_cmd = curl_cmd .. "--connect-timeout "..tonumber(cfg.connection_timeout).." " 
       end
-      ok = fs.execute_string(curl_cmd..fs.Q(url).." 2> /dev/null 1> "..fs.Q(filename))
+      ok = fs.execute_string(fs.quiet_stderr(curl_cmd..fs.Q(url).." > "..fs.Q(filename)))
    end
    if ok then
       return true, filename
