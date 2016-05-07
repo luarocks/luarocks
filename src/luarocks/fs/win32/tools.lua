@@ -11,17 +11,6 @@ local cfg = require("luarocks.cfg")
 
 local vars = cfg.variables
 
---- Strip the last extension of a filename.
--- Example: "foo.tar.gz" becomes "foo.tar".
--- If filename has no dots, returns it unchanged.
--- @param filename string: The file name to strip.
--- @return string: The stripped name.
-local function strip_extension(filename)
-   assert(type(filename) == "string")
-
-   return (filename:gsub("%.[^.]+$", "")) or filename
-end
-
 local function command_at(directory, cmd)
    local drive = directory:match("^([A-Za-z]:)")
    cmd = "cd " .. fs.Q(directory) .. " & " .. cmd
@@ -193,6 +182,16 @@ end
 function tools.is_file(file)
    assert(file)
    return fs.execute(fs.Q(vars.TEST).." -f", file)
+end
+
+--- Strip the last extension of a filename.
+-- Example: "foo.tar.gz" becomes "foo.tar".
+-- If filename has no dots, returns it unchanged.
+-- @param filename string: The file name to strip.
+-- @return string: The stripped name.
+local function strip_extension(filename)
+   assert(type(filename) == "string")
+   return (filename:gsub("%.[^.]+$", "")) or filename
 end
 
 --- Uncompress gzip file.
