@@ -242,28 +242,6 @@ function tools.unpack_archive(archive)
    return true
 end
 
-local md5_cmd = {
-   md5sum = fs.Q(vars.MD5SUM),
-   openssl = fs.Q(vars.OPENSSL).." md5",
-   md5 = fs.Q(vars.MD5),
-}
-
---- Get the MD5 checksum for a file.
--- @param file string: The file to be computed.
--- @return string: The MD5 checksum or nil + message
-function tools.get_md5(file)
-   local cmd = md5_cmd[cfg.md5checker]
-   if not cmd then return nil, "no MD5 checker command configured" end
-   local pipe = io.popen(cmd.." "..fs.Q(fs.absolute_name(file)))
-   local computed = pipe:read("*a")
-   pipe:close()
-   if computed then
-      computed = computed:match("("..("%x"):rep(32)..")")
-   end
-   if computed then return computed end
-   return nil, "Failed to compute MD5 hash for file "..tostring(fs.absolute_name(file))
-end
-
 --- Test for existance of a file.
 -- @param file string: filename to test
 -- @return boolean: true if file exists, false otherwise.
