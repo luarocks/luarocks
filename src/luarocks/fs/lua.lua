@@ -12,10 +12,10 @@ local util = require("luarocks.util")
 local path = require("luarocks.path")
 
 local socket_ok, zip_ok, unzip_ok, lfs_ok, md5_ok, posix_ok, _
-local http, ftp, lrzip, luazip, lfs, md5, posix
+local socket, ftp, lrzip, luazip, lfs, md5, posix
 
 if cfg.fs_use_modules then
-   socket_ok, http = pcall(require, "socket.http")
+   socket_ok, socket = pcall(require, "socket")
    _, ftp = pcall(require, "socket.ftp")
    zip_ok, lrzip = pcall(require, "luarocks.tools.zip")
    unzip_ok, luazip = pcall(require, "zip"); _G.zip = nil
@@ -544,17 +544,42 @@ end
 if socket_ok then
 
 local ltn12 = require("ltn12")
+local http = require("socket.http")
 local luasec_ok, https = pcall(require, "ssl.https")
+
+-- Patch ltn12 source used by LuaSocket to get fixed length
+-- request body to expose the length.
+local old_source_by_length = socket.sourcet["by-length"]
+socket.sourcet["by-length"] = function(sock, length)
+   local source = old_source_by_length(sock, length)
+   source.length = length
+   return source
+end
+
+-- If the file being downloaded consists of
+-- enough chunks (should not trigger for small files
+-- like rockspecs) or getting a chunk takes too long,
+-- start displaying progress line.
+local progress_step_threshold = 5
+local progress_seconds_threshold = 1
+
+local function bytes_to_string(bytes)
+   if bytes >= 1024 * 1000 then
+      return ("%.2f MiB"):format(bytes / (1024 * 1024))
+   else
+      return ("%.2f KiB"):format(bytes / 1024)
+   end
+end
 
 -- Perform HTTP(S) request.
 -- @param url string: URL starting with "http:" or "https:".
 -- @param method string: HTTP method.
--- @param loop_control table: optional set of visited URLs
--- used for redirection loop detection.
+-- @param context table: optional state table shared between requests
+-- in a single redirection chain.
 -- @return (table, number, table) or (nil, string, true?):
 -- parts of response body, status code and headers on success,
 -- nil, error message and HTTPS error flag on failure.
-local function request(url, method, loop_control)
+local function request(url, method, context)
    local transport
    if util.starts_with(url, "http:") then
       transport = http
@@ -565,7 +590,11 @@ local function request(url, method, loop_control)
       return nil, "Unsupported protocol", util.starts_with(url, "https")
    end
 
-   local result = {}
+   context = context or {
+      original_url = url,
+      redirecting_urls = {},
+      steps = 0
+   }
    
    local proxy = cfg.http_proxy
    if type(proxy) ~= "string" then proxy = nil end
@@ -573,53 +602,106 @@ local function request(url, method, loop_control)
    if proxy and not proxy:find("://") then
       proxy = "http://" .. proxy
    end
-   
-   if cfg.show_downloads then
-      io.write(method.." "..url.." ...\n")
-   end
-   local dots = 0
+
    if cfg.connection_timeout and cfg.connection_timeout > 0 then
       transport.TIMEOUT = cfg.connection_timeout
    end
+
+   local result = {}
+   local currently_downloaded = 0
+   local start_seconds = socket.gettime()
+   local speed = 0
+
    local res, status, headers, status_line = transport.request({
       url = url,
       proxy = proxy,
       method = method,
       redirect = false,
       sink = ltn12.sink.table(result),
-      step = cfg.show_downloads and function(...)
-         io.write(".")
-         io.flush()
-         dots = dots + 1
-         if dots == 70 then
-            io.write("\n")
-            dots = 0
+      step = cfg.show_downloads and function(source, sink)
+         local chunk, source_err = source()
+         local ret, sink_err = sink(chunk, source_err)
+
+         if not chunk or not ret then
+            return nil, source_err or sink_err
          end
-         return ltn12.pump.step(...)
+
+         context.steps = context.steps + 1
+         currently_downloaded = currently_downloaded + #chunk
+         local previous_seconds = context.seconds
+         context.seconds = socket.gettime()
+         speed = currently_downloaded / (context.seconds - start_seconds)
+         local previous_progress_line = context.progress_line
+
+         if not context.progress_line then
+            local enable_progress_line
+
+            if context.steps > progress_step_threshold then
+               enable_progress_line = true
+            elseif previous_seconds then
+               if context.seconds - previous_seconds > progress_seconds_threshold then
+                  enable_progress_line = true
+               end
+            end
+
+            if enable_progress_line then
+               util.printerr("Downloading " .. context.original_url)
+               context.progress_line = true
+            end
+         end
+
+         if context.progress_line then
+            local label = bytes_to_string(currently_downloaded)
+
+            if source.length then
+               label = label .. (" (%d%%)"):format(
+                  math.floor(currently_downloaded / source.length * 100))
+            end
+
+            label = label .. " | " .. bytes_to_string(speed) .. "/s"
+
+            if previous_progress_line then
+               io.stderr:write("\r" .. (" "):rep(#previous_progress_line))
+            end
+
+            context.progress_line = "  Got " .. label
+            io.stderr:write("\r" .. context.progress_line)
+            io.stderr:flush()
+         end
+
+         return 1
       end,
       headers = {
          ["user-agent"] = cfg.user_agent.." via LuaSocket"
       },
    })
-   if cfg.show_downloads then
-      io.write("\n")
-   end
+
+   local err
+
    if not res then
-      return nil, status
+      err = status
    elseif status == 301 or status == 302 then
       local location = headers.location
       if not location then
-         return nil, status_line
+         err = status_line
+      else
+         context.redirecting_urls[url] = true
+         if context.redirecting_urls[location] then
+            err = "Redirection loop -- broken URL?"
+         else
+            return request(location, method, context)
+         end
       end
-
-      loop_control = loop_control or {}
-      if loop_control[location] then
-         return nil, "Redirection loop -- broken URL?"
-      end
-      loop_control[url] = true
-      return request(location, method, loop_control)
    elseif status ~= 200 then
-      return nil, status_line
+      err = status_line
+   end
+
+   if context.progress_line then
+      io.stderr:write("\n")
+   end
+
+   if err then
+      return nil, err
    else
       return result, status, headers
    end
