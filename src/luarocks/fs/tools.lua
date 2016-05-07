@@ -55,6 +55,23 @@ function tools.pop_dir()
    return directory ~= nil
 end
 
+--- Run the given command.
+-- The command is executed in the current directory in the directory stack.
+-- @param cmd string: No quoting/escaping is applied to the command.
+-- @return boolean: true if command succeeds (status code 0), false
+-- otherwise.
+function tools.execute_string(cmd)
+   local current = fs.current_dir()
+   if not current then return false end
+   cmd = fs.command_at(current, cmd)
+   local code = os.execute(cmd)
+   if code == 0 or code == true then
+      return true
+   else
+      return false
+   end
+end
+
 --- Download a remote file.
 -- @param url string: URL to be fetched.
 -- @param filename string or nil: this function attempts to detect the
