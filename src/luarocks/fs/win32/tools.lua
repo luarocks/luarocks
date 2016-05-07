@@ -97,20 +97,6 @@ function tools.delete(arg)
    fs.execute_quiet("if exist "..fs.Q(arg.."\\").." ( RMDIR /S /Q "..fs.Q(arg).." ) else ( DEL /Q /F "..fs.Q(arg).." )")
 end
 
---- Internal implementation function for fs.dir.
--- Yields a filename on each iteration.
--- @param at string: directory to list
--- @return nil
-function tools.dir_iterator(at)
-   local pipe = io.popen(fs.command_at(at, fs.Q(vars.LS)))
-   for file in pipe:lines() do
-      if file ~= "." and file ~= ".." then
-         coroutine.yield(file)
-      end
-   end
-   pipe:close()
-end
-
 --- Recursively scan the contents of a directory.
 -- @param at string or nil: directory to scan (will be the current
 -- directory if none is given).

@@ -72,6 +72,20 @@ function tools.execute_string(cmd)
    end
 end
 
+--- Internal implementation function for fs.dir.
+-- Yields a filename on each iteration.
+-- @param at string: directory to list
+-- @return nil
+function tools.dir_iterator(at)
+   local pipe = io.popen(fs.command_at(at, fs.Q(vars.LS)))
+   for file in pipe:lines() do
+      if file ~= "." and file ~= ".." then
+         coroutine.yield(file)
+      end
+   end
+   pipe:close()
+end
+
 --- Download a remote file.
 -- @param url string: URL to be fetched.
 -- @param filename string or nil: this function attempts to detect the
