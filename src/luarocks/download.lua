@@ -11,6 +11,7 @@ local fetch = require("luarocks.fetch")
 local search = require("luarocks.search")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
+local cfg = require("luarocks.cfg")
 
 download.help_summary = "Download a specific rock file from a rocks server."
 download.help_arguments = "[--all] [--arch=<arch> | --source | --rockspec] [<name> [<version>]]"
@@ -25,7 +26,7 @@ download.help = [[
 local function get_file(filename)
    local protocol, pathname = dir.split_url(filename)
    if protocol == "file" then
-      local ok, err = fs.copy(pathname, fs.current_dir())
+      local ok, err = fs.copy(pathname, fs.current_dir(), cfg.perm_read)
       if ok then
          return pathname
       else
