@@ -186,20 +186,12 @@ function install.run(...)
       return name, version
    else
       local search = require("luarocks.search")
-      local results, err = search.find_suitable_rock(search.make_query(name:lower(), version))
-      if err then
+      local url, err = search.find_suitable_rock(search.make_query(name:lower(), version))
+      if not url then
          return nil, err
-      elseif type(results) == "string" then
-         local url = results
-         util.printout("Installing "..url.."...")
-         return install.run(url, util.forward_flags(flags))
-      else
-         util.printout()
-         util.printerr("Could not determine which rock to install.")
-         util.title("Search results:")
-         search.print_results(results)
-         return nil, (next(results) and "Please narrow your query." or "No results found.")
       end
+      util.printout("Installing "..url.."...")
+      return install.run(url, util.forward_flags(flags))
    end
 end
 

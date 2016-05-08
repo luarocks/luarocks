@@ -484,13 +484,13 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
       for _, dep in pairs(missing) do
          -- Double-check in case dependency was filled during recursion.
          if not match_dep(dep, nil, deps_mode) then
-            local rock = search.find_suitable_rock(dep)
-            if not rock then
-               return nil, "Could not satisfy dependency: "..deps.show_dep(dep)
+            local url, err = search.find_suitable_rock(dep)
+            if not url then
+               return nil, "Could not satisfy dependency "..deps.show_dep(dep)..": "..err
             end
-            local ok, err, errcode = install.run(rock, deps.deps_mode_to_flag(deps_mode))
+            local ok, err, errcode = install.run(url, deps.deps_mode_to_flag(deps_mode))
             if not ok then
-               return nil, "Failed installing dependency: "..rock.." - "..err, errcode
+               return nil, "Failed installing dependency: "..url.." - "..err, errcode
             end
          end
       end

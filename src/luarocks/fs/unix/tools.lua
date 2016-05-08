@@ -293,13 +293,19 @@ end
 function tools.unpack_archive(archive)
    assert(type(archive) == "string")
 
+   local pipe_to_tar = " | "..vars.TAR.." -xf -"
+
+   if not cfg.verbose then
+      pipe_to_tar = " 2> /dev/null"..fs.quiet(pipe_to_tar)
+   end
+
    local ok
    if archive:match("%.tar%.gz$") or archive:match("%.tgz$") then
-         ok = fs.execute_string(vars.GUNZIP.." -c "..archive.."|"..vars.TAR.." -xf -")
+      ok = fs.execute_string(vars.GUNZIP.." -c "..fs.Q(archive)..pipe_to_tar)
    elseif archive:match("%.tar%.bz2$") then
-         ok = fs.execute_string(vars.BUNZIP2.." -c "..archive.."|tar -xf -")
+      ok = fs.execute_string(vars.BUNZIP2.." -c "..fs.Q(archive)..pipe_to_tar)
    elseif archive:match("%.zip$") then
-      ok = fs.execute(vars.UNZIP, archive)
+      ok = fs.execute_quiet(vars.UNZIP, archive)
    elseif archive:match("%.lua$") or archive:match("%.c$") then
       -- Ignore .lua and .c files; they don't need to be extracted.
       return true
@@ -349,6 +355,24 @@ end
 function tools.set_time(file, time)
    file = dir.normalize(file)
    return fs.execute(vars.TOUCH, "-d", "@"..tostring(time), file)
+end
+
+--- Create a temporary directory.
+-- @param name string: name pattern to use for avoiding conflicts
+-- when creating temporary directory.
+-- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
+function tools.make_temp_dir(name)
+   assert(type(name) == "string")
+   name = dir.normalize(name)
+
+   local template = (os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-XXXXXX"
+   local pipe = io.popen(vars.MKTEMP.." -d "..fs.Q(template))
+   local dirname = pipe:read("*l")
+   pipe:close()
+   if dirname and dirname:match("^/") then
+      return dirname
+   end
+   return nil, "Failed to create temporary directory "..tostring(dirname)
 end
 
 return tools

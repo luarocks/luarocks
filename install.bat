@@ -55,7 +55,7 @@ local function die(message)
 	os.exit(1)
 end
 
-function split_string(str, delim, maxNb)
+local function split_string(str, delim, maxNb)
 	-- Eliminate bad cases...
 	if string.find(str, delim) == nil then
 		return { str }
@@ -427,7 +427,7 @@ end
 -- get a string value from windows registry.
 local function get_registry(key, value)
 	local keys = {key}
-	local key64, replaced = key:gsub("(%u+\\Software\\)", "\1Wow6432Node\\", 1)
+	local key64, replaced = key:gsub("(%u+\\Software\\)", "%1Wow6432Node\\", 1)
 
 	if replaced == 1 then
 		keys = {key64, key}
@@ -543,8 +543,7 @@ local function look_for_lua_install ()
 	else
 		-- no prefix given, so use path
 		directories = (os.getenv("PATH",";") or "")
-		local i = 1
-        while i ~= 0 do directories, i = directories:gsub(";;",";") end  --remove all doubles
+		directories = directories:gsub(";+", ";")  --remove all doubles
 		directories = split_string(directories,";")
 		-- if a path element ends with "\bin\" then remove it, as the searcher will check there anyway
 		for i, val in ipairs(directories) do
@@ -651,7 +650,7 @@ local with_arg = { -- options followed by an argument, others are flags
 -- this will be damaged by the batch construction at the start of this file
 local oarg = arg  -- retain old table
 if #arg > 0 then
-	farg = table.concat(arg, " ") .. " "
+	local farg = table.concat(arg, " ") .. " "
 	arg = {}
 	farg = farg:gsub('%"', "")
 	local i = 0
@@ -672,7 +671,6 @@ if #arg > 0 then
 	end
 end
 for k,v in pairs(oarg) do if k < 1 then arg[k] = v end end -- copy 0 and negative indexes
-oarg = nil
 
 -- build config option table with name and value elements
 local i = 1
@@ -771,7 +769,6 @@ if not vars.TREE_ROOT then
   end
 end
 
-local datapath
 vars.SYSCONFDIR = vars.SYSCONFDIR or vars.PREFIX
 vars.SYSCONFFILENAME = S"config-$LUA_VERSION.lua"
 vars.CONFIG_FILE = vars.SYSCONFDIR.."\\"..vars.SYSCONFFILENAME

@@ -28,8 +28,6 @@ local patch = require("luarocks.tools.patch")
 
 local dir_stack = {}
 
-math.randomseed(os.time())
-
 local dir_separator = "/"
 
 --- Quote argument for shell processing.
@@ -65,23 +63,6 @@ function fs_lua.is_writable(file)
       if fh then fh:close() end
    end
    return result
-end
-
---- Create a temporary directory.
--- @param name string: name pattern to use for avoiding conflicts
--- when creating temporary directory.
--- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
-function fs_lua.make_temp_dir(name)
-   assert(type(name) == "string")
-   name = dir.normalize(name)
-
-   local temp_dir = (os.getenv("TMP") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-" .. tostring(math.floor(math.random() * 10000))
-   local ok, err = fs.make_dir(temp_dir)
-   if ok then
-      return temp_dir
-   else
-      return nil, err
-   end
 end
 
 local function quote_args(command, ...)
@@ -274,6 +255,10 @@ function fs_lua.make_dir(directory)
          if not ok then
             return false, err
          end
+         ok, err = fs.chmod(path, cfg.perm_exec)
+         if not ok then
+            return false, err
+         end
       elseif mode ~= "directory" then
          return false, path.." is not a directory"
       end
@@ -339,12 +324,14 @@ end
 -- Assumes paths are normalized.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
+-- @param perms string or nil: Optional permissions.
+-- If not given, permissions of the source are copied over to the destination.
 -- @return boolean or (boolean, string): true on success, false on failure
-local function recursive_copy(src, dest)
+local function recursive_copy(src, dest, perms)
    local srcmode = lfs.attributes(src, "mode")
 
    if srcmode == "file" then
-      local ok = fs.copy(src, dest)
+      local ok = fs.copy(src, dest, perms)
       if not ok then return false end
    elseif srcmode == "directory" then
       local subdir = dir.path(dest, dir.base_name(src))
@@ -352,7 +339,7 @@ local function recursive_copy(src, dest)
       if not ok then return nil, err end
       for file in lfs.dir(src) do
          if file ~= "." and file ~= ".." then
-            local ok = recursive_copy(dir.path(src, file), subdir)
+            local ok = recursive_copy(dir.path(src, file), subdir, perms)
             if not ok then return false end
          end
       end
@@ -363,9 +350,10 @@ end
 --- Recursively copy the contents of a directory.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
+-- @param perms string or nil: Optional permissions. 
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
-function fs_lua.copy_contents(src, dest)
+function fs_lua.copy_contents(src, dest, perms)
    assert(src and dest)
    src = dir.normalize(src)
    dest = dir.normalize(dest)
@@ -373,7 +361,7 @@ function fs_lua.copy_contents(src, dest)
 
    for file in lfs.dir(src) do
       if file ~= "." and file ~= ".." then
-         local ok = recursive_copy(dir.path(src, file), dest)
+         local ok = recursive_copy(dir.path(src, file), dest, perms)
          if not ok then
             return false, "Failed copying "..src.." to "..dest
          end
@@ -785,6 +773,17 @@ function fs_lua.get_permissions(file)
    return posix.stat(file, "mode")
 end
 
+--- Create a temporary directory.
+-- @param name string: name pattern to use for avoiding conflicts
+-- when creating temporary directory.
+-- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
+function fs_lua.make_temp_dir(name)
+   assert(type(name) == "string")
+   name = dir.normalize(name)
+
+   return posix.mkdtemp((os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-XXXXXX")
+end
+
 end
 
 ---------------------------------------------------------------------
@@ -807,14 +806,16 @@ end
 --- Move a file.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
+-- @param perms string or nil: Permissions for destination file,
+-- or nil to use the source filename permissions.
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
-function fs_lua.move(src, dest)
+function fs_lua.move(src, dest, perms)
    assert(src and dest)
    if fs.exists(dest) and not fs.is_dir(dest) then
       return false, "File already exists: "..dest
    end
-   local ok, err = fs.copy(src, dest)
+   local ok, err = fs.copy(src, dest, perms)
    if not ok then
       return false, err
    end
