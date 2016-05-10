@@ -168,7 +168,6 @@ function install.run(...)
    if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
-      util.printout("Using "..name.."... switching to 'build' mode")
       local build = require("luarocks.build")
       return build.run(name, util.forward_flags(flags, "local", "keep", "deps-mode", "only-deps"))
    elseif name:match("%.rock$") then
@@ -190,7 +189,7 @@ function install.run(...)
       if not url then
          return nil, err
       end
-      util.printout("Installing "..url.."...")
+      util.printout("Installing "..url)
       return install.run(url, util.forward_flags(flags))
    end
 end

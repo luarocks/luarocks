@@ -488,6 +488,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
             if not url then
                return nil, "Could not satisfy dependency "..deps.show_dep(dep)..": "..err
             end
+            util.printout("Installing "..url)
             local ok, err, errcode = install.run(url, deps.deps_mode_to_flag(deps_mode))
             if not ok then
                return nil, "Failed installing dependency: "..url.." - "..err, errcode
