@@ -16,6 +16,7 @@ local deps = require("luarocks.deps")
 local manif = require("luarocks.manif")
 local remove = require("luarocks.remove")
 local cfg = require("luarocks.cfg")
+local unpack = table.unpack or unpack
 
 build.help_summary = "Build/compile a rock."
 build.help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
@@ -164,7 +165,7 @@ end
 -- @param build_only_deps boolean: true to build the listed dependencies only.
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode, build_only_deps)
+function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode, build_only_deps, deps_install_mode, blacklist)
    assert(type(rockspec_file) == "string")
    assert(type(need_to_fetch) == "boolean")
 
@@ -180,7 +181,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    if deps_mode == "none" then
       util.printerr("Warning: skipping dependency checks.")
    else
-      local ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+      local ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode, deps_install_mode, blacklist)
       if err then
          return nil, err, errcode
       end
@@ -355,7 +356,7 @@ end
 -- @param build_only_deps boolean: true to build the listed dependencies only.
 -- @return boolean or (nil, string, [string]): True if build was successful,
 -- or false and an error message and an optional error code.
-function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
+function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps, deps_install_mode, blacklist)
    assert(type(rock_file) == "string")
    assert(type(need_to_fetch) == "boolean")
 
@@ -368,25 +369,28 @@ function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
    local rockspec_file = path.rockspec_name_from_rock(rock_file)
    ok, err = fs.change_dir(unpack_dir)
    if not ok then return nil, err end
-   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps)
+   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps, deps_install_mode, blacklist)
    fs.pop_dir()
    return ok, err, errcode
 end
  
-local function do_build(name, version, deps_mode, build_only_deps)
+local function do_build(name, version, deps_mode, build_only_deps, deps_install_mode)
    if name:match("%.rockspec$") then
-      return build.build_rockspec(name, true, false, deps_mode, build_only_deps)
+      return build.build_rockspec(name, true, false, deps_mode, build_only_deps, deps_install_mode, {})
    elseif name:match("%.src%.rock$") then
-      return build.build_rock(name, false, deps_mode, build_only_deps)
+      return build.build_rock(name, false, deps_mode, build_only_deps, deps_install_mode, {})
    elseif name:match("%.all%.rock$") then
       local install = require("luarocks.install")
       local install_fun = build_only_deps and install.install_binary_rock_deps or install.install_binary_rock
-      return install_fun(name, deps_mode)
+      return install_fun(name, deps_mode, deps_install_mode, {})
    elseif name:match("%.rock$") then
-      return build.build_rock(name, true, deps_mode, build_only_deps)
+      return build.build_rock(name, true, deps_mode, build_only_deps, deps_install_mode, {})
    elseif not name:match(dir.separator) then
       local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(build.run, name:lower(), version, deps.deps_mode_to_flag(deps_mode), build_only_deps and "--only-deps")
+      local args = {deps.deps_mode_to_flag(deps_mode)}
+      table.insert(args, build_only_deps and "--only-deps" or nil)
+      table.insert(args, deps.deps_install_mode_to_flag(deps_install_mode) or nil)
+      return search.act_on_src_or_rockspec(build.run, name:lower(), version, unpack(args))
    end
    return nil, "Don't know what to do with "..name
 end
@@ -411,7 +415,8 @@ function build.run(...)
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
-      ok, err = do_build(name, version, deps.get_deps_mode(flags), flags["only-deps"])
+      local _, deps_install_mode = deps.get_install_modes(flags)
+      ok, err = do_build(name, version, deps.get_deps_mode(flags), flags["only-deps"], deps_install_mode)
       if not ok then return nil, err end
       local name, version = ok, err
       if flags["only-deps"] then
