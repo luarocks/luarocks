@@ -82,7 +82,7 @@ function remove.remove_search_results(results, name, deps_mode, force)
    
    local dependents = {}
    if force ~= "fast" then
-      util.printout("Checking stability of dependencies on the absence of")
+      util.printout("Checking stability of dependencies in the absence of")
       util.printout(name.." "..table.concat(util.keys(versions), ", ").."...")
       util.printout()
       dependents = check_dependents(name, versions, deps_mode)
