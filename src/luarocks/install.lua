@@ -170,7 +170,7 @@ function install.run(...)
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       util.printout("Using "..name.."... switching to 'build' mode")
       local build = require("luarocks.build")
-      return build.run(name, util.forward_flags(flags, "local", "keep", "deps-mode", "only-deps"))
+      return build.run(name, util.forward_flags(flags, "local", "keep", "deps-mode", "only-deps", "force", "force-fast"))
    elseif name:match("%.rock$") then
       if flags["only-deps"] then
          ok, err = install.install_binary_rock_deps(name, deps.get_deps_mode(flags))
