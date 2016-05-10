@@ -98,15 +98,7 @@ function install.install_binary_rock(rock_file, deps_mode)
    ok, err = manif.update_manifest(name, version, nil, deps_mode)
    if err then return nil, err end
    
-   local license = ""
-   if rockspec.description.license then
-      license = ("(license: "..rockspec.description.license..")")
-   end
-
-   local root_dir = path.root_dir(cfg.rocks_dir)
-   util.printout()
-   util.printout(name.." "..version.." is now installed in "..root_dir.." "..license)
-   
+   util.announce_install(rockspec)
    util.remove_scheduled_function(rollback)
    return name, version
 end
