@@ -432,8 +432,6 @@ function manif.update_manifest(name, version, repo, deps_mode)
    
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
-   util.printout("Updating manifest for "..repo)
-
    local manifest, err = manif.load_manifest(repo)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
