@@ -29,27 +29,19 @@ local function check_outdated(trees, query)
    end
    local outdated = {}
    for name, versions in util.sortedpairs(results_installed) do
-      local latest_installed
-      local latest_available, latest_available_repo
-
-      for version, _ in util.sortedpairs(versions, deps.compare_versions) do
-         latest_installed = version
-         break
-      end
+      versions = util.keys(versions)
+      table.sort(versions, deps.compare_versions)
+      local latest_installed = versions[1]
 
       local query_available = search.make_query(name:lower())
       query.exact_name = true
       local results_available, err = search.search_repos(query_available)
       
       if results_available[name] then
-         for version, repos in util.sortedpairs(results_available[name], deps.compare_versions) do
-            latest_available = version
-            for _, repo in ipairs(repos) do
-               latest_available_repo = repo.repo
-               break
-            end
-            break
-         end
+         local available_versions = util.keys(results_available[name])
+         table.sort(available_versions, deps.compare_versions)
+         local latest_available = available_versions[1]
+         local latest_available_repo = results_available[name][latest_available][1].repo
          
          if deps.compare_versions(latest_available, latest_installed) then
             table.insert(outdated, { name = name, installed = latest_installed, available = latest_available, repo = latest_available_repo })
