@@ -61,7 +61,7 @@ function purge.run(...)
       for version, repositories in util.sortedpairs(versions, sort) do
          if flags["old-versions"] then
             util.printout("Keeping "..package.." "..version.."...")
-            local ok, err = remove.remove_other_versions(package, version, flags["force"])
+            local ok, err = remove.remove_other_versions(package, version, flags["force"], flags["force-fast"])
             if not ok then
                util.printerr(err)
             end

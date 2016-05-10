@@ -458,6 +458,7 @@ test_purge_oldversions() { $luarocks purge --old-versions --tree="$testing_sys_t
 
 test_remove() { $luarocks build abelhas ${version_abelhas} && $luarocks remove abelhas ${version_abelhas}; }
 test_remove_force() { need_luasocket; $luarocks build lualogging && $luarocks remove --force luasocket; }
+test_remove_force_fast() { need_luasocket; $luarocks build lualogging && $luarocks remove --force-fast luasocket; }
 fail_remove_deps() { need_luasocket; $luarocks build lualogging && $luarocks remove luasocket; }
 fail_remove_missing() { $luarocks remove missing_rock; }
 fail_remove_invalid_name() { $luarocks remove invalid.rock; }
