@@ -16,7 +16,7 @@ local manif = require("luarocks.manif")
 local fs = require("luarocks.fs")
 
 remove.help_summary = "Uninstall a rock."
-remove.help_arguments = "[--force[=fast]] <name> [<version>]"
+remove.help_arguments = "[--force|--force-fast] <name> [<version>]"
 remove.help = [[
 Argument is the name of a rock to be uninstalled.
 If a version is not given, try to remove all versions at once.
