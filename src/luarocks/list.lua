@@ -32,7 +32,7 @@ local function check_outdated(trees, query)
       local latest_installed
       local latest_available, latest_available_repo
 
-      for version, _ in util.sortedpairs(versions) do
+      for version, _ in util.sortedpairs(versions, deps.compare_versions) do
          latest_installed = version
          break
       end
