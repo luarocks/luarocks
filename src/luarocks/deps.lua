@@ -410,6 +410,13 @@ local function values_set(tbl)
    return set
 end
 
+local function rock_status(name, deps_mode)
+   local search = require("luarocks.search")
+   local installed = match_dep(search.make_query(name), nil, deps_mode)
+   local installation_type = cfg.rocks_provided[name] and "provided by VM" or "installed"
+   return installed and installed.version.." "..installation_type or "not installed"
+end
+
 --- Check dependencies of a rock and attempt to install any missing ones.
 -- Packages are installed using the LuaRocks "install" command.
 -- Aborts the program if a dependency could not be fulfilled.
@@ -454,15 +461,25 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
    for _, dep in ipairs(rockspec.dependencies) do
       if not match_dep(dep, nil, deps_mode) then
          if first_missing_dep then
+            util.printout(("Missing dependencies for %s %s:"):format(rockspec.name, rockspec.version))
+            first_missing_dep = false
+         end
+
+         util.printout(("   %s (%s)"):format(deps.show_dep(dep), rock_status(dep.name, deps_mode)))
+      end
+   end
+
+   first_missing_dep = true
+
+   for _, dep in ipairs(rockspec.dependencies) do
+      if not match_dep(dep, nil, deps_mode) then
+         if first_missing_dep then
             util.printout()
             first_missing_dep = false
          end
 
-         local any_installed = match_dep(search.make_query(dep.name), nil, deps_mode)
-         local installation_type = cfg.rocks_provided[dep.name] and "provided by VM" or "installed"
-         local status = any_installed and any_installed.version.." "..installation_type or "missing"
          util.printout(("%s %s depends on %s (%s)"):format(
-            rockspec.name, rockspec.version, deps.show_dep(dep), status))
+            rockspec.name, rockspec.version, deps.show_dep(dep), rock_status(dep.name, deps_mode)))
 
          if dep.constraints[1] and dep.constraints[1].no_upgrade then
             util.printerr("This version of "..rockspec.name.." is designed for use with")
