@@ -159,7 +159,7 @@ else
    luadir="/Programs/Lua/Current"
    if [ ! -e "$luadir" ]
    then
-      luadir="/usr/local"
+      luadir="/usr"
    fi
 fi
 
@@ -178,6 +178,8 @@ srcdir_luasocket=luasocket-3.0-rc1
 
 version_cprint=0.1
 verrev_cprint=0.1-2
+
+version_lpeg=0.6-2
 
 version_luacov=0.11.0
 verrev_luacov=${version_luacov}-1
@@ -557,6 +559,12 @@ fail_doc_invalid() { $luarocks doc invalid; }
 test_doc_list() { $luarocks install luacov; $luarocks doc luacov --list; }
 test_doc_local() { $luarocks install luacov; $luarocks doc luacov --local; }
 test_doc_porcelain() { $luarocks install luacov; $luarocks doc luacov --porcelain; }
+
+# Tests for https://github.com/keplerproject/luarocks/pull/552
+fail_install_break_dependencies() { need_luasocket;$luarocks install lxsh && $luarocks install lpeg ${version_lpeg};   }
+test_install_break_dependencies_force() { need_luasocket;$luarocks install lxsh && $luarocks install --force lpeg ${version_lpeg}; }
+test_install_break_dependencies_forcefast() { need_luasocket;$luarocks install sailor && $luarocks install --force-fast ${version_lpeg}; }
+
 
 # Driver #########################################
 
