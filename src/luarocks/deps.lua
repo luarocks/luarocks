@@ -410,6 +410,13 @@ local function values_set(tbl)
    return set
 end
 
+local function rock_status(name, deps_mode)
+   local search = require("luarocks.search")
+   local installed = match_dep(search.make_query(name), nil, deps_mode)
+   local installation_type = cfg.rocks_provided[name] and "provided by VM" or "installed"
+   return installed and installed.version.." "..installation_type or "not installed"
+end
+
 --- Check dependencies of a rock and attempt to install any missing ones.
 -- Packages are installed using the LuaRocks "install" command.
 -- Aborts the program if a dependency could not be fulfilled.
@@ -449,52 +456,53 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
       end
    end
 
-   local _, missing, no_upgrade = deps.match_deps(rockspec, nil, deps_mode)
+   local first_missing_dep = true
 
-   if next(no_upgrade) then
-      util.printerr("Missing dependencies for "..rockspec.name.." "..rockspec.version..":")
-      for _, dep in pairs(no_upgrade) do
-         util.printerr(deps.show_dep(dep))
-      end
-      if next(missing) then
-         for _, dep in pairs(missing) do
-            util.printerr(deps.show_dep(dep))
+   for _, dep in ipairs(rockspec.dependencies) do
+      if not match_dep(dep, nil, deps_mode) then
+         if first_missing_dep then
+            util.printout(("Missing dependencies for %s %s:"):format(rockspec.name, rockspec.version))
+            first_missing_dep = false
          end
+
+         util.printout(("   %s (%s)"):format(deps.show_dep(dep), rock_status(dep.name, deps_mode)))
       end
-      util.printerr()
-      for _, dep in pairs(no_upgrade) do
-         util.printerr("This version of "..rockspec.name.." is designed for use with")
-         util.printerr(deps.show_dep(dep)..", but is configured to avoid upgrading it")
-         util.printerr("automatically. Please upgrade "..dep.name.." with")
-         util.printerr("   luarocks install "..dep.name)
-         util.printerr("or choose an older version of "..rockspec.name.." with")
-         util.printerr("   luarocks search "..rockspec.name)
-      end
-      return nil, "Failed matching dependencies."
    end
 
-   if next(missing) then
-      util.printerr()
-      util.printerr("Missing dependencies for "..rockspec.name..":")
-      for _, dep in pairs(missing) do
-         util.printerr(deps.show_dep(dep))
-      end
-      util.printerr()
+   first_missing_dep = true
 
-      for _, dep in pairs(missing) do
-         -- Double-check in case dependency was filled during recursion.
-         if not match_dep(dep, nil, deps_mode) then
-            local url, err = search.find_suitable_rock(dep)
-            if not url then
-               return nil, "Could not satisfy dependency "..deps.show_dep(dep)..": "..err
-            end
-            local ok, err, errcode = install.run(url, deps.deps_mode_to_flag(deps_mode))
-            if not ok then
-               return nil, "Failed installing dependency: "..url.." - "..err, errcode
-            end
+   for _, dep in ipairs(rockspec.dependencies) do
+      if not match_dep(dep, nil, deps_mode) then
+         if first_missing_dep then
+            util.printout()
+            first_missing_dep = false
+         end
+
+         util.printout(("%s %s depends on %s (%s)"):format(
+            rockspec.name, rockspec.version, deps.show_dep(dep), rock_status(dep.name, deps_mode)))
+
+         if dep.constraints[1] and dep.constraints[1].no_upgrade then
+            util.printerr("This version of "..rockspec.name.." is designed for use with")
+            util.printerr(deps.show_dep(dep)..", but is configured to avoid upgrading it")
+            util.printerr("automatically. Please upgrade "..dep.name.." with")
+            util.printerr("   luarocks install "..dep.name)
+            util.printerr("or choose an older version of "..rockspec.name.." with")
+            util.printerr("   luarocks search "..rockspec.name)
+            return nil, "Failed matching dependencies"
+         end
+
+         local url, search_err = search.find_suitable_rock(dep)
+         if not url then
+            return nil, "Could not satisfy dependency "..deps.show_dep(dep)..": "..search_err
+         end
+         util.printout("Installing "..url)
+         local ok, install_err, errcode = install.run(url, deps.deps_mode_to_flag(deps_mode))
+         if not ok then
+            return nil, "Failed installing dependency: "..url.." - "..install_err, errcode
          end
       end
    end
+
    return true
 end
 

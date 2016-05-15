@@ -506,6 +506,20 @@ function util.see_help(command, program)
    return "See '"..util.this_program(program or "luarocks")..' help'..(command and " "..command or "").."'."
 end
 
+function util.announce_install(rockspec)
+   local cfg = require("luarocks.cfg")
+   local path = require("luarocks.path")
+
+   local suffix = ""
+   if rockspec.description and rockspec.description.license then
+      suffix = " (license: "..rockspec.description.license..")"
+   end
+
+   local root_dir = path.root_dir(cfg.rocks_dir)
+   util.printout(rockspec.name.." "..rockspec.version.." is now installed in "..root_dir..suffix)
+   util.printout()
+end
+
 -- from http://lua-users.org/wiki/SplitJoin
 -- by PhilippeLhoste
 function util.split_string(str, delim, maxNb)
