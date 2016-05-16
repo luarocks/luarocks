@@ -179,6 +179,9 @@ srcdir_luasocket=luasocket-3.0-rc1
 version_cprint=0.1
 verrev_cprint=0.1-2
 
+new_version_say=1.2-1
+old_version_say=1.0-1
+
 version_luacov=0.11.0
 verrev_luacov=${version_luacov}-1
 version_lxsh=0.8.6
@@ -260,6 +263,9 @@ mkdir -p "$testing_server"
    get "$luarocks_repo/lua-path-0.2.3-1.src.rock"
    get "$luarocks_repo/lua-cjson-2.1.0-1.src.rock"
    get "$luarocks_repo/luacov-coveralls-0.1.1-1.src.rock"
+   get "$luarocks_repo/say-1.2-1.src.rock"
+   get "$luarocks_repo/say-1.0-1.src.rock"
+   get "$luarocks_repo/luassert-1.7.0-1.src.rock"
 )
 $luarocks_admin_nocov make_manifest "$testing_server"
 
@@ -558,8 +564,12 @@ test_doc_list() { $luarocks install luacov; $luarocks doc luacov --list; }
 test_doc_local() { $luarocks install luacov; $luarocks doc luacov --local; }
 test_doc_porcelain() { $luarocks install luacov; $luarocks doc luacov --porcelain; }
 
-# Driver #########################################
+# Tests for https://github.com/keplerproject/luarocks/pull/552
+test_install_break_dependencies_warning() { need_luasocket; $luarocks install say ${new_version_say} && $luarocks install luassert && $luarocks install say ${old_version_say}; }
+test_install_break_dependencies_force() { need_luasocket; $luarocks install say ${new_version_say} && $luarocks install luassert && $luarocks install --force say ${old_version_say}; }
+test_install_break_dependencies_forcefast() { need_luasocket; $luarocks install say ${new_version_say} && $luarocks install luassert && $luarocks install --force-fast say ${old_version_say}; }
 
+# Driver #########################################
 run_tests() {
    grep "^test_$1.*(" < $testing_dir/testing.sh | cut -d'(' -f1 | while read test
    do
