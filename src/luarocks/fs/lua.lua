@@ -556,12 +556,9 @@ socket.sourcet["by-length"] = function(sock, length)
    return source
 end
 
--- If the file being downloaded consists of
--- enough chunks (should not trigger for small files
--- like rockspecs) or getting a chunk takes too long,
+-- If downloading a file takes too long,
 -- start displaying progress line.
-local progress_step_threshold = 5
-local progress_seconds_threshold = 1
+local progress_seconds_threshold = 1.5
 
 local function bytes_to_string(bytes)
    if bytes >= 1024 * 1000 then
@@ -589,12 +586,6 @@ local function request(url, method, context)
    else
       return nil, "Unsupported protocol", util.starts_with(url, "https")
    end
-
-   context = context or {
-      original_url = url,
-      redirecting_urls = {},
-      steps = 0
-   }
    
    local proxy = cfg.http_proxy
    if type(proxy) ~= "string" then proxy = nil end
@@ -612,6 +603,12 @@ local function request(url, method, context)
    local start_seconds = socket.gettime()
    local speed = 0
 
+   context = context or {
+      original_url = url,
+      redirecting_urls = {},
+      first_start_seconds = start_seconds
+   }
+
    local res, status, headers, status_line = transport.request({
       url = url,
       proxy = proxy,
@@ -626,31 +623,19 @@ local function request(url, method, context)
             return nil, source_err or sink_err
          end
 
-         context.steps = context.steps + 1
          currently_downloaded = currently_downloaded + #chunk
-         local previous_seconds = context.seconds
-         context.seconds = socket.gettime()
-         speed = currently_downloaded / (context.seconds - start_seconds)
-         local previous_progress_line = context.progress_line
+         local current_seconds = socket.gettime()
+         speed = currently_downloaded / (current_seconds - start_seconds)
 
+         local enable_progress_line
          if not context.progress_line then
-            local enable_progress_line
-
-            if context.steps > progress_step_threshold then
-               enable_progress_line = true
-            elseif previous_seconds then
-               if context.seconds - previous_seconds > progress_seconds_threshold then
-                  enable_progress_line = true
-               end
-            end
-
-            if enable_progress_line then
+            if current_seconds - context.first_start_seconds > progress_seconds_threshold then
                util.printerr("Downloading " .. context.original_url)
-               context.progress_line = true
+               enable_progress_line = true
             end
          end
 
-         if context.progress_line then
+         if context.progress_line or enable_progress_line then
             local label = bytes_to_string(currently_downloaded)
 
             if source.length then
@@ -660,8 +645,8 @@ local function request(url, method, context)
 
             label = label .. " | " .. bytes_to_string(speed) .. "/s"
 
-            if previous_progress_line then
-               io.stderr:write("\r" .. (" "):rep(#previous_progress_line))
+            if context.progress_line then
+               io.stderr:write("\r" .. (" "):rep(#context.progress_line))
             end
 
             context.progress_line = "  Got " .. label
