@@ -163,9 +163,6 @@ local tests = {
       return run '$luarocks build "$testing_dir/testfiles/invalid_patch-0.1-1.rockspec"'
    end,
    test_build_deps_partial_match = function() return run "$luarocks build lmathx" end,
-   test_build_show_downloads = function()
-      return run("$luarocks build alien", { LUAROCKS_CONFIG="$testing_dir/testing_config_show_downloads.lua" })
-   end,
    test_download_all = function()
       return run "$luarocks download --all validate-args"
          and rm(glob("validate-args-*"))

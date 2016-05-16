@@ -59,7 +59,6 @@ rm -rf "$testing_sys_tree"
 rm -rf "$testing_tree_copy"
 rm -rf "$testing_sys_tree_copy"
 rm -rf "$testing_dir/testing_config.lua"
-rm -rf "$testing_dir/testing_config_show_downloads.lua"
 rm -rf "$testing_dir/testing_config_sftp.lua"
 rm -rf "$testing_dir/luacov.config"
 
@@ -99,10 +98,6 @@ external_deps_dirs = {
    }
 }
 EOF
-(
-   cat $testing_dir/testing_config.lua
-   echo "show_downloads = true"
-) > $testing_dir/testing_config_show_downloads.lua
 cat <<EOF > $testing_dir/testing_config_sftp.lua
 rocks_trees = {
    "$testing_tree",
@@ -401,7 +396,6 @@ fail_build_missing_external() { $luarocks build "$testing_dir/testfiles/missing_
 fail_build_invalidpatch() { need_luasocket; $luarocks build "$testing_dir/testfiles/invalid_patch-0.1-1.rockspec"; }
 
 test_build_deps_partial_match() { $luarocks build lmathx; }
-test_build_show_downloads() { export LUAROCKS_CONFIG="$testing_dir/testing_config_show_downloads.lua" && $luarocks build alien; export LUAROCKS_CONFIG="$testing_dir/testing_config.lua"; }
 
 test_download_all() { $luarocks download --all validate-args && rm validate-args-*; }
 test_download_rockspecversion() { $luarocks download --rockspec validate-args ${verrev_validate_args} && rm validate-args-*; }

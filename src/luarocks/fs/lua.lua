@@ -618,7 +618,7 @@ local function request(url, method, context)
       method = method,
       redirect = false,
       sink = ltn12.sink.table(result),
-      step = cfg.show_downloads and function(source, sink)
+      step = function(source, sink)
          local chunk, source_err = source()
          local ret, sink_err = sink(chunk, source_err)
 
