@@ -208,6 +208,7 @@ function write_rockspec.run(...)
       name = nil
    elseif not url_or_dir then
       url_or_dir = version
+      version = nil
    end
    
    if flags["tag"] then
