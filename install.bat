@@ -525,6 +525,14 @@ local function get_msvc_env_setup_cmd()
 				return ('call "%s"'):format(full_path)
 			end
 		end
+
+		-- try vcvarsall.bat in case MS changes the undocumented bat files above.
+		-- but this way we don't konw if specified compiler is installed...
+		local vcvarsall = vcdir .. 'vcvarsall.bat'
+		if exists(vcvarsall) then
+			local vcvarsall_args = { x86 = "", x86_64 = " amd64" }
+			return ('call "%s"%s'):format(vcvarsall, vcvarsall_args[vars.UNAME_M])
+		end
 	end
 
 	-- 2. try for Windows SDKs command line tools.
