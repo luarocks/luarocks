@@ -266,10 +266,6 @@ function write_rockspec.run(...)
    version = version or "scm"
 
    local filename = flags["output"] or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
-   
-   if not flags["homepage"] and url_or_dir:match("^git://github.com") then
-      flags["homepage"] = "http://"..url_or_dir:match("^[^:]+://(.*)")
-   end
 
    local rockspec = {
       rockspec_format = flags["rockspec-format"],
@@ -323,6 +319,19 @@ function write_rockspec.run(...)
    
    if not local_dir then
       local_dir = "."
+   end
+
+   if not flags["homepage"] then
+      local url_protocol, url_path = dir.split_url(rockspec.source.url)
+
+      if simple_scm_protocols[url_protocol] then
+         for _, domain in ipairs({"github.com", "bitbucket.org", "gitlab.com"}) do
+            if util.starts_with(url_path, domain) then
+               rockspec.description.homepage = "https://"..url_path:gsub("%.git$", "")
+               break
+            end
+         end
+      end
    end
    
    local libs = nil
