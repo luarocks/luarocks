@@ -41,6 +41,7 @@ local rockspec_types = {
    },
    dependencies = {
       platforms = {}, -- recursively defined below
+      versions = {}, -- recursively defined below
       _any = string_1,
    },
    supported_platforms = {
@@ -48,6 +49,7 @@ local rockspec_types = {
    },
    external_dependencies = {
       platforms = {}, -- recursively defined below
+      versions = {}, -- recursively defined below
       _any = {
          program = string_1,
          header = string_1,
@@ -57,6 +59,7 @@ local rockspec_types = {
    source = {
       _mandatory = true,
       platforms = {}, -- recursively defined below
+      versions = {}, -- recursively defined below
       url = mandatory_string_1,
       md5 = string_1,
       file = string_1,
@@ -69,6 +72,7 @@ local rockspec_types = {
    },
    build = {
       platforms = {}, -- recursively defined below
+      versions = {}, -- recursively defined below
       type = string_1,
       install = {
          lua = {
@@ -91,6 +95,7 @@ local rockspec_types = {
    },
    hooks = {
       platforms = {}, -- recursively defined below
+      versions = {}, -- recursively defined below
       post_install = string_1,
    },
    deploy = {
@@ -111,6 +116,12 @@ rockspec_types.dependencies.platforms._any = rockspec_types.dependencies
 rockspec_types.external_dependencies.platforms._any = rockspec_types.external_dependencies
 rockspec_types.source.platforms._any = rockspec_types.source
 rockspec_types.hooks.platforms._any = rockspec_types.hooks
+
+rockspec_types.build.versions._any = rockspec_types.build
+rockspec_types.dependencies.versions._any = rockspec_types.dependencies
+rockspec_types.external_dependencies.versions._any = rockspec_types.external_dependencies
+rockspec_types.source.versions._any = rockspec_types.source
+rockspec_types.hooks.versions._any = rockspec_types.hooks
 
 local manifest_types = {
    repository = {
