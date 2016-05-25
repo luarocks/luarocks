@@ -520,6 +520,71 @@ function util.announce_install(rockspec)
    util.printout()
 end
 
+--- Collect rockspecs located in a subdirectory.
+-- @param versions table: A table mapping rock names to newest rockspec versions.
+-- @param paths table: A table mapping rock names to newest rockspec paths.
+-- @param unnamed_paths table: An array of rockspec paths that don't contain rock
+-- name and version in regular format.
+-- @param subdir string: path to subdirectory.
+local function collect_rockspecs(versions, paths, unnamed_paths, subdir)
+   local fs = require("luarocks.fs")
+   local dir = require("luarocks.dir")
+   local path = require("luarocks.path")
+   local deps = require("luarocks.deps")
+
+   if fs.is_dir(subdir) then
+      for file in fs.dir(subdir) do
+         file = dir.path(subdir, file)
+
+         if file:match("rockspec$") and fs.is_file(file) then
+            local rock, version = path.parse_name(file)
+
+            if rock then
+               if not versions[rock] or deps.compare_versions(version, versions[rock]) then
+                  versions[rock] = version
+                  paths[rock] = file
+               end
+            else
+               table.insert(unnamed_paths, file)
+            end
+         end
+      end
+   end
+end
+
+--- Get default rockspec name for commands that take optional rockspec name.
+-- @return string or (nil, string): path to the rockspec or nil and error message.
+function util.get_default_rockspec()
+   local versions, paths, unnamed_paths = {}, {}, {}
+   -- Look for rockspecs in some common locations.
+   collect_rockspecs(versions, paths, unnamed_paths, ".")
+   collect_rockspecs(versions, paths, unnamed_paths, "rockspec")
+   collect_rockspecs(versions, paths, unnamed_paths, "rockspecs")
+
+   if #unnamed_paths > 0 then
+      -- There are rockspecs not following "name-version.rockspec" format.
+      -- More than one are ambiguous.
+      if #unnamed_paths > 1 then
+         return nil, "Please specify which rockspec file to use."
+      else
+         return unnamed_paths[1]
+      end
+   else
+      local rock = next(versions)
+
+      if rock then
+         -- If there are rockspecs for multiple rocks it's ambiguous.
+         if next(versions, rock) then
+            return nil, "Please specify which rockspec file to use."
+         else
+            return paths[rock]
+         end
+      else
+         return nil, "Argument missing: please specify a rockspec to use on current directory."
+      end
+   end
+end
+
 -- from http://lua-users.org/wiki/SplitJoin
 -- by PhilippeLhoste
 function util.split_string(str, delim, maxNb)
