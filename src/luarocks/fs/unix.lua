@@ -16,6 +16,13 @@ function unix.quiet(cmd)
    return cmd.." 1> /dev/null 2> /dev/null"
 end
 
+--- Annotate command string for execution with quiet stderr.
+-- @param cmd string: A command-line string.
+-- @return string: The command-line, with stderr silencing annotation.
+function unix.quiet_stderr(cmd)
+   return cmd.." 2> /dev/null"
+end
+
 --- Return an absolute pathname from a potentially relative one.
 -- @param pathname string: pathname to convert.
 -- @param relative_to string or nil: path to prepend when making

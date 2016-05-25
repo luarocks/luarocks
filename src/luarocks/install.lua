@@ -98,15 +98,7 @@ function install.install_binary_rock(rock_file, deps_mode)
    ok, err = manif.update_manifest(name, version, nil, deps_mode)
    if err then return nil, err end
    
-   local license = ""
-   if rockspec.description.license then
-      license = ("(license: "..rockspec.description.license..")")
-   end
-
-   local root_dir = path.root_dir(cfg.rocks_dir)
-   util.printout()
-   util.printout(name.." "..version.." is now installed in "..root_dir.." "..license)
-   
+   util.announce_install(rockspec)
    util.remove_scheduled_function(rollback)
    return name, version
 end
@@ -168,7 +160,6 @@ function install.run(...)
    if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
-      util.printout("Using "..name.."... switching to 'build' mode")
       local build = require("luarocks.build")
       return build.run(name, util.forward_flags(flags, "local", "keep", "deps-mode", "only-deps", "force", "force-fast"))
    elseif name:match("%.rock$") then
@@ -190,7 +181,7 @@ function install.run(...)
       if not url then
          return nil, err
       end
-      util.printout("Installing "..url.."...")
+      util.printout("Installing "..url)
       return install.run(url, util.forward_flags(flags))
    end
 end

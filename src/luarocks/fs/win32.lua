@@ -27,6 +27,13 @@ function win32.quiet(cmd)
    return cmd.." 2> NUL 1> NUL"
 end
 
+--- Annotate command string for execution with quiet stderr.
+-- @param cmd string: A command-line string.
+-- @return string: The command-line, with stderr silencing annotation.
+function win32.quiet_stderr(cmd)
+   return cmd.." 2> NUL"
+end
+
 local drive_letter = "[%.a-zA-Z]?:?[\\/]"
 
 local win_escape_chars = {

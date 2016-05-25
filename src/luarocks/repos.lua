@@ -157,11 +157,10 @@ local function install_binary(source, target, name, version)
    assert(type(target) == "string")
    
    if fs.is_lua(source) then
-      repos.ok, repos.err = fs.wrap_script(source, target, name, version)
+      return fs.wrap_script(source, target, name, version)
    else
-      repos.ok, repos.err = fs.copy_binary(source, target)
+      return fs.copy_binary(source, target)
    end
-   return repos.ok, repos.err
 end
 
 local function resolve_conflict(target, deploy_dir, name, version)

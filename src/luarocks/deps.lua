@@ -322,48 +322,32 @@ end
 -- @param dep table: A dependency parsed in table format.
 -- @param blacklist table: Versions that can't be accepted. Table where keys
 -- are program versions and values are 'true'.
--- @return table or nil: A table containing fields 'name' and 'version'
--- representing an installed rock which matches the given dependency,
+-- @return string or nil: latest installed version of the rock matching the dependency
 -- or nil if it could not be matched.
 local function match_dep(dep, blacklist, deps_mode)
    assert(type(dep) == "table")
 
-   local versions = cfg.rocks_provided[dep.name]
+   local versions
    if cfg.rocks_provided[dep.name] then
       -- provided rocks have higher priority than manifest's rocks
       versions = { cfg.rocks_provided[dep.name] }
    else
       versions = manif_core.get_versions(dep.name, deps_mode)
    end
-   if not versions then
-      return nil
-   end
-   if blacklist then
-      local i = 1
-      while versions[i] do
-         if blacklist[versions[i]] then
-            table.remove(versions, i)
-         else
-            i = i + 1
+
+   local latest_version
+   for _, vstring in ipairs(versions) do
+      if not blacklist or not blacklist[vstring] then
+         local version = deps.parse_version(vstring)
+         if deps.match_constraints(version, dep.constraints) then
+            if not latest_version or version > latest_version then
+               latest_version = version
+            end
          end
       end
    end
-   local candidates = {}
-   for _, vstring in ipairs(versions) do
-      local version = deps.parse_version(vstring)
-      if deps.match_constraints(version, dep.constraints) then
-         table.insert(candidates, version)
-      end
-   end
-   if #candidates == 0 then
-      return nil
-   else
-      table.sort(candidates)
-      return {
-         name = dep.name,
-         version = candidates[#candidates].string
-      }
-   end
+
+   return latest_version and latest_version.string
 end
 
 --- Attempt to match dependencies of a rockspec to installed rocks.
@@ -386,7 +370,7 @@ function deps.match_deps(rockspec, blacklist, deps_mode)
       local found = match_dep(dep, blacklist and blacklist[dep.name] or nil, deps_mode)
       if found then
          if not cfg.rocks_provided[dep.name] then
-            matched[dep] = found
+            matched[dep] = {name = dep.name, version = found}
          end
       else
          if dep.constraints[1] and dep.constraints[1].no_upgrade then
@@ -408,6 +392,13 @@ local function values_set(tbl)
       set[v] = true
    end
    return set
+end
+
+local function rock_status(name, deps_mode)
+   local search = require("luarocks.search")
+   local installed = match_dep(search.make_query(name), nil, deps_mode)
+   local installation_type = cfg.rocks_provided[name] and "provided by VM" or "installed"
+   return installed and installed.." "..installation_type or "not installed"
 end
 
 --- Check dependencies of a rock and attempt to install any missing ones.
@@ -449,52 +440,53 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
       end
    end
 
-   local _, missing, no_upgrade = deps.match_deps(rockspec, nil, deps_mode)
+   local first_missing_dep = true
 
-   if next(no_upgrade) then
-      util.printerr("Missing dependencies for "..rockspec.name.." "..rockspec.version..":")
-      for _, dep in pairs(no_upgrade) do
-         util.printerr(deps.show_dep(dep))
-      end
-      if next(missing) then
-         for _, dep in pairs(missing) do
-            util.printerr(deps.show_dep(dep))
+   for _, dep in ipairs(rockspec.dependencies) do
+      if not match_dep(dep, nil, deps_mode) then
+         if first_missing_dep then
+            util.printout(("Missing dependencies for %s %s:"):format(rockspec.name, rockspec.version))
+            first_missing_dep = false
          end
+
+         util.printout(("   %s (%s)"):format(deps.show_dep(dep), rock_status(dep.name, deps_mode)))
       end
-      util.printerr()
-      for _, dep in pairs(no_upgrade) do
-         util.printerr("This version of "..rockspec.name.." is designed for use with")
-         util.printerr(deps.show_dep(dep)..", but is configured to avoid upgrading it")
-         util.printerr("automatically. Please upgrade "..dep.name.." with")
-         util.printerr("   luarocks install "..dep.name)
-         util.printerr("or choose an older version of "..rockspec.name.." with")
-         util.printerr("   luarocks search "..rockspec.name)
-      end
-      return nil, "Failed matching dependencies."
    end
 
-   if next(missing) then
-      util.printerr()
-      util.printerr("Missing dependencies for "..rockspec.name..":")
-      for _, dep in pairs(missing) do
-         util.printerr(deps.show_dep(dep))
-      end
-      util.printerr()
+   first_missing_dep = true
 
-      for _, dep in pairs(missing) do
-         -- Double-check in case dependency was filled during recursion.
-         if not match_dep(dep, nil, deps_mode) then
-            local url, err = search.find_suitable_rock(dep)
-            if not url then
-               return nil, "Could not satisfy dependency "..deps.show_dep(dep)..": "..err
-            end
-            local ok, err, errcode = install.run(url, deps.deps_mode_to_flag(deps_mode))
-            if not ok then
-               return nil, "Failed installing dependency: "..url.." - "..err, errcode
-            end
+   for _, dep in ipairs(rockspec.dependencies) do
+      if not match_dep(dep, nil, deps_mode) then
+         if first_missing_dep then
+            util.printout()
+            first_missing_dep = false
+         end
+
+         util.printout(("%s %s depends on %s (%s)"):format(
+            rockspec.name, rockspec.version, deps.show_dep(dep), rock_status(dep.name, deps_mode)))
+
+         if dep.constraints[1] and dep.constraints[1].no_upgrade then
+            util.printerr("This version of "..rockspec.name.." is designed for use with")
+            util.printerr(deps.show_dep(dep)..", but is configured to avoid upgrading it")
+            util.printerr("automatically. Please upgrade "..dep.name.." with")
+            util.printerr("   luarocks install "..dep.name)
+            util.printerr("or choose an older version of "..rockspec.name.." with")
+            util.printerr("   luarocks search "..rockspec.name)
+            return nil, "Failed matching dependencies"
+         end
+
+         local url, search_err = search.find_suitable_rock(dep)
+         if not url then
+            return nil, "Could not satisfy dependency "..deps.show_dep(dep)..": "..search_err
+         end
+         util.printout("Installing "..url)
+         local ok, install_err, errcode = install.run(url, deps.deps_mode_to_flag(deps_mode))
+         if not ok then
+            return nil, "Failed installing dependency: "..url.." - "..install_err, errcode
          end
       end
    end
+
    return true
 end
 

@@ -179,6 +179,9 @@ srcdir_luasocket=luasocket-3.0-rc1
 version_cprint=0.1
 verrev_cprint=0.1-2
 
+new_version_say=1.2-1
+old_version_say=1.0-1
+
 version_luacov=0.11.0
 verrev_luacov=${version_luacov}-1
 version_lxsh=0.8.6
@@ -260,6 +263,9 @@ mkdir -p "$testing_server"
    get "$luarocks_repo/lua-path-0.2.3-1.src.rock"
    get "$luarocks_repo/lua-cjson-2.1.0-1.src.rock"
    get "$luarocks_repo/luacov-coveralls-0.1.1-1.src.rock"
+   get "$luarocks_repo/say-1.2-1.src.rock"
+   get "$luarocks_repo/say-1.0-1.src.rock"
+   get "$luarocks_repo/luassert-1.7.0-1.src.rock"
 )
 $luarocks_admin_nocov make_manifest "$testing_server"
 
@@ -358,7 +364,6 @@ fail_upload_noarg() { $luarocks upload; }
 fail_remove_noarg() { $luarocks remove; }
 fail_doc_noarg() { $luarocks doc; }
 fail_new_version_noarg() { $luarocks new_version; }
-fail_write_rockspec_noarg() { $luarocks write_rockspec; }
 
 fail_build_invalid() { $luarocks build invalid; }
 fail_download_invalid() { $luarocks download invalid; }
@@ -517,6 +522,9 @@ test_deps_mode_make_order() { $luarocks build --tree="$testing_sys_tree" lpeg &&
 test_deps_mode_make_order_sys() { $luarocks build --tree="$testing_tree" lpeg && rm -rf ./lxsh-${verrev_lxsh} && $luarocks download --source lxsh ${verrev_lxsh} && $luarocks unpack ./lxsh-${verrev_lxsh}.src.rock && cd lxsh-${verrev_lxsh}/lxsh-${version_lxsh}-1  && $luarocks make --tree="$testing_sys_tree" --deps-mode=order && cd ../.. && [ `$luarocks_noecho list --tree="$testing_tree" --porcelain lpeg | wc -l` = 1 ] && rm -rf ./lxsh-${verrev_lxsh}; }
 
 test_write_rockspec() { $luarocks write_rockspec git://github.com/keplerproject/luarocks; }
+test_write_rockspec_name() { $luarocks write_rockspec luarocks git://github.com/keplerproject/luarocks; }
+test_write_rockspec_name_version() { $luarocks write_rockspec luarocks 7.8.9 git://github.com/keplerproject/luarocks; }
+test_write_rockspec_current_dir() { $luarocks write_rockspec; }
 test_write_rockspec_tag() { $luarocks write_rockspec git://github.com/keplerproject/luarocks --tag=v2.3.0; }
 test_write_rockspec_lib() { $luarocks write_rockspec git://github.com/mbalmer/luafcgi --lib=fcgi --license="3-clause BSD" --lua-version=5.1,5.2; }
 test_write_rockspec_format() { $luarocks write_rockspec git://github.com/keplerproject/luarocks --rockspec-format=1.1 --lua-version=5.1,5.2; }
@@ -558,8 +566,12 @@ test_doc_list() { $luarocks install luacov; $luarocks doc luacov --list; }
 test_doc_local() { $luarocks install luacov; $luarocks doc luacov --local; }
 test_doc_porcelain() { $luarocks install luacov; $luarocks doc luacov --porcelain; }
 
-# Driver #########################################
+# Tests for https://github.com/keplerproject/luarocks/pull/552
+test_install_break_dependencies_warning() { need_luasocket; $luarocks install say ${new_version_say} && $luarocks install luassert && $luarocks install say ${old_version_say}; }
+test_install_break_dependencies_force() { need_luasocket; $luarocks install say ${new_version_say} && $luarocks install luassert && $luarocks install --force say ${old_version_say}; }
+test_install_break_dependencies_forcefast() { need_luasocket; $luarocks install say ${new_version_say} && $luarocks install luassert && $luarocks install --force-fast say ${old_version_say}; }
 
+# Driver #########################################
 run_tests() {
    grep "^test_$1.*(" < $testing_dir/testing.sh | cut -d'(' -f1 | while read test
    do

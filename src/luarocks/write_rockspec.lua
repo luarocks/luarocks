@@ -12,14 +12,16 @@ local type_check = require("luarocks.type_check")
 local util = require("luarocks.util")
 
 write_rockspec.help_summary = "Write a template for a rockspec file."
-write_rockspec.help_arguments = "[--output=<file> ...] [<name>] [<version>] {<url>|<path>}"
+write_rockspec.help_arguments = "[--output=<file> ...] [<name>] [<version>] [<url>|<path>]"
 write_rockspec.help = [[
 This command writes an initial version of a rockspec file,
-based on an URL or a local path. You may use a relative path such as '.'.
-If a local path is given, name and version arguments are mandatory.
-For URLs, LuaRocks will attempt to infer name and version if not given.
-
-If a repository URL is given with no version, it creates an 'scm' rock.
+based on a name, a version, and a location (an URL or a local path).
+If only two arguments are given, the first one is considered the name and the
+second one is the location.
+If only one argument is given, it must be the location.
+If no arguments are given, current directory is used as location.
+LuaRocks will attempt to infer name and version if not given,
+using 'scm' as default version.
 
 Note that the generated file is a _starting point_ for writing a
 rockspec, and is not guaranteed to be complete or correct.
@@ -198,18 +200,17 @@ end
 
 function write_rockspec.run(...)
    local flags, name, version, url_or_dir = util.parse_flags(...)
-   
-   if not name then
-      return nil, "Missing arguments. "..util.see_help("write_rockspec")
-   end
 
-   if name and not version then
+   if not name then
+      url_or_dir = "."
+   elseif not version then
       url_or_dir = name
       name = nil
    elseif not url_or_dir then
       url_or_dir = version
+      version = nil
    end
-   
+
    if flags["tag"] then
       if not version then
          version = flags["tag"]:gsub("^v", "")
@@ -217,28 +218,25 @@ function write_rockspec.run(...)
    end
 
    local protocol, pathname = dir.split_url(url_or_dir)
-   if not fetch.is_basic_protocol(protocol) then
-      if not name then
-         name = dir.base_name(url_or_dir):gsub("%.[^.]+$", "")
+   if protocol == "file" then
+      if pathname == "." then
+         name = name or dir.base_name(fs.current_dir())
       end
-      if not version then
-         version = "scm"
-      end
-   elseif protocol ~= "file" then
+   elseif fetch.is_basic_protocol(protocol) then
       local filename = dir.base_name(url_or_dir)
       local newname, newversion = filename:match("(.*)-([^-]+)")
-      if (not name) and newname then
-         name = newname
+      if newname then
+         name = name or newname
+         version = version or newversion:gsub("%.[a-z]+$", ""):gsub("%.tar$", "")
       end
-      if (not version) and newversion then
-         version = newversion:gsub(".[a-z]+$", ""):gsub(".tar$", "")
-      end
-      if not (name and version) then
-         return nil, "Missing name and version arguments. "..util.see_help("write_rockspec")
-      end
-   elseif not version then
-      return nil, "Missing name and version arguments. "..util.see_help("write_rockspec")
+   else
+      name = name or dir.base_name(url_or_dir):gsub("%.[^.]+$", "")
    end
+
+   if not name then
+      return nil, "Could not infer rock name. "..util.see_help("write_rockspec")
+   end
+   version = version or "scm"
 
    local filename = flags["output"] or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
    
