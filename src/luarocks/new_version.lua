@@ -11,13 +11,14 @@ local fs = require("luarocks.fs")
 local type_check = require("luarocks.type_check")
 
 new_version.help_summary = "Auto-write a rockspec for a new version of a rock."
-new_version.help_arguments = "[--tag=<tag>] {<package>|<rockspec>} [<new_version>] [<new_url>]"
+new_version.help_arguments = "[--tag=<tag>] [<package>|<rockspec>] [<new_version>] [<new_url>]"
 new_version.help = [[
 This is a utility function that writes a new rockspec, updating data
 from a previous one.
 
 If a package name is given, it downloads the latest rockspec from the
-default server. If a rockspec is given, it uses it instead.
+default server. If a rockspec is given, it uses it instead. If no argument
+is given, it looks for a rockspec same way 'luarocks make' does.
 
 If the version number is not given and tag is passed using --tag,
 it is used as the version, with 'v' removed from beginning.
@@ -125,12 +126,16 @@ end
 function new_version.run(...)
    local flags, input, version, url = util.parse_flags(...)
    if not input then
-      return nil, "Missing argument: expected package or rockspec. "..util.see_help("new_version")
+      local err
+      input, err = util.get_default_rockspec()
+      if not input then
+         return nil, err
+      end
    end
    assert(type(input) == "string")
    
    local filename = input
-   if not input:match(".rockspec$") then
+   if not input:match("rockspec$") then
       local err
       filename, err = download.download("rockspec", input)
       if not filename then
