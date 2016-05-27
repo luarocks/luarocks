@@ -3,6 +3,7 @@
 local write_rockspec = {}
 package.loaded["luarocks.write_rockspec"] = write_rockspec
 
+local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
@@ -109,6 +110,32 @@ local function detect_mit_license(data)
       end
    end
    return sum == 78656
+end
+
+local simple_scm_protocols = {
+   git = true, ["git+http"] = true, ["git+https"] = true,
+   hg = true, ["hg+http"] = true, ["hg+https"] = true
+}
+
+local function detect_url_from_command(program, args, directory)
+   local command = fs.Q(cfg.variables[program:upper()]).. " "..args
+   local pipe = io.popen(fs.command_at(directory, fs.quiet_stderr(command)))
+   if not pipe then return nil end
+   local url = pipe:read("*a"):match("^([^\r\n]+)")
+   pipe:close()
+   if not url then return nil end
+   if not util.starts_with(url, program.."://") then
+      url = program.."+"..url
+   end
+
+   if simple_scm_protocols[dir.split_url(url)] then
+      return url
+   end
+end
+
+local function detect_scm_url(directory)
+   return detect_url_from_command("git", "config --get remote.origin.url", directory) or
+      detect_url_from_command("hg", "paths default", directory)
 end
 
 local function show_license(rockspec)
@@ -239,10 +266,6 @@ function write_rockspec.run(...)
    version = version or "scm"
 
    local filename = flags["output"] or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
-   
-   if not flags["homepage"] and url_or_dir:match("^git://github.com") then
-      flags["homepage"] = "http://"..url_or_dir:match("^[^:]+://(.*)")
-   end
 
    local rockspec = {
       rockspec_format = flags["rockspec-format"],
@@ -290,10 +313,25 @@ function write_rockspec.run(...)
       else
          local_dir = nil
       end
+   else
+      rockspec.source.url = detect_scm_url(local_dir) or rockspec.source.url
    end
    
    if not local_dir then
       local_dir = "."
+   end
+
+   if not flags["homepage"] then
+      local url_protocol, url_path = dir.split_url(rockspec.source.url)
+
+      if simple_scm_protocols[url_protocol] then
+         for _, domain in ipairs({"github.com", "bitbucket.org", "gitlab.com"}) do
+            if util.starts_with(url_path, domain) then
+               rockspec.description.homepage = "https://"..url_path:gsub("%.git$", "")
+               break
+            end
+         end
+      end
    end
    
    local libs = nil
