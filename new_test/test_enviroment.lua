@@ -1,14 +1,28 @@
 local lfs
-
 local test_enviroment = {}
 
 -- Helper function for os.execute() returns numeric in Lua5.1 and boolean in Lua5.2+
-local function execute(cmd, print_cmd)
-	if print_cmd then 
-		print("Executing: " .. cmd)
+-- @command - string, command to execute
+-- @print_command - boolean, print command if 'true'
+-- @env_variables - table, table of environment variables to export {FOO="bar", BAR="foo"}
+local function execute(command, print_command, env_variables)
+	local final_command = ""
+
+	if env_variables then
+		final_command = "export "
+		for k,v in pairs(env_variables) do
+			final_command = final_command .. k .. "=" .. v .. " "
+		end
+		-- remove last space and add ';' to separate exporting variables from command
+		final_command = final_command:sub(1, -2) .. "; "
+	end
+	
+	final_command = final_command .. command
+	if print_command then 
+		print("Executing: " .. final_command)
 	end
 
-	local ok = os.execute(cmd)
+	local ok = os.execute(final_command)
 	return ok == true or ok == 0
 end
 
@@ -18,6 +32,14 @@ local function get_rocks(rock)
 	if not lfs.attributes(rock) then 
 		execute("wget -c " .. luarocks_repo .. rock)	
 	end
+end
+
+-- Create config files
+local function create_config(config_path, config_content)
+	local file, err = io.open(config_path, "w+")
+	if not file then return nil, err end
+	file:write(config_content)
+	file:close()
 end
 
 -- Install required dependencies with LuaRocks stable
@@ -46,7 +68,7 @@ local function install_dependencies()
 end 
 
 -- Build environment for testing
-function build_environment (...) 
+function build_environment(environment) 
 	execute("rm -rf " .. testing_tree)
 	execute("rm -rf " .. testing_sys_tree)
 	execute("rm -rf " .. testing_tree_copy)
@@ -57,11 +79,10 @@ function build_environment (...)
 
 	luarocks_admin_nocov(" make_manifest " .. testing_cache)  
 		
-	for _,package in ipairs(...) do
+	for _,package in ipairs(environment) do
 		if not luarocks_nocov(" install --only-server=" .. testing_cache .. " --tree=" .. testing_sys_tree .. " " .. package ) then
 			luarocks_nocov(" build --tree=" .. testing_sys_tree .. " " .. package )
 			luarocks_nocov(" pack --tree=" .. testing_sys_tree .. " " .. package .. "; mv " .. package .. "-*.rock " .. testing_cache)
-			-- install needed right? 
 		end
 	end
 end
@@ -92,7 +113,9 @@ function test_enviroment.run(...)
 
 	execute("mkdir " .. testing_cache)
 
-	local new_str = ([[rocks_trees = {
+--- CONFIG FILES
+-- testing_config.lua and testing_config_show_downloads
+	local config_content = ([[rocks_trees = {
 	"%{testing_tree}",
 	{ name = "system", root = "%{testing_sys_tree}" },
 }
@@ -125,14 +148,11 @@ external_deps_dirs = {
     ["%{testing_server}"] = testing_server,
     ["%{testing_cache}"] = testing_cache})
 
-	local file = io.open(testing_dir .. "/testing_config.lua", "w+")
-	file:write(new_str)
-	file:close()
-	file = io.open(testing_dir .. "/testing_config_show_downloads.lua", "w+")
-	file:write(new_str .. "show_downloads = true")
-	file:close()
+	create_config(testing_dir .. "/testing_config.lua", config_content)
+	create_config(testing_dir .. "/testing_config_show_downloads.lua", config_content .. "show_downloads = true")
 
-	new_str=([[rocks_trees = {
+-- testing_config_sftp.lua
+	config_content=([[rocks_trees = {
 	"%{testing_tree}",
 	"%{testing_sys_tree}",
 }
@@ -148,11 +168,11 @@ upload_servers = {
     ["%{testing_sys_tree}"] = testing_sys_tree,
     ["%{testing_tree}"] = testing_tree,
     ["%{testing_cache}"] = testing_cache})
-	file = io.open(testing_dir .. "/testing_config_sftp.lua", "w+")
-	file:write(new_str)
-	file:close()
 
-	new_str=([[return {
+	create_config(testing_dir .. "/testing_config_sftp.lua", config_content)
+
+-- luacov.config
+	config_content=([[return {
 	statsfile = "%{testing_dir}/luacov.stats.out",
 	reportfile = "%{testing_dir}/luacov.report.out",
 	modules = {
@@ -165,11 +185,10 @@ upload_servers = {
 }]]):gsub("%%%b{}", {
     ["%{testing_dir}"] = testing_dir})
 
-	file = io.open(testing_dir .. "/luacov.config", "w+")
-	file:write(new_str)
-	file:close()
+	create_config(testing_dir .. "/luacov.config", config_content)
 
-
+	-- Export environment variables???
+	
 	-- TRAVIS TODO
 	-- luadir = "/tmp/lua-" .. luaversion
 
@@ -211,12 +230,12 @@ upload_servers = {
 	lfs.chdir(src_dir)
 
 	--run_lua
-	luarocks = function(cmd) execute(lua .. " -e\"require('luacov.runner')('" .. testing_dir .. "/luacov.config')'" .. src_dir .. "/bin/luarocks" .. cmd ..  "'\"", 1) end
-	luarocks_nocov = function(cmd) execute(lua .. " " .. src_dir .. "/bin/luarocks" .. cmd, 1) end
+	luarocks = function(cmd) execute(lua .. " -e\"require('luacov.runner')('" .. testing_dir .. "/luacov.config')'" .. src_dir .. "/bin/luarocks" .. cmd ..  "'\"", true) end
+	luarocks_nocov = function(cmd) execute(lua .. " " .. src_dir .. "/bin/luarocks" .. cmd, true) end
 	luarocks_noecho= function(cmd) execute(lua .. " " .. src_dir .. "/bin/luarocks" .. cmd) end
 	luarocks_noecho_nocov = function(cmd) execute(lua .. " " .. src_dir .. "/bin/luarocks" .. cmd) end
-	luarocks_admin = function(cmd) execute(lua .. " -e\"require('luacov.runner')('" .. testing_dir .. "/luacov.config')'" .. src_dir .. "/bin/luarocks-admin" .. cmd ..  "'\"", 1) end
-	luarocks_admin_nocov = function(cmd) execute(lua .. " " .. src_dir .. "/bin/luarocks-admin" .. cmd, 1) end
+	luarocks_admin = function(cmd) execute(lua .. " -e\"require('luacov.runner')('" .. testing_dir .. "/luacov.config')'" .. src_dir .. "/bin/luarocks-admin" .. cmd ..  "'\"", true) end
+	luarocks_admin_nocov = function(cmd) execute(lua .. " " .. src_dir .. "/bin/luarocks-admin" .. cmd, true) end
 	
 	--TODO
 	execute("mkdir " .. testing_server)
