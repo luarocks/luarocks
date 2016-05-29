@@ -8,6 +8,7 @@ local test_enviroment = {}
 -- @return true/false - boolean, status of the command execution
 local function execute(command, print_command, env_variables)
 	local final_command = ""
+	local output = ""
 
 	if env_variables then
 		final_command = "export "
@@ -23,8 +24,17 @@ local function execute(command, print_command, env_variables)
 		print("Executing: " .. final_command)
 	end
 
+	final_command = final_command .. " > tmp_command_output"
+
 	local ok = os.execute(final_command)
-	return ok == true or ok == 0
+	
+	local file, err = io.open("tmp_command_output", "r")
+	if not file then return nil, err end
+	output = file:read()
+	file:close()
+	os.execute("rm tmp_command_output")
+	
+	return ok == true or ok == 0, output
 end
 
 --- Function for downloading rocks and rockspecs
@@ -70,15 +80,10 @@ end
 
 local function hash_environment(path)
 	-- if linux
-		-- execute("find . -printf "%s %p\n" | md5sum > tmp_hash_env")
+		-- execute("find . -printf "%s %p\n" | md5sum")
 	-- if mac
-	execute("find " .. path .. " -type f -exec stat -f \"%z %N\" {} \\; | md5 > tmp_hash_env")
-	
-	local file, err = io.open("tmp_hash_env", "r")
-	if not file then return nil, err end
-	local hash = file:read()
-	file:close()
-	execute("rm tmp_hash_env")
+	local _, hash = execute("find " .. path .. " -type f -exec stat -f \"%z %N\" {} \\; | md5")
+
 	return hash
 end
 
@@ -95,7 +100,7 @@ local function build_environment(environment, env_variables)
 	execute("mkdir " .. testing_sys_tree)
 
 	luarocks_admin_nocov(" make_manifest " .. testing_cache, env_variables)  
-		
+			
 	for _,package in ipairs(environment) do
 		if not luarocks_nocov(" install --only-server=" .. testing_cache .. " --tree=" .. testing_sys_tree .. " " .. package, env_variables) then
 			luarocks_nocov(" build --tree=" .. testing_sys_tree .. " " .. package, env_variables)
@@ -103,9 +108,16 @@ local function build_environment(environment, env_variables)
 		end
 	end
 
-	--env
-	-- env_variables.LUA_PATH = --TODO
-	-- env_variables.LUA_CPATH = --TODO
+	-- Creating environment variables
+	env_variables.LUA_PATH = testing_tree .. "/share/lua/" .. luaversion_short .. "/?.lua;"
+	env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_tree .. "/share/lua/".. luaversion_short .. "/?/init.lua;"
+	env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_sys_tree .. "/share/lua/" .. luaversion_short .. "/?.lua;"
+	env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_sys_tree .. "/share/lua/".. luaversion_short .. "/?/init.lua;"
+	env_variables.LUA_PATH = env_variables.LUA_PATH .. src_dir .. "/?.lua;"
+	
+	env_variables.LUA_CPATH = testing_tree .. "/lib/lua/5.1/?.so;" .. testing_sys_tree .. "/lib/lua/5.1/?.so;"
+	env_variables.PATH = os.getenv("PATH") .. ":" .. testing_tree .. "/bin:" .. testing_sys_tree .. "/bin"
+
 	execute("cp -a " .. testing_tree .. " " .. testing_tree_copy)
 	execute("cp -a " .. testing_sys_tree .. " " .. testing_sys_tree_copy)
 
@@ -116,27 +128,35 @@ end
 ---
 -- MAIN 
 function test_enviroment.run(...)
-	if execute("echo 'LuaRocks version:' && luarocks --version") and execute("echo 'Busted version:' && busted --version") then
-		lfs = require("lfs") 
+	local luarocks_found, luarocks_v = execute("luarocks --version")
+	local busted_found, busted_v = execute("busted --version")
+	if luarocks_found and busted_found then
+		print("LuaRocks version: " .. luarocks_v)
+		print("Busted version: " .. busted_v)
+		lfs = require("lfs")
+		print("Dependencies set")
 	else
 		install_dependencies()
 	end
-	
+
 	local luarocks_dir = lfs.currentdir()
 	local testing_dir = luarocks_dir .. "/new_test"
-	local src_dir = luarocks_dir .. "/src"
+	src_dir = luarocks_dir .. "/src"
 	local luarocks_temp = testing_dir .. "/luarocks-2.3.0"
 
 	local testing_env_variables = {}
-	local luaversion = _VERSION:gsub("Lua ", "")
+	luaversion_short = _VERSION:gsub("Lua ", "")
 
-	testing_lrprefix = testing_dir .. "/testing_lrprefix-" .. luaversion
-	testing_tree = testing_dir .. "/testing-" .. luaversion
-	testing_sys_tree = testing_dir .. "/testing_sys-" .. luaversion
-	testing_tree_copy = testing_dir .. "/testing_copy-" .. luaversion
-	testing_sys_tree_copy = testing_dir .. "/testing_sys_copy-" .. luaversion
-	testing_cache = testing_dir .. "/testing_cache-" .. luaversion
-	testing_server = testing_dir .. "/testing_server-" .. luaversion
+	local _, luaversion_full = execute("lua -v")
+	luaversion_full = luaversion_full:gsub("(.*)%s(%d.%d.%d)%s(.*)", "%2")
+
+	testing_lrprefix = testing_dir .. "/testing_lrprefix-" .. luaversion_full
+	testing_tree = testing_dir .. "/testing-" .. luaversion_full
+	testing_sys_tree = testing_dir .. "/testing_sys-" .. luaversion_full
+	testing_tree_copy = testing_dir .. "/testing_copy-" .. luaversion_full
+	testing_sys_tree_copy = testing_dir .. "/testing_sys_copy-" .. luaversion_full
+	testing_cache = testing_dir .. "/testing_cache-" .. luaversion_full
+	testing_server = testing_dir .. "/testing_server-" .. luaversion_full
 
 	execute("mkdir " .. testing_cache)
 
@@ -311,7 +331,7 @@ upload_servers = {
 	local minimal_environment = {"luacov"}
 	local full_environment = {}
 
-	if luaversion == "5.1.5" then
+	if luaversion_full == "5.1.5" then
 		full_environment = {"luacov", "luafilesystem", "luasocket", "luabitop","luaposix", "md5", "lzlib"}
 	else
 		full_environment = {"luacov", "luafilesystem", "luasocket", "luaposix", "md5", "lzlib"}
