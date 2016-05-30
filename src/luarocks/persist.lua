@@ -147,7 +147,7 @@ write_table = function(out, tbl, level, field_order)
       end
 
       write_value(out, v, level, sub_order)
-      if type(k) == "number" then
+      if type(v) == "number" then
          sep = ", "
          indent = false
       else
