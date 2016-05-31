@@ -1,6 +1,24 @@
 local lfs
 local test_enviroment = {}
 
+local function remove_dir(path)
+	if lfs.attributes(path) then
+		for file in lfs.dir(path) do
+			if file ~= "." and file ~= ".." then
+				local full_path = path..'/'..file
+				local attr = lfs.attributes(full_path)
+
+				if attr.mode == "directory" then
+					remove_dir(full_path)
+					os.remove(full_path)
+				else
+					os.remove(full_path)
+				end
+			end
+		end
+	end
+end
+
 --- Helper function for os.execute() returns numeric in Lua5.1 and boolean in Lua5.2+
 -- @param command - string, command to execute
 -- @param print_command - boolean, print command if 'true'
@@ -18,7 +36,7 @@ local function execute(command, print_command, env_variables)
 		-- remove last space and add ';' to separate exporting variables from command
 		final_command = final_command:sub(1, -2) .. "; "
 	end
-	
+
 	final_command = final_command .. command
 	if print_command then 
 		print("Executing: " .. final_command)
@@ -27,13 +45,13 @@ local function execute(command, print_command, env_variables)
 	final_command = final_command .. " > tmp_command_output"
 
 	local ok = os.execute(final_command)
-	
+
 	local file, err = io.open("tmp_command_output", "r")
 	if not file then return nil, err end
 	output = file:read()
 	file:close()
-	os.execute("rm tmp_command_output")
-	
+	os.remove("tmp_command_output")
+
 	return ok == true or ok == 0, output
 end
 
@@ -91,10 +109,10 @@ end
 local function build_environment(environment, env_variables)
 	print("--------------------")
 	print("Building environment")
-	execute("rm -rf " .. testing_tree)
-	execute("rm -rf " .. testing_sys_tree)
-	execute("rm -rf " .. testing_tree_copy)
-	execute("rm -rf " .. testing_sys_tree_copy)
+	remove_dir(testing_tree)
+	remove_dir(testing_sys_tree)
+	remove_dir(testing_tree_copy)
+	remove_dir(testing_sys_tree_copy)
 
 	execute("mkdir " .. testing_tree)
 	execute("mkdir " .. testing_sys_tree)
@@ -121,8 +139,23 @@ local function build_environment(environment, env_variables)
 	execute("cp -a " .. testing_tree .. " " .. testing_tree_copy)
 	execute("cp -a " .. testing_sys_tree .. " " .. testing_sys_tree_copy)
 
+	--TODO
 	local testing_tree_copy_md5 = hash_environment(testing_tree_copy)
 	local testing_sys_tree_copy_md5 = hash_environment(testing_sys_tree_copy)
+end
+
+--TODO
+local function reset_environment()
+	testing_tree_md5 = checksum_path(testing_tree)
+	testing_sys_tree_md5 = checksum_path(testing_sys_tree)
+	if testing_tree_md5 ~= testing_tree_copy_md5 then
+		remove_dir(testing_tree)
+		execute("cp -a " .. testing_tree_copy .. " " .. testing_tree)
+	end
+	if testing_sys_tree_md5 ~= testing_sys_tree_copy_md5 then
+		remove_dir(testing_sys_tree)
+		execute ("cp -a " .. testing_sys_tree_copy .. " " .. testing_sys_tree)
+	end
 end
 
 ---
