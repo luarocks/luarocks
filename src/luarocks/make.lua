@@ -9,8 +9,6 @@ package.loaded["luarocks.make"] = make
 
 local build = require("luarocks.build")
 local fs = require("luarocks.fs")
-local dir = require("luarocks.dir")
-local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 local fetch = require("luarocks.fetch")
