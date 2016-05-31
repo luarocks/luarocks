@@ -1,6 +1,5 @@
 
 --- Unix implementation of filesystem and platform abstractions.
---module("luarocks.fs.unix", package.seeall)
 local unix = {}
 
 local fs = require("luarocks.fs")

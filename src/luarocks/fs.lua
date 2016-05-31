@@ -7,7 +7,6 @@
 
 local pairs = pairs
 
---module("luarocks.fs", package.seeall)
 local fs = {}
 package.loaded["luarocks.fs"] = fs
 

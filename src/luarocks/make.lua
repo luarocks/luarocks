@@ -3,7 +3,6 @@
 -- Builds sources in the current directory, but unlike "build",
 -- it does not fetch sources, etc., assuming everything is 
 -- available in the current directory.
---module("luarocks.make", package.seeall)
 local make = {}
 package.loaded["luarocks.make"] = make
 

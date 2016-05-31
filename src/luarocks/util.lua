@@ -4,7 +4,6 @@
 -- inside specific functions) to avoid interdependencies,
 -- as this is used in the bootstrapping stage of luarocks.cfg.
 
---module("luarocks.util", package.seeall)
 local util = {}
 
 local unpack = unpack or table.unpack

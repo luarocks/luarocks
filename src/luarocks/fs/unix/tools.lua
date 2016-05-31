@@ -1,6 +1,5 @@
 
 --- fs operations implemented with third-party tools for Unix platform abstractions.
---module("luarocks.fs.unix.tools", package.seeall)
 local tools = {}
 
 local fs = require("luarocks.fs")

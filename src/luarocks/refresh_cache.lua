@@ -1,6 +1,5 @@
 
 --- Module implementing the luarocks-admin "refresh_cache" command.
---module("luarocks.refresh_cache", package.seeall)
 local refresh_cache = {}
 package.loaded["luarocks.refresh_cache"] = refresh_cache
 

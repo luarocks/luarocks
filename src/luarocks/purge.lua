@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "purge" command.
 -- Remove all rocks from a given tree.
---module("luarocks.purge", package.seeall)
 local purge = {}
 package.loaded["luarocks.purge"] = purge
 

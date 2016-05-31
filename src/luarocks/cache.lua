@@ -1,7 +1,6 @@
 
 --- Module handling the LuaRocks local cache.
 -- Adds a rock or rockspec to a rocks server.
---module("luarocks.cache", package.seeall)
 local cache = {}
 package.loaded["luarocks.cache"] = cache
 

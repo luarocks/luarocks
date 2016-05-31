@@ -1,7 +1,6 @@
 
 --- Module implementing the luarocks "download" command.
 -- Download a rock from the repository.
---module("luarocks.download", package.seeall)
 local download = {}
 package.loaded["luarocks.download"] = download
 

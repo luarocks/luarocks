@@ -1,6 +1,5 @@
 
 --- Build back-end for raw listing of commands in rockspec files.
---module("luarocks.build.command", package.seeall)
 local command = {}
 
 local fs = require("luarocks.fs")

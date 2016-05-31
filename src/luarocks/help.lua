@@ -4,7 +4,6 @@
 -- uses a global table called "commands" to find commands
 -- to show help for; each command should be represented by a
 -- table containing "help" and "help_summary" fields.
---module("luarocks.help", package.seeall)
 local help = {}
 
 local util = require("luarocks.util")

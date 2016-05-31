@@ -11,7 +11,6 @@
 -- comparison criteria is the source code of this module, but the
 -- test/test_deps.lua file included with LuaRocks provides some
 -- insights on what these criteria are.
---module("luarocks.deps", package.seeall)
 local deps = {}
 package.loaded["luarocks.deps"] = deps
 

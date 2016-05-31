@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "list" command.
 -- Lists currently installed rocks.
---module("luarocks.list", package.seeall)
 local list = {}
 package.loaded["luarocks.list"] = list
 

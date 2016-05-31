@@ -1,5 +1,4 @@
 
---module("luarocks.write_rockspec", package.seeall)
 local write_rockspec = {}
 package.loaded["luarocks.write_rockspec"] = write_rockspec
 

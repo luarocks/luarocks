@@ -3,7 +3,6 @@
 -- saving tables into files.
 -- Implemented separately to avoid interdependencies,
 -- as it is used in the bootstrapping stage of the cfg module.
---module("luarocks.persist", package.seeall)
 local persist = {}
 package.loaded["luarocks.persist"] = persist
 

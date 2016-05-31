@@ -1,6 +1,5 @@
 
 --- Functions for managing the repository on disk.
---module("luarocks.repos", package.seeall)
 local repos = {}
 package.loaded["luarocks.repos"] = repos
 

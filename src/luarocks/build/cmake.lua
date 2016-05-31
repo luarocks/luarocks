@@ -1,6 +1,5 @@
 
 --- Build back-end for CMake-based modules.
---module("luarocks.build.cmake", package.seeall)
 local cmake = {}
 
 local fs = require("luarocks.fs")
