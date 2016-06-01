@@ -149,40 +149,49 @@ local function build_environment(environment, testing_paths, env_variables)
 	execute_bool("cp -a " .. testing_paths.testing_tree .. " " .. testing_paths.testing_tree_copy)
 	execute_bool("cp -a " .. testing_paths.testing_sys_tree .. " " .. testing_paths.testing_sys_tree_copy)
 
-	--TODO
-	local testing_tree_copy_md5 = hash_environment(testing_paths.testing_tree_copy)
-	local testing_sys_tree_copy_md5 = hash_environment(testing_paths.testing_sys_tree_copy)
+	local md5sums = {}
+	md5sums.testing_tree_copy_md5 = hash_environment(testing_paths.testing_tree_copy)
+	md5sums.testing_sys_tree_copy_md5 = hash_environment(testing_paths.testing_sys_tree_copy)
+
+	return md5sums, env_variables
 end
 
---TODO
-local function reset_environment()
-	testing_tree_md5 = checksum_path(testing_tree)
-	testing_sys_tree_md5 = checksum_path(testing_sys_tree)
-	if testing_tree_md5 ~= testing_tree_copy_md5 then
-		remove_dir(testing_tree)
-		execute_bool("cp -a " .. testing_tree_copy .. " " .. testing_tree)
+--- Reset testing environment
+local function reset_environment(testing_paths, md5sums)
+	testing_tree_md5 = hash_environment(testing_paths.testing_tree)
+	testing_sys_tree_md5 = hash_environment(testing_paths.testing_sys_tree)
+
+	if testing_tree_md5 ~= md5sums.testing_tree_copy_md5 then
+		remove_dir(testing_paths.testing_tree)
+		execute_bool("cp -a " .. testing_paths.testing_tree_copy .. " " .. testing_paths.testing_tree)
 	end
-	if testing_sys_tree_md5 ~= testing_sys_tree_copy_md5 then
-		remove_dir(testing_sys_tree)
-		execute_bool("cp -a " .. testing_sys_tree_copy .. " " .. testing_sys_tree)
+	if testing_sys_tree_md5 ~= md5sums.testing_tree_copy_md5 then
+		remove_dir(testing_paths.testing_sys_tree)
+		execute_bool("cp -a " .. testing_paths.testing_sys_tree_copy .. " " .. testing_paths.testing_sys_tree)
 	end
+	print("Environment reseted")
 end
 
 ---
 -- MAIN 
-function test_enviroment.run(...)
+local function main(...)
+	print("LuaRocks version: ")
 	local luarocks_found = execute_bool("luarocks --version")
+	print("Busted version: ")
 	local busted_found = execute_bool("busted --version")
+
 	if luarocks_found and busted_found then
 		print("LuaRocks and Busted found")
 		lfs = require("lfs")
-		print("Dependencies set")
 	else
 		install_dependencies()
 	end
+	print("Dependencies for testing are set")
+	-- check windows/linux/os x
+	-- /uname/sw_vers
 
 	luaversion_short = _VERSION:gsub("Lua ", "")
-	local luaversion_full = arg[1]
+	local luaversion_full = "5.2.4"--arg[1]
 
 	local testing_paths = {}
 	testing_paths.luarocks_dir = lfs.currentdir()
@@ -365,7 +374,7 @@ upload_servers = {
 	-- get_rocks("/say-1.2-1.src.rock")
 	-- get_rocks("/say-1.0-1.src.rock")
 	-- get_rocks("/luassert-1.7.0-1.src.rock")
-
+	lfs.chdir(testing_paths.luarocks_dir)
 	-- Preparation of environment to build
 	luarocks_admin_nocov(" make_manifest " .. testing_paths.testing_server, testing_env_variables)
 	local minimal_environment = {"luacov"}
@@ -378,9 +387,20 @@ upload_servers = {
 	end
 
 	-- Build environments
-	build_environment(minimal_environment, testing_paths, testing_env_variables)
+	local md5sums = {}
+	md5sums, testing_env_variables = build_environment(minimal_environment, testing_paths, testing_env_variables)
 	-- build_environment(full_environment, testing_env_variables)
 
+	test_enviroment.testing_paths = testing_paths
+	test_enviroment.md5sums = md5sums
+	test_enviroment.testing_env_variables = testing_env_variables
+	return test_enviroment
 end
 
-return test_enviroment
+return {
+	main = main,
+	execute_help = execute_help,
+	execute_bool = execute_bool,
+	execute_output = execute_output,
+	reset_environment = reset_environment
+}
