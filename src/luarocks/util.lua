@@ -228,6 +228,13 @@ function util.forward_flags(flags, ...)
    return unpack(out)
 end
 
+-- Adds legacy 'run' function to a command module.
+-- @param command table: command module with 'command' function,
+-- the added 'run' function calls it after parseing command-line arguments.
+function util.add_run_function(command)
+   command.run = function(...) return command.command(util.parse_flags(...)) end
+end
+
 --- Merges contents of src on top of dst's contents.
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.

@@ -11,6 +11,7 @@ local build = require("luarocks.build")
 local install = require("luarocks.install")
 local util = require("luarocks.util")
 
+util.add_run_function(validate)
 validate.help_summary = "Sandboxed test of build/install of all packages in a repository."
 
 validate.help = [[
@@ -74,8 +75,7 @@ local function validate_rock(file)
    return ok, err, errcode
 end
 
-function validate.run(...)
-   local flags, repo = util.parse_flags(...)
+function validate.command(flags, repo)
    repo = repo or cfg.rocks_dir
 
    util.printout("Verifying contents of "..repo)

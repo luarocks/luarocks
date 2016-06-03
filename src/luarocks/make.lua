@@ -15,6 +15,7 @@ local pack = require("luarocks.pack")
 local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
 
+util.add_run_function(make)
 make.help_summary = "Compile package in current directory using a rockspec."
 make.help_arguments = "[--pack-binary-rock] [<rockspec>]"
 make.help = [[
@@ -50,8 +51,7 @@ To install rocks, you'll normally want to use the "install" and
 -- @param name string: A local rockspec.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
-function make.run(...)
-   local flags, rockspec = util.parse_flags(...)
+function make.command(flags, rockspec)
    assert(type(rockspec) == "string" or not rockspec)
    
    if not rockspec then

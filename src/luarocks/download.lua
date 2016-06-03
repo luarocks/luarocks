@@ -12,6 +12,7 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.cfg")
 
+util.add_run_function(download)
 download.help_summary = "Download a specific rock file from a rocks server."
 download.help_arguments = "[--all] [--arch=<arch> | --source | --rockspec] [<name> [<version>]]"
 
@@ -84,9 +85,7 @@ end
 -- version may also be passed.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-function download.run(...)
-   local flags, name, version = util.parse_flags(...)
-   
+function download.command(flags, name, version)
    assert(type(version) == "string" or not version)
    if type(name) ~= "string" and not flags["all"] then
       return nil, "Argument missing, see help."

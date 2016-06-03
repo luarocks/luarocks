@@ -13,6 +13,7 @@ local manif = require("luarocks.manif")
 local remove = require("luarocks.remove")
 local cfg = require("luarocks.cfg")
 
+util.add_run_function(install)
 install.help_summary = "Install a rock."
 
 install.help_arguments = "{<rock>|<name> [<version>]}"
@@ -149,8 +150,7 @@ end
 -- may also be given.
 -- @return boolean or (nil, string, exitcode): True if installation was
 -- successful, nil and an error message otherwise. exitcode is optionally returned.
-function install.run(...)
-   local flags, name, version = util.parse_flags(...)
+function install.command(flags, name, version)
    if type(name) ~= "string" then
       return nil, "Argument missing. "..util.see_help("install")
    end

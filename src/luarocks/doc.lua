@@ -12,6 +12,7 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local download = require("luarocks.download")
 
+util.add_run_function(doc)
 doc.help_summary = "Show documentation for an installed rock."
 
 doc.help = [[
@@ -57,8 +58,7 @@ end
 -- @param name or nil: an existing package name.
 -- @param version string or nil: a version may also be passed.
 -- @return boolean: True if succeeded, nil on errors.
-function doc.run(...)
-   local flags, name, version = util.parse_flags(...)
+function doc.command(flags, name, version)
    if not name then
       return nil, "Argument missing. "..util.see_help("doc")
    end

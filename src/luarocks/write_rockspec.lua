@@ -11,6 +11,7 @@ local persist = require("luarocks.persist")
 local type_check = require("luarocks.type_check")
 local util = require("luarocks.util")
 
+util.add_run_function(write_rockspec)
 write_rockspec.help_summary = "Write a template for a rockspec file."
 write_rockspec.help_arguments = "[--output=<file> ...] [<name>] [<version>] [<url>|<path>]"
 write_rockspec.help = [[
@@ -224,9 +225,7 @@ local function rockspec_cleanup(rockspec)
    rockspec.name = nil
 end
 
-function write_rockspec.run(...)
-   local flags, name, version, url_or_dir = util.parse_flags(...)
-
+function write_rockspec.command(flags, name, version, url_or_dir)
    if not name then
       url_or_dir = "."
    elseif not version then
