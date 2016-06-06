@@ -1,5 +1,7 @@
 #!/usr/bin/env lua
-local test_environment = require("./test_enviroment")
+local test_environment = require("./test_environment")
+
+local arg = arg or { ... }
 
 if arg[1] == nil then
 	print("LuaRocks test-suite\n\n"..
