@@ -1,6 +1,5 @@
 --- Module implementing the LuaRocks "install" command.
 -- Installs binary rocks.
---module("luarocks.install", package.seeall)
 local install = {}
 package.loaded["luarocks.install"] = install
 

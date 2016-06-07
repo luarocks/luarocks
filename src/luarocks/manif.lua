@@ -2,7 +2,6 @@
 -- Manifest files describe the contents of a LuaRocks tree or server.
 -- They are loaded into manifest tables, which are then used for
 -- performing searches, matching dependencies, etc.
---module("luarocks.manif", package.seeall)
 local manif = {}
 package.loaded["luarocks.manif"] = manif
 

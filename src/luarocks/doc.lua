@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "doc" command.
 -- Shows documentation for an installed rock.
---module("luarocks.doc", package.seeall)
 local doc = {}
 package.loaded["luarocks.doc"] = doc
 

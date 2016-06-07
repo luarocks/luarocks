@@ -363,7 +363,6 @@ fail_unpack_noarg() { $luarocks unpack; }
 fail_upload_noarg() { $luarocks upload; }
 fail_remove_noarg() { $luarocks remove; }
 fail_doc_noarg() { $luarocks doc; }
-fail_new_version_noarg() { $luarocks new_version; }
 
 fail_build_invalid() { $luarocks build invalid; }
 fail_download_invalid() { $luarocks download invalid; }
@@ -446,6 +445,7 @@ test_make_pack_binary_rock() { rm -rf ./lxsh-${verrev_lxsh} &&  $luarocks downlo
 test_new_version() { $luarocks download --rockspec luacov ${version_luacov} &&  $luarocks new_version ./luacov-${version_luacov}-1.rockspec 0.2 && rm ./luacov-0.*; }
 test_new_version_url() { $luarocks download --rockspec abelhas 1.0 && $luarocks new_version ./abelhas-1.0-1.rockspec 1.1 https://github.com/downloads/ittner/abelhas/abelhas-1.1.tar.gz && rm ./abelhas-*; }
 test_new_version_tag() { $luarocks download --rockspec luacov ${version_luacov} && $luarocks new_version ./luacov-${version_luacov}-1.rockspec --tag v0.3 && rm ./luacov-0.3-1.rockspec; }
+test_new_version_tag_without_arg() { rm -rf ./*rockspec && $luarocks download --rockspec luacov ${version_luacov} && $luarocks new_version --tag v0.3 && rm ./luacov-0.3-1.rockspec; }
 
 test_pack() { $luarocks list && $luarocks pack luacov && rm ./luacov-*.rock; }
 test_pack_src() { $luarocks install $luasec && $luarocks download --rockspec luasocket && $luarocks pack ./luasocket-${verrev_luasocket}.rockspec && rm ./luasocket-${version_luasocket}-*.rock; }

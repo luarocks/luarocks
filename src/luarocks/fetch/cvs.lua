@@ -1,6 +1,5 @@
 
 --- Fetch back-end for retrieving sources from CVS.
---module("luarocks.fetch.cvs", package.seeall)
 local cvs = {}
 
 local unpack = unpack or table.unpack

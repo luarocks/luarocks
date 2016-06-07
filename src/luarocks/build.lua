@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "build" command.
 -- Builds a rock, compiling its C parts if any.
---module("luarocks.build", package.seeall)
 local build = {}
 package.loaded["luarocks.build"] = build
 

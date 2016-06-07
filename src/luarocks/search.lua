@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "search" command.
 -- Queries LuaRocks servers.
---module("luarocks.search", package.seeall)
 local search = {}
 package.loaded["luarocks.search"] = search
 

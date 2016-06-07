@@ -1,7 +1,6 @@
 
 --- Module implementing the luarocks-admin "remove" command.
 -- Removes a rock or rockspec from a rocks server.
---module("luarocks.admin_remove", package.seeall)
 local admin_remove = {}
 package.loaded["luarocks.admin_remove"] = admin_remove
 

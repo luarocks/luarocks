@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "pack" command.
 -- Creates a rock, packing sources or binaries.
---module("luarocks.pack", package.seeall)
 local pack = {}
 package.loaded["luarocks.pack"] = pack
 

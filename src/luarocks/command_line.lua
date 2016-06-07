@@ -1,6 +1,5 @@
 
 --- Functions for command-line scripts.
---module("luarocks.command_line", package.seeall)
 local command_line = {}
 
 local unpack = unpack or table.unpack

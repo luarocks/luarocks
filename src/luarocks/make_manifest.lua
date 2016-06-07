@@ -1,7 +1,6 @@
 
 --- Module implementing the luarocks-admin "make_manifest" command.
 -- Compile a manifest file for a repository.
---module("luarocks.make_manifest", package.seeall)
 local make_manifest = {}
 package.loaded["luarocks.make_manifest"] = make_manifest
 

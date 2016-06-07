@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "remove" command.
 -- Uninstalls rocks.
---module("luarocks.remove", package.seeall)
 local remove = {}
 package.loaded["luarocks.remove"] = remove
 

@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "unpack" command.
 -- Unpack the contents of a rock.
---module("luarocks.unpack", package.seeall)
 local unpack = {}
 package.loaded["luarocks.unpack"] = unpack
 

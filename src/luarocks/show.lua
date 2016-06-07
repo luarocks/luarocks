@@ -1,6 +1,5 @@
 --- Module implementing the LuaRocks "show" command.
 -- Shows information about an installed rock.
---module("luarocks.show", package.seeall)
 local show = {}
 package.loaded["luarocks.show"] = show
 

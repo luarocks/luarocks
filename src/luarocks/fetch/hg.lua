@@ -1,6 +1,5 @@
 
 --- Fetch back-end for retrieving sources from HG.
---module("luarocks.fetch.hg", package.seeall)
 local hg = {}
 
 local unpack = unpack or table.unpack

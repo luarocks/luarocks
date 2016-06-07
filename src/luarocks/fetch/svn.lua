@@ -1,6 +1,5 @@
 
 --- Fetch back-end for retrieving sources from Subversion.
---module("luarocks.fetch.svn", package.seeall)
 local svn = {}
 
 local unpack = unpack or table.unpack

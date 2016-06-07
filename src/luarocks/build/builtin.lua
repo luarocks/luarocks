@@ -1,6 +1,5 @@
 
 --- A builtin build system: back-end to provide a portable way of building C-based Lua modules.
---module("luarocks.build.builtin", package.seeall)
 local builtin = {}
 
 local unpack = unpack or table.unpack

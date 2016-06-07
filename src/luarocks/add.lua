@@ -1,7 +1,6 @@
 
 --- Module implementing the luarocks-admin "add" command.
 -- Adds a rock or rockspec to a rocks server.
---module("luarocks.add", package.seeall)
 local add = {}
 package.loaded["luarocks.add"] = add
 
