@@ -3,7 +3,7 @@ local test_env = {}
 
 local arg = arg or { ... }
 
-function test_env.set_params()
+function test_env.set_args()
       if arg[1] == nil then
       print("LuaRocks test-suite\n\n"..
          [[
@@ -11,10 +11,10 @@ function test_env.set_params()
       Lua installed and added to path needed. 
 
    USAGE
-      --lua <version> (mandatory) type your full version of Lua (e.g. --lua 5.2.4)
-      --env <type>   (default:"minimal") type what kind of environment to use ["minimal", "full"]
-      --clean  remove existing testing environment
-      --os <version>    type your OS ["linux", "os x", "windows"]
+      lua=<version> (mandatory) type your full version of Lua (e.g. --lua 5.2.4)
+      env=<type>   (default:"minimal") type what kind of environment to use ["minimal", "full"]
+      clean  remove existing testing environment
+      os=<version>    type your OS ["linux", "os x", "windows"]
          ]]);
       os.exit()
    end
@@ -23,7 +23,6 @@ function test_env.set_params()
    for i=1, #arg do
       if arg[i]:find("lua=") then
          test_env.LUA_V = arg[i]:gsub("lua=","")
-         
       end
       if arg[i]:find("env=") then
          test_env.TYPE_TEST_ENV = arg[i]:gsub("env=","")
@@ -37,7 +36,7 @@ function test_env.set_params()
    end
 
    if not test_env.TEST_TARGET_OS then
-      print("OS check")
+      print("-=OS check=-")
       if os.execute("sw_vers") then 
          test_env.TEST_TARGET_OS = "os x"
       elseif os.execute("uname -s") then
@@ -45,9 +44,12 @@ function test_env.set_params()
       else
          test_env.TEST_TARGET_OS = "windows"
       end
+      print("--------------")
    end
 end
 
+--- Remove directory recursively
+-- @param path string: directory path to delete
 local function remove_dir(path)
    if lfs.attributes(path) then
       for file in lfs.dir(path) do
@@ -67,13 +69,15 @@ local function remove_dir(path)
 end
 
 --- Helper function for execute_bool and execute_output
--- @param command - string, command to execute
--- @param print_command - boolean, print command if 'true'
--- @param env_variables - table, table of environment variables to export {FOO="bar", BAR="foo"}
--- @return final_command - string, concatenated command to execution
+-- @param command string: command to execute
+-- @param print_command boolean: print command if 'true'
+-- @param env_variables table: table of environment variables to export {FOO="bar", BAR="foo"}
+-- @return final_command string: concatenated command to execution
 local function execute_helper(command, print_command, env_variables)
    local final_command = ""
-
+   if print_command then 
+      print("Executing: " .. command)
+   end
    if env_variables then
       final_command = "export "
       for k,v in pairs(env_variables) do
@@ -84,16 +88,13 @@ local function execute_helper(command, print_command, env_variables)
    end
 
    final_command = final_command .. command
-   if print_command then 
-      print("Executing: " .. final_command .. "\n")
-   end
 
    return final_command
 end
 
 --- Execute command and returns true/false
 -- In Lua5.1 os.execute returns numeric value, but in Lua5.2+ returns boolean
--- @return true/false - boolean, status of the command execution
+-- @return true/false boolean: status of the command execution
 local function execute_bool(command, print_command, env_variables)
    local command = execute_helper(command, print_command, env_variables)
    
@@ -102,7 +103,7 @@ local function execute_bool(command, print_command, env_variables)
 end
 
 --- Execute command and returns output of command
--- @return output - string, output the command execution
+-- @return output string: output the command execution
 local function execute_output(command, print_command, env_variables)
    local command = execute_helper(command, print_command, env_variables)
 
@@ -113,19 +114,21 @@ local function execute_output(command, print_command, env_variables)
 end
 
 --- Function for downloading rocks and rockspecs
-function test_env.download_rocks(rocks, save_path)
+-- @param rocks table: table with full name of rocks/rockspecs to download
+-- @param save_path string: path to directory, where to download rocks/rockspecs
+local function download_rocks(rocks, save_path)
    local luarocks_repo = "https://luarocks.org"   
    for _,rock in ipairs(rocks) do  
       -- check if already downloaded
-      print("TU JE CESTAAAA")
-      print(save_path .. rock)
       if not os.rename( save_path .. rock, save_path .. rock) then
          execute_bool("wget -cP " .. save_path .. " " .. luarocks_repo .. rock)  
       end
    end
 end
 
---- Create config files
+--- Create config files for testing
+-- @param config_path string: path where to save config file
+-- @param config_content string: content of this config file
 local function create_config(config_path, config_content)
    local file, err = io.open(config_path, "w+")
    if not file then return nil, err end
@@ -133,6 +136,9 @@ local function create_config(config_path, config_content)
    file:close()
 end
 
+--- Create md5checksum of directory structure recursively
+-- based on filename and size
+-- @param path string: path to directory for generate mg5checksum
 local function hash_environment(path)
    local hash = ""
    if test_env.TEST_TARGET_OS == "linux" then
@@ -203,7 +209,8 @@ end
 --- Build environment for testing
 local function build_environment(environment, testing_paths, env_variables)
    print("\n--------------------")
-   print("Building environment\n")
+   print("Building environment")
+   print("--------------------")
    remove_dir(testing_paths.testing_tree)
    remove_dir(testing_paths.testing_sys_tree)
    remove_dir(testing_paths.testing_tree_copy)
@@ -227,10 +234,6 @@ local function build_environment(environment, testing_paths, env_variables)
 
    execute_bool("cp -a " .. testing_paths.testing_tree .. "/." .. " " .. testing_paths.testing_tree_copy)
    execute_bool("cp -a " .. testing_paths.testing_sys_tree .. "/." .. " " .. testing_paths.testing_sys_tree_copy)
-
-   -- Create md5 checksum of testing environment
-   local md5sums = test_env.create_md5sums(testing_paths)
-  
 end
 
 --- Reset testing environment
@@ -240,13 +243,13 @@ function test_env.reset_environment(testing_paths, md5sums)
 
    if testing_tree_md5 ~= md5sums.testing_tree_copy_md5 then
       remove_dir(testing_paths.testing_tree)
-      execute_bool("cp -a " .. testing_paths.testing_tree_copy .. "/." .. " " .. testing_paths.testing_tree, true)
+      execute_bool("cp -a " .. testing_paths.testing_tree_copy .. "/." .. " " .. testing_paths.testing_tree)
    end
    if testing_sys_tree_md5 ~= md5sums.testing_sys_tree_copy_md5 then
       remove_dir(testing_paths.testing_sys_tree)
-      execute_bool("cp -a " .. testing_paths.testing_sys_tree_copy .. "/." .. " " .. testing_paths.testing_sys_tree, true)
+      execute_bool("cp -a " .. testing_paths.testing_sys_tree_copy .. "/." .. " " .. testing_paths.testing_sys_tree)
    end
-   print("Environment reseted")
+   print("\n-=Environment reseted=-")
 end
 
 function test_env.set_paths(luaversion_full)
@@ -270,8 +273,8 @@ end
 
 ---
 -- MAIN 
-function test_env.main()
-   test_env.set_params()
+function test_env.main(rocks)
+   test_env.set_args()
    local luaversion_full = test_env.LUA_V
    local testing_paths = test_env.set_paths(luaversion_full)
   
@@ -372,9 +375,6 @@ upload_servers = {
       luadir = "/usr/local"
    end
 
-   local lua = luadir .. "/bin/lua"
-
-
    lfs.chdir(testing_paths.luarocks_dir)
    execute_bool("./configure --with-lua=" .. luadir .. " --prefix=" .. testing_paths.testing_lrprefix
                         .. " && make clean", false, temp_env_variables)
@@ -384,6 +384,7 @@ upload_servers = {
    local run = test_env.run_luarocks(testing_paths, temp_env_variables)
    execute_bool("mkdir " .. testing_paths.testing_server)
 
+   download_rocks(rocks, testing_paths.testing_server)
    lfs.chdir(testing_paths.luarocks_dir)
 
    -- Preparation of environment to build
@@ -403,7 +404,9 @@ upload_servers = {
    else
       build_environment(minimal_environment, testing_paths, temp_env_variables)
    end
-   
+   print("--------------")
+   print("Running tests")
+   print("--------------")
 end
 
 return test_env
