@@ -89,7 +89,7 @@ function download.run(...)
    
    assert(type(version) == "string" or not version)
    if type(name) ~= "string" and not flags["all"] then
-      return nil, "Argument missing, see help."
+      return nil, "Argument missing. "..util.see_help("download")
    end
    if not name then name, version = "", "" end
 

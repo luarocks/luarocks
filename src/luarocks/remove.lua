@@ -140,7 +140,7 @@ function remove.run(...)
    local flags, name, version = util.parse_flags(...)
    
    if type(name) ~= "string" then
-      return nil, "Argument missing, see help."
+      return nil, "Argument missing. "..util.see_help("remove")
    end
    
    local deps_mode = flags["deps-mode"] or cfg.deps_mode
