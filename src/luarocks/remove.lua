@@ -14,6 +14,7 @@ local cfg = require("luarocks.cfg")
 local manif = require("luarocks.manif")
 local fs = require("luarocks.fs")
 
+util.add_run_function(remove)
 remove.help_summary = "Uninstall a rock."
 remove.help_arguments = "[--force|--force-fast] <name> [<version>]"
 remove.help = [[
@@ -136,9 +137,7 @@ end
 -- may also be given.
 -- @return boolean or (nil, string, exitcode): True if removal was
 -- successful, nil and an error message otherwise. exitcode is optionally returned.
-function remove.run(...)
-   local flags, name, version = util.parse_flags(...)
-   
+function remove.command(flags, name, version)
    if type(name) ~= "string" then
       return nil, "Argument missing. "..util.see_help("remove")
    end

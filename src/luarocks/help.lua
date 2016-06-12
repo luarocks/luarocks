@@ -12,6 +12,7 @@ local dir = require("luarocks.dir")
 
 local program = util.this_program("luarocks")
 
+util.add_run_function(help)
 help.help_summary = "Help on commands. Type '"..program.." help <command>' for more."
 
 help.help_arguments = "[<command>]"
@@ -40,9 +41,7 @@ end
 -- given, help summaries for all commands are shown.
 -- @return boolean or (nil, string): true if there were no errors
 -- or nil and an error message if an invalid command was requested.
-function help.run(...)
-   local flags, command = util.parse_flags(...)
-
+function help.command(flags, command)
    if not command then
       local conf = cfg.which_config()
       print_banner()

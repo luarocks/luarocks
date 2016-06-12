@@ -27,20 +27,9 @@ local function die(message, exitcode)
    os.exit(exitcode or cfg.errorcodes.UNSPECIFIED)
 end
 
-local function replace_tree(flags, args, tree)
+local function replace_tree(flags, tree)
    tree = dir.normalize(tree)
    flags["tree"] = tree
-   local added = false
-   for i = 1, #args do
-      if args[i]:match("%-%-tree=") then
-         args[i] = "--tree="..tree
-         added = true
-         break
-      end
-   end
-   if not added then
-      args[#args + 1] = "--tree="..tree
-   end
    path.use_tree(tree)
 end
 
@@ -78,7 +67,6 @@ function command_line.run_command(...)
    if flags["to"] then flags["tree"] = flags["to"] end
    if flags["nodeps"] then
       flags["deps-mode"] = "none"
-      table.insert(args, "--deps-mode=none")
    end
    
    cfg.flags = flags
@@ -106,15 +94,8 @@ function command_line.run_command(...)
       os.exit(cfg.errorcodes.OK)
    elseif flags["help"] or #nonflags == 0 then
       command = "help"
-      args = nonflags
    else
-      command = nonflags[1]
-      for i, arg in ipairs(args) do
-         if arg == command then
-            table.remove(args, i)
-            break
-         end
-      end
+      command = table.remove(nonflags, 1)
    end
    command = command:gsub("-", "_")
    
@@ -137,14 +118,14 @@ function command_line.run_command(...)
             if not tree.root then
                die("Configuration error: tree '"..tree.name.."' has no 'root' field.")
             end
-            replace_tree(flags, args, tree.root)
+            replace_tree(flags, tree.root)
             named = true
             break
          end
       end
       if not named then
          local root_dir = fs.absolute_name(flags["tree"])
-         replace_tree(flags, args, root_dir)
+         replace_tree(flags, root_dir)
       end
    elseif flags["local"] then
       if not cfg.home_tree then
@@ -152,7 +133,7 @@ function command_line.run_command(...)
              "You are running as a superuser, which is intended for system-wide operation.\n"..
              "To force using the superuser's home, use --tree explicitly.")
       end
-      replace_tree(flags, args, cfg.home_tree)
+      replace_tree(flags, cfg.home_tree)
    else
       local trees = cfg.rocks_trees
       path.use_tree(trees[#trees])
@@ -195,14 +176,8 @@ function command_line.run_command(...)
    end
    
    if commands[command] then
-      -- TODO the interface of run should be modified, to receive the
-      -- flags table and the (possibly unpacked) nonflags arguments.
-      -- This would remove redundant parsing of arguments.
-      -- I'm not changing this now to avoid messing with the run()
-      -- interface, which I know some people use (even though
-      -- I never published it as a public API...)
       local cmd = require(commands[command])
-      local xp, ok, err, exitcode = xpcall(function() return cmd.run(unpack(args)) end, function(err)
+      local xp, ok, err, exitcode = xpcall(function() return cmd.command(flags, unpack(nonflags)) end, function(err)
          die(debug.traceback("LuaRocks "..cfg.program_version
             .." bug (please report at https://github.com/keplerproject/luarocks/issues).\n"
             ..err, 2), cfg.errorcodes.CRASH)

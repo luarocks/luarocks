@@ -10,6 +10,8 @@ local path = require("luarocks.path")
 local deps = require("luarocks.deps")
 local fetch = require("luarocks.fetch")
 local manif = require("luarocks.manif")
+
+util.add_run_function(show)
 show.help_summary = "Show information about an installed rock."
 
 show.help = [[
@@ -103,8 +105,7 @@ end
 -- @param name or nil: an existing package name.
 -- @param version string or nil: a version may also be passed.
 -- @return boolean: True if succeeded, nil on errors.
-function show.run(...)
-   local flags, name, version = util.parse_flags(...)
+function show.command(flags, name, version)
    if not name then
       return nil, "Argument missing. "..util.see_help("show")
    end

@@ -10,6 +10,7 @@ local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 
+util.add_run_function(list)
 list.help_summary = "List currently installed rocks."
 list.help_arguments = "[--porcelain] <filter>"
 list.help = [[
@@ -69,8 +70,7 @@ end
 -- @param filter string or nil: A substring of a rock name to filter by.
 -- @param version string or nil: a version may also be passed.
 -- @return boolean: True if succeeded, nil on errors.
-function list.run(...)
-   local flags, filter, version = util.parse_flags(...)
+function list.command(flags, filter, version)
    local query = search.make_query(filter and filter:lower() or "", version)
    query.exact_name = false
    local trees = cfg.rocks_trees

@@ -11,6 +11,7 @@ local build = require("luarocks.build")
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.cfg")
 
+util.add_run_function(unpack)
 unpack.help_summary = "Unpack the contents of a rock."
 unpack.help_arguments = "[--force] {<rock>|<name> [<version>]}"
 unpack.help = [[
@@ -149,9 +150,7 @@ end
 -- version may also be passed.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-function unpack.run(...)
-   local flags, name, version = util.parse_flags(...)
-
+function unpack.command(flags, name, version)
    assert(type(version) == "string" or not version)
    if type(name) ~= "string" then
       return nil, "Argument missing. "..util.see_help("unpack")

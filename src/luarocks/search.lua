@@ -11,6 +11,7 @@ local deps = require("luarocks.deps")
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 
+util.add_run_function(search)
 search.help_summary = "Query the LuaRocks servers."
 search.help_arguments = "[--source] [--binary] { <name> [<version>] | --all }"
 search.help = [[
@@ -420,9 +421,7 @@ end
 -- @param version string or nil: a version may also be passed.
 -- @return boolean or (nil, string): True if build was successful; nil and an
 -- error message otherwise.
-function search.run(...)
-   local flags, name, version = util.parse_flags(...)
-   
+function search.command(flags, name, version)
    if flags["all"] then
       name, version = "", nil
    end

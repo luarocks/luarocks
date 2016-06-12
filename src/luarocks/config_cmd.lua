@@ -6,6 +6,7 @@ local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 
+util.add_run_function(config_cmd)
 config_cmd.help_summary = "Query information about the LuaRocks configuration."
 config_cmd.help_arguments = "<flag>"
 config_cmd.help = [[
@@ -33,9 +34,7 @@ end
 
 --- Driver function for "config" command.
 -- @return boolean: True if succeeded, nil on errors.
-function config_cmd.run(...)
-   local flags = util.parse_flags(...)
-   
+function config_cmd.command(flags)
    if flags["lua-incdir"] then
       print(cfg.variables.LUA_INCDIR)
       return true
