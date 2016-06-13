@@ -1,6 +1,5 @@
 
 --- Fetch back-end for retrieving sources from local Git repositories.
---module("luarocks.fetch.git_file", package.seeall)
 local git_file = {}
 
 local git = require("luarocks.fetch.git")

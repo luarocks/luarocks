@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "build" command.
 -- Builds a rock, compiling its C parts if any.
---module("luarocks.build", package.seeall)
 local build = {}
 package.loaded["luarocks.build"] = build
 
@@ -17,6 +16,7 @@ local manif = require("luarocks.manif")
 local remove = require("luarocks.remove")
 local cfg = require("luarocks.cfg")
 
+util.add_run_function(build)
 build.help_summary = "Build/compile a rock."
 build.help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
 build.help = [[
@@ -53,9 +53,11 @@ or the name of a rock to be fetched from a repository.
 -- @param location string: The base directory files should be copied to.
 -- @param is_module_path boolean: True if string keys in files should be
 -- interpreted as dotted module paths.
+-- @param perms string: Permissions of the newly created files installed.
+-- Directories are always created with the default permissions.
 -- @return boolean or (nil, string): True if succeeded or 
 -- nil and an error message.
-local function install_files(files, location, is_module_path)
+local function install_files(files, location, is_module_path, perms)
    assert(type(files) == "table" or not files)
    assert(type(location) == "string")
    if files then
@@ -85,7 +87,7 @@ local function install_files(files, location, is_module_path)
             local ok, err = fs.make_dir(dest)
             if not ok then return nil, err end
          end
-         local ok = fs.copy(dir.path(file), dir.path(dest, filename))
+         local ok = fs.copy(dir.path(file), dir.path(dest, filename), perms)
          if not ok then
             return nil, "Failed copying "..file
          end
@@ -142,7 +144,7 @@ local function install_default_docs(name, version)
                fs.make_dir(dest)
                has_dir = true
             end
-            fs.copy(file, dest)
+            fs.copy(file, dest, cfg.perm_read)
             break
          end
       end
@@ -200,6 +202,14 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       return nil, "Rockspec error: build type not specified"
    end
 
+   if not build_only_deps then
+      local ok
+      ok, err, errcode = deps.check_external_deps(rockspec, "build")
+      if err then
+         return nil, err, errcode
+      end
+   end
+
    if deps_mode == "none" then
       util.printerr("Warning: skipping dependency checks.")
    else
@@ -215,12 +225,6 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       util.printout()
       return name, version
    end   
-
-   local ok
-   ok, err, errcode = deps.check_external_deps(rockspec, "build")
-   if err then
-      return nil, err, errcode
-   end
 
    if repos.is_installed(name, version) then
       repos.delete_version(name, version)
@@ -245,10 +249,10 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    end
    
    local dirs = {
-      lua = { name = path.lua_dir(name, version), is_module_path = true },
-      lib = { name = path.lib_dir(name, version), is_module_path = true },
-      conf = { name = path.conf_dir(name, version), is_module_path = false },
-      bin = { name = path.bin_dir(name, version), is_module_path = false },
+      lua = { name = path.lua_dir(name, version), is_module_path = true, perms = cfg.perm_read },
+      lib = { name = path.lib_dir(name, version), is_module_path = true, perms = cfg.perm_exec },
+      conf = { name = path.conf_dir(name, version), is_module_path = false, perms = cfg.perm_read },
+      bin = { name = path.bin_dir(name, version), is_module_path = false, perms = cfg.perm_exec },
    }
    
    for _, d in pairs(dirs) do
@@ -300,7 +304,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
 
    if build_spec.install then
       for id, install_dir in pairs(dirs) do
-         ok, err = install_files(build_spec.install[id], install_dir.name, install_dir.is_module_path)
+         ok, err = install_files(build_spec.install[id], install_dir.name, install_dir.is_module_path, install_dir.perms)
          if not ok then 
             return nil, err
          end
@@ -338,7 +342,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
 
    fs.pop_dir()
    
-   fs.copy(rockspec.local_filename, path.rockspec_file(name, version))
+   fs.copy(rockspec.local_filename, path.rockspec_file(name, version), cfg.perm_read)
    if need_to_fetch then
       fs.pop_dir()
    end
@@ -360,15 +364,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    ok, err = manif.update_manifest(name, version, nil, deps_mode)
    if err then return nil, err end
 
-   local license = ""
-   if rockspec.description and rockspec.description.license then
-      license = ("(license: "..rockspec.description.license..")")
-   end
-
-   local root_dir = path.root_dir(cfg.rocks_dir)
-   util.printout(name.." "..version.." is now built and installed in "..root_dir.." "..license)
-   util.printout()
-   
+   util.announce_install(rockspec)
    util.remove_scheduled_function(rollback)
    return name, version
 end
@@ -427,8 +423,7 @@ end
 -- also be given.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
-function build.run(...)
-   local flags, name, version = util.parse_flags(...)
+function build.command(flags, name, version)
    if type(name) ~= "string" then
       return nil, "Argument missing. "..util.see_help("build")
    end
@@ -446,7 +441,7 @@ function build.run(...)
          return name, version
       end
       if (not flags["keep"]) and not cfg.keep_other_versions then
-         local ok, err = remove.remove_other_versions(name, version, flags["force"])
+         local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
          if not ok then util.printerr(err) end
       end
       return name, version

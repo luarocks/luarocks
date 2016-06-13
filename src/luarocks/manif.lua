@@ -2,7 +2,6 @@
 -- Manifest files describe the contents of a LuaRocks tree or server.
 -- They are loaded into manifest tables, which are then used for
 -- performing searches, matching dependencies, etc.
---module("luarocks.manif", package.seeall)
 local manif = {}
 package.loaded["luarocks.manif"] = manif
 
@@ -431,8 +430,6 @@ function manif.update_manifest(name, version, repo, deps_mode)
    assert(type(deps_mode) == "string")
    
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
-
-   util.printout("Updating manifest for "..repo)
 
    local manifest, err = manif.load_manifest(repo)
    if not manifest then

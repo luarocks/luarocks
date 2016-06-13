@@ -55,7 +55,7 @@ local function die(message)
 	os.exit(1)
 end
 
-function split_string(str, delim, maxNb)
+local function split_string(str, delim, maxNb)
 	-- Eliminate bad cases...
 	if string.find(str, delim) == nil then
 		return { str }
@@ -508,17 +508,30 @@ local function get_msvc_env_setup_cmd()
 	-- 1. try visual studio command line tools
 	local vcdir = get_visual_studio_directory()
 	if vcdir then
-		-- 1.1. try vcvarsall.bat
-		local vcvarsall = vcdir .. 'vcvarsall.bat'
-		if exists(vcvarsall) then
-			return ('call "%s"%s'):format(vcvarsall, x64 and ' amd64' or '')
+		local vcvars_bats = {
+			x86 = {
+				"bin\\vcvars32.bat", -- prefers native compiler
+				"bin\\amd64_x86\\vcvarsamd64_x86.bat"-- then cross compiler
+			},
+			x86_64 = {
+				"bin\\amd64\\vcvars64.bat", -- prefers native compiler
+				"bin\\x86_amd64\\vcvarsx86_amd64.bat" -- then cross compiler
+			}
+		}
+		assert(vcvars_bats[vars.UNAME_M], "vars.UNAME_M: only x86 and x86_64 are supported")
+		for _, bat in ipairs(vcvars_bats[vars.UNAME_M]) do
+			local full_path = vcdir .. bat
+			if exists(full_path) then
+				return ('call "%s"'):format(full_path)
+			end
 		end
 
-		-- 1.2. try vcvars32.bat / vcvars64.bat
-		local relative_path = x64 and "bin\\amd64\\vcvars64.bat" or "bin\\vcvars32.bat"
-		local full_path = vcdir .. relative_path
-		if exists(full_path) then
-			return ('call "%s"'):format(full_path)
+		-- try vcvarsall.bat in case MS changes the undocumented bat files above.
+		-- but this way we don't konw if specified compiler is installed...
+		local vcvarsall = vcdir .. 'vcvarsall.bat'
+		if exists(vcvarsall) then
+			local vcvarsall_args = { x86 = "", x86_64 = " amd64" }
+			return ('call "%s"%s'):format(vcvarsall, vcvarsall_args[vars.UNAME_M])
 		end
 	end
 
@@ -543,8 +556,7 @@ local function look_for_lua_install ()
 	else
 		-- no prefix given, so use path
 		directories = (os.getenv("PATH",";") or "")
-		local i = 1
-        while i ~= 0 do directories, i = directories:gsub(";;",";") end  --remove all doubles
+		directories = directories:gsub(";+", ";")  --remove all doubles
 		directories = split_string(directories,";")
 		-- if a path element ends with "\bin\" then remove it, as the searcher will check there anyway
 		for i, val in ipairs(directories) do
@@ -651,7 +663,7 @@ local with_arg = { -- options followed by an argument, others are flags
 -- this will be damaged by the batch construction at the start of this file
 local oarg = arg  -- retain old table
 if #arg > 0 then
-	farg = table.concat(arg, " ") .. " "
+	local farg = table.concat(arg, " ") .. " "
 	arg = {}
 	farg = farg:gsub('%"', "")
 	local i = 0
@@ -672,7 +684,6 @@ if #arg > 0 then
 	end
 end
 for k,v in pairs(oarg) do if k < 1 then arg[k] = v end end -- copy 0 and negative indexes
-oarg = nil
 
 -- build config option table with name and value elements
 local i = 1
@@ -771,7 +782,6 @@ if not vars.TREE_ROOT then
   end
 end
 
-local datapath
 vars.SYSCONFDIR = vars.SYSCONFDIR or vars.PREFIX
 vars.SYSCONFFILENAME = S"config-$LUA_VERSION.lua"
 vars.CONFIG_FILE = vars.SYSCONFDIR.."\\"..vars.SYSCONFFILENAME

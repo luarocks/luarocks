@@ -2,7 +2,6 @@
 --- LuaRocks-specific path handling functions.
 -- All paths are configured in this module, making it a single
 -- point where the layout of the local installation is defined in LuaRocks.
---module("luarocks.path", package.seeall)
 local path = {}
 
 local dir = require("luarocks.dir")

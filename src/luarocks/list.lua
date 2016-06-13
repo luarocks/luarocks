@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "list" command.
 -- Lists currently installed rocks.
---module("luarocks.list", package.seeall)
 local list = {}
 package.loaded["luarocks.list"] = list
 
@@ -11,6 +10,7 @@ local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 
+util.add_run_function(list)
 list.help_summary = "List currently installed rocks."
 list.help_arguments = "[--porcelain] <filter>"
 list.help = [[
@@ -29,27 +29,19 @@ local function check_outdated(trees, query)
    end
    local outdated = {}
    for name, versions in util.sortedpairs(results_installed) do
-      local latest_installed
-      local latest_available, latest_available_repo
-
-      for version, _ in util.sortedpairs(versions) do
-         latest_installed = version
-         break
-      end
+      versions = util.keys(versions)
+      table.sort(versions, deps.compare_versions)
+      local latest_installed = versions[1]
 
       local query_available = search.make_query(name:lower())
       query.exact_name = true
       local results_available, err = search.search_repos(query_available)
       
       if results_available[name] then
-         for version, repos in util.sortedpairs(results_available[name], deps.compare_versions) do
-            latest_available = version
-            for _, repo in ipairs(repos) do
-               latest_available_repo = repo.repo
-               break
-            end
-            break
-         end
+         local available_versions = util.keys(results_available[name])
+         table.sort(available_versions, deps.compare_versions)
+         local latest_available = available_versions[1]
+         local latest_available_repo = results_available[name][latest_available][1].repo
          
          if deps.compare_versions(latest_available, latest_installed) then
             table.insert(outdated, { name = name, installed = latest_installed, available = latest_available, repo = latest_available_repo })
@@ -78,8 +70,7 @@ end
 -- @param filter string or nil: A substring of a rock name to filter by.
 -- @param version string or nil: a version may also be passed.
 -- @return boolean: True if succeeded, nil on errors.
-function list.run(...)
-   local flags, filter, version = util.parse_flags(...)
+function list.command(flags, filter, version)
    local query = search.make_query(filter and filter:lower() or "", version)
    query.exact_name = false
    local trees = cfg.rocks_trees

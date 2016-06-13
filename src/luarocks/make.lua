@@ -3,14 +3,11 @@
 -- Builds sources in the current directory, but unlike "build",
 -- it does not fetch sources, etc., assuming everything is 
 -- available in the current directory.
---module("luarocks.make", package.seeall)
 local make = {}
 package.loaded["luarocks.make"] = make
 
 local build = require("luarocks.build")
 local fs = require("luarocks.fs")
-local dir = require("luarocks.dir")
-local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 local fetch = require("luarocks.fetch")
@@ -18,6 +15,7 @@ local pack = require("luarocks.pack")
 local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
 
+util.add_run_function(make)
 make.help_summary = "Compile package in current directory using a rockspec."
 make.help_arguments = "[--pack-binary-rock] [<rockspec>]"
 make.help = [[
@@ -49,70 +47,18 @@ To install rocks, you'll normally want to use the "install" and
 
 ]]
 
---- Collect rockspecs located in a subdirectory.
--- @param versions table: A table mapping rock names to newest rockspec versions.
--- @param paths table: A table mapping rock names to newest rockspec paths.
--- @param unnamed_paths table: An array of rockspec paths that don't contain rock
--- name and version in regular format.
--- @param subdir string: path to subdirectory.
-local function collect_rockspecs(versions, paths, unnamed_paths, subdir)
-   if fs.is_dir(subdir) then
-      for file in fs.dir(subdir) do
-         file = dir.path(subdir, file)
-
-         if file:match("rockspec$") and fs.is_file(file) then
-            local rock, version = path.parse_name(file)
-
-            if rock then
-               if not versions[rock] or deps.compare_versions(version, versions[rock]) then
-                  versions[rock] = version
-                  paths[rock] = file
-               end
-            else
-               table.insert(unnamed_paths, file)
-            end
-         end
-      end
-   end
-end
-
 --- Driver function for "make" command.
 -- @param name string: A local rockspec.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
-function make.run(...)
-   local flags, rockspec = util.parse_flags(...)
+function make.command(flags, rockspec)
    assert(type(rockspec) == "string" or not rockspec)
    
    if not rockspec then
-      -- Try to infer default rockspec name.
-      local versions, paths, unnamed_paths = {}, {}, {}
-      -- Look for rockspecs in some common locations.
-      collect_rockspecs(versions, paths, unnamed_paths, ".")
-      collect_rockspecs(versions, paths, unnamed_paths, "rockspec")
-      collect_rockspecs(versions, paths, unnamed_paths, "rockspecs")
-
-      if #unnamed_paths > 0 then
-         -- There are rockspecs not following "name-version.rockspec" format.
-         -- More than one are ambiguous.
-         if #unnamed_paths > 1 then
-            return nil, "Please specify which rockspec file to use."
-         else
-            rockspec = unnamed_paths[1]
-         end
-      else
-         local rock = next(versions)
-
-         if rock then
-            -- If there are rockspecs for multiple rocks it's ambiguous.
-            if next(versions, rock) then
-               return nil, "Please specify which rockspec file to use."
-            else
-               rockspec = paths[rock]
-            end
-         else
-            return nil, "Argument missing: please specify a rockspec to use on current directory."
-         end
+      local err
+      rockspec, err = util.get_default_rockspec()
+      if not rockspec then
+         return nil, err
       end
    end
    if not rockspec:match("rockspec$") then
@@ -132,7 +78,7 @@ function make.run(...)
       if not ok then return nil, err end
       local name, version = ok, err
       if (not flags["keep"]) and not cfg.keep_other_versions then
-         local ok, err = remove.remove_other_versions(name, version, flags["force"])
+         local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
          if not ok then util.printerr(err) end
       end
       return name, version

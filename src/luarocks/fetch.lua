@@ -1,6 +1,5 @@
 
 --- Functions related to fetching and loading local and remote files.
---module("luarocks.fetch", package.seeall)
 local fetch = {}
 package.loaded["luarocks.fetch"] = fetch
 

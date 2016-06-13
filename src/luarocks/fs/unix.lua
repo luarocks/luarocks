@@ -1,6 +1,5 @@
 
 --- Unix implementation of filesystem and platform abstractions.
---module("luarocks.fs.unix", package.seeall)
 local unix = {}
 
 local fs = require("luarocks.fs")
@@ -14,6 +13,13 @@ local util = require("luarocks.util")
 -- @return string: The command-line, with silencing annotation.
 function unix.quiet(cmd)
    return cmd.." 1> /dev/null 2> /dev/null"
+end
+
+--- Annotate command string for execution with quiet stderr.
+-- @param cmd string: A command-line string.
+-- @return string: The command-line, with stderr silencing annotation.
+function unix.quiet_stderr(cmd)
+   return cmd.." 2> /dev/null"
 end
 
 --- Return an absolute pathname from a potentially relative one.
@@ -66,7 +72,7 @@ function unix.wrap_script(file, dest, name, version)
    local addctx = "local k,l,_=pcall(require,"..util.LQ("luarocks.loader")..") _=k and l.add_context("..util.LQ(name)..","..util.LQ(version)..")"
    wrapper:write('exec '..fs.Q(lua)..' -e '..fs.Q(ppaths)..' -e '..fs.Q(addctx)..' '..fs.Q(file)..' "$@"\n')
    wrapper:close()
-   if fs.chmod(wrapname, "0755") then
+   if fs.chmod(wrapname, cfg.perm_exec) then
       return true
    else
       return nil, "Could not make "..wrapname.." executable."
@@ -96,7 +102,7 @@ function unix.is_actual_binary(filename)
 end
 
 function unix.copy_binary(filename, dest) 
-   return fs.copy(filename, dest, "0755")
+   return fs.copy(filename, dest, cfg.perm_exec)
 end
 
 --- Move a file on top of the other.

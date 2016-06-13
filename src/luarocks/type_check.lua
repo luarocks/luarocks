@@ -1,7 +1,6 @@
 --- Type-checking functions.
 -- Functions and definitions for doing a basic lint check on files
 -- loaded by LuaRocks.
---module("luarocks.type_check", package.seeall)
 local type_check = {}
 package.loaded["luarocks.type_check"] = type_check
 

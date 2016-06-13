@@ -4,7 +4,6 @@
 -- inside specific functions) to avoid interdependencies,
 -- as this is used in the bootstrapping stage of luarocks.cfg.
 
---module("luarocks.util", package.seeall)
 local util = {}
 
 local unpack = unpack or table.unpack
@@ -96,6 +95,7 @@ local supported_flags = {
    ["deps-mode"] = "<mode>",
    ["detailed"] = "\"<text>\"",
    ["force"] = true,
+   ["force-fast"] = true,
    ["from"] = "<server>",
    ["help"] = true,
    ["home"] = true,
@@ -210,36 +210,11 @@ function util.parse_flags(...)
    return flags, unpack(out)
 end
 
---- Build a sequence of flags for forwarding from one command to
--- another (for example, from "install" to "build").
--- @param flags table: A table of parsed flags
--- @param ... string...: A variable number of flags to be checked
--- in the flags table. If no flags are passed as varargs, the
--- entire flags table is forwarded.
--- @return string... A variable number of strings
-function util.forward_flags(flags, ...)
-   assert(type(flags) == "table")
-   local out = {}
-   local filter = select('#', ...)
-   local function add_flag(flagname)
-      if flags[flagname] then
-         if flags[flagname] == true then
-            table.insert(out, "--"..flagname)
-         else
-            table.insert(out, "--"..flagname.."="..flags[flagname])
-         end
-      end
-   end
-   if filter > 0 then
-      for i = 1, filter do
-         add_flag(select(i, ...))
-      end
-   else
-      for flagname, _ in pairs(flags) do
-         add_flag(flagname)
-      end
-   end
-   return unpack(out)
+-- Adds legacy 'run' function to a command module.
+-- @param command table: command module with 'command' function,
+-- the added 'run' function calls it after parseing command-line arguments.
+function util.add_run_function(command)
+   command.run = function(...) return command.command(util.parse_flags(...)) end
 end
 
 --- Merges contents of src on top of dst's contents.
@@ -517,6 +492,85 @@ end
 
 function util.see_help(command, program)
    return "See '"..util.this_program(program or "luarocks")..' help'..(command and " "..command or "").."'."
+end
+
+function util.announce_install(rockspec)
+   local cfg = require("luarocks.cfg")
+   local path = require("luarocks.path")
+
+   local suffix = ""
+   if rockspec.description and rockspec.description.license then
+      suffix = " (license: "..rockspec.description.license..")"
+   end
+
+   local root_dir = path.root_dir(cfg.rocks_dir)
+   util.printout(rockspec.name.." "..rockspec.version.." is now installed in "..root_dir..suffix)
+   util.printout()
+end
+
+--- Collect rockspecs located in a subdirectory.
+-- @param versions table: A table mapping rock names to newest rockspec versions.
+-- @param paths table: A table mapping rock names to newest rockspec paths.
+-- @param unnamed_paths table: An array of rockspec paths that don't contain rock
+-- name and version in regular format.
+-- @param subdir string: path to subdirectory.
+local function collect_rockspecs(versions, paths, unnamed_paths, subdir)
+   local fs = require("luarocks.fs")
+   local dir = require("luarocks.dir")
+   local path = require("luarocks.path")
+   local deps = require("luarocks.deps")
+
+   if fs.is_dir(subdir) then
+      for file in fs.dir(subdir) do
+         file = dir.path(subdir, file)
+
+         if file:match("rockspec$") and fs.is_file(file) then
+            local rock, version = path.parse_name(file)
+
+            if rock then
+               if not versions[rock] or deps.compare_versions(version, versions[rock]) then
+                  versions[rock] = version
+                  paths[rock] = file
+               end
+            else
+               table.insert(unnamed_paths, file)
+            end
+         end
+      end
+   end
+end
+
+--- Get default rockspec name for commands that take optional rockspec name.
+-- @return string or (nil, string): path to the rockspec or nil and error message.
+function util.get_default_rockspec()
+   local versions, paths, unnamed_paths = {}, {}, {}
+   -- Look for rockspecs in some common locations.
+   collect_rockspecs(versions, paths, unnamed_paths, ".")
+   collect_rockspecs(versions, paths, unnamed_paths, "rockspec")
+   collect_rockspecs(versions, paths, unnamed_paths, "rockspecs")
+
+   if #unnamed_paths > 0 then
+      -- There are rockspecs not following "name-version.rockspec" format.
+      -- More than one are ambiguous.
+      if #unnamed_paths > 1 then
+         return nil, "Please specify which rockspec file to use."
+      else
+         return unnamed_paths[1]
+      end
+   else
+      local rock = next(versions)
+
+      if rock then
+         -- If there are rockspecs for multiple rocks it's ambiguous.
+         if next(versions, rock) then
+            return nil, "Please specify which rockspec file to use."
+         else
+            return paths[rock]
+         end
+      else
+         return nil, "Argument missing: please specify a rockspec to use on current directory."
+      end
+   end
 end
 
 -- from http://lua-users.org/wiki/SplitJoin

@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "pack" command.
 -- Creates a rock, packing sources or binaries.
---module("luarocks.pack", package.seeall)
 local pack = {}
 package.loaded["luarocks.pack"] = pack
 
@@ -17,6 +16,7 @@ local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local search = require("luarocks.search")
 
+util.add_run_function(pack)
 pack.help_summary = "Create a rock, packing sources or binaries."
 pack.help_arguments = "{<rockspec>|<name> [<version>]}"
 pack.help = [[
@@ -53,7 +53,7 @@ function pack.pack_source_rock(rockspec_file)
    if not ok then return nil, err end
 
    fs.delete(rock_file)
-   fs.copy(rockspec_file, source_dir)
+   fs.copy(rockspec_file, source_dir, cfg.perm_read)
    if not fs.zip(rock_file, dir.base_name(rockspec_file), dir.base_name(source_file)) then
       return nil, "Failed packing "..rock_file
    end
@@ -62,7 +62,7 @@ function pack.pack_source_rock(rockspec_file)
    return rock_file
 end
 
-local function copy_back_files(name, version, file_tree, deploy_dir, pack_dir)
+local function copy_back_files(name, version, file_tree, deploy_dir, pack_dir, perms)
    local ok, err = fs.make_dir(pack_dir)
    if not ok then return nil, err end
    for file, sub in pairs(file_tree) do
@@ -74,9 +74,9 @@ local function copy_back_files(name, version, file_tree, deploy_dir, pack_dir)
       else
          local versioned = path.versioned_name(source, deploy_dir, name, version)
          if fs.exists(versioned) then
-            fs.copy(versioned, target)
+            fs.copy(versioned, target, perms)
          else
-            fs.copy(source, target)
+            fs.copy(source, target, perms)
          end
       end
    end
@@ -135,12 +135,12 @@ local function do_pack_binary_rock(name, version)
 
    local is_binary = false
    if rock_manifest.lib then
-      local ok, err = copy_back_files(name, version, rock_manifest.lib, path.deploy_lib_dir(root), dir.path(temp_dir, "lib"))
+      local ok, err = copy_back_files(name, version, rock_manifest.lib, path.deploy_lib_dir(root), dir.path(temp_dir, "lib"), cfg.perm_exec)
       if not ok then return nil, "Failed copying back files: " .. err end
       is_binary = true
    end
    if rock_manifest.lua then
-      local ok, err = copy_back_files(name, version, rock_manifest.lua, path.deploy_lua_dir(root), dir.path(temp_dir, "lua"))
+      local ok, err = copy_back_files(name, version, rock_manifest.lua, path.deploy_lua_dir(root), dir.path(temp_dir, "lua"), cfg.perm_read)
       if not ok then return nil, "Failed copying back files: " .. err end
    end
    
@@ -192,8 +192,7 @@ end
 -- version may also be passed.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-function pack.run(...)
-   local flags, arg, version = util.parse_flags(...)
+function pack.command(flags, arg, version)
    assert(type(version) == "string" or not version)
    if type(arg) ~= "string" then
       return nil, "Argument missing. "..util.see_help("pack")

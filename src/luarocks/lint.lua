@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "lint" command.
 -- Utility function that checks syntax of the rockspec.
---module("luarocks.lint", package.seeall)
 local lint = {}
 package.loaded["luarocks.lint"] = lint
 
@@ -9,6 +8,7 @@ local util = require("luarocks.util")
 local download = require("luarocks.download")
 local fetch = require("luarocks.fetch")
 
+util.add_run_function(lint)
 lint.help_summary = "Check syntax of a rockspec."
 lint.help_arguments = "<rockspec>"
 lint.help = [[
@@ -18,9 +18,7 @@ It returns success or failure if the text of a rockspec is
 syntactically correct.
 ]]
 
-function lint.run(...)
-   local flags, input = util.parse_flags(...)
-   
+function lint.command(flags, input)
    if not input then
       return nil, "Argument missing. "..util.see_help("lint")
    end

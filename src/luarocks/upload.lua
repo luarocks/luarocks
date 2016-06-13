@@ -7,6 +7,7 @@ local pack = require("luarocks.pack")
 local cfg = require("luarocks.cfg")
 local Api = require("luarocks.upload.api")
 
+util.add_run_function(upload)
 upload.help_summary = "Upload a rockspec to the public rocks repository."
 upload.help_arguments = "[--skip-pack] [--api-key=<key>] [--force] <rockspec>"
 upload.help = [[
@@ -20,8 +21,7 @@ upload.help = [[
                  increment the revision number instead.
 ]]
 
-function upload.run(...)
-   local flags, fname = util.parse_flags(...)
+function upload.command(flags, fname)
    if not fname then
       return nil, "Missing rockspec. "..util.see_help("upload")
    end

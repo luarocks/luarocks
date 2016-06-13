@@ -459,6 +459,25 @@ local tests = {
          and assert("lua-compat-5.2" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2.tar.bz2"))
          and assert("parser.moon" == fetch.url_to_base_dir("git://github.com/Cirru/parser.moon"))
          and assert("v0.3" == fetch.url_to_base_dir("https://github.com/hishamhm/lua-compat-5.2/archive/v0.3"))
+   end,
+
+   -- Tests for https://github.com/keplerproject/luarocks/issues/552
+   test_install_break_dependencies_warning = function()
+      need_luasocket()
+      return run "$luarocks install say ${new_version_say}"
+         and run "$luarocks install luassert"
+         and run "$luarocks install say ${old_version_say}"
+   end,
+   test_install_break_dependencies_force = function()
+      need_luasocket()
+      return run "$luarocks install say ${new_version_say}"
+         and run "$luarocks install luassert"
+         and run "$luarocks install --force say ${old_version_say}"
+   end,
+   test_install_break_dependencies_force = function()
+      need_luasocket()
+      return run "$luarocks install say ${new_version_say}"
+         and run "$luarocks install luassert"
+         and run "$luarocks install --force-fast say ${old_version_say}"
    end
-   
 }

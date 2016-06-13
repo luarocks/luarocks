@@ -1,6 +1,5 @@
 
 --- Functions for managing the repository on disk.
---module("luarocks.repos", package.seeall)
 local repos = {}
 package.loaded["luarocks.repos"] = repos
 
@@ -157,11 +156,10 @@ local function install_binary(source, target, name, version)
    assert(type(target) == "string")
    
    if fs.is_lua(source) then
-      repos.ok, repos.err = fs.wrap_script(source, target, name, version)
+      return fs.wrap_script(source, target, name, version)
    else
-      repos.ok, repos.err = fs.copy_binary(source, target)
+      return fs.copy_binary(source, target)
    end
-   return repos.ok, repos.err
 end
 
 local function resolve_conflict(target, deploy_dir, name, version)
@@ -199,9 +197,6 @@ function repos.deploy_files(name, version, wrap_bin_scripts)
 
    local function deploy_file_tree(file_tree, path_fn, deploy_dir, move_fn)
       local source_dir = path_fn(name, version)
-      if not move_fn then
-         move_fn = fs.move
-      end
       return recurse_rock_manifest_tree(file_tree, 
          function(parent_path, parent_module, file)
             local source = dir.path(source_dir, parent_path, file)
@@ -239,11 +234,16 @@ function repos.deploy_files(name, version, wrap_bin_scripts)
       local move_bin_fn = wrap_bin_scripts and install_binary or fs.copy_binary
       ok, err = deploy_file_tree(rock_manifest.bin, path.bin_dir, cfg.deploy_bin_dir, move_bin_fn)
    end
+   local function make_mover(perms)
+      return function (src, dest) 
+         return fs.move(src, dest, perms)
+      end
+   end
    if ok and rock_manifest.lua then
-      ok, err = deploy_file_tree(rock_manifest.lua, path.lua_dir, cfg.deploy_lua_dir)
+      ok, err = deploy_file_tree(rock_manifest.lua, path.lua_dir, cfg.deploy_lua_dir, make_mover(cfg.perm_read))
    end
    if ok and rock_manifest.lib then
-      ok, err = deploy_file_tree(rock_manifest.lib, path.lib_dir, cfg.deploy_lib_dir)
+      ok, err = deploy_file_tree(rock_manifest.lib, path.lib_dir, cfg.deploy_lib_dir, make_mover(cfg.perm_exec))
    end
    return ok, err
 end

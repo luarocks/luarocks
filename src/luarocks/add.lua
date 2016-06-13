@@ -1,7 +1,6 @@
 
 --- Module implementing the luarocks-admin "add" command.
 -- Adds a rock or rockspec to a rocks server.
---module("luarocks.add", package.seeall)
 local add = {}
 package.loaded["luarocks.add"] = add
 
@@ -13,6 +12,7 @@ local index = require("luarocks.index")
 local fs = require("luarocks.fs")
 local cache = require("luarocks.cache")
 
+util.add_run_function(add)
 add.help_summary = "Add a rock or rockspec to a rocks server."
 add.help_arguments = "[--server=<server>] [--no-refresh] {<rockspec>|<rock>...}"
 add.help = [[
@@ -54,7 +54,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
       if fs.exists(rockfile) then
          util.printout("Copying file "..rockfile.." to "..local_cache.."...")
          local absolute = fs.absolute_name(rockfile)
-         fs.copy(absolute, local_cache)
+         fs.copy(absolute, local_cache, cfg.perm_read)
          table.insert(files, dir.base_name(absolute))
       else
          util.printerr("File "..rockfile.." not found")
@@ -108,9 +108,8 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    return true
 end
 
-function add.run(...)
-   local files = { util.parse_flags(...) }
-   local flags = table.remove(files, 1)
+function add.command(flags, ...)
+   local files = {...}
    if #files < 1 then
       return nil, "Argument missing. "..util.see_help("add", "luarocks-admin")
    end

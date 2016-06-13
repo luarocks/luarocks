@@ -92,7 +92,7 @@ build_bins: cleanup_bins
 	   echo "#!$(LUA_BINDIR)/lua$(LUA_SUFFIX)" > src/bin/$$f ;\
 	   echo "package.path = [[$(LUADIR)/?.lua;]]..package.path" | sed "s,//,/,g" >> src/bin/$$f ;\
 	   cat src/bin/$$f.bak >> src/bin/$$f ;\
-	   chmod +x src/bin/$$f ;\
+	   chmod +rx src/bin/$$f ;\
 	   rm -f src/bin/$$f.bak ;\
 	done
 
@@ -117,7 +117,7 @@ cleanup_bins:
 	do \
 	   mv src/bin/$$f src/bin/$$f.bak ;\
 	   sed "s,^#!.*lua.*,#!/usr/bin/env lua,;/^package.path/d" < src/bin/$$f.bak > src/bin/$$f ;\
-	   chmod +x src/bin/$$f ;\
+	   chmod +rx src/bin/$$f ;\
 	   rm -f src/bin/$$f.bak ;\
 	done
 

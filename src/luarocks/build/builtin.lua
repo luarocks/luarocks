@@ -1,6 +1,5 @@
 
 --- A builtin build system: back-end to provide a portable way of building C-based Lua modules.
---module("luarocks.build.builtin", package.seeall)
 local builtin = {}
 
 local unpack = unpack or table.unpack
@@ -193,7 +192,8 @@ function builtin.run(rockspec)
    end
 
    local ok, err
-   local built_modules = {}
+   local lua_modules = {}
+   local lib_modules = {}
    local luadir = path.lua_dir(rockspec.name, rockspec.version)
    local libdir = path.lib_dir(rockspec.name, rockspec.version)
    --TODO EXEWRAPPER
@@ -233,7 +233,7 @@ function builtin.run(rockspec)
                end
             end
             local dest = dir.path(luadir, moddir, filename)
-            built_modules[info] = dest
+            lua_modules[info] = dest
          else
             info = {info}
          end
@@ -260,7 +260,7 @@ function builtin.run(rockspec)
             ok, err = fs.make_dir(moddir)
             if not ok then return nil, err end
          end
-         built_modules[module_name] = dir.path(libdir, module_name)
+         lib_modules[module_name] = dir.path(libdir, module_name)
          ok = compile_library(module_name, objects, info.libraries, info.libdirs, name)
          if not ok then
             return nil, "Failed compiling module "..module_name
@@ -269,18 +269,20 @@ function builtin.run(rockspec)
          if moddir ~= "" then
             module_name = dir.path(moddir, module_name)
          end
-         built_modules[module_name] = dir.path(libdir, module_name)
+         lib_modules[module_name] = dir.path(libdir, module_name)
          ok = compile_static_library(module_name, objects, info.libraries, info.libdirs, name)
          if not ok then
             return nil, "Failed compiling static library "..module_name
          end
       end
    end
-   for name, dest in pairs(built_modules) do
-      fs.make_dir(dir.dir_name(dest))
-      ok, err = fs.copy(name, dest)
-      if not ok then
-         return nil, "Failed installing "..name.." in "..dest..": "..err
+   for _, mods in ipairs({{ tbl = lua_modules, perms = cfg.perm_read }, { tbl = lib_modules, perms = cfg.perm_exec }}) do
+      for name, dest in pairs(mods.tbl) do
+         fs.make_dir(dir.dir_name(dest))
+         ok, err = fs.copy(name, dest, mods.perms)
+         if not ok then
+            return nil, "Failed installing "..name.." in "..dest..": "..err
+         end
       end
    end
    if fs.is_dir("lua") then
