@@ -760,8 +760,4 @@ function deps.get_deps_mode(flags)
    end
 end
 
-function deps.deps_mode_to_flag(deps_mode)
-   return "--deps-mode="..deps_mode
-end
-
 return deps
