@@ -2,37 +2,43 @@ local install = require("luarocks.install")
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
+local run = _G.test_setup.run
+local testing_paths = _G.test_setup.testing_paths
+local env_variables = _G.test_setup.env_variables
+local md5sums = _G.test_setup.md5sums
+
 --TODO
-describe("LuaRocks #whitebox_install", function()
+describe("new test #whitebox #w_install", function()
    it("trivial_test", function()
       assert.are.same(1,1)
    end)
 end)
 
 --TODO
-describe("Luarocks #blackbox_install", function()
-      test_env.set_args()
+describe("LuaRocks install tests #blackbox #b_install", function()
 
-      local testing_paths = test_env.set_paths(test_env.LUA_V)
-      local env_variables = test_env.create_env(testing_paths)
-      local md5sums = test_env.create_md5sums(testing_paths)
-      local run = test_env.run_luarocks(testing_paths, env_variables) 
-   
    before_each(function()
       test_env.reset_environment(testing_paths, md5sums)
    end)
-   
-   it("luarocks install with no arguments", function()
-      local output = run.luarocks_bool(" install", env_variables)
-      assert.is_false(output)
+
+   it("LuaRocks install with no flags/arguments", function()
+      assert.is_false(run.luarocks_bool("install", env_variables))
    end)
-   it("luarocks install with invalid argument", function()
-      local output = run.luarocks_bool(" install invalid", env_variables)
-      assert.is_false(output)
+   it("LuaRocks install with invalid argument", function()
+      assert.is_false(run.luarocks_bool("install invalid", env_variables))
    end)
-   --  it('luarocks install luasec with skipping dependency checks', function()
-   --    test_utils.luarocks_noprint(" install luasec --nodeps; ", test_utils.testing_env_variables)
-   --    assert.is.truthy(lfs.attributes(test_utils.testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasec"))
-   --    assert.is.falsy(lfs.attributes(test_utils.testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasocket"))
-   -- end)
+   it('LuaRocks install luasec with skipping dependency checks', function()
+      run.luarocks(" install luasec --nodeps", env_variables)
+      assert.is_true(run.luarocks_bool("show luasec", env_variables))
+      assert.is_false(run.luarocks_bool("show luasocket;", env_variables))
+
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasec"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasocket"))
+   end)
+   it("LuaRocks install with local flag as root", function()
+      local tmp_user = os.getenv("USER")
+      env_variables.USER = "root"
+      assert.is_false(run.luarocks_bool("install install --local luasocket", env_variables))
+      env_variables.USER = tmp_user
+   end)
 end)

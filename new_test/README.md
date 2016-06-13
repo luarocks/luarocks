@@ -1,6 +1,6 @@
 #LuaRocks testsuite
 ##Overview
-Test suite for LuaRocks project with Busted framework(http://olivinelabs.com/busted/). 
+Test suite for LuaRocks project with Busted unit testing framework(http://olivinelabs.com/busted/). 
 
 * Contains white-box & black-box tests
 * Easy setup for your purpose on command line or from configuration file
@@ -12,7 +12,7 @@ Test suite for LuaRocks project with Busted framework(http://olivinelabs.com/bus
 
 
 ##Usage
-Running of tests is based on basic Busted usage. *Helper* script is always *testing.lua*, mandatory for building environment to test black-box tests. Mandatory argument is version of Lua. Always start tests inside folder.
+Running of tests is based on basic Busted usage. *-Xhelper* flag is mandatory for inserting arguments into testing (primary black-box). Flag *--tags=* or *-t* is mandatory for specifying which tests will run. Mandatory *-Xhelper* argument is always version of Lua. Start tests inside LuaRocks folder or specify with *-C* flag.
 
 **Arguments for Busted helper script**
 
@@ -23,21 +23,29 @@ clean,	remove existing testing environment
 os=<version>,    type your OS ["linux", "os x", "windows"]
 ```
 ---------------------------------------------------------------------------------------------
-**Tags** of tests are required and are in this format:
+####_**Tags** of tests are required and are in this format:_
 
-*type-of-test*\_*name-of-command*
+**whitebox** - run all whitebox tests
 
-for example: `blackbox_install` or `whitebox_help`
+**blackbox** - run all blackbox tests
+
+**w**\_*name-of-command* - whitebox testing of command
+
+**setup**,**b**\_*name-of-command* - blackbox testing of command
+
+**setup** - setup required variables and functions for blackbox testing (mandatory)
+
+for example: `setup,b_install`  or `w_help`
 
 ###Examples
 To run white-box tests in LuaRocks directory type :
 
-`busted --exclude-tags="blackbox"`
+`busted -t "whitebox"`
 
 To run black-box tests just of *install* command (we defined our OS, so OS check is skipped.):
 
-`busted --helper="testing.lua" -Xhelper lua=5.2.4,os=linux -t "blackbox_install"`
+`busted -Xhelper lua=5.2.4,os=linux -t "setup, b_install"`
 
-To run black-box tests of *install* command, whitebox of *help* command (use *full* type of environment):
+To run black-box tests of *install* command, whitebox of *help* command (using *full* type of environment):
 
-`busted --helper="testing.lua" -Xhelper lua=5.2.4,env=full -t "blackbox_install", "whitebox_help"`
+`busted -Xhelper lua=5.2.4,env=full -t "b_install", "w_help"`
