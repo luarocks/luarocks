@@ -296,7 +296,6 @@ end
 ---
 -- MAIN 
 function test_env.main(rocks)
-   test_env.set_args()
    local luaversion_full = test_env.LUA_V
    local testing_paths = test_env.set_paths(luaversion_full)
   
