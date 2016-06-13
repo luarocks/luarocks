@@ -380,7 +380,7 @@ local function do_build(name, version, deps_mode, build_only_deps)
       return build.build_rock(name, true, deps_mode, build_only_deps)
    elseif not name:match(dir.separator) then
       local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(build.run, name:lower(), version, deps.deps_mode_to_flag(deps_mode), build_only_deps and "--only-deps")
+      return search.act_on_src_or_rockspec(do_build, name:lower(), version, nil, deps_mode, build_only_deps)
    end
    return nil, "Don't know what to do with "..name
 end
