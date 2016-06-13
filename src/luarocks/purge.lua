@@ -14,7 +14,6 @@ local manif = require("luarocks.manif")
 local cfg = require("luarocks.cfg")
 local remove = require("luarocks.remove")
 
-util.add_run_function(purge)
 purge.help_summary = "Remove all installed rocks from a tree."
 purge.help_arguments = "--tree=<tree> [--old-versions]"
 purge.help = [[

@@ -11,7 +11,6 @@ local deps = require("luarocks.deps")
 local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 
-util.add_run_function(search)
 search.help_summary = "Query the LuaRocks servers."
 search.help_arguments = "[--source] [--binary] { <name> [<version>] | --all }"
 search.help = [[

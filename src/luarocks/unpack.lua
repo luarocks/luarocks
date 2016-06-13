@@ -11,7 +11,6 @@ local build = require("luarocks.build")
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.cfg")
 
-util.add_run_function(unpack)
 unpack.help_summary = "Unpack the contents of a rock."
 unpack.help_arguments = "[--force] {<rock>|<name> [<version>]}"
 unpack.help = [[

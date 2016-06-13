@@ -14,7 +14,6 @@ local cfg = require("luarocks.cfg")
 local manif = require("luarocks.manif")
 local fs = require("luarocks.fs")
 
-util.add_run_function(remove)
 remove.help_summary = "Uninstall a rock."
 remove.help_arguments = "[--force|--force-fast] <name> [<version>]"
 remove.help = [[

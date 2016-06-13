@@ -12,7 +12,6 @@ local deps = require("luarocks.deps")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 
-util.add_run_function(make_manifest)
 make_manifest.help_summary = "Compile a manifest file for a repository."
 
 make_manifest.help = [[

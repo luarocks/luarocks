@@ -7,7 +7,6 @@ local pack = require("luarocks.pack")
 local cfg = require("luarocks.cfg")
 local Api = require("luarocks.upload.api")
 
-util.add_run_function(upload)
 upload.help_summary = "Upload a rockspec to the public rocks repository."
 upload.help_arguments = "[--skip-pack] [--api-key=<key>] [--force] <rockspec>"
 upload.help = [[

@@ -11,7 +11,6 @@ local build = require("luarocks.build")
 local install = require("luarocks.install")
 local util = require("luarocks.util")
 
-util.add_run_function(validate)
 validate.help_summary = "Sandboxed test of build/install of all packages in a repository."
 
 validate.help = [[

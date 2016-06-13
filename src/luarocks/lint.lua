@@ -8,7 +8,6 @@ local util = require("luarocks.util")
 local download = require("luarocks.download")
 local fetch = require("luarocks.fetch")
 
-util.add_run_function(lint)
 lint.help_summary = "Check syntax of a rockspec."
 lint.help_arguments = "<rockspec>"
 lint.help = [[

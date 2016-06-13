@@ -11,7 +11,6 @@ local deps = require("luarocks.deps")
 local fetch = require("luarocks.fetch")
 local manif = require("luarocks.manif")
 
-util.add_run_function(show)
 show.help_summary = "Show information about an installed rock."
 
 show.help = [[

@@ -12,7 +12,6 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local download = require("luarocks.download")
 
-util.add_run_function(doc)
 doc.help_summary = "Show documentation for an installed rock."
 
 doc.help = [[

@@ -10,7 +10,6 @@ local cfg = require("luarocks.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 
-util.add_run_function(list)
 list.help_summary = "List currently installed rocks."
 list.help_arguments = "[--porcelain] <filter>"
 list.help = [[

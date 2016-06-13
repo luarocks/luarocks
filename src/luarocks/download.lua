@@ -12,7 +12,6 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.cfg")
 
-util.add_run_function(download)
 download.help_summary = "Download a specific rock file from a rocks server."
 download.help_arguments = "[--all] [--arch=<arch> | --source | --rockspec] [<name> [<version>]]"
 

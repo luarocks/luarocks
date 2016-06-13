@@ -16,7 +16,6 @@ local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local search = require("luarocks.search")
 
-util.add_run_function(pack)
 pack.help_summary = "Create a rock, packing sources or binaries."
 pack.help_arguments = "{<rockspec>|<name> [<version>]}"
 pack.help = [[
