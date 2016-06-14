@@ -181,7 +181,8 @@ function test_env.create_env(testing_paths)
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_sys_tree .. "/share/lua/" .. luaversion_short .. "/?.lua;"
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_sys_tree .. "/share/lua/".. luaversion_short .. "/?/init.lua;"
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.src_dir .. "/?.lua;"
-   env_variables.LUA_CPATH = testing_paths.testing_tree .. "/lib/lua/5.1/?.so;" .. testing_paths.testing_sys_tree .. "/lib/lua/5.1/?.so;"
+   env_variables.LUA_CPATH = testing_paths.testing_tree .. "/lib/lua/" .. luaversion_short .. "/?.so;"
+                           .. testing_paths.testing_sys_tree .. "/lib/lua/" .. luaversion_short .. "/?.so;"
    env_variables.PATH = os.getenv("PATH") .. ":" .. testing_paths.testing_tree .. "/bin:" .. testing_paths.testing_sys_tree .. "/bin"
 
    return env_variables
@@ -206,23 +207,28 @@ function test_env.run_luarocks(testing_paths, env_variables)
    end
 
    local lua = luadir .. "/bin/lua"
+   run.luarocks = function(cmd, new_vars) return execute_output(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
+                  .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd, true,
+                  new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
+   run.luarocks_bool = function(cmd, new_vars) return execute_bool(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
+                  .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd, true,
+                  new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
+   run.luarocks_nocov = function(cmd, new_vars) return execute_bool(lua .. " " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd,
+                  true, new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
+   run.luarocks_noprint = function(cmd, new_vars) return execute_output(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
+                  .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd, false,
+                  new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
+   run.luarocks_noprint_nocov = function(cmd, new_vars) return execute_bool(lua .. " " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd,
+                  false, new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
+   run.luarocks_admin = function(cmd, new_vars) return execute_output(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
+                  .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks-admin " .. cmd, true,
+                  new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
+   run.luarocks_admin_bool = function(cmd, new_vars) return execute_output(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
+                  .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks-admin " .. cmd, true,
+                  new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
+   run.luarocks_admin_nocov = function(cmd, new_vars) return execute_bool(lua .. " " .. testing_paths.src_dir .. "/bin/luarocks-admin " .. cmd,
+                  true, new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
 
-   run.luarocks = function(cmd, env_variables) return execute_output(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
-               .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd, true, env_variables) end
-   run.luarocks_bool = function(cmd, env_variables) return execute_bool(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
-                     .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd, true, env_variables) end
-   run.luarocks_nocov = function(cmd, env_variables) return execute_bool(lua .. " " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd,
-                      true, env_variables) end
-   run.luarocks_noprint= function(cmd, env_variables) return execute_output(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
-                              .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd, false, env_variables) end
-   run.luarocks_noprint_nocov = function(cmd, env_variables) return execute_bool(lua .. " " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd,
-                                          false, env_variables) end
-   run.luarocks_admin = function(cmd, env_variables) return execute_output(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
-                              .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks-admin " .. cmd, true, env_variables) end
-   run.luarocks_admin_bool = function(cmd, env_variables) return execute_bool(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
-                              .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks-admin " .. cmd, true, env_variables) end
-   run.luarocks_admin_nocov = function(cmd, env_variables) return execute_bool(lua .. " " .. testing_paths.src_dir .. "/bin/luarocks-admin " .. cmd,
-                                       true, env_variables) end
    run.luadir = luadir
    run.lua = lua
    return run
@@ -242,7 +248,7 @@ local function build_environment(environment, testing_paths, env_variables)
    execute_bool("mkdir " .. testing_paths.testing_sys_tree)
 
    local run = test_env.run_luarocks(testing_paths, env_variables)
-   run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_cache, env_variables)  
+   run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_cache)
 
    for _,package in ipairs(environment) do
       if not run.luarocks_nocov("install --only-server=" .. testing_paths.testing_cache .. " --tree=" .. testing_paths.testing_sys_tree .. " " .. package, env_variables) then
@@ -251,17 +257,19 @@ local function build_environment(environment, testing_paths, env_variables)
       end
    end
 
-   -- Creating environment variables
-   env_variables = test_env.create_env(testing_paths)
-
    execute_bool("cp -a " .. testing_paths.testing_tree .. "/. " .. testing_paths.testing_tree_copy)
    execute_bool("cp -a " .. testing_paths.testing_sys_tree .. "/. " .. testing_paths.testing_sys_tree_copy)
 end
 
+
 --- Reset testing environment
-function test_env.reset_environment(testing_paths, md5sums)
+local function reset_environment(testing_paths, md5sums, env_variables, extra_rocks)
    testing_tree_md5 = hash_environment(testing_paths.testing_tree)
    testing_sys_tree_md5 = hash_environment(testing_paths.testing_sys_tree)
+
+   download_rocks(extra_rocks, testing_paths.testing_server)
+   local run = test_env.run_luarocks(testing_paths, env_variables)
+   run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
 
    if testing_tree_md5 ~= md5sums.testing_tree_copy_md5 then
       remove_dir(testing_paths.testing_tree)
@@ -271,6 +279,7 @@ function test_env.reset_environment(testing_paths, md5sums)
       remove_dir(testing_paths.testing_sys_tree)
       execute_bool("cp -a " .. testing_paths.testing_sys_tree_copy .. "/. " .. testing_paths.testing_sys_tree)
    end
+
    print("\n-=Environment reset=-")
 end
 
@@ -290,6 +299,45 @@ function test_env.set_paths(luaversion_full)
    testing_paths.testing_server = testing_paths.testing_dir .. "/testing_server-" .. luaversion_full
 
    return testing_paths
+end
+
+test_env.setup_done = false
+function test_env.setup_specs(extra_rocks)
+   if not test_env.setup_done then 
+
+      test_env.set_args()
+
+      local test_setup = {}
+      local rocks = {}
+      rocks[#rocks+1] = "/luacov-0.11.0-1.rockspec"
+      rocks[#rocks+1] = "/luacov-0.11.0-1.src.rock"
+
+      if test_env.TYPE_TEST_ENV == "full" then 
+         rocks[#rocks+1] = "/luafilesystem-1.6.3-1.src.rock"
+         rocks[#rocks+1] = "/luasocket-3.0rc1-1.src.rock"
+         rocks[#rocks+1] = "/luasocket-3.0rc1-1.rockspec"
+         rocks[#rocks+1] = "/luaposix-33.2.1-1.src.rock"
+         rocks[#rocks+1] = "/md5-1.2-1.src.rock"
+         rocks[#rocks+1] = "/lzlib-0.4.1.53-1.src.rock"
+      end
+      if test_env.TYPE_TEST_ENV == "full" and test_env.LUA_V ~= "5.1.5" then
+         rocks[#rocks+1] = "/luabitop-1.0.2-1.rockspec"
+         rocks[#rocks+1] = "/luabitop-1.0.2-1.src.rock"
+      end
+      test_env.main(rocks)
+      -- lfs.chdir("new_test")
+
+      test_env.testing_paths = test_env.set_paths(test_env.LUA_V)
+      test_env.env_variables = test_env.create_env(test_env.testing_paths)
+      test_env.md5sums = test_env.create_md5sums(test_env.testing_paths)
+      test_env.run = test_env.run_luarocks(test_env.testing_paths, test_env.env_variables)
+
+      test_env.setup_done = true
+      reset_environment(test_env.testing_paths, test_env.md5sums, test_env.env_variables, extra_rocks)
+   else
+      reset_environment(test_env.testing_paths, test_env.md5sums, test_env.env_variables, extra_rocks)
+   end
+   return true
 end
 
 
@@ -402,7 +450,7 @@ upload_servers = {
    lfs.chdir(testing_paths.luarocks_dir)
 
    -- Preparation of environment to build
-   run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server, temp_env_variables)
+   run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
    local minimal_environment = {"luacov"}
    local full_environment = {}
 
