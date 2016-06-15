@@ -196,41 +196,35 @@ function test_env.create_md5sums(testing_paths)
    return md5sums
 end
 
+function make_command_function(exec_function, lua_cmd, do_print)
+   return function(cmd, new_vars)
+      local vars = new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables
+      return exec_function(lua_cmd .. cmd, do_print, vars)
+   end
+end
+
 function test_env.run_luarocks(testing_paths, env_variables)
    local run = {}
-   local luadir
 
-   if lfs.attributes("/usr/bin/lua") then 
-      luadir = "/usr"
-   elseif lfs.attributes("/usr/local/bin/lua") then
-      luadir = "/usr/local"
-   end
+   local cov_str = testing_paths.lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir .. "/luacov.config')\" " .. testing_paths.src_dir
 
-   local lua = luadir .. "/bin/lua"
-   run.luarocks = function(cmd, new_vars) return execute_output(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
-                  .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd, true,
-                  new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
-   run.luarocks_bool = function(cmd, new_vars) return execute_bool(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
-                  .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd, true,
-                  new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
-   run.luarocks_nocov = function(cmd, new_vars) return execute_bool(lua .. " " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd,
-                  true, new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
-   run.luarocks_noprint = function(cmd, new_vars) return execute_output(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
-                  .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd, false,
-                  new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
-   run.luarocks_noprint_nocov = function(cmd, new_vars) return execute_bool(lua .. " " .. testing_paths.src_dir .. "/bin/luarocks " .. cmd,
-                  false, new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
-   run.luarocks_admin = function(cmd, new_vars) return execute_output(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
-                  .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks-admin " .. cmd, true,
-                  new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
-   run.luarocks_admin_bool = function(cmd, new_vars) return execute_output(lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir
-                  .. "/luacov.config')\" " .. testing_paths.src_dir .. "/bin/luarocks-admin " .. cmd, true,
-                  new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
-   run.luarocks_admin_nocov = function(cmd, new_vars) return execute_bool(lua .. " " .. testing_paths.src_dir .. "/bin/luarocks-admin " .. cmd,
-                  true, new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables) end
+   local luarocks_cmd = cov_str .. "/bin/luarocks "
+   run.luarocks = make_command_function(execute_output, luarocks_cmd, true)
+   run.luarocks_bool = make_command_function(execute_bool, luarocks_cmd, true)
+   run.luarocks_noprint = make_command_function(execute_bool, luarocks_cmd, false)
 
-   run.luadir = luadir
-   run.lua = lua
+   local luarocks_nocov_cmd = testing_paths.lua .. " " .. testing_paths.src_dir .. "/bin/luarocks "
+   run.luarocks_nocov = make_command_function(execute_bool, luarocks_nocov_cmd, true)
+   run.luarocks_noprint_nocov = make_command_function(execute_bool, luarocks_nocov_cmd, false)
+   
+
+   local luarocks_admin_cmd = cov_str .. "/bin/luarocks-admin "
+   run.luarocks_admin = make_command_function(execute_output, luarocks_admin_cmd, true)
+   run.luarocks_admin_bool = make_command_function(execute_bool, luarocks_admin_cmd, true)
+
+   local luarocks_admin_nocov_cmd = testing_paths.lua .. " " .. testing_paths.src_dir .. "/bin/luarocks-admin "
+   run.luarocks_admin_nocov = make_command_function(execute_bool, luarocks_admin_nocov_cmd, true)
+
    return run
 end
 
@@ -285,6 +279,18 @@ end
 
 function test_env.set_paths(luaversion_full)
    local testing_paths = {}
+
+   testing_paths.luadir = ""
+
+   if lfs.attributes("/usr/bin/lua") then 
+      luadir = "/usr"
+   elseif lfs.attributes("/usr/local/bin/lua") then
+      luadir = "/usr/local"
+   end
+
+   testing_paths.lua = luadir .. "/bin/lua"
+
+
    testing_paths.luarocks_dir = lfs.currentdir():gsub("/new_test","")
    testing_paths.testing_dir = testing_paths.luarocks_dir .. "/new_test"
    testing_paths.src_dir = testing_paths.luarocks_dir .. "/src"
@@ -329,14 +335,13 @@ function test_env.setup_specs(extra_rocks)
 
       test_env.testing_paths = test_env.set_paths(test_env.LUA_V)
       test_env.env_variables = test_env.create_env(test_env.testing_paths)
-      test_env.md5sums = test_env.create_md5sums(test_env.testing_paths)
       test_env.run = test_env.run_luarocks(test_env.testing_paths, test_env.env_variables)
 
       test_env.setup_done = true
-      reset_environment(test_env.testing_paths, test_env.md5sums, test_env.env_variables, extra_rocks)
-   else
-      reset_environment(test_env.testing_paths, test_env.md5sums, test_env.env_variables, extra_rocks)
    end
+   local md5sums = test_env.create_md5sums(test_env.testing_paths)
+   reset_environment(test_env.testing_paths, md5sums, test_env.env_variables, extra_rocks)
+
    return true
 end
 
@@ -439,7 +444,7 @@ upload_servers = {
    local run = test_env.run_luarocks(testing_paths, temp_env_variables)
 
    lfs.chdir(testing_paths.luarocks_dir)
-   execute_bool("./configure --with-lua=" .. run.luadir .. " --prefix=" .. testing_paths.testing_lrprefix
+   execute_bool("./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix
                         .. " && make clean", false, temp_env_variables)
    execute_bool("make src/luarocks/site_config.lua && make dev", false, temp_env_variables)
    lfs.chdir(testing_paths.src_dir)
