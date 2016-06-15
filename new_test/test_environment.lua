@@ -92,9 +92,7 @@ end
 local function execute_helper(command, print_command, env_variables)
    local final_command = ""
 
-   if print_command then 
-      print(">>>Executing: " .. command)
-   end
+  
    
    if env_variables then
       final_command = "export "
@@ -106,7 +104,9 @@ local function execute_helper(command, print_command, env_variables)
    end
 
    final_command = final_command .. command
-
+ if print_command then 
+      print(">>>Executing: " .. final_command)
+   end
    return final_command
 end
 
@@ -196,12 +196,12 @@ function test_env.create_md5sums(testing_paths)
    return md5sums
 end
 
-function make_command_function(exec_function, lua_cmd, do_print)
+function make_command_function(exec_function, lua_cmd, do_print, env_variables)
    return function(cmd, new_vars)
-      local vars = new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables
-      return exec_function(lua_cmd .. cmd, do_print, vars)
+      return exec_function(lua_cmd .. cmd, do_print, new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables)
    end
 end
+
 
 function test_env.run_luarocks(testing_paths, env_variables)
    local run = {}
@@ -209,21 +209,21 @@ function test_env.run_luarocks(testing_paths, env_variables)
    local cov_str = testing_paths.lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir .. "/luacov.config')\" " .. testing_paths.src_dir
 
    local luarocks_cmd = cov_str .. "/bin/luarocks "
-   run.luarocks = make_command_function(execute_output, luarocks_cmd, true)
-   run.luarocks_bool = make_command_function(execute_bool, luarocks_cmd, true)
-   run.luarocks_noprint = make_command_function(execute_bool, luarocks_cmd, false)
+   run.luarocks = make_command_function(execute_output, luarocks_cmd, true, env_variables)
+   run.luarocks_bool = make_command_function(execute_bool, luarocks_cmd, true, env_variables)
+   run.luarocks_noprint = make_command_function(execute_bool, luarocks_cmd, false, env_variables)
 
    local luarocks_nocov_cmd = testing_paths.lua .. " " .. testing_paths.src_dir .. "/bin/luarocks "
-   run.luarocks_nocov = make_command_function(execute_bool, luarocks_nocov_cmd, true)
-   run.luarocks_noprint_nocov = make_command_function(execute_bool, luarocks_nocov_cmd, false)
+   run.luarocks_nocov = make_command_function(execute_bool, luarocks_nocov_cmd, true, env_variables)
+   run.luarocks_noprint_nocov = make_command_function(execute_bool, luarocks_nocov_cmd, false, env_variables)
    
 
    local luarocks_admin_cmd = cov_str .. "/bin/luarocks-admin "
-   run.luarocks_admin = make_command_function(execute_output, luarocks_admin_cmd, true)
-   run.luarocks_admin_bool = make_command_function(execute_bool, luarocks_admin_cmd, true)
+   run.luarocks_admin = make_command_function(execute_output, luarocks_admin_cmd, true, env_variables)
+   run.luarocks_admin_bool = make_command_function(execute_bool, luarocks_admin_cmd, true, env_variables)
 
    local luarocks_admin_nocov_cmd = testing_paths.lua .. " " .. testing_paths.src_dir .. "/bin/luarocks-admin "
-   run.luarocks_admin_nocov = make_command_function(execute_bool, luarocks_admin_nocov_cmd, true)
+   run.luarocks_admin_nocov = make_command_function(execute_bool, luarocks_admin_nocov_cmd, true, env_variables)
 
    return run
 end
