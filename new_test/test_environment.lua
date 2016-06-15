@@ -3,6 +3,7 @@ local test_env = {}
 
 local arg = arg or { ... }
 
+--- Set all arguments from input into global variables
 function test_env.set_args()
       if arg[1] == nil then
       print("LuaRocks test-suite\n\n"..
@@ -28,7 +29,7 @@ function test_env.set_args()
          test_env.TYPE_TEST_ENV = arg[i]:gsub("(.*)env=([^%,]+)(.*)","%2")
       end
       if arg[i]:find("clean") then
-         test_env.TEST_CLEAN = "yes"
+         test_env.TEST_CLEAN = true
       end
       if arg[i]:find("os=") then
          test_env.TEST_TARGET_OS = arg[i]:gsub("(.*)os=([^%,]+)(.*)","%2")
@@ -36,7 +37,7 @@ function test_env.set_args()
    end
 
    if not test_env.TEST_TARGET_OS then
-      print("-=OS check=-")
+      print("[OS CHECK]")
       if os.execute("sw_vers") then 
          test_env.TEST_TARGET_OS = "osx"
       elseif os.execute("uname -s") then
@@ -92,8 +93,10 @@ end
 local function execute_helper(command, print_command, env_variables)
    local final_command = ""
 
-  
-   
+   if print_command then 
+      print("\n[EXECUTING]: " .. command)
+   end
+
    if env_variables then
       final_command = "export "
       for k,v in pairs(env_variables) do
@@ -104,9 +107,7 @@ local function execute_helper(command, print_command, env_variables)
    end
 
    final_command = final_command .. command
- if print_command then 
-      print(">>>Executing: " .. final_command)
-   end
+
    return final_command
 end
 
@@ -171,7 +172,7 @@ local function hash_environment(path)
    return hash
 end
 
-function test_env.create_env(testing_paths)
+local function create_env(testing_paths)
    local luaversion_short = _VERSION:gsub("Lua ", "")
    local env_variables = {}
 
@@ -188,7 +189,7 @@ function test_env.create_env(testing_paths)
    return env_variables
 end
 
-function test_env.create_md5sums(testing_paths)
+local function create_md5sums(testing_paths)
    local md5sums = {}
    md5sums.testing_tree_copy_md5 = hash_environment(testing_paths.testing_tree_copy)
    md5sums.testing_sys_tree_copy_md5 = hash_environment(testing_paths.testing_sys_tree_copy)
@@ -196,14 +197,13 @@ function test_env.create_md5sums(testing_paths)
    return md5sums
 end
 
-function make_command_function(exec_function, lua_cmd, do_print, env_variables)
+local function make_command_function(exec_function, lua_cmd, do_print, env_variables)
    return function(cmd, new_vars)
       return exec_function(lua_cmd .. cmd, do_print, new_vars and setmetatable(new_vars, { __index = env_variables } ) or env_variables)
    end
 end
 
-
-function test_env.run_luarocks(testing_paths, env_variables)
+local function run_luarocks(testing_paths, env_variables)
    local run = {}
 
    local cov_str = testing_paths.lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir .. "/luacov.config')\" " .. testing_paths.src_dir
@@ -223,7 +223,7 @@ function test_env.run_luarocks(testing_paths, env_variables)
    run.luarocks_admin_bool = make_command_function(execute_bool, luarocks_admin_cmd, true, env_variables)
 
    local luarocks_admin_nocov_cmd = testing_paths.lua .. " " .. testing_paths.src_dir .. "/bin/luarocks-admin "
-   run.luarocks_admin_nocov = make_command_function(execute_bool, luarocks_admin_nocov_cmd, true, env_variables)
+   run.luarocks_admin_nocov = make_command_function(execute_bool, luarocks_admin_nocov_cmd, false, env_variables)
 
    return run
 end
@@ -231,7 +231,7 @@ end
 --- Build environment for testing
 local function build_environment(environment, testing_paths, env_variables)
    print("\n--------------------")
-   print("Building environment")
+   print("BUILDING ENVIRONMENT")
    print("--------------------")
    remove_dir(testing_paths.testing_tree)
    remove_dir(testing_paths.testing_sys_tree)
@@ -241,7 +241,7 @@ local function build_environment(environment, testing_paths, env_variables)
    execute_bool("mkdir " .. testing_paths.testing_tree)
    execute_bool("mkdir " .. testing_paths.testing_sys_tree)
 
-   local run = test_env.run_luarocks(testing_paths, env_variables)
+   local run = run_luarocks(testing_paths, env_variables)
    run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_cache)
 
    for _,package in ipairs(environment) do
@@ -262,7 +262,7 @@ local function reset_environment(testing_paths, md5sums, env_variables, extra_ro
    testing_sys_tree_md5 = hash_environment(testing_paths.testing_sys_tree)
 
    download_rocks(extra_rocks, testing_paths.testing_server)
-   local run = test_env.run_luarocks(testing_paths, env_variables)
+   local run = run_luarocks(testing_paths, env_variables)
    run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
 
    if testing_tree_md5 ~= md5sums.testing_tree_copy_md5 then
@@ -274,10 +274,10 @@ local function reset_environment(testing_paths, md5sums, env_variables, extra_ro
       execute_bool("cp -a " .. testing_paths.testing_sys_tree_copy .. "/. " .. testing_paths.testing_sys_tree)
    end
 
-   print("\n-=Environment reset=-")
+   print("\n[ENVIRONMENT RESET]")
 end
 
-function test_env.set_paths(luaversion_full)
+local function set_paths(luaversion_full)
    local testing_paths = {}
 
    testing_paths.luadir = ""
@@ -289,7 +289,6 @@ function test_env.set_paths(luaversion_full)
    end
 
    testing_paths.lua = luadir .. "/bin/lua"
-
 
    testing_paths.luarocks_dir = lfs.currentdir():gsub("/new_test","")
    testing_paths.testing_dir = testing_paths.luarocks_dir .. "/new_test"
@@ -313,7 +312,6 @@ function test_env.setup_specs(extra_rocks)
 
       test_env.set_args()
 
-      local test_setup = {}
       local rocks = {}
       rocks[#rocks+1] = "/luacov-0.11.0-1.rockspec"
       rocks[#rocks+1] = "/luacov-0.11.0-1.src.rock"
@@ -331,15 +329,15 @@ function test_env.setup_specs(extra_rocks)
          rocks[#rocks+1] = "/luabitop-1.0.2-1.src.rock"
       end
       test_env.main(rocks)
-      -- lfs.chdir("new_test")
 
-      test_env.testing_paths = test_env.set_paths(test_env.LUA_V)
-      test_env.env_variables = test_env.create_env(test_env.testing_paths)
-      test_env.run = test_env.run_luarocks(test_env.testing_paths, test_env.env_variables)
+      -- Set paths, env_vars and functions for specs
+      test_env.testing_paths = set_paths(test_env.LUA_V)
+      test_env.env_variables = create_env(test_env.testing_paths)
+      test_env.run = run_luarocks(test_env.testing_paths, test_env.env_variables)
 
       test_env.setup_done = true
    end
-   local md5sums = test_env.create_md5sums(test_env.testing_paths)
+   local md5sums = create_md5sums(test_env.testing_paths)
    reset_environment(test_env.testing_paths, md5sums, test_env.env_variables, extra_rocks)
 
    return true
@@ -349,11 +347,10 @@ end
 ---
 -- MAIN 
 function test_env.main(rocks)
-   local luaversion_full = test_env.LUA_V
-   local testing_paths = test_env.set_paths(luaversion_full)
+   local testing_paths = set_paths(test_env.LUA_V)
   
    --TODO
-   if test_env.TEST_CLEAN == "yes" then
+   if test_env.TEST_CLEAN then
       remove_dir(testing_cache)
       remove_dir(testing_server)
    end
@@ -441,25 +438,22 @@ upload_servers = {
    -- luadir = "/tmp/lua-" .. luaversion
 
    --LOCAL
-   local run = test_env.run_luarocks(testing_paths, temp_env_variables)
+   local run = run_luarocks(testing_paths, temp_env_variables)
 
    lfs.chdir(testing_paths.luarocks_dir)
    execute_bool("./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix
                         .. " && make clean", false, temp_env_variables)
    execute_bool("make src/luarocks/site_config.lua && make dev", false, temp_env_variables)
-   lfs.chdir(testing_paths.src_dir)
-
    execute_bool("mkdir " .. testing_paths.testing_server)
 
    download_rocks(rocks, testing_paths.testing_server)
-   lfs.chdir(testing_paths.luarocks_dir)
 
    -- Preparation of environment to build
    run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
+   
    local minimal_environment = {"luacov"}
    local full_environment = {}
-
-   if luaversion_full == "5.1.5" then
+   if test_env.LUA_V == "5.1.5" then
       full_environment = {"luacov", "luafilesystem", "luasocket", "luabitop","luaposix", "md5", "lzlib"}
    else
       full_environment = {"luacov", "luafilesystem", "luasocket", "luaposix", "md5", "lzlib"}
@@ -471,9 +465,9 @@ upload_servers = {
    else
       build_environment(minimal_environment, testing_paths, temp_env_variables)
    end
-   print("--------------")
-   print("Running tests")
-   print("--------------")
+   print("----------------")
+   print(" RUNNING  TESTS")
+   print("----------------")
 end
 
 return test_env
