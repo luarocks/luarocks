@@ -28,7 +28,7 @@ function test_env.set_args()
          test_env.TYPE_TEST_ENV = arg[i]:gsub("(.*)env=([^%,]+)(.*)","%2")
       end
       if arg[i]:find("clean") then
-         test_env.TEST_CLEAN = true
+         test_env.TEST_ENV_CLEAN = true
       end
       if arg[i]:find("os=") then
          test_env.TEST_TARGET_OS = arg[i]:gsub("(.*)os=([^%,]+)(.*)","%2")
@@ -157,15 +157,17 @@ end
 --- Create md5checksum of directory structure recursively
 -- based on filename and size
 -- @param path string: path to directory for generate mg5checksum
-local function hash_environment(path)
+local function hash_environment(path, testing_os)
    local hash = ""
-   if test_env.TEST_TARGET_OS == "linux" then
+   local testing_os = testing_os or test_env.TEST_TARGET_OS
+
+   if testing_os == "linux" then
       hash = execute_output("find . -printf \"%s %p\n\" | md5sum")
    end
-   if test_env.TEST_TARGET_OS == "osx" then
+   if testing_os == "osx" then
       hash = execute_output("find " .. path .. " -type f -exec stat -f \"%z %N\" {} \\; | md5")
    end
-   -- if test_env.TEST_TARGET_OS == "windows" then
+   -- if testing_os == "windows" then
    --    hash = execute_output("find . -printf \"%s %p\n\" | md5sum")
    -- end
    return hash
@@ -309,15 +311,18 @@ local function set_paths(luaversion_full)
 end
 
 test_env.setup_done = false
-function test_env.setup_specs(extra_rocks)
+function test_env.setup_specs(extra_rocks, env_type)
    if not test_env.setup_done then 
       test_env.set_args()
+      
+      local env_type = env_type or test_env.TYPE_TEST_ENV
+      local luaversion_full = luaversion_full or test_env.LUA_V
 
       local rocks = {}
       rocks[#rocks+1] = "/luacov-0.11.0-1.rockspec"
       rocks[#rocks+1] = "/luacov-0.11.0-1.src.rock"
 
-      if test_env.TYPE_TEST_ENV == "full" then 
+      if env_type == "full" then 
          rocks[#rocks+1] = "/luafilesystem-1.6.3-1.src.rock"
          rocks[#rocks+1] = "/luasocket-3.0rc1-1.src.rock"
          rocks[#rocks+1] = "/luasocket-3.0rc1-1.rockspec"
@@ -325,14 +330,14 @@ function test_env.setup_specs(extra_rocks)
          rocks[#rocks+1] = "/md5-1.2-1.src.rock"
          rocks[#rocks+1] = "/lzlib-0.4.1.53-1.src.rock"
       end
-      if test_env.TYPE_TEST_ENV == "full" and test_env.LUA_V ~= "5.1.5" then
+      if env_type == "full" and luaversion_full ~= "5.1.5" then
          rocks[#rocks+1] = "/luabitop-1.0.2-1.rockspec"
          rocks[#rocks+1] = "/luabitop-1.0.2-1.src.rock"
       end
       test_env.main(rocks)
 
       -- Set paths, env_vars and functions for specs
-      test_env.testing_paths = set_paths(test_env.LUA_V)
+      test_env.testing_paths = set_paths(luaversion_full)
       test_env.env_variables = create_env(test_env.testing_paths)
       test_env.run = run_luarocks(test_env.testing_paths, test_env.env_variables)
 
@@ -347,11 +352,13 @@ end
 
 ---
 -- MAIN 
-function test_env.main(rocks)
-   local testing_paths = set_paths(test_env.LUA_V)
-  
-   --TODO
-   if test_env.TEST_CLEAN then
+function test_env.main(rocks, luaversion_full, env_type, env_clean)
+   local luaversion_full = luaversion_full or test_env.LUA_V
+   local testing_paths = set_paths(luaversion_full)
+
+
+   local env_clean = env_clean or test_env.TEST_ENV_CLEAN
+   if env_clean then
       remove_dir(testing_cache)
       remove_dir(testing_server)
    end
@@ -454,14 +461,15 @@ upload_servers = {
    
    local minimal_environment = {"luacov"}
    local full_environment = {}
-   if test_env.LUA_V == "5.1.5" then
+   if luaversion_full == "5.1.5" then
       full_environment = {"luacov", "luafilesystem", "luasocket", "luabitop","luaposix", "md5", "lzlib"}
    else
       full_environment = {"luacov", "luafilesystem", "luasocket", "luaposix", "md5", "lzlib"}
    end
 
    -- Build environments
-   if test_env.TYPE_TEST_ENV == "full" then
+   local env_type = env_type or test_env.TYPE_TEST_ENV
+   if env_type == "full" then
       build_environment(full_environment, testing_paths, temp_env_variables)
    else
       build_environment(minimal_environment, testing_paths, temp_env_variables)
