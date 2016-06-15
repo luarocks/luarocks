@@ -1,6 +1,5 @@
 local lfs = require("lfs")
 local test_env = {}
-
 local arg = arg or { ... }
 
 --- Set all arguments from input into global variables
@@ -261,7 +260,10 @@ local function reset_environment(testing_paths, md5sums, env_variables, extra_ro
    testing_tree_md5 = hash_environment(testing_paths.testing_tree)
    testing_sys_tree_md5 = hash_environment(testing_paths.testing_sys_tree)
 
-   download_rocks(extra_rocks, testing_paths.testing_server)
+   if extra_rocks then 
+      download_rocks(extra_rocks, testing_paths.testing_server)
+   end
+
    local run = run_luarocks(testing_paths, env_variables)
    run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
 
@@ -290,7 +292,7 @@ local function set_paths(luaversion_full)
 
    testing_paths.lua = luadir .. "/bin/lua"
 
-   testing_paths.luarocks_dir = lfs.currentdir():gsub("/new_test","")
+   testing_paths.luarocks_dir = lfs.currentdir()
    testing_paths.testing_dir = testing_paths.luarocks_dir .. "/new_test"
    testing_paths.src_dir = testing_paths.luarocks_dir .. "/src"
    testing_paths.luarocks_temp = testing_paths.testing_dir .. "/luarocks-2.3.0"
@@ -309,7 +311,6 @@ end
 test_env.setup_done = false
 function test_env.setup_specs(extra_rocks)
    if not test_env.setup_done then 
-
       test_env.set_args()
 
       local rocks = {}

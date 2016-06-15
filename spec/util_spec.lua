@@ -1,27 +1,28 @@
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
-local run = _G.test_setup.run
-local testing_paths = _G.test_setup.testing_paths
-local env_variables = _G.test_setup.env_variables
-local md5sums = _G.test_setup.md5sums
+expose("Basic tests #blackbox #b_util", function()
 
-describe("Basic tests #blackbox #b_util", function()
+   before_each(function()
+      test_env.setup_specs(extra_rocks)
+      run = test_env.run
+   end)
+
    it("LuaRocks version", function()
-      assert.is_true(run.luarocks_bool("--version", env_variables))
+      assert.is_true(run.luarocks_bool("--version"))
    end)
 
    it("LuaRocks unknown command", function()
-      assert.is_false(run.luarocks_bool("unknown_command", env_variables))
+      assert.is_false(run.luarocks_bool("unknown_command"))
    end)
 
    it("LuaRocks arguments fail", function()
-      assert.is_false(run.luarocks_bool("--porcelain=invalid", env_variables))
-      assert.is_false(run.luarocks_bool("--invalid-flag", env_variables))
-      assert.is_false(run.luarocks_bool("--server", env_variables))
-      assert.is_false(run.luarocks_bool("--server --porcelain", env_variables))
-      assert.is_false(run.luarocks_bool("--invalid-flag=abc", env_variables))
-      assert.is_false(run.luarocks_bool("invalid=5", env_variables))
+      assert.is_false(run.luarocks_bool("--porcelain=invalid"))
+      assert.is_false(run.luarocks_bool("--invalid-flag"))
+      assert.is_false(run.luarocks_bool("--server"))
+      assert.is_false(run.luarocks_bool("--server --porcelain"))
+      assert.is_false(run.luarocks_bool("--invalid-flag=abc"))
+      assert.is_false(run.luarocks_bool("invalid=5"))
    end)
 
    it("LuaRocks execute from not existing directory ", function()
@@ -31,8 +32,8 @@ describe("Basic tests #blackbox #b_util", function()
       local delete_path = lfs.currentdir()
       assert.is_true(os.remove(delete_path))
 
-      assert.is_false(run.luarocks_bool(" ", env_variables))
+      assert.is_false(run.luarocks_bool(" "))
       assert.is_true(lfs.chdir(main_path))
-      assert.is_true(run.luarocks_bool(" ", env_variables))
+      assert.is_true(run.luarocks_bool(" "))
    end)
 end)
