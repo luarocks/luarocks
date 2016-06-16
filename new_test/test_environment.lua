@@ -287,12 +287,12 @@ local function set_paths(luaversion_full)
    testing_paths.luadir = ""
 
    if lfs.attributes("/usr/bin/lua") then 
-      luadir = "/usr"
+      testing_paths.luadir = "/usr"
    elseif lfs.attributes("/usr/local/bin/lua") then
-      luadir = "/usr/local"
+      testing_paths.luadir = "/usr/local"
    end
 
-   testing_paths.lua = luadir .. "/bin/lua"
+   testing_paths.lua = testing_paths.luadir .. "/bin/lua"
 
    testing_paths.luarocks_dir = lfs.currentdir()
    testing_paths.testing_dir = testing_paths.luarocks_dir .. "/new_test"
@@ -314,7 +314,7 @@ test_env.setup_done = false
 function test_env.setup_specs(extra_rocks, env_type)
    if not test_env.setup_done then 
       test_env.set_args()
-      
+
       local env_type = env_type or test_env.TYPE_TEST_ENV
       local luaversion_full = luaversion_full or test_env.LUA_V
 
@@ -355,7 +355,6 @@ end
 function test_env.main(rocks, luaversion_full, env_type, env_clean)
    local luaversion_full = luaversion_full or test_env.LUA_V
    local testing_paths = set_paths(luaversion_full)
-
 
    local env_clean = env_clean or test_env.TEST_ENV_CLEAN
    if env_clean then
