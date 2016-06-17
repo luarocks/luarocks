@@ -30,6 +30,9 @@ function test_env.set_args()
       if arg[i]:find("clean") then
          test_env.TEST_ENV_CLEAN = true
       end
+      if arg[i]:find("travis") then
+         test_env.TRAVIS = true
+      end
       if arg[i]:find("os=") then
          test_env.TEST_TARGET_OS = arg[i]:gsub("(.*)os=([^%,]+)(.*)","%2")
       end
@@ -297,13 +300,17 @@ local function set_paths(luaversion_full)
 
    testing_paths.luadir = ""
 
-   if lfs.attributes("/usr/bin/lua") then 
-      testing_paths.luadir = "/usr"
-   elseif lfs.attributes("/usr/local/bin/lua") then
-      testing_paths.luadir = "/usr/local"
+   if test_env.TRAVIS then 
+      testing_paths.luadir = "lua_install"
+      testing_paths.lua = testing_paths.luadir .. "/bin/lua"
+   else
+      if lfs.attributes("/usr/bin/lua") then 
+         testing_paths.luadir = "/usr"
+      elseif lfs.attributes("/usr/local/bin/lua") then
+         testing_paths.luadir = "/usr/local"
+      end
+      testing_paths.lua = testing_paths.luadir .. "/bin/lua"
    end
-
-   testing_paths.lua = testing_paths.luadir .. "/bin/lua"
 
    testing_paths.luarocks_dir = lfs.currentdir()
    testing_paths.testing_dir = testing_paths.luarocks_dir .. "/new_test"

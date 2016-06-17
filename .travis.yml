@@ -1,13 +1,21 @@
-language: c
-
-compiler: gcc
-
+language: python
 sudo: false
 
 env:
-  matrix:
-    - LUA_VER=5.1.5
-    - LUA_VER=5.2.4
-    - LUA_VER=5.3.1
+  - LUA="lua=5.2"
 
-script: cd test && ./testing.sh --travis --lua $LUA_VER
+before_install:
+  - pip install hererocks
+  - hererocks lua_install -r^ --$LUA
+  - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
+
+install:
+  - luarocks install busted
+
+script:
+  - busted -Xhelper travis,$LUA -t blackbox --verbose
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
