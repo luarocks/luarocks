@@ -10,12 +10,11 @@ expose("LuaRocks show tests #blackbox #b_show", function()
    it("LuaRocks show with no flags/arguments", function()
          assert.is_false(run.luarocks_bool("show"))
    end)
-   --TODO
+   
    describe("LuaRocks show basic tests with flags", function()
       it("LuaRocks show invalid", function()
          assert.is_false(run.luarocks_bool("show invalid"))
       end)
-      --TODO
       it("LuaRocks show luacov", function()
          local output = run.luarocks("show luacov")
       end)

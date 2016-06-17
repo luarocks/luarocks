@@ -2,7 +2,6 @@ local test_env = require("new_test/test_environment")
 local site_config = require("luarocks.site_config")
 local lfs = require("lfs")
 
---TODO
 expose("LuaRocks config tests #blackbox #b_config", function()
    
    before_each(function()

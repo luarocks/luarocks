@@ -2,12 +2,6 @@ local make = require("luarocks.make")
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
-describe("LuaRocks #whitebox_make", function()
-   it("trivial_test #old", function()
-      assert.are.same(1,1)
-   end)
-end)
-
 expose("LuaRocks make tests #blackbox #b_make", function()
    before_each(function()
       test_env.setup_specs(extra_rocks)
