@@ -300,8 +300,8 @@ local function set_paths(luaversion_full)
 
    testing_paths.luadir = ""
 
-   if test_env.TRAVIS then 
-      testing_paths.luadir = "lua_install"
+   if test_env.TRAVIS then
+      testing_paths.luadir = lfs.currentdir() .. "/lua_install"
       testing_paths.lua = testing_paths.luadir .. "/bin/lua"
    else
       if lfs.attributes("/usr/bin/lua") then 
