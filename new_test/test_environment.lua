@@ -117,7 +117,7 @@ end
 -- In Lua5.1 os.execute returns numeric value, but in Lua5.2+ returns boolean
 -- @return true/false boolean: status of the command execution
 local function execute_bool(command, print_command, env_variables)
-   local command = execute_helper(command, print_command, env_variables)
+   command = execute_helper(command, print_command, env_variables)
    
    local ok = os.execute(command)
    return ok == true or ok == 0
@@ -126,7 +126,7 @@ end
 --- Execute command and returns output of command
 -- @return output string: output the command execution
 local function execute_output(command, print_command, env_variables)
-   local command = execute_helper(command, print_command, env_variables)
+   command = execute_helper(command, print_command, env_variables)
 
    local file = assert(io.popen(command))
    local output = file:read('*all')
@@ -163,7 +163,7 @@ end
 -- @param testing_os string(optional): version of PC OS
 local function hash_environment(path, testing_os)
    local hash = ""
-   local testing_os = testing_os or test_env.TEST_TARGET_OS
+   testing_os = testing_os or test_env.TEST_TARGET_OS
 
    if testing_os == "linux" then
       hash = execute_output("find . -printf \"%s %p\n\" | md5sum")
@@ -335,7 +335,7 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
    if not test_env.setup_done then 
       test_env.set_args()
 
-      local luaversion_full = luaversion_full or test_env.LUA_V
+      luaversion_full = luaversion_full or test_env.LUA_V
 
       test_env.main()
 
@@ -356,10 +356,10 @@ end
 ---
 -- MAIN 
 function test_env.main(luaversion_full, env_type, env_clean)
-   local luaversion_full = luaversion_full or test_env.LUA_V
+   luaversion_full = luaversion_full or test_env.LUA_V
    local testing_paths = set_paths(luaversion_full)
 
-   local env_clean = env_clean or test_env.TEST_ENV_CLEAN
+   env_clean = env_clean or test_env.TEST_ENV_CLEAN
    if env_clean then
       remove_dir(testing_paths.testing_cache)
       remove_dir(testing_paths.testing_server)
@@ -455,7 +455,7 @@ upload_servers = {
    end
 
    -- Preparation of rocks for building environment
-   local env_type = env_type or test_env.TYPE_TEST_ENV
+   env_type = env_type or test_env.TYPE_TEST_ENV
    
    local env_rocks = {} -- short names of rocks, required for building environment
    local rocks = {}  -- full names of rocks required for download
