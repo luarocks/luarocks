@@ -30,6 +30,9 @@ function test_env.set_args()
       if arg[i]:find("clean") then
          test_env.TEST_ENV_CLEAN = true
       end
+      if arg[i]:find("travis") then
+         test_env.TRAVIS = true
+      end
       if arg[i]:find("os=") then
          test_env.TEST_TARGET_OS = arg[i]:gsub("(.*)os=([^%,]+)(.*)","%2")
       end
@@ -270,15 +273,14 @@ end
 
 --- Reset testing environment
 local function reset_environment(testing_paths, md5sums, env_variables, extra_rocks)
-   testing_tree_md5 = hash_environment(testing_paths.testing_tree)
-   testing_sys_tree_md5 = hash_environment(testing_paths.testing_sys_tree)
+   local testing_tree_md5 = hash_environment(testing_paths.testing_tree)
+   local testing_sys_tree_md5 = hash_environment(testing_paths.testing_sys_tree)
 
    if extra_rocks then 
       download_rocks(extra_rocks, testing_paths.testing_server)
+      local run = run_luarocks(testing_paths, env_variables)
+      run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
    end
-
-   local run = run_luarocks(testing_paths, env_variables)
-   run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
 
    if testing_tree_md5 ~= md5sums.testing_tree_copy_md5 then
       remove_dir(testing_paths.testing_tree)
@@ -297,10 +299,16 @@ local function set_paths(luaversion_full)
 
    testing_paths.luadir = ""
 
-   if lfs.attributes("/usr/bin/lua") then 
-      testing_paths.luadir = "/usr"
-   elseif lfs.attributes("/usr/local/bin/lua") then
-      testing_paths.luadir = "/usr/local"
+   if test_env.TRAVIS then
+      testing_paths.luadir = lfs.currentdir() .. "/lua_install"
+      testing_paths.lua = testing_paths.luadir .. "/bin/lua"
+   else
+      if lfs.attributes("/usr/bin/lua") then 
+         testing_paths.luadir = lfs.currentdir() .. "/usr"
+      elseif lfs.attributes("/usr/local/bin/lua") then
+         testing_paths.luadir = "/usr/local"
+      end
+      testing_paths.lua = testing_paths.luadir .. "/bin/lua"
    end
 
    testing_paths.lua = testing_paths.luadir .. "/bin/lua"
@@ -347,14 +355,14 @@ end
 
 ---
 -- MAIN 
-function test_env.main(rocks, luaversion_full, env_type, env_clean)
+function test_env.main(luaversion_full, env_type, env_clean)
    local luaversion_full = luaversion_full or test_env.LUA_V
    local testing_paths = set_paths(luaversion_full)
 
    local env_clean = env_clean or test_env.TEST_ENV_CLEAN
    if env_clean then
-      remove_dir(testing_cache)
-      remove_dir(testing_server)
+      remove_dir(testing_paths.testing_cache)
+      remove_dir(testing_paths.testing_server)
    end
 
    execute_bool("mkdir " .. testing_paths.testing_cache)
