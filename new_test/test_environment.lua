@@ -139,12 +139,16 @@ end
 -- @param save_path string: path to directory, where to download rocks/rockspecs
 local function download_rocks(rocks, save_path)
    local luarocks_repo = "https://luarocks.org"   
+   local make_manifest = false
+
    for _,rock in ipairs(rocks) do  
       -- check if already downloaded
       if not os.rename( save_path .. rock, save_path .. rock) then
-         execute_bool("wget -cP " .. save_path .. " " .. luarocks_repo .. rock)  
+         execute_bool("wget -cP " .. save_path .. " " .. luarocks_repo .. rock)
+         make_manifest = true 
       end
    end
+   return make_manifest
 end
 
 --- Create config files for testing
@@ -272,15 +276,9 @@ local function build_environment(env_rocks, testing_paths, env_variables)
 end
 
 --- Reset testing environment
-local function reset_environment(testing_paths, md5sums, env_variables, extra_rocks)
+local function reset_environment(testing_paths, md5sums)
    local testing_tree_md5 = hash_environment(testing_paths.testing_tree)
    local testing_sys_tree_md5 = hash_environment(testing_paths.testing_sys_tree)
-
-   if extra_rocks then 
-      download_rocks(extra_rocks, testing_paths.testing_server)
-      local run = run_luarocks(testing_paths, env_variables)
-      run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
-   end
 
    if testing_tree_md5 ~= md5sums.testing_tree_copy_md5 then
       remove_dir(testing_paths.testing_tree)
@@ -346,8 +344,17 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
 
       test_env.setup_done = true
    end
+
+   if extra_rocks then 
+      local make_manifest = download_rocks(extra_rocks, test_env.testing_paths.testing_server)
+      if make_manifest then
+         local run = run_luarocks(test_env.testing_paths, test_env.env_variables)
+         run.luarocks_admin_nocov("make_manifest " .. test_env.testing_paths.testing_server)
+      end
+   end
+
    local md5sums = create_md5sums(test_env.testing_paths)
-   reset_environment(test_env.testing_paths, md5sums, test_env.env_variables, extra_rocks)
+   reset_environment(test_env.testing_paths, md5sums, test_env.env_variables)
 
    return true
 end
