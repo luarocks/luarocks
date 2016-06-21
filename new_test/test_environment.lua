@@ -117,7 +117,7 @@ end
 -- In Lua5.1 os.execute returns numeric value, but in Lua5.2+ returns boolean
 -- @return true/false boolean: status of the command execution
 local function execute_bool(command, print_command, env_variables)
-   local command = execute_helper(command, print_command, env_variables)
+   command = execute_helper(command, print_command, env_variables)
    
    local ok = os.execute(command)
    return ok == true or ok == 0
@@ -126,7 +126,7 @@ end
 --- Execute command and returns output of command
 -- @return output string: output the command execution
 local function execute_output(command, print_command, env_variables)
-   local command = execute_helper(command, print_command, env_variables)
+   command = execute_helper(command, print_command, env_variables)
 
    local file = assert(io.popen(command))
    local output = file:read('*all')
@@ -139,12 +139,16 @@ end
 -- @param save_path string: path to directory, where to download rocks/rockspecs
 local function download_rocks(rocks, save_path)
    local luarocks_repo = "https://luarocks.org"   
+   local make_manifest = false
+
    for _,rock in ipairs(rocks) do  
       -- check if already downloaded
       if not os.rename( save_path .. rock, save_path .. rock) then
-         execute_bool("wget -cP " .. save_path .. " " .. luarocks_repo .. rock)  
+         execute_bool("wget -cP " .. save_path .. " " .. luarocks_repo .. rock)
+         make_manifest = true 
       end
    end
+   return make_manifest
 end
 
 --- Create config files for testing
@@ -163,7 +167,7 @@ end
 -- @param testing_os string(optional): version of PC OS
 local function hash_environment(path, testing_os)
    local hash = ""
-   local testing_os = testing_os or test_env.TEST_TARGET_OS
+   testing_os = testing_os or test_env.TEST_TARGET_OS
 
    if testing_os == "linux" then
       hash = execute_output("find . -printf \"%s %p\n\" | md5sum")
@@ -272,16 +276,9 @@ local function build_environment(env_rocks, testing_paths, env_variables)
 end
 
 --- Reset testing environment
-local function reset_environment(testing_paths, md5sums, env_variables, extra_rocks)
-   testing_tree_md5 = hash_environment(testing_paths.testing_tree)
-   testing_sys_tree_md5 = hash_environment(testing_paths.testing_sys_tree)
-
-   if extra_rocks then 
-      download_rocks(extra_rocks, testing_paths.testing_server)
-   end
-
-   local run = run_luarocks(testing_paths, env_variables)
-   run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
+local function reset_environment(testing_paths, md5sums)
+   local testing_tree_md5 = hash_environment(testing_paths.testing_tree)
+   local testing_sys_tree_md5 = hash_environment(testing_paths.testing_sys_tree)
 
    if testing_tree_md5 ~= md5sums.testing_tree_copy_md5 then
       remove_dir(testing_paths.testing_tree)
@@ -302,16 +299,16 @@ local function set_paths(luaversion_full)
 
    if test_env.TRAVIS then
       testing_paths.luadir = lfs.currentdir() .. "/lua_install"
-      testing_paths.lua = testing_paths.luadir .. "/bin/lua"
    else
       if lfs.attributes("/usr/bin/lua") then 
-         testing_paths.luadir = "/usr"
+         testing_paths.luadir = lfs.currentdir() .. "/usr"
       elseif lfs.attributes("/usr/local/bin/lua") then
          testing_paths.luadir = "/usr/local"
       end
-      testing_paths.lua = testing_paths.luadir .. "/bin/lua"
    end
 
+   testing_paths.lua = testing_paths.luadir .. "/bin/lua"
+   
    testing_paths.luarocks_dir = lfs.currentdir()
    testing_paths.testing_dir = testing_paths.luarocks_dir .. "/new_test"
    testing_paths.src_dir = testing_paths.luarocks_dir .. "/src"
@@ -331,10 +328,10 @@ end
 
 test_env.setup_done = false
 function test_env.setup_specs(extra_rocks, luaversion_full)
-   if not test_env.setup_done then 
+   if not test_env.setup_done then
       test_env.set_args()
 
-      local luaversion_full = luaversion_full or test_env.LUA_V
+      luaversion_full = luaversion_full or test_env.LUA_V
 
       test_env.main()
 
@@ -345,8 +342,17 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
 
       test_env.setup_done = true
    end
+
+   if extra_rocks then 
+      local make_manifest = download_rocks(extra_rocks, test_env.testing_paths.testing_server)
+      if make_manifest then
+         local run = run_luarocks(test_env.testing_paths, test_env.env_variables)
+         run.luarocks_admin_nocov("make_manifest " .. test_env.testing_paths.testing_server)
+      end
+   end
+
    local md5sums = create_md5sums(test_env.testing_paths)
-   reset_environment(test_env.testing_paths, md5sums, test_env.env_variables, extra_rocks)
+   reset_environment(test_env.testing_paths, md5sums, test_env.env_variables)
 
    return true
 end
@@ -354,14 +360,14 @@ end
 
 ---
 -- MAIN 
-function test_env.main(rocks, luaversion_full, env_type, env_clean)
-   local luaversion_full = luaversion_full or test_env.LUA_V
+function test_env.main(luaversion_full, env_type, env_clean)
+   luaversion_full = luaversion_full or test_env.LUA_V
    local testing_paths = set_paths(luaversion_full)
 
-   local env_clean = env_clean or test_env.TEST_ENV_CLEAN
+   env_clean = env_clean or test_env.TEST_ENV_CLEAN
    if env_clean then
-      remove_dir(testing_cache)
-      remove_dir(testing_server)
+      remove_dir(testing_paths.testing_cache)
+      remove_dir(testing_paths.testing_server)
    end
 
    execute_bool("mkdir " .. testing_paths.testing_cache)
@@ -454,7 +460,7 @@ upload_servers = {
    end
 
    -- Preparation of rocks for building environment
-   local env_type = env_type or test_env.TYPE_TEST_ENV
+   env_type = env_type or test_env.TYPE_TEST_ENV
    
    local env_rocks = {} -- short names of rocks, required for building environment
    local rocks = {}  -- full names of rocks required for download

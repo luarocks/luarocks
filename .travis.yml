@@ -15,6 +15,9 @@ install:
 script:
   - busted -Xhelper travis,$LUA -t blackbox --verbose
 
+# after_success:
+  # - luacov-coveralls -c $TRAVIS_BUILD_DIR/luarocks/new_test/luacov.config --exclude $TRAVIS_BUILD_DIR/luarocks/new_test/
+
 notifications:
   email:
     on_success: change
