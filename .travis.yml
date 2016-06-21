@@ -11,12 +11,16 @@ before_install:
 
 install:
   - luarocks install busted
-
+  - luarocks install luacov
+  - luarocks install luacov-coveralls
+  
 script:
   - busted -Xhelper travis,$LUA -t blackbox --verbose
 
-# after_success:
-  # - luacov-coveralls -c $TRAVIS_BUILD_DIR/luarocks/new_test/luacov.config --exclude $TRAVIS_BUILD_DIR/luarocks/new_test/
+after_success:
+  - luacov-coveralls -c $TRAVIS_BUILD_DIR/new_test/luacov.config --exclude $TRAVIS_BUILD_DIR/new_test/
+  - $PWD/lua_install/bin/luacov -c $TRAVIS_BUILD_DIR/new_test/luacov.config
+  - grep "Summary" -B1 -A1000 $TRAVIS_BUILD_DIR/new_test/luacov.report.out
 
 notifications:
   email:
