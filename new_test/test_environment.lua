@@ -299,14 +299,12 @@ local function set_paths(luaversion_full)
 
    if test_env.TRAVIS then
       testing_paths.luadir = lfs.currentdir() .. "/lua_install"
-      testing_paths.lua = testing_paths.luadir .. "/bin/lua"
    else
       if lfs.attributes("/usr/bin/lua") then 
          testing_paths.luadir = lfs.currentdir() .. "/usr"
       elseif lfs.attributes("/usr/local/bin/lua") then
          testing_paths.luadir = "/usr/local"
       end
-      testing_paths.lua = testing_paths.luadir .. "/bin/lua"
    end
 
    testing_paths.lua = testing_paths.luadir .. "/bin/lua"
@@ -330,7 +328,7 @@ end
 
 test_env.setup_done = false
 function test_env.setup_specs(extra_rocks, luaversion_full)
-   if not test_env.setup_done then 
+   if not test_env.setup_done then
       test_env.set_args()
 
       luaversion_full = luaversion_full or test_env.LUA_V
