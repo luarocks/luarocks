@@ -192,8 +192,7 @@ function tools.unpack_archive(archive)
       -- Ignore .lua and .c files; they don't need to be extracted.
       return true
    else
-      local ext = archive:match(".*(%..*)")
-      return false, "Unrecognized filename extension "..(ext or "")
+      return false, "Couldn't extract archive "..archive..": unrecognized filename extension"
    end
    if not ok then
       return false, "Failed extracting "..archive
