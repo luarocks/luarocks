@@ -19,5 +19,4 @@ expose("LuaRocks path tests #blackbox #b_path", function()
    it("LuaRocks path with tree", function()
       assert.is_true(run.luarocks_bool("path --tree=lua_modules"))
    end)
-
 end)

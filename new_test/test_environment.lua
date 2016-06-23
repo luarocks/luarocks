@@ -54,7 +54,7 @@ end
 
 --- Remove directory recursively
 -- @param path string: directory path to delete
-local function remove_dir(path)
+function test_env.remove_dir(path)
    if lfs.attributes(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
@@ -62,7 +62,7 @@ local function remove_dir(path)
             local attr = lfs.attributes(full_path)
 
             if attr.mode == "directory" then
-               remove_dir(full_path)
+               test_env.remove_dir(full_path)
                os.remove(full_path)
             else
                os.remove(full_path)
@@ -70,21 +70,26 @@ local function remove_dir(path)
          end
       end
    end
+   os.remove(path)
 end
 
 --- Remove files based on filename
 -- @param path string: directory where to delete files
 -- @param pattern string: pattern in filenames
 function test_env.remove_files(path, pattern)
+   local result_check = false
    if lfs.attributes(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
             if file:find(pattern) then
-               os.remove(file)
+               if os.remove(file) then
+                  result_check = true
+               end
             end
          end
       end
    end
+   return result_check
 end
 
 --- Helper function for execute_bool and execute_output
@@ -252,10 +257,10 @@ local function build_environment(env_rocks, testing_paths, env_variables)
    print("\n--------------------")
    print("BUILDING ENVIRONMENT")
    print("--------------------")
-   remove_dir(testing_paths.testing_tree)
-   remove_dir(testing_paths.testing_sys_tree)
-   remove_dir(testing_paths.testing_tree_copy)
-   remove_dir(testing_paths.testing_sys_tree_copy)
+   test_env.remove_dir(testing_paths.testing_tree)
+   test_env.remove_dir(testing_paths.testing_sys_tree)
+   test_env.remove_dir(testing_paths.testing_tree_copy)
+   test_env.remove_dir(testing_paths.testing_sys_tree_copy)
 
    execute_bool("mkdir " .. testing_paths.testing_tree)
    execute_bool("mkdir " .. testing_paths.testing_sys_tree)
@@ -281,11 +286,11 @@ local function reset_environment(testing_paths, md5sums)
    local testing_sys_tree_md5 = hash_environment(testing_paths.testing_sys_tree)
 
    if testing_tree_md5 ~= md5sums.testing_tree_copy_md5 then
-      remove_dir(testing_paths.testing_tree)
+      test_env.remove_dir(testing_paths.testing_tree)
       execute_bool("cp -a " .. testing_paths.testing_tree_copy .. "/. " .. testing_paths.testing_tree)
    end
    if testing_sys_tree_md5 ~= md5sums.testing_sys_tree_copy_md5 then
-      remove_dir(testing_paths.testing_sys_tree)
+      test_env.remove_dir(testing_paths.testing_sys_tree)
       execute_bool("cp -a " .. testing_paths.testing_sys_tree_copy .. "/. " .. testing_paths.testing_sys_tree)
    end
 
@@ -339,6 +344,7 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
       test_env.testing_paths = set_paths(luaversion_full)
       test_env.env_variables = create_env(test_env.testing_paths)
       test_env.run = run_luarocks(test_env.testing_paths, test_env.env_variables)
+      test_env.platform = execute_output(test_env.testing_paths.lua .. " -e 'print(require(\"luarocks.cfg\").arch)'", false, test_env.env_variables)
 
       test_env.setup_done = true
    end
@@ -357,6 +363,25 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
    return true
 end
 
+--- Helper function for tests which needs luasocket installed
+function test_env.need_luasocket(luarocks_nocov, testing_cache, platform)
+   luarocks_nocov = luarocks_nocov or test_env.run.luarocks_nocov
+   testing_cache = testing_cache or test_env.testing_paths.testing_cache
+   platform = platform or test_env.platform
+
+   if luarocks_nocov("show luasocket") then
+      return true
+   else
+      testing_cache = testing_cache .. "/"
+      local luasocket_rock = "luasocket-3.0rc1-1." .. platform .. ".rock"
+      if not os.rename( testing_cache .. luasocket_rock, testing_cache .. luasocket_rock) then
+         luarocks_nocov("build --pack-binary-rock luasocket 3.0rc1-1")
+         os.rename(luasocket_rock, testing_cache .. luasocket_rock)
+      end
+      luarocks_nocov("install " .. testing_cache .. luasocket_rock)
+   end
+   return true
+end
 
 ---
 -- MAIN 
@@ -366,8 +391,8 @@ function test_env.main(luaversion_full, env_type, env_clean)
 
    env_clean = env_clean or test_env.TEST_ENV_CLEAN
    if env_clean then
-      remove_dir(testing_paths.testing_cache)
-      remove_dir(testing_paths.testing_server)
+      test_env.remove_dir(testing_paths.testing_cache)
+      test_env.remove_dir(testing_paths.testing_server)
    end
 
    execute_bool("mkdir " .. testing_paths.testing_cache)
@@ -408,7 +433,8 @@ external_deps_dirs = {
     ["%{testing_cache}"] = testing_paths.testing_cache})
 
    create_config(testing_paths.testing_dir .. "/testing_config.lua", config_content)
-   create_config(testing_paths.testing_dir .. "/testing_config_show_downloads.lua", config_content .. "show_downloads = true")
+   create_config(testing_paths.testing_dir .. "/testing_config_show_downloads.lua", config_content
+                  .. "show_downloads = true \n rocks_servers={\"http://luarocks.org/repositories/rocks\"}")
 
 -- testing_config_sftp.lua
    config_content=([[rocks_trees = {
