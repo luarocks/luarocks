@@ -6,6 +6,7 @@ local lfs = require("lfs")
 extra_rocks={
    "/cprint-0.1-2.src.rock",
    "/cprint-0.1-2.rockspec",
+   "/lpeg-0.12-1.src.rock",
    "/luasec-0.6-1.rockspec",
    "/luasocket-3.0rc1-1.src.rock",
    "/luasocket-3.0rc1-1.rockspec",
@@ -53,11 +54,6 @@ expose("LuaRocks install tests #blackbox #b_install", function()
       assert.is_true(run.luarocks_bool("install luasec"))
       assert.is_true(run.luarocks_bool("show luasocket"))
    end)
-   it("LuaRocks install only-deps luasocket platform", function()
-      run.luarocks_nocov("build luasocket --pack-binary-rock luasocket 3.0rc1-1")
-      local output = run.luarocks("install --only-deps " .. testing_paths.testing_cache .. "/luasocket-3.0rc1-1." .. platform .. ".rock")
-      assert.are.same(output, "Successfully installed dependencies for luasocket 3.0rc1-1")
-   end)
    it("LuaRocks install wsapi with bin", function()
       run.luarocks_bool("install wsapi")
    end)
@@ -75,8 +71,9 @@ expose("LuaRocks install tests #blackbox #b_install", function()
       assert.is_false(run.luarocks_bool("install \"foo-1.0-1.impossible-x86.rock\" "))
    end)
    it("LuaRocks install only-deps of luasocket packed rock", function()
-      assert.is_true(test_env.need_luasocket())
-      assert.is_true(run.luarocks_bool("install --only-deps " .. testing_paths.testing_cache .. "/luasocket-3.0rc1-1." .. platform .. ".rock"))
+      test_env.need_luasocket()
+      local output = run.luarocks("install --only-deps " .. testing_paths.testing_cache .. "/luasocket-3.0rc1-1." .. platform .. ".rock")
+      assert.are.same(output, "Successfully installed dependencies for luasocket 3.0rc1-1")
    end)
 
    it("LuaRocks install binary rock of cprint", function()
@@ -89,7 +86,6 @@ expose("LuaRocks install tests #blackbox #b_install", function()
    it("LuaRocks install invalid patch", function() --need luasocket?
       assert.is_false(run.luarocks_bool("install " .. testing_paths.testing_dir .. "/testfiles/invalid_patch-0.1-1.rockspec"))
    end)
-
 
    it("LuaRocks install reinstall", function()
       assert.is_true(test_env.need_luasocket())

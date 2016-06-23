@@ -3,6 +3,7 @@ local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
 extra_rocks={
+   "/lpeg-0.12-1.src.rock",
    "/luasocket-3.0rc1-1.src.rock",
    "/luasocket-3.0rc1-1.rockspec",
    "/lxsh-0.8.6-2.src.rock",
