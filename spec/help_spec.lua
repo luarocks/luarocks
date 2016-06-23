@@ -20,5 +20,3 @@ expose("LuaRocks help tests #blackbox #b_help", function()
       assert.is_true(run.luarocks_admin_bool("help"))
    end)
 end)
-
-

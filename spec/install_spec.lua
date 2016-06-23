@@ -3,7 +3,7 @@ local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
 
-extra_rocks={
+local extra_rocks = {
    "/cprint-0.1-2.src.rock",
    "/cprint-0.1-2.rockspec",
    "/lpeg-0.12-1.src.rock",

@@ -2,9 +2,9 @@ local list = require("luarocks.list")
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
-extra_rocks={
-"/say-1.0-1.src.rock",
-"/say-1.2-1.src.rock"
+local extra_rocks = {
+   "/say-1.0-1.src.rock",
+   "/say-1.2-1.src.rock"
 }
 
 describe("new test #whitebox #w_list", function()
