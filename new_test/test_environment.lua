@@ -333,7 +333,6 @@ end
 
 test_env.setup_done = false
 function test_env.setup_specs(extra_rocks, luaversion_full)
-   local md5sums = {}
    if not test_env.setup_done then
       test_env.set_args()
 
@@ -346,7 +345,7 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
       test_env.env_variables = create_env(test_env.testing_paths)
       test_env.run = run_luarocks(test_env.testing_paths, test_env.env_variables)
       test_env.platform = execute_output(test_env.testing_paths.lua .. " -e 'print(require(\"luarocks.cfg\").arch)'", false, test_env.env_variables)
-      md5sums = create_md5sums(test_env.testing_paths)
+      test_env.md5sums = create_md5sums(test_env.testing_paths)
       test_env.setup_done = true
    end
    
@@ -358,7 +357,7 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
       end
    end
 
-   reset_environment(test_env.testing_paths, md5sums, test_env.env_variables)
+   reset_environment(test_env.testing_paths, test_env.md5sums, test_env.env_variables)
 
    return true
 end
