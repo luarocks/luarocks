@@ -2,7 +2,7 @@ local pack = require("luarocks.pack")
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
-extra_rocks={
+local extra_rocks = {
 	"/luasec-0.6-1.rockspec",
 	"/luasocket-3.0rc1-1.src.rock",
 	"/luasocket-3.0rc1-1.rockspec"

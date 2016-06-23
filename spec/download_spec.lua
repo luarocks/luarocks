@@ -2,8 +2,8 @@ local download = require("luarocks.download")
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
-extra_rocks={
-"/validate-args-1.5.4-1.rockspec"
+local extra_rocks = {
+   "/validate-args-1.5.4-1.rockspec"
 }
 
 expose("LuaRocks download tests #blackbox #b_download", function()
