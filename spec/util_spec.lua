@@ -62,7 +62,7 @@ expose("Basic tests #blackbox #b_util", function()
       assert.is.truthy(lfs.attributes("src/luarocks/site_config.lua"))
    end)
 
-   describe("LuaRocks sysconfig fails #cicina", function()
+   describe("LuaRocks sysconfig fails", function()
       local scdir = ""
       
       before_each(function()
