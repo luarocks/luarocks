@@ -28,6 +28,7 @@ expose("LuaRocks install tests #blackbox #b_install", function()
    before_each(function()
       test_env.setup_specs(extra_rocks)
       testing_paths = test_env.testing_paths
+      env_variables = test_env.env_variables
       run = test_env.run
       platform = test_env.platform
    end)
@@ -41,10 +42,11 @@ expose("LuaRocks install tests #blackbox #b_install", function()
    it('LuaRocks install luasec with skipping dependency checks', function()
       run.luarocks(" install luasec --nodeps")
       assert.is_true(run.luarocks_bool("show luasec"))
-      assert.is_false(run.luarocks_bool("show luasocket"))
-
+      if env_variables.TYPE_TEST_ENV == "minimal" then
+         assert.is_false(run.luarocks_bool("show luasocket"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasocket"))
+      end
       assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasec"))
-      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasocket"))
    end)
    it("LuaRocks install with local flag as root", function()
       assert.is_false(run.luarocks_bool("install --local luasocket", { USER = "root" } ))
