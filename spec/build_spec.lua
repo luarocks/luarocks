@@ -20,7 +20,8 @@ local extra_rocks = {
    "/luasocket-3.0rc1-1.rockspec",
    "/lxsh-0.8.6-2.src.rock",
    "/lxsh-0.8.6-2.rockspec",
-   "/stdlib-41.0.0-1.src.rock"
+   "/stdlib-41.0.0-1.src.rock",
+   "/validate-args-1.5.4-1.rockspec"
 }
 
 expose("LuaRocks build tests #blackbox #b_build", function()
@@ -111,7 +112,7 @@ expose("LuaRocks build tests #blackbox #b_build", function()
       assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasec"))
    end)
 
-   it("LuaRocks build only deps of downloaded rockspec of #lxsh", function()
+   it("LuaRocks build only deps of downloaded rockspec of lxsh", function()
       assert.is_true(run.luarocks_bool("download --rockspec lxsh 0.8.6-2"))
       assert.is_true(run.luarocks_bool("build lxsh-0.8.6-2.rockspec --only-deps"))
       assert.is_false(run.luarocks_bool("show lxsh"))
@@ -119,13 +120,34 @@ expose("LuaRocks build tests #blackbox #b_build", function()
 
       assert.is_true(os.remove("lxsh-0.8.6-2.rockspec"))
    end)
-   it("LuaRocks build only deps of downloaded rock of #lxsh", function()
+   it("LuaRocks build only deps of downloaded rock of lxsh", function()
       assert.is_true(run.luarocks_bool("download --source lxsh 0.8.6-2"))
       assert.is_true(run.luarocks_bool("build lxsh-0.8.6-2.src.rock --only-deps"))
       assert.is_false(run.luarocks_bool("show lxsh"))
       assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh"))
 
       assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
+   end)
+
+--NEEDLUASOCKET?
+   it("LuaRocks build no https", function()
+      assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
+      assert.is_true(run.luarocks_bool("build validate-args-1.5.4-1.rockspec"))
+
+      assert.is_true(run.luarocks_bool("show validate-args"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/validate-args"))
+
+      assert.is_true(os.remove("validate-args-1.5.4-1.rockspec"))
+   end)
+   it("LuaRocks build with #https", function()
+      assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
+      assert.is_true(run.luarocks_bool("install luasec"))
+      assert.is_true(run.luarocks_bool("build validate-args-1.5.4-1.rockspec"))
+
+      assert.is_true(run.luarocks_bool("show validate-args"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/validate-args"))
+
+      assert.is_true(os.remove("validate-args-1.5.4-1.rockspec"))
    end)
 
    it("LuaRocks build missing external", function()
