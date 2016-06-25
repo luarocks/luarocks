@@ -1,6 +1,9 @@
 local test_env = require("new_test/test_environment")
 local new_version = require("luarocks.new_version")
 
+local extra_rocks = {
+   "/abelhas-1.0-1.rockspec"
+}
 
 expose("LuaRocks new_version tests #blackbox #b_new_version", function()
 
@@ -9,10 +12,33 @@ expose("LuaRocks new_version tests #blackbox #b_new_version", function()
       run = test_env.run
    end)
    
-   it("LuaRocks new version with no flags/arguments", function()
-      assert.is_false(run.luarocks_bool("new_version"))
+   describe("LuaRocks new_version basic tests", function()
+      it("LuaRocks new version with no flags/arguments", function()
+         assert.is_false(run.luarocks_bool("new_version"))
+      end)
+      it("LuaRocks new version invalid", function()
+         assert.is_false(run.luarocks_bool("new_version invalid"))
+      end)
    end)
-   it("LuaRocks new version invalid", function()
-      assert.is_false(run.luarocks_bool("new_version invalid"))
+
+   describe("LuaRocks new_version more complex tests", function()
+      it("LuaRocks new_version of luacov", function()
+         assert.is_true(run.luarocks_bool("download --rockspec luacov 0.11.0"))
+         assert.is_true(run.luarocks_bool("new_version luacov-0.11.0-1.rockspec 0.2"))
+         assert.is.truthy(lfs.attributes("luacov-0.2-1.rockspec"))
+         test_env.remove_files(lfs.currentdir(), "luacov--")
+      end)
+      it("LuaRocks new_version url of abelhas", function()
+         assert.is_true(run.luarocks_bool("download --rockspec abelhas 1.0"))
+         assert.is_true(run.luarocks_bool("new_version abelhas-1.0-1.rockspec 1.1 https://github.com/downloads/ittner/abelhas/abelhas-1.1.tar.gz"))
+         assert.is.truthy(lfs.attributes("abelhas-1.1-1.rockspec"))
+         test_env.remove_files(lfs.currentdir(), "abelhas--")
+      end)
+      it("LuaRocks new_version of luacov with tag", function()
+         assert.is_true(run.luarocks_bool("download --rockspec luacov 0.11.0"))
+         assert.is_true(run.luarocks_bool("new_version luacov-0.11.0-1.rockspec --tag v0.3"))
+         assert.is.truthy(lfs.attributes("luacov-0.3-1.rockspec"))
+         test_env.remove_files(lfs.currentdir(), "luacov--")
+      end)
    end)
 end)
