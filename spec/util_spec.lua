@@ -5,6 +5,8 @@ expose("Basic tests #blackbox #b_util", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
+      testing_paths = test_env.testing_paths
+      env_variables = test_env.env_variables
       run = test_env.run
    end)
 
@@ -58,5 +60,36 @@ expose("Basic tests #blackbox #b_util", function()
       assert.is.truthy(os.rename("src/luarocks/site_config.lua.tmp", "src/luarocks/site_config.lua"))
       assert.is.falsy(lfs.attributes("src/luarocks/site_config.lua.tmp"))
       assert.is.truthy(lfs.attributes("src/luarocks/site_config.lua"))
+   end)
+
+   describe("LuaRocks sysconfig fails #cicina", function()
+      local scdir = ""
+      
+      before_each(function()
+         scdir = testing_paths.testing_lrprefix .. "/etc/luarocks/"
+         lfs.mkdir(testing_paths.testing_lrprefix)
+         lfs.mkdir(testing_paths.testing_lrprefix .. "/etc/")
+         lfs.mkdir(scdir)
+      end)
+
+      after_each(function()
+         test_env.remove_dir(testing_paths.testing_lrprefix)
+      end) 
+
+      it("LuaRocks sysconfig fail", function()
+         local sysconfig = io.open(scdir .. "/config.lua", "w+")
+         sysconfig:write("aoeui")
+         sysconfig:close()
+
+         assert.is_false(run.luarocks_bool("list"))
+      end)
+
+      it("LuaRocks sysconfig fail", function()
+         local sysconfig = io.open(scdir .. "/config-" .. env_variables.LUA_VERSION .. ".lua", "w+")
+         sysconfig:write("aoeui")
+         sysconfig:close()
+
+         assert.is_false(run.luarocks_bool("list"))
+      end)
    end)
 end)

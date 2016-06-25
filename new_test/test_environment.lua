@@ -190,6 +190,7 @@ local function create_env(testing_paths)
    local luaversion_short = _VERSION:gsub("Lua ", "")
    local env_variables = {}
 
+   env_variables.LUA_VERSION = luaversion_short
    env_variables.LUAROCKS_CONFIG = testing_paths.testing_dir .. "/testing_config.lua"
    env_variables.LUA_PATH = testing_paths.testing_tree .. "/share/lua/" .. luaversion_short .. "/?.lua;"
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_tree .. "/share/lua/".. luaversion_short .. "/?/init.lua;"
