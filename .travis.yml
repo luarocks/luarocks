@@ -1,13 +1,14 @@
 language: python
 
-sudo: false
-
-os:
-  - linux
-  - osx
-
-env:
-  - LUA="lua=5.2"
+matrix:
+  include:
+    - os: linux
+      env:
+        - LUA="lua=5.2"
+    - os: osx
+      language: generic
+      env:
+        - LUA="lua=5.2"
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
