@@ -129,7 +129,6 @@ expose("LuaRocks build tests #blackbox #b_build", function()
       assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
    end)
 
---NEEDLUASOCKET?
    it("LuaRocks build no https", function()
       assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
       assert.is_true(run.luarocks_bool("build validate-args-1.5.4-1.rockspec"))
