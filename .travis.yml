@@ -15,6 +15,8 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install python3; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then virtualenv venv -p python3; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source venv/bin/activate; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install duti; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then duti -s /Applications/TextEdit.app .md all; fi
 
   - pip install hererocks
   - hererocks lua_install -r^ --$LUA
