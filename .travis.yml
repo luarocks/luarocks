@@ -28,8 +28,8 @@ install:
   - luarocks install luacov-coveralls
   
 script:
-  - busted -Xhelper travis,$LUA -t blackbox --verbose
-  - busted -Xhelper travis,$LUA,env=full -t blackbox --verbose
+  - busted -Xhelper travis,$LUA -t blackbox --exclude=tags=ssh --verbose
+  - busted -Xhelper travis,$LUA,env=full -t blackbox --exclude=tags=ssh --verbose
 
 after_success:
   - luacov-coveralls -c $TRAVIS_BUILD_DIR/new_test/luacov.config --exclude $TRAVIS_BUILD_DIR/new_test/
