@@ -396,7 +396,7 @@ function test_env.main(luaversion_full, env_type, env_clean)
    end
 
    execute_bool("mkdir " .. testing_paths.testing_cache)
-
+   execute_bool("mkdir /tmp/luarocks_testing")
 --- CONFIG FILES
 -- testing_config.lua and testing_config_show_downloads.lua
    local config_content = ([[rocks_trees = {

@@ -56,7 +56,7 @@ expose("LuaRocks config tests #blackbox #b_config", function()
       assert.are.same(output, scdir .. "/config.lua")
       test_env.remove_dir(testing_paths.testing_lrprefix)
    end)
-   it("LuaRocks fail system config invalid #speci", function()
+   it("LuaRocks fail system config invalid", function()
       local scdir = testing_paths.testing_lrprefix .. "/etc/luarocks"
       lfs.mkdir(testing_paths.testing_lrprefix)
       lfs.mkdir(testing_paths.testing_lrprefix .. "/etc/")
