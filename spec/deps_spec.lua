@@ -1,4 +1,4 @@
-local remove = require("luarocks.remove")
+local deps = require("luarocks.deps")
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
