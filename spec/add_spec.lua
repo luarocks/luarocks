@@ -31,5 +31,8 @@ expose("LuaRocks add tests #blackbox #b_add", function()
       it("LuaRocks-admin add invalid server", function() --?
          assert.is_false(run.luarocks_admin_bool("--server=testing add luasocket-3.0rc1-1.src.rock", { LUAROCKS_CONFIG = testing_paths.testing_dir .. "/testing_config_sftp.lua" } ))
       end)
+      it("LuaRocks-admin add, split server url", function() --?
+         assert.is_false(run.luarocks_admin_bool("--server=\"localhost@/tmp/luarocks_testing\" add " .. testing_paths.testing_server .. "luasocket-3.0rc1-1.src.rock"))
+      end)
    end)
 end)

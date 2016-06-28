@@ -337,6 +337,15 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
    if not test_env.setup_done then
       test_env.set_args()
 
+      if test_env.TRAVIS then
+         if not os.rename("~/.ssh/id_rsa.pub", "~/.ssh/id_rsa.pub") then
+            execute_bool("ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa")
+         end
+         execute_bool("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
+         execute_bool("chmod og-wx ~/.ssh/authorized_keys")
+         execute_bool("ssh-keyscan localhost >> ~/.ssh/known_hosts")
+      end
+
       luaversion_full = luaversion_full or test_env.LUA_V
 
       test_env.main()
@@ -432,7 +441,7 @@ external_deps_dirs = {
     ["%{testing_server}"] = testing_paths.testing_server,
     ["%{testing_cache}"] = testing_paths.testing_cache})
 
-   create_config(testing_paths.testing_dir .. "/testing_config.lua", config_content)
+   create_config(testing_paths.testing_dir .. "/testing_config.lua", config_content .. " \nweb_browser = \"true\"")
    create_config(testing_paths.testing_dir .. "/testing_config_show_downloads.lua", config_content
                   .. "show_downloads = true \n rocks_servers={\"http://luarocks.org/repositories/rocks\"}")
 
