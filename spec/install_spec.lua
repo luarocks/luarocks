@@ -17,14 +17,7 @@ local extra_rocks = {
    "/wsapi-1.6-1.src.rock"
 }
 
---TODO
-describe("new test #whitebox #w_install", function()
-   it("trivial_test", function()
-      assert.are.same(1,1)
-   end)
-end)
 
---TODO
 expose("LuaRocks install tests #blackbox #b_install", function()
 
    before_each(function()
