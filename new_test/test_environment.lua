@@ -340,10 +340,10 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
       if test_env.TRAVIS then
          if not os.rename("~/.ssh/id_rsa.pub", "~/.ssh/id_rsa.pub") then
             execute_bool("ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa")
+            execute_bool("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
+            execute_bool("chmod og-wx ~/.ssh/authorized_keys")
+            execute_bool("ssh-keyscan localhost >> ~/.ssh/known_hosts")
          end
-         execute_bool("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
-         execute_bool("chmod og-wx ~/.ssh/authorized_keys")
-         execute_bool("ssh-keyscan localhost >> ~/.ssh/known_hosts")
       end
 
       luaversion_full = luaversion_full or test_env.LUA_V
