@@ -1,6 +1,5 @@
 --- Module implementing the LuaRocks "install" command.
 -- Installs binary rocks.
---module("luarocks.install", package.seeall)
 local install = {}
 package.loaded["luarocks.install"] = install
 
@@ -14,6 +13,7 @@ local manif = require("luarocks.manif")
 local remove = require("luarocks.remove")
 local cfg = require("luarocks.cfg")
 
+util.add_run_function(install)
 install.help_summary = "Install a rock."
 
 install.help_arguments = "{<rock>|<name> [<version>]}"
@@ -150,8 +150,7 @@ end
 -- may also be given.
 -- @return boolean or (nil, string, exitcode): True if installation was
 -- successful, nil and an error message otherwise. exitcode is optionally returned.
-function install.run(...)
-   local flags, name, version = util.parse_flags(...)
+function install.command(flags, name, version)
    if type(name) ~= "string" then
       return nil, "Argument missing. "..util.see_help("install")
    end
@@ -161,7 +160,7 @@ function install.run(...)
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       local build = require("luarocks.build")
-      return build.run(name, util.forward_flags(flags, "local", "keep", "deps-mode", "only-deps", "force", "force-fast"))
+      return build.command(flags, name)
    elseif name:match("%.rock$") then
       if flags["only-deps"] then
          ok, err = install.install_binary_rock_deps(name, deps.get_deps_mode(flags))
@@ -182,7 +181,7 @@ function install.run(...)
          return nil, err
       end
       util.printout("Installing "..url)
-      return install.run(url, util.forward_flags(flags))
+      return install.command(flags, url)
    end
 end
 

@@ -1,6 +1,5 @@
 
 --- Module implementing the luarocks-admin "refresh_cache" command.
---module("luarocks.refresh_cache", package.seeall)
 local refresh_cache = {}
 package.loaded["luarocks.refresh_cache"] = refresh_cache
 
@@ -8,6 +7,7 @@ local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
 local cache = require("luarocks.cache")
 
+util.add_run_function(refresh_cache)
 refresh_cache.help_summary = "Refresh local cache of a remote rocks server."
 refresh_cache.help_arguments = "[--from=<server>]"
 refresh_cache.help = [[
@@ -16,8 +16,7 @@ If not given, the default server set in the upload_server variable
 from the configuration file is used instead.
 ]]
 
-function refresh_cache.run(...)
-   local flags = util.parse_flags(...)
+function refresh_cache.command(flags)
    local server, upload_server = cache.get_upload_server(flags["server"])
    if not server then return nil, upload_server end
    local download_url = cache.get_server_urls(server, upload_server)

@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "purge" command.
 -- Remove all rocks from a given tree.
---module("luarocks.purge", package.seeall)
 local purge = {}
 package.loaded["luarocks.purge"] = purge
 
@@ -15,6 +14,7 @@ local manif = require("luarocks.manif")
 local cfg = require("luarocks.cfg")
 local remove = require("luarocks.remove")
 
+util.add_run_function(purge)
 purge.help_summary = "Remove all installed rocks from a tree."
 purge.help_arguments = "--tree=<tree> [--old-versions]"
 purge.help = [[
@@ -31,9 +31,7 @@ assume a default tree.
                 overridden with the flag --force.
 ]]
 
-function purge.run(...)
-   local flags = util.parse_flags(...)
-   
+function purge.command(flags)
    local tree = flags["tree"]
 
    if type(tree) ~= "string" then

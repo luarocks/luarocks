@@ -1,6 +1,5 @@
 
 --- Fetch back-end for retrieving sources from GIT.
---module("luarocks.fetch.git", package.seeall)
 local git = {}
 
 local unpack = unpack or table.unpack

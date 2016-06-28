@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "build" command.
 -- Builds a rock, compiling its C parts if any.
---module("luarocks.build", package.seeall)
 local build = {}
 package.loaded["luarocks.build"] = build
 
@@ -17,6 +16,7 @@ local manif = require("luarocks.manif")
 local remove = require("luarocks.remove")
 local cfg = require("luarocks.cfg")
 
+util.add_run_function(build)
 build.help_summary = "Build/compile a rock."
 build.help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
 build.help = [[
@@ -177,6 +177,14 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       return nil, "Rockspec error: build type not specified"
    end
 
+   local ok
+   if not build_only_deps then
+      ok, err, errcode = deps.check_external_deps(rockspec, "build")
+      if err then
+         return nil, err, errcode
+      end
+   end
+
    if deps_mode == "none" then
       util.printerr("Warning: skipping dependency checks.")
    else
@@ -192,12 +200,6 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       util.printout()
       return name, version
    end   
-
-   local ok
-   ok, err, errcode = deps.check_external_deps(rockspec, "build")
-   if err then
-      return nil, err, errcode
-   end
 
    if repos.is_installed(name, version) then
       repos.delete_version(name, version)
@@ -378,7 +380,7 @@ local function do_build(name, version, deps_mode, build_only_deps)
       return build.build_rock(name, true, deps_mode, build_only_deps)
    elseif not name:match(dir.separator) then
       local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(build.run, name:lower(), version, deps.deps_mode_to_flag(deps_mode), build_only_deps and "--only-deps")
+      return search.act_on_src_or_rockspec(do_build, name:lower(), version, nil, deps_mode, build_only_deps)
    end
    return nil, "Don't know what to do with "..name
 end
@@ -391,8 +393,7 @@ end
 -- also be given.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
-function build.run(...)
-   local flags, name, version = util.parse_flags(...)
+function build.command(flags, name, version)
    if type(name) ~= "string" then
       return nil, "Argument missing. "..util.see_help("build")
    end

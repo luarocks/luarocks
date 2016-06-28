@@ -8,6 +8,7 @@ install_bins:
 	for f in $(BIN_FILES); \
 	do \
 	   cp "$$f" "$(DESTDIR)$(BINDIR)/$$f-$$luaver"; \
+	   chmod +rx "$(DESTDIR)$(BINDIR)/$$f-$$luaver"; \
 	   ln -nfs "$$f-$$luaver" "$(DESTDIR)$(BINDIR)/$$f"; \
 	done
 

@@ -8,7 +8,6 @@
 --   Project home: http://code.google.com/p/python-patch/ .
 --   Version 0.1
 
---module("luarocks.tools.patch", package.seeall)
 local patch = {}
 
 local fs = require("luarocks.fs")

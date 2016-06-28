@@ -1,7 +1,6 @@
 
 --- Module implementing the luarocks-admin "make_manifest" command.
 -- Compile a manifest file for a repository.
---module("luarocks.make_manifest", package.seeall)
 local make_manifest = {}
 package.loaded["luarocks.make_manifest"] = make_manifest
 
@@ -13,6 +12,7 @@ local deps = require("luarocks.deps")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 
+util.add_run_function(make_manifest)
 make_manifest.help_summary = "Compile a manifest file for a repository."
 
 make_manifest.help = [[
@@ -27,9 +27,7 @@ make_manifest.help = [[
 -- the default local repository configured as cfg.rocks_dir is used.
 -- @return boolean or (nil, string): True if manifest was generated,
 -- or nil and an error message.
-function make_manifest.run(...)
-   local flags, repo = util.parse_flags(...)
-
+function make_manifest.command(flags, repo)
    assert(type(repo) == "string" or not repo)
    repo = repo or cfg.rocks_dir
   

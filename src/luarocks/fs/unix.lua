@@ -1,6 +1,5 @@
 
 --- Unix implementation of filesystem and platform abstractions.
---module("luarocks.fs.unix", package.seeall)
 local unix = {}
 
 local fs = require("luarocks.fs")
@@ -14,6 +13,13 @@ local util = require("luarocks.util")
 -- @return string: The command-line, with silencing annotation.
 function unix.quiet(cmd)
    return cmd.." 1> /dev/null 2> /dev/null"
+end
+
+--- Annotate command string for execution with quiet stderr.
+-- @param cmd string: A command-line string.
+-- @return string: The command-line, with stderr silencing annotation.
+function unix.quiet_stderr(cmd)
+   return cmd.." 2> /dev/null"
 end
 
 --- Return an absolute pathname from a potentially relative one.

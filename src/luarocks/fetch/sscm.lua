@@ -1,6 +1,5 @@
 
 --- Fetch back-end for retrieving sources from Surround SCM Server
---module("luarocks.fetch.sscm", package.seeall)
 local sscm = {}
 
 local fs = require("luarocks.fs")

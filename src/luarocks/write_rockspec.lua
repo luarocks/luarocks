@@ -1,8 +1,8 @@
 
---module("luarocks.write_rockspec", package.seeall)
 local write_rockspec = {}
 package.loaded["luarocks.write_rockspec"] = write_rockspec
 
+local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
@@ -11,15 +11,18 @@ local persist = require("luarocks.persist")
 local type_check = require("luarocks.type_check")
 local util = require("luarocks.util")
 
+util.add_run_function(write_rockspec)
 write_rockspec.help_summary = "Write a template for a rockspec file."
-write_rockspec.help_arguments = "[--output=<file> ...] [<name>] [<version>] {<url>|<path>}"
+write_rockspec.help_arguments = "[--output=<file> ...] [<name>] [<version>] [<url>|<path>]"
 write_rockspec.help = [[
 This command writes an initial version of a rockspec file,
-based on an URL or a local path. You may use a relative path such as '.'.
-If a local path is given, name and version arguments are mandatory.
-For URLs, LuaRocks will attempt to infer name and version if not given.
-
-If a repository URL is given with no version, it creates an 'scm' rock.
+based on a name, a version, and a location (an URL or a local path).
+If only two arguments are given, the first one is considered the name and the
+second one is the location.
+If only one argument is given, it must be the location.
+If no arguments are given, current directory is used as location.
+LuaRocks will attempt to infer name and version if not given,
+using 'scm' as default version.
 
 Note that the generated file is a _starting point_ for writing a
 rockspec, and is not guaranteed to be complete or correct.
@@ -109,6 +112,32 @@ local function detect_mit_license(data)
    return sum == 78656
 end
 
+local simple_scm_protocols = {
+   git = true, ["git+http"] = true, ["git+https"] = true,
+   hg = true, ["hg+http"] = true, ["hg+https"] = true
+}
+
+local function detect_url_from_command(program, args, directory)
+   local command = fs.Q(cfg.variables[program:upper()]).. " "..args
+   local pipe = io.popen(fs.command_at(directory, fs.quiet_stderr(command)))
+   if not pipe then return nil end
+   local url = pipe:read("*a"):match("^([^\r\n]+)")
+   pipe:close()
+   if not url then return nil end
+   if not util.starts_with(url, program.."://") then
+      url = program.."+"..url
+   end
+
+   if simple_scm_protocols[dir.split_url(url)] then
+      return url
+   end
+end
+
+local function detect_scm_url(directory)
+   return detect_url_from_command("git", "config --get remote.origin.url", directory) or
+      detect_url_from_command("hg", "paths default", directory)
+end
+
 local function show_license(rockspec)
    local fd = open_file("COPYING") or open_file("LICENSE") or open_file("MIT-LICENSE.txt")
    if not fd then return nil end
@@ -196,20 +225,17 @@ local function rockspec_cleanup(rockspec)
    rockspec.name = nil
 end
 
-function write_rockspec.run(...)
-   local flags, name, version, url_or_dir = util.parse_flags(...)
-   
+function write_rockspec.command(flags, name, version, url_or_dir)
    if not name then
-      return nil, "Missing arguments. "..util.see_help("write_rockspec")
-   end
-
-   if name and not version then
+      url_or_dir = "."
+   elseif not version then
       url_or_dir = name
       name = nil
    elseif not url_or_dir then
       url_or_dir = version
+      version = nil
    end
-   
+
    if flags["tag"] then
       if not version then
          version = flags["tag"]:gsub("^v", "")
@@ -217,34 +243,27 @@ function write_rockspec.run(...)
    end
 
    local protocol, pathname = dir.split_url(url_or_dir)
-   if not fetch.is_basic_protocol(protocol) then
-      if not name then
-         name = dir.base_name(url_or_dir):gsub("%.[^.]+$", "")
+   if protocol == "file" then
+      if pathname == "." then
+         name = name or dir.base_name(fs.current_dir())
       end
-      if not version then
-         version = "scm"
-      end
-   elseif protocol ~= "file" then
+   elseif fetch.is_basic_protocol(protocol) then
       local filename = dir.base_name(url_or_dir)
       local newname, newversion = filename:match("(.*)-([^-]+)")
-      if (not name) and newname then
-         name = newname
+      if newname then
+         name = name or newname
+         version = version or newversion:gsub("%.[a-z]+$", ""):gsub("%.tar$", "")
       end
-      if (not version) and newversion then
-         version = newversion:gsub(".[a-z]+$", ""):gsub(".tar$", "")
-      end
-      if not (name and version) then
-         return nil, "Missing name and version arguments. "..util.see_help("write_rockspec")
-      end
-   elseif not version then
-      return nil, "Missing name and version arguments. "..util.see_help("write_rockspec")
+   else
+      name = name or dir.base_name(url_or_dir):gsub("%.[^.]+$", "")
    end
 
-   local filename = flags["output"] or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
-   
-   if not flags["homepage"] and url_or_dir:match("^git://github.com") then
-      flags["homepage"] = "http://"..url_or_dir:match("^[^:]+://(.*)")
+   if not name then
+      return nil, "Could not infer rock name. "..util.see_help("write_rockspec")
    end
+   version = version or "scm"
+
+   local filename = flags["output"] or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
 
    local rockspec = {
       rockspec_format = flags["rockspec-format"],
@@ -292,10 +311,25 @@ function write_rockspec.run(...)
       else
          local_dir = nil
       end
+   else
+      rockspec.source.url = detect_scm_url(local_dir) or rockspec.source.url
    end
    
    if not local_dir then
       local_dir = "."
+   end
+
+   if not flags["homepage"] then
+      local url_protocol, url_path = dir.split_url(rockspec.source.url)
+
+      if simple_scm_protocols[url_protocol] then
+         for _, domain in ipairs({"github.com", "bitbucket.org", "gitlab.com"}) do
+            if util.starts_with(url_path, domain) then
+               rockspec.description.homepage = "https://"..url_path:gsub("%.git$", "")
+               break
+            end
+         end
+      end
    end
    
    local libs = nil

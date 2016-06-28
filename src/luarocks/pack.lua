@@ -1,7 +1,6 @@
 
 --- Module implementing the LuaRocks "pack" command.
 -- Creates a rock, packing sources or binaries.
---module("luarocks.pack", package.seeall)
 local pack = {}
 package.loaded["luarocks.pack"] = pack
 
@@ -17,6 +16,7 @@ local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local search = require("luarocks.search")
 
+util.add_run_function(pack)
 pack.help_summary = "Create a rock, packing sources or binaries."
 pack.help_arguments = "{<rockspec>|<name> [<version>]}"
 pack.help = [[
@@ -192,8 +192,7 @@ end
 -- version may also be passed.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-function pack.run(...)
-   local flags, arg, version = util.parse_flags(...)
+function pack.command(flags, arg, version)
    assert(type(version) == "string" or not version)
    if type(arg) ~= "string" then
       return nil, "Argument missing. "..util.see_help("pack")

@@ -1,7 +1,6 @@
 
 --- Core functions for querying manifest files.
 -- This module requires no specific 'fs' functionality.
---module("luarocks.manif_core", package.seeall)
 local manif_core = {}
 package.loaded["luarocks.manif_core"] = manif_core
 
