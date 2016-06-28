@@ -338,7 +338,7 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
       test_env.set_args()
 
       if test_env.TRAVIS then
-         if not os.rename("~/.ssh/id_rsa.pub", "~/.ssh/id_rsa.pub") then
+         if not os.rename(os.getenv("HOME") .. "/.ssh/id_rsa.pub", os.getenv("HOME") .. "/.ssh/id_rsa.pub") then
             execute_bool("ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa")
          end
          execute_bool("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
