@@ -7,7 +7,6 @@
 
 local pairs = pairs
 
---module("luarocks.fs", package.seeall)
 local fs = {}
 package.loaded["luarocks.fs"] = fs
 
@@ -68,7 +67,10 @@ load_fns(fs_lua)
 
 -- Load platform-specific fallbacks for missing Lua modules
 local ok, fs_plat_tools = pcall(require, "luarocks.fs."..loaded_platform..".tools")
-if ok and fs_plat_tools then load_fns(fs_plat_tools) end
+if ok and fs_plat_tools then
+   load_fns(fs_plat_tools)
+   load_fns(require("luarocks.fs.tools"))
+end
 
 
 return fs

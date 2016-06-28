@@ -1,6 +1,5 @@
 
 --- Functions related to fetching and loading local and remote files.
---module("luarocks.fetch", package.seeall)
 local fetch = {}
 package.loaded["luarocks.fetch"] = fetch
 
@@ -345,7 +344,8 @@ function fetch.get_sources(rockspec, extract, dest_dir)
    if extract then
       local ok, err = fs.change_dir(store_dir)
       if not ok then return nil, err end
-      fs.unpack_archive(rockspec.source.file)
+      ok, err = fs.unpack_archive(rockspec.source.file)
+      if not ok then return nil, err end
       if not fs.exists(rockspec.source.dir) then
          return nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file, "source.dir", source_file, store_dir
       end

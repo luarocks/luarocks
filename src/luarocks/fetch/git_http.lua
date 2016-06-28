@@ -7,7 +7,6 @@
 -- source = { url = "git+http://example.com/foo.git" }
 -- Prefer using the normal git:// fetch mode as it is more widely
 -- available in older versions of LuaRocks.
---module("luarocks.fetch.git_http", package.seeall)
 local git_http = {}
 
 local git = require("luarocks.fetch.git")

@@ -11,7 +11,6 @@
 -- comparison criteria is the source code of this module, but the
 -- test/test_deps.lua file included with LuaRocks provides some
 -- insights on what these criteria are.
---module("luarocks.deps", package.seeall)
 local deps = {}
 package.loaded["luarocks.deps"] = deps
 
@@ -480,7 +479,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
             return nil, "Could not satisfy dependency "..deps.show_dep(dep)..": "..search_err
          end
          util.printout("Installing "..url)
-         local ok, install_err, errcode = install.run(url, deps.deps_mode_to_flag(deps_mode))
+         local ok, install_err, errcode = install.command({deps_mode = deps_mode}, url)
          if not ok then
             return nil, "Failed installing dependency: "..url.." - "..install_err, errcode
          end
