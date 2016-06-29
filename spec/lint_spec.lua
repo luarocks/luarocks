@@ -1,10 +1,9 @@
-local lint = require("luarocks.lint")
 local test_env = require("new_test/test_environment")
+local lfs = require("lfs")
 
 local extra_rocks = {
    "/validate-args-1.5.4-1.rockspec"
 }
-
 
 expose("LuaRocks lint tests #blackbox #b_lint", function()   
    before_each(function()

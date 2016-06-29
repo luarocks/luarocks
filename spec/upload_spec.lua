@@ -1,5 +1,5 @@
-local upload = require("luarocks.upload")
 local test_env = require("new_test/test_environment")
+local lfs = require("lfs")
 
 local extra_rocks = {
    "/lua-cjson-2.1.0-1.src.rock"

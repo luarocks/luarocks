@@ -1,4 +1,3 @@
-local list = require("luarocks.list")
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
@@ -36,17 +35,8 @@ expose("LuaRocks list tests #blackbox #b_list", function()
       local output = run.luarocks("list --outdated")
       assert.is.truthy(output:find("say"))
    end)
-   --TODOOOO
    it("LuaRocks list invalid tree", function()
-      -- assert.is_false(
-      -- local output = run.luarocks("--tree=/some/invalid/tree list")
-      -- print(output)
+      local output = run.luarocks("--tree=/some/invalid/tree list")
+      assert.are.same(output, "Installed rocks:----------------")
    end)
-   -- !move this to pack!
-   -- it("LuaRocks list invalid tree", function()
-   --    -- luarocks list && $luarocks pack luacov && rm ./luacov-*.rock;
-   --    run.luarocks("list", env_variables)
-   --    run.luarocks("pack luacov", env_variables)
-   --    -- os.remove("luacov-*.rock")
-   -- end)
 end)

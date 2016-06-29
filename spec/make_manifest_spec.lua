@@ -1,4 +1,3 @@
-local make_manifest = require("luarocks.make_manifest")
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 

@@ -1,4 +1,3 @@
-local install = require("luarocks.install")
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 

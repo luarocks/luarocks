@@ -1,5 +1,5 @@
-local path = require("luarocks.path")
 local test_env = require("new_test/test_environment")
+local lfs = require("lfs")
 
 expose("LuaRocks path tests #blackbox #b_path", function()
    before_each(function()
