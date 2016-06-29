@@ -1,4 +1,3 @@
-local write_rockspec = require("luarocks.write_rockspec")
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
@@ -10,7 +9,8 @@ expose("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
 
    describe("LuaRocks write_rockspec basic tests", function()
       it("LuaRocks write_rockspec with no flags/arguments", function()
-         assert.is_false(run.luarocks_bool("write_rockspec"))
+         assert.is_true(run.luarocks_bool("write_rockspec"))
+         os.remove("luarocks-scm-1.rockspec")
       end)
       it("LuaRocks write_rockspec with invalid argument", function()
          assert.is_false(run.luarocks_bool("write_rockspec invalid"))
@@ -60,5 +60,3 @@ expose("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
       end)
    end)
 end)
-
-

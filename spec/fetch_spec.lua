@@ -1,5 +1,6 @@
 local fetch = require("luarocks.fetch")
 local test_env = require("new_test/test_environment")
+local lfs = require("lfs")
 
 describe("Luarocks fetch test #whitebox #w_fetch", function()
    it("Fetch url to base dir", function()

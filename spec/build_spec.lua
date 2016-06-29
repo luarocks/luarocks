@@ -1,4 +1,3 @@
-local build = require("luarocks.build")
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 

@@ -1,5 +1,5 @@
-local search = require("luarocks.search")
 local test_env = require("new_test/test_environment")
+local lfs = require("lfs")
 
 local extra_rocks = {
 "/lzlib-0.4.1.53-1.src.rock"

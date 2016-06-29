@@ -1,5 +1,4 @@
 local test_env = require("new_test/test_environment")
-local new_version = require("luarocks.new_version")
 local lfs = require("lfs")
 
 local extra_rocks = {
@@ -10,12 +9,15 @@ expose("LuaRocks new_version tests #blackbox #b_new_version", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
+      testing_paths = test_env.testing_paths
       run = test_env.run
    end)
    
    describe("LuaRocks new_version basic tests", function()
       it("LuaRocks new version with no flags/arguments", function()
+         lfs.chdir("new_test")
          assert.is_false(run.luarocks_bool("new_version"))
+         lfs.chdir(testing_paths.luarocks_dir)
       end)
       it("LuaRocks new version invalid", function()
          assert.is_false(run.luarocks_bool("new_version invalid"))

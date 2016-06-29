@@ -1,5 +1,5 @@
-local help = require("luarocks.help")
 local test_env = require("new_test/test_environment")
+local lfs = require("lfs")
 
 expose("LuaRocks help tests #blackbox #b_help", function()   
    before_each(function()
