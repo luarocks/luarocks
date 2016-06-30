@@ -4,7 +4,11 @@ matrix:
   include:
     - os: linux
       env:
+        - LUA="lua=5.1"
         - LUA="lua=5.2"
+        - LUA="lua=5.3"
+        - LUA="luajit=2.0"
+        - LUA="luajit=2.1"
     - os: osx
       language: generic
       env:
@@ -26,8 +30,8 @@ install:
   - luarocks install luacov-coveralls
   
 script:
-  - busted -Xhelper travis,$LUA -t blackbox --exclude-tags=ssh --verbose
-  - busted -Xhelper travis,$LUA,env=full -t blackbox --exclude-tags=ssh --verbose
+  - busted -Xhelper travis,$LUA -t blackbox --verbose
+  - busted -Xhelper travis,$LUA,env=full -t blackbox --verbose
 
 after_success:
   - luacov-coveralls -c $TRAVIS_BUILD_DIR/new_test/luacov.config --exclude $TRAVIS_BUILD_DIR/new_test/
