@@ -1,6 +1,9 @@
 local test_env = require("new_test/test_environment")
-local site_config = require("luarocks.site_config")
 local lfs = require("lfs")
+
+test_env.unload_luarocks()
+local cfg = require("luarocks.cfg")
+local site_config = require("luarocks.site_config")
 
 expose("LuaRocks config tests #blackbox #b_config", function()
    

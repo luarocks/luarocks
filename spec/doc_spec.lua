@@ -1,13 +1,18 @@
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
+test_env.unload_luarocks()
+local doc = require("luarocks.doc")
+
 local extra_rocks = {
   "/luarepl-0.4-1.src.rock"
 }
 
 expose("LuaRocks doc tests #blackbox #b_doc", function()   
    before_each(function()
+
       test_env.setup_specs(extra_rocks)
+
       testing_paths = test_env.testing_paths
       run = test_env.run
    end)
