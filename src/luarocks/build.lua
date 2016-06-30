@@ -201,8 +201,8 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       return nil, "Rockspec error: build type not specified"
    end
 
+   local ok
    if not build_only_deps then
-      local ok
       ok, err, errcode = deps.check_external_deps(rockspec, "build")
       if err then
          return nil, err, errcode

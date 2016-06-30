@@ -353,7 +353,8 @@ function fetch.get_sources(rockspec, extract, dest_dir)
    if extract then
       local ok, err = fs.change_dir(store_dir)
       if not ok then return nil, err end
-      fs.unpack_archive(rockspec.source.file)
+      ok, err = fs.unpack_archive(rockspec.source.file)
+      if not ok then return nil, err end
       if not fs.exists(rockspec.source.dir) then
 
          -- If rockspec.source.dir can't be found, see if we only have one
