@@ -10,6 +10,9 @@ local function help()
 
    USAGE -Xhelper <arguments>
       lua=<version> (mandatory) type your full version of Lua (e.g. --lua 5.2.4)
+      OR
+      luajit=<version> (mandatory) type your full version of LuaJIT (e.g. --lua 5.2.4)
+
       env=<type>   (default:"minimal") type what kind of environment to use ["minimal", "full"]
       clean  remove existing testing environment
       travis  add just if running on TravisCI
@@ -27,12 +30,15 @@ function test_env.set_args()
    local args_position
    
    for i=1, #arg do
-      if arg[i]:find("-Xhelper") and arg[i+1]:find("lua=") then
-         print("In")
+      if arg[i]:find("-Xhelper") and arg[i+1]:find("lua=") and not arg[i+1]:find("luajit=") or
+         arg[i]:find("-Xhelper") and not arg[i+1]:find("lua=") and arg[i+1]:find("luajit=") then
          args_position = i+1
-         break
-      else
-         print("Please add mandatory argument - version of Lua in format 'lua=X.X.X', for -Xhelper flag")
+         break  
+      elseif arg[i]:find("-Xhelper") and arg[i+1]:find("lua=") and arg[i+1]:find("luajit=") then
+         print("Please specify just Lua or LuaJIT version for testing in format 'lua=X.X.X' or 'luajit=X.X', for -Xhelper flag")
+         os.exit(1)
+      elseif arg[i]:find("-Xhelper") and not arg[i+1]:find("lua=") and not arg[i+1]:find("luajit=") then
+         print("Please add mandatory argument - version of Lua or LuaJIT in format 'lua=X.X.X' or 'luajit=X.X', for -Xhelper flag")
          os.exit(1)
       end
    end
