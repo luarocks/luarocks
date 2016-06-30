@@ -7,7 +7,7 @@ local unpack = unpack or table.unpack
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 
 --- Run a command displaying its execution on standard output.

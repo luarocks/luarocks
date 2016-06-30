@@ -2,11 +2,10 @@
 --- Module implementing the LuaRocks "list" command.
 -- Lists currently installed rocks.
 local list = {}
-package.loaded["luarocks.list"] = list
 
 local search = require("luarocks.search")
 local deps = require("luarocks.deps")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 

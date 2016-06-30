@@ -1,3 +1,4 @@
+
 --- Configuration for LuaRocks.
 -- Tries to load the user's configuration file and
 -- defines defaults for unset values. See the
@@ -13,11 +14,7 @@
 local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, tonumber, type, assert, _VERSION =
       rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, tonumber, type, assert, _VERSION
 
---module("luarocks.cfg")
 local cfg = {}
-package.loaded["luarocks.cfg"] = cfg
-
-local util = require("luarocks.util")
 
 cfg.lua_version = _VERSION:sub(5)
 local version_suffix = cfg.lua_version:gsub("%.", "_")
@@ -32,14 +29,17 @@ if not ok then
    site_config = {}
 end
 
+local util = require("luarocks.core.util")
+local persist = require("luarocks.core.persist")
+local require = nil
+--------------------------------------------------------------------------------
+
 cfg.program_version = "scm"
-cfg.program_series = "2.2"
+cfg.program_series = "3.0"
 cfg.major_version = (cfg.program_version:match("([^.]%.[^.])")) or cfg.program_series
 cfg.variables = {}
 cfg.rocks_trees = {}
 cfg.platforms = {}
-
-local persist = require("luarocks.persist")
 
 cfg.errorcodes = setmetatable({
    OK = 0,

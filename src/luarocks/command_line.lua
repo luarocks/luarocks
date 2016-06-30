@@ -5,7 +5,7 @@ local command_line = {}
 local unpack = unpack or table.unpack
 
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")

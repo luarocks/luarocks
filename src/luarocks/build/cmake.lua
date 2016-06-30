@@ -4,7 +4,7 @@ local cmake = {}
 
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local deps = require("luarocks.deps")
 
 --- Driver function for the "cmake" build back-end.

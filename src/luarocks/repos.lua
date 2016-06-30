@@ -1,11 +1,10 @@
 
 --- Functions for managing the repository on disk.
 local repos = {}
-package.loaded["luarocks.repos"] = repos
 
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")

@@ -2,7 +2,6 @@
 --- Module implementing the LuaRocks "build" command.
 -- Builds a rock, compiling its C parts if any.
 local build = {}
-package.loaded["luarocks.build"] = build
 
 local pack = require("luarocks.pack")
 local path = require("luarocks.path")
@@ -12,9 +11,9 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
-local manif = require("luarocks.manif")
+local writer = require("luarocks.manif.writer")
 local remove = require("luarocks.remove")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 
 build.help_summary = "Build/compile a rock."
 build.help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
@@ -346,7 +345,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       fs.pop_dir()
    end
 
-   ok, err = manif.make_rock_manifest(name, version)
+   ok, err = writer.make_rock_manifest(name, version)
    if err then return nil, err end
 
    ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec))
@@ -360,7 +359,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    ok, err = repos.run_hook(rockspec, "post_install")
    if err then return nil, err end
 
-   ok, err = manif.update_manifest(name, version, nil, deps_mode)
+   ok, err = writer.update_manifest(name, version, nil, deps_mode)
    if err then return nil, err end
 
    util.announce_install(rockspec)

@@ -2,14 +2,13 @@
 --- Module implementing the LuaRocks "unpack" command.
 -- Unpack the contents of a rock.
 local unpack = {}
-package.loaded["luarocks.unpack"] = unpack
 
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local build = require("luarocks.build")
 local dir = require("luarocks.dir")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 
 unpack.help_summary = "Unpack the contents of a rock."
 unpack.help_arguments = "[--force] {<rock>|<name> [<version>]}"

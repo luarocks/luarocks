@@ -2,10 +2,9 @@
 --- Module handling the LuaRocks local cache.
 -- Adds a rock or rockspec to a rocks server.
 local cache = {}
-package.loaded["luarocks.cache"] = cache
 
 local fs = require("luarocks.fs")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 

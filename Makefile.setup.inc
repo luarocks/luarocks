@@ -5,16 +5,16 @@ BINDIR ?= $(PREFIX)/bin
 LUADIR ?= $(PREFIX)/share/lua/$(LUA_VERSION)/
 
 BIN_FILES = luarocks luarocks-admin
-LUAROCKS_FILES = fs/tools.lua fs/unix/tools.lua fs/unix.lua fs/win32/tools.lua fs/win32.lua \
-fs/lua.lua persist.lua list.lua require.lua repos.lua dir.lua make_manifest.lua \
-command_line.lua config_cmd.lua install.lua build/command.lua build/cmake.lua \
-build/make.lua build/builtin.lua fetch/cvs.lua fetch/git.lua fetch/sscm.lua \
-tools/patch.lua fetch/svn.lua tools/zip.lua tools/tar.lua pack.lua type_check.lua \
-make.lua remove.lua fs.lua manif.lua add.lua deps.lua build.lua search.lua \
-show.lua manif_core.lua fetch.lua unpack.lua validate.lua cfg.lua download.lua \
-help.lua util.lua index.lua cache.lua refresh_cache.lua loader.lua \
-admin_remove.lua fetch/hg.lua fetch/git_file.lua new_version.lua lint.lua \
-purge.lua path.lua path_cmd.lua write_rockspec.lua doc.lua upload.lua \
-upload/api.lua upload/multipart.lua fetch/git_http.lua fetch/hg_http.lua \
-fetch/hg_https.lua fetch/hg_ssh.lua fetch/git_https.lua fetch/git_ssh.lua
-
+LUAROCKS_FILES = admin/add.lua admin/cache.lua admin/make_manifest.lua admin/refresh_cache.lua \
+admin/remove.lua build.lua build/builtin.lua build/cmake.lua build/command.lua \
+build/make.lua command_line.lua config_cmd.lua core/cfg.lua core/deps.lua \
+core/dir.lua core/manif.lua core/path.lua core/persist.lua core/type_check.lua \
+core/util.lua deps.lua dir.lua doc.lua download.lua fetch.lua fetch/cvs.lua \
+fetch/git.lua fetch/git_file.lua fetch/git_http.lua fetch/git_https.lua \
+fetch/git_ssh.lua fetch/hg.lua fetch/hg_http.lua fetch/hg_https.lua fetch/hg_ssh.lua \
+fetch/sscm.lua fetch/svn.lua fs.lua fs/lua.lua fs/tools.lua fs/unix.lua fs/unix/tools.lua \
+fs/win32.lua fs/win32/tools.lua help.lua index.lua install.lua lint.lua list.lua \
+loader.lua make.lua manif.lua manif/writer.lua new_version.lua pack.lua path.lua \
+path_cmd.lua persist.lua purge.lua remove.lua repos.lua require.lua search.lua \
+show.lua tools/patch.lua tools/tar.lua tools/zip.lua type_check.lua unpack.lua \
+upload.lua upload/api.lua upload/multipart.lua util.lua write_rockspec.lua

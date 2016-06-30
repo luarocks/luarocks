@@ -7,7 +7,7 @@
 local help = {}
 
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 
 local program = util.this_program("luarocks")

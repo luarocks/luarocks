@@ -2,7 +2,6 @@
 --- Module implementing the luarocks "download" command.
 -- Download a rock from the repository.
 local download = {}
-package.loaded["luarocks.download"] = download
 
 local util = require("luarocks.util")
 local path = require("luarocks.path")
@@ -10,7 +9,7 @@ local fetch = require("luarocks.fetch")
 local search = require("luarocks.search")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 
 download.help_summary = "Download a specific rock file from a rocks server."
 download.help_arguments = "[--all] [--arch=<arch> | --source | --rockspec] [<name> [<version>]]"

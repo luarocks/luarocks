@@ -5,7 +5,7 @@ local path_cmd = {}
 
 local util = require("luarocks.util")
 local deps = require("luarocks.deps")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 
 path_cmd.help_summary = "Return the currently configured package path."
 path_cmd.help_arguments = ""

@@ -2,7 +2,6 @@
 --- Module implementing the LuaRocks "pack" command.
 -- Creates a rock, packing sources or binaries.
 local pack = {}
-package.loaded["luarocks.pack"] = pack
 
 local unpack = unpack or table.unpack
 
@@ -10,7 +9,7 @@ local path = require("luarocks.path")
 local repos = require("luarocks.repos")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
