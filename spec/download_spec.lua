@@ -1,6 +1,9 @@
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
+test_env.unload_luarocks()
+local download = require("luarocks.download")
+
 local extra_rocks = {
    "/validate-args-1.5.4-1.rockspec"
 }

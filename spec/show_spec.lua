@@ -1,6 +1,9 @@
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
+test_env.unload_luarocks()
+local show = require("luarocks.show")
+
 expose("LuaRocks show tests #blackbox #b_show", function()
    before_each(function()
       test_env.setup_specs(extra_rocks)

@@ -2,10 +2,8 @@ local lfs = require("lfs")
 local test_env = {}
 local arg = arg or { ... }
 
---- Set all arguments from input into global variables
-function test_env.set_args()
-      if arg[1] == nil then
-      print("LuaRocks test-suite\n\n"..
+local function help()
+   print("LuaRocks test-suite\n\n"..
          [[
    INFORMATION
       Lua installed and added to path needed. 
@@ -14,28 +12,50 @@ function test_env.set_args()
       lua=<version> (mandatory) type your full version of Lua (e.g. --lua 5.2.4)
       env=<type>   (default:"minimal") type what kind of environment to use ["minimal", "full"]
       clean  remove existing testing environment
+      travis  add just if running on TravisCI
       os=<version>    type your OS ["linux", "os x", "windows"]
          ]]);
       os.exit(1)
-   end
-   test_env.TYPE_TEST_ENV = "minimal"
+end
 
+--- Set all arguments from input into global variables
+function test_env.set_args()
+   if arg[1] == nil then
+      help()
+   end
+   
+   local args_position
+   
    for i=1, #arg do
-      if arg[i]:find("lua=") then
-         test_env.LUA_V = arg[i]:gsub("(.*)lua=([^%,]+)(.*)","%2") -- !needed coz from busted file I receive params in string...!
+      if arg[i]:find("-Xhelper") and arg[i+1]:find("lua=") then
+         print("In")
+         args_position = i+1
+         break
+      else
+         print("Please add mandatory argument - version of Lua in format 'lua=X.X.X', for -Xhelper flag")
+         os.exit(1)
       end
-      if arg[i]:find("env=") then
-         test_env.TYPE_TEST_ENV = arg[i]:gsub("(.*)env=([^%,]+)(.*)","%2")
-      end
-      if arg[i]:find("clean") then
-         test_env.TEST_ENV_CLEAN = true
-      end
-      if arg[i]:find("travis") then
-         test_env.TRAVIS = true
-      end
-      if arg[i]:find("os=") then
-         test_env.TEST_TARGET_OS = arg[i]:gsub("(.*)os=([^%,]+)(.*)","%2")
-      end
+   end
+
+   if not args_position then
+      help()
+   end
+
+   -- if at least Lua version argument was found on input start to parse other arguments to env. variables
+   test_env.TYPE_TEST_ENV = "minimal"
+   test_env.LUA_V = arg[args_position]:gsub("(.*)lua=([^%,]+)(.*)","%2")
+
+   if arg[args_position]:find("env=") then
+      test_env.TYPE_TEST_ENV = arg[args_position]:gsub("(.*)env=([^%,]+)(.*)","%2")
+   end
+   if arg[args_position]:find("clean") then
+      test_env.TEST_ENV_CLEAN = true
+   end
+   if arg[args_position]:find("travis") then
+      test_env.TRAVIS = true
+   end
+   if arg[args_position]:find("os=") then
+      test_env.TEST_TARGET_OS = arg[args_position]:gsub("(.*)os=([^%,]+)(.*)","%2")
    end
 
    if not test_env.TEST_TARGET_OS then
@@ -82,7 +102,7 @@ function test_env.remove_files(path, pattern)
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
             if file:find(pattern) then
-               if os.remove(file) then
+               if os.remove(path .. "/" .. file) then
                   result_check = true
                end
             end
@@ -298,7 +318,7 @@ local function reset_environment(testing_paths, md5sums)
    print("\n[ENVIRONMENT RESET]")
 end
 
-local function set_paths(luaversion_full)
+local function create_paths(luaversion_full)
    local testing_paths = {}
 
    testing_paths.luadir = ""
@@ -314,16 +334,15 @@ local function set_paths(luaversion_full)
    end
 
    testing_paths.lua = testing_paths.luadir .. "/bin/lua"
+   testing_paths.luarocks_tmp = "/tmp/luarocks_testing" --windows?
 
    testing_paths.luarocks_dir = lfs.currentdir()
    testing_paths.testing_dir = testing_paths.luarocks_dir .. "/new_test"
    testing_paths.src_dir = testing_paths.luarocks_dir .. "/src"
-   testing_paths.luarocks_temp = testing_paths.testing_dir .. "/luarocks-2.3.0"
-
    testing_paths.testing_lrprefix = testing_paths.testing_dir .. "/testing_lrprefix-" .. luaversion_full
    testing_paths.testing_tree = testing_paths.testing_dir .. "/testing-" .. luaversion_full
-   testing_paths.testing_sys_tree = testing_paths.testing_dir .. "/testing_sys-" .. luaversion_full
    testing_paths.testing_tree_copy = testing_paths.testing_dir .. "/testing_copy-" .. luaversion_full
+   testing_paths.testing_sys_tree = testing_paths.testing_dir .. "/testing_sys-" .. luaversion_full
    testing_paths.testing_sys_tree_copy = testing_paths.testing_dir .. "/testing_sys_copy-" .. luaversion_full
    testing_paths.testing_cache = testing_paths.testing_dir .. "/testing_cache-" .. luaversion_full
    testing_paths.testing_server = testing_paths.testing_dir .. "/testing_server-" .. luaversion_full
@@ -331,9 +350,18 @@ local function set_paths(luaversion_full)
    return testing_paths
 end
 
+--- Helper function to unload luarocks modules from global table package.loaded
+-- Needed to load our local (testing) version of LuaRocks
+function test_env.unload_luarocks()
+   for modname, _ in pairs(package.loaded) do
+      if modname:match("^luarocks%.") then
+         package.loaded[modname] = nil
+      end
+   end
+end
 
-test_env.setup_done = false
 function test_env.setup_specs(extra_rocks, luaversion_full)
+   -- if global variable about successful creation of testing environment doesn't exists, build environment
    if not test_env.setup_done then
       test_env.set_args()
 
@@ -351,8 +379,10 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
       test_env.main()
 
       -- Set paths, env_vars and functions for specs
-      test_env.testing_paths = set_paths(luaversion_full)
+      test_env.testing_paths = create_paths(luaversion_full)
       test_env.env_variables = create_env(test_env.testing_paths)
+      package.path = test_env.env_variables.LUA_PATH
+
       test_env.run = run_luarocks(test_env.testing_paths, test_env.env_variables)
       test_env.platform = execute_output(test_env.testing_paths.lua .. " -e 'print(require(\"luarocks.cfg\").arch)'", false, test_env.env_variables)
       test_env.md5sums = create_md5sums(test_env.testing_paths)
@@ -396,16 +426,26 @@ end
 -- MAIN 
 function test_env.main(luaversion_full, env_type, env_clean)
    luaversion_full = luaversion_full or test_env.LUA_V
-   local testing_paths = set_paths(luaversion_full)
+   local testing_paths = create_paths(luaversion_full)
 
    env_clean = env_clean or test_env.TEST_ENV_CLEAN
    if env_clean then
+      print("Cleaning testing directory...")
+      test_env.remove_dir(testing_paths.luarocks_tmp)
+      test_env.remove_dir(testing_paths.testing_tree)
+      test_env.remove_dir(testing_paths.testing_tree_copy)
       test_env.remove_dir(testing_paths.testing_cache)
       test_env.remove_dir(testing_paths.testing_server)
+      test_env.remove_dir(testing_paths.testing_sys_tree)
+      test_env.remove_dir(testing_paths.testing_sys_tree_copy)
+      test_env.remove_files(testing_paths.testing_dir, "testing_")
+      test_env.remove_files(testing_paths.testing_dir, "luacov")
+      print("Cleaning done!")
    end
 
    execute_bool("mkdir " .. testing_paths.testing_cache)
-   execute_bool("mkdir /tmp/luarocks_testing")
+   execute_bool("mkdir /tmp/luarocks_testing") -- testing_paths.luarocks_tmp
+
 --- CONFIG FILES
 -- testing_config.lua and testing_config_show_downloads.lua
    local config_content = ([[rocks_trees = {

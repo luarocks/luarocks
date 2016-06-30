@@ -1,6 +1,9 @@
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
+test_env.unload_luarocks()
+local build = require("luarocks.build")
+
 local extra_rocks = {
    "/lmathx-20120430.51-1.src.rock",
    "/lmathx-20120430.51-1.rockspec",

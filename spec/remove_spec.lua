@@ -1,6 +1,9 @@
 local test_env = require("new_test/test_environment")
 local lfs = require("lfs")
 
+test_env.unload_luarocks()
+local remove = require("luarocks.remove")
+
 local extra_rocks = {
    "/abelhas-1.0-1.rockspec",
    "/lualogging-1.3.0-1.src.rock",
