@@ -11,7 +11,7 @@ local function help()
    USAGE -Xhelper <arguments>
       lua=<version> (mandatory) type your full version of Lua (e.g. --lua 5.2.4)
       OR
-      luajit=<version> (mandatory) type your full version of LuaJIT (e.g. --lua 5.2.4)
+      luajit=<version> (mandatory) type your full version of LuaJIT (e.g. --luajit 2.0.3)
 
       env=<type>   (default:"minimal") type what kind of environment to use ["minimal", "full"]
       clean  remove existing testing environment
@@ -30,15 +30,19 @@ function test_env.set_args()
    local args_position
    
    for i=1, #arg do
-      if arg[i]:find("-Xhelper") and arg[i+1]:find("lua=") and not arg[i+1]:find("luajit=") or
-         arg[i]:find("-Xhelper") and not arg[i+1]:find("lua=") and arg[i+1]:find("luajit=") then
+      if arg[i]:find("-Xhelper") and arg[i+1]:find("lua=") and not arg[i+1]:find("luajit=") then
+         test_env.LUA_V = arg[args_position]:gsub("(.*)lua=([^%,]+)(.*)","%2")
+         args_position = i+1
+         break  
+      elseif arg[i]:find("-Xhelper") and not arg[i+1]:find("lua=") and arg[i+1]:find("luajit=") then
+         test_env.LUA_V = arg[args_position]:gsub("(.*)luajit=([^%,]+)(.*)","%2")
          args_position = i+1
          break  
       elseif arg[i]:find("-Xhelper") and arg[i+1]:find("lua=") and arg[i+1]:find("luajit=") then
-         print("Please specify just Lua or LuaJIT version for testing in format 'lua=X.X.X' or 'luajit=X.X', for -Xhelper flag")
+         print("Please specify just Lua or LuaJIT version for testing in format 'lua=X.X.X' or 'luajit=X.X.X', for -Xhelper flag")
          os.exit(1)
       elseif arg[i]:find("-Xhelper") and not arg[i+1]:find("lua=") and not arg[i+1]:find("luajit=") then
-         print("Please add mandatory argument - version of Lua or LuaJIT in format 'lua=X.X.X' or 'luajit=X.X', for -Xhelper flag")
+         print("Please add mandatory argument - version of Lua or LuaJIT in format 'lua=X.X.X' or 'luajit=X.X.X', for -Xhelper flag")
          os.exit(1)
       end
    end
@@ -47,9 +51,8 @@ function test_env.set_args()
       help()
    end
 
-   -- if at least Lua version argument was found on input start to parse other arguments to env. variables
+   -- if at least Lua/LuaJIT version argument was found on input start to parse other arguments to env. variables
    test_env.TYPE_TEST_ENV = "minimal"
-   test_env.LUA_V = arg[args_position]:gsub("(.*)lua=([^%,]+)(.*)","%2")
 
    if arg[args_position]:find("env=") then
       test_env.TYPE_TEST_ENV = arg[args_position]:gsub("(.*)env=([^%,]+)(.*)","%2")
