@@ -6,8 +6,10 @@ local function help()
    print("LuaRocks test-suite\n\n"..
          [[
    INFORMATION
-      Lua installed and added to path needed. 
-
+      New test-suite for LuaRocks project, using unit testing framework Busted.
+   REQUIREMENTS
+      Tests require to have Lua installed and added to PATH. Be sure sshd is runnig on your system, or
+      use '--exclude-tags=ssh', to not execute tests which require sshd.
    USAGE -Xhelper <arguments>
       lua=<version> (mandatory) type your full version of Lua (e.g. --lua 5.2.4)
       OR
@@ -16,7 +18,7 @@ local function help()
       env=<type>   (default:"minimal") type what kind of environment to use ["minimal", "full"]
       clean  remove existing testing environment
       travis  add just if running on TravisCI
-      os=<version>    type your OS ["linux", "os x", "windows"]
+      os=<version>    type your OS ["linux", "osx", "windows"]
          ]]);
       os.exit(1)
 end
@@ -31,12 +33,12 @@ function test_env.set_args()
    
    for i=1, #arg do
       if arg[i]:find("-Xhelper") and arg[i+1]:find("lua=") and not arg[i+1]:find("luajit=") then
-         test_env.LUA_V = arg[args_position]:gsub("(.*)lua=([^%,]+)(.*)","%2")
          args_position = i+1
+         test_env.LUA_V = arg[args_position]:gsub("(.*)lua=([^%,]+)(.*)","%2")
          break  
       elseif arg[i]:find("-Xhelper") and not arg[i+1]:find("lua=") and arg[i+1]:find("luajit=") then
-         test_env.LUA_V = arg[args_position]:gsub("(.*)luajit=([^%,]+)(.*)","%2")
          args_position = i+1
+         test_env.LUAJIT_V = arg[args_position]:gsub("(.*)luajit=([^%,]+)(.*)","%2")
          break  
       elseif arg[i]:find("-Xhelper") and arg[i+1]:find("lua=") and arg[i+1]:find("luajit=") then
          print("Please specify just Lua or LuaJIT version for testing in format 'lua=X.X.X' or 'luajit=X.X.X', for -Xhelper flag")
@@ -83,7 +85,7 @@ end
 
 --- Remove directory recursively
 -- @param path string: directory path to delete
-function test_env.remove_dir(path)
+function test_env.remove_dir(path, pattern)
    if lfs.attributes(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
@@ -100,6 +102,22 @@ function test_env.remove_dir(path)
       end
    end
    os.remove(path)
+end
+
+function test_env.remove_dir_pattern(path, pattern)
+   if lfs.attributes(path) then
+      for file in lfs.dir(path) do
+         if file ~= "." and file ~= ".." then
+            local full_path = path..'/'..file
+            local attr = lfs.attributes(full_path)
+
+            if attr.mode == "directory" and file:find(pattern) then
+               test_env.remove_dir(full_path)
+               os.remove(full_path)
+            end
+         end
+      end
+   end
 end
 
 --- Remove files based on filename
@@ -217,8 +235,12 @@ end
 
 local function create_env(testing_paths)
    local luaversion_short = _VERSION:gsub("Lua ", "")
+   
+   if test_env.LUAJIT_V then
+      luaversion_short="5.1"
+   end
+   
    local env_variables = {}
-
    env_variables.LUA_VERSION = luaversion_short
    env_variables.LUAROCKS_CONFIG = testing_paths.testing_dir .. "/testing_config.lua"
    env_variables.LUA_PATH = testing_paths.testing_tree .. "/share/lua/" .. luaversion_short .. "/?.lua;"
@@ -260,9 +282,9 @@ local function run_luarocks(testing_paths, env_variables)
 
    local run = {}
 
-   local cov_str = testing_paths.lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir .. "/luacov.config')\" " .. testing_paths.src_dir
+   local cov_str = testing_paths.lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir .. "/luacov.config')\" "
 
-   local luarocks_cmd = cov_str .. "/bin/luarocks "
+   local luarocks_cmd = cov_str .. testing_paths.src_dir .. "/bin/luarocks "
    run.luarocks = make_command_function(execute_output, luarocks_cmd, true)
    run.luarocks_bool = make_command_function(execute_bool, luarocks_cmd, true)
    run.luarocks_noprint = make_command_function(execute_bool, luarocks_cmd, false)
@@ -271,8 +293,7 @@ local function run_luarocks(testing_paths, env_variables)
    run.luarocks_nocov = make_command_function(execute_bool, luarocks_nocov_cmd, true)
    run.luarocks_noprint_nocov = make_command_function(execute_bool, luarocks_nocov_cmd, false)
    
-
-   local luarocks_admin_cmd = cov_str .. "/bin/luarocks-admin "
+   local luarocks_admin_cmd = cov_str .. testing_paths.src_dir .. "/bin/luarocks-admin "
    run.luarocks_admin = make_command_function(execute_output, luarocks_admin_cmd, true)
    run.luarocks_admin_bool = make_command_function(execute_bool, luarocks_admin_cmd, true)
 
@@ -334,15 +355,24 @@ local function create_paths(luaversion_full)
 
    if test_env.TRAVIS then
       testing_paths.luadir = lfs.currentdir() .. "/lua_install"
-   else
-      if lfs.attributes("/usr/bin/lua") then 
-         testing_paths.luadir = lfs.currentdir() .. "/usr"
+   elseif test_env.LUA_V then
+      if lfs.attributes("/usr/bin/lua") then
+         testing_paths.luadir = "/usr"
+         testing_paths.lua = testing_paths.luadir .. "/bin/lua"
       elseif lfs.attributes("/usr/local/bin/lua") then
          testing_paths.luadir = "/usr/local"
+         testing_paths.lua = testing_paths.luadir .. "/bin/lua"
+      end
+   elseif test_env.LUAJIT_V then
+      if lfs.attributes("/usr/bin/luajit") then
+         testing_paths.luadir = "/usr"
+         testing_paths.lua = testing_paths.luadir .. "/bin/luajit"
+      elseif lfs.attributes("/usr/local/bin/luajit") then
+         testing_paths.luadir = "/usr/local"
+         testing_paths.lua = testing_paths.luadir .. "/bin/luajit"
       end
    end
 
-   testing_paths.lua = testing_paths.luadir .. "/bin/lua"
    testing_paths.luarocks_tmp = "/tmp/luarocks_testing" --windows?
 
    testing_paths.luarocks_dir = lfs.currentdir()
@@ -383,7 +413,7 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
          execute_bool("ssh-keyscan localhost >> ~/.ssh/known_hosts")
       end
 
-      luaversion_full = luaversion_full or test_env.LUA_V
+      luaversion_full = luaversion_full or test_env.LUA_V or test_env.LUAJIT_V
 
       test_env.main()
 
@@ -434,19 +464,15 @@ end
 ---
 -- MAIN 
 function test_env.main(luaversion_full, env_type, env_clean)
-   luaversion_full = luaversion_full or test_env.LUA_V
+   luaversion_full = luaversion_full or test_env.LUA_V or test_env.LUAJIT_V
    local testing_paths = create_paths(luaversion_full)
 
    env_clean = env_clean or test_env.TEST_ENV_CLEAN
    if env_clean then
       print("Cleaning testing directory...")
       test_env.remove_dir(testing_paths.luarocks_tmp)
-      test_env.remove_dir(testing_paths.testing_tree)
-      test_env.remove_dir(testing_paths.testing_tree_copy)
-      test_env.remove_dir(testing_paths.testing_cache)
-      test_env.remove_dir(testing_paths.testing_server)
-      test_env.remove_dir(testing_paths.testing_sys_tree)
-      test_env.remove_dir(testing_paths.testing_sys_tree_copy)
+      test_env.remove_dir_pattern(testing_paths.testing_dir, "testing_")
+      test_env.remove_dir_pattern(testing_paths.testing_dir, "testing-")
       test_env.remove_files(testing_paths.testing_dir, "testing_")
       test_env.remove_files(testing_paths.testing_dir, "luacov")
       print("Cleaning done!")
@@ -535,7 +561,13 @@ upload_servers = {
 
    -- Configure LuaRocks testing environment
    lfs.chdir(testing_paths.luarocks_dir)
-   local configure_cmd = "./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix .. " && make clean"
+   local configure_cmd = "./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix 
+
+   if test_env.LUAJIT_V then
+      configure_cmd = configure_cmd .. " --lua-suffix=jit --with-lua-include=" .. testing_paths.luadir .. "/include/luajit-2.0" 
+   end
+   configure_cmd = configure_cmd .. " && make clean"
+   
    if not execute_bool(configure_cmd, false, temp_env_variables) then
       os.exit(1)
    end
