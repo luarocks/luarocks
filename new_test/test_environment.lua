@@ -570,9 +570,9 @@ upload_servers = {
    lfs.chdir(testing_paths.luarocks_dir)
    local configure_cmd = "./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix 
 
-   if test_env.LUAJIT_V then
-      configure_cmd = configure_cmd .. " --with-lua-include=" .. testing_paths.luadir .. "/include/luajit-2.0" 
-   end
+   -- if test_env.LUAJIT_V then
+      -- configure_cmd = configure_cmd .. " --with-lua-include=" .. testing_paths.luadir .. "/include/luajit-2.0" 
+   -- end
    configure_cmd = configure_cmd .. " && make clean"
    
    if not execute_bool(configure_cmd, false, temp_env_variables) then
