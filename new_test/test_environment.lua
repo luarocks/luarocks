@@ -23,6 +23,54 @@ local function help()
       os.exit(1)
 end
 
+--- Helper function for execute_bool and execute_output
+-- @param command string: command to execute
+-- @param print_command boolean: print command if 'true'
+-- @param env_variables table: table of environment variables to export {FOO="bar", BAR="foo"}
+-- @return final_command string: concatenated command to execution
+local function execute_helper(command, print_command, env_variables)
+   local final_command = ""
+
+   if print_command then 
+      print("\n[EXECUTING]: " .. command)
+   end
+
+   if env_variables then
+      final_command = "export "
+      for k,v in pairs(env_variables) do
+         final_command = final_command .. k .. "='" .. v .. "' "
+      end
+      -- remove last space and add ';' to separate exporting variables from command
+      final_command = final_command:sub(1, -2) .. "; "
+   end
+
+   final_command = final_command .. command
+
+   return final_command
+end
+
+--- Execute command and returns true/false
+-- In Lua5.1 os.execute returns numeric value, but in Lua5.2+ returns boolean
+-- @return true/false boolean: status of the command execution
+local function execute_bool(command, print_command, env_variables)
+   command = execute_helper(command, print_command, env_variables)
+   
+   local ok = os.execute(command)
+   return ok == true or ok == 0
+end
+
+--- Execute command and returns output of command
+-- @return output string: output the command execution
+local function execute_output(command, print_command, env_variables)
+   command = execute_helper(command, print_command, env_variables)
+
+   local file = assert(io.popen(command))
+   local output = file:read('*all')
+   file:close()
+   return output:gsub("\n","") -- output adding new line, need to be removed
+end
+
+
 --- Set all arguments from input into global variables
 function test_env.set_args()
    if arg[1] == nil then
@@ -71,9 +119,9 @@ function test_env.set_args()
 
    if not test_env.TEST_TARGET_OS then
       print("[OS CHECK]")
-      if io.popen("sw_vers") then 
+      if execute_bool("sw_vers") then 
          test_env.TEST_TARGET_OS = "osx"
-      elseif io.popen("uname -s") then
+      elseif execute_bool("uname -s") then
          test_env.TEST_TARGET_OS = "linux"
       else
          test_env.TEST_TARGET_OS = "windows"
@@ -139,52 +187,7 @@ function test_env.remove_files(path, pattern)
    return result_check
 end
 
---- Helper function for execute_bool and execute_output
--- @param command string: command to execute
--- @param print_command boolean: print command if 'true'
--- @param env_variables table: table of environment variables to export {FOO="bar", BAR="foo"}
--- @return final_command string: concatenated command to execution
-local function execute_helper(command, print_command, env_variables)
-   local final_command = ""
 
-   if print_command then 
-      print("\n[EXECUTING]: " .. command)
-   end
-
-   if env_variables then
-      final_command = "export "
-      for k,v in pairs(env_variables) do
-         final_command = final_command .. k .. "='" .. v .. "' "
-      end
-      -- remove last space and add ';' to separate exporting variables from command
-      final_command = final_command:sub(1, -2) .. "; "
-   end
-
-   final_command = final_command .. command
-
-   return final_command
-end
-
---- Execute command and returns true/false
--- In Lua5.1 os.execute returns numeric value, but in Lua5.2+ returns boolean
--- @return true/false boolean: status of the command execution
-local function execute_bool(command, print_command, env_variables)
-   command = execute_helper(command, print_command, env_variables)
-   
-   local ok = os.execute(command)
-   return ok == true or ok == 0
-end
-
---- Execute command and returns output of command
--- @return output string: output the command execution
-local function execute_output(command, print_command, env_variables)
-   command = execute_helper(command, print_command, env_variables)
-
-   local file = assert(io.popen(command))
-   local output = file:read('*all')
-   file:close()
-   return output:gsub("\n","") -- output adding new line, need to be removed
-end
 
 --- Function for downloading rocks and rockspecs
 -- @param rocks table: table with full name of rocks/rockspecs to download
