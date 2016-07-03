@@ -30,8 +30,8 @@ before_install:
 
   - pip install hererocks
   - hererocks lua_install -r^ --$LUA
+  - cd lua_install/bin
   - ls
-  - tree
   - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
 
 install:
