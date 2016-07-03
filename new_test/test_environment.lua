@@ -71,9 +71,9 @@ function test_env.set_args()
 
    if not test_env.TEST_TARGET_OS then
       print("[OS CHECK]")
-      if os.execute("sw_vers") then 
+      if io.popen("sw_vers") then 
          test_env.TEST_TARGET_OS = "osx"
-      elseif os.execute("uname -s") then
+      elseif io.popen("uname -s") then
          test_env.TEST_TARGET_OS = "linux"
       else
          test_env.TEST_TARGET_OS = "windows"
