@@ -18,15 +18,18 @@ expose("LuaRocks config tests #blackbox #b_config", function()
    end)
    it("LuaRocks config include dir", function()
       local output = run.luarocks("config --lua-incdir")
-      assert.are.same(output, site_config.LUA_INCDIR) --!not sure!
+      assert.are.same(output, site_config.LUA_INCDIR)
    end)
    it("LuaRocks config library dir", function()
       local output = run.luarocks("config --lua-libdir")
-      assert.are.same(output, site_config.LUA_LIBDIR) --!not sure!
+      assert.are.same(output, site_config.LUA_LIBDIR)
    end)
    it("LuaRocks config lua version", function()
       local output = run.luarocks("config --lua-ver")
       local lua_version = _VERSION:gsub("Lua ", "")
+      if test_env.LUAJIT_V then
+         lua_version = "5.1"
+      end
       assert.are.same(output, lua_version)
    end)
    it("LuaRocks config rock trees", function()
