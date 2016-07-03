@@ -355,9 +355,14 @@ local function create_paths(luaversion_full)
 
    if test_env.TRAVIS then
       testing_paths.luadir = lfs.currentdir() .. "/lua_install"
+      if test_env.LUA_V then
+         testing_paths.lua = testing_paths.luadir .. "/bin/lua"
+      elseif test_env.LUAJIT_V then
+         testing_paths.lua = testing_paths.luadir .. "/bin/luajit"
+      end
    end
 
-   if test_env.LUA_V then
+   if test_env.LUA_V and not test_env.TRAVIS then
       if lfs.attributes("/usr/bin/lua") then
          testing_paths.luadir = "/usr"
          testing_paths.lua = testing_paths.luadir .. "/bin/lua"
@@ -365,7 +370,7 @@ local function create_paths(luaversion_full)
          testing_paths.luadir = "/usr/local"
          testing_paths.lua = testing_paths.luadir .. "/bin/lua"
       end
-   elseif test_env.LUAJIT_V then
+   elseif test_env.LUAJIT_V and not test_env.TRAVIS then
       if lfs.attributes("/usr/bin/luajit") then
          testing_paths.luadir = "/usr"
          testing_paths.lua = testing_paths.luadir .. "/bin/luajit"
@@ -400,6 +405,7 @@ function test_env.unload_luarocks()
       end
    end
 end
+
 
 function test_env.setup_specs(extra_rocks, luaversion_full)
    -- if global variable about successful creation of testing environment doesn't exists, build environment
