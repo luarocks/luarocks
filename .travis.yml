@@ -30,6 +30,8 @@ before_install:
 
   - pip install hererocks
   - hererocks lua_install -r^ --$LUA
+  - ls
+  - tree
   - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
 
 install:
@@ -38,8 +40,8 @@ install:
   - luarocks install luacov-coveralls
   
 script:
-  - busted -Xhelper travis,$LUA -t blackbox --verbose
-  - busted -Xhelper travis,$LUA,env=full -t blackbox --verbose
+  - busted -Xhelper travis,$LUA --verbose
+  - busted -Xhelper travis,$LUA,env=full --verbose
 
 after_success:
   - luacov-coveralls -c $TRAVIS_BUILD_DIR/new_test/luacov.config --exclude $TRAVIS_BUILD_DIR/new_test/
