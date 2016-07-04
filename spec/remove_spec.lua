@@ -11,7 +11,8 @@ local extra_rocks = {
    "/luasocket-3.0rc1-1.rockspec"
 }
 
-expose("LuaRocks remove tests #blackbox #b_remove", function()   
+expose("LuaRocks remove tests #blackbox #b_remove", function()
+
    before_each(function()
       test_env.setup_specs(extra_rocks)
       testing_paths = test_env.testing_paths
@@ -77,6 +78,7 @@ expose("LuaRocks remove tests #blackbox #b_remove", function()
    it("LuaRocks-admin remove #ssh", function()
       assert.is_true(run.luarocks_admin_bool("--server=testing remove luasocket-3.0rc1-1.src.rock"))
    end)
+   
    it("LuaRocks-admin remove missing", function()
       assert.is_false(run.luarocks_admin_bool("--server=testing remove"))
    end)

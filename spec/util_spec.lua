@@ -42,6 +42,7 @@ expose("Basic tests #blackbox #b_util", function()
    it("LuaRocks timeout", function()
       assert.is_true(run.luarocks_bool("--timeout=10"))
    end)
+   
    it("LuaRocks timeout invalid", function()
       assert.is_false(run.luarocks_bool("--timeout=abc"))
    end)

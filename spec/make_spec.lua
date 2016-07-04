@@ -13,6 +13,7 @@ local extra_rocks = {
 }
 
 expose("LuaRocks make tests #blackbox #b_make", function()
+
    before_each(function()
       test_env.setup_specs(extra_rocks)
       run = test_env.run
@@ -24,7 +25,6 @@ expose("LuaRocks make tests #blackbox #b_make", function()
       assert.is_false(run.luarocks_bool("make"))
       lfs.chdir(testing_paths.luarocks_dir)
    end)
-
 
    it("LuaRocks make with rockspec", function()
       -- make luasocket
@@ -42,6 +42,7 @@ expose("LuaRocks make tests #blackbox #b_make", function()
       test_env.remove_dir("luasocket-3.0rc1-1")
       assert.is_true(os.remove("luasocket-3.0rc1-1.src.rock"))
    end)
+
    describe("LuaRocks making rockspecs (using lxsh)", function()
       --download lxsh and unpack it
       before_each(function()
@@ -64,6 +65,7 @@ expose("LuaRocks make tests #blackbox #b_make", function()
          assert.is_true(run.luarocks_bool("show lxsh"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh"))
       end)
+
       it("LuaRocks make unnamed rockspec", function()
          os.execute("cp lxsh-0.8.6-2.rockspec rockspec") --rewrite with lfs
          assert.is_true(run.luarocks_bool("make"))
@@ -71,6 +73,7 @@ expose("LuaRocks make tests #blackbox #b_make", function()
          assert.is_true(run.luarocks_bool("show lxsh"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh"))
       end)
+      
       it("LuaRocks make ambiguous rockspec", function()
          assert.is.truthy(os.rename("lxsh-0.8.6-2.rockspec", "lxsh2-0.8.6-2.rockspec"))
          assert.is_false(run.luarocks_bool("make"))
@@ -78,6 +81,7 @@ expose("LuaRocks make tests #blackbox #b_make", function()
          assert.is_false(run.luarocks_bool("show lxsh"))
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh"))
       end)
+      
       it("LuaRocks make ambiguous unnamed rockspec", function()
          assert.is.truthy(os.rename("lxsh-0.8.6-2.rockspec", "1_rockspec"))
          os.execute("cp 1_rockspec 2_rockspec") --rewrite with lfs
@@ -86,6 +90,7 @@ expose("LuaRocks make tests #blackbox #b_make", function()
          assert.is_false(run.luarocks_bool("show lxsh"))
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh"))
       end)
+      
       it("LuaRocks make pack binary rock", function()
          assert.is_true(run.luarocks_bool("make --deps-mode=none --pack-binary-rock"))
          assert.is.truthy(lfs.attributes("lxsh-0.8.6-2.all.rock"))

@@ -9,6 +9,7 @@ local extra_rocks = {
 }
 
 expose("LuaRocks download tests #blackbox #b_download", function()
+
    before_each(function()
       test_env.setup_specs(extra_rocks)
       run = test_env.run
@@ -17,6 +18,7 @@ expose("LuaRocks download tests #blackbox #b_download", function()
    it("LuaRocks download with no flags/arguments", function()
       assert.is_false(run.luarocks_bool("download"))
    end)
+
    it("LuaRocks download invalid", function()
       assert.is_false(run.luarocks_bool("download invalid"))
    end)
@@ -26,6 +28,7 @@ expose("LuaRocks download tests #blackbox #b_download", function()
       assert.is.truthy(lfs.attributes("validate-args-1.5.4-1.rockspec"))
       test_env.remove_files(lfs.currentdir(), "validate--args--")
    end)
+   
    it("LuaRocks download rockspec version", function()
       assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
       assert.is.truthy(lfs.attributes("validate-args-1.5.4-1.rockspec"))

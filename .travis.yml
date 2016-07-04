@@ -20,7 +20,24 @@ matrix:
     - os: osx
       language: generic
       env:
+        - LUA="lua=5.1"
+    - os: osx
+      language: generic
+      env:
         - LUA="lua=5.2"
+    - os: osx
+      language: generic
+      env:
+        - LUA="lua=5.3"
+    - os: osx
+      language: generic
+      env:
+        - LUA="luajit=2.0"
+    - os: osx
+      language: generic
+      env:
+        - LUA="luajit=2.1"
+
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi

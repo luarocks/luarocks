@@ -230,7 +230,7 @@ local function hash_environment(path, testing_os)
    if testing_os == "osx" then
       hash = execute_output("find " .. path .. " -type f -exec stat -f \"%z %N\" {} \\; | md5")
    end
-   -- if testing_os == "windows" then
+   --TODO if testing_os == "windows" then
    --    hash = execute_output("find . -printf \"%s %p\n\" | md5sum")
    -- end
    return hash
@@ -405,7 +405,7 @@ function test_env.unload_luarocks()
    end
 end
 
-
+--- Function for initially setup of environment, variables, md5sums for spec files
 function test_env.setup_specs(extra_rocks, luaversion_full)
    -- if global variable about successful creation of testing environment doesn't exists, build environment
    if not test_env.setup_done then
@@ -422,7 +422,7 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
 
       luaversion_full = luaversion_full or test_env.LUA_V or test_env.LUAJIT_V
 
-      test_env.main()
+      test_env.Main function to create config files and testing environment()   -- 
 
       -- Set paths, env_vars and functions for specs
       test_env.testing_paths = create_paths(luaversion_full)
@@ -469,7 +469,7 @@ function test_env.need_luasocket(luarocks_nocov, testing_cache, platform)
 end
 
 ---
--- MAIN 
+-- Main function to create config files and testing environment 
 function test_env.main(luaversion_full, env_type, env_clean)
    luaversion_full = luaversion_full or test_env.LUA_V or test_env.LUAJIT_V
    local testing_paths = create_paths(luaversion_full)
@@ -569,10 +569,6 @@ upload_servers = {
    -- Configure LuaRocks testing environment
    lfs.chdir(testing_paths.luarocks_dir)
    local configure_cmd = "./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix 
-
-   -- if test_env.LUAJIT_V then
-      -- configure_cmd = configure_cmd .. " --with-lua-include=" .. testing_paths.luadir .. "/include/luajit-2.0" 
-   -- end
    configure_cmd = configure_cmd .. " && make clean"
    
    if not execute_bool(configure_cmd, false, temp_env_variables) then

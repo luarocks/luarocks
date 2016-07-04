@@ -10,7 +10,8 @@ local extra_rocks = {
 	"/luasocket-3.0rc1-1.rockspec"
 }
 
-expose("LuaRocks pack tests #blackbox #b_pack", function()   
+expose("LuaRocks pack tests #blackbox #b_pack", function()
+
    before_each(function()
       test_env.setup_specs(extra_rocks)
       testing_paths = test_env.testing_paths
@@ -22,6 +23,7 @@ expose("LuaRocks pack tests #blackbox #b_pack", function()
       assert.is_true(run.luarocks_bool("pack luacov"))
       assert.is_true(test_env.remove_files(lfs.currentdir(), "luacov-"))
    end)
+   
    it("LuaRocks pack src", function()
       assert.is_true(run.luarocks_bool("install luasec"))
       assert.is_true(run.luarocks_bool("download --rockspec luasocket"))
