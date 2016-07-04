@@ -422,7 +422,7 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
 
       luaversion_full = luaversion_full or test_env.LUA_V or test_env.LUAJIT_V
 
-      test_env.Main function to create config files and testing environment()   -- 
+      test_env.main()
 
       -- Set paths, env_vars and functions for specs
       test_env.testing_paths = create_paths(luaversion_full)
