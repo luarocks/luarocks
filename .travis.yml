@@ -1,13 +1,69 @@
-language: c
+language: python
 
-compiler: gcc
+matrix:
+  include:
+    - os: linux
+      env:
+        - LUA="lua=5.1"
+    - os: linux
+      env:
+        - LUA="lua=5.2"
+    - os: linux
+      env:
+        - LUA="lua=5.3"
+    - os: linux
+      env:
+        - LUA="luajit=2.0"
+    - os: linux
+      env:
+        - LUA="luajit=2.1"
+    - os: osx
+      language: generic
+      env:
+        - LUA="lua=5.1"
+    - os: osx
+      language: generic
+      env:
+        - LUA="lua=5.2"
+    - os: osx
+      language: generic
+      env:
+        - LUA="lua=5.3"
+    - os: osx
+      language: generic
+      env:
+        - LUA="luajit=2.0"
+    - os: osx
+      language: generic
+      env:
+        - LUA="luajit=2.1"
 
-sudo: false
 
-env:
-  matrix:
-    - LUA_VER=5.1.5
-    - LUA_VER=5.2.4
-    - LUA_VER=5.3.1
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install python3; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then virtualenv venv -p python3; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source venv/bin/activate; fi
 
-script: cd test && ./testing.sh --travis --lua $LUA_VER
+  - pip install hererocks
+  - hererocks lua_install -r^ --$LUA
+  - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
+
+install:
+  - luarocks install busted
+  - luarocks install luacov
+  - luarocks install luacov-coveralls
+  
+script:
+  - busted -Xhelper travis,$LUA --verbose
+  - busted -Xhelper travis,$LUA,env=full --verbose
+
+after_success:
+  - luacov-coveralls -c $TRAVIS_BUILD_DIR/new_test/luacov.config --exclude $TRAVIS_BUILD_DIR/new_test/
+  - $PWD/lua_install/bin/luacov -c $TRAVIS_BUILD_DIR/new_test/luacov.config
+  - grep "Summary" -B1 -A1000 $TRAVIS_BUILD_DIR/new_test/luacov.report.out
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
