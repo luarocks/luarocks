@@ -70,7 +70,6 @@ local function execute_output(command, print_command, env_variables)
    return output:gsub("\n","") -- output adding new line, need to be removed
 end
 
-
 --- Set all arguments from input into global variables
 function test_env.set_args()
    if arg[1] == nil then
@@ -133,7 +132,7 @@ end
 
 --- Remove directory recursively
 -- @param path string: directory path to delete
-function test_env.remove_dir(path, pattern)
+function test_env.remove_dir(path)
    if lfs.attributes(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
@@ -152,6 +151,9 @@ function test_env.remove_dir(path, pattern)
    os.remove(path)
 end
 
+--- Remove directory recursively
+-- @param path string: directory path to delete
+-- @param pattern string: pattern in directories
 function test_env.remove_dir_pattern(path, pattern)
    if lfs.attributes(path) then
       for file in lfs.dir(path) do
@@ -171,6 +173,7 @@ end
 --- Remove files based on filename
 -- @param path string: directory where to delete files
 -- @param pattern string: pattern in filenames
+-- @return result_check boolean: true if one or more files deleted
 function test_env.remove_files(path, pattern)
    local result_check = false
    if lfs.attributes(path) then
@@ -188,10 +191,10 @@ function test_env.remove_files(path, pattern)
 end
 
 
-
 --- Function for downloading rocks and rockspecs
 -- @param rocks table: table with full name of rocks/rockspecs to download
 -- @param save_path string: path to directory, where to download rocks/rockspecs
+-- @return make_manifest boolean: true if new rocks downloaded
 local function download_rocks(rocks, save_path)
    local luarocks_repo = "https://luarocks.org"   
    local make_manifest = false
@@ -216,26 +219,29 @@ local function create_config(config_path, config_content)
    file:close()
 end
 
---- Create md5checksum of directory structure recursively
--- based on filename and size
--- @param path string: path to directory for generate mg5checksum
+--- Create md5sum of directory structure recursively, based on filename and size
+-- @param path string: path to directory for generate md5sum
 -- @param testing_os string(optional): version of PC OS
+-- @return md5sum string: md5sum of directory
 local function hash_environment(path, testing_os)
-   local hash = ""
+   local md5sum = ""
    testing_os = testing_os or test_env.TEST_TARGET_OS
 
    if testing_os == "linux" then
-      hash = execute_output("find . -printf \"%s %p\n\" | md5sum")
+      md5sum = execute_output("find " .. path .. " -printf \"%s %p\n\" | md5sum")
    end
    if testing_os == "osx" then
-      hash = execute_output("find " .. path .. " -type f -exec stat -f \"%z %N\" {} \\; | md5")
+      md5sum = execute_output("find " .. path .. " -type f -exec stat -f \"%z %N\" {} \\; | md5")
    end
    --TODO if testing_os == "windows" then
-   --    hash = execute_output("find . -printf \"%s %p\n\" | md5sum")
+   --    md5sum = execute_output("find . -printf \"%s %p\n\" | md5sum")
    -- end
-   return hash
+   return md5sum
 end
 
+--- Create environment variables needed for tests
+-- @param testing_paths table: table with paths to testing directory
+-- @return env_variables table: table with created environment variables
 local function create_env(testing_paths)
    local luaversion_short = _VERSION:gsub("Lua ", "")
    
@@ -258,6 +264,9 @@ local function create_env(testing_paths)
    return env_variables
 end
 
+--- Create md5sums of origin system and system-copy testing directory
+-- @param testing_paths table: table with paths to testing directory
+-- @return md5sums table: table of md5sums of system and system-copy testing directory
 local function create_md5sums(testing_paths)
    local md5sums = {}
    md5sums.testing_tree_copy_md5 = hash_environment(testing_paths.testing_tree_copy)
@@ -316,8 +325,8 @@ local function build_environment(env_rocks, testing_paths, env_variables)
    test_env.remove_dir(testing_paths.testing_tree_copy)
    test_env.remove_dir(testing_paths.testing_sys_tree_copy)
 
-   execute_bool("mkdir " .. testing_paths.testing_tree)
-   execute_bool("mkdir " .. testing_paths.testing_sys_tree)
+   lfs.mkdir(testing_paths.testing_tree)
+   lfs.mkdir(testing_paths.testing_sys_tree)
 
    local run = run_luarocks(testing_paths, env_variables)
    run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
@@ -485,8 +494,8 @@ function test_env.main(luaversion_full, env_type, env_clean)
       print("Cleaning done!")
    end
 
-   execute_bool("mkdir " .. testing_paths.testing_cache)
-   execute_bool("mkdir /tmp/luarocks_testing") -- testing_paths.luarocks_tmp
+   lfs.mkdir(testing_paths.testing_cache)
+   lfs.mkdir(testing_paths.luarocks_tmp)
 
 --- CONFIG FILES
 -- testing_config.lua and testing_config_show_downloads.lua
@@ -567,7 +576,7 @@ upload_servers = {
    local temp_env_variables = {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/testing_config.lua",LUA_PATH="",LUA_CPATH=""}
 
    -- Configure LuaRocks testing environment
-   lfs.chdir(testing_paths.luarocks_dir)
+   -- lfs.chdir(testing_paths.luarocks_dir)
    local configure_cmd = "./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix 
    configure_cmd = configure_cmd .. " && make clean"
    
@@ -601,10 +610,10 @@ upload_servers = {
       table.insert(env_rocks, "luabitop")
    end
 
-   table.insert(env_rocks, "luacov")   -- luacov is needed for minimal or full environments
+   table.insert(env_rocks, "luacov")   -- luacov is needed for minimal or full environment
    
    -- Download rocks needed for LuaRocks testing environment
-   execute_bool("mkdir " .. testing_paths.testing_server)
+   lfs.mkdir(testing_paths.testing_server)
    download_rocks(rocks, testing_paths.testing_server)
    
    build_environment(env_rocks, testing_paths, temp_env_variables)
