@@ -1,4 +1,4 @@
-local test_env = require("new_test/test_environment")
+local test_env = require("test/test_environment")
 local lfs = require("lfs")
 
 test_env.unload_luarocks()
@@ -21,7 +21,7 @@ expose("LuaRocks make tests #blackbox #b_make", function()
    end)
 
    it("LuaRocks make with no flags/arguments", function()
-      lfs.chdir("new_test")
+      lfs.chdir("test")
       assert.is_false(run.luarocks_bool("make"))
       lfs.chdir(testing_paths.luarocks_dir)
    end)

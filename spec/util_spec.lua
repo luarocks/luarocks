@@ -1,4 +1,4 @@
-local test_env = require("new_test/test_environment")
+local test_env = require("test/test_environment")
 local lfs = require("lfs")
 
 expose("Basic tests #blackbox #b_util", function()

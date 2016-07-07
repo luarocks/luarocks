@@ -12,14 +12,18 @@ Test suite for LuaRocks project with Busted unit testing framework(http://olivin
 
 
 ##Usage
-Running of tests is based on basic Busted usage. *-Xhelper* flag is mandatory for inserting arguments into testing (primary black-box). Flag *--tags=* or *-t* is mandatory for specifying which tests will run. Mandatory *-Xhelper* argument is always version of Lua. Start tests inside LuaRocks folder or specify with *-C* flag.
+Running of tests is based on basic Busted usage. *-Xhelper* flag is mandatory for inserting arguments into testing (primary black-box). Flag *--tags=* or *-t* is mandatory for specifying which tests will run. Mandatory *-Xhelper* flag always needs version of Lua or LuaJIT (e.g. *lua=5.2.4* or *luajit=2.0.3*). Start tests inside LuaRocks folder or specify with *-C* flag.
 
 **Arguments for Busted helper script**
 
 ```
-lua=<version>, !mandatory! type your full version of Lua (e.g. --lua 5.2.4)
+lua=<version>, !mandatory! type your full version of Lua (e.g. lua=5.2.4)
+OR
+luajit=<version>, !mandatory! type your full version of LuaJIT (e.g. luajit=5.2.4)
+
 env=<type>,	(default:"minimal") type what kind of environment to use ["minimal", "full"]
 clean,	remove existing testing environment
+travis,  add just if running on TravisCI
 os=<version>,    type your OS ["linux", "os x", "windows"]
 ```
 ---------------------------------------------------------------------------------------------
@@ -29,13 +33,13 @@ os=<version>,    type your OS ["linux", "os x", "windows"]
 
 **blackbox** - run all blackbox tests
 
+**ssh** - run all tests which require ssh
+
 **w**\_*name-of-command* - whitebox testing of command
 
-**setup**,**b**\_*name-of-command* - blackbox testing of command
+**b**\_*name-of-command* - blackbox testing of command
 
-**setup** - setup required variables and functions for blackbox testing (mandatory)
-
-for example: `setup,b_install`  or `w_help`
+for example: `b_install`  or `w_help`
 
 ###Examples
 To run white-box tests in LuaRocks directory type :
@@ -44,8 +48,12 @@ To run white-box tests in LuaRocks directory type :
 
 To run black-box tests just of *install* command (we defined our OS, so OS check is skipped.):
 
-`busted -Xhelper lua=5.2.4,os=linux -t "setup, b_install"`
+`busted -Xhelper lua=5.2.4,os=linux -t "b_install"`
 
 To run black-box tests of *install* command, whitebox of *help* command (using *full* type of environment):
 
 `busted -Xhelper lua=5.2.4,env=full -t "b_install", "w_help"`
+
+To run black-box tests without tests, which use ssh:
+
+`busted -Xhelper lua=5.2.4 -t "blackbox" --exclude-tags=ssh`

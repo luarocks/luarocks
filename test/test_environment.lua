@@ -391,7 +391,7 @@ local function create_paths(luaversion_full)
    testing_paths.luarocks_tmp = "/tmp/luarocks_testing" --windows?
 
    testing_paths.luarocks_dir = lfs.currentdir()
-   testing_paths.testing_dir = testing_paths.luarocks_dir .. "/new_test"
+   testing_paths.testing_dir = testing_paths.luarocks_dir .. "/test"
    testing_paths.src_dir = testing_paths.luarocks_dir .. "/src"
    testing_paths.testing_lrprefix = testing_paths.testing_dir .. "/testing_lrprefix-" .. luaversion_full
    testing_paths.testing_tree = testing_paths.testing_dir .. "/testing-" .. luaversion_full
@@ -576,7 +576,6 @@ upload_servers = {
    local temp_env_variables = {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/testing_config.lua",LUA_PATH="",LUA_CPATH=""}
 
    -- Configure LuaRocks testing environment
-   -- lfs.chdir(testing_paths.luarocks_dir)
    local configure_cmd = "./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix 
    configure_cmd = configure_cmd .. " && make clean"
    
