@@ -59,9 +59,9 @@ script:
   - busted -Xhelper travis,$LUA,env=full --verbose
 
 after_success:
-  - luacov-coveralls -c $TRAVIS_BUILD_DIR/new_test/luacov.config --exclude $TRAVIS_BUILD_DIR/new_test/
-  - $PWD/lua_install/bin/luacov -c $TRAVIS_BUILD_DIR/new_test/luacov.config
-  - grep "Summary" -B1 -A1000 $TRAVIS_BUILD_DIR/new_test/luacov.report.out
+  - luacov-coveralls -c $TRAVIS_BUILD_DIR/test/luacov.config --exclude $TRAVIS_BUILD_DIR/test/
+  - $PWD/lua_install/bin/luacov -c $TRAVIS_BUILD_DIR/test/luacov.config
+  - grep "Summary" -B1 -A1000 $TRAVIS_BUILD_DIR/test/luacov.report.out
 
 notifications:
   email:
