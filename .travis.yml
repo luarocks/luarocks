@@ -49,10 +49,10 @@ install:
   - luarocks install busted
   - luarocks install luacov
   - luarocks install luacov-coveralls
-  
+
 script:
-  - busted -Xhelper travis,$LUA --verbose
-  - busted -Xhelper travis,$LUA,env=full --verbose
+  - busted -Xhelper travis --verbose
+  - busted -Xhelper travis,env=full --verbose
 
 after_success:
   - luacov-coveralls -c $TRAVIS_BUILD_DIR/test/luacov.config --exclude $TRAVIS_BUILD_DIR/test/

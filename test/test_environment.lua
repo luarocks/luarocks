@@ -11,10 +11,6 @@ local function help()
       Tests require to have Lua installed and added to PATH. Be sure sshd is runnig on your system, or
       use '--exclude-tags=ssh', to not execute tests which require sshd.
    USAGE -Xhelper <arguments>
-      lua=<version> (mandatory) type your full version of Lua (e.g. --lua 5.2.4)
-      OR
-      luajit=<version> (mandatory) type your full version of LuaJIT (e.g. --luajit 2.0.3)
-
       env=<type>   (default:"minimal") type what kind of environment to use ["minimal", "full"]
       clean  remove existing testing environment
       travis  add just if running on TravisCI
@@ -70,50 +66,49 @@ local function execute_output(command, print_command, env_variables)
    return output:gsub("\n","") -- output adding new line, need to be removed
 end
 
+--- Set test_env.LUA_V or test_env.LUAJIT_V based
+-- on version of Lua used to run this script.
+function test_env.set_lua_version()
+   if _G.jit then
+      test_env.LUAJIT_V = _G.jit.version:match("(2%.%d)%.%d")
+   else
+      test_env.LUA_V = _VERSION:match("5%.%d")
+   end
+end
+
 --- Set all arguments from input into global variables
 function test_env.set_args()
    if arg[1] == nil then
       help()
    end
-   
-   local args_position
-   
+
+   local helper_arg
+
    for i=1, #arg do
-      if arg[i]:find("-Xhelper") and arg[i+1]:find("lua=") and not arg[i+1]:find("luajit=") then
-         args_position = i+1
-         test_env.LUA_V = arg[args_position]:gsub("(.*)lua=([^%,]+)(.*)","%2")
-         break  
-      elseif arg[i]:find("-Xhelper") and not arg[i+1]:find("lua=") and arg[i+1]:find("luajit=") then
-         args_position = i+1
-         test_env.LUAJIT_V = arg[args_position]:gsub("(.*)luajit=([^%,]+)(.*)","%2")
-         break  
-      elseif arg[i]:find("-Xhelper") and arg[i+1]:find("lua=") and arg[i+1]:find("luajit=") then
-         print("Please specify just Lua or LuaJIT version for testing in format 'lua=X.X.X' or 'luajit=X.X.X', for -Xhelper flag")
-         os.exit(1)
-      elseif arg[i]:find("-Xhelper") and not arg[i+1]:find("lua=") and not arg[i+1]:find("luajit=") then
-         print("Please add mandatory argument - version of Lua or LuaJIT in format 'lua=X.X.X' or 'luajit=X.X.X', for -Xhelper flag")
-         os.exit(1)
+      if arg[i] == "-Xhelper" then
+         helper_arg = arg[i+1]
+         break
       end
    end
 
-   if not args_position then
+   if not helper_arg then
       help()
    end
 
    -- if at least Lua/LuaJIT version argument was found on input start to parse other arguments to env. variables
    test_env.TYPE_TEST_ENV = "minimal"
 
-   if arg[args_position]:find("env=") then
-      test_env.TYPE_TEST_ENV = arg[args_position]:gsub("(.*)env=([^%,]+)(.*)","%2")
+   if helper_arg:find("env=") then
+      test_env.TYPE_TEST_ENV = helper_arg:gsub("(.*)env=([^%,]+)(.*)","%2")
    end
-   if arg[args_position]:find("clean") then
+   if helper_arg:find("clean") then
       test_env.TEST_ENV_CLEAN = true
    end
-   if arg[args_position]:find("travis") then
+   if helper_arg:find("travis") then
       test_env.TRAVIS = true
    end
-   if arg[args_position]:find("os=") then
-      test_env.TEST_TARGET_OS = arg[args_position]:gsub("(.*)os=([^%,]+)(.*)","%2")
+   if helper_arg:find("os=") then
+      test_env.TEST_TARGET_OS = helper_arg:gsub("(.*)os=([^%,]+)(.*)","%2")
    end
 
    if not test_env.TEST_TARGET_OS then
@@ -418,6 +413,7 @@ end
 function test_env.setup_specs(extra_rocks, luaversion_full)
    -- if global variable about successful creation of testing environment doesn't exists, build environment
    if not test_env.setup_done then
+      test_env.set_lua_version()
       test_env.set_args()
 
       if test_env.TRAVIS then
