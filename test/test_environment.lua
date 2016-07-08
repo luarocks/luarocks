@@ -537,6 +537,17 @@ local function clean()
    print("Cleaning done!")
 end
 
+--- Install luarocks into testing prefix.
+local function install_luarocks(install_env_vars)
+   -- Configure LuaRocks testing environment
+   local configure_cmd = "./configure --with-lua=" .. test_env.testing_paths.luadir ..
+      " --prefix=" .. test_env.testing_paths.testing_lrprefix ..
+      " && make clean"
+
+   assert(execute_bool(configure_cmd, false, install_env_vars))
+   assert(execute_bool("make src/luarocks/site_config.lua && make dev", false, install_env_vars))
+end
+
 ---
 -- Main function to create config files and testing environment 
 function test_env.main()
@@ -551,19 +562,13 @@ function test_env.main()
 
    create_configs()
 
-   -- Create environment variables for configuration
-   local temp_env_variables = {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/testing_config.lua",LUA_PATH="",LUA_CPATH=""}
+   local install_env_vars = {
+      LUAROCKS_CONFIG = test_env.testing_paths.testing_dir .. "/testing_config.lua",
+      LUA_PATH = "",
+      LUA_CPATH = ""
+   }
 
-   -- Configure LuaRocks testing environment
-   local configure_cmd = "./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix 
-   configure_cmd = configure_cmd .. " && make clean"
-   
-   if not execute_bool(configure_cmd, false, temp_env_variables) then
-      os.exit(1)
-   end
-   if not execute_bool("make src/luarocks/site_config.lua && make dev", false, temp_env_variables) then 
-      os.exit(1)
-   end
+   install_luarocks(install_env_vars)
 
    -- Preparation of rocks for building environment
    local env_rocks = {} -- short names of rocks, required for building environment
@@ -593,7 +598,7 @@ function test_env.main()
    lfs.mkdir(testing_paths.testing_server)
    download_rocks(rocks, testing_paths.testing_server)
    
-   build_environment(env_rocks, testing_paths, temp_env_variables)
+   build_environment(env_rocks, testing_paths, install_env_vars)
 
    print("----------------")
    print(" RUNNING  TESTS")
