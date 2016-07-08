@@ -441,6 +441,14 @@ function test_env.need_luasocket(luarocks_nocov, testing_cache, platform)
    return true
 end
 
+--- For each key-value pair in replacements table
+-- replace %{key} in given string with value.
+local function substitute(str, replacements)
+   return (str:gsub("%%%b{}", function(marker)
+      return replacements[marker:sub(3, -2)]
+   end))
+end
+
 ---
 -- Main function to create config files and testing environment 
 function test_env.main(luaversion_full, env_type, env_clean)
@@ -461,78 +469,87 @@ function test_env.main(luaversion_full, env_type, env_clean)
    lfs.mkdir(testing_paths.testing_cache)
    lfs.mkdir(testing_paths.luarocks_tmp)
 
---- CONFIG FILES
--- testing_config.lua and testing_config_show_downloads.lua
-   local config_content = ([[rocks_trees = {
-   "%{testing_tree}",
-   { name = "system", root = "%{testing_sys_tree}" },
-}
-rocks_servers = {
-   "%{testing_server}"
-}
-local_cache = "%{testing_cache}"
-upload_server = "testing"
-upload_user = "%{user}"
-upload_servers = {
-   testing = {
-      rsync = "localhost/tmp/luarocks_testing",
-   },
-}
-external_deps_dirs = {
-   "/usr/local",
-   "/usr",
-   -- These are used for a test that fails, so it
-   -- can point to invalid paths:
-   {
-      prefix = "/opt",
-      bin = "bin",
-      include = "include",
-      lib = { "lib", "lib64" },
-   }
-}]]):gsub("%%%b{}", {
-    ["%{user}"] = os.getenv("USER"),
-    ["%{testing_sys_tree}"] = testing_paths.testing_sys_tree,
-    ["%{testing_tree}"] = testing_paths.testing_tree,
-    ["%{testing_server}"] = testing_paths.testing_server,
-    ["%{testing_cache}"] = testing_paths.testing_cache})
+   --- CONFIG FILES
+   -- testing_config.lua and testing_config_show_downloads.lua
+   local config_content = substitute([[
+      rocks_trees = {
+         "%{testing_tree}",
+         { name = "system", root = "%{testing_sys_tree}" },
+      }
+      rocks_servers = {
+         "%{testing_server}"
+      }
+      local_cache = "%{testing_cache}"
+      upload_server = "testing"
+      upload_user = "%{user}"
+      upload_servers = {
+         testing = {
+            rsync = "localhost/tmp/luarocks_testing",
+         },
+      }
+      external_deps_dirs = {
+         "/usr/local",
+         "/usr",
+         -- These are used for a test that fails, so it
+         -- can point to invalid paths:
+         {
+            prefix = "/opt",
+            bin = "bin",
+            include = "include",
+            lib = { "lib", "lib64" },
+         }
+      }
+   ]], {
+      user = os.getenv("USER"),
+      testing_sys_tree = testing_paths.testing_sys_tree,
+      testing_tree = testing_paths.testing_tree,
+      testing_server = testing_paths.testing_server,
+      testing_cache = testing_paths.testing_cache
+   })
 
    create_config(testing_paths.testing_dir .. "/testing_config.lua", config_content .. " \nweb_browser = \"true\"")
    create_config(testing_paths.testing_dir .. "/testing_config_show_downloads.lua", config_content
                   .. "show_downloads = true \n rocks_servers={\"http://luarocks.org/repositories/rocks\"}")
 
--- testing_config_sftp.lua
-   config_content=([[rocks_trees = {
-   "%{testing_tree}",
-   "%{testing_sys_tree}",
-}
-local_cache = "%{testing_cache}"
-upload_server = "testing"
-upload_user = "%{user}"
-upload_servers = {
-   testing = {
-      sftp = "localhost/tmp/luarocks_testing",
-   },
-}]]):gsub("%%%b{}", {
-    ["%{user}"] = os.getenv("USER"),
-    ["%{testing_sys_tree}"] = testing_paths.testing_sys_tree,
-    ["%{testing_tree}"] = testing_paths.testing_tree,
-    ["%{testing_cache}"] = testing_paths.testing_cache})
+   -- testing_config_sftp.lua
+   config_content = substitute([[
+      rocks_trees = {
+         "%{testing_tree}",
+         "%{testing_sys_tree}",
+      }
+      local_cache = "%{testing_cache}"
+      upload_server = "testing"
+      upload_user = "%{user}"
+      upload_servers = {
+         testing = {
+            sftp = "localhost/tmp/luarocks_testing",
+         },
+      }
+   ]], {
+      user = os.getenv("USER"),
+      testing_sys_tree = testing_paths.testing_sys_tree,
+      testing_tree = testing_paths.testing_tree,
+      testing_cache = testing_paths.testing_cache
+   })
 
    create_config(testing_paths.testing_dir .. "/testing_config_sftp.lua", config_content)
 
--- luacov.config
-   config_content=([[return {
-   statsfile = "%{testing_dir}/luacov.stats.out",
-   reportfile = "%{testing_dir}/luacov.report.out",
-   modules = {
-      ["luarocks"] = "src/bin/luarocks",
-      ["luarocks-admin"] = "src/bin/luarocks-admin",
-      ["luarocks.*"] = "src",
-      ["luarocks.*.*"] = "src",
-      ["luarocks.*.*.*"] = "src"
-   }
-}]]):gsub("%%%b{}", {
-    ["%{testing_dir}"] = testing_paths.testing_dir})
+   -- luacov.config
+   config_content = substitute([[
+      return {
+         statsfile = "%{testing_dir}/luacov.stats.out",
+         reportfile = "%{testing_dir}/luacov.report.out",
+         modules = {
+            ["luarocks"] = "src/bin/luarocks",
+            ["luarocks-admin"] = "src/bin/luarocks-admin",
+            ["luarocks.*"] = "src",
+            ["luarocks.*.*"] = "src",
+            ["luarocks.*.*.*"] = "src"
+         }
+      }
+   ]], {
+      testing_dir = testing_paths.testing_dir
+   })
 
    create_config(testing_paths.testing_dir .. "/luacov.config", config_content)
 
