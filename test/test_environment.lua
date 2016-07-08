@@ -292,9 +292,12 @@ local function make_run_functions()
    }
 end
 
---- Build environment for testing
-local function build_environment(env_rocks, testing_paths, env_variables)
+--- Rebuild environment.
+-- Remove old installed rocks and install new ones,
+-- updating manifests and tree copies.
+local function build_environment(rocks, env_variables)
    title("BUILDING ENVIRONMENT")
+   local testing_paths = test_env.testing_paths
    test_env.remove_dir(testing_paths.testing_tree)
    test_env.remove_dir(testing_paths.testing_sys_tree)
    test_env.remove_dir(testing_paths.testing_tree_copy)
@@ -306,10 +309,11 @@ local function build_environment(env_rocks, testing_paths, env_variables)
    test_env.run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
    test_env.run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_cache)
 
-   for _,package in ipairs(env_rocks) do
-      if not test_env.run.luarocks_nocov("install --only-server=" .. testing_paths.testing_cache .. " --tree=" .. testing_paths.testing_sys_tree .. " " .. package, env_variables) then
-         test_env.run.luarocks_nocov("build --tree=" .. testing_paths.testing_sys_tree .. " " .. package, env_variables)
-         test_env.run.luarocks_nocov("pack --tree=" .. testing_paths.testing_sys_tree .. " " .. package .. "; mv " .. package .. "-*.rock " .. testing_paths.testing_cache, env_variables)
+   for _, rock in ipairs(rocks) do
+      if not test_env.run.luarocks_nocov("install --only-server=" .. testing_paths.testing_cache .. " --tree=" .. testing_paths.testing_sys_tree .. " " .. rock, env_variables) then
+         test_env.run.luarocks_nocov("build --tree=" .. testing_paths.testing_sys_tree .. " " .. rock, env_variables)
+         test_env.run.luarocks_nocov("pack --tree=" .. testing_paths.testing_sys_tree .. " " .. rock, env_variables)
+         execute_bool("mv " .. rock .. "-*.rock " .. testing_paths.testing_cache)
       end
    end
 
@@ -602,7 +606,7 @@ function test_env.main()
    lfs.mkdir(testing_paths.testing_server)
    download_rocks(rocks, testing_paths.testing_server)
    
-   build_environment(env_rocks, testing_paths, install_env_vars)
+   build_environment(env_rocks, install_env_vars)
 end
 
 test_env.set_lua_version()
