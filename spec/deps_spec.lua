@@ -11,7 +11,7 @@ local extra_rocks = {
    "/lpeg-0.12-1.src.rock"
 }
 
-expose("LuaRocks deps tests #blackbox #b_deps", function()
+describe("LuaRocks deps tests #blackbox #b_deps", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)

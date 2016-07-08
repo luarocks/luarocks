@@ -25,7 +25,7 @@ local extra_rocks = {
    "/validate-args-1.5.4-1.rockspec"
 }
 
-expose("LuaRocks build tests #blackbox #b_build", function()
+describe("LuaRocks build tests #blackbox #b_build", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)

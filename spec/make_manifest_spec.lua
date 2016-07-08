@@ -2,7 +2,7 @@ local test_env = require("test/test_environment")
 
 test_env.unload_luarocks()
 
-expose("LuaRocks make_manifest tests #blackbox #b_make_manifest", function()
+describe("LuaRocks make_manifest tests #blackbox #b_make_manifest", function()
 	
    before_each(function()
       test_env.setup_specs(extra_rocks)

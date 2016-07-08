@@ -1,7 +1,7 @@
 local test_env = require("test/test_environment")
 local lfs = require("lfs")
 
-expose("Basic tests #blackbox #b_util", function()
+describe("Basic tests #blackbox #b_util", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)

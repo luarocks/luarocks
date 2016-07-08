@@ -4,7 +4,7 @@ local lfs = require("lfs")
 test_env.unload_luarocks()
 local write_rockspec = require("luarocks.write_rockspec")
 
-expose("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
+describe("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)

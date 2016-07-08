@@ -18,7 +18,7 @@ local extra_rocks = {
    "/wsapi-1.6-1.src.rock"
 }
 
-expose("LuaRocks install tests #blackbox #b_install", function()
+describe("LuaRocks install tests #blackbox #b_install", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)

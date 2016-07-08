@@ -6,7 +6,7 @@ local extra_rocks = {
    "/validate-args-1.5.4-1.rockspec"
 }
 
-expose("LuaRocks lint tests #blackbox #b_lint", function()
+describe("LuaRocks lint tests #blackbox #b_lint", function()
    
    before_each(function()
       test_env.setup_specs(extra_rocks)

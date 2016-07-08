@@ -11,7 +11,7 @@ local extra_rocks = {
    "/lxsh-0.8.6-2.rockspec"
 }
 
-expose("LuaRocks make tests #blackbox #b_make", function()
+describe("LuaRocks make tests #blackbox #b_make", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)

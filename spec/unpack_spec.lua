@@ -7,7 +7,7 @@ local extra_rocks = {
    "/cprint-0.1-2.rockspec"
 }
 
-expose("LuaRocks unpack tests #blackbox #b_unpack", function()
+describe("LuaRocks unpack tests #blackbox #b_unpack", function()
    
    before_each(function()
       test_env.setup_specs(extra_rocks)

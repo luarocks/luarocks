@@ -2,7 +2,7 @@ local test_env = require("test/test_environment")
 
 test_env.unload_luarocks()
 
-expose("LuaRocks refresh_cache tests #blackbox #b_refresh_cache", function()
+describe("LuaRocks refresh_cache tests #blackbox #b_refresh_cache", function()
 	
    before_each(function()
       test_env.setup_specs(extra_rocks)

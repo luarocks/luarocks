@@ -2,7 +2,7 @@ local test_env = require("test/test_environment")
 
 test_env.unload_luarocks()
 
-expose("LuaRocks purge tests #blackbox #b_purge", function()   
+describe("LuaRocks purge tests #blackbox #b_purge", function()
    before_each(function()
       test_env.setup_specs(extra_rocks)
       testing_paths = test_env.testing_paths

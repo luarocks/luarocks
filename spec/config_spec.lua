@@ -3,7 +3,7 @@ local lfs = require("lfs")
 
 test_env.unload_luarocks()
 
-expose("LuaRocks config tests #blackbox #b_config", function()
+describe("LuaRocks config tests #blackbox #b_config", function()
    
    before_each(function()
       test_env.setup_specs(extra_rocks)
