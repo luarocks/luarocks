@@ -531,19 +531,23 @@ local function create_configs()
    write_file(test_env.testing_paths.testing_dir .. "/luacov.config", config_content)
 end
 
+--- Remove testing directories.
+local function clean()
+   print("Cleaning testing directory...")
+   test_env.remove_dir(test_env.testing_paths.luarocks_tmp)
+   test_env.remove_dir_pattern(test_env.testing_paths.testing_dir, "testing[_%-]")
+   test_env.remove_files(test_env.testing_paths.testing_dir, "testing_")
+   test_env.remove_files(test_env.testing_paths.testing_dir, "luacov")
+   print("Cleaning done!")
+end
+
 ---
 -- Main function to create config files and testing environment 
 function test_env.main()
    local testing_paths = test_env.testing_paths
 
    if test_env.TEST_ENV_CLEAN then
-      print("Cleaning testing directory...")
-      test_env.remove_dir(testing_paths.luarocks_tmp)
-      test_env.remove_dir_pattern(testing_paths.testing_dir, "testing_")
-      test_env.remove_dir_pattern(testing_paths.testing_dir, "testing-")
-      test_env.remove_files(testing_paths.testing_dir, "testing_")
-      test_env.remove_files(testing_paths.testing_dir, "luacov")
-      print("Cleaning done!")
+      clean()
    end
 
    lfs.mkdir(testing_paths.testing_cache)
