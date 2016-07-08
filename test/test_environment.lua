@@ -122,11 +122,9 @@ function test_env.remove_dir(path)
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
             local full_path = path..'/'..file
-            local attr = lfs.attributes(full_path)
 
-            if attr.mode == "directory" then
+            if lfs.attributes(full_path, "mode") == "directory" then
                test_env.remove_dir(full_path)
-               os.remove(full_path)
             else
                os.remove(full_path)
             end
@@ -136,28 +134,26 @@ function test_env.remove_dir(path)
    os.remove(path)
 end
 
---- Remove directory recursively
--- @param path string: directory path to delete
--- @param pattern string: pattern in directories
-function test_env.remove_dir_pattern(path, pattern)
+--- Remove subdirectories of a directory that match a pattern
+-- @param path string: path to directory
+-- @param pattern string: pattern matching basenames of subdirectories to be removed
+function test_env.remove_subdirs(path, pattern)
    if lfs.attributes(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
             local full_path = path..'/'..file
-            local attr = lfs.attributes(full_path)
 
-            if attr.mode == "directory" and file:find(pattern) then
+            if lfs.attributes(full_path, "mode") == "directory" and file:find(pattern) then
                test_env.remove_dir(full_path)
-               os.remove(full_path)
             end
          end
       end
    end
 end
 
---- Remove files based on filename
+--- Remove files matching a pattern
 -- @param path string: directory where to delete files
--- @param pattern string: pattern in filenames
+-- @param pattern string: pattern matching basenames of files to be deleted
 -- @return result_check boolean: true if one or more files deleted
 function test_env.remove_files(path, pattern)
    local result_check = false
@@ -535,7 +531,7 @@ end
 local function clean()
    print("Cleaning testing directory...")
    test_env.remove_dir(test_env.testing_paths.luarocks_tmp)
-   test_env.remove_dir_pattern(test_env.testing_paths.testing_dir, "testing[_%-]")
+   test_env.remove_subdirs(test_env.testing_paths.testing_dir, "testing[_%-]")
    test_env.remove_files(test_env.testing_paths.testing_dir, "testing_")
    test_env.remove_files(test_env.testing_paths.testing_dir, "luacov")
    print("Cleaning done!")
