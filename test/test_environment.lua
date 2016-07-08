@@ -1,6 +1,6 @@
 local lfs = require("lfs")
 local test_env = {}
-local arg = arg or { ... }
+local arg = arg
 
 local function help()
    print("LuaRocks test-suite\n\n"..
@@ -78,37 +78,21 @@ end
 
 --- Set all arguments from input into global variables
 function test_env.set_args()
-   if arg[1] == nil then
-      help()
-   end
-
-   local helper_arg
-
-   for i=1, #arg do
-      if arg[i] == "-Xhelper" then
-         helper_arg = arg[i+1]
-         break
-      end
-   end
-
-   if not helper_arg then
-      help()
-   end
-
    -- if at least Lua/LuaJIT version argument was found on input start to parse other arguments to env. variables
    test_env.TYPE_TEST_ENV = "minimal"
 
-   if helper_arg:find("env=") then
-      test_env.TYPE_TEST_ENV = helper_arg:gsub("(.*)env=([^%,]+)(.*)","%2")
-   end
-   if helper_arg:find("clean") then
-      test_env.TEST_ENV_CLEAN = true
-   end
-   if helper_arg:find("travis") then
-      test_env.TRAVIS = true
-   end
-   if helper_arg:find("os=") then
-      test_env.TEST_TARGET_OS = helper_arg:gsub("(.*)os=([^%,]+)(.*)","%2")
+   for _, argument in ipairs(arg) do
+      if argument:find("^env=") then
+         test_env.TYPE_TEST_ENV = argument:match("^env=(.*)$")
+      elseif argument == "clean" then
+         test_env.TEST_ENV_CLEAN = true
+      elseif argument == "travis" then
+         test_env.TRAVIS = true
+      elseif argument:find("^os=") then
+         test_env.TEST_TARGET_OS = argument:match("^os=(.*)$")
+      else
+         help()
+      end
    end
 
    if not test_env.TEST_TARGET_OS then
