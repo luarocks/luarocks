@@ -533,12 +533,10 @@ end
 
 ---
 -- Main function to create config files and testing environment 
-function test_env.main(luaversion_full, env_type, env_clean)
-   luaversion_full = luaversion_full or test_env.LUA_V or test_env.LUAJIT_V
-   local testing_paths = create_paths(luaversion_full)
+function test_env.main()
+   local testing_paths = test_env.testing_paths
 
-   env_clean = env_clean or test_env.TEST_ENV_CLEAN
-   if env_clean then
+   if test_env.TEST_ENV_CLEAN then
       print("Cleaning testing directory...")
       test_env.remove_dir(testing_paths.luarocks_tmp)
       test_env.remove_dir_pattern(testing_paths.testing_dir, "testing_")
@@ -568,14 +566,12 @@ function test_env.main(luaversion_full, env_type, env_clean)
    end
 
    -- Preparation of rocks for building environment
-   env_type = env_type or test_env.TYPE_TEST_ENV
-   
    local env_rocks = {} -- short names of rocks, required for building environment
    local rocks = {}  -- full names of rocks required for download
    rocks[#rocks+1] = "/luacov-0.11.0-1.rockspec"
    rocks[#rocks+1] = "/luacov-0.11.0-1.src.rock"
 
-   if env_type == "full" then 
+   if test_env.TYPE_TEST_ENV == "full" then 
       rocks[#rocks+1] = "/luafilesystem-1.6.3-1.src.rock"
       rocks[#rocks+1] = "/luasocket-3.0rc1-1.src.rock"
       rocks[#rocks+1] = "/luasocket-3.0rc1-1.rockspec"
@@ -583,11 +579,12 @@ function test_env.main(luaversion_full, env_type, env_clean)
       rocks[#rocks+1] = "/md5-1.2-1.src.rock"
       rocks[#rocks+1] = "/lzlib-0.4.1.53-1.src.rock"
       env_rocks = {"luafilesystem", "luasocket", "luaposix", "md5", "lzlib"}
-   end
-   if env_type == "full" and luaversion_full ~= "5.1" then
-      rocks[#rocks+1] = "/luabitop-1.0.2-1.rockspec"
-      rocks[#rocks+1] = "/luabitop-1.0.2-1.src.rock"
-      table.insert(env_rocks, "luabitop")
+
+      if test_env.LUA_V ~= "5.1" then
+         rocks[#rocks+1] = "/luabitop-1.0.2-1.rockspec"
+         rocks[#rocks+1] = "/luabitop-1.0.2-1.src.rock"
+         table.insert(env_rocks, "luabitop")
+      end
    end
 
    table.insert(env_rocks, "luacov")   -- luacov is needed for minimal or full environment
