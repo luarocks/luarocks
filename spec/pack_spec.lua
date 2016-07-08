@@ -2,7 +2,6 @@ local test_env = require("test/test_environment")
 local lfs = require("lfs")
 
 test_env.unload_luarocks()
-local pack = require("luarocks.pack")
 
 local extra_rocks = {
 	"/luasec-0.6-1.rockspec",

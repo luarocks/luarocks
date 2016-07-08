@@ -1,8 +1,6 @@
 local test_env = require("test/test_environment")
-local lfs = require("lfs")
 
 test_env.unload_luarocks()
-local refresh_cache = require("luarocks.refresh_cache")
 
 expose("LuaRocks refresh_cache tests #blackbox #b_refresh_cache", function()
 	

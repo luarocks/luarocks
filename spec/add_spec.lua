@@ -1,8 +1,6 @@
 local test_env = require("test/test_environment")
-local lfs = require("lfs")
 
 test_env.unload_luarocks()
-local add = require("luarocks.add")
 
 local extra_rocks = {
    "/luasocket-3.0rc1-1.src.rock",

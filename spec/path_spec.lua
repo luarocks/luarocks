@@ -1,8 +1,6 @@
 local test_env = require("test/test_environment")
-local lfs = require("lfs")
 
 test_env.unload_luarocks()
-local path = require("luarocks.path")
 
 expose("LuaRocks path tests #blackbox #b_path", function()
    before_each(function()

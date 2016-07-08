@@ -1,8 +1,6 @@
 local test_env = require("test/test_environment")
-local lfs = require("lfs")
 
 test_env.unload_luarocks()
-local help = require("luarocks.help")
 
 expose("LuaRocks help tests #blackbox #b_help", function()
 

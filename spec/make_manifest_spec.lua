@@ -1,8 +1,6 @@
 local test_env = require("test/test_environment")
-local lfs = require("lfs")
 
 test_env.unload_luarocks()
-local make_manifest = require("luarocks.make_manifest")
 
 expose("LuaRocks make_manifest tests #blackbox #b_make_manifest", function()
 	

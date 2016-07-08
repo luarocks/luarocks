@@ -2,7 +2,6 @@ local test_env = require("test/test_environment")
 local lfs = require("lfs")
 
 test_env.unload_luarocks()
-local make = require("luarocks.make")
 
 local extra_rocks = {
    "/lpeg-0.12-1.src.rock",

@@ -2,7 +2,6 @@ local test_env = require("test/test_environment")
 local lfs = require("lfs")
 
 test_env.unload_luarocks()
-local new_version = require("luarocks.new_version")
 
 local extra_rocks = {
    "/abelhas-1.0-1.rockspec"

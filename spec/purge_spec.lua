@@ -1,8 +1,6 @@
 local test_env = require("test/test_environment")
-local lfs = require("lfs")
 
 test_env.unload_luarocks()
-local purge = require("luarocks.purge")
 
 expose("LuaRocks purge tests #blackbox #b_purge", function()   
    before_each(function()

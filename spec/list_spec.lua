@@ -1,8 +1,6 @@
 local test_env = require("test/test_environment")
-local lfs = require("lfs")
 
 test_env.unload_luarocks()
-local list = require("luarocks.list")
 
 local extra_rocks = {
    "/say-1.0-1.src.rock",

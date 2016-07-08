@@ -1,8 +1,6 @@
 local test_env = require("test/test_environment")
-local lfs = require("lfs")
 
 test_env.unload_luarocks()
-local unpack = require("luarocks.unpack")
 
 local extra_rocks = {
    "/cprint-0.1-2.src.rock",
