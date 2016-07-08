@@ -32,6 +32,10 @@ local function title(str)
    print(("-"):rep(#str))
 end
 
+local function exists(path)
+   return lfs.attributes(path, "mode") ~= nil
+end
+
 --- Helper function for execute_bool and execute_output
 -- @param command string: command to execute
 -- @param print_command boolean: print command if 'true'
@@ -125,7 +129,7 @@ end
 --- Remove directory recursively
 -- @param path string: directory path to delete
 function test_env.remove_dir(path)
-   if lfs.attributes(path) then
+   if exists(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
             local full_path = path..'/'..file
@@ -145,7 +149,7 @@ end
 -- @param path string: path to directory
 -- @param pattern string: pattern matching basenames of subdirectories to be removed
 function test_env.remove_subdirs(path, pattern)
-   if lfs.attributes(path) then
+   if exists(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
             local full_path = path..'/'..file
@@ -164,7 +168,7 @@ end
 -- @return result_check boolean: true if one or more files deleted
 function test_env.remove_files(path, pattern)
    local result_check = false
-   if lfs.attributes(path) then
+   if exists(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
             if file:find(pattern) then
@@ -189,7 +193,7 @@ local function download_rocks(urls, save_path)
 
    for _, url in ipairs(urls) do
       -- check if already downloaded
-      if not os.rename(save_path .. url, save_path .. url) then
+      if not exists(save_path .. url) then
          execute_bool("wget -cP " .. save_path .. " " .. luarocks_repo .. url)
          make_manifest = true 
       end
@@ -346,21 +350,19 @@ local function create_paths(luaversion_full)
    if test_env.TRAVIS then
       testing_paths.luadir = lfs.currentdir() .. "/lua_install"
       testing_paths.lua = testing_paths.luadir .. "/bin/lua"
-   end
-
-   if test_env.LUA_V and not test_env.TRAVIS then
-      if lfs.attributes("/usr/bin/lua") then
+   elseif test_env.LUA_V then
+      if exists("/usr/bin/lua") then
          testing_paths.luadir = "/usr"
          testing_paths.lua = testing_paths.luadir .. "/bin/lua"
-      elseif lfs.attributes("/usr/local/bin/lua") then
+      elseif exists("/usr/local/bin/lua") then
          testing_paths.luadir = "/usr/local"
          testing_paths.lua = testing_paths.luadir .. "/bin/lua"
       end
-   elseif test_env.LUAJIT_V and not test_env.TRAVIS then
-      if lfs.attributes("/usr/bin/luajit") then
+   elseif test_env.LUAJIT_V then
+      if exists("/usr/bin/luajit") then
          testing_paths.luadir = "/usr"
          testing_paths.lua = testing_paths.luadir .. "/bin/luajit"
-      elseif lfs.attributes("/usr/local/bin/luajit") then
+      elseif exists("/usr/local/bin/luajit") then
          testing_paths.luadir = "/usr/local"
          testing_paths.lua = testing_paths.luadir .. "/bin/luajit"
       end
@@ -397,7 +399,7 @@ function test_env.setup_specs(extra_rocks)
    -- if global variable about successful creation of testing environment doesn't exists, build environment
    if not test_env.setup_done then
       if test_env.TRAVIS then
-         if not os.rename(os.getenv("HOME") .. "/.ssh/id_rsa.pub", os.getenv("HOME") .. "/.ssh/id_rsa.pub") then
+         if not exists(os.getenv("HOME") .. "/.ssh/id_rsa.pub") then
             execute_bool("ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa")
             execute_bool("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
             execute_bool("chmod og-wx ~/.ssh/authorized_keys")
@@ -431,7 +433,7 @@ function test_env.need_luasocket()
    else
       local testing_cache = test_env.testing_paths.testing_cache .. "/"
       local luasocket_rock = "luasocket-3.0rc1-1." .. test_env.platform .. ".rock"
-      if not os.rename( testing_cache .. luasocket_rock, testing_cache .. luasocket_rock) then
+      if not exists(testing_cache .. luasocket_rock) then
          test_env.run.luarocks_nocov("build --pack-binary-rock luasocket 3.0rc1-1")
          os.rename(luasocket_rock, testing_cache .. luasocket_rock)
       end
