@@ -180,17 +180,17 @@ end
 
 
 --- Function for downloading rocks and rockspecs
--- @param rocks table: table with full name of rocks/rockspecs to download
+-- @param urls table: array of full names of rocks/rockspecs to download
 -- @param save_path string: path to directory, where to download rocks/rockspecs
 -- @return make_manifest boolean: true if new rocks downloaded
-local function download_rocks(rocks, save_path)
+local function download_rocks(urls, save_path)
    local luarocks_repo = "https://luarocks.org"   
    local make_manifest = false
 
-   for _,rock in ipairs(rocks) do  
+   for _, url in ipairs(urls) do
       -- check if already downloaded
-      if not os.rename( save_path .. rock, save_path .. rock) then
-         execute_bool("wget -cP " .. save_path .. " " .. luarocks_repo .. rock)
+      if not os.rename(save_path .. url, save_path .. url) then
+         execute_bool("wget -cP " .. save_path .. " " .. luarocks_repo .. url)
          make_manifest = true 
       end
    end
@@ -579,34 +579,33 @@ function test_env.main()
    install_luarocks(install_env_vars)
 
    -- Preparation of rocks for building environment
-   local env_rocks = {} -- short names of rocks, required for building environment
-   local rocks = {}  -- full names of rocks required for download
-   rocks[#rocks+1] = "/luacov-0.11.0-1.rockspec"
-   rocks[#rocks+1] = "/luacov-0.11.0-1.src.rock"
+   local rocks = {} -- names of rocks, required for building environment
+   local urls = {}  -- names of rock and rockspec files to be downloaded
+   table.insert(urls, "/luacov-0.11.0-1.rockspec")
+   table.insert(urls, "/luacov-0.11.0-1.src.rock")
 
-   if test_env.TYPE_TEST_ENV == "full" then 
-      rocks[#rocks+1] = "/luafilesystem-1.6.3-1.src.rock"
-      rocks[#rocks+1] = "/luasocket-3.0rc1-1.src.rock"
-      rocks[#rocks+1] = "/luasocket-3.0rc1-1.rockspec"
-      rocks[#rocks+1] = "/luaposix-33.2.1-1.src.rock"
-      rocks[#rocks+1] = "/md5-1.2-1.src.rock"
-      rocks[#rocks+1] = "/lzlib-0.4.1.53-1.src.rock"
-      env_rocks = {"luafilesystem", "luasocket", "luaposix", "md5", "lzlib"}
+   if test_env.TYPE_TEST_ENV == "full" then
+      table.insert(urls, "/luafilesystem-1.6.3-1.src.rock")
+      table.insert(urls, "/luasocket-3.0rc1-1.src.rock")
+      table.insert(urls, "/luasocket-3.0rc1-1.rockspec")
+      table.insert(urls, "/luaposix-33.2.1-1.src.rock")
+      table.insert(urls, "/md5-1.2-1.src.rock")
+      table.insert(urls, "/lzlib-0.4.1.53-1.src.rock")
+      rocks = {"luafilesystem", "luasocket", "luaposix", "md5", "lzlib"}
 
       if test_env.LUA_V ~= "5.1" then
-         rocks[#rocks+1] = "/luabitop-1.0.2-1.rockspec"
-         rocks[#rocks+1] = "/luabitop-1.0.2-1.src.rock"
-         table.insert(env_rocks, "luabitop")
+         table.insert(urls, "/luabitop-1.0.2-1.rockspec")
+         table.insert(urls, "/luabitop-1.0.2-1.src.rock")
+         table.insert(rocks, "luabitop")
       end
    end
 
-   table.insert(env_rocks, "luacov")   -- luacov is needed for minimal or full environment
-   
+   table.insert(rocks, "luacov")   -- luacov is needed for minimal or full environment
+
    -- Download rocks needed for LuaRocks testing environment
    lfs.mkdir(testing_paths.testing_server)
-   download_rocks(rocks, testing_paths.testing_server)
-   
-   build_environment(env_rocks, install_env_vars)
+   download_rocks(urls, testing_paths.testing_server)
+   build_environment(rocks, install_env_vars)
 end
 
 test_env.set_lua_version()
