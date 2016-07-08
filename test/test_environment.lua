@@ -1,22 +1,28 @@
 local lfs = require("lfs")
 local test_env = {}
-local arg = arg
+
+local help_message = [[
+LuaRocks test-suite
+
+INFORMATION
+   New test-suite for LuaRocks project, using unit testing framework Busted.
+REQUIREMENTS
+   Tests require to have Lua installed and added to PATH. Be sure sshd is
+   running on your system, or use '--exclude-tags=ssh', to not execute tests
+   which require sshd.
+USAGE
+   busted [-Xhelper <arguments>]
+ARGUMENTS
+   env=<type>     Set type of environment to use ("minimal" or "full",
+                  default: "minimal").
+   clean          Remove existing testing environment.
+   travis         Add if running on TravisCI.
+   os=<type>      Set OS ("linux", "osx", or "windows").
+]]
 
 local function help()
-   print("LuaRocks test-suite\n\n"..
-         [[
-   INFORMATION
-      New test-suite for LuaRocks project, using unit testing framework Busted.
-   REQUIREMENTS
-      Tests require to have Lua installed and added to PATH. Be sure sshd is runnig on your system, or
-      use '--exclude-tags=ssh', to not execute tests which require sshd.
-   USAGE -Xhelper <arguments>
-      env=<type>   (default:"minimal") type what kind of environment to use ["minimal", "full"]
-      clean  remove existing testing environment
-      travis  add just if running on TravisCI
-      os=<version>    type your OS ["linux", "osx", "windows"]
-         ]]);
-      os.exit(1)
+   print(help_message)
+   os.exit(1)
 end
 
 --- Helper function for execute_bool and execute_output
