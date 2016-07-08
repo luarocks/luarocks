@@ -1,4 +1,6 @@
 local test_env = require("test/test_environment")
+local run = test_env.run
+local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
@@ -11,8 +13,6 @@ describe("LuaRocks unpack tests #blackbox #b_unpack", function()
    
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      testing_paths = test_env.testing_paths
-      run = test_env.run
       platform = test_env.platform
    end)
 

@@ -1,5 +1,7 @@
 local test_env = require("test/test_environment")
 local lfs = require("lfs")
+local run = test_env.run
+local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
@@ -29,8 +31,6 @@ describe("LuaRocks build tests #blackbox #b_build", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      testing_paths = test_env.testing_paths
-      run = test_env.run
    end)
 
    describe("LuaRocks build - basic testing set", function()

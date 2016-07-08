@@ -254,44 +254,40 @@ local function create_md5sums(testing_paths)
    return md5sums
 end
 
-local function run_luarocks(testing_paths, env_variables)
-   
-   local function make_command_function(exec_function, lua_cmd, do_print)
-      return function(cmd, new_vars)
-         local temp_vars = {}
-         for k, v in pairs(env_variables) do
-            temp_vars[k] = v
-         end
-         if new_vars then
-            for k, v in pairs(new_vars) do
-               temp_vars[k] = v
-            end
-         end
-         return exec_function(lua_cmd .. cmd, do_print, temp_vars)
-      end
+local function make_run_function(cmd_name, exec_function, with_coverage, do_print)
+   local cmd_prefix = test_env.testing_paths.lua .. " "
+
+   if with_coverage then
+      cmd_prefix = cmd_prefix .. "-e \"require('luacov.runner')('" .. test_env.testing_paths.testing_dir .. "/luacov.config')\" "
    end
 
-   local run = {}
+   cmd_prefix = cmd_prefix .. test_env.testing_paths.src_dir .. "/bin/" .. cmd_name .. " "
 
-   local cov_str = testing_paths.lua .. " -e\"require('luacov.runner')('" .. testing_paths.testing_dir .. "/luacov.config')\" "
+   return function(cmd, new_vars)
+      local temp_vars = {}
+      for k, v in pairs(test_env.env_variables) do
+         temp_vars[k] = v
+      end
+      if new_vars then
+         for k, v in pairs(new_vars) do
+            temp_vars[k] = v
+         end
+      end
+      return exec_function(cmd_prefix .. cmd, do_print, temp_vars)
+   end
+end
 
-   local luarocks_cmd = cov_str .. testing_paths.src_dir .. "/bin/luarocks "
-   run.luarocks = make_command_function(execute_output, luarocks_cmd, true)
-   run.luarocks_bool = make_command_function(execute_bool, luarocks_cmd, true)
-   run.luarocks_noprint = make_command_function(execute_bool, luarocks_cmd, false)
-
-   local luarocks_nocov_cmd = testing_paths.lua .. " " .. testing_paths.src_dir .. "/bin/luarocks "
-   run.luarocks_nocov = make_command_function(execute_bool, luarocks_nocov_cmd, true)
-   run.luarocks_noprint_nocov = make_command_function(execute_bool, luarocks_nocov_cmd, false)
-   
-   local luarocks_admin_cmd = cov_str .. testing_paths.src_dir .. "/bin/luarocks-admin "
-   run.luarocks_admin = make_command_function(execute_output, luarocks_admin_cmd, true)
-   run.luarocks_admin_bool = make_command_function(execute_bool, luarocks_admin_cmd, true)
-
-   local luarocks_admin_nocov_cmd = testing_paths.lua .. " " .. testing_paths.src_dir .. "/bin/luarocks-admin "
-   run.luarocks_admin_nocov = make_command_function(execute_bool, luarocks_admin_nocov_cmd, false)
-
-   return run
+local function make_run_functions()
+   return {
+      luarocks = make_run_function("luarocks", execute_output, true, true),
+      luarocks_bool = make_run_function("luarocks", execute_bool, true, true),
+      luarocks_noprint = make_run_function("luarocks", execute_bool, true, false),
+      luarocks_nocov = make_run_function("luarocks", execute_bool, false, true),
+      luarocks_noprint_nocov = make_run_function("luarocks", execute_bool, false, false),
+      luarocks_admin = make_run_function("luarocks-admin", execute_output, true, true),
+      luarocks_admin_bool = make_run_function("luarocks-admin", execute_bool, true, true),
+      luarocks_admin_nocov = make_run_function("luarocks-admin", execute_bool, false, false)
+   }
 end
 
 --- Build environment for testing
@@ -307,14 +303,13 @@ local function build_environment(env_rocks, testing_paths, env_variables)
    lfs.mkdir(testing_paths.testing_tree)
    lfs.mkdir(testing_paths.testing_sys_tree)
 
-   local run = run_luarocks(testing_paths, env_variables)
-   run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
-   run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_cache)
+   test_env.run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
+   test_env.run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_cache)
 
    for _,package in ipairs(env_rocks) do
-      if not run.luarocks_nocov("install --only-server=" .. testing_paths.testing_cache .. " --tree=" .. testing_paths.testing_sys_tree .. " " .. package, env_variables) then
-         run.luarocks_nocov("build --tree=" .. testing_paths.testing_sys_tree .. " " .. package, env_variables)
-         run.luarocks_nocov("pack --tree=" .. testing_paths.testing_sys_tree .. " " .. package .. "; mv " .. package .. "-*.rock " .. testing_paths.testing_cache, env_variables)
+      if not test_env.run.luarocks_nocov("install --only-server=" .. testing_paths.testing_cache .. " --tree=" .. testing_paths.testing_sys_tree .. " " .. package, env_variables) then
+         test_env.run.luarocks_nocov("build --tree=" .. testing_paths.testing_sys_tree .. " " .. package, env_variables)
+         test_env.run.luarocks_nocov("pack --tree=" .. testing_paths.testing_sys_tree .. " " .. package .. "; mv " .. package .. "-*.rock " .. testing_paths.testing_cache, env_variables)
       end
    end
 
@@ -394,12 +389,9 @@ function test_env.unload_luarocks()
 end
 
 --- Function for initially setup of environment, variables, md5sums for spec files
-function test_env.setup_specs(extra_rocks, luaversion_full)
+function test_env.setup_specs(extra_rocks)
    -- if global variable about successful creation of testing environment doesn't exists, build environment
    if not test_env.setup_done then
-      test_env.set_lua_version()
-      test_env.set_args()
-
       if test_env.TRAVIS then
          if not os.rename(os.getenv("HOME") .. "/.ssh/id_rsa.pub", os.getenv("HOME") .. "/.ssh/id_rsa.pub") then
             execute_bool("ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa")
@@ -409,16 +401,9 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
          end
       end
 
-      luaversion_full = luaversion_full or test_env.LUA_V or test_env.LUAJIT_V
-
       test_env.main()
-
-      -- Set paths, env_vars and functions for specs
-      test_env.testing_paths = create_paths(luaversion_full)
-      test_env.env_variables = create_env(test_env.testing_paths)
       package.path = test_env.env_variables.LUA_PATH
 
-      test_env.run = run_luarocks(test_env.testing_paths, test_env.env_variables)
       test_env.platform = execute_output(test_env.testing_paths.lua .. " -e 'print(require(\"luarocks.cfg\").arch)'", false, test_env.env_variables)
       test_env.md5sums = create_md5sums(test_env.testing_paths)
       test_env.setup_done = true
@@ -427,8 +412,7 @@ function test_env.setup_specs(extra_rocks, luaversion_full)
    if extra_rocks then 
       local make_manifest = download_rocks(extra_rocks, test_env.testing_paths.testing_server)
       if make_manifest then
-         local run = run_luarocks(test_env.testing_paths, test_env.env_variables)
-         run.luarocks_admin_nocov("make_manifest " .. test_env.testing_paths.testing_server)
+         test_env.run.luarocks_admin_nocov("make_manifest " .. test_env.testing_paths.testing_server)
       end
    end
 
@@ -601,5 +585,11 @@ upload_servers = {
    print(" RUNNING  TESTS")
    print("----------------")
 end
+
+test_env.set_lua_version()
+test_env.set_args()
+test_env.testing_paths = create_paths(test_env.LUA_V or test_env.LUAJIT_V)
+test_env.env_variables = create_env(test_env.testing_paths)
+test_env.run = make_run_functions()
 
 return test_env

@@ -1,4 +1,5 @@
 local test_env = require("test/test_environment")
+local run = test_env.run
 
 test_env.unload_luarocks()
 
@@ -10,7 +11,6 @@ describe("LuaRocks search tests #blackbox #b_search", function()
    
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      run = test_env.run
    end)
 
    it("LuaRocks search with no flags/arguments", function()

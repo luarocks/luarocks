@@ -1,11 +1,11 @@
 local test_env = require("test/test_environment")
+local run = test_env.run
 
 test_env.unload_luarocks()
 
 describe("LuaRocks path tests #blackbox #b_path", function()
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      run = test_env.run
    end)
 
    it("LuaRocks path bin", function()

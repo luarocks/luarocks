@@ -1,5 +1,7 @@
 local test_env = require("test/test_environment")
 local lfs = require("lfs")
+local run = test_env.run
+local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
@@ -15,8 +17,6 @@ describe("LuaRocks make tests #blackbox #b_make", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      run = test_env.run
-      testing_paths = test_env.testing_paths
    end)
 
    it("LuaRocks make with no flags/arguments", function()
