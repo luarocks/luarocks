@@ -7,9 +7,8 @@ LuaRocks test-suite
 INFORMATION
    New test-suite for LuaRocks project, using unit testing framework Busted.
 REQUIREMENTS
-   Tests require to have Lua installed and added to PATH. Be sure sshd is
-   running on your system, or use '--exclude-tags=ssh', to not execute tests
-   which require sshd.
+   Be sure sshd is running on your system, or use '--exclude-tags=ssh',
+   to not execute tests which require sshd.
 USAGE
    busted [-Xhelper <arguments>]
 ARGUMENTS
@@ -343,30 +342,11 @@ local function reset_environment(testing_paths, md5sums)
 end
 
 local function create_paths(luaversion_full)
+   local cfg = require("luarocks.cfg")
+
    local testing_paths = {}
-
-   testing_paths.luadir = ""
-
-   if test_env.TRAVIS then
-      testing_paths.luadir = lfs.currentdir() .. "/lua_install"
-      testing_paths.lua = testing_paths.luadir .. "/bin/lua"
-   elseif test_env.LUA_V then
-      if exists("/usr/bin/lua") then
-         testing_paths.luadir = "/usr"
-         testing_paths.lua = testing_paths.luadir .. "/bin/lua"
-      elseif exists("/usr/local/bin/lua") then
-         testing_paths.luadir = "/usr/local"
-         testing_paths.lua = testing_paths.luadir .. "/bin/lua"
-      end
-   elseif test_env.LUAJIT_V then
-      if exists("/usr/bin/luajit") then
-         testing_paths.luadir = "/usr"
-         testing_paths.lua = testing_paths.luadir .. "/bin/luajit"
-      elseif exists("/usr/local/bin/luajit") then
-         testing_paths.luadir = "/usr/local"
-         testing_paths.lua = testing_paths.luadir .. "/bin/luajit"
-      end
-   end
+   testing_paths.luadir = cfg.variables.LUA_BINDIR:gsub("/bin/?$", "")
+   testing_paths.lua = cfg.variables.LUA_BINDIR .. "/" .. cfg.lua_interpreter
 
    testing_paths.luarocks_tmp = "/tmp/luarocks_testing" --windows?
 
