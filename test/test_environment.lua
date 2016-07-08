@@ -567,7 +567,7 @@ upload_servers = {
       rocks[#rocks+1] = "/lzlib-0.4.1.53-1.src.rock"
       env_rocks = {"luafilesystem", "luasocket", "luaposix", "md5", "lzlib"}
    end
-   if env_type == "full" and luaversion_full ~= "5.1.5" then
+   if env_type == "full" and luaversion_full ~= "5.1" then
       rocks[#rocks+1] = "/luabitop-1.0.2-1.rockspec"
       rocks[#rocks+1] = "/luabitop-1.0.2-1.src.rock"
       table.insert(env_rocks, "luabitop")
