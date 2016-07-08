@@ -421,23 +421,18 @@ function test_env.setup_specs(extra_rocks)
 end
 
 --- Helper function for tests which needs luasocket installed
-function test_env.need_luasocket(luarocks_nocov, testing_cache, platform)
-   luarocks_nocov = luarocks_nocov or test_env.run.luarocks_nocov
-   testing_cache = testing_cache or test_env.testing_paths.testing_cache
-   platform = platform or test_env.platform
-
-   if luarocks_nocov("show luasocket") then
+function test_env.need_luasocket()
+   if test_env.run.luarocks_nocov("show luasocket") then
       return true
    else
-      testing_cache = testing_cache .. "/"
-      local luasocket_rock = "luasocket-3.0rc1-1." .. platform .. ".rock"
+      local testing_cache = test_env.testing_paths.testing_cache .. "/"
+      local luasocket_rock = "luasocket-3.0rc1-1." .. test_env.platform .. ".rock"
       if not os.rename( testing_cache .. luasocket_rock, testing_cache .. luasocket_rock) then
-         luarocks_nocov("build --pack-binary-rock luasocket 3.0rc1-1")
+         test_env.run.luarocks_nocov("build --pack-binary-rock luasocket 3.0rc1-1")
          os.rename(luasocket_rock, testing_cache .. luasocket_rock)
       end
-      luarocks_nocov("install " .. testing_cache .. luasocket_rock)
+      return test_env.run.luarocks_nocov("install " .. testing_cache .. luasocket_rock)
    end
-   return true
 end
 
 --- For each key-value pair in replacements table
