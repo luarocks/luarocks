@@ -25,6 +25,13 @@ local function help()
    os.exit(1)
 end
 
+local function title(str)
+   print()
+   print(("-"):rep(#str))
+   print(str)
+   print(("-"):rep(#str))
+end
+
 --- Helper function for execute_bool and execute_output
 -- @param command string: command to execute
 -- @param print_command boolean: print command if 'true'
@@ -102,7 +109,8 @@ function test_env.set_args()
    end
 
    if not test_env.TEST_TARGET_OS then
-      print("[OS CHECK]")
+      title("OS CHECK")
+
       if execute_bool("sw_vers") then 
          test_env.TEST_TARGET_OS = "osx"
       elseif execute_bool("uname -s") then
@@ -110,7 +118,6 @@ function test_env.set_args()
       else
          test_env.TEST_TARGET_OS = "windows"
       end
-      print("--------------")
    end
    return true
 end
@@ -287,9 +294,7 @@ end
 
 --- Build environment for testing
 local function build_environment(env_rocks, testing_paths, env_variables)
-   print("\n--------------------")
-   print("BUILDING ENVIRONMENT")
-   print("--------------------")
+   title("BUILDING ENVIRONMENT")
    test_env.remove_dir(testing_paths.testing_tree)
    test_env.remove_dir(testing_paths.testing_sys_tree)
    test_env.remove_dir(testing_paths.testing_tree_copy)
@@ -402,6 +407,7 @@ function test_env.setup_specs(extra_rocks)
       test_env.platform = execute_output(test_env.testing_paths.lua .. " -e 'print(require(\"luarocks.cfg\").arch)'", false, test_env.env_variables)
       test_env.md5sums = create_md5sums(test_env.testing_paths)
       test_env.setup_done = true
+      title("RUNNING TESTS")
    end
    
    if extra_rocks then 
@@ -412,8 +418,6 @@ function test_env.setup_specs(extra_rocks)
    end
 
    reset_environment(test_env.testing_paths, test_env.md5sums, test_env.env_variables)
-
-   return true
 end
 
 --- Helper function for tests which needs luasocket installed
@@ -599,10 +603,6 @@ function test_env.main()
    download_rocks(rocks, testing_paths.testing_server)
    
    build_environment(env_rocks, testing_paths, install_env_vars)
-
-   print("----------------")
-   print(" RUNNING  TESTS")
-   print("----------------")
 end
 
 test_env.set_lua_version()
