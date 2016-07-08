@@ -17,8 +17,6 @@ describe("LuaRocks deps tests #blackbox #b_deps", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      testing_paths = test_env.testing_paths
-      run = test_env.run
    end)
 
    it("LuaRocks deps mode one", function()

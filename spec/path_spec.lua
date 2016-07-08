@@ -5,7 +5,7 @@ test_env.unload_luarocks()
 
 describe("LuaRocks path tests #blackbox #b_path", function()
    before_each(function()
-      test_env.setup_specs(extra_rocks)
+      test_env.setup_specs()
    end)
 
    it("LuaRocks path bin", function()

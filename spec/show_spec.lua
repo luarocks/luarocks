@@ -6,7 +6,7 @@ test_env.unload_luarocks()
 describe("LuaRocks show tests #blackbox #b_show", function()
    
    before_each(function()
-      test_env.setup_specs(extra_rocks)
+      test_env.setup_specs()
    end)
 
    it("LuaRocks show with no flags/arguments", function()

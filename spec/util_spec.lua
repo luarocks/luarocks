@@ -7,7 +7,7 @@ local env_variables = test_env.env_variables
 describe("Basic tests #blackbox #b_util", function()
 
    before_each(function()
-      test_env.setup_specs(extra_rocks)
+      test_env.setup_specs()
    end)
 
    it("LuaRocks version", function()

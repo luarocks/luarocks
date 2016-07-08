@@ -6,7 +6,7 @@ test_env.unload_luarocks()
 
 describe("LuaRocks purge tests #blackbox #b_purge", function()
    before_each(function()
-      test_env.setup_specs(extra_rocks)
+      test_env.setup_specs()
    end)
 
    describe("LuaRocks purge basic tests", function()

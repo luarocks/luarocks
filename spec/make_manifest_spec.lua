@@ -6,7 +6,7 @@ test_env.unload_luarocks()
 describe("LuaRocks make_manifest tests #blackbox #b_make_manifest", function()
 	
    before_each(function()
-      test_env.setup_specs(extra_rocks)
+      test_env.setup_specs()
    end)
 
    describe("LuaRocks-admin make manifest tests", function()
