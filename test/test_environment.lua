@@ -198,8 +198,7 @@ end
 -- @param config_path string: path where to save config file
 -- @param config_content string: content of this config file
 local function create_config(config_path, config_content)
-   local file, err = io.open(config_path, "w+")
-   if not file then return nil, err end
+   local file = assert(io.open(config_path, "w"))
    file:write(config_content)
    file:close()
 end
