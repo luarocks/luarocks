@@ -205,22 +205,16 @@ end
 
 --- Create md5sum of directory structure recursively, based on filename and size
 -- @param path string: path to directory for generate md5sum
--- @param testing_os string(optional): version of PC OS
 -- @return md5sum string: md5sum of directory
-local function hash_environment(path, testing_os)
-   local md5sum = ""
-   testing_os = testing_os or test_env.TEST_TARGET_OS
-
-   if testing_os == "linux" then
-      md5sum = execute_output("find " .. path .. " -printf \"%s %p\n\" | md5sum")
+local function hash_environment(path)
+   if test_env.TEST_TARGET_OS == "linux" then
+      return execute_output("find " .. path .. " -printf \"%s %p\n\" | md5sum")
+   elseif test_env.TEST_TARGET_OS == "osx" then
+      return execute_output("find " .. path .. " -type f -exec stat -f \"%z %N\" {} \\; | md5")
+   else
+      -- TODO: Windows
+      return ""
    end
-   if testing_os == "osx" then
-      md5sum = execute_output("find " .. path .. " -type f -exec stat -f \"%z %N\" {} \\; | md5")
-   end
-   --TODO if testing_os == "windows" then
-   --    md5sum = execute_output("find . -printf \"%s %p\n\" | md5sum")
-   -- end
-   return md5sum
 end
 
 --- Create environment variables needed for tests
