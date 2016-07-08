@@ -194,12 +194,12 @@ local function download_rocks(rocks, save_path)
    return make_manifest
 end
 
---- Create config files for testing
--- @param config_path string: path where to save config file
--- @param config_content string: content of this config file
-local function create_config(config_path, config_content)
-   local file = assert(io.open(config_path, "w"))
-   file:write(config_content)
+--- Create a file containing a string.
+-- @param path string: path to file.
+-- @param str string: content of the file.
+local function write_file(path, str)
+   local file = assert(io.open(path, "w"))
+   file:write(str)
    file:close()
 end
 
@@ -443,27 +443,10 @@ local function substitute(str, replacements)
    end))
 end
 
----
--- Main function to create config files and testing environment 
-function test_env.main(luaversion_full, env_type, env_clean)
-   luaversion_full = luaversion_full or test_env.LUA_V or test_env.LUAJIT_V
-   local testing_paths = create_paths(luaversion_full)
 
-   env_clean = env_clean or test_env.TEST_ENV_CLEAN
-   if env_clean then
-      print("Cleaning testing directory...")
-      test_env.remove_dir(testing_paths.luarocks_tmp)
-      test_env.remove_dir_pattern(testing_paths.testing_dir, "testing_")
-      test_env.remove_dir_pattern(testing_paths.testing_dir, "testing-")
-      test_env.remove_files(testing_paths.testing_dir, "testing_")
-      test_env.remove_files(testing_paths.testing_dir, "luacov")
-      print("Cleaning done!")
-   end
-
-   lfs.mkdir(testing_paths.testing_cache)
-   lfs.mkdir(testing_paths.luarocks_tmp)
-
-   --- CONFIG FILES
+--- Create configs for luacov and several versions of Luarocks
+-- configs needed for some tests.
+local function create_configs()
    -- testing_config.lua and testing_config_show_downloads.lua
    local config_content = substitute([[
       rocks_trees = {
@@ -495,14 +478,14 @@ function test_env.main(luaversion_full, env_type, env_clean)
       }
    ]], {
       user = os.getenv("USER"),
-      testing_sys_tree = testing_paths.testing_sys_tree,
-      testing_tree = testing_paths.testing_tree,
-      testing_server = testing_paths.testing_server,
-      testing_cache = testing_paths.testing_cache
+      testing_sys_tree = test_env.testing_paths.testing_sys_tree,
+      testing_tree = test_env.testing_paths.testing_tree,
+      testing_server = test_env.testing_paths.testing_server,
+      testing_cache = test_env.testing_paths.testing_cache
    })
 
-   create_config(testing_paths.testing_dir .. "/testing_config.lua", config_content .. " \nweb_browser = \"true\"")
-   create_config(testing_paths.testing_dir .. "/testing_config_show_downloads.lua", config_content
+   write_file(test_env.testing_paths.testing_dir .. "/testing_config.lua", config_content .. " \nweb_browser = \"true\"")
+   write_file(test_env.testing_paths.testing_dir .. "/testing_config_show_downloads.lua", config_content
                   .. "show_downloads = true \n rocks_servers={\"http://luarocks.org/repositories/rocks\"}")
 
    -- testing_config_sftp.lua
@@ -521,12 +504,12 @@ function test_env.main(luaversion_full, env_type, env_clean)
       }
    ]], {
       user = os.getenv("USER"),
-      testing_sys_tree = testing_paths.testing_sys_tree,
-      testing_tree = testing_paths.testing_tree,
-      testing_cache = testing_paths.testing_cache
+      testing_sys_tree = test_env.testing_paths.testing_sys_tree,
+      testing_tree = test_env.testing_paths.testing_tree,
+      testing_cache = test_env.testing_paths.testing_cache
    })
 
-   create_config(testing_paths.testing_dir .. "/testing_config_sftp.lua", config_content)
+   write_file(test_env.testing_paths.testing_dir .. "/testing_config_sftp.lua", config_content)
 
    -- luacov.config
    config_content = substitute([[
@@ -542,10 +525,33 @@ function test_env.main(luaversion_full, env_type, env_clean)
          }
       }
    ]], {
-      testing_dir = testing_paths.testing_dir
+      testing_dir = test_env.testing_paths.testing_dir
    })
 
-   create_config(testing_paths.testing_dir .. "/luacov.config", config_content)
+   write_file(test_env.testing_paths.testing_dir .. "/luacov.config", config_content)
+end
+
+---
+-- Main function to create config files and testing environment 
+function test_env.main(luaversion_full, env_type, env_clean)
+   luaversion_full = luaversion_full or test_env.LUA_V or test_env.LUAJIT_V
+   local testing_paths = create_paths(luaversion_full)
+
+   env_clean = env_clean or test_env.TEST_ENV_CLEAN
+   if env_clean then
+      print("Cleaning testing directory...")
+      test_env.remove_dir(testing_paths.luarocks_tmp)
+      test_env.remove_dir_pattern(testing_paths.testing_dir, "testing_")
+      test_env.remove_dir_pattern(testing_paths.testing_dir, "testing-")
+      test_env.remove_files(testing_paths.testing_dir, "testing_")
+      test_env.remove_files(testing_paths.testing_dir, "luacov")
+      print("Cleaning done!")
+   end
+
+   lfs.mkdir(testing_paths.testing_cache)
+   lfs.mkdir(testing_paths.luarocks_tmp)
+
+   create_configs()
 
    -- Create environment variables for configuration
    local temp_env_variables = {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/testing_config.lua",LUA_PATH="",LUA_CPATH=""}
