@@ -1,18 +1,17 @@
 local test_env = require("test/test_environment")
 local lfs = require("lfs")
+local run = test_env.run
 
 test_env.unload_luarocks()
-local download = require("luarocks.download")
 
 local extra_rocks = {
    "/validate-args-1.5.4-1.rockspec"
 }
 
-expose("LuaRocks download tests #blackbox #b_download", function()
+describe("LuaRocks download tests #blackbox #b_download", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      run = test_env.run
    end)
 
    it("LuaRocks download with no flags/arguments", function()

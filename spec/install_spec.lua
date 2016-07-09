@@ -1,8 +1,10 @@
 local test_env = require("test/test_environment")
 local lfs = require("lfs")
+local run = test_env.run
+local testing_paths = test_env.testing_paths
+local env_variables = test_env.env_variables
 
 test_env.unload_luarocks()
-local install = require("luarocks.install")
 
 local extra_rocks = {
    "/cprint-0.1-2.src.rock",
@@ -19,14 +21,10 @@ local extra_rocks = {
    "/wsapi-1.6-1.src.rock"
 }
 
-expose("LuaRocks install tests #blackbox #b_install", function()
+describe("LuaRocks install tests #blackbox #b_install", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      testing_paths = test_env.testing_paths
-      env_variables = test_env.env_variables
-      run = test_env.run
-      platform = test_env.platform
    end)
 
    describe("LuaRocks install - basic tests", function()
@@ -86,21 +84,21 @@ expose("LuaRocks install tests #blackbox #b_install", function()
       
       it("LuaRocks install only-deps of luasocket packed rock", function()
          assert.is_true(test_env.need_luasocket())
-         local output = run.luarocks("install --only-deps " .. testing_paths.testing_cache .. "/luasocket-3.0rc1-1." .. platform .. ".rock")
+         local output = run.luarocks("install --only-deps " .. testing_paths.testing_cache .. "/luasocket-3.0rc1-1." .. test_env.platform .. ".rock")
          assert.are.same(output, "Successfully installed dependencies for luasocket 3.0rc1-1")
       end)
 
       it("LuaRocks install binary rock of cprint", function()
          assert.is_true(test_env.need_luasocket())
          assert.is_true(run.luarocks_bool("build --pack-binary-rock cprint"))
-         assert.is_true(run.luarocks_bool("install cprint-0.1-2." .. platform .. ".rock"))
-         assert.is_true(os.remove("cprint-0.1-2." .. platform .. ".rock"))
+         assert.is_true(run.luarocks_bool("install cprint-0.1-2." .. test_env.platform .. ".rock"))
+         assert.is_true(os.remove("cprint-0.1-2." .. test_env.platform .. ".rock"))
       end)
 
       it("LuaRocks install reinstall", function()
          assert.is_true(test_env.need_luasocket())
-         assert.is_true(run.luarocks_bool("install " .. testing_paths.testing_cache .. "/luasocket-3.0rc1-1." .. platform .. ".rock"))
-         assert.is_true(run.luarocks_bool("install --deps-mode=none " .. testing_paths.testing_cache .. "/luasocket-3.0rc1-1." .. platform .. ".rock"))
+         assert.is_true(run.luarocks_bool("install " .. testing_paths.testing_cache .. "/luasocket-3.0rc1-1." .. test_env.platform .. ".rock"))
+         assert.is_true(run.luarocks_bool("install --deps-mode=none " .. testing_paths.testing_cache .. "/luasocket-3.0rc1-1." .. test_env.platform .. ".rock"))
       end)
    end)
 

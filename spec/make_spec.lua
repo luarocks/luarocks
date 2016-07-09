@@ -1,8 +1,9 @@
 local test_env = require("test/test_environment")
 local lfs = require("lfs")
+local run = test_env.run
+local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
-local make = require("luarocks.make")
 
 local extra_rocks = {
    "/lpeg-0.12-1.src.rock",
@@ -12,12 +13,10 @@ local extra_rocks = {
    "/lxsh-0.8.6-2.rockspec"
 }
 
-expose("LuaRocks make tests #blackbox #b_make", function()
+describe("LuaRocks make tests #blackbox #b_make", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      run = test_env.run
-      testing_paths = test_env.testing_paths
    end)
 
    it("LuaRocks make with no flags/arguments", function()

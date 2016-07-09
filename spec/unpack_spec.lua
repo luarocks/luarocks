@@ -1,21 +1,18 @@
 local test_env = require("test/test_environment")
-local lfs = require("lfs")
+local run = test_env.run
+local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
-local unpack = require("luarocks.unpack")
 
 local extra_rocks = {
    "/cprint-0.1-2.src.rock",
    "/cprint-0.1-2.rockspec"
 }
 
-expose("LuaRocks unpack tests #blackbox #b_unpack", function()
+describe("LuaRocks unpack tests #blackbox #b_unpack", function()
    
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      testing_paths = test_env.testing_paths
-      run = test_env.run
-      platform = test_env.platform
    end)
 
    describe("LuaRocks unpack basic fail tests", function()
@@ -51,9 +48,9 @@ expose("LuaRocks unpack tests #blackbox #b_unpack", function()
       it("LuaRocks unpack binary", function()
          assert.is_true(run.luarocks_bool("build cprint"))
          assert.is_true(run.luarocks_bool("pack cprint"))
-         assert.is_true(run.luarocks_bool("unpack cprint-0.1-2." .. platform .. ".rock"))
+         assert.is_true(run.luarocks_bool("unpack cprint-0.1-2." .. test_env.platform .. ".rock"))
          test_env.remove_dir("cprint-0.1-2")
-         os.remove("cprint-0.1-2." .. platform .. ".rock")
+         os.remove("cprint-0.1-2." .. test_env.platform .. ".rock")
       end)
    end)
 end)

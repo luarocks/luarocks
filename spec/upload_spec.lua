@@ -1,18 +1,16 @@
 local test_env = require("test/test_environment")
-local lfs = require("lfs")
+local run = test_env.run
 
 test_env.unload_luarocks()
-local upload = require("luarocks.upload")
 
 local extra_rocks = {
    "/lua-cjson-2.1.0-1.src.rock"
 }
 
-expose("LuaRocks upload tests #blackbox #b_upload", function()
+describe("LuaRocks upload tests #blackbox #b_upload", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      run = test_env.run
    end)
 
    it("LuaRocks upload with no flags/arguments", function()

@@ -234,9 +234,12 @@ end
 
 local function mkfield(context, field)
    if context == "" then
-      return field
+      return tostring(field)
+   elseif type(field) == "string" then
+      return context.."."..field
+   else
+      return context.."["..tostring(field).."]"
    end
-   return context.."."..field
 end
 
 --- Type check the contents of a table.

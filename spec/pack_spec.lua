@@ -1,8 +1,8 @@
 local test_env = require("test/test_environment")
 local lfs = require("lfs")
+local run = test_env.run
 
 test_env.unload_luarocks()
-local pack = require("luarocks.pack")
 
 local extra_rocks = {
 	"/luasec-0.6-1.rockspec",
@@ -10,12 +10,10 @@ local extra_rocks = {
 	"/luasocket-3.0rc1-1.rockspec"
 }
 
-expose("LuaRocks pack tests #blackbox #b_pack", function()
+describe("LuaRocks pack tests #blackbox #b_pack", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      testing_paths = test_env.testing_paths
-      run = test_env.run
    end)
 
    it("LuaRocks pack basic", function()

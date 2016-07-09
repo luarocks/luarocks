@@ -1,8 +1,9 @@
 local test_env = require("test/test_environment")
 local lfs = require("lfs")
+local run = test_env.run
+local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
-local deps = require("luarocks.deps")
 
 local extra_rocks = {
    "/lxsh-0.8.6-2.src.rock",
@@ -12,12 +13,10 @@ local extra_rocks = {
    "/lpeg-0.12-1.src.rock"
 }
 
-expose("LuaRocks deps tests #blackbox #b_deps", function()
+describe("LuaRocks deps tests #blackbox #b_deps", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      testing_paths = test_env.testing_paths
-      run = test_env.run
    end)
 
    it("LuaRocks deps mode one", function()
