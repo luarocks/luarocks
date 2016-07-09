@@ -1,17 +1,17 @@
 local test_env = require("test/test_environment")
 local lfs = require("lfs")
+local run = test_env.run
+local testing_paths = test_env.testing_paths
+local site_config
 
 test_env.unload_luarocks()
-local cfg = require("luarocks.cfg")
 
-expose("LuaRocks config tests #blackbox #b_config", function()
+describe("LuaRocks config tests #blackbox #b_config", function()
    
    before_each(function()
-      test_env.setup_specs(extra_rocks)
+      test_env.setup_specs()
       test_env.unload_luarocks() -- need to be required here, because site_config is created after first loading of specs
       site_config = require("luarocks.site_config")
-      testing_paths = test_env.testing_paths
-      run = test_env.run
    end)
 
    describe("LuaRocks config - basic tests", function()

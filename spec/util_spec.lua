@@ -1,13 +1,13 @@
 local test_env = require("test/test_environment")
 local lfs = require("lfs")
+local run = test_env.run
+local testing_paths = test_env.testing_paths
+local env_variables = test_env.env_variables
 
-expose("Basic tests #blackbox #b_util", function()
+describe("Basic tests #blackbox #b_util", function()
 
    before_each(function()
-      test_env.setup_specs(extra_rocks)
-      testing_paths = test_env.testing_paths
-      env_variables = test_env.env_variables
-      run = test_env.run
+      test_env.setup_specs()
    end)
 
    it("LuaRocks version", function()

@@ -1,0 +1,6 @@
+return {
+   default = {
+      helper = "test/test_environment",
+      ["auto-insulate"] = false
+   }
+}

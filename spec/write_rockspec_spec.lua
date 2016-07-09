@@ -1,14 +1,13 @@
 local test_env = require("test/test_environment")
 local lfs = require("lfs")
+local run = test_env.run
 
 test_env.unload_luarocks()
-local write_rockspec = require("luarocks.write_rockspec")
 
-expose("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
+describe("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
 
    before_each(function()
-      test_env.setup_specs(extra_rocks)
-      run = test_env.run
+      test_env.setup_specs()
    end)
 
    describe("LuaRocks write_rockspec basic tests", function()

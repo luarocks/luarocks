@@ -1,20 +1,18 @@
 local test_env = require("test/test_environment")
-local lfs = require("lfs")
+local run = test_env.run
+local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
-local list = require("luarocks.list")
 
 local extra_rocks = {
    "/say-1.0-1.src.rock",
    "/say-1.2-1.src.rock"
 }
 
-expose("LuaRocks list tests #blackbox #b_list", function()
+describe("LuaRocks list tests #blackbox #b_list", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
-      run = test_env.run
-      testing_paths = test_env.testing_paths
    end)
 
    it("LuaRocks list with no flags/arguments", function()
