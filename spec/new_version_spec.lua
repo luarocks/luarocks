@@ -7,8 +7,7 @@ test_env.unload_luarocks()
 
 local extra_rocks = {
    "/abelhas-1.0-1.rockspec",
-   "/md5-1.2-1.rockspec",
-   "/lpeg-0.12-1.rockspec",
+   "/lpeg-0.12-1.rockspec"
 }
 
 describe("LuaRocks new_version tests #blackbox #b_new_version", function()
@@ -61,10 +60,6 @@ describe("LuaRocks new_version tests #blackbox #b_new_version", function()
          assert.is_true(run.luarocks_bool("download --rockspec lpeg 0.12"))
          assert.is_true(run.luarocks_bool("new_version lpeg-0.12-1.rockspec 0.2 https://luarocks.org/manifests/gvvaughan/lpeg-1.0.0-1.rockspec"))
          test_env.remove_files(lfs.currentdir(), "lpeg--")
-
-         -- assert.is_true(run.luarocks_bool("download --rockspec md5 1.2"))
-         -- assert.is_true(run.luarocks_bool("new_version md5-1.2-1.rockspec 1.3 https://luarocks.org/manifests/tomasguisasola/md5-1.2-1.rockspec"))
-         -- test_env.remove_files(lfs.currentdir(), "md5--")
       end)
    end)
 end)
