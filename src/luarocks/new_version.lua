@@ -134,15 +134,19 @@ function new_version.command(flags, input, version, url)
    end
    assert(type(input) == "string")
    
-   local filename = input
-   if not input:match("rockspec$") then
-      local err
+   local filename, err
+   if input:match("rockspec$") then
+      filename, err = fetch.fetch_url(input)
+      if not filename then
+         return nil, err
+      end
+   else
       filename, err = download.download("rockspec", input)
       if not filename then
          return nil, err
       end
    end
-   
+
    local valid_rs, err = fetch.load_rockspec(filename)
    if not valid_rs then
       return nil, err
@@ -168,7 +172,7 @@ function new_version.command(flags, input, version, url)
    end
    local new_rockver = new_ver:gsub("-", "")
    
-   local out_rs = persist.load_into_table(filename)
+   local out_rs, err = persist.load_into_table(filename)
    local out_name = out_rs.package:lower()
    out_rs.version = new_rockver.."-"..new_rev
 
