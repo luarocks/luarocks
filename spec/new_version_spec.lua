@@ -36,6 +36,13 @@ describe("LuaRocks new_version tests #blackbox #b_new_version", function()
    end)
 
    describe("LuaRocks new_version more complex tests", function()
+      it("LuaRocks new version with remote spec", function()
+         assert.is_true(run.luarocks_bool("new_version https://luarocks.org/manifests/luarocks/luasocket-2.0.2-6.rockspec"))
+         assert.is.truthy(lfs.attributes("luasocket-2.0.2-6.rockspec"))
+         assert.is.truthy(lfs.attributes("luasocket-2.0.2-7.rockspec"))
+         test_env.remove_files(lfs.currentdir(), "luasocket--")
+      end)
+
       it("LuaRocks new_version of luacov", function()
          assert.is_true(run.luarocks_bool("download --rockspec luacov 0.11.0"))
          assert.is_true(run.luarocks_bool("new_version luacov-0.11.0-1.rockspec 0.2"))
