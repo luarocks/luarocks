@@ -169,12 +169,10 @@ describe("LuaRocks build tests #blackbox #b_build", function()
       end)
 
       it("LuaRocks build missing external", function()
-         assert.is_true(test_env.need_luasocket())
          assert.is_false(run.luarocks_bool("build " .. testing_paths.testing_dir .. "/testfiles/missing_external-0.1-1.rockspec INEXISTENT_INCDIR=\"/invalid/dir\""))
       end)
       
       it("LuaRocks build invalid patch", function()
-         assert.is_true(test_env.need_luasocket())
          assert.is_false(run.luarocks_bool("build " .. testing_paths.testing_dir .. "/testfiles/invalid_patch-0.1-1.rockspec"))
       end)
    end)

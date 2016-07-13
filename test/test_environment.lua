@@ -14,6 +14,7 @@ USAGE
 ARGUMENTS
    env=<type>     Set type of environment to use ("minimal" or "full",
                   default: "minimal").
+   noreset        Don't reset environment after each test
    clean          Remove existing testing environment.
    travis         Add if running on TravisCI.
    os=<type>      Set OS ("linux", "osx", or "windows").
@@ -96,10 +97,13 @@ end
 function test_env.set_args()
    -- if at least Lua/LuaJIT version argument was found on input start to parse other arguments to env. variables
    test_env.TYPE_TEST_ENV = "minimal"
+   test_env.RESET_ENV = true
 
    for _, argument in ipairs(arg) do
       if argument:find("^env=") then
          test_env.TYPE_TEST_ENV = argument:match("^env=(.*)$")
+      elseif argument == "noreset" then
+         test_env.RESET_ENV = false
       elseif argument == "clean" then
          test_env.TEST_ENV_CLEAN = true
       elseif argument == "travis" then
@@ -333,6 +337,7 @@ local function reset_environment(testing_paths, md5sums)
       test_env.remove_dir(testing_paths.testing_tree)
       execute_bool("cp -a " .. testing_paths.testing_tree_copy .. "/. " .. testing_paths.testing_tree)
    end
+
    if testing_sys_tree_md5 ~= md5sums.testing_sys_tree_copy_md5 then
       test_env.remove_dir(testing_paths.testing_sys_tree)
       execute_bool("cp -a " .. testing_paths.testing_sys_tree_copy .. "/. " .. testing_paths.testing_sys_tree)
@@ -403,21 +408,17 @@ function test_env.setup_specs(extra_rocks)
       end
    end
 
-   reset_environment(test_env.testing_paths, test_env.md5sums, test_env.env_variables)
+   if test_env.RESET_ENV then
+      reset_environment(test_env.testing_paths, test_env.md5sums, test_env.env_variables)
+   end
 end
 
---- Helper function for tests which needs luasocket installed
-function test_env.need_luasocket()
-   if test_env.run.luarocks_nocov("show luasocket") then
+--- Test if required rock is installed if not, install it
+function test_env.need_rock(rock)
+   if test_env.run.luarocks_nocov("show " .. rock) then
       return true
    else
-      local testing_cache = test_env.testing_paths.testing_cache .. "/"
-      local luasocket_rock = "luasocket-3.0rc1-1." .. test_env.platform .. ".rock"
-      if not exists(testing_cache .. luasocket_rock) then
-         test_env.run.luarocks_nocov("build --pack-binary-rock luasocket 3.0rc1-1")
-         os.rename(luasocket_rock, testing_cache .. luasocket_rock)
-      end
-      return test_env.run.luarocks_nocov("install " .. testing_cache .. luasocket_rock)
+      return test_env.run.luarocks_nocov("install " .. rock)
    end
 end
 
