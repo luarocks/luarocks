@@ -76,6 +76,9 @@ function upload.command(flags, fname)
    local module_url = res.module_url
    
    if rock_fname then
+      if (not res.version) or (not res.version.id) then
+         return nil, "Invalid response from server."
+      end
       util.printout(("Sending " .. tostring(rock_fname) .. " ..."))
       res, err = api:method("upload_rock/" .. ("%d"):format(res.version.id), nil, {
          rock_file = multipart.new_file(rock_fname)
