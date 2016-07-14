@@ -1,6 +1,7 @@
 local test_env = require("test/test_environment")
 local lfs = require("lfs")
 local run = test_env.run
+local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
@@ -20,6 +21,10 @@ describe("LuaRocks pack tests #blackbox #b_pack", function()
       assert.is_true(run.luarocks_bool("list"))
       assert.is_true(run.luarocks_bool("pack luacov"))
       assert.is_true(test_env.remove_files(lfs.currentdir(), "luacov-"))
+   end)
+
+   it("LuaRocks pack invalid rockspec", function()
+      assert.is_false(run.luarocks_bool("pack " .. testing_paths.testing_dir .. "/testfiles/invaild_validate-args-1.5.4-1.rockspec"))
    end)
    
    it("LuaRocks pack src", function()

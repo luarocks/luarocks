@@ -44,8 +44,11 @@ describe("LuaRocks remove tests #blackbox #b_remove", function()
    end)
 
    describe("LuaRocks remove more complex tests", function()
+      before_each(function()
+         assert.is_true(test_env.need_rock("luasocket"))
+      end)
+
       it("LuaRocks remove fail, break dependencies", function()
-         assert.is_true(test_env.need_luasocket())
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasocket"))
          assert.is_true(run.luarocks_bool("build lualogging"))
 
@@ -54,7 +57,6 @@ describe("LuaRocks remove tests #blackbox #b_remove", function()
       end)
       
       it("LuaRocks remove force", function()
-         assert.is_true(test_env.need_luasocket())
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasocket"))
          assert.is_true(run.luarocks_bool("build lualogging"))
 
@@ -64,7 +66,6 @@ describe("LuaRocks remove tests #blackbox #b_remove", function()
       end)
       
       it("LuaRocks remove force fast", function()
-         assert.is_true(test_env.need_luasocket())
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasocket"))
          assert.is_true(run.luarocks_bool("build lualogging"))
 
