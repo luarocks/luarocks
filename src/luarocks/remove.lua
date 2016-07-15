@@ -2,7 +2,6 @@
 --- Module implementing the LuaRocks "remove" command.
 -- Uninstalls rocks.
 local remove = {}
-package.loaded["luarocks.remove"] = remove
 
 local search = require("luarocks.search")
 local deps = require("luarocks.deps")
@@ -10,8 +9,8 @@ local fetch = require("luarocks.fetch")
 local repos = require("luarocks.repos")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
-local manif = require("luarocks.manif")
+local cfg = require("luarocks.core.cfg")
+local writer = require("luarocks.manif.writer")
 local fs = require("luarocks.fs")
 
 remove.help_summary = "Uninstall a rock."
@@ -113,7 +112,7 @@ function remove.remove_search_results(results, name, deps_mode, force, fast)
    
    local ok, err = delete_versions(name, versions)
    if not ok then return nil, err end
-   ok, err = manif.make_manifest(cfg.rocks_dir, deps_mode)
+   ok, err = writer.make_manifest(cfg.rocks_dir, deps_mode)
    if not ok then return nil, err end
 
    util.printout("Removal successful.")

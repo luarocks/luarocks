@@ -1,8 +1,7 @@
 
 local write_rockspec = {}
-package.loaded["luarocks.write_rockspec"] = write_rockspec
 
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")

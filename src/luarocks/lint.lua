@@ -2,7 +2,6 @@
 --- Module implementing the LuaRocks "lint" command.
 -- Utility function that checks syntax of the rockspec.
 local lint = {}
-package.loaded["luarocks.lint"] = lint
 
 local util = require("luarocks.util")
 local download = require("luarocks.download")

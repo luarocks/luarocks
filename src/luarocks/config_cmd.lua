@@ -2,7 +2,7 @@
 -- Queries information about the LuaRocks configuration.
 local config_cmd = {}
 
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 

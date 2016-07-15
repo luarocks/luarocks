@@ -20,9 +20,9 @@ grep -q "\"$1\"" rockspec || {
    exit 1
 }
 
-grep -q "program_version = \"$1\"" src/luarocks/cfg.lua || {
+grep -q "program_version = \"$1\"" src/luarocks/core/cfg.lua || {
    echo
-   echo "program_version in src/luarocks/cfg.lua is incorrect. Please fix it."
+   echo "program_version in src/luarocks/core/cfg.lua is incorrect. Please fix it."
    exit 1
 }
 
@@ -41,9 +41,9 @@ grep -q "LUAROCKS_VER: $1" appveyor.yml || {
 # e.g. if $1 is "2.3.0", $program_series is "2.3"
 program_series=${1%.*}
 
-grep -q "program_series = \"$program_series\"" src/luarocks/cfg.lua || {
+grep -q "program_series = \"$program_series\"" src/luarocks/core/cfg.lua || {
    echo
-   echo "program_series in src/luarocks/cfg.lua is incorrect. Please fix it."
+   echo "program_series in src/luarocks/core/cfg.lua is incorrect. Please fix it."
    exit 1
 }
 

@@ -2,15 +2,14 @@
 --- Module implementing the luarocks-admin "add" command.
 -- Adds a rock or rockspec to a rocks server.
 local add = {}
-package.loaded["luarocks.add"] = add
 
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
-local manif = require("luarocks.manif")
+local writer = require("luarocks.manif.writer")
 local index = require("luarocks.index")
 local fs = require("luarocks.fs")
-local cache = require("luarocks.cache")
+local cache = require("luarocks.admin.cache")
 
 add.help_summary = "Add a rock or rockspec to a rocks server."
 add.help_arguments = "[--server=<server>] [--no-refresh] {<rockspec>|<rock>...}"
@@ -22,6 +21,15 @@ from the configuration file is used instead.
 The flag --no-refresh indicates the local cache should not be refreshed
 prior to generation of the updated manifest.
 ]]
+
+local function zip_manifests()
+   for ver in util.lua_versions() do
+      local file = "manifest-"..ver
+      local zip = file..".zip"
+      fs.delete(dir.path(fs.current_dir(), zip))
+      fs.zip(zip, file)
+   end
+end
 
 local function add_files_to_server(refresh, rockfiles, server, upload_server)
    assert(type(refresh) == "boolean" or not refresh)
@@ -67,9 +75,9 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    if not ok then return nil, err end
 
    util.printout("Updating manifest...")
-   manif.make_manifest(local_cache, "one", true)
+   writer.make_manifest(local_cache, "one", true)
    
-   manif.zip_manifests()
+   zip_manifests()
    
    util.printout("Updating index.html...")
    index.make_index(local_cache)

@@ -1,7 +1,6 @@
 
 --- Functions related to fetching and loading local and remote files.
 local fetch = {}
-package.loaded["luarocks.fetch"] = fetch
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
@@ -10,7 +9,7 @@ local path = require("luarocks.path")
 local deps = require("luarocks.deps")
 local persist = require("luarocks.persist")
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 
 function fetch.is_basic_protocol(protocol, remote)
    return protocol == "http" or protocol == "https" or protocol == "ftp" or (not remote and protocol == "file")

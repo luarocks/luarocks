@@ -2,13 +2,13 @@
 --- Module implementing the LuaRocks "search" command.
 -- Queries LuaRocks servers.
 local search = {}
-package.loaded["luarocks.search"] = search
+
 
 local dir = require("luarocks.dir")
 local path = require("luarocks.path")
 local manif = require("luarocks.manif")
 local deps = require("luarocks.deps")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 
 search.help_summary = "Query the LuaRocks servers."

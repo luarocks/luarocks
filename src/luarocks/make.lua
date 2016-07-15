@@ -4,12 +4,11 @@
 -- it does not fetch sources, etc., assuming everything is 
 -- available in the current directory.
 local make = {}
-package.loaded["luarocks.make"] = make
 
 local build = require("luarocks.build")
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local fetch = require("luarocks.fetch")
 local pack = require("luarocks.pack")
 local remove = require("luarocks.remove")

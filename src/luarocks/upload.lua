@@ -4,7 +4,7 @@ local upload = {}
 local util = require("luarocks.util")
 local fetch = require("luarocks.fetch")
 local pack = require("luarocks.pack")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local Api = require("luarocks.upload.api")
 
 upload.help_summary = "Upload a rockspec to the public rocks repository."

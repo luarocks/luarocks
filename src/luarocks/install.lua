@@ -1,7 +1,6 @@
 --- Module implementing the LuaRocks "install" command.
 -- Installs binary rocks.
 local install = {}
-package.loaded["luarocks.install"] = install
 
 local path = require("luarocks.path")
 local repos = require("luarocks.repos")
@@ -9,9 +8,9 @@ local fetch = require("luarocks.fetch")
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
 local deps = require("luarocks.deps")
-local manif = require("luarocks.manif")
+local writer = require("luarocks.manif.writer")
 local remove = require("luarocks.remove")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 
 install.help_summary = "Install a rock."
 
@@ -74,7 +73,7 @@ function install.install_binary_rock(rock_file, deps_mode)
 
    -- For compatibility with .rock files built with LuaRocks 1
    if not fs.exists(path.rock_manifest_file(name, version)) then
-      ok, err = manif.make_rock_manifest(name, version)
+      ok, err = writer.make_rock_manifest(name, version)
       if err then return nil, err end
    end
 
@@ -94,7 +93,7 @@ function install.install_binary_rock(rock_file, deps_mode)
    ok, err = repos.run_hook(rockspec, "post_install")
    if err then return nil, err end
    
-   ok, err = manif.update_manifest(name, version, nil, deps_mode)
+   ok, err = writer.update_manifest(name, version, nil, deps_mode)
    if err then return nil, err end
    
    util.announce_install(rockspec)

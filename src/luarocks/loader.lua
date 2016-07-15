@@ -6,21 +6,24 @@
 -- used to load previous modules, so that the loader chooses versions
 -- that are declared to be compatible with the ones loaded earlier.
 local loaders = package.loaders or package.searchers
-local package, require, ipairs, table, type, next, tostring, error =
-      package, require, ipairs, table, type, next, tostring, error
+local require, ipairs, table, type, next, tostring, error =
+      require, ipairs, table, type, next, tostring, error
 local unpack = unpack or table.unpack
 
---module("luarocks.loader")
 local loader = {}
-package.loaded["luarocks.loader"] = loader
 
-local cfg = require("luarocks.cfg")
+local is_clean = not package.loaded["luarocks.core.cfg"]
+
+-- This loader module depends only on core modules.
+local cfg = require("luarocks.core.cfg")
 cfg.init_package_paths()
 
-local path = require("luarocks.path")
-local manif_core = require("luarocks.manif_core")
-local deps = require("luarocks.deps")
-local util = require("luarocks.util")
+local path = require("luarocks.core.path")
+local manif = require("luarocks.core.manif")
+local deps = require("luarocks.core.deps")
+local util = require("luarocks.core.util")
+local require = nil
+--------------------------------------------------------------------------------
 
 loader.context = {}
 
@@ -33,7 +36,7 @@ local function load_rocks_trees()
    local any_ok = false
    local trees = {}
    for _, tree in ipairs(cfg.rocks_trees) do
-      local manifest, err = manif_core.load_local_manifest(path.rocks_dir(tree))
+      local manifest, err = manif.load_local_manifest(path.rocks_dir(tree))
       if manifest then
          any_ok = true
          table.insert(trees, {tree=tree, manifest=manifest})
@@ -216,5 +219,13 @@ function loader.luarocks_loader(module)
 end
 
 table.insert(loaders, 1, loader.luarocks_loader)
+
+if is_clean then
+   for modname, _ in pairs(package.loaded) do
+      if modname:match("^luarocks%.") then
+         package.loaded[modname] = nil
+      end
+   end
+end
 
 return loader

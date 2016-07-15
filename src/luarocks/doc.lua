@@ -2,7 +2,6 @@
 --- Module implementing the LuaRocks "doc" command.
 -- Shows documentation for an installed rock.
 local doc = {}
-package.loaded["luarocks.doc"] = doc
 
 local util = require("luarocks.util")
 local show = require("luarocks.show")

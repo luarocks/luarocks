@@ -1,10 +1,9 @@
 --- Module implementing the LuaRocks "show" command.
 -- Shows information about an installed rock.
 local show = {}
-package.loaded["luarocks.show"] = show
 
 local search = require("luarocks.search")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 local deps = require("luarocks.deps")
