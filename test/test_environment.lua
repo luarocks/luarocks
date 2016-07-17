@@ -41,7 +41,7 @@ end
 -- @param print_command boolean: print command if 'true'
 -- @param env_variables table: table of environment variables to export {FOO="bar", BAR="foo"}
 -- @return final_command string: concatenated command to execution
-local function execute_helper(command, print_command, env_variables)
+function test_env.execute_helper(command, print_command, env_variables)
    local final_command = ""
 
    if print_command then 
@@ -66,7 +66,7 @@ end
 -- In Lua5.1 os.execute returns numeric value, but in Lua5.2+ returns boolean
 -- @return true/false boolean: status of the command execution
 local function execute_bool(command, print_command, env_variables)
-   command = execute_helper(command, print_command, env_variables)
+   command = test_env.execute_helper(command, print_command, env_variables)
    
    local ok = os.execute(command)
    return ok == true or ok == 0
@@ -75,7 +75,7 @@ end
 --- Execute command and returns output of command
 -- @return output string: output the command execution
 local function execute_output(command, print_command, env_variables)
-   command = execute_helper(command, print_command, env_variables)
+   command = test_env.execute_helper(command, print_command, env_variables)
 
    local file = assert(io.popen(command))
    local output = file:read('*all')

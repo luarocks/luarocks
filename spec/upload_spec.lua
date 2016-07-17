@@ -20,18 +20,6 @@ local extra_rocks = {
    "/wsapi-1.6.1-1.src.rock",
    "/wsapi-xavante-1.6.1-1.src.rock",
    "/xavante-2.4.0-1.src.rock"
--- "copas    2.0.1-1",
--- coxpcall    1.16.0-1
--- dkjson    2.5-2
--- luafilesystem    1.6.3-2
--- luasec    0.6-1
--- luasocket    3.0rc1-2
--- restserver    0.1-1
--- restserver-xavante    0.2-1
--- rings    1.3.0-1
--- wsapi    1.6.1-1
--- wsapi-xavante    1.6.1-1
--- xavante    2.4.0-1
 }
 
 describe("LuaRocks upload tests #blackbox #b_upload", function()
@@ -65,7 +53,8 @@ describe("LuaRocks upload tests #blackbox #b_upload", function()
    describe("LuaRocks upload tests with Xavante server", function()
       before_each(function()
          assert.is_true(test_env.need_rock("restserver-xavante"))
-         os.execute(testing_paths.lua .. " " .. testing_paths.testing_dir .. "/mock-server.lua &")
+         local final_command = test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.testing_dir .. "/mock-server.lua &", true, test_env.env_variables)
+         os.execute(final_command)
       end)
       
       after_each(function()
