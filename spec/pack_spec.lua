@@ -52,7 +52,7 @@ describe("LuaRocks pack tests #blackbox #b_pack", function()
    
    it("LuaRocks pack src", function()
       assert.is_true(run.luarocks_bool("install luasec"))
-      assert.is_true(run.luarocks_bool("download --rockspec luasocket"))
+      assert.is_true(run.luarocks_bool("download --rockspec luasocket 3.0rc1-1"))
       assert.is_true(run.luarocks_bool("pack luasocket-3.0rc1-1.rockspec"))
       assert.is_true(test_env.remove_files(lfs.currentdir(), "luasocket-"))
    end)

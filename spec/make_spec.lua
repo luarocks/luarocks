@@ -27,7 +27,7 @@ describe("LuaRocks make tests #blackbox #b_make", function()
 
    it("LuaRocks make with rockspec", function()
       -- make luasocket
-      assert.is_true(run.luarocks_bool("download --source luasocket"))
+      assert.is_true(run.luarocks_bool("download --source luasocket 3.0rc1-1"))
       assert.is_true(run.luarocks_bool("unpack luasocket-3.0rc1-1.src.rock"))
       lfs.chdir("luasocket-3.0rc1-1/luasocket-3.0-rc1/")
       assert.is_true(run.luarocks_bool("make luasocket-3.0rc1-1.rockspec"))
