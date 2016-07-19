@@ -36,12 +36,24 @@ local function exists(path)
    return lfs.attributes(path, "mode") ~= nil
 end
 
+function test_env.quiet(commad)
+   if not test_env.VERBOSE then
+      if test_env.TEST_TARGET_OS == "linux" or test_env.TEST_TARGET_OS == "osx" then
+         return commad .. " 1> /dev/null 2> /dev/null"
+      elseif test_env.TEST_TARGET_OS == "windows" then
+         return commad .. " 2> NUL 1> NUL"
+      end
+   else
+      return command
+   end
+end
+
 --- Helper function for execute_bool and execute_output
 -- @param command string: command to execute
 -- @param print_command boolean: print command if 'true'
 -- @param env_variables table: table of environment variables to export {FOO="bar", BAR="foo"}
 -- @return final_command string: concatenated command to execution
-local function execute_helper(command, print_command, env_variables)
+function test_env.execute_helper(command, print_command, env_variables)
    local final_command = ""
 
    if print_command then 
@@ -66,7 +78,7 @@ end
 -- In Lua5.1 os.execute returns numeric value, but in Lua5.2+ returns boolean
 -- @return true/false boolean: status of the command execution
 local function execute_bool(command, print_command, env_variables)
-   command = execute_helper(command, print_command, env_variables)
+   command = test_env.execute_helper(command, print_command, env_variables)
    
    local ok = os.execute(command)
    return ok == true or ok == 0
@@ -75,7 +87,7 @@ end
 --- Execute command and returns output of command
 -- @return output string: output the command execution
 local function execute_output(command, print_command, env_variables)
-   command = execute_helper(command, print_command, env_variables)
+   command = test_env.execute_helper(command, print_command, env_variables)
 
    local file = assert(io.popen(command))
    local output = file:read('*all')
@@ -106,6 +118,8 @@ function test_env.set_args()
          test_env.RESET_ENV = false
       elseif argument == "clean" then
          test_env.TEST_ENV_CLEAN = true
+      elseif argument == "verbose" then
+         test_env.VERBOSE = true
       elseif argument == "travis" then
          test_env.TRAVIS = true
       elseif argument:find("^os=") then
@@ -415,10 +429,11 @@ end
 
 --- Test if required rock is installed if not, install it
 function test_env.need_rock(rock)
-   if test_env.run.luarocks_nocov("show " .. rock) then
+   print("Check if " .. rock .. " is installed")
+   if test_env.run.luarocks_noprint_nocov(test_env.quiet("show " .. rock)) then
       return true
    else
-      return test_env.run.luarocks_nocov("install " .. rock)
+      return test_env.run.luarocks_noprint_nocov(test_env.quiet("install " .. rock))
    end
 end
 
@@ -525,18 +540,20 @@ local function clean()
    test_env.remove_subdirs(test_env.testing_paths.testing_dir, "testing[_%-]")
    test_env.remove_files(test_env.testing_paths.testing_dir, "testing_")
    test_env.remove_files(test_env.testing_paths.testing_dir, "luacov")
+   test_env.remove_files(test_env.testing_paths.testing_dir, "upload_config")
    print("Cleaning done!")
 end
 
 --- Install luarocks into testing prefix.
 local function install_luarocks(install_env_vars)
    -- Configure LuaRocks testing environment
-   local configure_cmd = "./configure --with-lua=" .. test_env.testing_paths.luadir ..
-      " --prefix=" .. test_env.testing_paths.testing_lrprefix ..
-      " && make clean"
-
-   assert(execute_bool(configure_cmd, false, install_env_vars))
-   assert(execute_bool("make src/luarocks/site_config.lua && make dev", false, install_env_vars))
+   title("Installing LuaRocks")
+   local configure_cmd = "./configure --with-lua=" .. test_env.testing_paths.luadir .. " --prefix=" .. test_env.testing_paths.testing_lrprefix
+   assert(execute_bool(test_env.quiet(configure_cmd)), false, install_env_vars)
+   assert(execute_bool(test_env.quiet("make clean")), false, install_env_vars)
+   assert(execute_bool(test_env.quiet("make src/luarocks/site_config.lua")), false, install_env_vars)
+   assert(execute_bool(test_env.quiet("make dev")), false, install_env_vars)
+   print("LuaRocks installed correctly!")
 end
 
 ---

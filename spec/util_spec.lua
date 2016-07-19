@@ -34,13 +34,16 @@ describe("Basic tests #blackbox #b_util", function()
       local delete_path = lfs.currentdir()
       assert.is_true(os.remove(delete_path))
 
-      assert.is_false(run.luarocks_bool(" "))
+      local output = run.luarocks("")      
+      assert.is.falsy(output:find("LuaRocks scm, a module deployment system for Lua"))
       assert.is_true(lfs.chdir(main_path))
-      assert.is_true(run.luarocks_bool(" "))
+
+      output = run.luarocks("")
+      assert.is.truthy(output:find("LuaRocks scm, a module deployment system for Lua"))
    end)
 
    it("LuaRocks timeout", function()
-      assert.is_true(run.luarocks_bool("--timeout=10"))
+      assert.is.truthy(run.luarocks("--timeout=10"))
    end)
    
    it("LuaRocks timeout invalid", function()
@@ -48,7 +51,7 @@ describe("Basic tests #blackbox #b_util", function()
    end)
 
    it("LuaRocks only server=testing", function()
-      assert.is_true(run.luarocks_bool("--only-server=testing"))
+      assert.is.truthy(run.luarocks("--only-server=testing"))
    end)
    
    it("LuaRocks test site config", function()
@@ -56,7 +59,7 @@ describe("Basic tests #blackbox #b_util", function()
       assert.is.falsy(lfs.attributes("src/luarocks/site_config.lua"))
       assert.is.truthy(lfs.attributes("src/luarocks/site_config.lua.tmp"))
 
-      assert.is_true(run.luarocks_bool(""))
+      assert.is.truthy(run.luarocks(""))
       
       assert.is.truthy(os.rename("src/luarocks/site_config.lua.tmp", "src/luarocks/site_config.lua"))
       assert.is.falsy(lfs.attributes("src/luarocks/site_config.lua.tmp"))
