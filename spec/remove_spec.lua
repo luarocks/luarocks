@@ -45,7 +45,7 @@ describe("LuaRocks remove tests #blackbox #b_remove", function()
 
    describe("LuaRocks remove more complex tests", function()
       before_each(function()
-         assert.is_true(test_env.need_rock("luasocket"))
+         assert.is.truthy(test_env.need_rock("luasocket"))
       end)
 
       it("LuaRocks remove fail, break dependencies", function()
