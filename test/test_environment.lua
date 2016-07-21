@@ -549,10 +549,10 @@ local function install_luarocks(install_env_vars)
    -- Configure LuaRocks testing environment
    title("Installing LuaRocks")
    local configure_cmd = "./configure --with-lua=" .. test_env.testing_paths.luadir .. " --prefix=" .. test_env.testing_paths.testing_lrprefix
-   assert(execute_bool(test_env.quiet(configure_cmd)), false, install_env_vars)
-   assert(execute_bool(test_env.quiet("make clean")), false, install_env_vars)
-   assert(execute_bool(test_env.quiet("make src/luarocks/site_config.lua")), false, install_env_vars)
-   assert(execute_bool(test_env.quiet("make dev")), false, install_env_vars)
+   assert(execute_bool(test_env.quiet(configure_cmd), false, install_env_vars))
+   assert(execute_bool(test_env.quiet("make clean"), false, install_env_vars))
+   assert(execute_bool(test_env.quiet("make src/luarocks/site_config.lua"), false, install_env_vars))
+   assert(execute_bool(test_env.quiet("make dev"), false, install_env_vars))
    print("LuaRocks installed correctly!")
 end
 
