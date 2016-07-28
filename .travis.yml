@@ -42,7 +42,7 @@ matrix:
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; brew install python; fi
   - pip install hererocks
-  - hererocks lua_install -r^ --$LUA
+  - hererocks lua_install --luarocks @luarocks-3 --$LUA
   - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
 
 install:

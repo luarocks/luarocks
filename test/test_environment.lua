@@ -361,7 +361,7 @@ local function reset_environment(testing_paths, md5sums)
 end
 
 local function create_paths(luaversion_full)
-   local cfg = require("luarocks.cfg")
+   local cfg = require("luarocks.core.cfg")
 
    local testing_paths = {}
    testing_paths.luadir = cfg.variables.LUA_BINDIR:gsub("/bin/?$", "")
@@ -409,7 +409,7 @@ function test_env.setup_specs(extra_rocks)
       test_env.main()
       package.path = test_env.env_variables.LUA_PATH
 
-      test_env.platform = execute_output(test_env.testing_paths.lua .. " -e 'print(require(\"luarocks.cfg\").arch)'", false, test_env.env_variables)
+      test_env.platform = execute_output(test_env.testing_paths.lua .. " -e 'print(require(\"luarocks.core.cfg\").arch)'", false, test_env.env_variables)
       test_env.md5sums = create_md5sums(test_env.testing_paths)
       test_env.setup_done = true
       title("RUNNING TESTS")
