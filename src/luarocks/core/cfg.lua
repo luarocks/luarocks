@@ -406,7 +406,7 @@ local defaults = {
 
 if cfg.platforms.windows then
    local full_prefix = (site_config.LUAROCKS_PREFIX or (os.getenv("PROGRAMFILES")..[[\LuaRocks]]))
-   extra_luarocks_module_dir = full_prefix.."\\lua\\?.lua"
+   extra_luarocks_module_dir = full_prefix.."/lua/?.lua"
 
    home_config_file = home_config_file and home_config_file:gsub("\\","/")
    defaults.fs_use_modules = false

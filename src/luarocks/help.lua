@@ -64,7 +64,7 @@ function help.command(flags, command)
 	--verbose              Display verbose output of commands executed.
 	--timeout=<seconds>    Timeout on network operations, in seconds.
 	                       0 means no timeout (wait forever).
-	                       Default is ]]..cfg.connection_timeout..[[.]])
+	                       Default is ]]..tostring(cfg.connection_timeout)..[[.]])
       print_section("VARIABLES")
       util.printout([[
 	Variables from the "variables" table of the configuration file
