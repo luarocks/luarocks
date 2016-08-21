@@ -343,30 +343,32 @@ local function look_for_link_libraries(directory)
 	return false
 end
 
-local function look_for_headers (directory)
+local function look_for_headers(directory)
+	local directories
 	if vars.LUA_INCDIR then
-		print(S"    checking for $LUA_INCDIR\\lua.h")
-		if exists(S"$LUA_INCDIR\\lua.h") then
-			print("       Found lua.h")
-			return true
-		end
-		die(S"lua.h not found in $LUA_INCDIR")
+		directories = {vars.LUA_INCDIR}
+	else
+		directories = {
+			directory .. S"\\include\\lua\\$LUA_VERSION",
+			directory .. S"\\include\\lua$LUA_SHORTV",
+			directory .. S"\\include\\lua$LUA_VERSION",
+			directory .. "\\include",
+			directory
+		}
 	end
 
-	for _, e in ipairs{ 
-        S([[\include\lua\$LUA_VERSION]]), 
-        S([[\include\lua$LUA_SHORTV]]), 
-        S([[\include\lua$LUA_VERSION]]), 
-        S([[\include\$LUA_VERSION]]), 
-        [[\include\]],
-        [[\]], 
-      } do
-		print("    checking for "..directory..e.."\\lua.h")
-		if exists(directory..e.."\\lua.h") then
-			vars.LUA_INCDIR = directory..e
+	for _, dir in ipairs(directories) do
+		local full_name = dir .. "\\lua.h"
+		print("    checking for " .. full_name)
+		if exists(full_name) then
+			vars.LUA_INCDIR = dir
 			print("       Found lua.h")
 			return true
 		end
+	end
+
+	if vars.LUA_INCDIR then
+		die(S"lua.h not found in $LUA_INCDIR")
 	end
 	return false
 end
