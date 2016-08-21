@@ -42,6 +42,8 @@ local NOADMIN = false
 local PROMPT = true
 local SELFCONTAINED = false
 
+local lua_version_set = false
+
 ---
 -- Some helpers
 -- 
@@ -220,6 +222,7 @@ local function parse_options(args)
 			vars.TREE_CMODULE = option.value
 		elseif name == "/LV" then
 			vars.LUA_VERSION = option.value
+			lua_version_set = true
 		elseif name == "/L" then
 			INSTALL_LUA = true
 		elseif name == "/MW" then
@@ -287,8 +290,31 @@ end
 -- ***********************************************************
 -- Detect Lua
 -- ***********************************************************
+local function detect_lua_version(interpreter_path)
+	local handler = io.popen(('type NUL && "%s" -e "io.stdout:write(_VERSION)" 2>NUL'):format(interpreter_path), "r")
+	if not handler then
+		return nil, "interpreter does not work"
+	end
+	local full_version = handler:read("*a")
+	handler:close()
+
+	local version = full_version:match("^Lua (5%.[123])$")
+	if not version then
+		return nil, "unknown interpreter version '" .. full_version .. "'"
+	end
+	return version
+end
+
 local function look_for_interpreter(directory)
-	local names = {S"lua$LUA_VERSION.exe", S"lua$LUA_SHORTV.exe", "lua.exe", "luajit.exe"}
+	local names
+	if lua_version_set then
+		names = {S"lua$LUA_VERSION.exe", S"lua$LUA_SHORTV.exe"}
+	else
+		names = {"lua5.3.exe", "lua53.exe", "lua5.2.exe", "lua52.exe", "lua5.1.exe", "lua51.exe"}
+	end
+	table.insert(names, "lua.exe")
+	table.insert(names, "luajit.exe")
+
 	local directories
 	if vars.LUA_BINDIR then
 		-- If LUA_BINDIR is specified, look only in that directory.
@@ -302,16 +328,31 @@ local function look_for_interpreter(directory)
 		for _, name in ipairs(names) do
 			local full_name = dir .. "\\" .. name
 			if exists(full_name) then
-				vars.LUA_INTERPRETER = name
-				vars.LUA_BINDIR = dir
-				print("       Found " .. full_name)
-				return true
+				print("       Found " .. name .. ", testing it...")
+				local version, err = detect_lua_version(full_name)
+				if not version then
+					print("       Error: " .. err)
+				else
+					if version ~= vars.LUA_VERSION then
+						if lua_version_set then
+							die("Version of interpreter clashes with the value of /LV. Please check your configuration.")
+						else
+							vars.LUA_VERSION = version
+							vars.LUA_SHORTV = version:gsub("%.", "")
+							vars.LUA_LIB_NAMES = vars.LUA_LIB_NAMES:gsub("5([%.]?)[123]", "5%1" .. version:sub(-1))
+						end
+					end
+
+					vars.LUA_INTERPRETER = name
+					vars.LUA_BINDIR = dir
+					return true
+				end
 			end
 		end
 	end
 
 	if vars.LUA_BINDIR then
-		die(S"Lua executable lua.exe, luajit.exe, lua$LUA_SHORTV.exe or lua$LUA_VERSION.exe not found in $LUA_BINDIR")
+		die(("Working Lua executable (one of %s) not found in %s"):format(table.concat(names, ", "), vars.LUA_BINDIR))
 	end
 	return false
 end
@@ -559,12 +600,8 @@ local function look_for_lua_install ()
 			look_for_headers(vars.LUA_INCDIR)
 		then
 			if get_runtime() then
-				print("Runtime check completed, now testing interpreter...")
-				if exec(S[["$LUA_BINDIR\$LUA_INTERPRETER" -v 2>NUL]]) then
-					print("    Ok")
-					return true
-				end
-				print("   Interpreter returned an error, not ok")
+				print("Runtime check completed.")
+				return true
 			end
 		end
 		return false
@@ -580,12 +617,8 @@ local function look_for_lua_install ()
 					if look_for_headers(directory) then
 						print("Headers found, checking runtime to use...")
 						if get_runtime() then
-							print("Runtime check completed, now testing interpreter...")
-							if exec(S[["$LUA_BINDIR\$LUA_INTERPRETER" -v 2>NUL]]) then
-								print("    Ok")
-								return true
-							end
-							print("   Interpreter returned an error, not ok")
+							print("Runtime check completed.")
+							return true
 						end
 					end
 				end
