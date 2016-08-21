@@ -526,33 +526,33 @@ local function get_msvc_env_setup_cmd()
 	return ""
 end
 
+local function get_possible_lua_directories()
+	if vars.LUA_PREFIX then
+		return {vars.LUA_PREFIX}
+	end
+
+	-- No prefix given, so use PATH.
+	local path = os.getenv("PATH") or ""
+	path = path:gsub(";+", ";") -- Remove duplicates.
+	local directories = split_string(path, ";")
+	for i, dir in ipairs(directories) do
+		-- Remove trailing backslashes, but not from a drive letter like `C:\`.
+		dir = dir:gsub("([^:])\\+$", "%1")
+		-- Remove trailing `bin` subdirectory, the searcher will check there anyway.
+		if dir:upper():match("[:\\]BIN$") then
+			dir = dir:sub(1, -5)
+		end
+		directories[i] = dir
+	end
+	-- Finally add some other default paths.
+	table.insert(directories, [[c:\lua5.1.2]])
+	table.insert(directories, [[c:\lua]])
+	table.insert(directories, [[c:\kepler\1.1]])
+	return directories
+end
+
 local function look_for_lua_install ()
 	print("Looking for Lua interpreter")
-	local directories
-	if vars.LUA_PREFIX then
-		directories = { vars.LUA_PREFIX }
-	else
-		-- no prefix given, so use path
-		directories = (os.getenv("PATH",";") or "")
-		directories = directories:gsub(";+", ";")  --remove all doubles
-		directories = split_string(directories,";")
-		-- if a path element ends with "\bin\" then remove it, as the searcher will check there anyway
-		for i, val in ipairs(directories) do
-			-- remove trailing backslash
-			while val:sub(-1,-1) == "\\" and val:sub(-2,-1) ~= ":\\" do 
-				val = val:sub(1,-2)
-			end
-			-- remove trailing 'bin'
-			if val:upper():sub(-4,-1) == "\\BIN" or val:upper():sub(-4,-1) == ":BIN" then
-				val = val:sub(1,-5)
-			end
-			directories[i] = val
-		end
-		-- finaly add some other default paths
-		table.insert(directories, [[c:\lua5.1.2]])
-		table.insert(directories, [[c:\lua]])
-		table.insert(directories, [[c:\kepler\1.1]])
-	end
 	if vars.LUA_BINDIR and vars.LUA_LIBDIR and vars.LUA_INCDIR then
 		if look_for_interpreter(vars.LUA_BINDIR) and 
 			look_for_link_libraries(vars.LUA_LIBDIR) and
@@ -569,8 +569,8 @@ local function look_for_lua_install ()
 		end
 		return false
 	end
-	
-	for _, directory in ipairs(directories) do
+
+	for _, directory in ipairs(get_possible_lua_directories()) do
 		print("    checking " .. directory)
 		if exists(directory) then
 			if look_for_interpreter(directory) then
