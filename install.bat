@@ -151,7 +151,7 @@ Configuring the destinations:
                
 Configuring the Lua interpreter:
 /LV [version]  Lua version to use; either 5.1, 5.2, or 5.3.
-               Default is 5.1
+               Default is auto-detected.
 /LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
                If not provided, the installer will search the system
                path and some default locations for a valid Lua
