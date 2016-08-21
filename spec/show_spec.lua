@@ -34,7 +34,7 @@ describe("LuaRocks show tests #blackbox #b_show", function()
       
       it("LuaRocks show rockspec of luacov", function()
          local output = run.luarocks("show --rockspec luacov")
-         assert.is.truthy(output:match("luacov-0.11.0-1.rockspec"))
+         assert.is.truthy(output:match("luacov--0.11.0--1.rockspec"))
       end)
       
       it("LuaRocks show mversion of luacov", function()
