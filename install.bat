@@ -287,56 +287,32 @@ end
 -- ***********************************************************
 -- Detect Lua
 -- ***********************************************************
-local function look_for_interpreter (directory)
+local function look_for_interpreter(directory)
+	local names = {S"lua$LUA_VERSION.exe", S"lua$LUA_SHORTV.exe", "lua.exe", "luajit.exe"}
+	local directories
 	if vars.LUA_BINDIR then
-        -- if LUA_BINDIR is specified, it must be there, otherwise we fail
-		if exists( S"$LUA_BINDIR\\lua$LUA_VERSION.exe" ) then
-			vars.LUA_INTERPRETER = S"lua$LUA_VERSION.exe"
-			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
-			return true
-		elseif exists( S"$LUA_BINDIR\\lua$LUA_SHORTV.exe" ) then
-			vars.LUA_INTERPRETER = S"lua$LUA_SHORTV.exe"
-			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
-			return true
-		elseif exists(S"$LUA_BINDIR\\lua.exe") then
-			vars.LUA_INTERPRETER = "lua.exe"
-			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
-			return true
-		elseif exists(S"$LUA_BINDIR\\luajit.exe") then
-			vars.LUA_INTERPRETER = "luajit.exe"
-			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
-			return true
+		-- If LUA_BINDIR is specified, look only in that directory.
+		directories = {vars.LUA_BINDIR}
+	else
+		-- Try candidate directory and its `bin` subdirectory.
+		directories = {directory, directory .. "\\bin"}
+	end
+
+	for _, dir in ipairs(directories) do
+		for _, name in ipairs(names) do
+			local full_name = dir .. "\\" .. name
+			if exists(full_name) then
+				vars.LUA_INTERPRETER = name
+				vars.LUA_BINDIR = dir
+				print("       Found " .. full_name)
+				return true
+			end
 		end
+	end
+
+	if vars.LUA_BINDIR then
 		die(S"Lua executable lua.exe, luajit.exe, lua$LUA_SHORTV.exe or lua$LUA_VERSION.exe not found in $LUA_BINDIR")
 	end
-
-	for _, e in ipairs{ [[\]], [[\bin\]] } do
-		if exists(directory..e.."\\lua"..vars.LUA_VERSION..".exe") then
-			vars.LUA_INTERPRETER = S"lua$LUA_VERSION.exe"
-			vars.LUA_BINDIR = directory .. e
-			print("       Found ."..e..vars.LUA_INTERPRETER)
-			return true
-
-		elseif exists(directory..e.."\\lua"..vars.LUA_SHORTV..".exe") then
-			vars.LUA_INTERPRETER = S"lua$LUA_SHORTV.exe"
-			vars.LUA_BINDIR = directory .. e
-			print("       Found ."..e..vars.LUA_INTERPRETER)
-			return true
-
-		elseif exists(directory..e.."\\lua.exe") then
-			vars.LUA_INTERPRETER = "lua.exe"
-			vars.LUA_BINDIR = directory..e
-			print("       Found ."..e..vars.LUA_INTERPRETER)
-			return true
-
-		elseif exists(directory..e.."\\luajit.exe") then
-			vars.LUA_INTERPRETER = "luajit.exe"
-			vars.LUA_BINDIR = directory..e
-			print("       Found ."..e..vars.LUA_INTERPRETER)
-			return true
-		end
-	end
-	--print("      No Lua interpreter found")
 	return false
 end
 
