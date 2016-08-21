@@ -316,29 +316,29 @@ local function look_for_interpreter(directory)
 	return false
 end
 
-local function look_for_link_libraries (directory)
+local function look_for_link_libraries(directory)
+	local directories
 	if vars.LUA_LIBDIR then
-		for name in vars.LUA_LIB_NAMES:gmatch("[^%s]+") do
-			print(S"    checking for $LUA_LIBDIR\\"..name)
-			if exists(vars.LUA_LIBDIR.."\\"..name) then
-				vars.LUA_LIBNAME = name
-				print("       Found "..name)
-				return true
-			end
-		end
-		die(S"link library (one of; $LUA_LIB_NAMES) not found in $LUA_LIBDIR")
+		directories = {vars.LUA_LIBDIR}
+	else
+		directories = {directory, directory .. "\\lib", directory .. "\\bin"}
 	end
 
-	for _, e in ipairs{ [[\]], [[\lib\]], [[\bin\]]} do
+	for _, dir in ipairs(directories) do
 		for name in vars.LUA_LIB_NAMES:gmatch("[^%s]+") do
-			print("    checking for "..directory..e.."\\"..name)
-			if exists(directory..e.."\\"..name) then
-				vars.LUA_LIBDIR = directory .. e
+			local full_name = dir .. "\\" .. name
+			print("    checking for " .. full_name)
+			if exists(full_name) then
+				vars.LUA_LIBDIR = dir
 				vars.LUA_LIBNAME = name
-				print("       Found "..name)
+				print("       Found " .. name)
 				return true
 			end
 		end
+	end
+
+	if vars.LUA_LIBDIR then
+		die(S"link library (one of; $LUA_LIB_NAMES) not found in $LUA_LIBDIR")
 	end
 	return false
 end
