@@ -20,10 +20,12 @@ describe("LuaRocks show tests #blackbox #b_show", function()
       
       it("LuaRocks show luacov", function()
          local output = run.luarocks("show luacov")
+         assert.is.truthy(output:match("LuaCov"))
       end)
       
       it("LuaRocks show modules of luacov", function()
          local output = run.luarocks("show --modules luacov")
+         assert.is.truthy(output:match("luacovluacov.defaultsluacov.reporterluacov.reporter.defaultluacov.runnerluacov.statsluacov.tick"))
       end)
       
       it("LuaRocks show dependencies of luacov", function()
@@ -32,10 +34,12 @@ describe("LuaRocks show tests #blackbox #b_show", function()
       
       it("LuaRocks show rockspec of luacov", function()
          local output = run.luarocks("show --rockspec luacov")
+         assert.is.truthy(output:match("luacov-0.11.0-1.rockspec"))
       end)
       
       it("LuaRocks show mversion of luacov", function()
          local output = run.luarocks("show --mversion luacov")
+         assert.is.truthy(output:match("0.11.0--1"))
       end)
       
       it("LuaRocks show rock tree of luacov", function()
@@ -49,6 +53,6 @@ describe("LuaRocks show tests #blackbox #b_show", function()
 
    it("LuaRocks show old version of luacov", function()
       run.luarocks("install luacov 0.11.0")
-      run.luarocks("show luacov 0.11.0")
+      run.luarocks_bool("show luacov 0.11.0")
    end)
 end)
