@@ -8,9 +8,9 @@ test_env.unload_luarocks()
 local extra_rocks = {
    "/lxsh-0.8.6-2.src.rock",
    "/lxsh-0.8.6-2.rockspec",
-   "/luasocket-3.0rc1-1.src.rock",
-   "/luasocket-3.0rc1-1.rockspec",
-   "/lpeg-0.12-1.src.rock"
+   "/luasocket-3.0rc1-2.src.rock",
+   "/luasocket-3.0rc1-2.rockspec",
+   "/lpeg-1.0.0-1.src.rock",
 }
 
 describe("LuaRocks deps tests #blackbox #b_deps", function()
@@ -23,59 +23,59 @@ describe("LuaRocks deps tests #blackbox #b_deps", function()
       assert.is_true(run.luarocks_bool("build --tree=system lpeg"))
       assert.is_true(run.luarocks_bool("build --deps-mode=one --tree=" .. testing_paths.testing_tree .. " lxsh"))
       
-      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh"))
-      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
 
    it("LuaRocks deps mode order", function()
       assert.is_true(run.luarocks_bool("build --tree=system lpeg"))
       assert.is_true(run.luarocks_bool("build --deps-mode=order --tree=" .. testing_paths.testing_tree .. " lxsh"))
 
-      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh"))
-      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
 
    it("LuaRocks deps mode order sys", function()
       assert.is_true(run.luarocks_bool("build --tree=" .. testing_paths.testing_tree .. " lpeg"))
       assert.is_true(run.luarocks_bool("build --deps-mode=order --tree=" .. testing_paths.testing_sys_tree .. " lxsh"))
 
-      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
 
    it("LuaRocks deps mode all sys", function()
       assert.is_true(run.luarocks_bool("build --tree=" .. testing_paths.testing_tree .. " lpeg"))
       assert.is_true(run.luarocks_bool("build --deps-mode=all --tree=" .. testing_paths.testing_sys_tree .. " lxsh"))
 
-      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
 
    it("LuaRocks deps mode none", function()
       assert.is_true(run.luarocks_bool("build --tree=" .. testing_paths.testing_tree .. " lpeg"))
       assert.is_true(run.luarocks_bool("build --deps-mode=none lxsh"))
 
-      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
 
    it("LuaRocks nodeps alias", function()
       assert.is_true(run.luarocks_bool("build --tree=" .. testing_paths.testing_tree .. " --nodeps lxsh"))
 
-      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh"))
-      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
 
    it("LuaRocks deps mode make order", function()
@@ -89,10 +89,10 @@ describe("LuaRocks deps tests #blackbox #b_deps", function()
       test_env.remove_dir("lxsh-0.8.6-2")
       assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
 
-      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh"))
-      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
    
    it("LuaRocks deps mode make order sys", function()
@@ -106,9 +106,9 @@ describe("LuaRocks deps tests #blackbox #b_deps", function()
       test_env.remove_dir("lxsh-0.8.6-2")
       assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
 
-      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg"))
-      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
 end)

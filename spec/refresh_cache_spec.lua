@@ -4,7 +4,7 @@ local run = test_env.run
 test_env.unload_luarocks()
 
 describe("LuaRocks refresh_cache tests #blackbox #b_refresh_cache", function()
-	
+
    before_each(function()
       test_env.setup_specs()
    end)
