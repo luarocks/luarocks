@@ -171,6 +171,10 @@ function test_env.set_args()
          test_env.APPVEYOR_OPENSSL = "OPENSSL_LIBDIR=C:\\OpenSSL-Win32\\lib OPENSSL_INCDIR=C:\\OpenSSL-Win32\\include"
       elseif argument:find("^os=") then
          test_env.TEST_TARGET_OS = argument:match("^os=(.*)$")
+      elseif argument == "mingw" then
+         test_env.MINGW = true
+      elseif argument == "msvc" then
+         test_env.MINGW = false
       else
          help()
       end
@@ -629,11 +633,8 @@ local function install_luarocks(install_env_vars)
    local testing_paths = test_env.testing_paths
    title("Installing LuaRocks")
    if test_env.TEST_TARGET_OS == "windows" then
-      if test_env.LUA_V then 
-         assert(execute_bool("install.bat /LUA " .. testing_paths.luadir .. " /LV " .. test_env.LUA_V .. " /P " .. testing_paths.testing_lrprefix .. " /NOREG /NOADMIN /F /Q /CONFIG " .. testing_paths.testing_lrprefix .. "/etc/luarocks", false, install_env_vars))
-      else
-         assert(execute_bool("install.bat /LUA " .. testing_paths.luadir .. " /P " .. testing_paths.testing_lrprefix .. " /NOREG /NOADMIN /F /Q /CONFIG " .. testing_paths.testing_lrprefix .. "/etc/luarocks", false, install_env_vars))
-      end
+      local compiler_flag = test_env.MINGW and "/MW" or ""
+      assert(execute_bool("install.bat /LUA " .. testing_paths.luadir .. " " .. compiler_flag .. " /P " .. testing_paths.testing_lrprefix .. " /NOREG /NOADMIN /F /Q /CONFIG " .. testing_paths.testing_lrprefix .. "/etc/luarocks", false, install_env_vars))
       assert(execute_bool(testing_paths.win_tools .. "/cp " .. testing_paths.testing_lrprefix .. "/lua/luarocks/site_config* " .. testing_paths.src_dir .. "/luarocks/site_config.lua"))
    else
       local configure_cmd = "./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix
