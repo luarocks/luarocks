@@ -42,6 +42,8 @@ local NOADMIN = false
 local PROMPT = true
 local SELFCONTAINED = false
 
+local lua_version_set = false
+
 ---
 -- Some helpers
 -- 
@@ -149,7 +151,7 @@ Configuring the destinations:
                
 Configuring the Lua interpreter:
 /LV [version]  Lua version to use; either 5.1, 5.2, or 5.3.
-               Default is 5.1
+               Default is auto-detected.
 /LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
                If not provided, the installer will search the system
                path and some default locations for a valid Lua
@@ -220,6 +222,7 @@ local function parse_options(args)
 			vars.TREE_CMODULE = option.value
 		elseif name == "/LV" then
 			vars.LUA_VERSION = option.value
+			lua_version_set = true
 		elseif name == "/L" then
 			INSTALL_LUA = true
 		elseif name == "/MW" then
@@ -287,110 +290,126 @@ end
 -- ***********************************************************
 -- Detect Lua
 -- ***********************************************************
-local function look_for_interpreter (directory)
+local function detect_lua_version(interpreter_path)
+	local handler = io.popen(('type NUL && "%s" -e "io.stdout:write(_VERSION)" 2>NUL'):format(interpreter_path), "r")
+	if not handler then
+		return nil, "interpreter does not work"
+	end
+	local full_version = handler:read("*a")
+	handler:close()
+
+	local version = full_version:match("^Lua (5%.[123])$")
+	if not version then
+		return nil, "unknown interpreter version '" .. full_version .. "'"
+	end
+	return version
+end
+
+local function look_for_interpreter(directory)
+	local names
+	if lua_version_set then
+		names = {S"lua$LUA_VERSION.exe", S"lua$LUA_SHORTV.exe"}
+	else
+		names = {"lua5.3.exe", "lua53.exe", "lua5.2.exe", "lua52.exe", "lua5.1.exe", "lua51.exe"}
+	end
+	table.insert(names, "lua.exe")
+	table.insert(names, "luajit.exe")
+
+	local directories
 	if vars.LUA_BINDIR then
-        -- if LUA_BINDIR is specified, it must be there, otherwise we fail
-		if exists( S"$LUA_BINDIR\\lua$LUA_VERSION.exe" ) then
-			vars.LUA_INTERPRETER = S"lua$LUA_VERSION.exe"
-			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
-			return true
-		elseif exists( S"$LUA_BINDIR\\lua$LUA_SHORTV.exe" ) then
-			vars.LUA_INTERPRETER = S"lua$LUA_SHORTV.exe"
-			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
-			return true
-		elseif exists(S"$LUA_BINDIR\\lua.exe") then
-			vars.LUA_INTERPRETER = "lua.exe"
-			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
-			return true
-		elseif exists(S"$LUA_BINDIR\\luajit.exe") then
-			vars.LUA_INTERPRETER = "luajit.exe"
-			print(S"       Found $LUA_BINDIR\\$LUA_INTERPRETER")
-			return true
-		end
-		die(S"Lua executable lua.exe, luajit.exe, lua$LUA_SHORTV.exe or lua$LUA_VERSION.exe not found in $LUA_BINDIR")
+		-- If LUA_BINDIR is specified, look only in that directory.
+		directories = {vars.LUA_BINDIR}
+	else
+		-- Try candidate directory and its `bin` subdirectory.
+		directories = {directory, directory .. "\\bin"}
 	end
 
-	for _, e in ipairs{ [[\]], [[\bin\]] } do
-		if exists(directory..e.."\\lua"..vars.LUA_VERSION..".exe") then
-			vars.LUA_INTERPRETER = S"lua$LUA_VERSION.exe"
-			vars.LUA_BINDIR = directory .. e
-			print("       Found ."..e..vars.LUA_INTERPRETER)
-			return true
+	for _, dir in ipairs(directories) do
+		for _, name in ipairs(names) do
+			local full_name = dir .. "\\" .. name
+			if exists(full_name) then
+				print("       Found " .. name .. ", testing it...")
+				local version, err = detect_lua_version(full_name)
+				if not version then
+					print("       Error: " .. err)
+				else
+					if version ~= vars.LUA_VERSION then
+						if lua_version_set then
+							die("Version of interpreter clashes with the value of /LV. Please check your configuration.")
+						else
+							vars.LUA_VERSION = version
+							vars.LUA_SHORTV = version:gsub("%.", "")
+							vars.LUA_LIB_NAMES = vars.LUA_LIB_NAMES:gsub("5([%.]?)[123]", "5%1" .. version:sub(-1))
+						end
+					end
 
-		elseif exists(directory..e.."\\lua"..vars.LUA_SHORTV..".exe") then
-			vars.LUA_INTERPRETER = S"lua$LUA_SHORTV.exe"
-			vars.LUA_BINDIR = directory .. e
-			print("       Found ."..e..vars.LUA_INTERPRETER)
-			return true
-
-		elseif exists(directory..e.."\\lua.exe") then
-			vars.LUA_INTERPRETER = "lua.exe"
-			vars.LUA_BINDIR = directory..e
-			print("       Found ."..e..vars.LUA_INTERPRETER)
-			return true
-
-		elseif exists(directory..e.."\\luajit.exe") then
-			vars.LUA_INTERPRETER = "luajit.exe"
-			vars.LUA_BINDIR = directory..e
-			print("       Found ."..e..vars.LUA_INTERPRETER)
-			return true
+					vars.LUA_INTERPRETER = name
+					vars.LUA_BINDIR = dir
+					return true
+				end
+			end
 		end
 	end
-	--print("      No Lua interpreter found")
+
+	if vars.LUA_BINDIR then
+		die(("Working Lua executable (one of %s) not found in %s"):format(table.concat(names, ", "), vars.LUA_BINDIR))
+	end
 	return false
 end
 
-local function look_for_link_libraries (directory)
+local function look_for_link_libraries(directory)
+	local directories
 	if vars.LUA_LIBDIR then
+		directories = {vars.LUA_LIBDIR}
+	else
+		directories = {directory, directory .. "\\lib", directory .. "\\bin"}
+	end
+
+	for _, dir in ipairs(directories) do
 		for name in vars.LUA_LIB_NAMES:gmatch("[^%s]+") do
-			print(S"    checking for $LUA_LIBDIR\\"..name)
-			if exists(vars.LUA_LIBDIR.."\\"..name) then
+			local full_name = dir .. "\\" .. name
+			print("    checking for " .. full_name)
+			if exists(full_name) then
+				vars.LUA_LIBDIR = dir
 				vars.LUA_LIBNAME = name
-				print("       Found "..name)
+				print("       Found " .. name)
 				return true
 			end
 		end
+	end
+
+	if vars.LUA_LIBDIR then
 		die(S"link library (one of; $LUA_LIB_NAMES) not found in $LUA_LIBDIR")
 	end
-
-	for _, e in ipairs{ [[\]], [[\lib\]], [[\bin\]]} do
-		for name in vars.LUA_LIB_NAMES:gmatch("[^%s]+") do
-			print("    checking for "..directory..e.."\\"..name)
-			if exists(directory..e.."\\"..name) then
-				vars.LUA_LIBDIR = directory .. e
-				vars.LUA_LIBNAME = name
-				print("       Found "..name)
-				return true
-			end
-		end
-	end
 	return false
 end
 
-local function look_for_headers (directory)
+local function look_for_headers(directory)
+	local directories
 	if vars.LUA_INCDIR then
-		print(S"    checking for $LUA_INCDIR\\lua.h")
-		if exists(S"$LUA_INCDIR\\lua.h") then
-			print("       Found lua.h")
-			return true
-		end
-		die(S"lua.h not found in $LUA_INCDIR")
+		directories = {vars.LUA_INCDIR}
+	else
+		directories = {
+			directory .. S"\\include\\lua\\$LUA_VERSION",
+			directory .. S"\\include\\lua$LUA_SHORTV",
+			directory .. S"\\include\\lua$LUA_VERSION",
+			directory .. "\\include",
+			directory
+		}
 	end
 
-	for _, e in ipairs{ 
-        S([[\include\lua\$LUA_VERSION]]), 
-        S([[\include\lua$LUA_SHORTV]]), 
-        S([[\include\lua$LUA_VERSION]]), 
-        S([[\include\$LUA_VERSION]]), 
-        [[\include\]],
-        [[\]], 
-      } do
-		print("    checking for "..directory..e.."\\lua.h")
-		if exists(directory..e.."\\lua.h") then
-			vars.LUA_INCDIR = directory..e
+	for _, dir in ipairs(directories) do
+		local full_name = dir .. "\\lua.h"
+		print("    checking for " .. full_name)
+		if exists(full_name) then
+			vars.LUA_INCDIR = dir
 			print("       Found lua.h")
 			return true
 		end
+	end
+
+	if vars.LUA_INCDIR then
+		die(S"lua.h not found in $LUA_INCDIR")
 	end
 	return false
 end
@@ -548,51 +567,47 @@ local function get_msvc_env_setup_cmd()
 	return ""
 end
 
+local function get_possible_lua_directories()
+	if vars.LUA_PREFIX then
+		return {vars.LUA_PREFIX}
+	end
+
+	-- No prefix given, so use PATH.
+	local path = os.getenv("PATH") or ""
+	path = path:gsub(";+", ";") -- Remove duplicates.
+	local directories = split_string(path, ";")
+	for i, dir in ipairs(directories) do
+		-- Remove trailing backslashes, but not from a drive letter like `C:\`.
+		dir = dir:gsub("([^:])\\+$", "%1")
+		-- Remove trailing `bin` subdirectory, the searcher will check there anyway.
+		if dir:upper():match("[:\\]BIN$") then
+			dir = dir:sub(1, -5)
+		end
+		directories[i] = dir
+	end
+	-- Finally add some other default paths.
+	table.insert(directories, [[c:\lua5.1.2]])
+	table.insert(directories, [[c:\lua]])
+	table.insert(directories, [[c:\kepler\1.1]])
+	return directories
+end
+
 local function look_for_lua_install ()
 	print("Looking for Lua interpreter")
-	local directories
-	if vars.LUA_PREFIX then
-		directories = { vars.LUA_PREFIX }
-	else
-		-- no prefix given, so use path
-		directories = (os.getenv("PATH",";") or "")
-		directories = directories:gsub(";+", ";")  --remove all doubles
-		directories = split_string(directories,";")
-		-- if a path element ends with "\bin\" then remove it, as the searcher will check there anyway
-		for i, val in ipairs(directories) do
-			-- remove trailing backslash
-			while val:sub(-1,-1) == "\\" and val:sub(-2,-1) ~= ":\\" do 
-				val = val:sub(1,-2)
-			end
-			-- remove trailing 'bin'
-			if val:upper():sub(-4,-1) == "\\BIN" or val:upper():sub(-4,-1) == ":BIN" then
-				val = val:sub(1,-5)
-			end
-			directories[i] = val
-		end
-		-- finaly add some other default paths
-		table.insert(directories, [[c:\lua5.1.2]])
-		table.insert(directories, [[c:\lua]])
-		table.insert(directories, [[c:\kepler\1.1]])
-	end
 	if vars.LUA_BINDIR and vars.LUA_LIBDIR and vars.LUA_INCDIR then
 		if look_for_interpreter(vars.LUA_BINDIR) and 
 			look_for_link_libraries(vars.LUA_LIBDIR) and
 			look_for_headers(vars.LUA_INCDIR)
 		then
 			if get_runtime() then
-				print("Runtime check completed, now testing interpreter...")
-				if exec(S[["$LUA_BINDIR\$LUA_INTERPRETER" -v 2>NUL]]) then
-					print("    Ok")
-					return true
-				end
-				print("   Interpreter returned an error, not ok")
+				print("Runtime check completed.")
+				return true
 			end
 		end
 		return false
 	end
-	
-	for _, directory in ipairs(directories) do
+
+	for _, directory in ipairs(get_possible_lua_directories()) do
 		print("    checking " .. directory)
 		if exists(directory) then
 			if look_for_interpreter(directory) then
@@ -602,12 +617,8 @@ local function look_for_lua_install ()
 					if look_for_headers(directory) then
 						print("Headers found, checking runtime to use...")
 						if get_runtime() then
-							print("Runtime check completed, now testing interpreter...")
-							if exec(S[["$LUA_BINDIR\$LUA_INTERPRETER" -v 2>NUL]]) then
-								print("    Ok")
-								return true
-							end
-							print("   Interpreter returned an error, not ok")
+							print("Runtime check completed.")
+							return true
 						end
 					end
 				end
