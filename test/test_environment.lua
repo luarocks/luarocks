@@ -660,9 +660,7 @@ function test_env.main()
    create_configs()
 
    local install_env_vars = {
-      LUAROCKS_CONFIG = test_env.testing_paths.testing_dir .. "/testing_config.lua",
-      LUA_PATH,
-      LUA_CPATH
+      LUAROCKS_CONFIG = test_env.testing_paths.testing_dir .. "/testing_config.lua"
    }
 
    install_luarocks(install_env_vars)
