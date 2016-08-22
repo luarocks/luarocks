@@ -53,32 +53,6 @@ local function die(message)
 	os.exit(1)
 end
 
-local function split_string(str, delim, maxNb)
-	-- Eliminate bad cases...
-	if string.find(str, delim) == nil then
-		return { str }
-	end
-	if maxNb == nil or maxNb < 1 then
-		maxNb = 0	 -- No limit
-	end
-	local result = {}
-	local pat = "(.-)" .. delim .. "()"
-	local nb = 0
-	local lastPos
-	for part, pos in string.gmatch(str, pat) do
-		nb = nb + 1
-		result[nb] = part
-		lastPos = pos
-		if nb == maxNb then break end
-	end
-	-- Handle the last field
-	if nb ~= maxNb then
-		result[nb + 1] = string.sub(str, lastPos)
-	end
-	return result
-end
-
-
 local function exec(cmd)
 	--print(cmd)
 	local status = os.execute("type NUL && "..cmd)
@@ -567,16 +541,15 @@ local function get_possible_lua_directories()
 
 	-- No prefix given, so use PATH.
 	local path = os.getenv("PATH") or ""
-	path = path:gsub(";+", ";") -- Remove duplicates.
-	local directories = split_string(path, ";")
-	for i, dir in ipairs(directories) do
+	local directories = {}
+	for dir in path:gmatch("[^;]+") do
 		-- Remove trailing backslashes, but not from a drive letter like `C:\`.
 		dir = dir:gsub("([^:])\\+$", "%1")
 		-- Remove trailing `bin` subdirectory, the searcher will check there anyway.
 		if dir:upper():match("[:\\]BIN$") then
 			dir = dir:sub(1, -5)
 		end
-		directories[i] = dir
+		table.insert(directories, dir)
 	end
 	-- Finally add some other default paths.
 	table.insert(directories, [[c:\lua5.1.2]])
