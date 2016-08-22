@@ -173,7 +173,7 @@ function test_env.set_args()
          test_env.TEST_TARGET_OS = argument:match("^os=(.*)$")
       elseif argument == "mingw" then
          test_env.MINGW = true
-      elseif argument == "msvc" then
+      elseif argument == "vs" then
          test_env.MINGW = false
       else
          help()
