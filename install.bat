@@ -763,9 +763,6 @@ vars.INCDIR = S"$PREFIX\\include"
 vars.LUA_SHORTV = vars.LUA_VERSION:gsub("%.", "")
 
 if INSTALL_LUA then
-	if vars.LUA_VERSION ~= "5.1" then
-		die("Cannot install own copy of Lua because only 5.1 is bundled")
-	end
 	vars.LUA_INTERPRETER = "lua5.1"
 	vars.LUA_BINDIR = vars.BINDIR
 	vars.LUA_LIBDIR = vars.LIBDIR
