@@ -92,7 +92,7 @@ describe("LuaRocks build tests #blackbox #b_build", function()
 
    describe("LuaRocks build - basic builds", function()
       it("LuaRocks build luadoc", function()
-         assert.is_true(run.luarocks_bool(test_env.quiet("build luadoc")))
+         assert.is_true(run.luarocks_bool("build luadoc --verbose"))
       end)
       
       it("LuaRocks build luacov diff version", function()
