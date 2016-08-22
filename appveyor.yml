@@ -32,6 +32,8 @@ init:
 # Setup Lua development/build environment
 # Make VS 2015 command line tools available
 - call "%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %platform%
+# Add MinGW compiler to the path
+- set PATH=C:\MinGW\bin;%PATH%
 
 before_build:
   - set PATH=C:\Python27\Scripts;%PATH% # Add directory containing 'pip' to PATH
@@ -43,7 +45,6 @@ build_script:
   - luarocks install busted 1> NUL 2> NUL
 
 test_script:
-  - set PATH=C:\MinGW\bin;%PATH% # Add MinGW compiler to the path
   - busted --lpath=.//?.lua --exclude-tags=ssh,unix,mock -Xhelper appveyor,%COMPILER%
 
 after_test:
