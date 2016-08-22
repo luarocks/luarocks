@@ -24,10 +24,6 @@ vars.LUA_LIBDIR = nil
 vars.LUA_LIBNAME = nil
 vars.LUA_VERSION = "5.1"
 vars.LUA_SHORTV = nil   -- "51"
--- MinGW does not generate .lib, nor needs it to link, but MSVC does
--- so .lib must be listed first to ensure they are found first if present.
--- To prevent MSVC trying to link to a .dll, which won't work.
-vars.LUA_LIB_NAMES = "lua5.1.lib lua51.lib lua5.1.dll lua51.dll liblua.dll.a"
 vars.LUA_RUNTIME = nil
 vars.UNAME_M = nil
 vars.COMPILER_ENV_CMD = nil
@@ -273,14 +269,8 @@ local function check_flags()
 			die("Bundled Lua version is 5.1, cannot install "..vars.LUA_VERSION)
 		end
 	end
-	if vars.LUA_VERSION ~= "5.1" then
-		if vars.LUA_VERSION == "5.2" then
-			vars.LUA_LIB_NAMES = vars.LUA_LIB_NAMES:gsub("5([%.]?)1", "5%12")
-		elseif vars.LUA_VERSION == "5.3" then
-			vars.LUA_LIB_NAMES = vars.LUA_LIB_NAMES:gsub("5([%.]?)1", "5%13")
-		else
-			die("Bad argument: /LV must either be 5.1, 5.2, or 5.3")
-		end
+	if not vars.LUA_VERSION:match("^5%.[123]$") then
+		die("Bad argument: /LV must either be 5.1, 5.2, or 5.3")
 	end
   if USE_MSVC_MANUAL and USE_MINGW then
     die("Cannot combine option /MSVC and /MW")
@@ -339,7 +329,6 @@ local function look_for_interpreter(directory)
 						else
 							vars.LUA_VERSION = version
 							vars.LUA_SHORTV = version:gsub("%.", "")
-							vars.LUA_LIB_NAMES = vars.LUA_LIB_NAMES:gsub("5([%.]?)[123]", "5%1" .. version:sub(-1))
 						end
 					end
 
@@ -358,6 +347,10 @@ local function look_for_interpreter(directory)
 end
 
 local function look_for_link_libraries(directory)
+	-- MinGW does not generate .lib, nor needs it to link, but MSVC does,
+	-- so .lib must be listed first to ensure they are found first if present,
+	-- to prevent MSVC trying to link to a .dll, which won't work.
+	local names = {S"lua$LUA_VERSION.lib", S"lua$LUA_SHORTV.lib", S"lua$LUA_VERSION.dll", S"lua$LUA_SHORTV.dll", "liblua.dll.a"}
 	local directories
 	if vars.LUA_LIBDIR then
 		directories = {vars.LUA_LIBDIR}
@@ -366,7 +359,7 @@ local function look_for_link_libraries(directory)
 	end
 
 	for _, dir in ipairs(directories) do
-		for name in vars.LUA_LIB_NAMES:gmatch("[^%s]+") do
+		for _, name in ipairs(names) do
 			local full_name = dir .. "\\" .. name
 			print("    checking for " .. full_name)
 			if exists(full_name) then
@@ -379,7 +372,7 @@ local function look_for_link_libraries(directory)
 	end
 
 	if vars.LUA_LIBDIR then
-		die(S"link library (one of; $LUA_LIB_NAMES) not found in $LUA_LIBDIR")
+		die(("Link library (one of %s) not found in %s"):format(table.concat(names, ", "), vars.LUA_LIBDIR))
 	end
 	return false
 end
