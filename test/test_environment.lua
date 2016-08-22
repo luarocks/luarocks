@@ -153,6 +153,7 @@ end
 function test_env.set_args()
    -- if at least Lua/LuaJIT version argument was found on input start to parse other arguments to env. variables
    test_env.TYPE_TEST_ENV = "minimal"
+   test_env.OPENSSL_DIRS = ""
    test_env.RESET_ENV = true
 
    for _, argument in ipairs(arg) do
@@ -168,7 +169,7 @@ function test_env.set_args()
          test_env.TRAVIS = true
       elseif argument == "appveyor" then
          test_env.APPVEYOR = true
-         test_env.APPVEYOR_OPENSSL = "OPENSSL_LIBDIR=C:\\OpenSSL-Win32\\lib OPENSSL_INCDIR=C:\\OpenSSL-Win32\\include"
+         test_env.OPENSSL_DIRS = "OPENSSL_LIBDIR=C:\\OpenSSL-Win32\\lib OPENSSL_INCDIR=C:\\OpenSSL-Win32\\include"
       elseif argument:find("^os=") then
          test_env.TEST_TARGET_OS = argument:match("^os=(.*)$")
       else

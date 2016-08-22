@@ -120,11 +120,7 @@ describe("LuaRocks build tests #blackbox #b_build", function()
       end)
       
       it("LuaRocks build luasec with skipping dependency checks", function()
-         if test_env.APPVEYOR then
-            assert.is_true(run.luarocks_bool("build luasec " .. test_env.APPVEYOR_OPENSSL .. " --nodeps"))
-         else
-            assert.is_true(run.luarocks_bool("build luasec --nodeps"))
-         end
+         assert.is_true(run.luarocks_bool("build luasec " .. test_env.OPENSSL_DIRS .. " --nodeps"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasec/0.6-1/luasec-0.6-1.rockspec"))
       end)
       
@@ -150,11 +146,7 @@ describe("LuaRocks build tests #blackbox #b_build", function()
       end
 
       it("LuaRocks build luasec only deps", function()
-         if test_env.APPVEYOR then
-            assert.is_true(run.luarocks_bool(test_env.quiet("build luasec " .. test_env.APPVEYOR_OPENSSL .. " --only-deps")))
-         else
-            assert.is_true(run.luarocks_bool(test_env.quiet("build luasec --only-deps")))
-         end
+         assert.is_true(run.luarocks_bool(test_env.quiet("build luasec " .. test_env.OPENSSL_DIRS .. " --only-deps")))
          assert.is_false(run.luarocks_bool("show luasec"))
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasec/0.6-1/luasec-0.6-1.rockspec"))
       end)
@@ -189,12 +181,8 @@ describe("LuaRocks build tests #blackbox #b_build", function()
       
       it("LuaRocks build with https", function()
          assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
+         assert.is_true(run.luarocks_bool(test_env.quiet("install luasec " .. test_env.OPENSSL_DIRS)))
          
-         if test_env.APPVEYOR then
-            assert.is_true(run.luarocks_bool(test_env.quiet("install luasec " .. test_env.APPVEYOR_OPENSSL)))
-         else
-            assert.is_true(run.luarocks_bool(test_env.quiet("install luasec")))
-         end
          assert.is_true(run.luarocks_bool("build validate-args-1.5.4-1.rockspec"))
          assert.is.truthy(run.luarocks("show validate-args"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/validate-args/1.5.4-1/validate-args-1.5.4-1.rockspec"))

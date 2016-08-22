@@ -49,11 +49,7 @@ describe("LuaRocks pack tests #blackbox #b_pack", function()
    end)
 
    it("LuaRocks pack src", function()
-      if test_env.APPVEYOR then
-         assert.is_true(run.luarocks_bool(test_env.quiet("install luasec " .. test_env.APPVEYOR_OPENSSL)))
-      else
-         assert.is_true(run.luarocks_bool(test_env.quiet("install luasec")))
-      end
+      assert.is_true(run.luarocks_bool(test_env.quiet("install luasec " .. test_env.OPENSSL_DIRS)))
       assert.is_true(run.luarocks_bool("download --rockspec luasocket 3.0rc1-2"))
       assert.is_true(run.luarocks_bool("pack luasocket-3.0rc1-2.rockspec"))
       assert.is_true(test_env.remove_files(lfs.currentdir(), "luasocket-"))
