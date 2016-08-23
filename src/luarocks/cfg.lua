@@ -468,6 +468,7 @@ if cfg.platforms.mingw32 then
    defaults.variables.LD = "mingw32-gcc"
    defaults.variables.CFLAGS = "-O2"
    defaults.variables.LIBFLAG = "-shared"
+   defaults.makefile = "Makefile"
    defaults.external_deps_patterns = {
       bin = { "?.exe", "?.bat" },
       -- mingw lookup list from http://stackoverflow.com/a/15853231/1793220
