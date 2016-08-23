@@ -24,10 +24,6 @@ vars.LUA_LIBDIR = nil
 vars.LUA_LIBNAME = nil
 vars.LUA_VERSION = "5.1"
 vars.LUA_SHORTV = nil   -- "51"
--- MinGW does not generate .lib, nor needs it to link, but MSVC does
--- so .lib must be listed first to ensure they are found first if present.
--- To prevent MSVC trying to link to a .dll, which won't work.
-vars.LUA_LIB_NAMES = "lua5.1.lib lua51.lib lua5.1.dll lua51.dll liblua.dll.a"
 vars.LUA_RUNTIME = nil
 vars.UNAME_M = nil
 vars.COMPILER_ENV_CMD = nil
@@ -56,32 +52,6 @@ local function die(message)
 	print("Failed installing LuaRocks. Run with /? for help.")
 	os.exit(1)
 end
-
-local function split_string(str, delim, maxNb)
-	-- Eliminate bad cases...
-	if string.find(str, delim) == nil then
-		return { str }
-	end
-	if maxNb == nil or maxNb < 1 then
-		maxNb = 0	 -- No limit
-	end
-	local result = {}
-	local pat = "(.-)" .. delim .. "()"
-	local nb = 0
-	local lastPos
-	for part, pos in string.gmatch(str, pat) do
-		nb = nb + 1
-		result[nb] = part
-		lastPos = pos
-		if nb == maxNb then break end
-	end
-	-- Handle the last field
-	if nb ~= maxNb then
-		result[nb + 1] = string.sub(str, lastPos)
-	end
-	return result
-end
-
 
 local function exec(cmd)
 	--print(cmd)
@@ -273,14 +243,8 @@ local function check_flags()
 			die("Bundled Lua version is 5.1, cannot install "..vars.LUA_VERSION)
 		end
 	end
-	if vars.LUA_VERSION ~= "5.1" then
-		if vars.LUA_VERSION == "5.2" then
-			vars.LUA_LIB_NAMES = vars.LUA_LIB_NAMES:gsub("5([%.]?)1", "5%12")
-		elseif vars.LUA_VERSION == "5.3" then
-			vars.LUA_LIB_NAMES = vars.LUA_LIB_NAMES:gsub("5([%.]?)1", "5%13")
-		else
-			die("Bad argument: /LV must either be 5.1, 5.2, or 5.3")
-		end
+	if not vars.LUA_VERSION:match("^5%.[123]$") then
+		die("Bad argument: /LV must either be 5.1, 5.2, or 5.3")
 	end
   if USE_MSVC_MANUAL and USE_MINGW then
     die("Cannot combine option /MSVC and /MW")
@@ -339,7 +303,6 @@ local function look_for_interpreter(directory)
 						else
 							vars.LUA_VERSION = version
 							vars.LUA_SHORTV = version:gsub("%.", "")
-							vars.LUA_LIB_NAMES = vars.LUA_LIB_NAMES:gsub("5([%.]?)[123]", "5%1" .. version:sub(-1))
 						end
 					end
 
@@ -358,6 +321,10 @@ local function look_for_interpreter(directory)
 end
 
 local function look_for_link_libraries(directory)
+	-- MinGW does not generate .lib, nor needs it to link, but MSVC does,
+	-- so .lib must be listed first to ensure they are found first if present,
+	-- to prevent MSVC trying to link to a .dll, which won't work.
+	local names = {S"lua$LUA_VERSION.lib", S"lua$LUA_SHORTV.lib", S"lua$LUA_VERSION.dll", S"lua$LUA_SHORTV.dll", "liblua.dll.a"}
 	local directories
 	if vars.LUA_LIBDIR then
 		directories = {vars.LUA_LIBDIR}
@@ -366,7 +333,7 @@ local function look_for_link_libraries(directory)
 	end
 
 	for _, dir in ipairs(directories) do
-		for name in vars.LUA_LIB_NAMES:gmatch("[^%s]+") do
+		for _, name in ipairs(names) do
 			local full_name = dir .. "\\" .. name
 			print("    checking for " .. full_name)
 			if exists(full_name) then
@@ -379,7 +346,7 @@ local function look_for_link_libraries(directory)
 	end
 
 	if vars.LUA_LIBDIR then
-		die(S"link library (one of; $LUA_LIB_NAMES) not found in $LUA_LIBDIR")
+		die(("Link library (one of %s) not found in %s"):format(table.concat(names, ", "), vars.LUA_LIBDIR))
 	end
 	return false
 end
@@ -574,16 +541,15 @@ local function get_possible_lua_directories()
 
 	-- No prefix given, so use PATH.
 	local path = os.getenv("PATH") or ""
-	path = path:gsub(";+", ";") -- Remove duplicates.
-	local directories = split_string(path, ";")
-	for i, dir in ipairs(directories) do
+	local directories = {}
+	for dir in path:gmatch("[^;]+") do
 		-- Remove trailing backslashes, but not from a drive letter like `C:\`.
 		dir = dir:gsub("([^:])\\+$", "%1")
 		-- Remove trailing `bin` subdirectory, the searcher will check there anyway.
 		if dir:upper():match("[:\\]BIN$") then
 			dir = dir:sub(1, -5)
 		end
-		directories[i] = dir
+		table.insert(directories, dir)
 	end
 	-- Finally add some other default paths.
 	table.insert(directories, [[c:\lua5.1.2]])
@@ -763,9 +729,6 @@ vars.INCDIR = S"$PREFIX\\include"
 vars.LUA_SHORTV = vars.LUA_VERSION:gsub("%.", "")
 
 if INSTALL_LUA then
-	if vars.LUA_VERSION ~= "5.1" then
-		die("Cannot install own copy of Lua because only 5.1 is bundled")
-	end
 	vars.LUA_INTERPRETER = "lua5.1"
 	vars.LUA_BINDIR = vars.BINDIR
 	vars.LUA_LIBDIR = vars.LIBDIR

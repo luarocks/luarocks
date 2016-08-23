@@ -63,18 +63,10 @@ describe("LuaRocks upload tests #blackbox #b_upload", function()
       end)
 
       it("LuaRocks upload rockspec with api-key", function()
-         if test_env.APPVEYOR then
-            assert.is_true(run.luarocks_bool("upload " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.rockspec " .. test_env.APPVEYOR_OPENSSL .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/luarocks_site.lua"}))
-         else
-            assert.is_true(run.luarocks_bool("upload " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.rockspec --api-key=123", {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/luarocks_site.lua"}))
-         end
+         assert.is_true(run.luarocks_bool("upload " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.rockspec " .. test_env.OPENSSL_DIRS .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/luarocks_site.lua"}))
       end)
       it("LuaRocks upload rockspec with api-key and skip-pack", function()
-         if test_env.APPVEYOR then
-            assert.is_true(run.luarocks_bool("upload --skip-pack " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.rockspec " .. test_env.APPVEYOR_OPENSSL .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/luarocks_site.lua"}))
-         else
-            assert.is_true(run.luarocks_bool("upload --skip-pack " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.rockspec --api-key=123", {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/luarocks_site.lua"}))
-         end
+         assert.is_true(run.luarocks_bool("upload --skip-pack " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.rockspec " .. test_env.OPENSSL_DIRS .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/luarocks_site.lua"}))
       end)
    end)
 end)
