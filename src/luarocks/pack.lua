@@ -164,7 +164,7 @@ function pack.pack_binary_rock(name, version, cmd, ...)
    if not rname then
       rname, rversion = name, version
    end
-   return do_pack_binary_rock(rname, rversion)
+   return do_pack_binary_rock(rname, rversion, temp_dir)
 end
 
 --- Driver function for the "pack" command.
