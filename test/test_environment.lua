@@ -119,13 +119,29 @@ function test_env.execute_helper(command, print_command, env_variables)
 end
 
 --- Execute command and returns true/false
--- In Lua5.1 os.execute returns numeric value, but in Lua5.2+ returns boolean
 -- @return true/false boolean: status of the command execution
 local function execute_bool(command, print_command, env_variables)
    command = test_env.execute_helper(command, print_command, env_variables)
    
-   local ok = os.execute(command)
-   return ok == true or ok == 0
+   local redirect_filename
+   local redirect = ""
+   if print_command ~= nil then
+      redirect_filename = test_env.testing_paths.luarocks_tmp.."/output.txt"
+      redirect = " > "..redirect_filename
+   end
+   local ok = os.execute(command .. redirect)
+   ok = (ok == true or ok == 0) -- normalize Lua 5.1 output to boolean
+   if redirect ~= "" then
+      if not ok then
+         local fd = io.open(redirect_filename, "r")
+         if fd then
+            print(fd:read("*a"))
+            fd:close()
+         end
+      end
+      os.remove(redirect_filename)
+   end
+   return ok
 end
 
 --- Execute command and returns output of command

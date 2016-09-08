@@ -30,10 +30,10 @@ describe("LuaRocks make tests #blackbox #b_make", function()
       assert.is_true(run.luarocks_bool("download --source luasocket 3.0rc1-2"))
       assert.is_true(run.luarocks_bool("unpack luasocket-3.0rc1-2.src.rock"))
       lfs.chdir("luasocket-3.0rc1-2/luasocket-3.0-rc1/")
-      assert.is_true(run.luarocks_bool(test_env.quiet("make luasocket-3.0rc1-2.rockspec")))
+      assert.is_true(run.luarocks_bool("make luasocket-3.0rc1-2.rockspec"))
 
       -- test it
-      assert.is_true(run.luarocks_bool(test_env.quiet("show luasocket")))
+      assert.is_true(run.luarocks_bool("show luasocket"))
       assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasocket/3.0rc1-2/luasocket-3.0rc1-2.rockspec"))
 
       -- delete downloaded and unpacked files
@@ -69,7 +69,7 @@ describe("LuaRocks make tests #blackbox #b_make", function()
          test_env.copy("lxsh-0.8.6-2.rockspec", "rockspec")
          assert.is_true(run.luarocks_bool("make"))
 
-         assert.is_true(run.luarocks_bool(test_env.quiet("show lxsh")))
+         assert.is_true(run.luarocks_bool("show lxsh"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
          os.remove("rockspec")
       end)
@@ -94,7 +94,7 @@ describe("LuaRocks make tests #blackbox #b_make", function()
       end)
       
       it("LuaRocks make pack binary rock", function()
-         assert.is_true(run.luarocks_bool(test_env.quiet("make --deps-mode=none --pack-binary-rock")))
+         assert.is_true(run.luarocks_bool("make --deps-mode=none --pack-binary-rock"))
          assert.is.truthy(lfs.attributes("lxsh-0.8.6-2.all.rock"))
       end)
    end)

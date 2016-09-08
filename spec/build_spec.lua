@@ -92,7 +92,7 @@ describe("LuaRocks build tests #blackbox #b_build", function()
 
    describe("LuaRocks build - basic builds", function()
       it("LuaRocks build luadoc", function()
-         assert.is_true(run.luarocks_bool(test_env.quiet("build luadoc")))
+         assert.is_true(run.luarocks_bool("build luadoc"))
       end)
       
       it("LuaRocks build luacov diff version", function()
@@ -114,7 +114,7 @@ describe("LuaRocks build tests #blackbox #b_build", function()
          if test_env.TEST_TARGET_OS == "windows" then
             assert.is_false(run.luarocks_bool("build lpty")) --Error: This rockspec for lpty does not support win32, windows platforms
          else
-            assert.is_true(run.luarocks_bool(test_env.quiet("build lpty")))
+            assert.is_true(run.luarocks_bool("build lpty"))
             assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lpty/1.0.1-1/lpty-1.0.1-1.rockspec"))
          end
       end)
@@ -146,7 +146,7 @@ describe("LuaRocks build tests #blackbox #b_build", function()
       end
 
       it("LuaRocks build luasec only deps", function()
-         assert.is_true(run.luarocks_bool(test_env.quiet("build luasec " .. test_env.OPENSSL_DIRS .. " --only-deps")))
+         assert.is_true(run.luarocks_bool("build luasec " .. test_env.OPENSSL_DIRS .. " --only-deps"))
          assert.is_false(run.luarocks_bool("show luasec"))
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasec/0.6-1/luasec-0.6-1.rockspec"))
       end)
@@ -181,7 +181,7 @@ describe("LuaRocks build tests #blackbox #b_build", function()
       
       it("LuaRocks build with https", function()
          assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
-         assert.is_true(run.luarocks_bool(test_env.quiet("install luasec " .. test_env.OPENSSL_DIRS)))
+         assert.is_true(run.luarocks_bool("install luasec " .. test_env.OPENSSL_DIRS))
          
          assert.is_true(run.luarocks_bool("build validate-args-1.5.4-1.rockspec"))
          assert.is.truthy(run.luarocks("show validate-args"))

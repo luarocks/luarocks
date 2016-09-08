@@ -10,7 +10,7 @@ describe("LuaRocks help tests #blackbox #b_help", function()
    end)
 
    it("LuaRocks help with no flags/arguments", function()
-      assert.is_true(run.luarocks_bool(test_env.quiet("help")))
+      assert.is_true(run.luarocks_bool("help"))
    end)
 
    it("LuaRocks help invalid argument", function()
@@ -18,7 +18,7 @@ describe("LuaRocks help tests #blackbox #b_help", function()
    end)
    
    it("LuaRocks help config", function()
-      assert.is_true(run.luarocks_bool(test_env.quiet("help config")))
+      assert.is_true(run.luarocks_bool("help config"))
    end)
    
    it("LuaRocks-admin help with no flags/arguments", function()
