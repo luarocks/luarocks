@@ -85,6 +85,11 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
    store_dir = fs.absolute_name(store_dir)
    local ok, err = fs.change_dir(store_dir)
    if not ok then return nil, err end
+   
+   -- there's no way to get depth from a commit id, unfortunately
+   if rockspec.source.revision then 
+      depth = "--"
+   end
 
    local command = {fs.Q(git_cmd), "clone", depth or "--depth=1", rockspec.source.url, module}
    local tag_or_branch = rockspec.source.tag or rockspec.source.branch
@@ -96,6 +101,8 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
          -- The argument to `--branch` can actually be a branch or a tag as of
          -- Git 1.7.10.
          table.insert(command, 3, "--branch=" .. tag_or_branch)
+         -- We got the right tag/branch, so don't bother with `git checkout`
+         tag_or_branch = nil
       end
    end
    if not fs.execute(unpack(command)) then
@@ -103,9 +110,11 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
    end
    ok, err = fs.change_dir(module)
    if not ok then return nil, err end
-   if tag_or_branch and not git_can_clone_by_tag() then
-      if not fs.execute(fs.Q(git_cmd), "checkout", tag_or_branch) then
-         return nil, 'Failed to check out the "' .. tag_or_branch ..'" tag or branch.'
+
+   local committish = rockspec.source.revision or tag_or_branch
+   if committish then
+      if not fs.execute(fs.Q(git_cmd), "checkout", committish) then
+         return nil, 'Failed to check out "' .. committish ..'".'
       end
    end
 

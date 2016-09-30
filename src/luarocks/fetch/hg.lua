@@ -32,9 +32,15 @@ function hg.get_sources(rockspec, extract, dest_dir)
    local module = dir.base_name(url)
 
    local command = {hg_cmd, "clone", url, module}
-   local tag_or_branch = rockspec.source.tag or rockspec.source.branch
-   if tag_or_branch then
-      command = {hg_cmd, "clone", "--rev", tag_or_branch, url, module}
+
+   -- TODO: if revision is specified and so are tag/branch, then validate to
+   -- make sure tag/branch matches revision
+   local rev = rockspec.source.revision
+   rev = rev or rockspec.source.tag
+   rev = rev or rockspec.source.branch
+
+   if rev then
+      command = {hg_cmd, "clone", "--rev", rev, url, module}
    end
    local store_dir
    if not dest_dir then

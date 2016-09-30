@@ -237,6 +237,10 @@ function fetch.load_local_rockspec(filename, quick)
    if rockspec.source.cvs_module then rockspec.source.module = rockspec.source.cvs_module end
    if rockspec.source.cvs_tag then rockspec.source.tag = rockspec.source.cvs_tag end
 
+   if rockspec.source.revision and not deps.format_is_at_least("3.0") then
+      return nil, "source.revision is only supported in rockspec format 3.0 or higher"
+   end
+
    local name_version = rockspec.package:lower() .. "-" .. rockspec.version
    if basename ~= "rockspec" and basename ~= name_version .. ".rockspec" then
       return nil, "Inconsistency between rockspec filename ("..basename..") and its contents ("..name_version..".rockspec)."
