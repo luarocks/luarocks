@@ -22,6 +22,11 @@ local manif_core = require("luarocks.manif_core")
 local deps = require("luarocks.deps")
 local util = require("luarocks.util")
 
+-- Workaround for wrappers produced by older versions of LuaRocks
+if luarocks then
+   luarocks.loader = loader
+end
+
 loader.context = {}
 
 -- Contains a table when rocks trees are loaded,
