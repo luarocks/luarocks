@@ -116,3 +116,59 @@ describe("Basic tests #blackbox #b_util", function()
       end)
    end)
 end)
+
+test_env.unload_luarocks()
+local util = require("luarocks.util")
+
+describe("Luarocks util test #whitebox #w_util", function()
+   describe("util.sortedpairs", function()
+      local function collect(iter, state, var)
+         local collected = {}
+
+         while true do
+            local returns = {iter(state, var)}
+
+            if returns[1] == nil then
+               return collected
+            else
+               table.insert(collected, returns)
+               var = returns[1]
+            end
+         end
+      end
+
+      it("default sort", function()
+         assert.are.same({}, collect(util.sortedpairs({})))
+         assert.are.same({
+            {1, "v1"},
+            {2, "v2"},
+            {3, "v3"},
+            {"bar", "v5"},
+            {"foo", "v4"}
+         }, collect(util.sortedpairs({"v1", "v2", "v3", foo = "v4", bar = "v5"})))
+      end)
+
+      it("sort by function", function()
+         local function compare(a, b) return a > b end
+         assert.are.same({}, collect(util.sortedpairs({}, compare)))
+         assert.are.same({
+            {3, "v3"},
+            {2, "v2"},
+            {1, "v1"}
+         }, collect(util.sortedpairs({"v1", "v2", "v3"}, compare)))
+      end)
+
+      it("sort by priority table", function()
+         assert.are.same({}, collect(util.sortedpairs({}, {"k1", "k2"})))
+         assert.are.same({
+            {"k3", "v3"},
+            {"k2", "v2", {"sub order"}},
+            {"k1", "v1"},
+            {"k4", "v4"},
+            {"k5", "v5"},
+         }, collect(util.sortedpairs({
+            k1 = "v1", k2 = "v2", k3 = "v3", k4 = "v4", k5 = "v5"
+         }, {"k3", {"k2", {"sub order"}}, "k1"})))
+      end)
+   end)
+end)
