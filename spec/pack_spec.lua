@@ -56,6 +56,15 @@ describe("LuaRocks pack tests #blackbox #b_pack", function()
       assert.is_true(run.luarocks_bool("pack luasocket-3.0rc1-2.rockspec"))
       assert.is_true(test_env.remove_files(lfs.currentdir(), "luasocket-"))
    end)
-end)
 
+   it("LuaRocks pack scm revisions #623", function()
+	   local function rspec(name)
+		   return testing_paths.testing_dir  .. "/testfiles/" .. name .."-1.0-1.rockspec"
+	   end
+	   assert.is_false(run.luarocks_bool("pack "..rspec("invalid_revision")))
+	   assert.is_false(run.luarocks_bool("pack "..rspec("revision_too_old")))
+	   assert.is_false(run.luarocks_bool("pack "..rspec("revision_bad_url")))
+	   assert.is_false(run.luarocks_bool("pack "..rspec("revision_nonexistent_rev")))
+   end)
+end)
 
