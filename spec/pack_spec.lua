@@ -58,13 +58,20 @@ describe("LuaRocks pack tests #blackbox #b_pack", function()
    end)
 
    it("LuaRocks pack scm revisions #623", function()
-	   local function rspec(name)
-		   return testing_paths.testing_dir  .. "/testfiles/" .. name .."-1.0-1.rockspec"
-	   end
-	   assert.is_false(run.luarocks_bool("pack "..rspec("invalid_revision")))
-	   assert.is_false(run.luarocks_bool("pack "..rspec("revision_too_old")))
-	   assert.is_false(run.luarocks_bool("pack "..rspec("revision_bad_url")))
-	   assert.is_false(run.luarocks_bool("pack "..rspec("revision_nonexistent_rev")))
+      local function rspec(name)
+          return testing_paths.testing_dir  .. "/testfiles/" .. name .."-1.0-1.rockspec"
+      end
+      assert.is_false(run.luarocks_bool("pack "..rspec("invalid_revision")))
+      assert.is_false(run.luarocks_bool("pack "..rspec("revision_too_old")))
+      assert.is_false(run.luarocks_bool("pack "..rspec("revision_nonexistent_rev")))
+
+      assert.is_true(run.luarocks_bool("pack "..rspec("revision_hg")))
+      assert.is_true(run.luarocks_bool("pack "..rspec("revision_git")))
+      assert.is_true(run.luarocks_bool("pack "..rspec("revision_branched")))
+      assert.is_true(run.luarocks_bool("pack "..rspec("revision_tagged")))
+
+      -- broken
+      -- assert.is_false(run.luarocks_bool("pack "..rspec("revision_bad_url")))
    end)
 end)
 
