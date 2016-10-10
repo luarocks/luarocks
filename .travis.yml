@@ -40,7 +40,7 @@ matrix:
 
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; brew install python; gem install bundler; brew install openssl; brew link openssl --force;fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update;fi
   - pip install hererocks
   - hererocks lua_install -r^ --$LUA
   - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
