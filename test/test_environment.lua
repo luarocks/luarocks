@@ -202,6 +202,9 @@ function test_env.set_args()
 
       if execute_bool("sw_vers") then 
          test_env.TEST_TARGET_OS = "osx"
+         if test_env.TRAVIS then
+            test_env.OPENSSL_DIRS = "OPENSSL_LIBDIR=/usr/local/opt/openssl/lib OPENSSL_INCDIR=/usr/local/opt/openssl/include"
+         end
       elseif execute_output("uname -s") == "Linux" then
          test_env.TEST_TARGET_OS = "linux"
       else
