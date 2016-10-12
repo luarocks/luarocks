@@ -464,6 +464,11 @@ function manif.zip_manifests()
    end
 end
 
+local function relative_path(from_dir, to_file)
+   -- It is assumed that `from_dir` is prefix of `to_file`.
+   return (to_file:sub(#from_dir + 1):gsub("^[\\/]*", ""))
+end
+
 local function find_providers(file, root)
    assert(type(file) == "string")
    root = root or cfg.root_dir
@@ -479,13 +484,13 @@ local function find_providers(file, root)
 
    if util.starts_with(file, deploy_lua) then
       manifest_tbl = manifest.modules
-      key = path.path_to_module(file:sub(#deploy_lua+1):gsub("\\", "/"))
+      key = path.path_to_module(relative_path(deploy_lua, file):gsub("\\", "/"))
    elseif util.starts_with(file, deploy_lib) then
       manifest_tbl = manifest.modules
-      key = path.path_to_module(file:sub(#deploy_lib+1):gsub("\\", "/"))
+      key = path.path_to_module(relative_path(deploy_lib, file):gsub("\\", "/"))
    elseif util.starts_with(file, deploy_bin) then
       manifest_tbl = manifest.commands
-      key = file:sub(#deploy_bin+1):gsub("^[\\/]*", "")
+      key = relative_path(deploy_bin, file)
    else
       assert(false, "Assertion failed: '"..file.."' is not a deployed file.")
    end
