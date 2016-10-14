@@ -2,9 +2,10 @@
 
 A package manager for Lua modules.
 
-[![Build Status](https://travis-ci.org/keplerproject/luarocks.png?branch=master)](https://travis-ci.org/keplerproject/luarocks)
-[![Build status](https://ci.appveyor.com/api/projects/status/4x4630tcf64da48i/branch/master?svg=true)](https://ci.appveyor.com/project/hishamhm/luarocks/branch/master)
-[![Coverage Status](https://coveralls.io/repos/keplerproject/luarocks/badge.svg?branch=master)](https://coveralls.io/r/keplerproject/luarocks?branch=master)
+[![Build Status](https://travis-ci.org/keplerproject/luarocks.svg?branch=master)](https://travis-ci.org/keplerproject/luarocks)
+[![Build Status](https://ci.appveyor.com/api/projects/status/4x4630tcf64da48i/branch/master?svg=true)](https://ci.appveyor.com/project/hishamhm/luarocks/branch/master)
+[![Coverage Status](https://codecov.io/gh/keplerproject/luarocks/coverage.svg?branch=master)](https://codecov.io/gh/keplerproject/luarocks/branch/master)
+[![Join the chat at https://gitter.im/keplerproject/luarocks](https://badges.gitter.im/keplerproject/luarocks.svg)](https://gitter.im/keplerproject/luarocks?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Main website: [luarocks.org](http://www.luarocks.org)
 

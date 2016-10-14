@@ -56,45 +56,12 @@ local function format_text(text)
    return (table.concat(paragraphs, "\n\n"):gsub("%s$", ""))
 end
 
-function show.pick_installed_rock(name, version, tree)
-   local results = {}
-   local query = search.make_query(name, version)
-   query.exact_name = true
-   local tree_map = {}
-   local trees = cfg.rocks_trees
-   if tree then
-      trees = { tree }
-   end
-   for _, tree in ipairs(trees) do
-      local rocks_dir = path.rocks_dir(tree)
-      tree_map[rocks_dir] = tree
-      search.manifest_search(results, rocks_dir, query)
-   end
-
-   if not next(results) then --
-      return nil,"cannot find package "..name.." "..(version or "").."\nUse 'list' to find installed rocks."
-   end
-
-   version = nil
-   local repo_url
-   local package, versions = util.sortedpairs(results)()
-   --question: what do we do about multiple versions? This should
-   --give us the latest version on the last repo (which is usually the global one)
-   for vs, repositories in util.sortedpairs(versions, deps.compare_versions) do
-      if not version then version = vs end
-      for _, rp in ipairs(repositories) do repo_url = rp.repo end
-   end
-
-   local repo = tree_map[repo_url]
-   return name, version, repo, repo_url
-end
-
 local function installed_rock_label(name, tree)
    local installed, version
    if cfg.rocks_provided[name] then
       installed, version = true, cfg.rocks_provided[name]
    else
-      installed, version = show.pick_installed_rock(name, nil, tree)
+      installed, version = search.pick_installed_rock(name, nil, tree)
    end
    return installed and "(using "..version..")" or "(missing)"
 end
@@ -109,7 +76,7 @@ function show.command(flags, name, version)
    end
    
    local repo, repo_url
-   name, version, repo, repo_url = show.pick_installed_rock(name, version, flags["tree"])
+   name, version, repo, repo_url = search.pick_installed_rock(name, version, flags["tree"])
    if not name then
       return nil, version
    end

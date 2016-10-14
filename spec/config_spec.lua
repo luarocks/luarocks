@@ -2,6 +2,7 @@ local test_env = require("test/test_environment")
 local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
+local env_variables = test_env.env_variables
 local site_config
 
 test_env.unload_luarocks()
@@ -21,12 +22,20 @@ describe("LuaRocks config tests #blackbox #b_config", function()
       
       it("LuaRocks config include dir", function()
          local output = run.luarocks("config --lua-incdir")
-         assert.are.same(output, site_config.LUA_INCDIR)
+         if test_env.TEST_TARGET_OS == "windows" then
+            assert.are.same(output, site_config.LUA_INCDIR:gsub("\\","/"))
+         else
+            assert.are.same(output, site_config.LUA_INCDIR)
+         end
       end)
       
       it("LuaRocks config library dir", function()
          local output = run.luarocks("config --lua-libdir")
-         assert.are.same(output, site_config.LUA_LIBDIR)
+         if test_env.TEST_TARGET_OS == "windows" then
+            assert.are.same(output, site_config.LUA_LIBDIR:gsub("\\","/"))
+         else
+            assert.are.same(output, site_config.LUA_LIBDIR)
+         end
       end)
       
       it("LuaRocks config lua version", function()
@@ -53,38 +62,61 @@ describe("LuaRocks config tests #blackbox #b_config", function()
    end)
 
    describe("LuaRocks config - more complex tests", function()
+      local scdir = testing_paths.testing_lrprefix .. "/etc/luarocks"
+      local versioned_scname = scdir .. "/config-" .. env_variables.LUA_VERSION .. ".lua"
+      local scname = scdir .. "/config.lua"
+
+      local configfile
+      if test_env.TEST_TARGET_OS == "windows" then
+         configfile = versioned_scname
+      else
+         configfile = scname
+      end
+
       it("LuaRocks fail system config", function()
-         os.remove(testing_paths.testing_lrprefix .. "/etc/luarocks/config.lua")
-         assert.is_false(run.luarocks_bool("config --system-config;"))
+         os.rename(configfile, configfile .. ".bak")
+         assert.is_false(run.luarocks_bool("config --system-config"))
+         os.rename(configfile .. ".bak", configfile)
       end)
       
       it("LuaRocks system config", function()
-         local scdir = testing_paths.testing_lrprefix .. "/etc/luarocks"
          lfs.mkdir(testing_paths.testing_lrprefix)
          lfs.mkdir(testing_paths.testing_lrprefix .. "/etc/")
          lfs.mkdir(scdir)
 
-         local sysconfig = io.open(scdir .. "/config.lua", "w+")
-         sysconfig:write(" ")
-         sysconfig:close()
-
-         local output = run.luarocks("config --system-config;")
-         assert.are.same(output, scdir .. "/config.lua")
-         test_env.remove_dir(testing_paths.testing_lrprefix)
+         if test_env.TEST_TARGET_OS == "windows" then
+            local output = run.luarocks("config --system-config")
+            assert.are.same(output, configfile)
+         else
+            local sysconfig = io.open(configfile, "w+")
+            sysconfig:write(" ")
+            sysconfig:close()
+            
+            local output = run.luarocks("config --system-config")
+            assert.are.same(output, configfile)
+            os.remove(configfile)
+         end
       end)
       
       it("LuaRocks fail system config invalid", function()
-         local scdir = testing_paths.testing_lrprefix .. "/etc/luarocks"
          lfs.mkdir(testing_paths.testing_lrprefix)
          lfs.mkdir(testing_paths.testing_lrprefix .. "/etc/")
          lfs.mkdir(scdir)
 
-         local sysconfig = io.open(scdir .. "/config.lua", "w+")
-         sysconfig:write("if if if")
-         sysconfig:close()
-
-         assert.is_false(run.luarocks_bool("config --system-config;"))
-         test_env.remove_dir(testing_paths.testing_lrprefix)
+         if test_env.TEST_TARGET_OS == "windows" then
+            test_env.copy(configfile, "configfile_temp")
+            local sysconfig = io.open(configfile, "w+")
+            sysconfig:write("if if if")
+            sysconfig:close()
+            assert.is_false(run.luarocks_bool("config --system-config"))
+            test_env.copy("configfile_temp", configfile)
+         else
+            local sysconfig = io.open(configfile, "w+")
+            sysconfig:write("if if if")
+            sysconfig:close()
+            assert.is_false(run.luarocks_bool("config --system-config"))
+            os.remove(configfile)
+         end
       end)
    end)
 end)

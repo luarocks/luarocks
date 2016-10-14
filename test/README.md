@@ -12,7 +12,7 @@ Test suite for LuaRocks project with Busted unit testing framework(http://olivin
 
 
 ##Usage
-Running of tests is based on basic Busted usage. *-Xhelper* flag is mandatory for inserting arguments into testing (primary black-box). Flag *--tags=* or *-t* is mandatory for specifying which tests will run. Mandatory *-Xhelper* flag always needs version of Lua or LuaJIT (e.g. *lua=5.2.4* or *luajit=2.0.3*). Start tests inside LuaRocks folder or specify with *-C* flag.
+Running of tests is based on basic Busted usage. *-Xhelper* flag is mandatory for inserting arguments into testing (primary black-box). Flag *--tags=* or *-t* is mandatory for specifying which tests will run. Start tests inside LuaRocks folder or specify with *-C* flag.
 
 **Arguments for Busted helper script**
 
@@ -22,7 +22,9 @@ OR
 luajit=<version>, !mandatory! type your full version of LuaJIT (e.g. luajit=5.2.4)
 
 env=<type>,	(default:"minimal") type what kind of environment to use ["minimal", "full"]
+noreset,	Don't reset environment after each test
 clean,	remove existing testing environment
+appveyor,  add just if running on TravisCI
 travis,  add just if running on TravisCI
 os=<version>,    type your OS ["linux", "os x", "windows"]
 ```
@@ -35,6 +37,10 @@ os=<version>,    type your OS ["linux", "os x", "windows"]
 
 **ssh** - run all tests which require ssh
 
+**mock** - run all tests which require mock LuaRocks server (upload tests)
+
+**unix** - run all tests which are UNIX based, won't work on Windows systems
+
 **w**\_*name-of-command* - whitebox testing of command
 
 **b**\_*name-of-command* - blackbox testing of command
@@ -42,6 +48,9 @@ os=<version>,    type your OS ["linux", "os x", "windows"]
 for example: `b_install`  or `w_help`
 
 ###Examples
+To run all tests:
+`busted`
+
 To run white-box tests in LuaRocks directory type :
 
 `busted -t "whitebox"`

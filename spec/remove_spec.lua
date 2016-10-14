@@ -8,8 +8,8 @@ test_env.unload_luarocks()
 local extra_rocks = {
    "/abelhas-1.0-1.rockspec",
    "/lualogging-1.3.0-1.src.rock",
-   "/luasocket-3.0rc1-1.src.rock",
-   "/luasocket-3.0rc1-1.rockspec"
+   "/luasocket-3.0rc1-2.src.rock",
+   "/luasocket-3.0rc1-2.rockspec"
 }
 
 describe("LuaRocks remove tests #blackbox #b_remove", function()
@@ -76,7 +76,7 @@ describe("LuaRocks remove tests #blackbox #b_remove", function()
    end)
 
    it("LuaRocks-admin remove #ssh", function()
-      assert.is_true(run.luarocks_admin_bool("--server=testing remove luasocket-3.0rc1-1.src.rock"))
+      assert.is_true(run.luarocks_admin_bool("--server=testing remove luasocket-3.0rc1-2.src.rock"))
    end)
    
    it("LuaRocks-admin remove missing", function()

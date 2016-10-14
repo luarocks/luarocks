@@ -6,9 +6,10 @@ local testing_paths = test_env.testing_paths
 test_env.unload_luarocks()
 
 local extra_rocks = {
-	"/luasec-0.6-1.rockspec",
-	"/luasocket-3.0rc1-1.src.rock",
-	"/luasocket-3.0rc1-1.rockspec",
+   "/luasec-0.6-1.rockspec",
+   "/luassert-1.7.0-1.src.rock",
+   "/luasocket-3.0rc1-2.src.rock",
+   "/luasocket-3.0rc1-2.rockspec",
    "/say-1.2-1.src.rock",
    "/say-1.0-1.src.rock"
 }
@@ -24,7 +25,7 @@ describe("LuaRocks pack tests #blackbox #b_pack", function()
    end)
 
    it("LuaRocks pack basic", function()
-      assert.is_true(run.luarocks_bool(test_env.quiet("pack luacov")))
+      assert.is_true(run.luarocks_bool("pack luacov"))
       assert.is_true(test_env.remove_files(lfs.currentdir(), "luacov-"))
    end)
 
@@ -40,18 +41,19 @@ describe("LuaRocks pack tests #blackbox #b_pack", function()
       assert.is_false(run.luarocks_bool("pack /non/exist/temp.manif"))
    end)
 
-   it("LuaRocks pack specify which version of rock", function()
+   it("LuaRocks pack detects latest version version of rock", function()
       assert.is_true(run.luarocks_bool("install say 1.2"))
       assert.is_true(run.luarocks_bool("install luassert"))
       assert.is_true(run.luarocks_bool("install say 1.0"))
-      
-      assert.is_false(run.luarocks_bool("pack say"))
+      assert.is_true(run.luarocks_bool("pack say"))
+      assert.is_truthy(lfs.attributes("say-1.2-1.all.rock"))
+      assert.is_true(test_env.remove_files(lfs.currentdir(), "say-"))
    end)
 
    it("LuaRocks pack src", function()
-      assert.is_true(run.luarocks_bool(test_env.quiet("install luasec")))
-      assert.is_true(run.luarocks_bool("download --rockspec luasocket 3.0rc1-1"))
-      assert.is_true(run.luarocks_bool("pack luasocket-3.0rc1-1.rockspec"))
+      assert.is_true(run.luarocks_bool("install luasec " .. test_env.OPENSSL_DIRS))
+      assert.is_true(run.luarocks_bool("download --rockspec luasocket 3.0rc1-2"))
+      assert.is_true(run.luarocks_bool("pack luasocket-3.0rc1-2.rockspec"))
       assert.is_true(test_env.remove_files(lfs.currentdir(), "luasocket-"))
    end)
 end)

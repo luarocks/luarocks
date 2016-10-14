@@ -6,10 +6,9 @@
 -- file format documentation</a> for details.
 --
 -- End-users shouldn't edit this file. They can override any defaults
--- set in this file using their system-wide $LUAROCKS_SYSCONFIG file
--- (see luarocks.site_config) or their user-specific configuration file
--- (~/.luarocks/config.lua on Unix or %APPDATA%/luarocks/config.lua on
--- Windows).
+-- set in this file using their system-wide or user-specific configuration
+-- files. Run `luarocks` with no arguments to see the locations of
+-- these files in your platform.
 
 local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, tonumber, type, assert, _VERSION =
       rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, tonumber, type, assert, _VERSION
@@ -477,6 +476,7 @@ if cfg.platforms.mingw32 then
    defaults.variables.RANLIB = "ranlib"
    defaults.variables.CFLAGS = "-O2"
    defaults.variables.LIBFLAG = "-shared"
+   defaults.makefile = "Makefile"
    defaults.external_deps_patterns = {
       bin = { "?.exe", "?.bat" },
       -- mingw lookup list from http://stackoverflow.com/a/15853231/1793220

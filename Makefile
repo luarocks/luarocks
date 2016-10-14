@@ -2,7 +2,8 @@
 include config.unix
 
 .PHONY: all build dev build_bins luadoc check_makefile cleanup_bins clean \
- install_site_config write_sysconfig install bootstrap install_rock
+ install_site_config write_sysconfig install bootstrap install_rock \
+ run_luarocks
 
 ROCKS_TREE ?= $(PREFIX)
 SYSCONFDIR ?= $(PREFIX)/etc/luarocks
@@ -124,6 +125,9 @@ cleanup_bins:
 clean: cleanup_bins
 	rm -f src/luarocks/site_config.lua
 
+run_luarocks:
+	'$(LUA_BINDIR)/lua$(LUA_SUFFIX)' -e "package.path=[[$(SAFEPWD)/src/?.lua;]]..package.path" src/bin/luarocks make rockspec --tree="$(PREFIX)"
+
 install_site_config: src/luarocks/site_config.lua
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
 	cp src/luarocks/site_config.lua "$(DESTDIR)$(LUADIR)/luarocks"
@@ -144,8 +148,7 @@ write_sysconfig:
 
 install: install_bins install_luas install_site_config write_sysconfig
 
-bootstrap: src/luarocks/site_config.lua install_site_config write_sysconfig cleanup_bins
-	'$(LUA_BINDIR)/lua$(LUA_SUFFIX)' -e "package.path=[[$(SAFEPWD)/src/?.lua;]]..package.path" src/bin/luarocks make rockspec --tree="$(PREFIX)"
+bootstrap: src/luarocks/site_config.lua run_luarocks install_site_config write_sysconfig cleanup_bins
 
 install_rock: install_bins install_luas
 

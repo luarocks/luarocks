@@ -12,4 +12,4 @@ install: install_bins install_luas copy_site_config
 copy_site_config:
 	luaver="$(LUA_VERSION)" && [ -n "$$luaver" ] || luaver=`$(LUA) -e 'print(_VERSION:sub(5))'`; \
 	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"; \
-	cp $(LUAROCKS_PREFIX)/share/lua/$$luaver/luarocks/site_config.lua "$(DESTDIR)$(LUADIR)/luarocks"
+	lprefix=`echo "$(LUADIR)" | sed 's,/lib/luarocks/.*,,'`; sed "s,LUAROCKS_PREFIX=.*,LUAROCKS_PREFIX=[[$$lprefix]],g" $(LUAROCKS_PREFIX)/share/lua/$$luaver/luarocks/site_config.lua > "$(DESTDIR)$(LUADIR)/luarocks/site_config.lua"

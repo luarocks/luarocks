@@ -6,25 +6,50 @@ environment:
   LUAROCKS_VER: 3.0.0
 
   matrix:
-  - LUA_VER: 5.1.5
-  - LUA_VER: 5.2.4
-  - LUA_VER: 5.3.1
-  - LJ_VER: 2.0.4
-  - LJ_VER: 2.1
+  - LUA: "lua 5.1"
+    COMPILER: "vs"
+  - LUA: "lua 5.1"
+    COMPILER: "mingw"
+  - LUA: "lua 5.2"
+    COMPILER: "vs"
+  - LUA: "lua 5.2"
+    COMPILER: "mingw"
+  - LUA: "lua 5.3"
+    COMPILER: "vs"
+  - LUA: "lua 5.3"
+    COMPILER: "mingw"
+  - LUA: "luajit 2.0"
+    COMPILER: "vs"
+  - LUA: "luajit 2.0"
+    COMPILER: "mingw"
+  - LUA: "luajit 2.1"
+    COMPILER: "vs"
+  - LUA: "luajit 2.1"
+    COMPILER: "mingw"
+
 
 init:
 # Setup Lua development/build environment
 # Make VS 2015 command line tools available
 - call "%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %platform%
+# Add MinGW compiler to the path
+- set PATH=C:\MinGW\bin;%PATH%
 
-install:
-# Setup Lua development/build environment
-- call .appveyor\install.bat
+before_build:
+  - set PATH=C:\Python27\Scripts;%PATH% # Add directory containing 'pip' to PATH
+  - pip install hererocks
+  - hererocks env --%LUA% -rlatest --target=%COMPILER%
+  - call env\bin\activate
 
 build_script:
-- call .appveyor\build.bat
+  - luarocks install busted 1> NUL 2> NUL
 
 test_script:
-- echo "Testing..."
-- cd test
-- call testing.bat
+  - busted --lpath=.//?.lua --exclude-tags=ssh,unix,mock -Xhelper appveyor,%COMPILER%
+
+after_test:
+  - if "%LUA%"=="lua 5.1" (luarocks show bit32 || luarocks install bit32)
+  - luarocks install luacov
+  - pip install codecov
+  - luacov -c test/luacov.config
+  - cd test && codecov

@@ -12,8 +12,8 @@ local extra_rocks = {
    "/lpeg-0.12-1.src.rock",
    "/luasec-0.6-1.rockspec",
    "/luassert-1.7.0-1.src.rock",
-   "/luasocket-3.0rc1-1.src.rock",
-   "/luasocket-3.0rc1-1.rockspec",
+   "/luasocket-3.0rc1-2.src.rock",
+   "/luasocket-3.0rc1-2.rockspec",
    "/lxsh-0.8.6-2.src.rock",
    "/lxsh-0.8.6-2.rockspec",
    "/say-1.2-1.src.rock",
@@ -44,8 +44,8 @@ describe("LuaRocks install tests #blackbox #b_install", function()
          assert.is_false(run.luarocks_bool("install \"invalid.rock\" "))
       end)
 
-      it("LuaRocks install with local flag as root", function()
-         assert.is_false(run.luarocks_bool("install --local luasocket", { USER = "root" } ))
+      it("LuaRocks install with local flag as root #unix", function()
+         assert.is_false(run.luarocks_bool("install --local luasocket ", { USER = "root" } ))
       end)
 
       it("LuaRocks install not a zip file", function()
@@ -66,15 +66,15 @@ describe("LuaRocks install tests #blackbox #b_install", function()
       end)
 
       it("LuaRocks install luasec and show luasocket (dependency)", function()
-         assert.is_true(run.luarocks_bool("install luasec"))
+         assert.is_true(run.luarocks_bool("install luasec " .. test_env.OPENSSL_DIRS))
          assert.is_true(run.luarocks_bool("show luasocket"))
       end)
    end)
 
    describe("LuaRocks install - more complex tests", function()
       it('LuaRocks install luasec with skipping dependency checks', function()
-         run.luarocks_bool(test_env.quiet(" install luasec --nodeps"))
-         assert.is_true(run.luarocks_bool(test_env.quiet("show luasec")))
+         assert.is_true(run.luarocks_bool("install luasec " .. test_env.OPENSSL_DIRS .. " --nodeps"))
+         assert.is_true(run.luarocks_bool("show luasec"))
          if env_variables.TYPE_TEST_ENV == "minimal" then
             assert.is_false(run.luarocks_bool(test_env.quiet("show luasocket")))
             assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasocket"))
@@ -83,21 +83,21 @@ describe("LuaRocks install tests #blackbox #b_install", function()
       end)
       
       it("LuaRocks install only-deps of luasocket packed rock", function()
-         assert.is_true(run.luarocks_bool(test_env.quiet("build --pack-binary-rock luasocket 3.0rc1-1")))
-         local output = run.luarocks("install --only-deps " .. "luasocket-3.0rc1-1." .. test_env.platform .. ".rock")
-         assert.are.same(output, "Successfully installed dependencies for luasocket 3.0rc1-1")
-         assert.is_true(os.remove("luasocket-3.0rc1-1." .. test_env.platform .. ".rock"))
+         assert.is_true(run.luarocks_bool("build --pack-binary-rock luasocket 3.0rc1-2"))
+         local output = run.luarocks("install --only-deps " .. "luasocket-3.0rc1-2." .. test_env.platform .. ".rock")
+         assert.are.same(output, "Successfully installed dependencies for luasocket 3.0rc1-2")
+         assert.is_true(os.remove("luasocket-3.0rc1-2." .. test_env.platform .. ".rock"))
       end)
 
       it("LuaRocks install reinstall", function()
-         assert.is_true(run.luarocks_bool(test_env.quiet("build --pack-binary-rock luasocket 3.0rc1-1")))
-         assert.is_true(run.luarocks_bool("install " .. "luasocket-3.0rc1-1." .. test_env.platform .. ".rock"))
-         assert.is_true(run.luarocks_bool("install --deps-mode=none " .. "luasocket-3.0rc1-1." .. test_env.platform .. ".rock"))
-         assert.is_true(os.remove("luasocket-3.0rc1-1." .. test_env.platform .. ".rock"))
+         assert.is_true(run.luarocks_bool("build --pack-binary-rock luasocket 3.0rc1-2"))
+         assert.is_true(run.luarocks_bool("install " .. "luasocket-3.0rc1-2." .. test_env.platform .. ".rock"))
+         assert.is_true(run.luarocks_bool("install --deps-mode=none " .. "luasocket-3.0rc1-2." .. test_env.platform .. ".rock"))
+         assert.is_true(os.remove("luasocket-3.0rc1-2." .. test_env.platform .. ".rock"))
       end)
 
       it("LuaRocks install binary rock of cprint", function()
-         assert.is_true(run.luarocks_bool(test_env.quiet("build --pack-binary-rock cprint")))
+         assert.is_true(run.luarocks_bool("build --pack-binary-rock cprint"))
          assert.is_true(run.luarocks_bool("install cprint-0.1-2." .. test_env.platform .. ".rock"))
          assert.is_true(os.remove("cprint-0.1-2." .. test_env.platform .. ".rock"))
       end)     

@@ -30,7 +30,6 @@ describe("LuaRocks search tests #blackbox #b_search", function()
    end)
    
    it("LuaRocks search with flag all", function()
-      assert.is_true(run.luarocks_bool(test_env.quiet("search --all")))
+      assert.is_true(run.luarocks_bool("search --all"))
    end)
-   
 end)
