@@ -18,7 +18,7 @@ package.loaded["luarocks.cfg"] = cfg
 
 local util = require("luarocks.util")
 
-cfg.lua_version = _VERSION:sub(5)
+cfg.lua_version = _VERSION:match(" (5%.[123])$") or "5.1"
 local version_suffix = cfg.lua_version:gsub("%.", "_")
 
 -- Load site-local global configurations
