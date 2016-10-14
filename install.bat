@@ -262,7 +262,7 @@ local function detect_lua_version(interpreter_path)
 	local full_version = handler:read("*a")
 	handler:close()
 
-	local version = full_version:match("^Lua (5%.[123])$")
+	local version = full_version:match(" (5%.[123])$")
 	if not version then
 		return nil, "unknown interpreter version '" .. full_version .. "'"
 	end
