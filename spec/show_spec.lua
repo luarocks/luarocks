@@ -49,6 +49,14 @@ describe("LuaRocks show tests #blackbox #b_show", function()
       it("LuaRocks show rock directory of luacov", function()
          local output = run.luarocks("show --rock-dir luacov")
       end)
+
+      it("LuaRocks show issues URL of luacov", function()
+         local output = run.luarocks("show --issues luacov")
+      end)
+      
+      it("LuaRocks show labels of luacov", function()
+         local output = run.luarocks("show --labels luacov")
+      end)
    end)
 
    it("LuaRocks show old version of luacov", function()
