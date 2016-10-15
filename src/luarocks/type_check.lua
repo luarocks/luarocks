@@ -9,6 +9,9 @@ type_check.rockspec_format = "3.0"
 local string_1 = type_check.string_1
 local mandatory_string_1 = type_check.mandatory_string_1
 
+local string_3 = { _type = "string", _version = "3.0" }
+local list_of_strings_3 = { _any = string_3, _version = "3.0" }
+
 -- Syntax for type-checking tables:
 --
 -- A type-checking table describes typing data for a value.
@@ -33,6 +36,8 @@ local rockspec_types = {
       homepage = string_1,
       license = string_1,
       maintainer = string_1,
+      labels = list_of_strings_3,
+      issues_url = string_3,
    },
    dependencies = {
       platforms = {}, -- recursively defined below
