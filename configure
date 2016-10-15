@@ -226,8 +226,8 @@ then
 fi
 
 detect_lua_version() {
-   detected_lua=`$1 -e 'print(_VERSION:sub(5))' 2> /dev/null`
-   if [ "$detected_lua" = "5.1" -o "$detected_lua" = "5.2" -o "$detected_lua" = "5.3" ]
+   detected_lua=`$1 -e 'print(_VERSION:match(" (5%.[123])$"))' 2> /dev/null`
+   if [ "$detected_lua" != "nil" ]
    then
       echo "Lua version detected: $detected_lua"
       if [ "$LUA_VERSION_SET" != "yes" ]
