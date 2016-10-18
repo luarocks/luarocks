@@ -63,7 +63,12 @@ local rockspec_types = {
       dir = string_1,
       tag = string_1,
       branch = string_1,
-      revision = { _type = "string", _pattern = string.rep("%x",40), _version = "3.0" },
+	  revision = {
+		  _type = "string",
+		  _version = "3.0",
+		  _pattern = "%x%x%x%x+",
+		  _expecting = "a hexadecimal string of at least 4 characters"
+	  },
       module = string_1,
       cvs_tag = string_1,
       cvs_module = string_1,
