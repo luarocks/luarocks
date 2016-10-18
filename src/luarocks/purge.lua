@@ -64,7 +64,7 @@ function purge.command(flags)
             break
          else
             util.printout("Removing "..package.." "..version.."...")
-            local ok, err = repos.delete_version(package, version, true)
+            local ok, err = repos.delete_version(package, version, "none", true)
             if not ok then
                util.printerr(err)
             end
