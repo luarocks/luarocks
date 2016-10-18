@@ -267,13 +267,17 @@ end
 -- Version numbers are compared as exact string comparison.
 -- @param name string: name of package
 -- @param version string: package version in string format
+-- @param deps_mode: string: Which trees to check dependencies for:
+-- "one" for the current default tree, "all" for all trees,
+-- "order" for all trees with priority >= the current default, "none" for no trees.
 -- @param quick boolean: do not try to fix the versioned name
 -- of another version that provides the same module that
 -- was deleted. This is used during 'purge', as every module
 -- will be eventually deleted.
-function repos.delete_version(name, version, quick)
+function repos.delete_version(name, version, deps_mode, quick)
    assert(type(name) == "string")
    assert(type(version) == "string")
+   assert(type(deps_mode) == "string")
 
    local function delete_deployed_file_tree(file_tree, deploy_dir, suffix)
       return recurse_rock_manifest_tree(file_tree, 
@@ -323,7 +327,12 @@ function repos.delete_version(name, version, quick)
    if not get_installed_versions(name) then
       fs.delete(dir.path(cfg.rocks_dir, name))
    end
-   return true
+   
+   if quick then
+      return true
+   end
+
+   return manif.make_manifest(cfg.rocks_dir, deps_mode)
 end
 
 return repos

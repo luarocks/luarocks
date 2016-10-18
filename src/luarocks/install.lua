@@ -50,7 +50,7 @@ function install.install_binary_rock(rock_file, deps_mode)
       return nil, "Incompatible architecture "..arch, "arch"
    end
    if repos.is_installed(name, version) then
-      repos.delete_version(name, version)
+      repos.delete_version(name, version, deps_mode)
    end
    
    local rollback = util.schedule_function(function()
@@ -89,7 +89,7 @@ function install.install_binary_rock(rock_file, deps_mode)
 
    util.remove_scheduled_function(rollback)
    rollback = util.schedule_function(function()
-      repos.delete_version(name, version)
+      repos.delete_version(name, version, deps_mode)
    end)
 
    ok, err = repos.run_hook(rockspec, "post_install")
@@ -168,7 +168,7 @@ function install.command(flags, name, version)
          ok, err = install.install_binary_rock(name, deps.get_deps_mode(flags))
       end
       if not ok then return nil, err end
-      local name, version = ok, err
+      name, version = ok, err
       if (not flags["only-deps"]) and (not flags["keep"]) and not cfg.keep_other_versions then
          local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
          if not ok then util.printerr(err) end

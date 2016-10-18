@@ -202,7 +202,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    end   
 
    if repos.is_installed(name, version) then
-      repos.delete_version(name, version)
+      repos.delete_version(name, version, deps_mode)
    end
 
    if not minimal_mode then
@@ -325,7 +325,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    
    util.remove_scheduled_function(rollback)
    rollback = util.schedule_function(function()
-      repos.delete_version(name, version)
+      repos.delete_version(name, version, deps_mode)
    end)
 
    ok, err = repos.run_hook(rockspec, "post_install")

@@ -365,7 +365,7 @@ end
 -- @param deps_mode string: Dependency mode: "one" for the current default tree,
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for the default dependency mode from the configuration.
--- @param versioned boolean: if versioned versions of the manifest should be created.
+-- @param remote boolean: 'true' if making a manifest for a rocks server.
 -- @return boolean or (nil, string): True if manifest was generated,
 -- or nil and an error message.
 function manif.make_manifest(repo, deps_mode, remote)

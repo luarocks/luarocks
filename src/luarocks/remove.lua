@@ -62,12 +62,15 @@ end
 --- Delete given versions of a program.
 -- @param name string: the name of a program
 -- @param versions array of string: the versions to be deleted.
+-- @param deps_mode: string: Which trees to check dependencies for:
+-- "one" for the current default tree, "all" for all trees,
+-- "order" for all trees with priority >= the current default, "none" for no trees.
 -- @return boolean or (nil, string): true on success or nil and an error message.
-local function delete_versions(name, versions) 
+local function delete_versions(name, versions, deps_mode) 
 
    for version, _ in pairs(versions) do
       util.printout("Removing "..name.." "..version.."...")
-      local ok, err = repos.delete_version(name, version)
+      local ok, err = repos.delete_version(name, version, deps_mode)
       if not ok then return nil, err end
    end
    
@@ -112,9 +115,7 @@ function remove.remove_search_results(results, name, deps_mode, force, fast)
       end
    end
    
-   local ok, err = delete_versions(name, versions)
-   if not ok then return nil, err end
-   ok, err = manif.make_manifest(cfg.rocks_dir, deps_mode)
+   local ok, err = delete_versions(name, versions, deps_mode)
    if not ok then return nil, err end
 
    util.printout("Removal successful.")
