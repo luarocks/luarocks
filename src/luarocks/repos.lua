@@ -151,17 +151,6 @@ function repos.run_hook(rockspec, hook_name)
    return true
 end
 
-local function install_binary(source, target, name, version)
-   assert(type(source) == "string")
-   assert(type(target) == "string")
-   
-   if fs.is_lua(source) then
-      return fs.wrap_script(source, target, name, version)
-   else
-      return fs.copy_binary(source, target)
-   end
-end
-
 function repos.should_wrap_bin_scripts(rockspec)
    assert(type(rockspec) == "table")
 
@@ -266,22 +255,24 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
                end
             end
 
-            if fs.exists(target) then
-               local backup = target
+            local ok, err = fs.make_dir(dir.dir_name(target))
+            if not ok then return nil, err end
+
+            local suffixed_target, mover = move_fn(source, target, name, version)
+            if fs.exists(suffixed_target) then
+               local backup = suffixed_target
                repeat
                   backup = backup.."~"
-               until not fs.exists(backup) -- slight race condition here, but shouldn't be a problem.
+               until not fs.exists(backup) -- Slight race condition here, but shouldn't be a problem.
 
-               util.printerr("Warning: "..target.." is not tracked by this installation of LuaRocks. Moving it to "..backup)
-               local ok, err = fs.move(target, backup)
+               util.printerr("Warning: "..suffixed_target.." is not tracked by this installation of LuaRocks. Moving it to "..backup)
+               local ok, err = fs.move(suffixed_target, backup)
                if not ok then
                   return nil, err
                end
             end
 
-            local ok, err = fs.make_dir(dir.dir_name(target))
-            if not ok then return nil, err end
-            ok, err = move_fn(source, target, name, version)
+            ok, err = mover()
             fs.remove_dir_tree_if_empty(dir.dir_name(source))
             return ok, err
          end
@@ -289,16 +280,24 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    end
 
    local rock_manifest = manif.load_rock_manifest(name, version)
-   
+
+   local function install_binary(source, target, name, version)
+      if wrap_bin_scripts and fs.is_lua(source) then
+         return target .. (cfg.wrapper_suffix or ""), function() return fs.wrap_script(source, target, name, version) end
+      else
+         return target, function() return fs.copy_binary(source, target) end
+      end
+   end
+
+   local function make_mover(perms)
+      return function(source, target)
+         return target, function() return fs.move(source, target, perms) end
+      end
+   end
+
    local ok, err = true
    if rock_manifest.bin then
-      local move_bin_fn = wrap_bin_scripts and install_binary or fs.copy_binary
-      ok, err = deploy_file_tree(rock_manifest.bin, path.bin_dir, cfg.deploy_bin_dir, move_bin_fn, cfg.wrapper_suffix)
-   end
-   local function make_mover(perms)
-      return function (src, dest) 
-         return fs.move(src, dest, perms)
-      end
+      ok, err = deploy_file_tree(rock_manifest.bin, path.bin_dir, cfg.deploy_bin_dir, install_binary, cfg.wrapper_suffix)
    end
    if ok and rock_manifest.lua then
       ok, err = deploy_file_tree(rock_manifest.lua, path.lua_dir, cfg.deploy_lua_dir, make_mover(cfg.perm_read))
