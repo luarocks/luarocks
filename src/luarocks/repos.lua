@@ -191,7 +191,18 @@ function repos.should_wrap_bin_scripts(rockspec)
    return true
 end
 
-function repos.deploy_files(name, version, wrap_bin_scripts)
+--- Deploy a package from the rocks subdirectory.
+-- It is maintained that for each file the one that is provided
+-- by the newest version of the lexicographically smallest package
+-- is installed using unversioned name, and other versions of the file
+-- use versioned names.
+-- @param name string: name of package
+-- @param version string: exact package version in string format
+-- @param wrap_bin_scripts bool: whether commands written in Lua should be wrapped.
+-- @param deps_mode: string: Which trees to check dependencies for:
+-- "one" for the current default tree, "all" for all trees,
+-- "order" for all trees with priority >= the current default, "none" for no trees.
+function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    assert(type(name) == "string")
    assert(type(version) == "string")
    assert(type(wrap_bin_scripts) == "boolean")
@@ -247,7 +258,13 @@ function repos.deploy_files(name, version, wrap_bin_scripts)
    if ok and rock_manifest.lib then
       ok, err = deploy_file_tree(rock_manifest.lib, path.lib_dir, cfg.deploy_lib_dir, make_mover(cfg.perm_exec))
    end
-   return ok, err
+
+   if not ok then
+      return nil, err
+   end
+
+   local writer = require("luarocks.manif.writer")
+   return writer.update_manifest(name, version, nil, deps_mode)
 end
 
 local function delete_suffixed(filename, suffix)
@@ -266,9 +283,12 @@ local function delete_suffixed(filename, suffix)
 end
 
 --- Delete a package from the local repository.
--- Version numbers are compared as exact string comparison.
+-- It is maintained that for each file the one that is provided
+-- by the newest version of the lexicographically smallest package
+-- is installed using unversioned name, and other versions of the file
+-- use versioned names.
 -- @param name string: name of package
--- @param version string: package version in string format
+-- @param version string: exact package version in string format
 -- @param deps_mode: string: Which trees to check dependencies for:
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.

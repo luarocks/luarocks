@@ -20,7 +20,7 @@ local extra_rocks = {
    "/say-1.0-1.src.rock",
    "/wsapi-1.6-1.src.rock",
    "/luafilesystem-1.6.3-2.src.rock",
-   "/luafilesystem-1.6.1-1.src.rock",
+   "/luafilesystem-1.6.3-1.src.rock",
 }
 
 describe("LuaRocks install tests #blackbox #b_install", function()
@@ -87,12 +87,12 @@ describe("LuaRocks install tests #blackbox #b_install", function()
       it('LuaRocks install - handle versioned modules when installing another version with --keep #268', function()
          assert.is_true(run.luarocks_bool("install luafilesystem"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/lfs."..test_env.lib_extension))
-         assert.is_true(run.luarocks_bool("install luafilesystem 1.6.1 --keep"))
+         assert.is_true(run.luarocks_bool("install luafilesystem 1.6.3-1 --keep"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/lfs."..test_env.lib_extension))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/luafilesystem_1_6_1_1-lfs."..test_env.lib_extension))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/luafilesystem_1_6_3_1-lfs."..test_env.lib_extension))
          assert.is_true(run.luarocks_bool("install luafilesystem"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/lfs."..test_env.lib_extension))
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/luafilesystem_1_6_1_1-lfs."..test_env.lib_extension))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/luafilesystem_1_6_3_1-lfs."..test_env.lib_extension))
       end)
       
       it("LuaRocks install only-deps of luasocket packed rock", function()
