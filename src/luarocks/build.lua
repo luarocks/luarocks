@@ -72,10 +72,7 @@ local function install_files(files, location, is_module_path, perms)
                if not ok then return nil, err end
                if filename:match("%.lua$") then
                   local basename = modname:match("([^.]+)$")
-                  local baseinfo = filename:gsub("%.lua$", "")
-                  if basename ~= baseinfo then
-                     filename = basename..".lua"
-                  end
+                  filename = basename..".lua"
                end
             else
                dest = dir.path(location, dir.dir_name(modname))
