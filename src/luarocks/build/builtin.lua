@@ -209,10 +209,7 @@ function builtin.run(rockspec)
                moddir = path.module_to_path(name..".init")
             else
                local basename = name:match("([^.]+)$")
-               local baseinfo = filename:gsub("%.lua$", "")
-               if basename ~= baseinfo then
-                  filename = basename..".lua"
-               end
+               filename = basename..".lua"
             end
             local dest = dir.path(luadir, moddir, filename)
             lua_modules[info] = dest
