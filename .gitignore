@@ -2,3 +2,13 @@
 /src/luarocks/site_config.lua
 /test/testing_*
 /test/luacov.*
+# Stuff that pops up during development but shouldn't be in the repo (helps clean up `git status`)
+/*.rockspec
+/*.rock
+/*.tar.gz
+/*.zip
+/src/*.*
+/prefix-*
+/dev_*
+/gh-pages
+/wiki
