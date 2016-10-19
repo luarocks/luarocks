@@ -208,6 +208,7 @@ function fetch.load_local_rockspec(filename, quick)
          return nil, "Rockspec format "..rockspec.rockspec_format.." is not supported, please upgrade LuaRocks."
       end
    end
+   rockspec.format_is_at_least = deps.format_is_at_least
 
    util.platform_overrides(rockspec.build)
    util.platform_overrides(rockspec.dependencies)
@@ -247,12 +248,12 @@ function fetch.load_local_rockspec(filename, quick)
    rockspec.source.dir = rockspec.source.dir
                       or rockspec.source.module
                       or ( (filebase:match("%.lua$") or filebase:match("%.c$"))
-                           and (deps.format_is_at_least(rockspec, "3.0")
+                           and (rockspec:format_is_at_least("3.0")
                                 and (fetch.is_basic_protocol(protocol) and "." or base)
                                 or  ".") )
                       or base
 
-   rockspec.rocks_provided = (deps.format_is_at_least(rockspec, "3.0")
+   rockspec.rocks_provided = (rockspec:format_is_at_least("3.0")
                               and cfg.rocks_provided_3_0
                               or  cfg.rocks_provided)
 
@@ -363,7 +364,7 @@ function fetch.get_sources(rockspec, extract, dest_dir)
          -- with rockspecs newer than 3.0.
          local dir_count, found_dir = 0
 
-         if not rockspec.source.dir_set and deps.format_is_at_least(rockspec, "3.0") then
+         if not rockspec.source.dir_set and rockspec:format_is_at_least("3.0") then
             local files = fs.list_dir()
             for _, f in ipairs(files) do
                if fs.is_dir(f) then

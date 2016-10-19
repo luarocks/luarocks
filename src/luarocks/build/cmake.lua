@@ -5,7 +5,6 @@ local cmake = {}
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
-local deps = require("luarocks.deps")
 
 --- Driver function for the "cmake" build back-end.
 -- @param rockspec table: the loaded rockspec.
@@ -54,7 +53,7 @@ function cmake.run(rockspec)
    end
 
    local do_build, do_install
-   if deps.format_is_at_least(rockspec, "3.0") then
+   if rockspec:format_is_at_least("3.0") then
       do_build   = (build.build_pass   == nil) and true or build.build_pass
       do_install = (build.install_pass == nil) and true or build.install_pass
    else

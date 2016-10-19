@@ -110,7 +110,7 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
    end
 
    -- Fetching git submodules is supported only when rockspec format is >= 3.0.
-   if deps.format_is_at_least(rockspec, "3.0") then
+   if rockspec:format_is_at_least("3.0") then
       command = {fs.Q(git_cmd), "submodule", "update", "--init", "--recursive"}
 
       if git_supports_shallow_submodules(git_cmd) then
