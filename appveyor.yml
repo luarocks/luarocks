@@ -38,7 +38,7 @@ init:
 before_build:
   - set PATH=C:\Python27\Scripts;%PATH% # Add directory containing 'pip' to PATH
   - pip install hererocks
-  - hererocks env --%LUA% -rlatest --target=%COMPILER%
+  - hererocks env --%LUA% --luarocks @luarocks-3 --target=%COMPILER%
   - call env\bin\activate
 
 build_script:
