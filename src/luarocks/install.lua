@@ -84,7 +84,7 @@ function install.install_binary_rock(rock_file, deps_mode)
       if err then return nil, err, errcode end
    end
 
-   ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec))
+   ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), deps_mode)
    if err then return nil, err end
 
    util.remove_scheduled_function(rollback)
@@ -94,10 +94,7 @@ function install.install_binary_rock(rock_file, deps_mode)
 
    ok, err = repos.run_hook(rockspec, "post_install")
    if err then return nil, err end
-   
-   ok, err = manif.update_manifest(name, version, nil, deps_mode)
-   if err then return nil, err end
-   
+
    util.announce_install(rockspec)
    util.remove_scheduled_function(rollback)
    return name, version
