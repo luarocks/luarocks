@@ -100,9 +100,11 @@ describe("LuaRocks install tests #blackbox #b_install", function()
       end)
 
       it('LuaRocks install - handle versioned modules and commands from different files when upgrading #302', function()
+         io.open(testing_paths.testing_sys_tree .. "/bin/luacheck"..test_env.wrapper_extension, "w"):close()
          assert.is_true(run.luarocks_bool("install luacheck 0.7.3 --deps-mode=none"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION.."/luacheck.lua"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/bin/luacheck"..test_env.wrapper_extension))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/bin/luacheck"..test_env.wrapper_extension .. "~"))
 
          assert.is_true(run.luarocks_bool("install luacheck 0.8.0 --deps-mode=none"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION.."/luacheck/init.lua"))
