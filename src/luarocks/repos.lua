@@ -8,7 +8,6 @@ local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
-local writer = require("luarocks.manif.writer")
 local deps = require("luarocks.deps")
 
 --- Get all installed versions of a package.
@@ -332,6 +331,7 @@ function repos.delete_version(name, version, deps_mode, quick)
       return true
    end
 
+   local writer = require("luarocks.manif.writer")
    return writer.make_manifest(cfg.rocks_dir, deps_mode)
 end
 
