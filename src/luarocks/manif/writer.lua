@@ -189,10 +189,8 @@ local function store_results(results, manifest, dep_handler)
             local entrytable = {}
             entrytable.arch = entry.arch
             if entry.arch == "installed" then
-               local rock_manifest = manif.load_rock_manifest(name, version)
-               if not rock_manifest then
-                  return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks 2 tree?"
-               end
+               local rock_manifest, err = manif.load_rock_manifest(name, version)
+               if not rock_manifest then return nil, err end
                entrytable.modules = store_package_items(repos.package_modules, name, version, manifest.modules)
                entrytable.commands = store_package_items(repos.package_commands, name, version, manifest.commands)
             end

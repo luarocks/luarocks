@@ -102,10 +102,8 @@ local function do_pack_binary_rock(name, version, tree)
       return nil, "'"..name.." "..version.."' does not seem to be an installed rock."
    end
    
-   local rock_manifest = manif.load_rock_manifest(name, version, root)
-   if not rock_manifest then
-      return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks 2 tree?"
-   end
+   local rock_manifest, err = manif.load_rock_manifest(name, version, root)
+   if not rock_manifest then return nil, err end
 
    local name_version = name .. "-" .. version
    local rock_file = fs.absolute_name(name_version .. "."..cfg.arch..".rock")

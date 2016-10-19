@@ -25,7 +25,9 @@ function manif.load_rock_manifest(name, version, root)
    end
    local pathname = path.rock_manifest_file(name, version, root)
    local rock_manifest = persist.load_into_table(pathname)
-   if not rock_manifest then return nil end
+   if not rock_manifest then
+      return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks tree?"
+   end
    manif.rock_manifest_cache[name_version] = rock_manifest
    return rock_manifest.rock_manifest
 end

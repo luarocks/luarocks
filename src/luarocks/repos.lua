@@ -78,6 +78,7 @@ function repos.package_modules(package, version)
 
    local result = {}
    local rock_manifest = manif.load_rock_manifest(package, version)
+   if not rock_manifest then return result end
    store_package_data(result, package, rock_manifest.lib)
    store_package_data(result, package, rock_manifest.lua)
    return result
@@ -97,6 +98,7 @@ function repos.package_commands(package, version)
 
    local result = {}
    local rock_manifest = manif.load_rock_manifest(package, version)
+   if not rock_manifest then return result end
    store_package_data(result, package, rock_manifest.bin)
    return result
 end
@@ -112,7 +114,7 @@ function repos.has_binaries(name, version)
    assert(type(version) == "string")
 
    local rock_manifest = manif.load_rock_manifest(name, version)
-   if rock_manifest.bin then
+   if rock_manifest and rock_manifest.bin then
       for name, md5 in pairs(rock_manifest.bin) do
          -- TODO verify that it is the same file. If it isn't, find the actual command.
          if fs.is_actual_binary(dir.path(cfg.deploy_bin_dir, name)) then
@@ -196,7 +198,7 @@ function repos.deploy_files(name, version, wrap_bin_scripts)
 
    local function deploy_file_tree(file_tree, path_fn, deploy_dir, move_fn)
       local source_dir = path_fn(name, version)
-      return recurse_rock_manifest_tree(file_tree, 
+      return recurse_rock_manifest_tree(file_tree,
          function(parent_path, parent_module, file)
             local source = dir.path(source_dir, parent_path, file)
             local target = dir.path(deploy_dir, parent_path, file)
@@ -226,7 +228,8 @@ function repos.deploy_files(name, version, wrap_bin_scripts)
       )
    end
 
-   local rock_manifest = manif.load_rock_manifest(name, version)
+   local rock_manifest, err = manif.load_rock_manifest(name, version)
+   if not rock_manifest then return nil, err end
    
    local ok, err = true
    if rock_manifest.bin then
@@ -305,12 +308,10 @@ function repos.delete_version(name, version, deps_mode, quick)
       )
    end
 
-   local rock_manifest = manif.load_rock_manifest(name, version)
-   if not rock_manifest then
-      return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks 2 tree?"
-   end
+   local rock_manifest, err = manif.load_rock_manifest(name, version)
+   if not rock_manifest then return nil, err end
    
-   local ok, err = true
+   local ok = true
    if rock_manifest.bin then
       ok, err = delete_deployed_file_tree(rock_manifest.bin, cfg.deploy_bin_dir, cfg.wrapper_suffix)
    end
