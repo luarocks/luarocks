@@ -4,7 +4,6 @@
 local path_cmd = {}
 
 local util = require("luarocks.util")
-local deps = require("luarocks.deps")
 local cfg = require("luarocks.cfg")
 
 util.add_run_function(path_cmd)
@@ -35,8 +34,6 @@ And on Windows:
 --- Driver function for "path" command.
 -- @return boolean This function always succeeds.
 function path_cmd.command(flags)
-   local deps_mode = deps.get_deps_mode(flags)
-   
    local lr_path, lr_cpath, lr_bin = cfg.package_paths(flags["tree"])
    local path_sep = cfg.export_path_separator
 

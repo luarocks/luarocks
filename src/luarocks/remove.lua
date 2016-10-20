@@ -11,7 +11,6 @@ local repos = require("luarocks.repos")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
-local manif = require("luarocks.manif")
 local fs = require("luarocks.fs")
 
 util.add_run_function(remove)
