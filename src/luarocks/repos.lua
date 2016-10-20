@@ -175,12 +175,14 @@ local function find_suffixed(file, suffix)
          return filename
       end
    end
+
+   return nil, table.concat(filenames, ", ") .. " not found"
 end
 
 local function move_suffixed(from_file, to_file, suffix)
-   local suffixed_from_file = find_suffixed(from_file, suffix)
+   local suffixed_from_file, err = find_suffixed(from_file, suffix)
    if not suffixed_from_file then
-      return nil, "File not found"
+      return nil, "Could not move " .. from_file .. " to " .. to_file .. ": " .. err
    end
 
    suffix = suffixed_from_file:sub(#from_file + 1)
@@ -189,14 +191,14 @@ local function move_suffixed(from_file, to_file, suffix)
 end
 
 local function delete_suffixed(file, suffix)
-   local suffixed_file = find_suffixed(file, suffix)
+   local suffixed_file, err = find_suffixed(file, suffix)
    if not suffixed_file then
-      return nil, "File not found", "not found"
+      return nil, "Could not remove " .. file .. ": " .. err, "not found"
    end
 
    fs.delete(suffixed_file)
    if fs.exists(suffixed_file) then
-      return nil, "Failed deleting " .. suffixed_file, "fail"
+      return nil, "Failed deleting " .. suffixed_file .. ": file still exists", "fail"
    end
 
    return true

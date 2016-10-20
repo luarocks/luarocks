@@ -2,6 +2,7 @@
 --- Functions for command-line scripts.
 local command_line = {}
 
+local pack = function(...) return {...}, select("#", ...) end
 local unpack = unpack or table.unpack
 
 local util = require("luarocks.util")
@@ -13,17 +14,24 @@ local fs = require("luarocks.fs")
 
 local program = util.this_program("luarocks")
 
+local function error_handler(err)
+   return debug.traceback("LuaRocks "..cfg.program_version..
+      " bug (please report at https://github.com/keplerproject/luarocks/issues).\n"..err, 2)
+end
+
 --- Display an error message and exit.
 -- @param message string: The error message.
 -- @param exitcode number: the exitcode to use
 local function die(message, exitcode)
    assert(type(message) == "string")
-
-   local ok, err = pcall(util.run_scheduled_functions)
-   if not ok then
-      util.printerr("\nLuaRocks "..cfg.program_version.." internal bug (please report at https://github.com/keplerproject/luarocks/issues):\n"..err)
-   end
    util.printerr("\nError: "..message)
+
+   local ok, err = xpcall(util.run_scheduled_functions, error_handler)
+   if not ok then
+      util.printerr("\nError: "..err)
+      exitcode = cfg.errorcodes.CRASH
+   end
+
    os.exit(exitcode or cfg.errorcodes.UNSPECIFIED)
 end
 
@@ -177,12 +185,10 @@ function command_line.run_command(...)
    
    if commands[command] then
       local cmd = require(commands[command])
-      local xp, ok, err, exitcode = xpcall(function() return cmd.command(flags, unpack(nonflags)) end, function(err)
-         die(debug.traceback("LuaRocks "..cfg.program_version
-            .." bug (please report at https://github.com/keplerproject/luarocks/issues).\n"
-            ..err, 2), cfg.errorcodes.CRASH)
-      end)
-      if xp and (not ok) then
+      local call_ok, ok, err, exitcode = xpcall(function() return cmd.command(flags, unpack(nonflags)) end, error_handler)
+      if not call_ok then
+         die(ok, cfg.errorcodes.CRASH)
+      elseif not ok then
          die(err, exitcode)
       end
    else
