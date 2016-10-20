@@ -23,6 +23,8 @@ local extra_rocks = {
    "/luafilesystem-1.6.3-1.src.rock",
    "/luacheck-0.7.3-1.src.rock",
    "/luacheck-0.8.0-1.src.rock",
+   "/sailor-0.5-3.src.rock",
+   "/sailor-0.5-4.src.rock",
 }
 
 describe("LuaRocks install tests #blackbox #b_install", function()
@@ -117,6 +119,16 @@ describe("LuaRocks install tests #blackbox #b_install", function()
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/bin/luacheck"..test_env.wrapper_extension))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION.."/luacheck_0_7_3_1-luacheck.lua"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/bin/luacheck_0_7_3_1-luacheck"..test_env.wrapper_extension))
+      end)
+
+      it('LuaRocks install - handle non-Lua files in build.install.lua when upgrading sailorproject/sailor#138', function()
+         assert.is_true(run.luarocks_bool("install sailor 0.5-3 --deps-mode=none"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION.."/sailor/blank-app/.htaccess"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION.."/sailor/blank-app/.htaccess~"))
+
+         assert.is_true(run.luarocks_bool("install sailor 0.5-4 --deps-mode=none"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION.."/sailor/blank-app/.htaccess"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION.."/sailor/blank-app/.htaccess~"))
       end)
       
       it("LuaRocks install only-deps of luasocket packed rock", function()
