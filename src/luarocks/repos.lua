@@ -151,33 +151,6 @@ function repos.run_hook(rockspec, hook_name)
    return true
 end
 
-local function install_binary(source, target, name, version)
-   assert(type(source) == "string")
-   assert(type(target) == "string")
-   
-   if fs.is_lua(source) then
-      return fs.wrap_script(source, target, name, version)
-   else
-      return fs.copy_binary(source, target)
-   end
-end
-
-local function resolve_conflict(target, deploy_dir, name, version)
-   local cname, cversion = manif.find_current_provider(target)
-   if not cname then
-      return nil, cversion
-   end
-   if name ~= cname or deps.compare_versions(version, cversion) then
-      local versioned = path.versioned_name(target, deploy_dir, cname, cversion)
-      local ok, err = fs.make_dir(dir.dir_name(versioned))
-      if not ok then return nil, err end
-      fs.move(target, versioned)
-      return target
-   else
-      return path.versioned_name(target, deploy_dir, name, version)
-   end
-end
-
 function repos.should_wrap_bin_scripts(rockspec)
    assert(type(rockspec) == "table")
 
@@ -190,11 +163,71 @@ function repos.should_wrap_bin_scripts(rockspec)
    return true
 end
 
+local function find_suffixed(file, suffix)
+   local filenames = {file}
+   if suffix and suffix ~= "" then
+      table.insert(filenames, 1, file .. suffix)
+   end
+
+   for _, filename in ipairs(filenames) do
+      if fs.exists(filename) then
+         return filename
+      end
+   end
+end
+
+local function move_suffixed(from_file, to_file, suffix)
+   local suffixed_from_file = find_suffixed(from_file, suffix)
+   if not suffixed_from_file then
+      return nil, "File not found"
+   end
+
+   suffix = suffixed_from_file:sub(#from_file + 1)
+   local suffixed_to_file = to_file .. suffix
+   return fs.move(suffixed_from_file, suffixed_to_file)
+end
+
+local function delete_suffixed(file, suffix)
+   local suffixed_file = find_suffixed(file, suffix)
+   if not suffixed_file then
+      return nil, "File not found", "not found"
+   end
+
+   fs.delete(suffixed_file)
+   if fs.exists(suffixed_file) then
+      return nil, "Failed deleting " .. suffixed_file, "fail"
+   end
+
+   return true
+end
+
+local function resolve_conflict(target, deploy_dir, name, version, cur_name, cur_version, suffix)
+   if name < cur_name or (name == cur_name and deps.compare_versions(version, cur_version)) then
+      -- New version has priority. Move currently provided version back using versioned name.
+      local cur_target = manif.find_conflicting_file(cur_name, cur_version, target)
+      local versioned = path.versioned_name(cur_target, deploy_dir, cur_name, cur_version)
+
+      local ok, err = fs.make_dir(dir.dir_name(versioned))
+      if not ok then
+         return nil, err
+      end
+
+      ok, err = move_suffixed(cur_target, versioned, suffix)
+      if not ok then
+         return nil, err
+      end
+
+      return target
+   else
+      -- Current version has priority, deploy new version using versioned name.
+      return path.versioned_name(target, deploy_dir, name, version)
+   end
+end
+
 --- Deploy a package from the rocks subdirectory.
--- It is maintained that for each file the one that is provided
+-- It is maintained that for each module and command the one that is provided
 -- by the newest version of the lexicographically smallest package
--- is installed using unversioned name, and other versions of the file
--- use versioned names.
+-- is installed using unversioned name, and other versions use versioned names.
 -- @param name string: name of package
 -- @param version string: exact package version in string format
 -- @param wrap_bin_scripts bool: whether commands written in Lua should be wrapped.
@@ -206,49 +239,65 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    assert(type(version) == "string")
    assert(type(wrap_bin_scripts) == "boolean")
 
-   local function deploy_file_tree(file_tree, path_fn, deploy_dir, move_fn)
+   local function deploy_file_tree(file_tree, path_fn, deploy_dir, move_fn, suffix)
       local source_dir = path_fn(name, version)
       return recurse_rock_manifest_tree(file_tree, 
          function(parent_path, parent_module, file)
             local source = dir.path(source_dir, parent_path, file)
             local target = dir.path(deploy_dir, parent_path, file)
-            local ok, err
-            if fs.exists(target) then
-               local new_target, err = resolve_conflict(target, deploy_dir, name, version)
-               if err == "untracked" then
-                  local backup = target
-                  repeat
-                     backup = backup.."~"
-                  until not fs.exists(backup) -- slight race condition here, but shouldn't be a problem.
-                  util.printerr("Warning: "..target.." is not tracked by this installation of LuaRocks. Moving it to "..backup)
-                  fs.move(target, backup)
-               elseif err then
-                  return nil, err.." Cannot install new version."
-               else
-                  target = new_target
+
+            local cur_name, cur_version = manif.find_current_provider(target)
+            if cur_name then
+               local resolve_err
+               target, resolve_err = resolve_conflict(target, deploy_dir, name, version, cur_name, cur_version, suffix)
+               if not target then
+                  return nil, resolve_err
                end
             end
-            ok, err = fs.make_dir(dir.dir_name(target))
+
+            local ok, err = fs.make_dir(dir.dir_name(target))
             if not ok then return nil, err end
-            ok, err = move_fn(source, target, name, version)
+
+            local suffixed_target, mover = move_fn(source, target, name, version)
+            if fs.exists(suffixed_target) then
+               local backup = suffixed_target
+               repeat
+                  backup = backup.."~"
+               until not fs.exists(backup) -- Slight race condition here, but shouldn't be a problem.
+
+               util.printerr("Warning: "..suffixed_target.." is not tracked by this installation of LuaRocks. Moving it to "..backup)
+               local ok, err = fs.move(suffixed_target, backup)
+               if not ok then
+                  return nil, err
+               end
+            end
+
+            ok, err = mover()
             fs.remove_dir_tree_if_empty(dir.dir_name(source))
-            if not ok then return nil, err end
-            return true
+            return ok, err
          end
       )
    end
 
    local rock_manifest = manif.load_rock_manifest(name, version)
-   
+
+   local function install_binary(source, target, name, version)
+      if wrap_bin_scripts and fs.is_lua(source) then
+         return target .. (cfg.wrapper_suffix or ""), function() return fs.wrap_script(source, target, name, version) end
+      else
+         return target, function() return fs.copy_binary(source, target) end
+      end
+   end
+
+   local function make_mover(perms)
+      return function(source, target)
+         return target, function() return fs.move(source, target, perms) end
+      end
+   end
+
    local ok, err = true
    if rock_manifest.bin then
-      local move_bin_fn = wrap_bin_scripts and install_binary or fs.copy_binary
-      ok, err = deploy_file_tree(rock_manifest.bin, path.bin_dir, cfg.deploy_bin_dir, move_bin_fn)
-   end
-   local function make_mover(perms)
-      return function (src, dest) 
-         return fs.move(src, dest, perms)
-      end
+      ok, err = deploy_file_tree(rock_manifest.bin, path.bin_dir, cfg.deploy_bin_dir, install_binary, cfg.wrapper_suffix)
    end
    if ok and rock_manifest.lua then
       ok, err = deploy_file_tree(rock_manifest.lua, path.lua_dir, cfg.deploy_lua_dir, make_mover(cfg.perm_read))
@@ -264,26 +313,10 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    return manif.update_manifest(name, version, nil, deps_mode)
 end
 
-local function delete_suffixed(filename, suffix)
-   local filenames = { filename }
-   if suffix and suffix ~= "" then filenames = { filename..suffix, filename } end
-   for _, name in ipairs(filenames) do
-      if fs.exists(name) then
-         fs.delete(name)
-         if fs.exists(name) then
-            return nil, "Failed deleting "..name, "fail"
-         end
-         return true, name
-      end
-   end
-   return false, "File not found", "not found"
-end
-
 --- Delete a package from the local repository.
--- It is maintained that for each file the one that is provided
+-- It is maintained that for each module and command the one that is provided
 -- by the newest version of the lexicographically smallest package
--- is installed using unversioned name, and other versions of the file
--- use versioned names.
+-- is installed using unversioned name, and other versions use versioned names.
 -- @param name string: name of package
 -- @param version string: exact package version in string format
 -- @param deps_mode: string: Which trees to check dependencies for:
@@ -303,19 +336,31 @@ function repos.delete_version(name, version, deps_mode, quick)
          function(parent_path, parent_module, file)
             local target = dir.path(deploy_dir, parent_path, file)
             local versioned = path.versioned_name(target, deploy_dir, name, version)
-            local ok, name, err = delete_suffixed(versioned, suffix)
+
+            local ok, err, err_type = delete_suffixed(versioned, suffix)
             if ok then
                fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
                return true
+            elseif err_type == "fail" then
+               return nil, err
             end
-            if err == "fail" then return nil, name end
-            ok, name, err = delete_suffixed(target, suffix)
-            if err == "fail" then return nil, name end
+
+            ok, err = delete_suffixed(target, suffix)
+            if not ok then
+               return nil, err
+            end
+
             if not quick then
                local next_name, next_version = manif.find_next_provider(target)
                if next_name then
-                  local versioned = path.versioned_name(name, deploy_dir, next_name, next_version)
-                  fs.move(versioned, name)
+                  local next_target = manif.find_conflicting_file(next_name, next_version, target)
+                  local next_versioned = path.versioned_name(next_target, deploy_dir, next_name, next_version)
+
+                  ok, err = move_suffixed(next_versioned, next_target, suffix)
+                  if not ok then
+                     return nil, err
+                  end
+
                   fs.remove_dir_tree_if_empty(dir.dir_name(versioned))
                end
             end
@@ -340,7 +385,7 @@ function repos.delete_version(name, version, deps_mode, quick)
    if ok and rock_manifest.lib then
       ok, err = delete_deployed_file_tree(rock_manifest.lib, cfg.deploy_lib_dir)
    end
-   if err then return nil, err end
+   if not ok then return nil, err end
 
    fs.delete(path.install_dir(name, version))
    if not get_installed_versions(name) then

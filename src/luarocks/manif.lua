@@ -469,6 +469,22 @@ local function relative_path(from_dir, to_file)
    return (to_file:sub(#from_dir + 1):gsub("^[\\/]*", ""))
 end
 
+local function file_manifest_coordinates(manifest, file, root)
+   local deploy_bin = path.deploy_bin_dir(root)
+   local deploy_lua = path.deploy_lua_dir(root)
+   local deploy_lib = path.deploy_lib_dir(root)
+
+   if util.starts_with(file, deploy_lua) then
+      return "modules", path.path_to_module(relative_path(deploy_lua, file):gsub("\\", "/")), deploy_lua
+   elseif util.starts_with(file, deploy_lib) then
+      return "modules", path.path_to_module(relative_path(deploy_lib, file):gsub("\\", "/")), deploy_lib
+   elseif util.starts_with(file, deploy_bin) then
+      return "commands", relative_path(deploy_bin, file), deploy_bin
+   else
+      assert(false, "Assertion failed: '"..file.."' is not a deployed file.")
+   end
+end
+
 local function find_providers(file, root)
    assert(type(file) == "string")
    root = root or cfg.root_dir
@@ -477,25 +493,10 @@ local function find_providers(file, root)
    if not manifest then
       return nil, "untracked"
    end
-   local deploy_bin = path.deploy_bin_dir(root)
-   local deploy_lua = path.deploy_lua_dir(root)
-   local deploy_lib = path.deploy_lib_dir(root)
-   local key, manifest_tbl
 
-   if util.starts_with(file, deploy_lua) then
-      manifest_tbl = manifest.modules
-      key = path.path_to_module(relative_path(deploy_lua, file):gsub("\\", "/"))
-   elseif util.starts_with(file, deploy_lib) then
-      manifest_tbl = manifest.modules
-      key = path.path_to_module(relative_path(deploy_lib, file):gsub("\\", "/"))
-   elseif util.starts_with(file, deploy_bin) then
-      manifest_tbl = manifest.commands
-      key = relative_path(deploy_bin, file)
-   else
-      assert(false, "Assertion failed: '"..file.."' is not a deployed file.")
-   end
+   local type_key, key = file_manifest_coordinates(manifest, file, root)
 
-   local providers = manifest_tbl[key]
+   local providers = manifest[type_key][key]
    if not providers then
       return nil, "untracked"
    end
@@ -521,6 +522,27 @@ function manif.find_next_provider(file, root)
    else
       return nil
    end
+end
+
+--- Given a file conflicting with a module or command
+-- provided by a version of a package, return which file
+-- in that version corresponds to the conflicting item.
+-- @param name string: name of the package with conflicting module or command.
+-- @param version string: version of the package with conflicting module or command.
+-- @param file string: full, unversioned path to a deployed file.
+-- @return string: full, unversioned path to a deployed file in
+-- given package that conflicts with given file.
+function manif.find_conflicting_file(name, version, file, root)
+   root = root or cfg.root_dir
+
+   local manifest = manif_core.load_local_manifest(path.rocks_dir(root))
+   if not manifest then
+      return
+   end
+
+   local entry_table = manifest.repository[name][version][1]
+   local type_key, key, deploy_dir = file_manifest_coordinates(manifest, file, root)
+   return dir.path(deploy_dir, entry_table[type_key][key])
 end
 
 return manif
