@@ -515,6 +515,7 @@ function test_env.setup_specs(extra_rocks)
 
       test_env.platform = execute_output(test_env.testing_paths.lua .. " -e \"print(require('luarocks.core.cfg').arch)\"", false, test_env.env_variables)
       test_env.lib_extension = execute_output(test_env.testing_paths.lua .. " -e \"print(require('luarocks.core.cfg').lib_extension)\"", false, test_env.env_variables)
+      test_env.wrapper_extension = test_env.TEST_TARGET_OS == "windows" and ".bat" or ""
       test_env.md5sums = create_md5sums(test_env.testing_paths)
       test_env.setup_done = true
       title("RUNNING TESTS")
