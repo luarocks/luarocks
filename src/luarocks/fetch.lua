@@ -197,16 +197,16 @@ function fetch.load_local_rockspec(filename, quick)
    end
    local globals = err
 
+   if rockspec.rockspec_format then
+      if deps.compare_versions(rockspec.rockspec_format, type_check.rockspec_format) then
+         return nil, "Rockspec format "..rockspec.rockspec_format.." is not supported, please upgrade LuaRocks."
+      end
+   end
+
    if not quick then
       local ok, err = type_check.type_check_rockspec(rockspec, globals)
       if not ok then
          return nil, filename..": "..err
-      end
-   end
-   
-   if rockspec.rockspec_format then
-      if deps.compare_versions(rockspec.rockspec_format, type_check.rockspec_format) then
-         return nil, "Rockspec format "..rockspec.rockspec_format.." is not supported, please upgrade LuaRocks."
       end
    end
 
