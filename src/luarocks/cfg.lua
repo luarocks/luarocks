@@ -315,6 +315,7 @@ local defaults = {
    arch = "unknown",
    lib_extension = "unknown",
    obj_extension = "unknown",
+   link_lua_explicitly = false,
 
    rocks_servers = {
       {
@@ -527,6 +528,7 @@ if cfg.platforms.cygwin then
    defaults.variables.CC = "echo -llua | xargs gcc"
    defaults.variables.LD = "echo -llua | xargs gcc"
    defaults.variables.LIBFLAG = "-shared"
+   defaults.link_lua_explicitly = true
 end
 
 if cfg.platforms.msys then

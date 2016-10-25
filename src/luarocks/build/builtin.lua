@@ -164,7 +164,7 @@ function builtin.run(rockspec)
             add_flags(extras, "-Wl,-rpath,%s:", libdirs)
          end
          add_flags(extras, "-l%s", libraries)
-         if cfg.is_platform("cygwin") then
+         if cfg.link_lua_explicitly then
             add_flags(extras, "-l%s", {"lua"})
          end
          return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, "-L"..variables.LUA_LIBDIR, unpack(extras))
