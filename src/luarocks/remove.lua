@@ -155,6 +155,7 @@ function remove.command(flags, name, version)
    end
 
    local results = {}
+   name = name:lower()
    search.manifest_search(results, cfg.rocks_dir, search.make_query(name, version))
    if not results[name] then
       return nil, "Could not find rock '"..name..(version and " "..version or "").."' in "..path.rocks_tree_to_string(cfg.root_dir)
