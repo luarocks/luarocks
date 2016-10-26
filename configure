@@ -361,6 +361,18 @@ else
    fi
 fi
 
+echo_n "Checking if Lua header version matches that of the interpreter... "
+header_version=$(sed -n 's/.*LUA_VERSION_NUM.*5.\(.\).*/5.\1/p' "$lua_h")
+if [ "$header_version" = "$LUA_VERSION" ]
+then
+   echo "yes"
+else
+   echo "no"
+   echo "lua.h version mismatch (interpreter: $LUA_VERSION; lua.h: $header_version)."
+   die "You may want to use the flag --with-lua or --with-lua-include. See --help."
+fi
+
+
 if [ "$LUAROCKS_DOWNLOADER_SET" != "yes" ]
 then
    find_helper "a downloader helper program" curl wget fetch
