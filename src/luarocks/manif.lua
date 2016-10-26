@@ -55,7 +55,6 @@ end
 
 function manif.make_rock_manifest(name, version)
    local install_dir = path.install_dir(name, version)
-   local rock_manifest = path.rock_manifest_file(name, version)
    local tree = {}
    for _, file in ipairs(fs.find(install_dir)) do
       local full_path = dir.path(install_dir, file)
@@ -80,7 +79,7 @@ function manif.make_rock_manifest(name, version)
          last[last_name] = sum
       end
    end
-   rock_manifest = { rock_manifest=tree }
+   local rock_manifest = { rock_manifest=tree }
    manif.rock_manifest_cache[name.."/"..version] = rock_manifest
    save_table(install_dir, "rock_manifest", rock_manifest )
 end

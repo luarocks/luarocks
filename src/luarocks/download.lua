@@ -102,7 +102,7 @@ function download.command(flags, name, version)
       arch = flags["arch"]
    end
    
-   local dl, err = download.download(arch, name, version, flags["all"])
+   local dl, err = download.download(arch, name:lower(), version, flags["all"])
    return dl and true, err
 end
 

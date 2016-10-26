@@ -141,7 +141,7 @@ function new_version.command(flags, input, version, url)
          return nil, err
       end
    else
-      filename, err = download.download("rockspec", input)
+      filename, err = download.download("rockspec", input:lower())
       if not filename then
          return nil, err
       end

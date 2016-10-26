@@ -22,6 +22,11 @@ describe("LuaRocks show tests #blackbox #b_show", function()
          local output = run.luarocks("show luacov")
          assert.is.truthy(output:match("LuaCov"))
       end)
+
+      it("LuaRocks show luacov with uppercase name", function()
+         local output = run.luarocks("show LuaCov")
+         assert.is.truthy(output:match("LuaCov"))
+      end)
       
       it("LuaRocks show modules of luacov", function()
          local output = run.luarocks("show --modules luacov")

@@ -11,7 +11,6 @@ local repos = require("luarocks.repos")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.cfg")
-local manif = require("luarocks.manif")
 local fs = require("luarocks.fs")
 
 util.add_run_function(remove)
@@ -156,6 +155,7 @@ function remove.command(flags, name, version)
    end
 
    local results = {}
+   name = name:lower()
    search.manifest_search(results, cfg.rocks_dir, search.make_query(name, version))
    if not results[name] then
       return nil, "Could not find rock '"..name..(version and " "..version or "").."' in "..path.rocks_tree_to_string(cfg.root_dir)

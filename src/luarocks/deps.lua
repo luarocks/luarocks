@@ -691,7 +691,6 @@ function deps.scan_deps(results, missing, manifest, name, version, deps_mode)
 
    local fetch = require("luarocks.fetch")
 
-   local err
    if results[name] then
       return results, missing
    end
