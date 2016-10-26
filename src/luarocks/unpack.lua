@@ -159,7 +159,7 @@ function unpack.command(flags, name, version)
       return run_unpacker(name, flags["force"])
    else
       local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(run_unpacker, name, version)
+      return search.act_on_src_or_rockspec(run_unpacker, name:lower(), version)
    end
 end
 
