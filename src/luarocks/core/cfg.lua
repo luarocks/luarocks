@@ -131,24 +131,27 @@ else
    -- Fall back to Unix in unknown systems.
 end
 
--- Set order for platform overrides
+-- Set order for platform overrides.
+-- More general platform identifiers should be listed first,
+-- more specific ones later.
 local platform_order = {
    -- Unixes
-   unix = 1,
-   bsd = 2, 
-   solaris = 3,
-   netbsd = 4,
-   openbsd = 5,
-   freebsd = 6,
-   linux = 7,
-   macosx = 8,
-   cygwin = 9,
-   msys = 10,
-   haiku = 11,
+   "unix",
+   "bsd",
+   "solaris",
+   "netbsd",
+   "openbsd",
+   "freebsd",
+   "linux",
+   "macosx",
+   "cygwin",
+   "msys",
+   "haiku",
    -- Windows
-   win32 = 12,
-   mingw32 = 13,
-   windows = 14 }
+   "win32",
+   "mingw32",
+   "windows",
+}
 
 -- Path configuration:
 local sys_config_file, home_config_file
@@ -274,26 +277,50 @@ if not next(cfg.rocks_trees) then
    end
 end
 
-
 -- update platforms list; keyed -> array
 do
-   local lst = {} -- use temp array to not confuse `pairs` in loop
-   for plat in pairs(cfg.platforms) do 
-      if cfg.platforms[plat] then  -- entries set to 'false' skipped
-         if not platform_order[plat] then
-            local pl = ""
-            for k,_ in pairs(platform_order) do pl = pl .. ", " .. k end
-            io.stderr:write("Bad platform given; "..tostring(plat)..". Valid entries are: "..pl:sub(3,-1) ..".\n")
-            os.exit(cfg.errorcodes.CONFIGFILE)
+   -- if explicitly given by user,
+   if cfg.platforms[1] then
+      local is_windows = cfg.platforms.windows
+      -- Clear auto-detected values
+      for k, _ in pairs(cfg.platforms) do
+         if type(k) == "string" then
+            cfg.platforms[k] = nil
          end
-         table.insert(lst, plat)
-      else
-         cfg.platforms[plat] = nil
       end
+      -- and set the ones given by the user.
+      for _, plat in ipairs(cfg.platforms) do
+         cfg.platforms[plat] = true
+      end
+      -- If no major platform family was set by the user,
+      if not (cfg.platforms.unix or cfg.platforms.windows) then
+         -- set some fallback defaults in case the user provides an incomplete configuration.
+         -- LuaRocks expects a set of defaults to be available.
+         -- This is used for setting defaults here only; the platform overrides
+         -- will use only the user's list.
+         if is_windows then
+            cfg.platforms.windows = true
+            table.insert(cfg.platforms, "windows")
+         else
+            cfg.platforms.unix = true
+            table.insert(cfg.platforms, "unix")
+         end
+      end
+   else
+      -- Sort detected platform defaults
+      local order = {}
+      for i, v in ipairs(platform_order) do
+         order[v] = i
+      end
+      local entries = {}
+      for k, v in pairs(cfg.platforms) do
+         if type(k) == "string" and v == true then
+            table.insert(entries, k)
+         end
+      end
+      table.sort(entries, function(a, b) return order[a] < order[b] end)
+      util.deep_merge(cfg.platforms, entries)
    end
-   -- platform overrides depent on the order, so set priorities
-   table.sort(lst, function(key1, key2) return platform_order[key1] < platform_order[key2] end)
-   util.deep_merge(cfg.platforms, lst)
 end
 
 -- Configure defaults:
@@ -315,6 +342,7 @@ local defaults = {
    arch = "unknown",
    lib_extension = "unknown",
    obj_extension = "unknown",
+   link_lua_explicitly = false,
 
    rocks_servers = {
       {
@@ -536,6 +564,7 @@ if cfg.platforms.cygwin then
    defaults.variables.CC = "echo -llua | xargs gcc"
    defaults.variables.LD = "echo -llua | xargs gcc"
    defaults.variables.LIBFLAG = "-shared"
+   defaults.link_lua_explicitly = true
 end
 
 if cfg.platforms.msys then

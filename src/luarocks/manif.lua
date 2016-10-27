@@ -32,6 +32,7 @@ function manif.load_rock_manifest(name, version, root)
    return rock_manifest.rock_manifest
 end
 
+
 local function fetch_manifest_from(repo_url, filename)
    local url = dir.path(repo_url, filename)
    local name = repo_url:gsub("[/:]","_")

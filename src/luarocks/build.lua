@@ -226,7 +226,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    end
 
    if not minimal_mode then
-      local _, source_dir
+      local source_dir
       if need_to_fetch then
          ok, source_dir, errcode = fetch.fetch_sources(rockspec, true)
          if not ok then

@@ -61,6 +61,8 @@ function doc.command(flags, name, version)
       return nil, "Argument missing. "..util.see_help("doc")
    end
 
+   name = name:lower()
+
    local iname, iversion, repo = search.pick_installed_rock(name, version, flags["tree"])
    if not iname then
       util.printout(name..(version and " "..version or "").." is not installed. Looking for it in the rocks servers...")

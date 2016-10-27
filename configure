@@ -229,15 +229,17 @@ detect_lua_version() {
    detected_lua=`$1 -e 'print(_VERSION:match(" (5%.[123])$"))' 2> /dev/null`
    if [ "$detected_lua" != "nil" ]
    then
-      echo "Lua version detected: $detected_lua"
       if [ "$LUA_VERSION_SET" != "yes" ]
       then
+         echo "Lua version detected: $detected_lua"
          LUA_VERSION=$detected_lua
-      elif [ "$LUA_VERSION" != "$detected_lua" ]
+         return 0
+      elif [ "$LUA_VERSION" = "$detected_lua" ]
       then
-         die "This clashes with the value of --lua-version. Please check your configuration."
+         return 0
       fi
    fi
+   return 1
 }
 
 search_interpreter() {
@@ -247,23 +249,35 @@ search_interpreter() {
       find_lua="$LUA_BINDIR"
    elif [ "$LUA_DIR_SET" = "yes" ]
    then
-      if [ -f "$LUA_DIR/bin/lua$suffix" ]
+      LUA_BINDIR="$LUA_DIR/bin"
+      if [ -f "$LUA_BINDIR/lua$suffix" ]
       then
-         find_lua="$LUA_DIR/bin"
+         find_lua="$LUA_BINDIR"
       fi
    else
       find_lua=`find_program lua$suffix`
    fi
    if [ -n "$find_lua" -a -x "$find_lua/lua$suffix" ]
    then
-      echo "Lua interpreter found: $find_lua/lua$suffix..."
-      LUA_SUFFIX=$suffix
-      detect_lua_version "$find_lua/lua$LUA_SUFFIX"
-      return 0
+      if detect_lua_version "$find_lua/lua$suffix"
+      then
+         echo "Lua interpreter found: $find_lua/lua$suffix..."
+         if [ "$LUA_BINDIR_SET" != "yes" ]
+         then
+            LUA_BINDIR="$find_lua"
+         fi
+         if [ "$LUA_DIR_SET" != "yes" ]
+         then
+            LUA_DIR=`dirname "$find_lua"`
+         fi
+         LUA_SUFFIX="$suffix"
+         return 0
+      fi
    fi
    return 1
 }
 
+lua_interp_found=no
 if [ "$LUA_SUFFIX_SET" != "yes" ]
 then
    if [ "$LUA_VERSION_SET" = "yes" -a "$LUA_VERSION" = "5.1" ]
@@ -278,7 +292,6 @@ then
    else
       suffixes="5.3 53 -5.3 -53 5.2 52 -5.2 -52 5.1 51 -5.1 -51"
    fi
-   lua_interp_found=no
    for suffix in "" `echo $suffixes`
    do
       search_interpreter "$suffix" && {
@@ -286,23 +299,28 @@ then
          break
       }
    done
+else
+   search_interpreter "$LUA_SUFFIX" && {
+      lua_interp_found=yes
+   }
 fi
 
-if [ "$LUA_DIR_SET" != "yes" ]
+if [ "$lua_interp_found" != "yes" ]
 then
-   if [ -z "$find_lua" ]
-   then
-      echo_n "Looking for Lua... "
-      find_lua=`find_program lua$LUA_SUFFIX`
-   fi
+   [ "$LUA_VERSION_SET" ] && { interp="Lua $LUA_VERSION" ;} || { interp="Lua" ;}
+   [ "$LUA_DIR_SET" -o "$LUA_BINDIR_SET" ] && { where="$LUA_BINDIR" ;} || { interp="\$PATH" ;}
+   echo "$interp interpreter not found in $where"
+   die "You may want to use the flags --with-lua, --with-lua-bin and/or --lua-suffix. See --help."
+fi
 
-   if [ -n "$find_lua" ]
+if [ "$LUA_VERSION_SET" = "yes" ]
+then
+   echo_n "Checking if $LUA_BINDIR/lua$LUA_SUFFIX is Lua version $LUA_VERSION... "
+   if detect_lua_version "$LUA_BINDIR/lua$LUA_SUFFIX"
    then
-      LUA_DIR=`dirname $find_lua`
-      LUA_BINDIR="$find_lua"
-      echo "lua$LUA_SUFFIX found in \$PATH: $find_lua"
+      echo "yes"
    else
-      echo "lua$LUA_SUFFIX not found in \$PATH."
+      echo "no"
       die "You may want to use the flags --with-lua, --with-lua-bin and/or --lua-suffix. See --help."
    fi
 fi
@@ -315,23 +333,6 @@ fi
 if [ "$LUA_LIBDIR_SET" != "yes" ]
 then
    LUA_LIBDIR="$LUA_DIR/lib"
-fi
-
-if [ "$LUA_DIR_SET" = "yes" -a "$LUA_BINDIR_SET" != "yes" ]
-then
-   LUA_BINDIR="$LUA_DIR/bin"
-fi
-
-if [ "$lua_interp_found" != "yes" ]
-then
-   echo_n "Checking Lua interpreter... "
-   if [ -x "$LUA_BINDIR/lua$LUA_SUFFIX" ]
-   then
-      echo "lua$LUA_SUFFIX found in $LUA_BINDIR"
-   else
-      echo "lua$LUA_SUFFIX not found (looked in $LUA_BINDIR)"
-      die "You may want to use the flag --with-lua or --with-lua-bin. See --help."
-   fi
 fi
 
 echo_n "Checking Lua includes... "
@@ -359,6 +360,18 @@ else
       fi
    fi
 fi
+
+echo_n "Checking if Lua header version matches that of the interpreter... "
+header_version=$(sed -n 's/.*LUA_VERSION_NUM.*5.\(.\).*/5.\1/p' "$lua_h")
+if [ "$header_version" = "$LUA_VERSION" ]
+then
+   echo "yes"
+else
+   echo "no"
+   echo "lua.h version mismatch (interpreter: $LUA_VERSION; lua.h: $header_version)."
+   die "You may want to use the flag --with-lua or --with-lua-include. See --help."
+fi
+
 
 if [ "$LUAROCKS_DOWNLOADER_SET" != "yes" ]
 then

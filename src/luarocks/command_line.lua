@@ -2,7 +2,6 @@
 --- Functions for command-line scripts.
 local command_line = {}
 
-local pack = function(...) return {...}, select("#", ...) end
 local unpack = unpack or table.unpack
 
 local util = require("luarocks.util")

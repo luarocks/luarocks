@@ -76,7 +76,7 @@ function show.command(flags, name, version)
    end
    
    local repo, repo_url
-   name, version, repo, repo_url = search.pick_installed_rock(name, version, flags["tree"])
+   name, version, repo, repo_url = search.pick_installed_rock(name:lower(), version, flags["tree"])
    if not name then
       return nil, version
    end
