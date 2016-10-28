@@ -419,7 +419,7 @@ function manif.update_manifest(name, version, repo, deps_mode)
    
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
-   local manifest, err = manif.load_manifest(rocks_dir)
+   local manifest, err = manif_core.load_local_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
       local ok, err = manif.make_manifest(rocks_dir, deps_mode)
