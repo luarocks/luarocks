@@ -422,14 +422,10 @@ function manif.update_manifest(name, version, repo, deps_mode)
    local manifest, err = manif_core.load_local_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
-      local ok, err = manif.make_manifest(rocks_dir, deps_mode)
-      if not ok then
-         return nil, err
-      end
-      manifest, err = manif.load_manifest(rocks_dir)
-      if not manifest then
-         return nil, err
-      end
+      -- Manifest built by `manif.make_manifest` should already
+      -- include information about given name and version,
+      -- no need to update it.
+      return manif.make_manifest(rocks_dir, deps_mode)
    end
 
    local results = {[name] = {[version] = {{arch = "installed", repo = rocks_dir}}}}
