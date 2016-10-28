@@ -33,7 +33,24 @@ function win32.quiet_stderr(cmd)
    return cmd.." 2> NUL"
 end
 
-local drive_letter = "[%.a-zA-Z]?:?[\\/]"
+-- Split path into root and the rest.
+-- Root part consists of an optional drive letter (e.g. "C:")
+-- and an optional directory separator.
+local function split_root(path)
+   local root = ""
+
+   if path:match("^.:") then
+      root = path:sub(1, 2)
+      path = path:sub(3)
+   end
+
+   if path:match("^[\\/]") then
+      root = path:sub(1, 1)
+      path = path:sub(2)
+   end
+
+   return root, path
+end
 
 --- Quote argument for shell processing. Fixes paths on Windows.
 -- Adds double quotes and escapes.
@@ -41,8 +58,9 @@ local drive_letter = "[%.a-zA-Z]?:?[\\/]"
 -- @return string: Quoted argument.
 function win32.Q(arg)
    assert(type(arg) == "string")
-   -- Quote DIR for Windows
-   if arg:match("^"..drive_letter)  then
+   -- Use Windows-specific directory separator for paths.
+   -- Paths should be converted to absolute by now.
+   if split_root(arg) ~= "" then
       arg = arg:gsub("/", "\\")
    end
    if arg == "\\" then
@@ -62,8 +80,9 @@ end
 -- @return string: Quoted argument.
 function win32.Qb(arg)
    assert(type(arg) == "string")
-   -- Quote DIR for Windows
-   if arg:match("^"..drive_letter)  then
+   -- Use Windows-specific directory separator for paths.
+   -- Paths should be converted to absolute by now.
+   if split_root(arg) ~= "" then
       arg = arg:gsub("/", "\\")
    end
    if arg == "\\" then
@@ -88,10 +107,14 @@ function win32.absolute_name(pathname, relative_to)
    assert(type(relative_to) == "string" or not relative_to)
 
    relative_to = relative_to or fs.current_dir()
-   if pathname:match("^"..drive_letter) then
+   local root, rest = split_root(pathname)
+   if root:match("[\\/]$") then
+      -- It's an absolute path already.
       return pathname
    else
-      return relative_to .. "/" .. pathname
+      -- It's a relative path, join it with base path.
+      -- This drops drive letter from paths like "C:foo".
+      return relative_to .. "/" .. rest
    end
 end
 
@@ -100,7 +123,7 @@ end
 -- @param pathname string: pathname to use.
 -- @return string: The root of the given pathname.
 function win32.root_of(pathname)
-   return (fs.absolute_name(pathname):match("^("..drive_letter..")"))
+   return (split_root(fs.absolute_name(pathname)))
 end
 
 --- Create a wrapper to make a script executable from the command-line.
