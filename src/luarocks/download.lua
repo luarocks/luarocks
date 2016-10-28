@@ -1,25 +1,11 @@
-
---- Module implementing the luarocks "download" command.
--- Download a rock from the repository.
 local download = {}
 
-local util = require("luarocks.util")
 local path = require("luarocks.path")
 local fetch = require("luarocks.fetch")
 local search = require("luarocks.search")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.core.cfg")
-
-download.help_summary = "Download a specific rock file from a rocks server."
-download.help_arguments = "[--all] [--arch=<arch> | --source | --rockspec] [<name> [<version>]]"
-
-download.help = [[
---all          Download all files if there are multiple matches.
---source       Download .src.rock if available.
---rockspec     Download .rockspec if available.
---arch=<arch>  Download rock for a specific architecture.
-]]
 
 local function get_file(filename)
    local protocol, pathname = dir.split_url(filename)
@@ -46,8 +32,8 @@ function download.download(arch, name, version, all)
       local has_result = false
       local all_ok = true
       local any_err = ""
-      for name, result in pairs(results) do
-         for version, items in pairs(result) do
+      for _, result in pairs(results) do
+         for _, items in pairs(result) do
             for _, item in ipairs(items) do
                -- Ignore provided rocks.
                if item.arch ~= "installed" then
@@ -75,33 +61,6 @@ function download.download(arch, name, version, all)
    end
    return nil, "Could not find a result named "..name..(version and " "..version or "")..
       (search_err and ": "..search_err or ".")
-end
-
---- Driver function for the "download" command.
--- @param name string: a rock name.
--- @param version string or nil: if the name of a package is given, a
--- version may also be passed.
--- @return boolean or (nil, string): true if successful or nil followed
--- by an error message.
-function download.command(flags, name, version)
-   assert(type(version) == "string" or not version)
-   if type(name) ~= "string" and not flags["all"] then
-      return nil, "Argument missing. "..util.see_help("download")
-   end
-   if not name then name, version = "", "" end
-
-   local arch
-
-   if flags["source"] then
-      arch = "src"
-   elseif flags["rockspec"] then
-      arch = "rockspec"
-   elseif flags["arch"] then
-      arch = flags["arch"]
-   end
-   
-   local dl, err = download.download(arch, name:lower(), version, flags["all"])
-   return dl and true, err
 end
 
 return download
