@@ -414,31 +414,31 @@ end
 function manif.update_manifest(name, version, repo, deps_mode)
    assert(type(name) == "string")
    assert(type(version) == "string")
-   repo = path.rocks_dir(repo or cfg.root_dir)
+   local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
    assert(type(deps_mode) == "string")
    
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
-   local manifest, err = manif.load_manifest(repo)
+   local manifest, err = manif.load_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
-      local ok, err = manif.make_manifest(repo, deps_mode)
+      local ok, err = manif.make_manifest(rocks_dir, deps_mode)
       if not ok then
          return nil, err
       end
-      manifest, err = manif.load_manifest(repo)
+      manifest, err = manif.load_manifest(rocks_dir)
       if not manifest then
          return nil, err
       end
    end
 
-   local results = {[name] = {[version] = {{arch = "installed", repo = repo}}}}
+   local results = {[name] = {[version] = {{arch = "installed", repo = rocks_dir}}}}
 
    local ok, err = store_results(results, manifest)
    if not ok then return nil, err end
 
    update_dependencies(manifest, deps_mode)
-   return save_table(repo, "manifest", manifest)
+   return save_table(rocks_dir, "manifest", manifest)
 end
 
 function manif.zip_manifests()
