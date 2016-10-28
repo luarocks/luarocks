@@ -161,31 +161,28 @@ function manif.load_manifest(repo_url, lua_version)
    return manif_core.manifest_loader(pathname, repo_url, lua_version)
 end
 
---- Output a table listing items of a package.
--- @param itemsfn function: a function for obtaining items of a package.
--- pkg and version will be passed to it; it should return a table with
--- items as keys.
--- @param pkg string: package name
--- @param version string: package version
--- @param tbl table: the package matching table: keys should be item names
--- and values arrays of strings with packages names in "name/version" format.
-local function store_package_items(itemsfn, pkg, version, tbl)
-   assert(type(itemsfn) == "function")
-   assert(type(pkg) == "string")
+--- Update storage table to account for items provided by a package.
+-- @param storage table: a table storing items in the following format:
+-- keys are item names and values are arrays of packages providing each item,
+-- where a package is specified as string `name/version`.
+-- @param items table: a table mapping item names to paths.
+-- @param name string: package name.
+-- @param version string: package version.
+local function store_package_items(storage, name, version, items)
+   assert(type(storage) == "table")
+   assert(type(items) == "table")
+   assert(type(name) == "string")
    assert(type(version) == "string")
-   assert(type(tbl) == "table")
 
-   local pkg_version = pkg.."/"..version
-   local result = {}
+   local package_identifier = name.."/"..version
 
-   for item, path in pairs(itemsfn(pkg, version)) do
-      result[item] = path
-      if not tbl[item] then
-         tbl[item] = {}
+   for item_name, path in pairs(items) do
+      if not storage[item_name] then
+         storage[item_name] = {}
       end
-      table.insert(tbl[item], pkg_version)
+
+      table.insert(storage[item_name], package_identifier)
    end
-   return result
 end
 
 --- Sort function for ordering rock identifiers in a manifest's
@@ -340,8 +337,11 @@ local function store_results(results, manifest, dep_handler)
                if not rock_manifest then
                   return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks 2 tree?"
                end
-               entrytable.modules = store_package_items(repos.package_modules, name, version, manifest.modules)
-               entrytable.commands = store_package_items(repos.package_commands, name, version, manifest.commands)
+
+               entrytable.modules = repos.package_modules(name, version)
+               store_package_items(manifest.modules, name, version, entrytable.modules)
+               entrytable.commands = repos.package_commands(name, version)
+               store_package_items(manifest.commands, name, version, entrytable.commands)
             end
             table.insert(versiontable, entrytable)
          end
