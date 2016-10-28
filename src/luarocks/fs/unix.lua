@@ -22,6 +22,15 @@ function unix.quiet_stderr(cmd)
    return cmd.." 2> /dev/null"
 end
 
+--- Quote argument for shell processing.
+-- Adds single quotes and escapes.
+-- @param arg string: Unquoted argument.
+-- @return string: Quoted argument.
+function unix.Q(arg)
+   assert(type(arg) == "string")
+   return "'" .. arg:gsub("'", "'\\''") .. "'"
+end
+
 --- Return an absolute pathname from a potentially relative one.
 -- @param pathname string: pathname to convert.
 -- @param relative_to string or nil: path to prepend when making

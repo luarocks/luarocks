@@ -30,17 +30,6 @@ local dir_stack = {}
 
 local dir_separator = "/"
 
---- Quote argument for shell processing.
--- Adds single quotes and escapes.
--- @param arg string: Unquoted argument.
--- @return string: Quoted argument.
-function fs_lua.Q(arg)
-   assert(type(arg) == "string")
-
-   -- FIXME Unix-specific
-   return "'" .. arg:gsub("'", "'\\''") .. "'"
-end
-
 --- Test is file/dir is writable.
 -- Warning: testing if a file/dir is writable does not guarantee
 -- that it will remain writable and therefore it is no replacement
