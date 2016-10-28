@@ -35,19 +35,6 @@ end
 
 local drive_letter = "[%.a-zA-Z]?:?[\\/]"
 
-local win_escape_chars = {
-  ["%"] = "%%",
-  ['"'] = '\\"',
-}
-
-local function q_escaper(bs, q)
-  return ("\\"):rep(2*#bs-1) .. (q or "\\")
-end
-
-local function p_escaper(bs)
-   return bs .. bs .. '"%"'
-end
-
 --- Quote argument for shell processing. Fixes paths on Windows.
 -- Adds double quotes and escapes.
 -- @param arg string: Unquoted argument.
@@ -61,11 +48,11 @@ function win32.Q(arg)
    if arg == "\\" then
       return '\\' -- CHDIR needs special handling for root dir
    end
-    -- URLs and anything else
-   arg = arg:gsub('(\\+)(")', q_escaper)
-   arg = arg:gsub('(\\+)$', q_escaper)
-   arg = arg:gsub('"', win_escape_chars)
-   arg = arg:gsub('(\\*)%%', p_escaper)
+   -- URLs and anything else
+   arg = arg:gsub('\\(\\*)"', '\\%1%1"')
+   arg = arg:gsub('\\+$', '%0%0')
+   arg = arg:gsub('"', '\\"')
+   arg = arg:gsub('(\\*)%%', '%1%1"%%"')
    return '"' .. arg .. '"'
 end
 
@@ -83,9 +70,10 @@ function win32.Qb(arg)
       return '\\' -- CHDIR needs special handling for root dir
    end
    -- URLs and anything else
-   arg = arg:gsub('(\\+)(")', q_escaper)
-   arg = arg:gsub('(\\+)$', q_escaper)
-   arg = arg:gsub('[%%"]', win_escape_chars)
+   arg = arg:gsub('\\(\\*)"', '\\%1%1"')
+   arg = arg:gsub('\\+$', '%0%0')
+   arg = arg:gsub('"', '\\"')
+   arg = arg:gsub('%%', '%%%%')
    return '"' .. arg .. '"'
 end
 
