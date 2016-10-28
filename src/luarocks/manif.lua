@@ -318,12 +318,10 @@ end
 -- @param results table: The search results as returned by search.disk_search.
 -- @param manifest table: A manifest table (must contain repository, modules, commands tables).
 -- It will be altered to include the search results.
--- @param dep_handler: dependency handler function
 -- @return boolean or (nil, string): true in case of success, or nil followed by an error message.
-local function store_results(results, manifest, dep_handler)
+local function store_results(results, manifest)
    assert(type(results) == "table")
    assert(type(manifest) == "table")
-   assert((not dep_handler) or type(dep_handler) == "function")
 
    for name, versions in pairs(results) do
       local pkgtable = manifest.repository[name] or {}
@@ -348,9 +346,6 @@ local function store_results(results, manifest, dep_handler)
          pkgtable[version] = versiontable
       end
       manifest.repository[name] = pkgtable
-   end
-   if dep_handler then
-      dep_handler(manifest)
    end
    sort_package_matching_table(manifest.modules)
    sort_package_matching_table(manifest.commands)
@@ -385,25 +380,19 @@ function manif.make_manifest(repo, deps_mode, remote)
 
    manif_core.cache_manifest(repo, nil, manifest)
 
-   local dep_handler = nil
-   if not remote then
-      dep_handler = function(manifest)
-         update_dependencies(manifest, deps_mode)
-      end
-   end
-   local ok, err = store_results(results, manifest, dep_handler)
+   local ok, err = store_results(results, manifest)
    if not ok then return nil, err end
 
    if remote then
       local cache = {}
       for luaver in util.lua_versions() do
          local vmanifest = { repository = {}, modules = {}, commands = {} }
-         local dep_handler = function(manifest)
-            filter_by_lua_version(manifest, luaver, repo, cache)
-         end
-         local ok, err = store_results(results, vmanifest, dep_handler)
+         local ok, err = store_results(results, vmanifest)
+         filter_by_lua_version(vmanifest, luaver, repo, cache)
          save_table(repo, "manifest-"..luaver, vmanifest)
       end
+   else
+      update_dependencies(manifest, deps_mode)
    end
 
    return save_table(repo, "manifest", manifest)
@@ -445,12 +434,10 @@ function manif.update_manifest(name, version, repo, deps_mode)
 
    local results = {[name] = {[version] = {{arch = "installed", repo = repo}}}}
 
-   local dep_handler = function(manifest)
-      update_dependencies(manifest, deps_mode)
-   end
-   local ok, err = store_results(results, manifest, dep_handler)
+   local ok, err = store_results(results, manifest)
    if not ok then return nil, err end
 
+   update_dependencies(manifest, deps_mode)
    return save_table(repo, "manifest", manifest)
 end
 
