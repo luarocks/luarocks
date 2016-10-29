@@ -1,14 +1,15 @@
 
 --- Module implementing the LuaRocks "search" command.
 -- Queries LuaRocks servers.
-local search = {}
+local cmd_search = {}
 
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
+local search = require("luarocks.search")
 
-search.help_summary = "Query the LuaRocks servers."
-search.help_arguments = "[--source] [--binary] { <name> [<version>] | --all }"
-search.help = [[
+cmd_search.help_summary = "Query the LuaRocks servers."
+cmd_search.help_arguments = "[--source] [--binary] { <name> [<version>] | --all }"
+cmd_search.help = [[
 --source  Return only rockspecs and source rocks,
           to be used with the "build" command.
 --binary  Return only pure Lua and binary rocks (rocks that can be used
@@ -44,7 +45,7 @@ end
 -- @param version string or nil: a version may also be passed.
 -- @return boolean or (nil, string): True if build was successful; nil and an
 -- error message otherwise.
-function search.command(flags, name, version)
+function cmd_search.command(flags, name, version)
    if flags["all"] then
       name, version = "", nil
    end
@@ -70,4 +71,4 @@ function search.command(flags, name, version)
    return true
 end
 
-return search
+return cmd_search

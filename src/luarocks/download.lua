@@ -32,8 +32,8 @@ function download.download(arch, name, version, all)
       local has_result = false
       local all_ok = true
       local any_err = ""
-      for _, result in pairs(results) do
-         for _, items in pairs(result) do
+      for name, result in pairs(results) do
+         for version, items in pairs(result) do
             for _, item in ipairs(items) do
                -- Ignore provided rocks.
                if item.arch ~= "installed" then

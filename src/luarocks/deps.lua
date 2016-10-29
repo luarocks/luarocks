@@ -240,7 +240,7 @@ end
 function deps.fulfill_dependencies(rockspec, deps_mode)
 
    local search = require("luarocks.search")
-   local install = require("luarocks.install")
+   local install = require("luarocks.cmd.install")
 
    if rockspec.supported_platforms then
       if not deps.platforms_set then
