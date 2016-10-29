@@ -353,10 +353,10 @@ function writer.add_to_manifest(name, version, repo, deps_mode)
    local manifest, err = manif.load_local_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
-      -- Manifest built by `manif.make_manifest` should already
+      -- Manifest built by `writer.make_manifest` should already
       -- include information about given name and version,
       -- no need to update it.
-      return manif.make_manifest(rocks_dir, deps_mode)
+      return writer.make_manifest(rocks_dir, deps_mode)
    end
 
    local results = {[name] = {[version] = {{arch = "installed", repo = rocks_dir}}}}
@@ -390,9 +390,9 @@ function writer.remove_from_manifest(name, version, repo, deps_mode)
    local manifest, err = manif.load_local_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
-      -- Manifest built by `manif.make_manifest` should already
+      -- Manifest built by `writer.make_manifest` should already
       -- include up-to-date information, no need to update it.
-      return manif.make_manifest(rocks_dir, deps_mode)
+      return writer.make_manifest(rocks_dir, deps_mode)
    end
 
    local package_entry = manifest.repository[name]
