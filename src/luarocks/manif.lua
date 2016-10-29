@@ -161,31 +161,59 @@ function manif.load_manifest(repo_url, lua_version)
    return manif_core.manifest_loader(pathname, repo_url, lua_version)
 end
 
---- Output a table listing items of a package.
--- @param itemsfn function: a function for obtaining items of a package.
--- pkg and version will be passed to it; it should return a table with
--- items as keys.
--- @param pkg string: package name
--- @param version string: package version
--- @param tbl table: the package matching table: keys should be item names
--- and values arrays of strings with packages names in "name/version" format.
-local function store_package_items(itemsfn, pkg, version, tbl)
-   assert(type(itemsfn) == "function")
-   assert(type(pkg) == "string")
+--- Update storage table to account for items provided by a package.
+-- @param storage table: a table storing items in the following format:
+-- keys are item names and values are arrays of packages providing each item,
+-- where a package is specified as string `name/version`.
+-- @param items table: a table mapping item names to paths.
+-- @param name string: package name.
+-- @param version string: package version.
+local function store_package_items(storage, name, version, items)
+   assert(type(storage) == "table")
+   assert(type(items) == "table")
+   assert(type(name) == "string")
    assert(type(version) == "string")
-   assert(type(tbl) == "table")
 
-   local pkg_version = pkg.."/"..version
-   local result = {}
+   local package_identifier = name.."/"..version
 
-   for item, path in pairs(itemsfn(pkg, version)) do
-      result[item] = path
-      if not tbl[item] then
-         tbl[item] = {}
+   for item_name, path in pairs(items) do
+      if not storage[item_name] then
+         storage[item_name] = {}
       end
-      table.insert(tbl[item], pkg_version)
+
+      table.insert(storage[item_name], package_identifier)
    end
-   return result
+end
+
+--- Update storage table removing items provided by a package.
+-- @param storage table: a table storing items in the following format:
+-- keys are item names and values are arrays of packages providing each item,
+-- where a package is specified as string `name/version`.
+-- @param items table: a table mapping item names to paths.
+-- @param name string: package name.
+-- @param version string: package version.
+local function remove_package_items(storage, name, version, items)
+   assert(type(storage) == "table")
+   assert(type(items) == "table")
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+
+   local package_identifier = name.."/"..version
+
+   for item_name, path in pairs(items) do
+      local all_identifiers = storage[item_name]
+
+      for i, identifier in ipairs(all_identifiers) do
+         if identifier == package_identifier then
+            table.remove(all_identifiers, i)
+            break
+         end
+      end
+
+      if #all_identifiers == 0 then
+         storage[item_name] = nil
+      end
+   end
 end
 
 --- Sort function for ordering rock identifiers in a manifest's
@@ -321,12 +349,10 @@ end
 -- @param results table: The search results as returned by search.disk_search.
 -- @param manifest table: A manifest table (must contain repository, modules, commands tables).
 -- It will be altered to include the search results.
--- @param dep_handler: dependency handler function
 -- @return boolean or (nil, string): true in case of success, or nil followed by an error message.
-local function store_results(results, manifest, dep_handler)
+local function store_results(results, manifest)
    assert(type(results) == "table")
    assert(type(manifest) == "table")
-   assert((not dep_handler) or type(dep_handler) == "function")
 
    for name, versions in pairs(results) do
       local pkgtable = manifest.repository[name] or {}
@@ -340,17 +366,17 @@ local function store_results(results, manifest, dep_handler)
                if not rock_manifest then
                   return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks 2 tree?"
                end
-               entrytable.modules = store_package_items(repos.package_modules, name, version, manifest.modules)
-               entrytable.commands = store_package_items(repos.package_commands, name, version, manifest.commands)
+
+               entrytable.modules = repos.package_modules(name, version)
+               store_package_items(manifest.modules, name, version, entrytable.modules)
+               entrytable.commands = repos.package_commands(name, version)
+               store_package_items(manifest.commands, name, version, entrytable.commands)
             end
             table.insert(versiontable, entrytable)
          end
          pkgtable[version] = versiontable
       end
       manifest.repository[name] = pkgtable
-   end
-   if dep_handler then
-      dep_handler(manifest)
    end
    sort_package_matching_table(manifest.modules)
    sort_package_matching_table(manifest.commands)
@@ -385,34 +411,26 @@ function manif.make_manifest(repo, deps_mode, remote)
 
    manif_core.cache_manifest(repo, nil, manifest)
 
-   local dep_handler = nil
-   if not remote then
-      dep_handler = function(manifest)
-         update_dependencies(manifest, deps_mode)
-      end
-   end
-   local ok, err = store_results(results, manifest, dep_handler)
+   local ok, err = store_results(results, manifest)
    if not ok then return nil, err end
 
    if remote then
       local cache = {}
       for luaver in util.lua_versions() do
          local vmanifest = { repository = {}, modules = {}, commands = {} }
-         local dep_handler = function(manifest)
-            filter_by_lua_version(manifest, luaver, repo, cache)
-         end
-         local ok, err = store_results(results, vmanifest, dep_handler)
+         local ok, err = store_results(results, vmanifest)
+         filter_by_lua_version(vmanifest, luaver, repo, cache)
          save_table(repo, "manifest-"..luaver, vmanifest)
       end
+   else
+      update_dependencies(manifest, deps_mode)
    end
 
    return save_table(repo, "manifest", manifest)
 end
 
---- Load a manifest file from a local repository and add to the repository
--- information with regard to the given name and version.
--- A file called 'manifest' will be written in the root of the given
--- repository directory.
+--- Update manifest file for a local repository
+-- adding information about a version of a package installed in that repository.
 -- @param name string: Name of a package from the repository.
 -- @param version string: Version of a package from the repository.
 -- @param repo string or nil: Pathname of a local repository. If not given,
@@ -420,38 +438,78 @@ end
 -- @param deps_mode string: Dependency mode: "one" for the current default tree,
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for using the default dependency mode from the configuration.
--- @return boolean or (nil, string): True if manifest was generated,
+-- @return boolean or (nil, string): True if manifest was updated successfully,
 -- or nil and an error message.
-function manif.update_manifest(name, version, repo, deps_mode)
+function manif.add_to_manifest(name, version, repo, deps_mode)
    assert(type(name) == "string")
    assert(type(version) == "string")
-   repo = path.rocks_dir(repo or cfg.root_dir)
+   local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
    assert(type(deps_mode) == "string")
-   
+
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
-   local manifest, err = manif.load_manifest(repo)
+   local manifest, err = manif_core.load_local_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
-      local ok, err = manif.make_manifest(repo, deps_mode)
-      if not ok then
-         return nil, err
-      end
-      manifest, err = manif.load_manifest(repo)
-      if not manifest then
-         return nil, err
-      end
+      -- Manifest built by `manif.make_manifest` should already
+      -- include information about given name and version,
+      -- no need to update it.
+      return manif.make_manifest(rocks_dir, deps_mode)
    end
 
-   local results = {[name] = {[version] = {{arch = "installed", repo = repo}}}}
+   local results = {[name] = {[version] = {{arch = "installed", repo = rocks_dir}}}}
 
-   local dep_handler = function(manifest)
-      update_dependencies(manifest, deps_mode)
-   end
-   local ok, err = store_results(results, manifest, dep_handler)
+   local ok, err = store_results(results, manifest)
    if not ok then return nil, err end
 
-   return save_table(repo, "manifest", manifest)
+   update_dependencies(manifest, deps_mode)
+   return save_table(rocks_dir, "manifest", manifest)
+end
+
+--- Update manifest file for a local repository
+-- removing information about a version of a package.
+-- @param name string: Name of a package removed from the repository.
+-- @param version string: Version of a package removed from the repository.
+-- @param repo string or nil: Pathname of a local repository. If not given,
+-- the default local repository is used.
+-- @param deps_mode string: Dependency mode: "one" for the current default tree,
+-- "all" for all trees, "order" for all trees with priority >= the current default,
+-- "none" for using the default dependency mode from the configuration.
+-- @return boolean or (nil, string): True if manifest was updated successfully,
+-- or nil and an error message.
+function manif.remove_from_manifest(name, version, repo, deps_mode)
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+   local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
+   assert(type(deps_mode) == "string")
+
+   if deps_mode == "none" then deps_mode = cfg.deps_mode end
+
+   local manifest, err = manif_core.load_local_manifest(rocks_dir)
+   if not manifest then
+      util.printerr("No existing manifest. Attempting to rebuild...")
+      -- Manifest built by `manif.make_manifest` should already
+      -- include up-to-date information, no need to update it.
+      return manif.make_manifest(rocks_dir, deps_mode)
+   end
+
+   local package_entry = manifest.repository[name]
+
+   local version_entry = package_entry[version][1]
+   remove_package_items(manifest.modules, name, version, version_entry.modules)
+   remove_package_items(manifest.commands, name, version, version_entry.commands)
+
+   package_entry[version] = nil
+   manifest.dependencies[name][version] = nil
+
+   if not next(package_entry) then
+      -- No more versions of this package.
+      manifest.repository[name] = nil
+      manifest.dependencies[name] = nil
+   end
+
+   update_dependencies(manifest, deps_mode)
+   return save_table(rocks_dir, "manifest", manifest)
 end
 
 function manif.zip_manifests()

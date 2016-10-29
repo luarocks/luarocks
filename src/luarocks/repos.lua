@@ -312,7 +312,7 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
       return nil, err
    end
 
-   return manif.update_manifest(name, version, nil, deps_mode)
+   return manif.add_to_manifest(name, version, nil, deps_mode)
 end
 
 --- Delete a package from the local repository.
@@ -398,7 +398,7 @@ function repos.delete_version(name, version, deps_mode, quick)
       return true
    end
 
-   return manif.make_manifest(cfg.rocks_dir, deps_mode)
+   return manif.remove_from_manifest(name, version, nil, deps_mode)
 end
 
 return repos
