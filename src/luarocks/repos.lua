@@ -315,7 +315,7 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    end
 
    local writer = require("luarocks.manif.writer")
-   return writer.update_manifest(name, version, nil, deps_mode)
+   return writer.add_to_manifest(name, version, nil, deps_mode)
 end
 
 --- Delete a package from the local repository.
@@ -400,7 +400,7 @@ function repos.delete_version(name, version, deps_mode, quick)
    end
 
    local writer = require("luarocks.manif.writer")
-   return writer.make_manifest(cfg.rocks_dir, deps_mode)
+   return writer.remove_from_manifest(name, version, nil, deps_mode)
 end
 
 return repos

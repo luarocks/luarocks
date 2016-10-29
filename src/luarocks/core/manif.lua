@@ -88,20 +88,19 @@ end
 function manif.get_versions(name, deps_mode)
    assert(type(name) == "string")
    assert(type(deps_mode) == "string")
-   
-   local manifest = {}
+
+   local version_set = {}
    path.map_trees(deps_mode, function(tree)
-      local loaded = manif.load_local_manifest(path.rocks_dir(tree))
-      if loaded then
-         util.deep_merge(manifest, loaded)
+      local manifest = manif.load_local_manifest(path.rocks_dir(tree))
+
+      if manifest and manifest.repository[name] then
+         for version in pairs(manifest.repository[name]) do
+            version_set[version] = true
+         end
       end
    end)
-   
-   local item = next(manifest) and manifest.repository[name]
-   if item then
-      return util.keys(item)
-   end
-   return {}
+
+   return util.keys(version_set)
 end
 
 return manif
