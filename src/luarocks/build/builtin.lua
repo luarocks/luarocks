@@ -82,6 +82,7 @@ function builtin.run(rockspec)
          local ok = execute(variables.LD.." "..variables.LIBFLAG, "-o", library, unpack(extras))
          return ok
       end
+      --[[ TODO disable static libs until we fix the conflict in the manifest, which will take extending the manifest format.
       compile_static_library = function(library, objects, libraries, libdirs, name)
          local ok = execute(variables.AR, "rc", library, unpack(objects))
          if ok then
@@ -89,6 +90,7 @@ function builtin.run(rockspec)
          end
          return ok
       end
+      ]]
       compile_wrapper_binary = function(fullname, name)
          --TODO EXEWRAPPER
          local fullbasename = fullname:gsub("%.lua$", ""):gsub("/", "\\")
@@ -135,10 +137,12 @@ function builtin.run(rockspec)
          end
          return ok
       end
+      --[[ TODO disable static libs until we fix the conflict in the manifest, which will take extending the manifest format.
       compile_static_library = function(library, objects, libraries, libdirs, name)
          local ok = execute(variables.AR, "-out:"..library, unpack(objects))
          return ok
       end
+      ]]
       compile_wrapper_binary = function(fullname, name)
          --TODO EXEWRAPPER
          local fullbasename = fullname:gsub("%.lua$", ""):gsub("/", "\\")
@@ -262,6 +266,7 @@ function builtin.run(rockspec)
          if not ok then
             return nil, "Failed compiling module "..module_name
          end
+         --[[ TODO disable static libs until we fix the conflict in the manifest, which will take extending the manifest format.
          module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.static_lib_extension)
          if moddir ~= "" then
             module_name = dir.path(moddir, module_name)
@@ -271,6 +276,7 @@ function builtin.run(rockspec)
          if not ok then
             return nil, "Failed compiling static library "..module_name
          end
+         ]]
       end
    end
    for _, mods in ipairs({{ tbl = lua_modules, perms = cfg.perm_read }, { tbl = lib_modules, perms = cfg.perm_exec }}) do

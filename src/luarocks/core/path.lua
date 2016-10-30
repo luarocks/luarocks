@@ -53,11 +53,13 @@ function path.path_to_module(file)
       name = file:match("(.*)%."..cfg.lib_extension.."$")
       if name then
          name = name:gsub(dir.separator, ".")
+      --[[ TODO disable static libs until we fix the conflict in the manifest, which will take extending the manifest format.
       else
          name = file:match("(.*)%."..cfg.static_lib_extension.."$")
          if name then
             name = name:gsub(dir.separator, ".")
          end
+      ]]
       end
    end
    if not name then name = file end
