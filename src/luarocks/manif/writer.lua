@@ -82,21 +82,11 @@ local function update_dependencies(manifest, deps_mode)
    
    for pkg, versions in pairs(manifest.repository) do
       for version, repositories in pairs(versions) do
-         local current = pkg.." "..version
          for _, repo in ipairs(repositories) do
             if repo.arch == "installed" then
-               local missing
-               repo.dependencies, missing = deps.scan_deps({}, {}, manifest, pkg, version, deps_mode)
+               repo.dependencies = {}
+               deps.scan_deps(repo.dependencies, {}, manifest, pkg, version, deps_mode)
                repo.dependencies[pkg] = nil
-               if missing then
-                  for miss, err in pairs(missing) do
-                     if miss == current then
-                        util.printerr("Tree inconsistency detected: "..current.." has no rockspec. "..err)
-                     elseif deps_mode ~= "none" then
-                        util.printerr("Missing dependency for "..pkg.." "..version..": "..miss)
-                     end
-                  end
-               end
             end
          end
       end
@@ -412,6 +402,35 @@ function writer.remove_from_manifest(name, version, repo, deps_mode)
 
    update_dependencies(manifest, deps_mode)
    return save_table(rocks_dir, "manifest", manifest)
+end
+
+--- Report missing dependencies for all rocks installed in a repository.
+-- @param repo string or nil: Pathname of a local repository. If not given,
+-- the default local repository is used.
+-- @param deps_mode string: Dependency mode: "one" for the current default tree,
+-- "all" for all trees, "order" for all trees with priority >= the current default,
+-- "none" for using the default dependency mode from the configuration.
+function writer.check_dependencies(repo, deps_mode)
+   local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
+   assert(type(deps_mode) == "string")
+   if deps_mode == "none" then deps_mode = cfg.deps_mode end
+
+   local manifest = manif.load_local_manifest(rocks_dir)
+   if not manifest then
+      return
+   end
+
+   for name, versions in util.sortedpairs(manifest.repository) do
+      for version, version_entries in util.sortedpairs(versions, deps.compare_versions) do
+         for _, entry in ipairs(version_entries) do
+            if entry.arch == "installed" then
+               if manifest.dependencies[name] and manifest.dependencies[name][version] then
+                  deps.report_missing_dependencies(name, version, manifest.dependencies[name][version], deps_mode)
+               end
+            end
+         end
+      end
+   end
 end
 
 return writer

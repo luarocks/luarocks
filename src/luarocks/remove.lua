@@ -11,6 +11,7 @@ local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 local fs = require("luarocks.fs")
+local writer = require("luarocks.manif.writer")
 
 remove.help_summary = "Uninstall a rock."
 remove.help_arguments = "[--force|--force-fast] <name> [<version>]"
@@ -159,7 +160,13 @@ function remove.command(flags, name, version)
       return nil, "Could not find rock '"..name..(version and " "..version or "").."' in "..path.rocks_tree_to_string(cfg.root_dir)
    end
 
-   return remove.remove_search_results(results, name, deps_mode, flags["force"], flags["force-fast"])
+   local ok, err = remove.remove_search_results(results, name, deps_mode, flags["force"], flags["force-fast"])
+   if not ok then
+      return nil, err
+   end
+
+   writer.check_dependencies(nil, deps.get_deps_mode(flags))
+   return true
 end
 
 return remove

@@ -164,10 +164,13 @@ function install.command(flags, name, version)
       end
       if not ok then return nil, err end
       name, version = ok, err
+
       if (not flags["only-deps"]) and (not flags["keep"]) and not cfg.keep_other_versions then
          local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
          if not ok then util.printerr(err) end
       end
+
+      writer.check_dependencies(nil, deps.get_deps_mode(flags))
       return name, version
    else
       local search = require("luarocks.search")

@@ -230,6 +230,28 @@ local function rock_status(name, deps_mode, rocks_provided)
    return installed and installed.." "..installation_type or "not installed"
 end
 
+--- Check depenendencies of a package and report any missing ones.
+-- @param name string: package name.
+-- @param version string: package version.
+-- @param dependencies table: array of dependencies.
+-- @param deps_mode string: Which trees to check dependencies for:
+-- "one" for the current default tree, "all" for all trees,
+-- "order" for all trees with priority >= the current default, "none" for no trees.
+function deps.report_missing_dependencies(name, version, dependencies, deps_mode)
+   local first_missing_dep = true
+
+   for _, dep in ipairs(dependencies) do
+      if not match_dep(dep, nil, deps_mode) then
+         if first_missing_dep then
+            util.printout(("Missing dependencies for %s %s:"):format(name, version))
+            first_missing_dep = false
+         end
+
+         util.printout(("   %s (%s)"):format(deps.show_dep(dep), rock_status(dep.name, deps_mode)))
+      end
+   end
+end
+
 --- Check dependencies of a rock and attempt to install any missing ones.
 -- Packages are installed using the LuaRocks "install" command.
 -- Aborts the program if a dependency could not be fulfilled.
@@ -270,20 +292,9 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
       end
    end
 
+   deps.report_missing_dependencies(rockspec.name, rockspec.version, rockspec.dependencies, deps_mode)
+
    local first_missing_dep = true
-
-   for _, dep in ipairs(rockspec.dependencies) do
-      if not match_dep(dep, nil, deps_mode, rockspec.rocks_provided) then
-         if first_missing_dep then
-            util.printout(("Missing dependencies for %s %s:"):format(rockspec.name, rockspec.version))
-            first_missing_dep = false
-         end
-
-         util.printout(("   %s (%s)"):format(deps.show_dep(dep), rock_status(dep.name, deps_mode, rockspec.rocks_provided)))
-      end
-   end
-
-   first_missing_dep = true
 
    for _, dep in ipairs(rockspec.dependencies) do
       if not match_dep(dep, nil, deps_mode, rockspec.rocks_provided) then
@@ -505,17 +516,15 @@ function deps.check_external_deps(rockspec, mode)
    return true
 end
 
---- Recursively scan dependencies, to build a transitive closure of all
--- dependent packages.
--- @param results table: The results table being built.
--- @param missing table: The table of missing dependencies being recursively built.
+--- Recursively add satisfied dependencies of a package to a table,
+-- to build a transitive closure of all dependent packages.
+-- Additionally ensures that `dependencies` table of the manifest is up-to-date.
+-- @param results table: The results table being built, maps package names to versions.
 -- @param manifest table: The manifest table containing dependencies.
 -- @param name string: Package name.
 -- @param version string: Package version.
--- @return (table, table): The results and a table of missing dependencies.
-function deps.scan_deps(results, missing, manifest, name, version, deps_mode)
+function deps.scan_deps(results, manifest, name, version, deps_mode)
    assert(type(results) == "table")
-   assert(type(missing) == "table")
    assert(type(manifest) == "table")
    assert(type(name) == "string")
    assert(type(version) == "string")
@@ -523,7 +532,7 @@ function deps.scan_deps(results, missing, manifest, name, version, deps_mode)
    local fetch = require("luarocks.fetch")
 
    if results[name] then
-      return results, missing
+      return
    end
    if not manifest.dependencies then manifest.dependencies = {} end
    local dependencies = manifest.dependencies
@@ -533,9 +542,9 @@ function deps.scan_deps(results, missing, manifest, name, version, deps_mode)
    local rockspec, err
    if not deplist then
       rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version), false)
-      if err then
-         missing[name.." "..version] = err
-         return results, missing
+      if not rockspec then
+         util.printerr("Couldn't load rockspec for "..name.." "..version..": "..err)
+         return
       end
       dependencies_name[version] = rockspec.dependencies
    else
@@ -544,18 +553,11 @@ function deps.scan_deps(results, missing, manifest, name, version, deps_mode)
          rocks_provided = setmetatable({}, { __index = cfg.rocks_provided_3_0 })
       }
    end
-   local matched, failures = deps.match_deps(rockspec, nil, deps_mode)
-   results[name] = results
-   for _, match in pairs(matched) do
-      results, missing = deps.scan_deps(results, missing, manifest, match.name, match.version, deps_mode)
-   end
-   if next(failures) then
-      for _, failure in pairs(failures) do
-         missing[deps.show_dep(failure)] = "failed"
-      end
-   end
+   local matched = deps.match_deps(rockspec, nil, deps_mode)
    results[name] = version
-   return results, missing
+   for _, match in pairs(matched) do
+      deps.scan_deps(results, manifest, match.name, match.version, deps_mode)
+   end
 end
 
 local valid_deps_modes = {
