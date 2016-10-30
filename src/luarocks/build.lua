@@ -400,14 +400,14 @@ function build.command(flags, name, version)
       if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
       ok, err = do_build(name, version, deps.get_deps_mode(flags), flags["only-deps"])
       if not ok then return nil, err end
-      local name, version = ok, err
-      if flags["only-deps"] then
-         return name, version
-      end
-      if (not flags["keep"]) and not cfg.keep_other_versions then
+      name, version = ok, err
+
+      if (not flags["only-deps"]) and (not flags["keep"]) and not cfg.keep_other_versions then
          local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
          if not ok then util.printerr(err) end
       end
+
+      manif.check_dependencies(nil, deps.get_deps_mode(flags))
       return name, version
    end
 end
