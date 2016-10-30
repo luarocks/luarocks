@@ -1,6 +1,5 @@
 
---- Module implementing the LuaRocks "pack" command.
--- Creates a rock, packing sources or binaries.
+-- Create rock files, packing sources or binaries.
 local pack = {}
 
 local unpack = unpack or table.unpack
@@ -14,15 +13,6 @@ local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local search = require("luarocks.search")
-
-pack.help_summary = "Create a rock, packing sources or binaries."
-pack.help_arguments = "{<rockspec>|<name> [<version>]}"
-pack.help = [[
-Argument may be a rockspec file, for creating a source rock,
-or the name of an installed package, for creating a binary rock.
-In the latter case, the app version may be given as a second
-argument.
-]]
 
 --- Create a source rock.
 -- Packages a rockspec and its required source files in a rock
@@ -86,7 +76,7 @@ end
 -- @param tree string or nil: An optional tree to pick the package from.
 -- @return string or (nil, string): The filename of the resulting
 -- .src.rock file; or nil and an error message.
-local function do_pack_binary_rock(name, version, tree)
+function pack.pack_installed_rock(name, version, tree)
    assert(type(name) == "string")
    assert(type(version) == "string" or not version)
 
@@ -160,34 +150,7 @@ function pack.pack_binary_rock(name, version, cmd, ...)
    if not rname then
       rname, rversion = name, version
    end
-   return do_pack_binary_rock(rname, rversion, temp_dir)
-end
-
---- Driver function for the "pack" command.
--- @param arg string:  may be a rockspec file, for creating a source rock,
--- or the name of an installed package, for creating a binary rock.
--- @param version string or nil: if the name of a package is given, a
--- version may also be passed.
--- @return boolean or (nil, string): true if successful or nil followed
--- by an error message.
-function pack.command(flags, arg, version)
-   assert(type(version) == "string" or not version)
-   if type(arg) ~= "string" then
-      return nil, "Argument missing. "..util.see_help("pack")
-   end
-
-   local file, err
-   if arg:match(".*%.rockspec") then
-      file, err = pack.pack_source_rock(arg)
-   else
-      file, err = do_pack_binary_rock(arg:lower(), version, flags["tree"])
-   end
-   if err then
-      return nil, err
-   else
-      util.printout("Packed: "..file)
-      return true
-   end
+   return pack.pack_installed_rock(rname, rversion, temp_dir)
 end
 
 return pack

@@ -57,7 +57,8 @@ describe("LuaRocks config tests #blackbox #b_config", function()
       end)
       
       it("LuaRocks config missing user config", function()
-         assert.is_false(run.luarocks_bool("config --user-config", {LUAROCKS_CONFIG = "missing_file.lua"}))
+         local output = run.luarocks("config --user-config", {LUAROCKS_CONFIG = "missing_file.lua"})
+         assert.truthy(output:match("Warning"))
       end)
    end)
 
