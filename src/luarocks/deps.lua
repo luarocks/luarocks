@@ -147,7 +147,7 @@ end
 -- @param dep table: A dependency parsed in table format.
 -- @param blacklist table: Versions that can't be accepted. Table where keys
 -- are program versions and values are 'true'.
--- @param provided table: A table of auto-dependencies provided 
+-- @param rocks_provided table: A table of auto-dependencies provided 
 -- by this Lua implementation for the given dependency.
 -- @return string or nil: latest installed version of the rock matching the dependency
 -- or nil if it could not be matched.
@@ -235,19 +235,21 @@ end
 -- @param version string: package version.
 -- @param dependencies table: array of dependencies.
 -- @param deps_mode string: Which trees to check dependencies for:
+-- @param rocks_provided table: A table of auto-dependencies provided 
+-- by this Lua implementation for the given dependency.
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
-function deps.report_missing_dependencies(name, version, dependencies, deps_mode)
+function deps.report_missing_dependencies(name, version, dependencies, deps_mode, rocks_provided)
    local first_missing_dep = true
 
    for _, dep in ipairs(dependencies) do
-      if not match_dep(dep, nil, deps_mode) then
+      if not match_dep(dep, nil, deps_mode, rocks_provided) then
          if first_missing_dep then
             util.printout(("Missing dependencies for %s %s:"):format(name, version))
             first_missing_dep = false
          end
 
-         util.printout(("   %s (%s)"):format(deps.show_dep(dep), rock_status(dep.name, deps_mode)))
+         util.printout(("   %s (%s)"):format(deps.show_dep(dep), rock_status(dep.name, deps_mode, rocks_provided)))
       end
    end
 end
@@ -292,7 +294,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
       end
    end
 
-   deps.report_missing_dependencies(rockspec.name, rockspec.version, rockspec.dependencies, deps_mode)
+   deps.report_missing_dependencies(rockspec.name, rockspec.version, rockspec.dependencies, deps_mode, rockspec.rocks_provided)
 
    local first_missing_dep = true
 
