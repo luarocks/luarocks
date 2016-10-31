@@ -85,13 +85,15 @@ local function update_dependencies(manifest, deps_mode)
          for _, repo in ipairs(repositories) do
             if repo.arch == "installed" then
                repo.dependencies = {}
-               deps.scan_deps(repo.dependencies, {}, manifest, pkg, version, deps_mode)
+               deps.scan_deps(repo.dependencies, manifest, pkg, version, deps_mode)
                repo.dependencies[pkg] = nil
             end
          end
       end
    end
 end
+
+
 
 --- Sort function for ordering rock identifiers in a manifest's
 -- modules table. Rocks are ordered alphabetically by name, and then
