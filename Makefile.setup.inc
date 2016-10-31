@@ -5,16 +5,20 @@ BINDIR ?= $(PREFIX)/bin
 LUADIR ?= $(PREFIX)/share/lua/$(LUA_VERSION)/
 
 BIN_FILES = luarocks luarocks-admin
-LUAROCKS_FILES = admin/add.lua admin/cache.lua admin/make_manifest.lua admin/refresh_cache.lua \
-admin/remove.lua build.lua build/builtin.lua build/cmake.lua build/command.lua \
-build/make.lua command_line.lua config_cmd.lua core/cfg.lua core/deps.lua \
-core/dir.lua core/manif.lua core/path.lua core/persist.lua core/type_check.lua \
-core/util.lua deps.lua dir.lua doc.lua download.lua fetch.lua fetch/cvs.lua \
-fetch/git.lua fetch/git_file.lua fetch/git_http.lua fetch/git_https.lua \
-fetch/git_ssh.lua fetch/hg.lua fetch/hg_http.lua fetch/hg_https.lua fetch/hg_ssh.lua \
-fetch/sscm.lua fetch/svn.lua fs.lua fs/lua.lua fs/tools.lua fs/unix.lua fs/unix/tools.lua \
-fs/win32.lua fs/win32/tools.lua help.lua index.lua install.lua lint.lua list.lua \
-loader.lua make.lua manif.lua manif/writer.lua new_version.lua pack.lua path.lua \
-path_cmd.lua persist.lua purge.lua remove.lua repos.lua require.lua search.lua \
-show.lua tools/patch.lua tools/tar.lua tools/zip.lua type_check.lua unpack.lua \
-upload.lua upload/api.lua upload/multipart.lua util.lua write_rockspec.lua
+LUAROCKS_FILES = fs.lua dir.lua repos.lua command_line.lua upload/api.lua upload/multipart.lua \
+index.lua build.lua search.lua fs/win32.lua fs/win32/tools.lua \
+fs/unix/tools.lua fs/lua.lua fs/tools.lua fs/unix.lua loader.lua cmd/help.lua \
+cmd/unpack.lua cmd/upload.lua cmd/lint.lua cmd/purge.lua cmd/install.lua \
+cmd/config.lua cmd/write_rockspec.lua cmd/build.lua cmd/search.lua \
+cmd/make.lua cmd/list.lua cmd/show.lua cmd/path.lua cmd/new_version.lua \
+cmd/pack.lua cmd/download.lua cmd/doc.lua cmd/remove.lua tools/patch.lua \
+tools/zip.lua tools/tar.lua manif/writer.lua build/cmake.lua build/make.lua \
+build/command.lua build/builtin.lua fetch.lua path.lua util.lua deps.lua \
+pack.lua download.lua core/dir.lua core/path.lua core/util.lua core/deps.lua \
+core/cfg.lua core/type_check.lua core/persist.lua core/manif.lua \
+type_check.lua persist.lua require.lua manif.lua admin/cache.lua \
+admin/cmd/make_manifest.lua admin/cmd/add.lua admin/cmd/remove.lua \
+admin/cmd/refresh_cache.lua remove.lua fetch/git_file.lua fetch/sscm.lua \
+fetch/cvs.lua fetch/git_https.lua fetch/git_ssh.lua fetch/hg_http.lua \
+fetch/git_http.lua fetch/svn.lua fetch/git.lua fetch/hg_ssh.lua \
+fetch/hg_https.lua fetch/hg.lua
