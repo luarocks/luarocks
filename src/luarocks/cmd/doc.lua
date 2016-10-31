@@ -2,7 +2,6 @@
 --- Module implementing the LuaRocks "doc" command.
 -- Shows documentation for an installed rock.
 local doc = {}
-package.loaded["luarocks.doc"] = doc
 
 local util = require("luarocks.util")
 local search = require("luarocks.search")
@@ -12,7 +11,6 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local download = require("luarocks.download")
 
-util.add_run_function(doc)
 doc.help_summary = "Show documentation for an installed rock."
 
 doc.help = [[

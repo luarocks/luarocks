@@ -1,7 +1,6 @@
 
 --- Module which builds the index.html page to be used in rocks servers.
 local index = {}
-package.loaded["luarocks.index"] = index
 
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")

@@ -7,12 +7,11 @@
 local help = {}
 
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 
 local program = util.this_program("luarocks")
 
-util.add_run_function(help)
 help.help_summary = "Help on commands. Type '"..program.." help <command>' for more."
 
 help.help_arguments = "[<command>]"

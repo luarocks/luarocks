@@ -1,3 +1,4 @@
+
 --- Configuration for LuaRocks.
 -- Tries to load the user's configuration file and
 -- defines defaults for unset values. See the
@@ -12,11 +13,7 @@
 local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, tonumber, type, assert, _VERSION =
       rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, package, tonumber, type, assert, _VERSION
 
---module("luarocks.cfg")
 local cfg = {}
-package.loaded["luarocks.cfg"] = cfg
-
-local util = require("luarocks.util")
 
 cfg.lua_version = _VERSION:match(" (5%.[123])$") or "5.1"
 local version_suffix = cfg.lua_version:gsub("%.", "_")
@@ -31,14 +28,17 @@ if not ok then
    site_config = {}
 end
 
+local util = require("luarocks.core.util")
+local persist = require("luarocks.core.persist")
+local require = nil
+--------------------------------------------------------------------------------
+
 cfg.program_version = "scm"
-cfg.program_series = "2.2"
+cfg.program_series = "3.0"
 cfg.major_version = (cfg.program_version:match("([^.]%.[^.])")) or cfg.program_series
 cfg.variables = {}
 cfg.rocks_trees = {}
 cfg.platforms = {}
-
-local persist = require("luarocks.persist")
 
 cfg.errorcodes = setmetatable({
    OK = 0,
@@ -75,8 +75,8 @@ end
 -- so that this detection does not run every time. When it is
 -- performed, we use the Unix way to identify the system,
 -- even on Windows (assuming UnxUtils or Cygwin).
-local system = site_config.LUAROCKS_UNAME_S or io.popen("uname -s"):read("*l")
-local proc = site_config.LUAROCKS_UNAME_M or io.popen("uname -m"):read("*l")
+local system = site_config.LUAROCKS_UNAME_S or util.popen_read("uname -s")
+local proc = site_config.LUAROCKS_UNAME_M or util.popen_read("uname -m")
 if proc:match("i[%d]86") then
    cfg.target_cpu = "x86"
 elseif proc:match("amd64") or proc:match("x86_64") then
@@ -370,6 +370,8 @@ local defaults = {
       MAKE = "make",
       CC = "cc",
       LD = "ld",
+      AR = "ar",
+      RANLIB = "ranlib",
 
       CVS = "cvs",
       GIT = "git",
@@ -425,7 +427,8 @@ local defaults = {
       include = "include"
    },
 
-   rocks_provided = {}
+   rocks_provided = {},
+   rocks_provided_3_0 = {},
 }
 
 if cfg.platforms.windows then
@@ -437,6 +440,7 @@ if cfg.platforms.windows then
    defaults.arch = "win32-"..cfg.target_cpu 
    defaults.lib_extension = "dll"
    defaults.external_lib_extension = "dll"
+   defaults.static_lib_extension = "lib"
    defaults.obj_extension = "obj"
    defaults.external_deps_dirs = { "c:/external/" }
    defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/bin"
@@ -450,6 +454,7 @@ if cfg.platforms.windows then
    defaults.variables.WRAPPER = full_prefix.."\\rclauncher.c"
    defaults.variables.LD = "link"
    defaults.variables.MT = "mt"
+   defaults.variables.AR = "lib"
    defaults.variables.LUALIB = "lua"..cfg.lua_version..".lib"
    defaults.variables.CFLAGS = "/nologo /MD /O2"
    defaults.variables.LIBFLAG = "/nologo /dll"
@@ -489,11 +494,14 @@ end
 
 if cfg.platforms.mingw32 then
    defaults.obj_extension = "o"
+   defaults.static_lib_extension = "a"
    defaults.cmake_generator = "MinGW Makefiles"
    defaults.variables.MAKE = "mingw32-make"
    defaults.variables.CC = "mingw32-gcc"
    defaults.variables.RC = "windres"
    defaults.variables.LD = "mingw32-gcc"
+   defaults.variables.AR = "ar"
+   defaults.variables.RANLIB = "ranlib"
    defaults.variables.CFLAGS = "-O2"
    defaults.variables.LIBFLAG = "-shared"
    defaults.makefile = "Makefile"
@@ -514,6 +522,7 @@ end
 
 if cfg.platforms.unix then
    defaults.lib_extension = "so"
+   defaults.static_lib_extension = "a"
    defaults.external_lib_extension = "so"
    defaults.obj_extension = "o"
    defaults.external_deps_dirs = { "/usr/local", "/usr" }
@@ -587,7 +596,7 @@ if cfg.platforms.macosx then
    defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
    defaults.variables.STAT = "/usr/bin/stat"
    defaults.variables.STATFLAG = "-f '%A'"
-   local version = io.popen("sw_vers -productVersion"):read("*l")
+   local version = util.popen_read("sw_vers -productVersion")
    version = tonumber(version and version:match("^[^.]+%.([^.]+)")) or 3
    if version >= 10 then
       version = 8
@@ -646,8 +655,8 @@ end
 if package.loaded.jit then
    -- LuaJIT
    local lj_version = package.loaded.jit.version:match("LuaJIT (.*)"):gsub("%-","")
-   --defaults.rocks_provided["luajit"] = lj_version.."-1"
    defaults.rocks_provided["luabitop"] = lj_version.."-1"
+   defaults.rocks_provided_3_0["luajit"] = lj_version.."-1"
 end
 
 -- Use defaults:
@@ -664,6 +673,7 @@ for _, entry in ipairs({"variables", "rocks_provided"}) do
       end
    end
 end
+setmetatable(defaults.rocks_provided_3_0, { __index = cfg.rocks_provided })
 
 -- For values not set in the config file, use values from the 'defaults' table.
 local cfg_mt = {

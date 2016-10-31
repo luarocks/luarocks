@@ -2,11 +2,10 @@
 -- Queries information about the LuaRocks configuration.
 local config_cmd = {}
 
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 
-util.add_run_function(config_cmd)
 config_cmd.help_summary = "Query information about the LuaRocks configuration."
 config_cmd.help_arguments = "<flag>"
 config_cmd.help = [[

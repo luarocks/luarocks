@@ -1,8 +1,7 @@
 
 local write_rockspec = {}
-package.loaded["luarocks.write_rockspec"] = write_rockspec
 
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
@@ -10,8 +9,8 @@ local path = require("luarocks.path")
 local persist = require("luarocks.persist")
 local type_check = require("luarocks.type_check")
 local util = require("luarocks.util")
+local deps = require("luarocks.deps")
 
-util.add_run_function(write_rockspec)
 write_rockspec.help_summary = "Write a template for a rockspec file."
 write_rockspec.help_arguments = "[--output=<file> ...] [<name>] [<version>] [<url>|<path>]"
 write_rockspec.help = [[
@@ -223,6 +222,7 @@ local function rockspec_cleanup(rockspec)
    rockspec.source.protocol = nil
    rockspec.variables = nil
    rockspec.name = nil
+   rockspec.format_is_at_least = nil
 end
 
 function write_rockspec.command(flags, name, version, url_or_dir)
@@ -285,6 +285,7 @@ function write_rockspec.command(flags, name, version, url_or_dir)
    }
    path.configure_paths(rockspec)
    rockspec.source.protocol = protocol
+   rockspec.format_is_at_least = deps.format_is_at_least
    
    configure_lua_version(rockspec, flags["lua-version"])
    

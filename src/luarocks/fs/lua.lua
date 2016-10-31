@@ -6,7 +6,7 @@ local fs_lua = {}
 
 local fs = require("luarocks.fs")
 
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
