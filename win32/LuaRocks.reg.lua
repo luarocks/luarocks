@@ -1,6 +1,6 @@
 -- Call this file using its full path and the template file as a parameter;
 --
--- C:\> lua.exe "create_reg_file.lua" "c:\luarocks\2.0\LuaRocks.reg.template"
+-- C:\> lua.exe "LuaRocks.reg.lua" "c:\luarocks\2.0\LuaRocks.reg.template"
 --
 -- it will strip the ".template" extension and write to that file the
 -- template contents, where "<LUAROCKSPATH>" will be replaced by the path
