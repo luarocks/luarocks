@@ -147,8 +147,6 @@ function Api:request(url, params, post_params)
    if not self.config.key then
       return nil, "Must have API key before performing any actions."
    end
-   local body
-   local headers = {}
    if params and next(params) then
       url = url .. ("?" .. encode_query_string(params))
    end
@@ -215,7 +213,6 @@ function Api:request(url, params, post_params)
             warned_luasec = true
          end
          http_ok, http = pcall(require, "socket.http")
-         server = server:gsub("^https", "http")
          url = url:gsub("^https", "http")
          via = "luasocket"
       end
