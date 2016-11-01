@@ -110,6 +110,7 @@ local function require_json()
    for _, lib in ipairs(list) do
       local json_ok, json = pcall(require, lib)
       if json_ok then
+         pcall(json.use_lpeg) -- optional feature in dkjson
          return json_ok, json
       end
    end
