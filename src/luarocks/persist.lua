@@ -106,7 +106,7 @@ local function write_value(out, v, level, sub_order)
          end
          out:write(open.."\n"..v..close)
       else
-         out:write("\""..v:gsub("\\", "\\\\"):gsub("\"", "\\\"").."\"")
+         out:write(("%q"):format(v))
       end
    else
       out:write(tostring(v))
