@@ -540,85 +540,89 @@ function manif.zip_manifests()
    end
 end
 
-local function relative_path(from_dir, to_file)
-   -- It is assumed that `from_dir` is prefix of `to_file`.
-   return (to_file:sub(#from_dir + 1):gsub("^[\\/]*", ""))
+--- Get type and name of an item (a module or a command) provided by a file.
+-- @param deploy_type string: rock manifest subtree the file comes from ("bin", "lua", or "lib").
+-- @param file_path string: path to the file relatively to deploy_type subdirectory.
+-- @return (string, string): item type ("module" or "command") and name.
+function manif.get_provided_item(deploy_type, file_path)
+   assert(type(deploy_type) == "string")
+   assert(type(file_path) == "string")
+   local item_type = deploy_type == "bin" and "command" or "module"
+   local item_name = item_type == "command" and file_path or path.path_to_module(file_path)
+   return item_type, item_name
 end
 
-local function file_manifest_coordinates(manifest, file, root)
-   local deploy_bin = path.deploy_bin_dir(root)
-   local deploy_lua = path.deploy_lua_dir(root)
-   local deploy_lib = path.deploy_lib_dir(root)
-
-   if util.starts_with(file, deploy_lua) then
-      return "modules", path.path_to_module(relative_path(deploy_lua, file):gsub("\\", "/")), deploy_lua
-   elseif util.starts_with(file, deploy_lib) then
-      return "modules", path.path_to_module(relative_path(deploy_lib, file):gsub("\\", "/")), deploy_lib
-   elseif util.starts_with(file, deploy_bin) then
-      return "commands", relative_path(deploy_bin, file), deploy_bin
-   else
-      assert(false, "Assertion failed: '"..file.."' is not a deployed file.")
-   end
+local function get_providers(item_type, item_name, repo)
+   assert(type(item_type) == "string")
+   assert(type(item_name) == "string")
+   local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
+   local manifest = manif_core.load_local_manifest(rocks_dir)
+   return manifest and manifest[item_type .. "s"][item_name]
 end
 
-local function find_providers(file, root)
-   assert(type(file) == "string")
-   root = root or cfg.root_dir
-
-   local manifest, err = manif_core.load_local_manifest(path.rocks_dir(root))
-   if not manifest then
-      return nil, "untracked"
-   end
-
-   local type_key, key = file_manifest_coordinates(manifest, file, root)
-
-   local providers = manifest[type_key][key]
-   if not providers then
-      return nil, "untracked"
-   end
-   return providers
-end
-
---- Given a path of a deployed file, figure out which rock name and version
--- correspond to it in the tree manifest.
--- @param file string: The full path of a deployed file.
+--- Given a name of a module or a command, figure out which rock name and version
+-- correspond to it in the rock tree manifest.
+-- @param item_type string: "module" or "command".
+-- @param item_name string: module or command name.
 -- @param root string or nil: A local root dir for a rocks tree. If not given, the default is used.
--- @return string, string: name and version of the provider rock.
-function manif.find_current_provider(file, root)
-   local providers, err = find_providers(file, root)
-   if not providers then return nil, err end
-   return providers[1]:match("([^/]*)/([^/]*)")
+-- @return (string, string) or nil: name and version of the provider rock or nil if there
+-- is no provider.
+function manif.get_current_provider(item_type, item_name, repo)
+   local providers = get_providers(item_type, item_name, repo)
+   if providers then
+      return providers[1]:match("([^/]*)/([^/]*)")
+   end
 end
 
-function manif.find_next_provider(file, root)
-   local providers, err = find_providers(file, root)
-   if not providers then return nil, err end
-   if providers[2] then
+function manif.get_next_provider(item_type, item_name, repo)
+   local providers = get_providers(item_type, item_name, repo)
+   if providers and providers[2] then
       return providers[2]:match("([^/]*)/([^/]*)")
-   else
-      return nil
    end
 end
 
---- Given a file conflicting with a module or command
--- provided by a version of a package, return which file
--- in that version corresponds to the conflicting item.
--- @param name string: name of the package with conflicting module or command.
--- @param version string: version of the package with conflicting module or command.
--- @param file string: full, unversioned path to a deployed file.
--- @return string: full, unversioned path to a deployed file in
--- given package that conflicts with given file.
-function manif.find_conflicting_file(name, version, file, root)
-   root = root or cfg.root_dir
-
-   local manifest = manif_core.load_local_manifest(path.rocks_dir(root))
-   if not manifest then
-      return
-   end
+--- Given a name of a module or a command provided by a package, figure out
+-- which file provides it.
+-- @param name string: package name.
+-- @param version string: package version.
+-- @param item_type string: "module" or "command".
+-- @param item_name string: module or command name.
+-- @param root string or nil: A local root dir for a rocks tree. If not given, the default is used.
+-- @return (string, string): rock manifest subtree the file comes from ("bin", "lua", or "lib")
+-- and path to the providing file relatively to that subtree.
+function manif.get_providing_file(name, version, item_type, item_name, repo)
+   local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
+   local manifest = manif_core.load_local_manifest(rocks_dir)
 
    local entry_table = manifest.repository[name][version][1]
-   local type_key, key, deploy_dir = file_manifest_coordinates(manifest, file, root)
-   return dir.path(deploy_dir, entry_table[type_key][key])
+   local file_path = entry_table[item_type .. "s"][item_name]
+
+   if item_type == "command" then
+      return "bin", file_path
+   end
+
+   -- A module can be in "lua" or "lib". Decide based on extension first:
+   -- most likely Lua modules are in "lua/" and C modules are in "lib/".
+   if file_path:match("%." .. cfg.lua_extension .. "$") then
+      return "lua", file_path
+   elseif file_path:match("%." .. cfg.lib_extension .. "$") then
+      return "lib", file_path
+   end
+
+   -- Fallback to rock manifest scanning.
+   local rock_manifest = manif.load_rock_manifest(name, version)
+   local subtree = rock_manifest.lib
+
+   for path_part in file_path:gmatch("[^/]+") do
+      if type(subtree) == "table" then
+         subtree = subtree[path_part]
+      else
+         -- Assume it's in "lua/" if it's not in "lib/".
+         return "lua", file_path
+      end
+   end
+
+   return type(subtree) == "string" and "lib" or "lua", file_path
 end
 
 return manif
