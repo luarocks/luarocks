@@ -25,14 +25,15 @@ local function write_value(out, v, level, sub_order)
       if v:match("[\r\n]") then
          local open, close = "[[", "]]"
          local equals = 0
-         while v:find(close, 1, true) do
+         local v_with_bracket = v.."]"
+         while v_with_bracket:find(close, 1, true) do
             equals = equals + 1
             local eqs = ("="):rep(equals)
             open, close = "["..eqs.."[", "]"..eqs.."]"
          end
          out:write(open.."\n"..v..close)
       else
-         out:write("\""..v:gsub("\\", "\\\\"):gsub("\"", "\\\"").."\"")
+         out:write(("%q"):format(v))
       end
    else
       out:write(tostring(v))

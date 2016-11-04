@@ -214,7 +214,7 @@ function test_env.set_args()
    return true
 end
 
-local function copy_dir(source_path, target_path)
+function test_env.copy_dir(source_path, target_path)
    local testing_paths = test_env.testing_paths
    if test_env.TEST_TARGET_OS == "windows" then
       execute_bool(testing_paths.win_tools .. "/cp -R ".. source_path .. "/. " .. target_path)
@@ -430,8 +430,8 @@ local function build_environment(rocks, env_variables)
       end
    end
    
-   copy_dir(testing_paths.testing_tree, testing_paths.testing_tree_copy)
-   copy_dir(testing_paths.testing_sys_tree, testing_paths.testing_sys_tree_copy)
+   test_env.copy_dir(testing_paths.testing_tree, testing_paths.testing_tree_copy)
+   test_env.copy_dir(testing_paths.testing_sys_tree, testing_paths.testing_sys_tree_copy)
 end
 
 --- Reset testing environment
@@ -441,12 +441,12 @@ local function reset_environment(testing_paths, md5sums)
 
    if testing_tree_md5 ~= md5sums.testing_tree_copy_md5 then
       test_env.remove_dir(testing_paths.testing_tree)
-      copy_dir(testing_paths.testing_tree_copy, testing_paths.testing_tree)
+      test_env.copy_dir(testing_paths.testing_tree_copy, testing_paths.testing_tree)
    end
 
    if testing_sys_tree_md5 ~= md5sums.testing_sys_tree_copy_md5 then
       test_env.remove_dir(testing_paths.testing_sys_tree)
-      copy_dir(testing_paths.testing_sys_tree_copy, testing_paths.testing_sys_tree)
+      test_env.copy_dir(testing_paths.testing_sys_tree_copy, testing_paths.testing_sys_tree)
    end
    print("\n[ENVIRONMENT RESET]")
 end
