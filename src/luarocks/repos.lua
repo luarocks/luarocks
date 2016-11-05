@@ -73,50 +73,54 @@ local function recurse_rock_manifest_tree(file_tree, action)
    return do_recurse_rock_manifest_tree(file_tree)
 end
 
-local function store_package_data(result, name, file_tree)
-   if not file_tree then return end
-   return recurse_rock_manifest_tree(file_tree, function(file_path)
-      result[path.path_to_module(file_path)] = file_path
-      return true
-   end)
+local function store_package_data(result, rock_manifest, deploy_type)
+   if rock_manifest[deploy_type] then
+      recurse_rock_manifest_tree(rock_manifest[deploy_type], function(file_path)
+         local _, item_name = manif.get_provided_item(deploy_type, file_path)
+         result[item_name] = file_path
+         return true
+      end)
+   end
 end
 
---- Obtain a list of modules within an installed package.
--- @param package string: The package name; for example "luasocket"
+--- Obtain a table of modules within an installed package.
+-- @param name string: The package name; for example "luasocket"
 -- @param version string: The exact version number including revision;
 -- for example "2.0.1-1".
--- @return table: A table of modules where keys are module identifiers
--- in "foo.bar" format and values are pathnames in architecture-dependent
--- "foo/bar.so" format. If no modules are found or if package or version
+-- @return table: A table of modules where keys are module names
+-- and values are file paths of files providing modules
+-- relative to "lib" or "lua" rock manifest subtree.
+-- If no modules are found or if package name or version
 -- are invalid, an empty table is returned.
-function repos.package_modules(package, version)
-   assert(type(package) == "string")
+function repos.package_modules(name, version)
+   assert(type(name) == "string")
    assert(type(version) == "string")
 
    local result = {}
-   local rock_manifest = manif.load_rock_manifest(package, version)
+   local rock_manifest = manif.load_rock_manifest(name, version)
    if not rock_manifest then return result end
-   store_package_data(result, package, rock_manifest.lib)
-   store_package_data(result, package, rock_manifest.lua)
+   store_package_data(result, rock_manifest, "lib")
+   store_package_data(result, rock_manifest, "lua")
    return result
 end
 
---- Obtain a list of command-line scripts within an installed package.
--- @param package string: The package name; for example "luasocket"
+--- Obtain a table of command-line scripts within an installed package.
+-- @param name string: The package name; for example "luasocket"
 -- @param version string: The exact version number including revision;
 -- for example "2.0.1-1".
--- @return table: A table of items where keys are command names
--- as strings and values are pathnames in architecture-dependent
--- ".../bin/foo" format. If no modules are found or if package or version
+-- @return table: A table of commands where keys and values are command names
+-- as strings - file paths of files providing commands
+-- relative to "bin" rock manifest subtree.
+-- If no commands are found or if package name or version
 -- are invalid, an empty table is returned.
-function repos.package_commands(package, version)
-   assert(type(package) == "string")
+function repos.package_commands(name, version)
+   assert(type(name) == "string")
    assert(type(version) == "string")
 
    local result = {}
-   local rock_manifest = manif.load_rock_manifest(package, version)
+   local rock_manifest = manif.load_rock_manifest(name, version)
    if not rock_manifest then return result end
-   store_package_data(result, package, rock_manifest.bin)
+   store_package_data(result, rock_manifest, "bin")
    return result
 end
 
