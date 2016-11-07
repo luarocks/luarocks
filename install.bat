@@ -459,7 +459,7 @@ local function get_windows_sdk_directory()
 	assert(type(vars.LUA_RUNTIME) == "string", "requires vars.LUA_RUNTIME to be set before calling this function.")
 	-- Only v7.1 and v6.1 shipped with compilers
 	-- Other versions requires a separate  installation of Visual Studio.
-	-- see https://github.com/keplerproject/luarocks/pull/443#issuecomment-152792516
+	-- see https://github.com/luarocks/luarocks/pull/443#issuecomment-152792516
 	local wsdks = {
 		["MSVCR100"] = "v7.1", -- shipped with Visual Studio 2010 compilers.
 		["MSVCR100D"] = "v7.1", -- shipped with Visual Studio 2010 compilers.
