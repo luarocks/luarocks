@@ -1,10 +1,11 @@
-<p align="center"><a href="http://luarocks.org"><img border="0" src="http://keplerproject.github.io/luarocks/luarocks.png" alt="LuaRocks" width="500px"></a></p>
+<p align="center"><a href="http://luarocks.org"><img border="0" src="http://luarocks.github.io/luarocks/luarocks.png" alt="LuaRocks" width="500px"></a></p>
 
 A package manager for Lua modules.
 
-[![Build Status](https://travis-ci.org/keplerproject/luarocks.png?branch=master)](https://travis-ci.org/keplerproject/luarocks)
-[![Build status](https://ci.appveyor.com/api/projects/status/4x4630tcf64da48i/branch/master?svg=true)](https://ci.appveyor.com/project/hishamhm/luarocks/branch/master)
-[![Coverage Status](https://coveralls.io/repos/keplerproject/luarocks/badge.svg?branch=master)](https://coveralls.io/r/keplerproject/luarocks?branch=master)
+[![Build Status](https://travis-ci.org/luarocks/luarocks.svg?branch=master)](https://travis-ci.org/luarocks/luarocks)
+[![Build Status](https://ci.appveyor.com/api/projects/status/4x4630tcf64da48i/branch/master?svg=true)](https://ci.appveyor.com/project/hishamhm/luarocks/branch/master)
+[![Coverage Status](https://codecov.io/gh/luarocks/luarocks/coverage.svg?branch=master)](https://codecov.io/gh/luarocks/luarocks/branch/master)
+[![Join the chat at https://gitter.im/keplerproject/luarocks](https://badges.gitter.im/keplerproject/luarocks.svg)](https://gitter.im/keplerproject/luarocks?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Main website: [luarocks.org](http://www.luarocks.org)
 
@@ -26,3 +27,6 @@ LuaRocks is free software and uses the same [license][7] as Lua 5.x.
 [5]: http://luarocks.org/en/Installation_instructions_for_Unix
 [6]: http://luarocks.org/en/Installation_instructions_for_Windows
 [7]: http://luarocks.org/en/License
+
+
+[![Join the chat at https://gitter.im/luarocks/luarocks](https://badges.gitter.im/luarocks/luarocks.svg)](https://gitter.im/luarocks/luarocks?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
