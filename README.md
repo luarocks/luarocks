@@ -27,3 +27,6 @@ LuaRocks is free software and uses the same [license][7] as Lua 5.x.
 [5]: http://luarocks.org/en/Installation_instructions_for_Unix
 [6]: http://luarocks.org/en/Installation_instructions_for_Windows
 [7]: http://luarocks.org/en/License
+
+
+[![Join the chat at https://gitter.im/luarocks/luarocks](https://badges.gitter.im/luarocks/luarocks.svg)](https://gitter.im/luarocks/luarocks?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
