@@ -10,6 +10,7 @@ local path = require("luarocks.path")
 local deps = require("luarocks.deps")
 local fetch = require("luarocks.fetch")
 local manif = require("luarocks.manif")
+local repos = require("luarocks.repos")
 
 util.add_run_function(show)
 show.help_summary = "Show information about an installed rock."
@@ -118,8 +119,8 @@ function show.command(flags, name, version)
       if next(minfo.modules) then
          util.printout()
          util.printout("Modules:")
-         for mod, filename in util.sortedpairs(minfo.modules) do
-            util.printout("\t"..mod.." ("..path.which(mod, filename, name, version, repo, manifest)..")")
+         for mod in util.sortedpairs(minfo.modules) do
+            util.printout("\t"..mod.." ("..repos.which(name, version, "module", mod, repo)..")")
          end
       end
       local direct_deps = {}
