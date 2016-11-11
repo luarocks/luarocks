@@ -67,6 +67,12 @@ local function installed_rock_label(name, tree)
    return installed and "(using "..version..")" or "(missing)"
 end
 
+local function print_items(name, version, item_set, item_type, repo)
+   for item_name in util.sortedpairs(item_set) do
+      util.printout("\t"..item_name.." ("..repos.which(name, version, item_type, item_name, repo)..")")
+   end
+end
+
 --- Driver function for "show" command.
 -- @param name or nil: an existing package name.
 -- @param version string or nil: a version may also be passed.
@@ -122,13 +128,19 @@ function show.command(flags, name, version)
          util.printout("Labels: ", table.concat(descript.labels, ", "))
       end
       util.printout("Installed in: ", path.rocks_tree_to_string(repo))
+
+      if next(minfo.commands) then
+         util.printout()
+         util.printout("Commands: ")
+         print_items(name, version, minfo.commands, "command", repo)
+      end
+
       if next(minfo.modules) then
          util.printout()
-         util.printout("Modules:")
-         for mod in util.sortedpairs(minfo.modules) do
-            util.printout("\t"..mod.." ("..repos.which(name, version, "module", mod, repo)..")")
-         end
+         util.printout("Modules: ")
+         print_items(name, version, minfo.modules, "module", repo)
       end
+
       local direct_deps = {}
       if #rockspec.dependencies > 0 then
          util.printout()
