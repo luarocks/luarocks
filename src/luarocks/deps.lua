@@ -3,7 +3,7 @@
 local deps = {}
 
 local cfg = require("luarocks.core.cfg")
-local manif = require("luarocks.core.manif")
+local manif = require("luarocks.manif")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
