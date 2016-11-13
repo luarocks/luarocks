@@ -9,7 +9,7 @@ local path = require("luarocks.path")
 local persist = require("luarocks.persist")
 local type_check = require("luarocks.type_check")
 local util = require("luarocks.util")
-local deps = require("luarocks.deps")
+local vers = require("luarocks.vers")
 
 write_rockspec.help_summary = "Write a template for a rockspec file."
 write_rockspec.help_arguments = "[--output=<file> ...] [<name>] [<version>] [<url>|<path>]"
@@ -285,7 +285,7 @@ function write_rockspec.command(flags, name, version, url_or_dir)
    }
    path.configure_paths(rockspec)
    rockspec.source.protocol = protocol
-   rockspec.format_is_at_least = deps.format_is_at_least
+   rockspec.format_is_at_least = vers.format_is_at_least
    
    configure_lua_version(rockspec, flags["lua-version"])
    

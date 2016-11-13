@@ -5,6 +5,7 @@ local cfg = require("luarocks.core.cfg")
 local search = require("luarocks.search")
 local repos = require("luarocks.repos")
 local deps = require("luarocks.deps")
+local vers = require("luarocks.vers")
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
@@ -109,7 +110,7 @@ local function sort_pkgs(a, b)
    local na, va = a:match("(.*)/(.*)$")
    local nb, vb = b:match("(.*)/(.*)$")
 
-   return (na == nb) and deps.compare_versions(va, vb) or na < nb
+   return (na == nb) and vers.compare_versions(va, vb) or na < nb
 end
 
 --- Sort items of a package matching table by version number (higher versions first).
@@ -151,7 +152,7 @@ local function filter_by_lua_version(manifest, lua_version, repodir, cache)
    assert((not cache) or type(cache) == "table")
    
    cache = cache or {}
-   lua_version = deps.parse_version(lua_version)
+   lua_version = vers.parse_version(lua_version)
    for pkg, versions in pairs(manifest.repository) do
       local to_remove = {}
       for version, repositories in pairs(versions) do
@@ -166,7 +167,7 @@ local function filter_by_lua_version(manifest, lua_version, repodir, cache)
                   cache[pathname] = rockspec
                   for _, dep in ipairs(rockspec.dependencies) do
                      if dep.name == "lua" then 
-                        if not deps.match_constraints(lua_version, dep.constraints) then
+                        if not vers.match_constraints(lua_version, dep.constraints) then
                            table.insert(to_remove, version)
                         end
                         break
@@ -423,7 +424,7 @@ function writer.check_dependencies(repo, deps_mode)
    end
 
    for name, versions in util.sortedpairs(manifest.repository) do
-      for version, version_entries in util.sortedpairs(versions, deps.compare_versions) do
+      for version, version_entries in util.sortedpairs(versions, vers.compare_versions) do
          for _, entry in ipairs(version_entries) do
             if entry.arch == "installed" then
                if manifest.dependencies[name] and manifest.dependencies[name][version] then

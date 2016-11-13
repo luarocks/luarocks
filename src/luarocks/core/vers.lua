@@ -1,5 +1,5 @@
 
-local deps = {}
+local vers = {}
 
 local util = require("luarocks.core.util")
 local require = nil
@@ -73,7 +73,7 @@ setmetatable(version_cache, {
 -- @param vstring string: A version number in string format.
 -- @return table or nil: A version table or nil
 -- if the input string contains invalid characters.
-function deps.parse_version(vstring)
+function vers.parse_version(vstring)
    if not vstring then return nil end
    assert(type(vstring) == "string")
 
@@ -125,8 +125,8 @@ end
 -- @param a string: one version.
 -- @param b string: another version.
 -- @return boolean: True if a > b.
-function deps.compare_versions(a, b)
-   return deps.parse_version(a) > deps.parse_version(b)
+function vers.compare_versions(a, b)
+   return vers.parse_version(a) > vers.parse_version(b)
 end
 
 --- A more lenient check for equivalence between versions.
@@ -145,8 +145,8 @@ local function partial_match(version, requested)
    assert(type(version) == "string" or type(version) == "table")
    assert(type(requested) == "string" or type(version) == "table")
 
-   if type(version) ~= "table" then version = deps.parse_version(version) end
-   if type(requested) ~= "table" then requested = deps.parse_version(requested) end
+   if type(version) ~= "table" then version = vers.parse_version(version) end
+   if type(requested) ~= "table" then requested = vers.parse_version(requested) end
    if not version or not requested then return false end
    
    for i, ri in ipairs(requested) do
@@ -164,14 +164,14 @@ end
 -- @param constraints table: An array of constraints in table format.
 -- @return boolean: True if version satisfies all constraints,
 -- false otherwise.
-function deps.match_constraints(version, constraints)
+function vers.match_constraints(version, constraints)
    assert(type(version) == "table")
    assert(type(constraints) == "table")
    local ok = true
    setmetatable(version, version_mt)
    for _, constr in pairs(constraints) do
       if type(constr.version) == "string" then
-         constr.version = deps.parse_version(constr.version)
+         constr.version = vers.parse_version(constr.version)
       end
       local constr_version, constr_op = constr.version, constr.op
       setmetatable(constr_version, version_mt)
@@ -188,5 +188,4 @@ function deps.match_constraints(version, constraints)
    return ok
 end
 
-return deps
-
+return vers

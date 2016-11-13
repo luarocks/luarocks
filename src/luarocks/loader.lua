@@ -20,7 +20,7 @@ cfg.init_package_paths()
 
 local path = require("luarocks.core.path")
 local manif = require("luarocks.core.manif")
-local deps = require("luarocks.core.deps")
+local vers = require("luarocks.core.vers")
 local util = require("luarocks.core.util")
 local require = nil
 --------------------------------------------------------------------------------
@@ -112,8 +112,8 @@ function loader.add_context(name, version)
          for _, tree in ipairs(loader.rocks_trees) do
             local entries = tree.manifest.repository[pkg]
             if entries then
-               for version, pkgs in util.sortedpairs(entries, deps.compare_versions) do
-                  if (not constraints) or deps.match_constraints(deps.parse_version(version), constraints) then
+               for version, pkgs in util.sortedpairs(entries, vers.compare_versions) do
+                  if (not constraints) or vers.match_constraints(vers.parse_version(version), constraints) then
                      loader.add_context(pkg, version)
                   end
                end
@@ -190,7 +190,7 @@ local function select_module(module, filter_file_name)
             if loader.context[name] == version then
                return name, version, file_name
             end
-            version = deps.parse_version(version)
+            version = vers.parse_version(version)
             table.insert(providers, {name = name, version = version, module_name = file_name, tree = tree})
          end
       end

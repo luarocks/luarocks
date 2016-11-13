@@ -7,7 +7,7 @@ local util = require("luarocks.util")
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local search = require("luarocks.search")
-local deps = require("luarocks.deps")
+local vers = require("luarocks.vers")
 local repos = require("luarocks.repos")
 local writer = require("luarocks.manif.writer")
 local cfg = require("luarocks.core.cfg")
@@ -48,9 +48,9 @@ function purge.command(flags)
 
    search.manifest_search(results, path.rocks_dir(tree), query)
 
-   local sort = function(a,b) return deps.compare_versions(b,a) end
+   local sort = function(a,b) return vers.compare_versions(b,a) end
    if flags["old-versions"] then
-      sort = deps.compare_versions
+      sort = vers.compare_versions
    end
 
    for package, versions in util.sortedpairs(results) do

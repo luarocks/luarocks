@@ -6,7 +6,7 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local type_check = require("luarocks.type_check")
 local path = require("luarocks.path")
-local deps = require("luarocks.deps")
+local vers = require("luarocks.vers")
 local persist = require("luarocks.persist")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
@@ -197,7 +197,7 @@ function fetch.load_local_rockspec(filename, quick)
    local globals = err
 
    if rockspec.rockspec_format then
-      if deps.compare_versions(rockspec.rockspec_format, type_check.rockspec_format) then
+      if vers.compare_versions(rockspec.rockspec_format, type_check.rockspec_format) then
          return nil, "Rockspec format "..rockspec.rockspec_format.." is not supported, please upgrade LuaRocks."
       end
    end
@@ -209,7 +209,7 @@ function fetch.load_local_rockspec(filename, quick)
       end
    end
    
-   rockspec.format_is_at_least = deps.format_is_at_least
+   rockspec.format_is_at_least = vers.format_is_at_least
 
    util.platform_overrides(rockspec.build)
    util.platform_overrides(rockspec.dependencies)
@@ -260,7 +260,7 @@ function fetch.load_local_rockspec(filename, quick)
 
    if rockspec.dependencies then
       for i = 1, #rockspec.dependencies do
-         local parsed, err = deps.parse_dep(rockspec.dependencies[i])
+         local parsed, err = vers.parse_dep(rockspec.dependencies[i])
          if not parsed then
             return nil, "Parse error processing dependency '"..rockspec.dependencies[i].."': "..tostring(err)
          end
