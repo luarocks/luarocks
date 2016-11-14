@@ -112,8 +112,8 @@ function loader.add_context(name, version)
          for _, tree in ipairs(loader.rocks_trees) do
             local entries = tree.manifest.repository[pkg]
             if entries then
-               for version, pkgs in util.sortedpairs(entries, vers.compare_versions) do
-                  if (not constraints) or vers.match_constraints(vers.parse_version(version), constraints) then
+               for ver, pkgs in util.sortedpairs(entries, vers.compare_versions) do
+                  if (not constraints) or vers.match_constraints(vers.parse_version(ver), constraints) then
                      loader.add_context(pkg, version)
                   end
                end
@@ -145,7 +145,7 @@ end
 -- @return table or (nil, string): The module table as returned by some other loader,
 -- or nil followed by an error message if no other loader managed to load the module.
 local function call_other_loaders(module, name, version, module_name)
-   for i, a_loader in ipairs(loaders) do
+   for _, a_loader in ipairs(loaders) do
       if a_loader ~= loader.luarocks_loader then
          local results = { a_loader(module_name) }
          if type(results[1]) == "function" then
