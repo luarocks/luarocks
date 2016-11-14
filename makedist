@@ -80,6 +80,21 @@ then
    exit 1
 fi
 
+cat Makefile.setup.inc | tr ' \\' '\n\n' | grep 'lua$' | while read i
+do
+   if [ ! -e src/luarocks/$i ]
+   then
+      echo "Ref in Makefile.setup.inc for file that no longer exists: $i"
+      touch "outdated_ref"
+      exit 1
+   fi
+done
+if [ -e "outdated_ref" ]
+then
+   rm -f "outdated_ref"
+   exit 1
+fi
+
 rm -rf "release-unix" "release-windows" "$out.tar.gz" "$out-win32.zip"
 
 mkdir "release-unix"

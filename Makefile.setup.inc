@@ -14,7 +14,7 @@ cmd/make.lua cmd/list.lua cmd/show.lua cmd/path.lua cmd/new_version.lua \
 cmd/pack.lua cmd/download.lua cmd/doc.lua cmd/remove.lua tools/patch.lua \
 tools/zip.lua tools/tar.lua manif/writer.lua build/cmake.lua build/make.lua \
 build/command.lua build/builtin.lua fetch.lua path.lua util.lua deps.lua \
-pack.lua download.lua core/dir.lua core/path.lua core/util.lua core/deps.lua \
+pack.lua download.lua core/dir.lua core/path.lua core/util.lua \
 core/cfg.lua core/type_check.lua core/persist.lua core/manif.lua \
 type_check.lua persist.lua require.lua manif.lua admin/cache.lua \
 admin/cmd/make_manifest.lua admin/cmd/add.lua admin/cmd/remove.lua \
