@@ -6,7 +6,7 @@ local search = require("luarocks.search")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
-local deps = require("luarocks.deps")
+local vers = require("luarocks.vers")
 local fetch = require("luarocks.fetch")
 local manif = require("luarocks.manif")
 local repos = require("luarocks.repos")
@@ -147,7 +147,7 @@ function show.command(flags, name, version)
          util.printout("Depends on:")
          for _, dep in ipairs(rockspec.dependencies) do
             direct_deps[dep.name] = true
-            util.printout("\t"..deps.show_dep(dep).." "..installed_rock_label(dep.name, flags["tree"]))
+            util.printout("\t"..vers.show_dep(dep).." "..installed_rock_label(dep.name, flags["tree"]))
          end
       end
       local has_indirect_deps

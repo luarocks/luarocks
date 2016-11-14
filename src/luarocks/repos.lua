@@ -8,7 +8,7 @@ local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
-local deps = require("luarocks.deps")
+local vers = require("luarocks.vers")
 
 -- Tree of files installed by a package are stored
 -- in its rock manifest. Some of these files have to
@@ -246,7 +246,7 @@ local function prepare_target(name, version, deploy_type, file_path, suffix)
 
    if not cur_name then
       return non_versioned
-   elseif name < cur_name or (name == cur_name and deps.compare_versions(version, cur_version)) then
+   elseif name < cur_name or (name == cur_name and vers.compare_versions(version, cur_version)) then
       -- New version has priority. Move currently provided version back using versioned name.
       local cur_deploy_type, cur_file_path = manif.get_providing_file(cur_name, cur_version, item_type, item_name)
       local cur_non_versioned, cur_versioned = get_deploy_paths(cur_name, cur_version, cur_deploy_type, cur_file_path)

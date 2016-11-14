@@ -21,4 +21,4 @@ admin/cmd/make_manifest.lua admin/cmd/add.lua admin/cmd/remove.lua \
 admin/cmd/refresh_cache.lua remove.lua fetch/git_file.lua fetch/sscm.lua \
 fetch/cvs.lua fetch/git_https.lua fetch/git_ssh.lua fetch/hg_http.lua \
 fetch/git_http.lua fetch/svn.lua fetch/git.lua fetch/hg_ssh.lua \
-fetch/hg_https.lua fetch/hg.lua
+fetch/hg_https.lua fetch/hg.lua vers.lua core/vers.lua

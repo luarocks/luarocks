@@ -387,7 +387,7 @@ local function collect_rockspecs(versions, paths, unnamed_paths, subdir)
    local fs = require("luarocks.fs")
    local dir = require("luarocks.dir")
    local path = require("luarocks.path")
-   local deps = require("luarocks.deps")
+   local vers = require("luarocks.vers")
 
    if fs.is_dir(subdir) then
       for file in fs.dir(subdir) do
@@ -397,7 +397,7 @@ local function collect_rockspecs(versions, paths, unnamed_paths, subdir)
             local rock, version = path.parse_name(file)
 
             if rock then
-               if not versions[rock] or deps.compare_versions(version, versions[rock]) then
+               if not versions[rock] or vers.compare_versions(version, versions[rock]) then
                   versions[rock] = version
                   paths[rock] = file
                end

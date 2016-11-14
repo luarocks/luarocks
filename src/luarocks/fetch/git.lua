@@ -6,19 +6,19 @@ local unpack = unpack or table.unpack
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
-local deps = require("luarocks.deps")
+local vers = require("luarocks.vers")
 local util = require("luarocks.util")
 
 local cached_git_version
 
 --- Get git version.
 -- @param git_cmd string: name of git command.
--- @return table: git version as returned by luarocks.deps.parse_version.
+-- @return table: git version as returned by luarocks.vers.parse_version.
 local function git_version(git_cmd)
    if not cached_git_version then
       local version_line = io.popen(fs.Q(git_cmd)..' --version'):read()
       local version_string = version_line:match('%d-%.%d+%.?%d*')
-      cached_git_version = deps.parse_version(version_string)
+      cached_git_version = vers.parse_version(version_string)
    end
 
    return cached_git_version
@@ -29,7 +29,7 @@ end
 -- @param version string: required version.
 -- @return boolean: true if git matches version or is newer, false otherwise.
 local function git_is_at_least(git_cmd, version)
-   return git_version(git_cmd) >= deps.parse_version(version)
+   return git_version(git_cmd) >= vers.parse_version(version)
 end
 
 --- Git >= 1.7.10 can clone a branch **or tag**, < 1.7.10 by branch only. We

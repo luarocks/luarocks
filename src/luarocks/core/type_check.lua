@@ -2,7 +2,7 @@
 local type_check = {}
 
 local cfg = require("luarocks.core.cfg")
-local deps = require("luarocks.core.deps")
+local vers = require("luarocks.core.vers")
 local require = nil
 --------------------------------------------------------------------------------
 
@@ -74,7 +74,7 @@ local manifest_types = {
 
 local function check_version(version, typetbl, context)
    local typetbl_version = typetbl._version or "1.0"
-   if deps.compare_versions(typetbl_version, version) then
+   if vers.compare_versions(typetbl_version, version) then
       if context == "" then
          return nil, "Invalid rockspec_format version number in rockspec? Please fix rockspec accordingly."
       else

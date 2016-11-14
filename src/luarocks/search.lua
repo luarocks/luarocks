@@ -3,7 +3,7 @@ local search = {}
 local dir = require("luarocks.dir")
 local path = require("luarocks.path")
 local manif = require("luarocks.manif")
-local deps = require("luarocks.deps")
+local vers = require("luarocks.vers")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 
@@ -92,7 +92,7 @@ end
 local function store_if_match(results, repo, name, version, arch, query)
    if match_name(query, name) then
       if query.arch[arch] or query.arch["any"] then
-         if deps.match_constraints(deps.parse_version(version), query.constraints) then
+         if vers.match_constraints(vers.parse_version(version), query.constraints) then
             search.store_result(results, name, version, arch, repo)
          end
       end
@@ -229,7 +229,7 @@ function search.make_query(name, version)
       constraints = {}
    }
    if version then
-      table.insert(query.constraints, { op = "==", version = deps.parse_version(version)})
+      table.insert(query.constraints, { op = "==", version = vers.parse_version(version)})
    end
    return query
 end
@@ -246,7 +246,7 @@ local function pick_latest_version(name, versions)
 
    local vtables = {}
    for v, _ in pairs(versions) do
-      table.insert(vtables, deps.parse_version(v))
+      table.insert(vtables, vers.parse_version(v))
    end
    table.sort(vtables)
    local version = vtables[#vtables].string
@@ -339,7 +339,7 @@ function search.print_results(results, porcelain)
       if not porcelain then
          util.printout(package)
       end
-      for version, repos in util.sortedpairs(versions, deps.compare_versions) do
+      for version, repos in util.sortedpairs(versions, vers.compare_versions) do
          for _, repo in ipairs(repos) do
             repo.repo = dir.normalize(repo.repo)
             if porcelain then
@@ -402,7 +402,7 @@ function search.pick_installed_rock(name, version, given_tree)
    local package, versions = util.sortedpairs(results)()
    --question: what do we do about multiple versions? This should
    --give us the latest version on the last repo (which is usually the global one)
-   for vs, repositories in util.sortedpairs(versions, deps.compare_versions) do
+   for vs, repositories in util.sortedpairs(versions, vers.compare_versions) do
       if not version then version = vs end
       for _, rp in ipairs(repositories) do repo_url = rp.repo end
    end
