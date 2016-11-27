@@ -140,9 +140,21 @@ write_sysconfig:
 	   echo 'rocks_trees = {' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	   if  [ ! -n "$(FORCE_CONFIG)" ] ;\
 	   then \
-	      echo '   { name = [[user]], root = home..[[/.luarocks]] },' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
+	      echo -n '   { name = [[user]], root = home..[[/.luarocks]]' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
+		  if [ "$(VERSIONED_ROCKS_DIR)" = "yes" ] ;\
+		  then \
+		     echo ', bin_dir = home..[[/.luarocks/bin/${LUA_VERSION}]]},' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
+      	  else \
+		     echo ' },' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
+		  fi ;\
 	   fi ;\
-	   echo '   { name = [[system]], root = [[$(ROCKS_TREE)]] }' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
+	   echo -n '   { name = [[system]], root = [[$(ROCKS_TREE)]]' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
+	   if [ "$(VERSIONED_ROCKS_DIR)" = "yes" ] ;\
+	   then \
+	      echo ', bin_dir = [[$(ROCKS_TREE)/bin/$(LUA_VERSION)]]},' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
+	   else \
+	      echo ' },' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
+	   fi ;\
 	   echo '}' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	fi
 
