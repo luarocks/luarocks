@@ -1,5 +1,19 @@
 [
 {
+"2.4.2": {
+"date": "2016-11-30", 
+"files": ["luarocks-2.4.2.tar.gz", "luarocks-2.4.2.tar.gz.asc", "luarocks-2.4.2-win32.zip", "luarocks-2.4.2-win32.zip.asc"], 
+"about": [
+"Fixed conflict resolution on deploy/delete",
+"Improved dependency check messages",
+"Performance improvements when removing packages",
+"Support user-defined `platforms` array in config file",
+"Improvements in Lua interpreter version detection in Unix configure script",
+"Relaxed Lua version detection to improve support for alternative implementations (e.g. Ravi)",
+"Plus assorted bugfixes and improvements"
+]
+}},
+{
 "2.4.1": {
 "date": "2016-10-06", 
 "files": ["luarocks-2.4.1.tar.gz", "luarocks-2.4.1.tar.gz.asc", "luarocks-2.4.1-win32.zip", "luarocks-2.4.1-win32.zip.asc"], 
