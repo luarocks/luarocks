@@ -20,7 +20,7 @@ help.help = [[
 ]]
 
 local function print_banner()
-   util.printout("\nLuaRocks "..cfg.program_version..", a module deployment system for Lua")
+   util.printout("\nLuaRocks "..cfg.program_version..", the Lua package manager")
 end
 
 local function print_section(section)

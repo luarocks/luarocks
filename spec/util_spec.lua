@@ -35,11 +35,11 @@ describe("Basic tests #blackbox #b_util", function()
       assert.is_true(os.remove(delete_path))
 
       local output = run.luarocks("")      
-      assert.is.falsy(output:find("LuaRocks scm, a module deployment system for Lua"))
+      assert.is.falsy(output:find("the Lua package manager"))
       assert.is_true(lfs.chdir(main_path))
 
       output = run.luarocks("")
-      assert.is.truthy(output:find("LuaRocks scm, a module deployment system for Lua"))
+      assert.is.truthy(output:find("the Lua package manager"))
    end)
 
    it("LuaRocks timeout", function()
