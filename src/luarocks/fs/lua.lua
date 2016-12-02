@@ -823,16 +823,16 @@ end
 function fs_lua.check_command_permissions(flags)
    local ok = true
    local err = ""
-   for _, dir in ipairs { cfg.rocks_dir, cfg.deploy_lua_dir, cfg.deploy_bin_dir, cfg.deploy_lua_dir } do
-      if fs.exists(dir) then
-         if not fs.is_writable(dir) then
+   for _, directory in ipairs { cfg.rocks_dir, cfg.deploy_lua_dir, cfg.deploy_bin_dir, cfg.deploy_lua_dir } do
+      if fs.exists(directory) then
+         if not fs.is_writable(directory) then
             ok = false
-            err = "Your user does not have write permissions in " .. dir
+            err = "Your user does not have write permissions in " .. directory
             break
          end
       else
-         local root = fs.root_of(dir)
-         local parent = dir
+         local root = fs.root_of(directory)
+         local parent = directory
          repeat
             parent = dir.dir_name(parent)
             if parent == "" then
@@ -841,7 +841,7 @@ function fs_lua.check_command_permissions(flags)
          until parent == root or fs.exists(parent)
          if not fs.is_writable(parent) then
             ok = false
-            err = dir.." does not exist and your user does not have write permissions in " .. parent
+            err = directory.." does not exist and your user does not have write permissions in " .. parent
             break
          end
       end
