@@ -821,28 +821,29 @@ end
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
 function fs_lua.check_command_permissions(flags)
-   local root_dir = path.root_dir(cfg.rocks_dir)
    local ok = true
    local err = ""
-   for _, dir in ipairs { cfg.rocks_dir, root_dir } do
-      if fs.exists(dir) and not fs.is_writable(dir) then
-         ok = false
-         err = "Your user does not have write permissions in " .. dir
-         break
-      end
-   end
-   if ok and not fs.exists(root_dir) then
-      local root = fs.root_of(root_dir)
-      local parent = root_dir
-      repeat
-         parent = dir.dir_name(parent)
-         if parent == "" then
-            parent = root
+   for _, dir in ipairs { cfg.rocks_dir, cfg.deploy_lua_dir, cfg.deploy_bin_dir, cfg.deploy_lua_dir } do
+      if fs.exists(dir) then
+         if not fs.is_writable(dir) then
+            ok = false
+            err = "Your user does not have write permissions in " .. dir
+            break
          end
-      until parent == root or fs.exists(parent)
-      if not fs.is_writable(parent) then
-         ok = false
-         err = root_dir.." does not exist and your user does not have write permissions in " .. parent
+      else
+         local root = fs.root_of(dir)
+         local parent = dir
+         repeat
+            parent = dir.dir_name(parent)
+            if parent == "" then
+               parent = root
+            end
+         until parent == root or fs.exists(parent)
+         if not fs.is_writable(parent) then
+            ok = false
+            err = dir.." does not exist and your user does not have write permissions in " .. parent
+            break
+         end
       end
    end
    if ok then
