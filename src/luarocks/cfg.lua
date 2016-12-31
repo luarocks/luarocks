@@ -428,6 +428,24 @@ local defaults = {
    rocks_provided = {}
 }
 
+local function make_external_deps_dirs(default_dirs)
+  local dirs, already_added = {}, {}
+  for _, dir in ipairs(site_config.LUAROCKS_USER_EXTERNAL_DEPS_DIRS or {}) do
+    dir = cfg.platforms.windows and dir:gsub("\\","/") or dir
+    if not already_added[dir] then
+      dirs[#dirs+1] = dir
+      already_added[dir] = true
+    end
+  end
+  for _, dir in ipairs(default_dirs) do
+    if not already_added[dir] then
+      dirs[#dirs+1] = dir
+      already_added[dir] = true
+    end
+  end
+  return dirs
+end
+
 if cfg.platforms.windows then
    local full_prefix = (site_config.LUAROCKS_PREFIX or (os.getenv("PROGRAMFILES")..[[\LuaRocks]]))
    extra_luarocks_module_dir = full_prefix.."/lua/?.lua"
@@ -438,7 +456,7 @@ if cfg.platforms.windows then
    defaults.lib_extension = "dll"
    defaults.external_lib_extension = "dll"
    defaults.obj_extension = "obj"
-   defaults.external_deps_dirs = { "c:/external/" }
+   defaults.external_deps_dirs = make_external_deps_dirs({ "c:/external/" })
    defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/bin"
    defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/include"
    defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/lib"
@@ -516,7 +534,7 @@ if cfg.platforms.unix then
    defaults.lib_extension = "so"
    defaults.external_lib_extension = "so"
    defaults.obj_extension = "o"
-   defaults.external_deps_dirs = { "/usr/local", "/usr" }
+   defaults.external_deps_dirs = make_external_deps_dirs({ "/usr/local", "/usr" })
    defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR or "/usr/local/bin"
    defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR or "/usr/local/include"
    defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR or "/usr/local/lib"
