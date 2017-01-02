@@ -65,17 +65,23 @@ describe("LuaRocks pack tests #blackbox #b_pack", function()
       assert.is_false(run.luarocks_bool("pack "..rspec("revision_too_old")))
       assert.is_false(run.luarocks_bool("pack "..rspec("revision_too_short")))
       assert.is_false(run.luarocks_bool("pack "..rspec("revision_nonexistent_rev")))
+	  
+      -- broken
+      -- assert.is_false(run.luarocks_bool("pack "..rspec("revision_bad_url")))
 
       assert.is_true(run.luarocks_bool("pack "..rspec("revision_hg")))
       assert.is_true(run.luarocks_bool("pack "..rspec("revision_git")))
       assert.is_true(run.luarocks_bool("pack "..rspec("revision_shorthash")))
+
       assert.is_true(run.luarocks_bool("pack "..rspec("revision_branched")))
       assert.is_true(run.luarocks_bool("pack "..rspec("revision_tagged")))
+      assert.is_true(run.luarocks_bool("pack "..rspec("revision_tagged_and_branched")))
+
+      assert.is_false(run.luarocks_bool("pack "..rspec("revision_not_on_branch")))
+      assert.is_true(run.luarocks_bool("pack "..rspec("revision_beats_tag")))
 
       assert.is_true(test_env.remove_files(lfs.currentdir(), "revision_"))
 
-      -- broken
-      -- assert.is_false(run.luarocks_bool("pack "..rspec("revision_bad_url")))
    end)
 end)
 

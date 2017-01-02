@@ -1,10 +1,12 @@
 rockspec_format = "3.0"
-package = "revision_branched"
+package = "revision_beats_tag"
 version = "1.0-1"
+-- To be consistent with how tags beat branches, revisions should beat tags.
 source = {
    url = "git://github.com/Alloyed/git_test",
-   branch = "mybranch",
-   revision = "01673c6ed890224490452d79e36fc36cdd460960"
+   tag = "#2",
+   -- change #1 on master
+   revision = "4d1e421287df69fad1338a45591c27116c6736ab"
 }
 description = {
    homepage = "https://github.com/Alloyed/git_test",

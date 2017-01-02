@@ -1,10 +1,11 @@
 rockspec_format = "3.0"
-package = "revision_branched"
+package = "revision_not_on_branch"
 version = "1.0-1"
 source = {
    url = "git://github.com/Alloyed/git_test",
    branch = "mybranch",
-   revision = "01673c6ed890224490452d79e36fc36cdd460960"
+   -- change #3 on master
+   revision = "56bc5ec9dc03e3f05cfa39b292e116b07d44c90e"
 }
 description = {
    homepage = "https://github.com/Alloyed/git_test",

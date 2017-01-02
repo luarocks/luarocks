@@ -20,7 +20,7 @@ local git = require("luarocks.fetch.git")
 -- store it; or nil and an error message.
 function git_http.get_sources(rockspec, extract, dest_dir)
    rockspec.source.url = rockspec.source.url:gsub("^git.", "")
-   return git.get_sources(rockspec, extract, dest_dir, "--")
+   return git.get_sources(rockspec, extract, dest_dir)
 end
 
 return git_http

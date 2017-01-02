@@ -26,7 +26,7 @@ function git_ssh.get_sources(rockspec, extract, dest_dir)
       rockspec.source.url = rockspec.source.url:gsub("^ssh://", "")
    end
 
-   return git.get_sources(rockspec, extract, dest_dir, "--")
+   return git.get_sources(rockspec, extract, dest_dir)
 end
 
 return git_ssh
