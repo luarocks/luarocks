@@ -32,6 +32,7 @@ local function git_is_at_least(git_cmd, version)
    return git_version(git_cmd) >= vers.parse_version(version)
 end
 
+
 --- Git >= 1.7.10 can clone a branch **or tag**, < 1.7.10 by branch only. We
 -- need to know this in order to build the appropriate command; if we can't
 -- clone by tag then we'll have to issue a subsequent command to check out the
@@ -41,6 +42,11 @@ end
 local function git_can_clone_by_tag(git_cmd)
    return git_is_at_least(git_cmd, "1.7.10")
 end
+
+--- Git >= 1.7.10 can also clone a single branch, without downloading commits
+-- for other branches. This saves less bandwith than a shallow clone, but it
+-- can be used in more cases.
+local git_supports_single_branch = git_can_clone_by_tag
 
 --- Git >= 1.8.4 can fetch submodules shallowly, saving bandwidth and time for
 -- submodules with large history.
@@ -89,7 +95,7 @@ function git.get_sources(rockspec, extract, dest_dir)
    -- shallow clone by default
    local depth = "--depth=1"
    if rockspec.source.revision then
-      if rockspec.source.branch then
+      if rockspec.source.branch and git_supports_single_branch(git_cmd) then
          -- If the rockspec specifies a branch, then clone only that branch
          depth = "--single-branch"
       else
