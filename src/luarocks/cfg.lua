@@ -409,7 +409,8 @@ local defaults = {
       SEVENZ = "7z",
 
       RSYNCFLAGS = "--exclude=.git -Oavz",
-      STATFLAG = "-c '%a'",
+      STATPERMFLAG = "-c '%a'",
+      STATOWNERFLAG = "-c '%U'",
       CURLNOCERTFLAG = "",
       WGETNOCERTFLAG = "",
    },
@@ -577,7 +578,8 @@ end
 
 if cfg.platforms.bsd then
    defaults.variables.MAKE = "gmake"
-   defaults.variables.STATFLAG = "-f '%OLp'"
+   defaults.variables.STATPERMFLAG = "-f '%OLp'"
+   defaults.variables.STATOWNERFLAG = "-f '%Su'"
 end
 
 if cfg.platforms.macosx then
