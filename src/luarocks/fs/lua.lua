@@ -293,7 +293,7 @@ function fs_lua.copy(src, dest, perms)
    if destmode == "directory" then
       dest = dir.path(dest, dir.base_name(src))
    end
-   if not perms then perms = fs.get_permissions(src) end
+   if not perms then perms = fs.attributes(src, "permissions") end
    local src_h, err = io.open(src, "rb")
    if not src_h then return nil, err end
    local dest_h, err = io.open(dest, "w+b")
@@ -758,8 +758,18 @@ function fs_lua.chmod(file, mode)
    return err == 0
 end
 
-function fs_lua.get_permissions(file)
-   return posix.stat(file, "mode")
+function fs_lua.attributes(file, attrtype)
+   if attrtype == "permissions" then
+      return posix.stat(file, "mode")
+   elseif attrtype == "owner" then
+      return posix.getpwuid(posix.stat(file, "uid")).pw_name
+   else
+      return ""
+   end
+end
+
+function fs_lua.current_user()
+   return posix.getpwuid(posix.geteuid()).pw_name
 end
 
 --- Create a temporary directory.

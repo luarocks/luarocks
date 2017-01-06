@@ -191,7 +191,12 @@ function win32.chmod(filename, mode)
    return true
 end
 
-function win32.get_permissions(filename)
+function win32.attributes(filename, attrtype)
+   if attrtype == "permissions" then
+      return "" -- FIXME
+   elseif attrtype == "owner" then
+      return os.getenv("USERNAME") -- FIXME popen_read('powershell -Command "& {(get-acl '..filename..').owner}"'):gsub("^[^\\]*\\", "")
+   end
    return ""
 end
 
@@ -261,6 +266,10 @@ end
 
 function win32.tmpname()
    return os.getenv("TMP")..os.tmpname()
+end
+
+function win32.current_user()
+   return os.getenv("USERNAME")
 end
 
 return win32
