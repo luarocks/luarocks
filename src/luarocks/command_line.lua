@@ -187,7 +187,9 @@ function command_line.run_command(...)
       util.warning("The directory '" .. cfg.local_cache .. "' or its parent directory "..
                    "is not owned by the current user and the cache has been disabled. "..
                    "Please check the permissions and owner of that directory. "..
-                   "If executing pip with sudo, you may want sudo's -H flag.")
+                   (cfg.is_platform("unix")
+                    and ("If executing "..util.this_program("luarocks").." with sudo, you may want sudo's -H flag.")
+                    or ""))
       cfg.local_cache = fs.make_temp_dir("local_cache")
       util.schedule_function(fs.delete, cfg.local_cache)
    end
