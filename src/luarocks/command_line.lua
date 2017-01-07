@@ -178,8 +178,20 @@ function command_line.run_command(...)
       end
    end
 
-   if not fs.current_dir() or fs.current_dir() == "" then
+   if (not fs.current_dir()) or fs.current_dir() == "" then
       die("Current directory does not exist. Please run LuaRocks from an existing directory.")
+   end
+
+   if fs.attributes(cfg.local_cache, "owner") ~= fs.current_user() or
+      fs.attributes(dir.dir_name(cfg.local_cache), "owner") ~= fs.current_user() then
+      util.warning("The directory '" .. cfg.local_cache .. "' or its parent directory "..
+                   "is not owned by the current user and the cache has been disabled. "..
+                   "Please check the permissions and owner of that directory. "..
+                   (cfg.is_platform("unix")
+                    and ("If executing "..util.this_program("luarocks").." with sudo, you may want sudo's -H flag.")
+                    or ""))
+      cfg.local_cache = fs.make_temp_dir("local_cache")
+      util.schedule_function(fs.delete, cfg.local_cache)
    end
    
    if commands[command] then

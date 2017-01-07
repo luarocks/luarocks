@@ -132,4 +132,8 @@ function unix.tmpname()
    return os.tmpname()
 end
 
+function unix.current_user()
+   return os.getenv("USER")
+end
+
 return unix
