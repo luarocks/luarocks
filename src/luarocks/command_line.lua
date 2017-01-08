@@ -40,6 +40,18 @@ local function replace_tree(flags, tree)
    path.use_tree(tree)
 end
 
+local function is_ownership_ok(directory)
+   local me = fs.current_user()
+   for _ = 1,3 do -- try up to grandparent
+      local owner = fs.attributes(directory, "owner")
+      if owner then
+         return owner == me
+      end
+      directory = dir.dir_name(directory)
+   end
+   return false
+end
+
 --- Main command-line processor.
 -- Parses input arguments and calls the appropriate driver function
 -- to execute the action requested on the command-line, forwarding
@@ -182,8 +194,7 @@ function command_line.run_command(...)
       die("Current directory does not exist. Please run LuaRocks from an existing directory.")
    end
 
-   if fs.attributes(cfg.local_cache, "owner") ~= fs.current_user() or
-      fs.attributes(dir.dir_name(cfg.local_cache), "owner") ~= fs.current_user() then
+   if not is_ownership_ok(cfg.local_cache) then
       util.warning("The directory '" .. cfg.local_cache .. "' or its parent directory "..
                    "is not owned by the current user and the cache has been disabled. "..
                    "Please check the permissions and owner of that directory. "..
