@@ -760,11 +760,13 @@ end
 
 function fs_lua.attributes(file, attrtype)
    if attrtype == "permissions" then
-      return posix.stat(file, "mode")
+      return posix.stat(file, "mode") or nil
    elseif attrtype == "owner" then
-      return posix.getpwuid(posix.stat(file, "uid")).pw_name
+      local uid = posix.stat(file, "uid")
+      if not uid then return nil end
+      return posix.getpwuid(uid).pw_name or nil
    else
-      return ""
+      return nil
    end
 end
 

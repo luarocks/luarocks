@@ -197,7 +197,7 @@ function win32.attributes(filename, attrtype)
    elseif attrtype == "owner" then
       return os.getenv("USERNAME") -- FIXME popen_read('powershell -Command "& {(get-acl '..filename..').owner}"'):gsub("^[^\\]*\\", "")
    end
-   return ""
+   return nil
 end
 
 --- Move a file on top of the other.
