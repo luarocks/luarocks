@@ -428,6 +428,22 @@ local defaults = {
    rocks_provided = {}
 }
 
+local function portable_slash(p)
+   return p and p:gsub("\\", "/")
+end
+
+local function make_search_path(...)
+   local dirs = {}
+   for _, p in ipairs({...}) do
+      if type(p) == 'string' then
+         p = portable_slash(p)
+         if p:sub(-1, -1) ~= '/' then p = p..'/' end
+         dirs[#dirs+1] = p
+      end
+   end
+   return dirs
+end
+
 if cfg.platforms.windows then
    local full_prefix = (site_config.LUAROCKS_PREFIX or (os.getenv("PROGRAMFILES")..[[\LuaRocks]]))
    extra_luarocks_module_dir = full_prefix.."/lua/?.lua"
@@ -438,10 +454,10 @@ if cfg.platforms.windows then
    defaults.lib_extension = "dll"
    defaults.external_lib_extension = "dll"
    defaults.obj_extension = "obj"
-   defaults.external_deps_dirs = { "c:/external/" }
-   defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/bin"
-   defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/include"
-   defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/lib"
+   defaults.external_deps_dirs = make_search_path(site_config.LUAROCKS_EXTERNAL_DEPS_DIR, "c:/external/")
+   defaults.variables.LUA_BINDIR = portable_slash(site_config.LUA_BINDIR) or "c:/lua"..cfg.lua_version.."/bin"
+   defaults.variables.LUA_INCDIR = portable_slash(site_config.LUA_INCDIR) or "c:/lua"..cfg.lua_version.."/include"
+   defaults.variables.LUA_LIBDIR = portable_slash(site_config.LUA_LIBDIR) or "c:/lua"..cfg.lua_version.."/lib"
 
    defaults.makefile = "Makefile.win"
    defaults.variables.MAKE = "nmake"
@@ -516,7 +532,7 @@ if cfg.platforms.unix then
    defaults.lib_extension = "so"
    defaults.external_lib_extension = "so"
    defaults.obj_extension = "o"
-   defaults.external_deps_dirs = { "/usr/local", "/usr" }
+   defaults.external_deps_dirs = make_search_path(site_config.LUAROCKS_EXTERNAL_DEPS_DIR, "/usr/local", "/usr")
    defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR or "/usr/local/bin"
    defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR or "/usr/local/include"
    defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR or "/usr/local/lib"
