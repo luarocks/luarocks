@@ -432,21 +432,36 @@ local defaults = {
    rocks_provided_3_0 = {},
 }
 
+-- Convert a path or a list of path from windows style \ to /.
+-- If arg is not a string or table, this function returns nil.
+local function portable_slash(p)
+   local typ = type(p)
+   if typ == 'string' then
+      return p and p:gsub("\\", "/")
+   elseif typ == 'table' then
+      local dirs = {}
+      for _, v in ipairs(p) do
+         dirs[#dirs+1] = portable_slash(v)
+      end
+      return dirs
+   end
+end
+
 if cfg.platforms.windows then
    local full_prefix = (site_config.LUAROCKS_PREFIX or (os.getenv("PROGRAMFILES")..[[\LuaRocks]]))
    extra_luarocks_module_dir = full_prefix.."/lua/?.lua"
 
-   home_config_file = home_config_file and home_config_file:gsub("\\","/")
+   home_config_file = portable_slash(home_config_file)
    defaults.fs_use_modules = false
-   defaults.arch = "win32-"..cfg.target_cpu 
+   defaults.arch = "win32-"..cfg.target_cpu
    defaults.lib_extension = "dll"
    defaults.external_lib_extension = "dll"
    defaults.static_lib_extension = "lib"
    defaults.obj_extension = "obj"
-   defaults.external_deps_dirs = { "c:/external/" }
-   defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/bin"
-   defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/include"
-   defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/lib"
+   defaults.external_deps_dirs = portable_slash(site_config.LUAROCKS_EXTERNAL_DEPS_DIRS) or { "c:/external/" }
+   defaults.variables.LUA_BINDIR = portable_slash(site_config.LUA_BINDIR) or "c:/lua"..cfg.lua_version.."/bin"
+   defaults.variables.LUA_INCDIR = portable_slash(site_config.LUA_INCDIR) or "c:/lua"..cfg.lua_version.."/include"
+   defaults.variables.LUA_LIBDIR = portable_slash(site_config.LUA_LIBDIR) or "c:/lua"..cfg.lua_version.."/lib"
 
    defaults.makefile = "Makefile.win"
    defaults.variables.MAKE = "nmake"
@@ -526,7 +541,7 @@ if cfg.platforms.unix then
    defaults.static_lib_extension = "a"
    defaults.external_lib_extension = "so"
    defaults.obj_extension = "o"
-   defaults.external_deps_dirs = { "/usr/local", "/usr" }
+   defaults.external_deps_dirs = site_config.LUAROCKS_EXTERNAL_DEPS_DIRS or { "/usr/local", "/usr" }
    defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR or "/usr/local/bin"
    defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR or "/usr/local/include"
    defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR or "/usr/local/lib"
