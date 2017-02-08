@@ -3,6 +3,7 @@ local api = {}
 
 local cfg = require("luarocks.cfg")
 local fs = require("luarocks.fs")
+local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local persist = require("luarocks.persist")
 local multipart = require("luarocks.upload.multipart")
@@ -36,6 +37,10 @@ function Api:save_config()
    end
    local upload_conf = upload_config_file()
    if not upload_conf then return nil end
+   local ok, err = fs.make_dir(dir.dir_name(upload_conf))
+   if not ok then
+      return nil, err
+   end
    persist.save_from_table(upload_conf, self.config)
    fs.chmod(upload_conf, "0600")
 end
