@@ -1,0 +1,254 @@
+<!doctype html>
+<html>
+<head>
+<title>Ideas List - Google Summer of Code 2017</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400italic,400bold,400,700" type="text/css"/>
+<link rel="stylesheet" href="../style.css" type="text/css"/>
+<style>
+table {
+   width: 100%;
+}
+td { 
+   padding: 5px;
+   background-color: white;
+   border: 1px solid #c1cce4;
+}
+h3 {
+   border-bottom: solid 2px black;
+}
+h4 {
+   font-style: italic;
+   border-bottom: solid 1px #c0c0c0;
+}
+</style>
+</head>
+<body>
+   <div class="content">
+      <div class="header"><div class="header_inner"><div class="user_panel"><a href="https://github.com/keplerproject/luarocks/wiki/Download">Install</a> &middot; <a href="https://github.com/keplerproject/luarocks/wiki/Documentation">Docs</a> &middot; <a href="https://luarocks.org/login">Log In</a> &middot; <a href="https://luarocks.org/register">Register</a></div><a href="https://luarocks.org/"><img alt="LuaRocks" class="text_logo" src="https://luarocks.org/static/header_luarocks_name.svg"/></a><form method="GET" action="https://luarocks.org/search" class="header_search"><input type="text" placeholder="Search modules or uploaders..." name="q"/></form></div></div>
+      <div class="index_page">
+         <div class="main_column">
+
+<h2>Ideas List - Google Summer of Code 2017</h2>
+
+<ul>
+<li><a href="#social">
+Social enhancements for LuaRocks.org
+</a></li>
+<li><a href="#orgsite">
+Module management enhancements for LuaRocks.org
+</a></li>
+<li><a href="#gui">
+A GUI front-end for LuaRocks
+</a></li>
+<li><a href="#typedlua">
+Port LuaRocks to Typed Lua and make it a library
+</a></li>
+<li><a href="#distro">
+Auto-building distro packages
+</a></li>
+<li><a href="#static">
+Static build support for LuaRocks
+</a></li>
+</ul>
+
+<div class="project">
+<h3 id="social">Social enhancements for LuaRocks.org</h3>
+<h4>Brief explanation</h4>
+
+<p>
+The LuaRocks.org website is where Lua users and developers find and upload Lua modules. Users
+can currently create accounts for uploading modules and also for "following" modules, which
+produces notifications in the top bar when other users follow your modules. There's a lot
+more, however, that we could add to improve the site experience, such as:
+</p>
+
+<ul>
+<li>add the distinction betwen "starring"/following modules, like GitHub</li>
+<li>add the ability to follow developers</li>
+<li>show a feed of updates to modules you star</li>
+<li>send an email digest for modules you follow</li>
+<li>and other ideas!</li>
+</ul>
+
+<h4>Knowledge prerequisites</h4>
+<ul>
+<li>Lua</li>
+<li>web development</li>
+<li>LuaRocks experience is a plus</li>
+<li>MoonScript is a plus (but can be learned for the project)</li>
+</ul>
+
+<h4>Skill level</h4>
+<p>medium</p>
+
+<h4>Mentor</h4>
+<p>
+<a href="http://leafo.net/">Leaf Corcoran</a>
+</p>
+</div>
+
+<div class="project">
+<h3 id="orgsite">Module management enhancements for LuaRocks.org</h3>
+<h4>Brief explanation</h4>
+
+<p>
+The LuaRocks.org website is where Lua users and developers find and upload Lua modules. Users
+can currently create accounts for uploading modules, and each module becomes attached to one
+user account. For organizations with multiple developers, this can prove cumbersome. Also,
+the only ways to upload modules are via the command-line tool or via the web interface.
+This project aims to improve LuaRocks.org support for organizations, via two main goals:
+</p>
+
+<ul>
+<li>Organization accounts/modules shared across accounts, showing module stats on
+module pages</li>
+<li>Better GitHub integration: automatically creating new module
+versions with webhook, automatically syncing readme, showing module popularity
+on GitHub</li>
+</ul>
+
+<h4>Knowledge prerequisites</h4>
+<ul>
+<li>Lua</li>
+<li>web development</li>
+<li>JSON and REST APIs</li>
+<li>LuaRocks experience is a plus</li>
+<li>MoonScript is a plus (but can be learned for the project!)</li>
+<li>experience with the GitHub API would be a major plus</li>
+</ul>
+
+<h4>Skill level</h4>
+<p>medium</p>
+
+<h4>Mentor</h4>
+<p>
+<a href="http://leafo.net/">Leaf Corcoran</a>
+</p>
+</div>
+
+<div class="project">
+<h3 id="gui">A GUI front-end for LuaRocks</h3>
+<h4>Brief explanation</h4>
+
+<p>
+A cross-platform GUI desktop front-end for LuaRocks. It should allow users to
+search for rocks, list installed rocks, install and remove them, view rock
+details, etc. There are some options on portable Lua toolkits for developing
+this front-end (WxLua, TekUI, QtLua, etc.)
+</p>
+
+<p>
+A possible side-result of this project would be to define an API for
+interfacing the LuaRocks backend. The LuaRocks backend is currently accessible
+via the command-line tool, but an API is desired. By making a API wrapper around
+the command-line tool,  this project could provide good insights into a design
+for an UI-agnostic API.
+</p>
+
+<h4>Knowledge prerequisites</h4>
+<ul>
+<li>Lua</li>
+<li>LuaRocks experience is a plus</li>
+<li>some previous experience with UI APIs is preferred</li>
+</ul>
+
+<h4>Skill level</h4>
+<p>easy/medium</p>
+
+<h4>Mentor</h4>
+<p>
+<a href="http://thijsschreijer.nl/">Thijs Schreijer</a>
+</p>
+</div>
+
+<div class="project">
+<h3 id="typedlua">Port LuaRocks to Typed Lua and make it a library</h3>
+<h4>Brief explanation</h4>
+
+<p>
+LuaRocks is currently not a reentrant library. We would like to make usable as
+a library, embeddable into applications. This would require a good deal of
+refactoring, and encapsulating all state into a main instance object. Porting
+the code base to Typed Lua would be a great opportunity to make the codebase
+reentrant. Since Typed Lua generates plain Lua, it would not become a new
+dependency for LuaRocks, but instead it would be used as a tool in the
+refactoring process.
+</p>
+
+<h4>Knowledge prerequisites</h4>
+<ul>
+<li>Lua</li>
+<li>LuaRocks experience is recommended</li>
+</ul>
+
+<h4>Skill level</h4>
+<p>medium/hard</p>
+
+<h4>Mentor</h4>
+<p>
+<a href="http://hisham.hm/">Hisham Muhammad</a>
+</p>
+</div>
+
+<div class="project">
+<h3 id="distro">Auto-building distro packages</h3>
+<h4>Brief explanation</h4>
+
+<p>
+Making LuaRocks able to generate packages for Linux distributions. We could
+have a build farm which builds all rocks for, say, Arch Linux, and then a
+repository of binary rocks that can be installed with Pacman, similar to
+<a href="https://wiki.archlinux.org/index.php/ArchHaskell">ArchHaskell</a>.
+</p>
+
+<h4>Knowledge prerequisites</h4>
+<ul>
+<li>Lua</li>
+<li>distro packaging</li>
+<li>LuaRocks is a plus</li>
+</ul>
+
+<h4>Skill level</h4>
+<p>medium</p>
+
+<h4>Mentor</h4>
+<p>
+<a href="http://catwell.info/">Pierre Chapuis</a>
+</p>
+</div>
+
+<div class="project">
+<h3 id="static">Static build support for LuaRocks</h3>
+<h4>Brief explanation</h4>
+
+<p>
+LuaRocks currently builds Lua modules as dynamic libraries. The aim of this
+project is to add support for building static libraries. The local manifest
+format needs to be extended. Also, research if it would be possible to make
+that work beyond the LuaRocks 'builtin' rockspec mode (including a possible
+extension of the rockspec format). Another possibility is adding a command
+that builds a custom interpreter bundling a set of rocks statically. Other
+targets benefitting from static builds could be embedded systems: research how
+to improve LuaRocks support for cross-compiling.
+</p>
+
+<h4>Knowledge prerequisites</h4>
+<ul>
+<li>Lua</li>
+<li>LuaRocks experience is recommended</li>
+</ul>
+
+<h4>Skill level</h4>
+<p>medium</p>
+
+<h4>Mentor</h4>
+<p>
+<a href="http://daurnimator.com/">Daurnimator</a>
+</p>
+</div>
+
+         </div>
+      </div>
+   </div>
+</body>
+</html>
