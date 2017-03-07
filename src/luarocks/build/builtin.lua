@@ -99,11 +99,13 @@ function builtin.run(rockspec)
          return ok, wrapname
       end
    elseif cfg.is_platform("win32") then
+      -- TODO: Refactor the code below to make changes in the proper locations. <from here>
       compile_object = function(object, source, defines, incdirs)
          local extras = {}
          add_flags(extras, "-D%s", defines)
          add_flags(extras, "-I%s", incdirs)
-         return execute(variables.CC.." "..variables.CFLAGS, "-c", "-Fo"..object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
+         -- For MSVC we need to use slashes instead of dashes to specify options.
+         return execute(variables.CC.." "..variables.CFLAGS .. " /c /Fo" .. object .. " /I" .. variables.LUA_INCDIR, source, unpack(extras))
       end
       compile_library = function(library, objects, libraries, libdirs, name)
          local extras = { unpack(objects) }
@@ -115,7 +117,13 @@ function builtin.run(rockspec)
          def:write("EXPORTS\n")
          def:write("luaopen_"..name:gsub("%.", "_").."\n")
          def:close()
-         local ok = execute(variables.LD, "-dll", "-def:"..deffile, "-out:"..library, dir.path(variables.LUA_LIBDIR, variables.LUALIB), unpack(extras))
+
+         -- For some reason the lib extension here is ".dll". It must be ".lib" !!.
+         variables.LUALIB = string.gsub(variables.LUALIB, ".dll$", ".lib") -- Changing in place because I don't know where it is being defined. (cfg.lua does not help)
+         -- For some reason the lib directory is not ".../lib". I'll append it in place because I don't know where it is bein defined. (cfg.lua does not help)
+         variables.LUA_LIBDIR = variables.LUA_LIBDIR .. "/lib"
+         -- For MSVC we need to use slashes instead of dashes to specify options.
+         local ok = execute(variables.LD .. " /dll /def:" .. deffile .. " /out:" .. library, dir.path(variables.LUA_LIBDIR, variables.LUALIB), unpack(extras))
          local basedir = ""
          if name:find("%.") ~= nil then
             basedir = name:gsub("%.%w+$", "\\")
@@ -124,10 +132,13 @@ function builtin.run(rockspec)
          local manifestfile = basedir .. basename..".dll.manifest"
 
          if ok and fs.exists(manifestfile) then
-            ok = execute(variables.MT, "-manifest", manifestfile, "-outputresource:"..basedir..basename..".dll;2")
+            -- For MSVC we need to use slashes instead of dashes to specify options.
+            ok = execute(variables.MT .. " /manifest " .. manifestfile .. " /outputresource:"..basedir..basename..".dll;2")
          end
          return ok
       end
+      -- TODO: <untill here>
+      
       compile_wrapper_binary = function(fullname, name)
          --TODO EXEWRAPPER
          local fullbasename = fullname:gsub("%.lua$", ""):gsub("/", "\\")
@@ -195,7 +206,7 @@ function builtin.run(rockspec)
        end
      end
    end
-   
+
    if not build.modules then
       return nil, "Missing build.modules table"
    end
