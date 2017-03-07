@@ -49,6 +49,9 @@ Auto-building distro packages
 <li><a href="#static">
 Static build support for LuaRocks
 </a></li>
+<li><a href="#upgrade">
+A command to upgrade all installed rocks
+</a></li>
 </ul>
 
 <div class="project">
@@ -213,7 +216,7 @@ repository of binary rocks that can be installed with Pacman, similar to
 
 <h4>Mentor</h4>
 <p>
-<a href="http://catwell.info/">Pierre Chapuis</a> - <a href="mailto:catwell@catwell.info">catwell@catwell.info</a>
+<a href="http://catwell.info/">Pierre Chapuis</a> - <a href="mailto:catwell@archlinux.us">catwell@archlinux.us</a>
 </p>
 </div>
 
@@ -244,6 +247,35 @@ to improve LuaRocks support for cross-compiling.
 <h4>Mentor</h4>
 <p>
 <a href="http://daurnimator.com/">Daurnimator</a> - <a href="mailto:quae@daurnimator.com">quae@daurnimator.com</a>
+</p>
+</div>
+
+<div class="project">
+<h3 id="upgrade">A command to upgrade all installed rocks</h3>
+<h4>Brief explanation</h4>
+
+<p>
+LuaRocks users have wanted <code>luarocks upgrade</code> for a long
+time, but implementing it is not trivial and will involve trade-offs (see
+<a href="https://github.com/luarocks/luarocks/issues/22">the GitHub issue</a>
+and
+<a href="http://article.gmane.org/gmane.comp.lang.lua.general/112719">this
+email</a>). The goal of this project is to identify those trade-offs clearly,
+document them, come to a decision regarding their resolution, and finally
+implement the command.</p>
+
+<h4>Knowledge prerequisites</h4>
+<ul>
+<li>Lua</li>
+<li>LuaRocks experience is recommended</li>
+</ul>
+
+<h4>Skill level</h4>
+<p>medium</p>
+
+<h4>Mentor</h4>
+<p>
+<a href="http://catwell.info/">Pierre Chapuis</a> - <a href="mailto:catwell@archlinux.us">catwell@archlinux.us</a>
 </p>
 </div>
 
