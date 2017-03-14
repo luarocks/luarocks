@@ -104,7 +104,7 @@ function tools.use_downloader(url, filename, cache)
    if cfg.downloader == "wget" then
       local wget_cmd = fs.Q(vars.WGET).." "..vars.WGETNOCERTFLAG.." --no-cache --user-agent=\""..cfg.user_agent.." via wget\" --quiet "
       if cfg.connection_timeout and cfg.connection_timeout > 0 then
-        wget_cmd = wget_cmd .. "--timeout="..tonumber(cfg.connection_timeout).." --tries=1 "
+        wget_cmd = wget_cmd .. "--timeout="..tostring(cfg.connection_timeout).." --tries=1 "
       end
       if cache then
          -- --timestamping is incompatible with --output-document,
@@ -120,7 +120,7 @@ function tools.use_downloader(url, filename, cache)
    elseif cfg.downloader == "curl" then
       local curl_cmd = fs.Q(vars.CURL).." "..vars.CURLNOCERTFLAG.." -f -L --user-agent \""..cfg.user_agent.." via curl\" "
       if cfg.connection_timeout and cfg.connection_timeout > 0 then
-        curl_cmd = curl_cmd .. "--connect-timeout "..tonumber(cfg.connection_timeout).." "
+        curl_cmd = curl_cmd .. "--connect-timeout "..tostring(cfg.connection_timeout).." "
       end
       ok = fs.execute_string(fs.quiet_stderr(curl_cmd..fs.Q(url).." > "..fs.Q(filename)))
    end
