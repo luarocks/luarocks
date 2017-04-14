@@ -308,7 +308,7 @@ fi
 if [ "$lua_interp_found" != "yes" ]
 then
    [ "$LUA_VERSION_SET" ] && { interp="Lua $LUA_VERSION" ;} || { interp="Lua" ;}
-   [ "$LUA_DIR_SET" -o "$LUA_BINDIR_SET" ] && { where="$LUA_BINDIR" ;} || { interp="\$PATH" ;}
+   [ "$LUA_DIR_SET" -o "$LUA_BINDIR_SET" ] && { where="$LUA_BINDIR" ;} || { where="\$PATH" ;}
    echo "$interp interpreter not found in $where"
    die "You may want to use the flags --with-lua, --with-lua-bin and/or --lua-suffix. See --help."
 fi
