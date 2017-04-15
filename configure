@@ -65,6 +65,7 @@ system's package manager.
                             \$LUAROCKS_CONFIG variable or the user's home
                             directory. Useful to avoid conflicts when LuaRocks
                             is embedded within an application.
+--with-luaenv               Config for lua in current luaenv environment.
 EOF
 }
 
@@ -203,6 +204,19 @@ do
       *) die "Invalid option: $value. See --help." ;;
       esac
       LUAROCKS_MD5CHECKER_SET=yes
+      ;;
+   --with-luaenv)
+      find_helper "luaenv the lua environment manager" luaenv
+      LUA=`luaenv which lua`
+      LUA_BINDIR=`dirname ${LUA}`
+      LUA_BINDIR_SET=yes
+      LUA_DIR=`dirname ${LUA_BINDIR}`
+      LUA_DIR_SET=yes
+      PREFIX=${LUA_DIR}
+      PREFIX_SET=yes
+      LUA_HEADER=`find ${LUA_DIR}/include -name lua.h`
+      LUA_INCDIR=`dirname ${LUA_HEADER}`
+      LUA_INCDIR_SET=yes
       ;;
    *)
       die "Error: Unknown flag: $1"
