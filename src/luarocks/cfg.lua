@@ -589,7 +589,9 @@ if cfg.platforms.macosx then
    defaults.variables.STATFLAG = "-f '%A'"
    local version = io.popen("sw_vers -productVersion"):read("*l")
    version = tonumber(version and version:match("^[^.]+%.([^.]+)")) or 3
-   if version >= 10 then
+   if version >= 12 then
+      version = 12
+   elseif version >= 10 then
       version = 8
    elseif version >= 5 then
       version = 5
