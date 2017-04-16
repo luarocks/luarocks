@@ -21,6 +21,13 @@ function Api:load_config()
    local upload_conf = upload_config_file()
    if not upload_conf then return nil end
    local cfg, err = persist.load_into_table(upload_conf)
+   if not cfg then return cfg, err end
+   -- Warn on old repository url
+   if cfg.server:match("^http[s?]://rocks.moonscript.org") then
+      util.printerr("Warning: The main rocks repository is now located at https://luarocks.org")
+      util.printerr("Edit your upload configuration at '" .. upload_config_file()  .."'")
+      return nil, "Your upload client is too out of date to continue, please upgrade LuaRocks."
+   end
    return cfg
 end
 
