@@ -6,20 +6,48 @@ local unpack = unpack or table.unpack
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
+local deps = require("luarocks.deps")
 local util = require("luarocks.util")
+
+local cached_git_version
+
+--- Get git version.
+-- @param git_cmd string: name of git command.
+-- @return table: git version as returned by luarocks.deps.parse_version.
+local function git_version(git_cmd)
+   if not cached_git_version then
+      local version_line = io.popen(fs.Q(git_cmd)..' --version'):read()
+      local version_string = version_line:match('%d-%.%d+%.?%d*')
+      cached_git_version = deps.parse_version(version_string)
+   end
+
+   return cached_git_version
+end
+
+--- Check if git satisfies version requirement.
+-- @param git_cmd string: name of git command.
+-- @param version string: required version.
+-- @return boolean: true if git matches version or is newer, false otherwise.
+local function git_is_at_least(git_cmd, version)
+   return git_version(git_cmd) >= deps.parse_version(version)
+end
 
 --- Git >= 1.7.10 can clone a branch **or tag**, < 1.7.10 by branch only. We
 -- need to know this in order to build the appropriate command; if we can't
 -- clone by tag then we'll have to issue a subsequent command to check out the
 -- given tag.
+-- @param git_cmd string: name of git command.
 -- @return boolean: Whether Git can clone by tag.
 local function git_can_clone_by_tag(git_cmd)
-   local version_string = io.popen(fs.Q(git_cmd)..' --version'):read()
-   local major, minor, tiny = version_string:match('(%d-)%.(%d+)%.?(%d*)')
-   major, minor, tiny = tonumber(major), tonumber(minor), tonumber(tiny) or 0
-   local value = major > 1 or (major == 1 and (minor > 7 or (minor == 7 and tiny >= 10)))
-   git_can_clone_by_tag = function() return value end
-   return value
+   return git_is_at_least(git_cmd, "1.7.10")
+end
+
+--- Git >= 1.8.4 can fetch submodules shallowly, saving bandwidth and time for
+-- submodules with large history.
+-- @param git_cmd string: name of git command.
+-- @return boolean: Whether Git can fetch submodules shallowly.
+local function git_supports_shallow_submodules(git_cmd)
+   return git_is_at_least(git_cmd, "1.8.4")
 end
 
 --- Download sources for building a rock, using git.
@@ -76,10 +104,20 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
    ok, err = fs.change_dir(module)
    if not ok then return nil, err end
    if tag_or_branch and not git_can_clone_by_tag() then
-      local checkout_command = {fs.Q(git_cmd), "checkout", tag_or_branch}
-      if not fs.execute(unpack(checkout_command)) then
+      if not fs.execute(fs.Q(git_cmd), "checkout", tag_or_branch) then
          return nil, 'Failed to check out the "' .. tag_or_branch ..'" tag or branch.'
       end
+   end
+
+   command = {fs.Q(git_cmd), "submodule", "update", "--init", "--recursive"}
+
+   if git_supports_shallow_submodules(git_cmd) then
+      -- Fetch only the last commit of each submodule.
+      table.insert(command, 5, "--depth=1")
+   end
+
+   if not fs.execute(unpack(command)) then
+      return nil, 'Failed to fetch submodules.'
    end
 
    fs.delete(dir.path(store_dir, module, ".git"))
