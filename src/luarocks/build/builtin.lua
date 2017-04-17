@@ -53,6 +53,7 @@ function builtin.run(rockspec)
 
    local build = rockspec.build
    local variables = rockspec.variables
+   local checked_lua_h = false
 
    local function add_flags(extras, flag, flags)
       if flags then
@@ -218,6 +219,14 @@ function builtin.run(rockspec)
          end
       end
       if type(info) == "table" then
+         if not checked_lua_h then
+            local lua_incdir, lua_h = variables.LUA_INCDIR, "lua.h"
+            if not fs.exists(dir.path(lua_incdir, lua_h)) then
+               return nil, "Lua header file "..lua_h.." not found (looked in "..lua_incdir.."). \n" ..
+                           "You need to install the Lua development package for your system."
+            end
+            checked_lua_h = true
+         end
          local objects = {}
          local sources = info.sources
          if info[1] then sources = info end
