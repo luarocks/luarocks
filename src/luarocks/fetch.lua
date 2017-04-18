@@ -150,7 +150,7 @@ function fetch.fetch_and_unpack_rock(rock_file, dest)
       unpack_dir = dest
       local ok, err = fs.make_dir(unpack_dir)
       if not ok then
-         return nil, "Failed unpacking rock file: " .. err
+         return nil, "Failed unpacking rock file: " .. err .. ". Is 'unzip' installed?"
       end
    else
       unpack_dir = fs.make_temp_dir(name)
