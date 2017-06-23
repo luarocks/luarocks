@@ -155,15 +155,16 @@ end
 -- @param minimal_mode boolean: true if there's no need to fetch,
 -- unpack or change dir (this is used by "luarocks make"). Implies
 -- need_to_fetch = false.
--- @param deps_mode string: Dependency mode: "one" for the current default tree,
+-- @param flags table: the flags table passed to run() drivers.
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for no trees.
 -- @param build_only_deps boolean: true to build the listed dependencies only.
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode, build_only_deps)
+function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, flags, build_only_deps)
    assert(type(rockspec_file) == "string")
    assert(type(need_to_fetch) == "boolean")
+   local deps_mode = deps.get_deps_mode(flags)
 
    local rockspec, err, errcode = fetch.load_rockspec(rockspec_file)
    if err then
