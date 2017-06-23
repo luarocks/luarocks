@@ -43,6 +43,18 @@ local function make_rc(luafilename, rcfilename)
    rcfile:close()
 end
 
+local function add_flags(extras, flag, flags, variables)
+   if flags then
+      if type(flags) ~= "table" then
+         flags = { tostring(flags) }
+      end
+      util.variable_substitutions(flags, variables)
+      for _, v in ipairs(flags) do
+         table.insert(extras, flag:format(v))
+      end
+   end
+end
+
 --- Driver function for the builtin build back-end.
 -- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string): true if no errors ocurred,
@@ -54,29 +66,17 @@ function builtin.run(rockspec)
    local build = rockspec.build
    local variables = rockspec.variables
 
-   local function add_flags(extras, flag, flags)
-      if flags then
-         if type(flags) ~= "table" then
-            flags = { tostring(flags) }
-         end
-         util.variable_substitutions(flags, variables)
-         for _, v in ipairs(flags) do
-            table.insert(extras, flag:format(v))
-         end
-      end
-   end
-
    if cfg.is_platform("mingw32") then
       compile_object = function(object, source, defines, incdirs)
          local extras = {}
-         add_flags(extras, "-D%s", defines)
-         add_flags(extras, "-I%s", incdirs)
+         add_flags(extras, "-D%s", defines, variables)
+         add_flags(extras, "-I%s", incdirs, variables)
          return execute(variables.CC.." "..variables.CFLAGS, "-c", "-o", object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
       end
       compile_library = function(library, objects, libraries, libdirs)
          local extras = { unpack(objects) }
-         add_flags(extras, "-L%s", libdirs)
-         add_flags(extras, "-l%s", libraries)
+         add_flags(extras, "-L%s", libdirs, variables)
+         add_flags(extras, "-l%s", libraries, variables)
          extras[#extras+1] = dir.path(variables.LUA_LIBDIR, variables.LUALIB)
          extras[#extras+1] = "-l" .. (variables.MSVCRT or "m")
          local ok = execute(variables.LD.." "..variables.LIBFLAG, "-o", library, unpack(extras))
@@ -101,14 +101,14 @@ function builtin.run(rockspec)
    elseif cfg.is_platform("win32") then
       compile_object = function(object, source, defines, incdirs)
          local extras = {}
-         add_flags(extras, "-D%s", defines)
-         add_flags(extras, "-I%s", incdirs)
+         add_flags(extras, "-D%s", defines, variables)
+         add_flags(extras, "-I%s", incdirs, variables)
          return execute(variables.CC.." "..variables.CFLAGS, "-c", "-Fo"..object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
       end
       compile_library = function(library, objects, libraries, libdirs, name)
          local extras = { unpack(objects) }
-         add_flags(extras, "-libpath:%s", libdirs)
-         add_flags(extras, "%s.lib", libraries)
+         add_flags(extras, "-libpath:%s", libdirs, variables)
+         add_flags(extras, "%s.lib", libraries, variables)
          local basename = dir.base_name(library):gsub(".[^.]*$", "")
          local deffile = basename .. ".def"
          local def = io.open(dir.path(fs.current_dir(), deffile), "w+")
@@ -153,19 +153,19 @@ function builtin.run(rockspec)
    else
       compile_object = function(object, source, defines, incdirs)
          local extras = {}
-         add_flags(extras, "-D%s", defines)
-         add_flags(extras, "-I%s", incdirs)
+         add_flags(extras, "-D%s", defines, variables)
+         add_flags(extras, "-I%s", incdirs, variables)
          return execute(variables.CC.." "..variables.CFLAGS, "-I"..variables.LUA_INCDIR, "-c", source, "-o", object, unpack(extras))
       end
       compile_library = function (library, objects, libraries, libdirs)
          local extras = { unpack(objects) }
-         add_flags(extras, "-L%s", libdirs)
+         add_flags(extras, "-L%s", libdirs, variables)
          if cfg.gcc_rpath then
-            add_flags(extras, "-Wl,-rpath,%s:", libdirs)
+            add_flags(extras, "-Wl,-rpath,%s:", libdirs, variables)
          end
-         add_flags(extras, "-l%s", libraries)
+         add_flags(extras, "-l%s", libraries, variables)
          if cfg.link_lua_explicitly then
-            add_flags(extras, "-l%s", {"lua"})
+            add_flags(extras, "-l%s", {"lua"}, variables)
          end
          return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, "-L"..variables.LUA_LIBDIR, unpack(extras))
       end
