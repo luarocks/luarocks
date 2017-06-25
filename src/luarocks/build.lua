@@ -264,7 +264,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, flags,
          return nil, "Failed initializing build back-end for build type '"..build_spec.type.."': "..build_type
       end
   
-      ok, err = build_type.run(rockspec)
+      ok, err = build_type.run(rockspec, flags)
       if not ok then
          return nil, "Build error: " .. err
       end

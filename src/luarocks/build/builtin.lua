@@ -169,9 +169,10 @@ end
 
 --- Driver function for the builtin build back-end.
 -- @param rockspec table: the loaded rockspec.
+-- @param flags table: the flags table passed to run() drivers.
 -- @return boolean or (nil, string): true if no errors ocurred,
 -- nil and an error message otherwise.
-function builtin.run(rockspec)
+function builtin.run(rockspec, flags)
    assert(type(rockspec) == "table")
    local compile = {} --TODO EXEWRAPPER
 
