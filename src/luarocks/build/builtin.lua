@@ -167,6 +167,25 @@ local function compile_library(variables, flags)
    return compile
 end
 
+local function build_objects(info, compile)
+   local objects = {}
+   local sources = info.sources
+   if info[1] then sources = info end
+   if type(sources) == "string" then sources = {sources} end
+   for _, source in ipairs(sources) do
+      local object = source:gsub("%.[^.]*$", "."..cfg.obj_extension)
+      if not object then
+         object = source.."."..cfg.obj_extension
+      end
+      local ok = compile.object(object, source, info.defines, info.incdirs)
+      if not ok then
+         return nil, "Failed compiling object "..object
+      end
+      table.insert(objects, object)
+   end
+   return objects
+end
+
 --- Driver function for the builtin build back-end.
 -- @param rockspec table: the loaded rockspec.
 -- @param flags table: the flags table passed to run() drivers.
@@ -226,21 +245,7 @@ function builtin.run(rockspec, flags)
          end
       end
       if type(info) == "table" then
-         local objects = {}
-         local sources = info.sources
-         if info[1] then sources = info end
-         if type(sources) == "string" then sources = {sources} end
-         for _, source in ipairs(sources) do
-            local object = source:gsub("%.[^.]*$", "."..cfg.obj_extension)
-            if not object then
-               object = source.."."..cfg.obj_extension
-            end
-            ok = compile.object(object, source, info.defines, info.incdirs)
-            if not ok then
-               return nil, "Failed compiling object "..object
-            end
-            table.insert(objects, object)
-         end
+         local objects = build_objects(info, compile)
          local module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)
          if moddir ~= "" then
             module_name = dir.path(moddir, module_name)

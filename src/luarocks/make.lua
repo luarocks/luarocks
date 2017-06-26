@@ -50,6 +50,7 @@ To install rocks, you'll normally want to use the "install" and
 
 --- Driver function for "make" command.
 -- @param flags table: the flags table passed to run() drivers.
+-- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
 function make.command(flags, rockspec)
