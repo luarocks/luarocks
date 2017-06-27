@@ -59,7 +59,7 @@ local function compile_library(variables, flags)
    local compile = {}
 
    if cfg.is_platform("mingw32") then
-      compile.object = function(object, source, defines, incdirs)
+      compile.dynamic_object = function(object, source, defines, incdirs)
          local extras = {}
          add_flags(extras, "-D%s", defines, variables)
          add_flags(extras, "-I%s", incdirs, variables)
@@ -91,7 +91,7 @@ local function compile_library(variables, flags)
          return ok, wrapname
       end
    elseif cfg.is_platform("win32") then
-      compile.object = function(object, source, defines, incdirs)
+      compile.dynamic_object = function(object, source, defines, incdirs)
          local extras = {}
          add_flags(extras, "-D%s", defines, variables)
          add_flags(extras, "-I%s", incdirs, variables)
@@ -143,7 +143,7 @@ local function compile_library(variables, flags)
          return ok, wrapname
       end
    else
-      compile.object = function(object, source, defines, incdirs)
+      compile.dynamic_object = function(object, source, defines, incdirs)
          local extras = {}
          add_flags(extras, "-D%s", defines, variables)
          add_flags(extras, "-I%s", incdirs, variables)
@@ -161,13 +161,19 @@ local function compile_library(variables, flags)
          end
          return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, "-L"..variables.LUA_LIBDIR, unpack(extras))
       end
+      compile.static_object = function(object, source, defines, incdirs)
+         local extras = {}
+         add_flags(extras, "-D%s", defines, variables)
+         add_flags(extras, "-I%s", incdirs, variables)
+         return execute(variables.CC.." "..variables.CFLAGS_STATIC, "-I"..variables.LUA_INCDIR, "-c", source, "-o", object, unpack(extras))
+      end
       compile.wrapper_binary = function(_, name) return true, name end
       --TODO EXEWRAPPER
    end
    return compile
 end
 
-local function build_objects(info, compile)
+local function build_objects(info, compile_object)
    local objects = {}
    local sources = info.sources
    if info[1] then sources = info end
@@ -177,7 +183,7 @@ local function build_objects(info, compile)
       if not object then
          object = source.."."..cfg.obj_extension
       end
-      local ok = compile.object(object, source, info.defines, info.incdirs)
+      local ok = compile_object(object, source, info.defines, info.incdirs)
       if not ok then
          return nil, "Failed compiling object "..object
       end
@@ -245,7 +251,7 @@ function builtin.run(rockspec, flags)
          end
       end
       if type(info) == "table" then
-         local objects = build_objects(info, compile)
+         local objects = build_objects(info, compile.dynamic_object)
          local module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)
          if moddir ~= "" then
             module_name = dir.path(moddir, module_name)
@@ -256,6 +262,21 @@ function builtin.run(rockspec, flags)
          ok = compile.dynamic_library(module_name, objects, info.libraries, info.libdirs, name)
          if not ok then
             return nil, "Failed compiling module "..module_name
+         end
+
+         if flags["static"] then
+            objects = build_objects(info, compile.static_object)
+            module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)
+            if moddir ~= "" then
+               module_name = dir.path(moddir, module_name)
+               ok, err = fs.make_dir(moddir)
+               if not ok then return nil, err end
+            end
+            lib_modules[module_name] = dir.path(libdir, module_name)
+            ok = compile.static_library(module_name, objects, info.libraries, info.libdirs, name)
+            if not ok then
+               return nil, "Failed compiling module "..module_name
+            end
          end
       end
    end
