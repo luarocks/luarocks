@@ -9,6 +9,7 @@ test_env.unload_luarocks()
 local extra_rocks = {
    "/luasocket-3.0rc1-2.src.rock",
    "/luasocket-3.0rc1-2.rockspec",
+   "/lpeg-0.12-1.src.rock",
    "/lxsh-0.8.6-2.src.rock",
    "/lxsh-0.8.6-2.rockspec"
 }
