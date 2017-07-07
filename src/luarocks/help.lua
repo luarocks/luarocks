@@ -48,7 +48,7 @@ function help.command(flags, command)
       print_section("NAME")
       util.printout("\t"..program..[[ - ]]..program_description)
       print_section("SYNOPSIS")
-      util.printout("\t"..program..[[ [--from=<server> | --only-from=<server>] [--to=<tree>] [VAR=VALUE]... <command> [<argument>] ]])
+      util.printout("\t"..program..[[ [--server=<server> | --only-server=<server>] [--tree=<tree>] [VAR=VALUE]... <command> [<argument>] ]])
       print_section("GENERAL OPTIONS")
       util.printout([[
 	These apply to all commands, as appropriate:
