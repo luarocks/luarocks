@@ -101,11 +101,11 @@ describe("LuaRocks make tests #blackbox #b_make", function()
    end)
 
    describe("LuaRocks make upgrading rockspecs with mixed deploy types", function()
-      setup(function()
+      before_each(function()
          test_env.copy_dir(testing_paths.testing_dir .. "/testfiles/mixed_deploy_type", "mdt")
       end)
 
-      teardown(function()
+      after_each(function()
          test_env.remove_dir("mdt")
          os.remove("mdt."..test_env.lib_extension)
       end)
