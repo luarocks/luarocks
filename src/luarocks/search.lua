@@ -455,6 +455,7 @@ end
 -- @return boolean or (nil, string): True if build was successful; nil and an
 -- error message otherwise.
 function search.command(flags, name, version)
+   flags["all"] = true
    if flags["all"] then
       name, version = "", nil
    end
