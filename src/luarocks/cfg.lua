@@ -650,6 +650,12 @@ if package.loaded.jit then
    defaults.rocks_provided["luabitop"] = lj_version.."-1"
 end
 
+if _TARANTOOL then
+    -- Tarantool
+    local tarantool_version = _TARANTOOL:match("([^-]+)-")
+    defaults.rocks_provided["tarantool"] = tarantool_version.."-1"
+end
+
 -- Use defaults:
 
 -- Populate some arrays with values from their 'defaults' counterparts
