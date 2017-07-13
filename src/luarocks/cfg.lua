@@ -161,15 +161,17 @@ local sys_config_ok, home_config_ok = false, false
 local extra_luarocks_module_dir
 sys_config_dir = site_config.LUAROCKS_SYSCONFDIR or site_config.LUAROCKS_PREFIX
 if cfg.platforms.windows then
-   cfg.home = os.getenv("APPDATA") or "c:"
+   cfg.home = site_config.LUAROCKS_HOMEDIR or os.getenv("APPDATA") or "c:"
    sys_config_dir = sys_config_dir or "c:/luarocks"
    home_config_dir = cfg.home.."/luarocks"
    cfg.home_tree = cfg.home.."/luarocks/"
 else
-   cfg.home = os.getenv("HOME") or ""
+   cfg.home = site_config.LUAROCKS_HOMEDIR or os.getenv("HOME") or ""
    sys_config_dir = sys_config_dir or "/etc/luarocks"
-   home_config_dir = cfg.home.."/.luarocks"
-   cfg.home_tree = (os.getenv("USER") ~= "root") and cfg.home.."/.luarocks/"
+   local home_tree_subdir = site_config.LUAROCKS_HOME_TREE_SUBDIR or
+                            "/.luarocks"
+   home_config_dir = cfg.home..home_tree_subdir
+   cfg.home_tree = (os.getenv("USER") ~= "root") and cfg.home..home_tree_subdir
 end
 
 -- Create global environment for the config files;
@@ -334,8 +336,10 @@ local defaults = {
    perm_read = "0644",
    perm_exec = "0755",
 
-   lua_modules_path = "/share/lua/"..cfg.lua_version,
-   lib_modules_path = "/lib/lua/"..cfg.lua_version,
+   lua_modules_path = site_config.LUA_MODULES_LUA_SUBDIR or
+        "/share/lua/"..cfg.lua_version,
+   lib_modules_path = site_config.LUA_MODULES_LIB_SUBDIR or
+        "/lib/lua/"..cfg.lua_version,
    rocks_subdir = site_config.LUAROCKS_ROCKS_SUBDIR or "/lib/luarocks/rocks",
 
    arch = "unknown",
@@ -343,7 +347,7 @@ local defaults = {
    obj_extension = "unknown",
    link_lua_explicitly = false,
 
-   rocks_servers = {
+   rocks_servers = site_config.LUAROCKS_ROCKS_SERVERS or {
       {
         "https://luarocks.org",
         "https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/master/",
