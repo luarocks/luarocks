@@ -325,8 +325,7 @@ end
 
 -- Configure defaults:
 local defaults = {
-
-   local_by_default = false,
+   local_by_default = site_config.LUAROCKS_LOCAL_BY_DEFAULT or false,
    accept_unknown_fields = false,
    fs_use_modules = true,
    hooks_enabled = true,
