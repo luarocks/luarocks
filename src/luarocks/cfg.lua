@@ -171,7 +171,7 @@ else
    local home_tree_subdir = site_config.LUAROCKS_HOME_TREE_SUBDIR or
                             "/.luarocks"
    home_config_dir = cfg.home..home_tree_subdir
-   cfg.home_tree = (os.getenv("USER") ~= "root") and cfg.home..home_tree_subdir
+   cfg.home_tree = cfg.home..home_tree_subdir
 end
 
 -- Create global environment for the config files;
