@@ -252,6 +252,9 @@ function builtin.run(rockspec, flags)
       end
       if type(info) == "table" then
          local objects = build_objects(info, compile.dynamic_object)
+         if not objects then
+            return nil, "Failed build of objects for dynamic library"
+         end
          local module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)
          if moddir ~= "" then
             module_name = dir.path(moddir, module_name)
@@ -266,6 +269,9 @@ function builtin.run(rockspec, flags)
 
          if flags["static"] then
             objects = build_objects(info, compile.static_object)
+            if not objects then
+               return nil, "Failed build of objects for static library"
+            end
             module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)
             if moddir ~= "" then
                module_name = dir.path(moddir, module_name)
