@@ -57,7 +57,6 @@ end
 
 local function compile_library(variables, flags)
    local compile = {}
-
    if cfg.is_platform("mingw32") then
       compile.dynamic_object = function(object, source, defines, incdirs)
          local extras = {}
@@ -149,7 +148,7 @@ local function compile_library(variables, flags)
          add_flags(extras, "-I%s", incdirs, variables)
          return execute(variables.CC.." "..variables.CFLAGS, "-I"..variables.LUA_INCDIR, "-c", source, "-o", object, unpack(extras))
       end
-      compile.dynamic_library = function (library, objects, libraries, libdirs)
+      compile.dynamic_library = function(library, objects, libraries, libdirs)
          local extras = { unpack(objects) }
          add_flags(extras, "-L%s", libdirs, variables)
          if cfg.gcc_rpath then
@@ -166,6 +165,9 @@ local function compile_library(variables, flags)
          add_flags(extras, "-D%s", defines, variables)
          add_flags(extras, "-I%s", incdirs, variables)
          return execute(variables.CC.." "..variables.CFLAGS_STATIC, "-I"..variables.LUA_INCDIR, "-c", source, "-o", object, unpack(extras))
+      end
+      compile.static_library = function(library, objects)
+         return execute(variables.AR, variables.ARFLAGS, library, unpack(objects))
       end
       compile.wrapper_binary = function(_, name) return true, name end
       --TODO EXEWRAPPER
@@ -198,13 +200,10 @@ end
 -- @return boolean or (nil, string): true if no errors ocurred,
 -- nil and an error message otherwise.
 function builtin.run(rockspec, flags)
-   assert(type(rockspec) == "table")
-   local compile = {} --TODO EXEWRAPPER
-
+   assert(type(rockspec) == "table")   --TODO EXEWRAPPER
    local build = rockspec.build
    local variables = rockspec.variables
-
-   compile = compile_library(variables, flags)
+   local compile = compile_library(variables, flags)
 
    local ok, err
    local lua_modules = {}
@@ -251,35 +250,39 @@ function builtin.run(rockspec, flags)
          end
       end
       if type(info) == "table" then
-         local objects = build_objects(info, compile.dynamic_object)
-         if not objects then
-            return nil, "Failed build of objects for dynamic library"
-         end
-         local module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)
-         if moddir ~= "" then
-            module_name = dir.path(moddir, module_name)
-            ok, err = fs.make_dir(moddir)
-            if not ok then return nil, err end
-         end
-         lib_modules[module_name] = dir.path(libdir, module_name)
-         ok = compile.dynamic_library(module_name, objects, info.libraries, info.libdirs, name)
-         if not ok then
-            return nil, "Failed compiling module "..module_name
-         end
-
-         if flags["static"] then
-            objects = build_objects(info, compile.static_object)
+         if flags["dynamic"] or not flags["dynamic"] and not flags["static"] then
+            local objects = build_objects(info, compile.dynamic_object)
             if not objects then
-               return nil, "Failed build of objects for static library"
+               return nil, "Failed build of objects for dynamic library"
             end
-            module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)
+            local module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)
             if moddir ~= "" then
                module_name = dir.path(moddir, module_name)
                ok, err = fs.make_dir(moddir)
                if not ok then return nil, err end
             end
             lib_modules[module_name] = dir.path(libdir, module_name)
-            ok = compile.static_library(module_name, objects, info.libraries, info.libdirs, name)
+            ok = compile.dynamic_library(module_name, objects, info.libraries, info.libdirs, name)
+            if not ok then
+               return nil, "Failed compiling module "..module_name
+            end
+         end
+         if flags["static"] then
+            if compile.static_object == nil then
+               return nil, "Static library compilation not available for your platform"
+            end
+            local objects = build_objects(info, compile.static_object)
+            if not objects then
+               return nil, "Failed build of objects for static library"
+            end
+            local module_name = "luarocks-"..name:match("([^.]*)$").."."..util.matchquote(cfg.lib_static_extension)
+            if moddir ~= "" then
+               module_name = dir.path(moddir, module_name)
+               ok, err = fs.make_dir(moddir)
+               if not ok then return nil, err end
+            end
+            lib_modules[module_name] = dir.path(libdir, module_name)
+            ok = compile.static_library(module_name, objects)
             if not ok then
                return nil, "Failed compiling module "..module_name
             end

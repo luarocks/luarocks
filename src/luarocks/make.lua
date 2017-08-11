@@ -46,6 +46,9 @@ To install rocks, you'll normally want to use the "install" and
                     rockspec. Allows to specify a different branch to 
                     fetch. Particularly for SCM rocks.
 
+--static            Create a static library from sources in the current
+                    directory.
+
 ]]
 
 --- Driver function for "make" command.
