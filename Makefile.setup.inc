@@ -2,7 +2,7 @@
 DESTDIR =
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
-LUADIR ?= $(PREFIX)/share/lua/$(LUA_VERSION)/
+LUADIR ?= $(PREFIX)/share/lua/$(LUA_VERSION)
 
 BIN_FILES = luarocks luarocks-admin
 LUAROCKS_FILES = fs.lua dir.lua repos.lua command_line.lua upload/api.lua upload/multipart.lua \
