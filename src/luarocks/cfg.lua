@@ -638,22 +638,22 @@ defaults.variables.LUA = site_config.LUA_DIR_SET and (defaults.variables.LUA_BIN
 -- Add built-in modules to rocks_provided
 defaults.rocks_provided["lua"] = cfg.lua_version.."-1"
 
-if bit32 then -- Lua 5.2+
+if rawget(_G, 'bit32') then -- Lua 5.2+
    defaults.rocks_provided["bit32"] = cfg.lua_version.."-1"
 end
 
-if utf8 then -- Lua 5.3+
+if rawget(_G, 'utf8') then -- Lua 5.3+
    defaults.rocks_provided["utf8"] = cfg.lua_version.."-1"
 end
 
-if package.loaded.jit then
+if rawget(package.loaded, 'jit') then
    -- LuaJIT
    local lj_version = package.loaded.jit.version:match("LuaJIT (.*)"):gsub("%-","")
    --defaults.rocks_provided["luajit"] = lj_version.."-1"
    defaults.rocks_provided["luabitop"] = lj_version.."-1"
 end
 
-if _TARANTOOL then
+if rawget(_G, '_TARANTOOL') then
     -- Tarantool
     local tarantool_version = _TARANTOOL:match("([^-]+)-")
     defaults.rocks_provided["tarantool"] = tarantool_version.."-1"
