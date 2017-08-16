@@ -58,7 +58,7 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
    local ok, err = fs.change_dir(store_dir)
    if not ok then return nil, err end
 
-   local command = {fs.Q(git_cmd), "clone", depth or "--depth=1", rockspec.source.url, module}
+   local command = {fs.Q(git_cmd), "clone", "--recursive", depth or "--depth=1", rockspec.source.url, module}
    local tag_or_branch = rockspec.source.tag or rockspec.source.branch
    -- If the tag or branch is explicitly set to "master" in the rockspec, then
    -- we can avoid passing it to Git since it's the default.
