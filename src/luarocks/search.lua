@@ -455,15 +455,14 @@ end
 -- @return boolean or (nil, string): True if build was successful; nil and an
 -- error message otherwise.
 function search.command(flags, name, version)
-   flags["all"] = true
+   if type(name) ~= "string" or name == "" then
+      flags["all"] = true
+   end
+
    if flags["all"] then
       name, version = "", nil
    end
 
-   if type(name) ~= "string" and not flags["all"] then
-      return nil, "Enter name and version or use --all. "..util.see_help("search")
-   end
-   
    local query = search.make_query(name:lower(), version)
    query.exact_name = false
    local results, err = search.search_repos(query)
