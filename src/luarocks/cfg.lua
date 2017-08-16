@@ -162,16 +162,18 @@ local extra_luarocks_module_dir
 sys_config_dir = site_config.LUAROCKS_SYSCONFDIR or site_config.LUAROCKS_PREFIX
 if cfg.platforms.windows then
    cfg.home = site_config.LUAROCKS_HOMEDIR or os.getenv("APPDATA") or "c:"
+   cfg.localdir = site_config.LUAROCKS_LOCALDIR or cfg.home
    sys_config_dir = sys_config_dir or "c:/luarocks"
-   home_config_dir = cfg.home.."/luarocks"
-   cfg.home_tree = cfg.home.."/luarocks/"
+   home_config_dir = cfg.localdir.."/luarocks"
+   cfg.home_tree = cfg.localdir.."/luarocks/"
 else
    cfg.home = site_config.LUAROCKS_HOMEDIR or os.getenv("HOME") or ""
+   cfg.localdir = site_config.LUAROCKS_LOCALDIR or cfg.home
    sys_config_dir = sys_config_dir or "/etc/luarocks"
    local home_tree_subdir = site_config.LUAROCKS_HOME_TREE_SUBDIR or
                             "/.luarocks"
-   home_config_dir = cfg.home..home_tree_subdir
-   cfg.home_tree = cfg.home..home_tree_subdir
+   home_config_dir = cfg.localdir..home_tree_subdir
+   cfg.home_tree = cfg.localdir..home_tree_subdir
 end
 
 -- Create global environment for the config files;
