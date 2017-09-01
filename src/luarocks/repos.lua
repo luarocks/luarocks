@@ -70,6 +70,7 @@ local function recurse_rock_manifest_tree(file_tree, action)
    end
    return do_recurse_rock_manifest_tree(file_tree, "", "")
 end
+repos.recurse_rock_manifest_tree = recurse_rock_manifest_tree
 
 local function store_package_data(result, name, file_tree)
    if not file_tree then return end
