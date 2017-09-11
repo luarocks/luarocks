@@ -285,7 +285,7 @@ end
 -- @param save_path string: path to directory, where to download rocks/rockspecs
 -- @return make_manifest boolean: true if new rocks downloaded
 local function download_rocks(urls, save_path)
-   local luarocks_repo = "https://www.luarocks.org"   
+   local luarocks_repo = "https://luarocks.org"
    local make_manifest = false
 
    for _, url in ipairs(urls) do
