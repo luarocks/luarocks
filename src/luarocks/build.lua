@@ -155,15 +155,16 @@ end
 -- @param minimal_mode boolean: true if there's no need to fetch,
 -- unpack or change dir (this is used by "luarocks make"). Implies
 -- need_to_fetch = false.
--- @param deps_mode string: Dependency mode: "one" for the current default tree,
+-- @param flags table: the flags table passed to run() drivers.
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for no trees.
 -- @param build_only_deps boolean: true to build the listed dependencies only.
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode, build_only_deps)
+function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, flags, build_only_deps)
    assert(type(rockspec_file) == "string")
    assert(type(need_to_fetch) == "boolean")
+   local deps_mode = deps.get_deps_mode(flags)
 
    local rockspec, err, errcode = fetch.load_rockspec(rockspec_file)
    if err then
@@ -263,7 +264,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
          return nil, "Failed initializing build back-end for build type '"..build_spec.type.."': "..build_type
       end
   
-      ok, err = build_type.run(rockspec)
+      ok, err = build_type.run(rockspec, flags)
       if not ok then
          return nil, "Build error: " .. err
       end
@@ -337,13 +338,13 @@ end
 -- @param rock_file string: local or remote filename of a rock.
 -- @param need_to_fetch boolean: true if sources need to be fetched,
 -- false if the rockspec was obtained from inside a source rock.
--- @param deps_mode: string: Which trees to check dependencies for:
+-- @param flags table: the flags table passed to run() drivers.
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
 -- @param build_only_deps boolean: true to build the listed dependencies only.
 -- @return boolean or (nil, string, [string]): True if build was successful,
 -- or false and an error message and an optional error code.
-function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
+function build.build_rock(rock_file, need_to_fetch, flags, build_only_deps)
    assert(type(rock_file) == "string")
    assert(type(need_to_fetch) == "boolean")
 
@@ -356,30 +357,31 @@ function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
    local rockspec_file = path.rockspec_name_from_rock(rock_file)
    ok, err = fs.change_dir(unpack_dir)
    if not ok then return nil, err end
-   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps)
+   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, flags, build_only_deps)
    fs.pop_dir()
    return ok, err, errcode
 end
  
-local function do_build(name, version, deps_mode, build_only_deps)
+local function do_build(name, version, deps_mode, flags, build_only_deps)
    if name:match("%.rockspec$") then
-      return build.build_rockspec(name, true, false, deps_mode, build_only_deps)
+      return build.build_rockspec(name, true, false, flags, build_only_deps)
    elseif name:match("%.src%.rock$") then
-      return build.build_rock(name, false, deps_mode, build_only_deps)
+      return build.build_rock(name, false, flags, build_only_deps)
    elseif name:match("%.all%.rock$") then
       local install = require("luarocks.install")
       local install_fun = build_only_deps and install.install_binary_rock_deps or install.install_binary_rock
       return install_fun(name, deps_mode)
    elseif name:match("%.rock$") then
-      return build.build_rock(name, true, deps_mode, build_only_deps)
+      return build.build_rock(name, true, flags, build_only_deps)
    elseif not name:match(dir.separator) then
       local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(do_build, name:lower(), version, nil, deps_mode, build_only_deps)
+      return search.act_on_src_or_rockspec(do_build, name:lower(), version, nil, deps_mode, flags, build_only_deps)
    end
    return nil, "Don't know what to do with "..name
 end
 
 --- Driver function for "build" command.
+-- @param flags table: the flags table passed to run() drivers.
 -- @param name string: A local or remote rockspec or rock file.
 -- If a package name is given, forwards the request to "search" and,
 -- if returned a result, installs the matching rock.
@@ -388,17 +390,18 @@ end
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
 function build.command(flags, name, version)
+   local deps_mode = deps.get_deps_mode(flags)
    if type(name) ~= "string" then
       return nil, "Argument missing. "..util.see_help("build")
    end
    assert(type(version) == "string" or not version)
 
    if flags["pack-binary-rock"] then
-      return pack.pack_binary_rock(name, version, do_build, name, version, deps.get_deps_mode(flags))
+      return pack.pack_binary_rock(name, version, do_build, name, version, deps_mode, flags)
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
-      ok, err = do_build(name, version, deps.get_deps_mode(flags), flags["only-deps"])
+      ok, err = do_build(name, version, deps_mode, flags, flags["only-deps"])
       if not ok then return nil, err end
       name, version = ok, err
 
@@ -407,7 +410,7 @@ function build.command(flags, name, version)
          if not ok then util.printerr(err) end
       end
 
-      manif.check_dependencies(nil, deps.get_deps_mode(flags))
+      manif.check_dependencies(nil, deps_mode)
       return name, version
    end
 end

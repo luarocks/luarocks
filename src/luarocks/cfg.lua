@@ -370,6 +370,7 @@ local defaults = {
       MAKE = "make",
       CC = "cc",
       LD = "ld",
+      AR = "ar",
 
       CVS = "cvs",
       GIT = "git",
@@ -515,6 +516,7 @@ end
 if cfg.platforms.unix then
    defaults.lib_extension = "so"
    defaults.external_lib_extension = "so"
+   defaults.lib_static_extension = "a"
    defaults.obj_extension = "o"
    defaults.external_deps_dirs = { "/usr/local", "/usr" }
    defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR or "/usr/local/bin"
@@ -524,6 +526,7 @@ if cfg.platforms.unix then
    defaults.cmake_generator = "Unix Makefiles"
    defaults.variables.CC = "gcc"
    defaults.variables.LD = "gcc"
+   defaults.variables.ARFLAGS = "rcu"
    defaults.gcc_rpath = true
    defaults.variables.LIBFLAG = "-shared"
    defaults.external_deps_patterns = {
@@ -542,6 +545,7 @@ if cfg.platforms.unix then
    defaults.export_lua_cpath = "export LUA_CPATH='%s'"
    defaults.wrapper_suffix = ""
    defaults.local_cache = cfg.home.."/.cache/luarocks"
+   defaults.variables.CFLAGS_STATIC = defaults.variables.CFLAGS
    if not defaults.variables.CFLAGS:match("-fPIC") then
       defaults.variables.CFLAGS = defaults.variables.CFLAGS.." -fPIC"
    end
@@ -587,6 +591,7 @@ if cfg.platforms.macosx then
    defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
    defaults.variables.STAT = "/usr/bin/stat"
    defaults.variables.STATFLAG = "-f '%A'"
+   defaults.variables.ARFLAGS = "rcu"
    local version = io.popen("sw_vers -productVersion"):read("*l")
    version = tonumber(version and version:match("^[^.]+%.([^.]+)")) or 3
    if version >= 10 then

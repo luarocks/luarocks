@@ -43,46 +43,37 @@ local function make_rc(luafilename, rcfilename)
    rcfile:close()
 end
 
---- Driver function for the builtin build back-end.
--- @param rockspec table: the loaded rockspec.
--- @return boolean or (nil, string): true if no errors ocurred,
--- nil and an error message otherwise.
-function builtin.run(rockspec)
-   assert(type(rockspec) == "table")
-   local compile_object, compile_library, compile_wrapper_binary --TODO EXEWRAPPER
-
-   local build = rockspec.build
-   local variables = rockspec.variables
-
-   local function add_flags(extras, flag, flags)
-      if flags then
-         if type(flags) ~= "table" then
-            flags = { tostring(flags) }
-         end
-         util.variable_substitutions(flags, variables)
-         for _, v in ipairs(flags) do
-            table.insert(extras, flag:format(v))
-         end
+local function add_flags(extras, flag, flags, variables)
+   if flags then
+      if type(flags) ~= "table" then
+         flags = { tostring(flags) }
+      end
+      util.variable_substitutions(flags, variables)
+      for _, v in ipairs(flags) do
+         table.insert(extras, flag:format(v))
       end
    end
+end
 
+local function compile_library(variables, flags)
+   local compile = {}
    if cfg.is_platform("mingw32") then
-      compile_object = function(object, source, defines, incdirs)
+      compile.dynamic_object = function(object, source, defines, incdirs)
          local extras = {}
-         add_flags(extras, "-D%s", defines)
-         add_flags(extras, "-I%s", incdirs)
+         add_flags(extras, "-D%s", defines, variables)
+         add_flags(extras, "-I%s", incdirs, variables)
          return execute(variables.CC.." "..variables.CFLAGS, "-c", "-o", object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
       end
-      compile_library = function(library, objects, libraries, libdirs)
+      compile.dynamic_library = function(library, objects, libraries, libdirs)
          local extras = { unpack(objects) }
-         add_flags(extras, "-L%s", libdirs)
-         add_flags(extras, "-l%s", libraries)
+         add_flags(extras, "-L%s", libdirs, variables)
+         add_flags(extras, "-l%s", libraries, variables)
          extras[#extras+1] = dir.path(variables.LUA_LIBDIR, variables.LUALIB)
          extras[#extras+1] = "-l" .. (variables.MSVCRT or "m")
          local ok = execute(variables.LD.." "..variables.LIBFLAG, "-o", library, unpack(extras))
          return ok
       end
-      compile_wrapper_binary = function(fullname, name)
+      compile.wrapper_binary = function(fullname, name)
          --TODO EXEWRAPPER
          local fullbasename = fullname:gsub("%.lua$", ""):gsub("/", "\\")
          local basename = name:gsub("%.lua$", ""):gsub("/", "\\")
@@ -99,16 +90,16 @@ function builtin.run(rockspec)
          return ok, wrapname
       end
    elseif cfg.is_platform("win32") then
-      compile_object = function(object, source, defines, incdirs)
+      compile.dynamic_object = function(object, source, defines, incdirs)
          local extras = {}
-         add_flags(extras, "-D%s", defines)
-         add_flags(extras, "-I%s", incdirs)
+         add_flags(extras, "-D%s", defines, variables)
+         add_flags(extras, "-I%s", incdirs, variables)
          return execute(variables.CC.." "..variables.CFLAGS, "-c", "-Fo"..object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
       end
-      compile_library = function(library, objects, libraries, libdirs, name)
+      compile.dynamic_library = function(library, objects, libraries, libdirs, name)
          local extras = { unpack(objects) }
-         add_flags(extras, "-libpath:%s", libdirs)
-         add_flags(extras, "%s.lib", libraries)
+         add_flags(extras, "-libpath:%s", libdirs, variables)
+         add_flags(extras, "%s.lib", libraries, variables)
          local basename = dir.base_name(library):gsub(".[^.]*$", "")
          local deffile = basename .. ".def"
          local def = io.open(dir.path(fs.current_dir(), deffile), "w+")
@@ -128,7 +119,7 @@ function builtin.run(rockspec)
          end
          return ok
       end
-      compile_wrapper_binary = function(fullname, name)
+      compile.wrapper_binary = function(fullname, name)
          --TODO EXEWRAPPER
          local fullbasename = fullname:gsub("%.lua$", ""):gsub("/", "\\")
          local basename = name:gsub("%.lua$", ""):gsub("/", "\\")
@@ -151,27 +142,68 @@ function builtin.run(rockspec)
          return ok, wrapname
       end
    else
-      compile_object = function(object, source, defines, incdirs)
+      compile.dynamic_object = function(object, source, defines, incdirs)
          local extras = {}
-         add_flags(extras, "-D%s", defines)
-         add_flags(extras, "-I%s", incdirs)
+         add_flags(extras, "-D%s", defines, variables)
+         add_flags(extras, "-I%s", incdirs, variables)
          return execute(variables.CC.." "..variables.CFLAGS, "-I"..variables.LUA_INCDIR, "-c", source, "-o", object, unpack(extras))
       end
-      compile_library = function (library, objects, libraries, libdirs)
+      compile.dynamic_library = function(library, objects, libraries, libdirs)
          local extras = { unpack(objects) }
-         add_flags(extras, "-L%s", libdirs)
+         add_flags(extras, "-L%s", libdirs, variables)
          if cfg.gcc_rpath then
-            add_flags(extras, "-Wl,-rpath,%s:", libdirs)
+            add_flags(extras, "-Wl,-rpath,%s:", libdirs, variables)
          end
-         add_flags(extras, "-l%s", libraries)
+         add_flags(extras, "-l%s", libraries, variables)
          if cfg.link_lua_explicitly then
-            add_flags(extras, "-l%s", {"lua"})
+            add_flags(extras, "-l%s", {"lua"}, variables)
          end
          return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, "-L"..variables.LUA_LIBDIR, unpack(extras))
       end
-      compile_wrapper_binary = function(_, name) return true, name end
+      compile.static_object = function(object, source, defines, incdirs)
+         local extras = {}
+         add_flags(extras, "-D%s", defines, variables)
+         add_flags(extras, "-I%s", incdirs, variables)
+         return execute(variables.CC.." "..variables.CFLAGS_STATIC, "-I"..variables.LUA_INCDIR, "-c", source, "-o", object, unpack(extras))
+      end
+      compile.static_library = function(library, objects)
+         return execute(variables.AR, variables.ARFLAGS, library, unpack(objects))
+      end
+      compile.wrapper_binary = function(_, name) return true, name end
       --TODO EXEWRAPPER
    end
+   return compile
+end
+
+local function build_objects(info, compile_object)
+   local objects = {}
+   local sources = info.sources
+   if info[1] then sources = info end
+   if type(sources) == "string" then sources = {sources} end
+   for _, source in ipairs(sources) do
+      local object = source:gsub("%.[^.]*$", "."..cfg.obj_extension)
+      if not object then
+         object = source.."."..cfg.obj_extension
+      end
+      local ok = compile_object(object, source, info.defines, info.incdirs)
+      if not ok then
+         return nil, "Failed compiling object "..object
+      end
+      table.insert(objects, object)
+   end
+   return objects
+end
+
+--- Driver function for the builtin build back-end.
+-- @param rockspec table: the loaded rockspec.
+-- @param flags table: the flags table passed to run() drivers.
+-- @return boolean or (nil, string): true if no errors ocurred,
+-- nil and an error message otherwise.
+function builtin.run(rockspec, flags)
+   assert(type(rockspec) == "table")   --TODO EXEWRAPPER
+   local build = rockspec.build
+   local variables = rockspec.variables
+   local compile = compile_library(variables, flags)
 
    local ok, err
    local lua_modules = {}
@@ -186,7 +218,7 @@ function builtin.run(rockspec)
      for key, name in pairs(build.install.bin) do
        local fullname = dir.path(fs.current_dir(), name)
        if cfg.exewrapper and fs.is_lua(fullname) then
-          ok, name = compile_wrapper_binary(fullname, name)
+          ok, name = compile.wrapper_binary(fullname, name)
           if ok then
              build.install.bin[key] = name
           else
@@ -218,31 +250,42 @@ function builtin.run(rockspec)
          end
       end
       if type(info) == "table" then
-         local objects = {}
-         local sources = info.sources
-         if info[1] then sources = info end
-         if type(sources) == "string" then sources = {sources} end
-         for _, source in ipairs(sources) do
-            local object = source:gsub("%.[^.]*$", "."..cfg.obj_extension)
-            if not object then
-               object = source.."."..cfg.obj_extension
+         if flags["dynamic"] or not flags["dynamic"] and not flags["static"] then
+            local objects = build_objects(info, compile.dynamic_object)
+            if not objects then
+               return nil, "Failed build of objects for dynamic library"
             end
-            ok = compile_object(object, source, info.defines, info.incdirs)
+            local module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)
+            if moddir ~= "" then
+               module_name = dir.path(moddir, module_name)
+               ok, err = fs.make_dir(moddir)
+               if not ok then return nil, err end
+            end
+            lib_modules[module_name] = dir.path(libdir, module_name)
+            ok = compile.dynamic_library(module_name, objects, info.libraries, info.libdirs, name)
             if not ok then
-               return nil, "Failed compiling object "..object
+               return nil, "Failed compiling module "..module_name
             end
-            table.insert(objects, object)
          end
-         local module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)
-         if moddir ~= "" then
-            module_name = dir.path(moddir, module_name)
-            ok, err = fs.make_dir(moddir)
-            if not ok then return nil, err end
-         end
-         lib_modules[module_name] = dir.path(libdir, module_name)
-         ok = compile_library(module_name, objects, info.libraries, info.libdirs, name)
-         if not ok then
-            return nil, "Failed compiling module "..module_name
+         if flags["static"] then
+            if compile.static_object == nil then
+               return nil, "Static library compilation not available for your platform"
+            end
+            local objects = build_objects(info, compile.static_object)
+            if not objects then
+               return nil, "Failed build of objects for static library"
+            end
+            local module_name = "luarocks-"..name:match("([^.]*)$").."."..util.matchquote(cfg.lib_static_extension)
+            if moddir ~= "" then
+               module_name = dir.path(moddir, module_name)
+               ok, err = fs.make_dir(moddir)
+               if not ok then return nil, err end
+            end
+            lib_modules[module_name] = dir.path(libdir, module_name)
+            ok = compile.static_library(module_name, objects)
+            if not ok then
+               return nil, "Failed compiling module "..module_name
+            end
          end
       end
    end

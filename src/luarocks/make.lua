@@ -48,10 +48,14 @@ NB: Use `luarocks install` with the `--only-deps` flag if you want to install de
                     rockspec. Allows to specify a different branch to 
                     fetch. Particularly for SCM rocks.
 
+--static            Create a static library from sources in the current
+                    directory.
+
 ]]
 
 --- Driver function for "make" command.
--- @param name string: A local rockspec.
+-- @param flags table: the flags table passed to run() drivers.
+-- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
 function make.command(flags, rockspec)
@@ -73,11 +77,11 @@ function make.command(flags, rockspec)
       if not rspec then
          return nil, err
       end
-      return pack.pack_binary_rock(rspec.name, rspec.version, build.build_rockspec, rockspec, false, true, deps.get_deps_mode(flags))
+      return pack.pack_binary_rock(rspec.name, rspec.version, build.build_rockspec, rockspec, false, true, flags)
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
-      ok, err = build.build_rockspec(rockspec, false, true, deps.get_deps_mode(flags))
+      ok, err = build.build_rockspec(rockspec, false, true, flags)
       if not ok then return nil, err end
       local name, version = ok, err
 
