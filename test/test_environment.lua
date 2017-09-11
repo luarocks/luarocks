@@ -533,7 +533,9 @@ function test_env.setup_specs(extra_rocks)
    end
 end
 
---- Test if required rock is installed if not, install it
+--- Test if required rock is installed and if not, install it.
+-- Return `true` if the rock is already installed or has been installed successfully,
+-- `false` if installation failed.
 function test_env.need_rock(rock)
    print("Check if " .. rock .. " is installed")
    if test_env.run.luarocks_noprint_nocov(test_env.quiet("show " .. rock)) then

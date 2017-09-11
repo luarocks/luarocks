@@ -50,7 +50,7 @@ describe("LuaRocks upload tests #blackbox #b_upload", function()
 
    describe("LuaRocks upload tests with Xavante server #mock", function()
       before_each(function()
-         assert.is.truthy(test_env.need_rock("restserver-xavante"))
+         assert.is_true(test_env.need_rock("restserver-xavante"))
          local final_command = test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.testing_dir .. "/mock-server.lua &", true, test_env.env_variables)
          os.execute(final_command)
       end)
