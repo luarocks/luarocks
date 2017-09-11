@@ -5,8 +5,6 @@ local testing_paths = test_env.testing_paths
 test_env.unload_luarocks()
 
 local extra_rocks = {
-   "/lua-cjson-2.1.0-1.src.rock",
-   
    -- rocks needed for mock-server
    "/copas-2.0.1-1.src.rock",
    "/coxpcall-1.16.0-1.src.rock",
@@ -42,18 +40,17 @@ describe("LuaRocks upload tests #blackbox #b_upload", function()
    end)
    
    it("LuaRocks upload api key invalid and skip-pack", function()
-      assert.is_false(run.luarocks_bool("upload --api-key=\"invalid\" --skip-pack luacov-0.11.0-1.rockspec"))
+      assert.is_false(run.luarocks_bool("upload --api-key=\"invalid\" --skip-pack " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.rockspec"))
    end)
    
    it("LuaRocks upload force #unix", function()
-      assert.is_true(run.luarocks_bool("install lua-cjson"))
-      assert.is_false(run.luarocks_bool("upload --api-key=\"invalid\" --force luacov-0.11.0-1.rockspec"))
-      assert.is_true(run.luarocks_bool("install lua-cjson"))
+      assert.is_true(test_env.need_rock("dkjson"))
+      assert.is_false(run.luarocks_bool("upload --api-key=\"invalid\" --force " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.rockspec"))
    end)
 
    describe("LuaRocks upload tests with Xavante server #mock", function()
       before_each(function()
-         assert.is.truthy(test_env.need_rock("restserver-xavante"))
+         assert.is_true(test_env.need_rock("restserver-xavante"))
          local final_command = test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.testing_dir .. "/mock-server.lua &", true, test_env.env_variables)
          os.execute(final_command)
       end)
