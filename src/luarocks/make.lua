@@ -33,7 +33,8 @@ This command is useful as a tool for debugging rockspecs.
 To install rocks, you'll normally want to use the "install" and
 "build" commands. See the help on those for details.
 
-NB: Use `luarocks install` with the `--only-deps` flag if you want to install dependencies of the rockspec (see `luarocks help install`)
+NB: Use `luarocks install` with the `--only-deps` flag if you want to install
+only dependencies of the rockspec (see `luarocks help install`).
 
 --pack-binary-rock  Do not install rock. Instead, produce a .rock file
                     with the contents of compilation in the current
