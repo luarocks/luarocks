@@ -28,6 +28,7 @@ commands = {
    doc = "luarocks.doc",
    upload = "luarocks.upload",
    config = "luarocks.config_cmd",
+   shell = "luarocks.shell"
 }
 
 command_line.run_command(...)
