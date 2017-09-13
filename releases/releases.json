@@ -1,5 +1,14 @@
 [
 {
+"2.4.3": {
+"date": "2017-09-12", 
+"files": ["luarocks-2.4.3.tar.gz", "luarocks-2.4.3.tar.gz.asc", "luarocks-2.4.3-win32.zip", "luarocks-2.4.3-win32.zip.asc"], 
+"about": [
+"Fixed display of pathnames in `luarocks show`",
+"Improved check for write permissions when installing"
+]
+}},
+{
 "2.4.2": {
 "date": "2016-11-30", 
 "files": ["luarocks-2.4.2.tar.gz", "luarocks-2.4.2.tar.gz.asc", "luarocks-2.4.2-win32.zip", "luarocks-2.4.2-win32.zip.asc"], 
