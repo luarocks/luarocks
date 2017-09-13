@@ -6,7 +6,7 @@ local unpack = unpack or table.unpack
 
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 
 --- Call "make" with given target and variables
 -- @param make_cmd string: the make command to be used (typically

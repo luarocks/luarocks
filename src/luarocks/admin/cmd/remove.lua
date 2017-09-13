@@ -2,17 +2,15 @@
 --- Module implementing the luarocks-admin "remove" command.
 -- Removes a rock or rockspec from a rocks server.
 local admin_remove = {}
-package.loaded["luarocks.admin_remove"] = admin_remove
 
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
-local manif = require("luarocks.manif")
+local writer = require("luarocks.manif.writer")
 local index = require("luarocks.index")
 local fs = require("luarocks.fs")
-local cache = require("luarocks.cache")
+local cache = require("luarocks.admin.cache")
 
-util.add_run_function(admin_remove)
 admin_remove.help_summary = "Remove a rock or rockspec from a rocks server."
 admin_remove.help_arguments = "[--server=<server>] [--no-refresh] {<rockspec>|<rock>...}"
 admin_remove.help = [[
@@ -65,7 +63,7 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    if not ok then return nil, err end
 
    util.printout("Updating manifest...")
-   manif.make_manifest(local_cache, "one", true)
+   writer.make_manifest(local_cache, "one", true)
    util.printout("Updating index.html...")
    index.make_index(local_cache)
 

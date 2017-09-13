@@ -1,45 +1,15 @@
 
---- Module implementing the LuaRocks "build" command.
--- Builds a rock, compiling its C parts if any.
 local build = {}
-package.loaded["luarocks.build"] = build
 
-local pack = require("luarocks.pack")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
-local repos = require("luarocks.repos")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
-local manif = require("luarocks.manif")
-local remove = require("luarocks.remove")
-local cfg = require("luarocks.cfg")
-
-util.add_run_function(build)
-build.help_summary = "Build/compile a rock."
-build.help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
-build.help = [[
-Build and install a rock, compiling its C parts if any.
-Argument may be a rockspec file, a source rock file
-or the name of a rock to be fetched from a repository.
-
---pack-binary-rock  Do not install rock. Instead, produce a .rock file
-                    with the contents of compilation in the current
-                    directory.
-
---keep              Do not remove previously installed versions of the
-                    rock after building a new one. This behavior can
-                    be made permanent by setting keep_other_versions=true
-                    in the configuration file.
-
---branch=<name>     Override the `source.branch` field in the loaded
-                    rockspec. Allows to specify a different branch to 
-                    fetch. Particularly for SCM rocks.
-
---only-deps         Installs only the dependencies of the rock.
-
-]]..util.deps_mode_help()
+local cfg = require("luarocks.core.cfg")
+local repos = require("luarocks.repos")
+local writer = require("luarocks.manif.writer")
 
 --- Install files to a given location.
 -- Takes a table where the array part is a list of filenames to be copied.
@@ -148,6 +118,31 @@ local function install_default_docs(name, version)
    end
 end
 
+local function check_macosx_deployment_target(rockspec)
+   local target = rockspec.build.macosx_deployment_target
+   local function minor(version) 
+      return tonumber(version and version:match("^[^.]+%.([^.]+)"))
+   end
+   local function patch_variable(var, target)
+      if rockspec.variables[var]:match("MACOSX_DEPLOYMENT_TARGET") then
+         rockspec.variables[var] = (rockspec.variables[var]):gsub("MACOSX_DEPLOYMENT_TARGET=[^ ]*", "MACOSX_DEPLOYMENT_TARGET="..target)
+      else
+         rockspec.variables[var] = "env MACOSX_DEPLOYMENT_TARGET="..target.." "..rockspec.variables[var]
+      end
+   end
+   if cfg.platforms.macosx and rockspec:format_is_at_least("3.0") and target then
+      local version = util.popen_read("sw_vers -productVersion")
+      local versionminor = minor(version)
+      local targetminor = minor(target)
+      if targetminor > versionminor then
+         return nil, ("This rock requires Mac OSX 10.%d, and you are running 10.%d."):format(targetminor, versionminor)
+      end
+      patch_variable("CC", target)
+      patch_variable("LD", target)
+   end
+   return true
+end
+
 --- Build and install a rock given a rockspec.
 -- @param rockspec_file string: local or remote filename of a rockspec.
 -- @param need_to_fetch boolean: true if sources need to be fetched,
@@ -245,6 +240,11 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       end
    end
    
+   ok, err = check_macosx_deployment_target(rockspec)
+   if not ok then
+      return nil, err
+   end
+   
    if build_spec.type ~= "none" then
 
       -- Temporary compatibility
@@ -314,7 +314,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       fs.pop_dir()
    end
 
-   ok, err = manif.make_rock_manifest(name, version)
+   ok, err = writer.make_rock_manifest(name, version)
    if err then return nil, err end
 
    ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), deps_mode)
@@ -331,85 +331,6 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    util.announce_install(rockspec)
    util.remove_scheduled_function(rollback)
    return name, version
-end
-
---- Build and install a rock.
--- @param rock_file string: local or remote filename of a rock.
--- @param need_to_fetch boolean: true if sources need to be fetched,
--- false if the rockspec was obtained from inside a source rock.
--- @param deps_mode: string: Which trees to check dependencies for:
--- "one" for the current default tree, "all" for all trees,
--- "order" for all trees with priority >= the current default, "none" for no trees.
--- @param build_only_deps boolean: true to build the listed dependencies only.
--- @return boolean or (nil, string, [string]): True if build was successful,
--- or false and an error message and an optional error code.
-function build.build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
-   assert(type(rock_file) == "string")
-   assert(type(need_to_fetch) == "boolean")
-
-   local ok, err, errcode
-   local unpack_dir
-   unpack_dir, err, errcode = fetch.fetch_and_unpack_rock(rock_file)
-   if not unpack_dir then
-      return nil, err, errcode
-   end
-   local rockspec_file = path.rockspec_name_from_rock(rock_file)
-   ok, err = fs.change_dir(unpack_dir)
-   if not ok then return nil, err end
-   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps)
-   fs.pop_dir()
-   return ok, err, errcode
-end
- 
-local function do_build(name, version, deps_mode, build_only_deps)
-   if name:match("%.rockspec$") then
-      return build.build_rockspec(name, true, false, deps_mode, build_only_deps)
-   elseif name:match("%.src%.rock$") then
-      return build.build_rock(name, false, deps_mode, build_only_deps)
-   elseif name:match("%.all%.rock$") then
-      local install = require("luarocks.install")
-      local install_fun = build_only_deps and install.install_binary_rock_deps or install.install_binary_rock
-      return install_fun(name, deps_mode)
-   elseif name:match("%.rock$") then
-      return build.build_rock(name, true, deps_mode, build_only_deps)
-   elseif not name:match(dir.separator) then
-      local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(do_build, name:lower(), version, nil, deps_mode, build_only_deps)
-   end
-   return nil, "Don't know what to do with "..name
-end
-
---- Driver function for "build" command.
--- @param name string: A local or remote rockspec or rock file.
--- If a package name is given, forwards the request to "search" and,
--- if returned a result, installs the matching rock.
--- @param version string: When passing a package name, a version number may
--- also be given.
--- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
--- error message otherwise. exitcode is optionally returned.
-function build.command(flags, name, version)
-   if type(name) ~= "string" then
-      return nil, "Argument missing. "..util.see_help("build")
-   end
-   assert(type(version) == "string" or not version)
-
-   if flags["pack-binary-rock"] then
-      return pack.pack_binary_rock(name, version, do_build, name, version, deps.get_deps_mode(flags))
-   else
-      local ok, err = fs.check_command_permissions(flags)
-      if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
-      ok, err = do_build(name, version, deps.get_deps_mode(flags), flags["only-deps"])
-      if not ok then return nil, err end
-      name, version = ok, err
-
-      if (not flags["only-deps"]) and (not flags["keep"]) and not cfg.keep_other_versions then
-         local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
-         if not ok then util.printerr(err) end
-      end
-
-      manif.check_dependencies(nil, deps.get_deps_mode(flags))
-      return name, version
-   end
 end
 
 return build

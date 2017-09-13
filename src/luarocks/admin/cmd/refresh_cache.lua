@@ -1,13 +1,10 @@
 
 --- Module implementing the luarocks-admin "refresh_cache" command.
 local refresh_cache = {}
-package.loaded["luarocks.refresh_cache"] = refresh_cache
 
-local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
-local cache = require("luarocks.cache")
+local cfg = require("luarocks.core.cfg")
+local cache = require("luarocks.admin.cache")
 
-util.add_run_function(refresh_cache)
 refresh_cache.help_summary = "Refresh local cache of a remote rocks server."
 refresh_cache.help_arguments = "[--from=<server>]"
 refresh_cache.help = [[

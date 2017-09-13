@@ -10,7 +10,6 @@ local persist = require("luarocks.persist")
 local fs = require("luarocks.fs")
 local type_check = require("luarocks.type_check")
 
-util.add_run_function(new_version)
 new_version.help_summary = "Auto-write a rockspec for a new version of a rock."
 new_version.help_arguments = "[--tag=<tag>] [<package>|<rockspec>] [<new_version>] [<new_url>]"
 new_version.help = [[

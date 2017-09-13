@@ -6,7 +6,7 @@ local fs_lua = {}
 
 local fs = require("luarocks.fs")
 
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
@@ -489,10 +489,10 @@ end
 
 if unzip_ok then
 --- Uncompress files from a .zip archive.
--- @param zipfile string: pathname of .zip archive to be extracted.
+-- @param filename string: pathname of .zip archive to be extracted.
 -- @return boolean: true on success, false on failure.
-function fs_lua.unzip(zipfile)
-   local zipfile, err = luazip.open(zipfile)
+function fs_lua.unzip(filename)
+   local zipfile, err = luazip.open(filename)
    if not zipfile then return nil, err end
    local files = zipfile:files()
    local file = files()

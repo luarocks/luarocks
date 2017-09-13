@@ -1,16 +1,15 @@
 
 --- Functions related to fetching and loading local and remote files.
 local fetch = {}
-package.loaded["luarocks.fetch"] = fetch
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local type_check = require("luarocks.type_check")
 local path = require("luarocks.path")
-local deps = require("luarocks.deps")
+local vers = require("luarocks.vers")
 local persist = require("luarocks.persist")
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 
 function fetch.is_basic_protocol(protocol, remote)
    return protocol == "http" or protocol == "https" or protocol == "ftp" or (not remote and protocol == "file")
@@ -198,7 +197,7 @@ function fetch.load_local_rockspec(filename, quick)
    local globals = err
 
    if rockspec.rockspec_format then
-      if deps.compare_versions(rockspec.rockspec_format, type_check.rockspec_format) then
+      if vers.compare_versions(rockspec.rockspec_format, type_check.rockspec_format) then
          return nil, "Rockspec format "..rockspec.rockspec_format.." is not supported, please upgrade LuaRocks."
       end
    end
@@ -209,6 +208,8 @@ function fetch.load_local_rockspec(filename, quick)
          return nil, filename..": "..err
       end
    end
+   
+   rockspec.format_is_at_least = vers.format_is_at_least
 
    util.platform_overrides(rockspec.build)
    util.platform_overrides(rockspec.dependencies)
@@ -244,13 +245,22 @@ function fetch.load_local_rockspec(filename, quick)
    rockspec.local_filename = filename
    local filebase = rockspec.source.file or rockspec.source.url
    local base = fetch.url_to_base_dir(filebase)
+   rockspec.source.dir_set = rockspec.source.dir ~= nil
    rockspec.source.dir = rockspec.source.dir
                       or rockspec.source.module
-                      or ((filebase:match("%.lua$") or filebase:match("%.c$")) and ".")
+                      or ( (filebase:match("%.lua$") or filebase:match("%.c$"))
+                           and (rockspec:format_is_at_least("3.0")
+                                and (fetch.is_basic_protocol(protocol) and "." or base)
+                                or  ".") )
                       or base
+
+   rockspec.rocks_provided = (rockspec:format_is_at_least("3.0")
+                              and cfg.rocks_provided_3_0
+                              or  cfg.rocks_provided)
+
    if rockspec.dependencies then
       for i = 1, #rockspec.dependencies do
-         local parsed, err = deps.parse_dep(rockspec.dependencies[i])
+         local parsed, err = vers.parse_dep(rockspec.dependencies[i])
          if not parsed then
             return nil, "Parse error processing dependency '"..rockspec.dependencies[i].."': "..tostring(err)
          end
@@ -347,7 +357,29 @@ function fetch.get_sources(rockspec, extract, dest_dir)
       ok, err = fs.unpack_archive(rockspec.source.file)
       if not ok then return nil, err end
       if not fs.exists(rockspec.source.dir) then
-         return nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file, "source.dir", source_file, store_dir
+
+         -- If rockspec.source.dir can't be found, see if we only have one
+         -- directory in store_dir.  If that's the case, assume it's what
+         -- we're looking for.
+         -- We only do this if the rockspec source.dir was not set, and only
+         -- with rockspecs newer than 3.0.
+         local dir_count, found_dir = 0
+
+         if not rockspec.source.dir_set and rockspec:format_is_at_least("3.0") then
+            local files = fs.list_dir()
+            for _, f in ipairs(files) do
+               if fs.is_dir(f) then
+                  dir_count = dir_count + 1
+                  found_dir = f
+               end
+            end
+         end
+
+         if dir_count == 1 then
+            rockspec.source.dir = found_dir
+         else
+            return nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file, "source.dir", source_file, store_dir
+         end
       end
       fs.pop_dir()
    end

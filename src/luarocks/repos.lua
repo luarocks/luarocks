@@ -1,15 +1,14 @@
 
 --- Functions for managing the repository on disk.
 local repos = {}
-package.loaded["luarocks.repos"] = repos
 
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
-local deps = require("luarocks.deps")
+local vers = require("luarocks.vers")
 
 -- Tree of files installed by a package are stored
 -- in its rock manifest. Some of these files have to
@@ -55,67 +54,73 @@ end
 local function recurse_rock_manifest_tree(file_tree, action) 
    assert(type(file_tree) == "table")
    assert(type(action) == "function")
-   local function do_recurse_rock_manifest_tree(tree, parent_path, parent_module)
-      
+
+   local function do_recurse_rock_manifest_tree(tree, parent_path)
       for file, sub in pairs(tree) do
+         local sub_path = (parent_path and (parent_path .. "/") or "") .. file
+         local ok, err
+
          if type(sub) == "table" then
-            local ok, err = do_recurse_rock_manifest_tree(sub, parent_path..file.."/", parent_module..file..".")
-            if not ok then return nil, err end
+            ok, err = do_recurse_rock_manifest_tree(sub, sub_path)
          else
-            local ok, err = action(parent_path, parent_module, file)
-            if not ok then return nil, err end
+            ok, err = action(sub_path)
          end
+
+         if not ok then return nil, err end
       end
       return true
    end
-   return do_recurse_rock_manifest_tree(file_tree, "", "")
+   return do_recurse_rock_manifest_tree(file_tree)
 end
 
-local function store_package_data(result, name, file_tree)
-   if not file_tree then return end
-   return recurse_rock_manifest_tree(file_tree, 
-      function(parent_path, parent_module, file)
-         local pathname = parent_path..file
-         result[path.path_to_module(pathname)] = pathname
+local function store_package_data(result, rock_manifest, deploy_type)
+   if rock_manifest[deploy_type] then
+      recurse_rock_manifest_tree(rock_manifest[deploy_type], function(file_path)
+         local _, item_name = manif.get_provided_item(deploy_type, file_path)
+         result[item_name] = file_path
          return true
-      end
-   )
+      end)
+   end
 end
 
---- Obtain a list of modules within an installed package.
--- @param package string: The package name; for example "luasocket"
+--- Obtain a table of modules within an installed package.
+-- @param name string: The package name; for example "luasocket"
 -- @param version string: The exact version number including revision;
 -- for example "2.0.1-1".
--- @return table: A table of modules where keys are module identifiers
--- in "foo.bar" format and values are pathnames in architecture-dependent
--- "foo/bar.so" format. If no modules are found or if package or version
+-- @return table: A table of modules where keys are module names
+-- and values are file paths of files providing modules
+-- relative to "lib" or "lua" rock manifest subtree.
+-- If no modules are found or if package name or version
 -- are invalid, an empty table is returned.
-function repos.package_modules(package, version)
-   assert(type(package) == "string")
+function repos.package_modules(name, version)
+   assert(type(name) == "string")
    assert(type(version) == "string")
 
    local result = {}
-   local rock_manifest = manif.load_rock_manifest(package, version)
-   store_package_data(result, package, rock_manifest.lib)
-   store_package_data(result, package, rock_manifest.lua)
+   local rock_manifest = manif.load_rock_manifest(name, version)
+   if not rock_manifest then return result end
+   store_package_data(result, rock_manifest, "lib")
+   store_package_data(result, rock_manifest, "lua")
    return result
 end
 
---- Obtain a list of command-line scripts within an installed package.
--- @param package string: The package name; for example "luasocket"
+--- Obtain a table of command-line scripts within an installed package.
+-- @param name string: The package name; for example "luasocket"
 -- @param version string: The exact version number including revision;
 -- for example "2.0.1-1".
--- @return table: A table of items where keys are command names
--- as strings and values are pathnames in architecture-dependent
--- ".../bin/foo" format. If no modules are found or if package or version
+-- @return table: A table of commands where keys and values are command names
+-- as strings - file paths of files providing commands
+-- relative to "bin" rock manifest subtree.
+-- If no commands are found or if package name or version
 -- are invalid, an empty table is returned.
-function repos.package_commands(package, version)
-   assert(type(package) == "string")
+function repos.package_commands(name, version)
+   assert(type(name) == "string")
    assert(type(version) == "string")
 
    local result = {}
-   local rock_manifest = manif.load_rock_manifest(package, version)
-   store_package_data(result, package, rock_manifest.bin)
+   local rock_manifest = manif.load_rock_manifest(name, version)
+   if not rock_manifest then return result end
+   store_package_data(result, rock_manifest, "bin")
    return result
 end
 
@@ -130,7 +135,7 @@ function repos.has_binaries(name, version)
    assert(type(version) == "string")
 
    local rock_manifest = manif.load_rock_manifest(name, version)
-   if rock_manifest.bin then
+   if rock_manifest and rock_manifest.bin then
       for name, md5 in pairs(rock_manifest.bin) do
          -- TODO verify that it is the same file. If it isn't, find the actual command.
          if fs.is_actual_binary(dir.path(cfg.deploy_bin_dir, name)) then
@@ -241,7 +246,7 @@ local function prepare_target(name, version, deploy_type, file_path, suffix)
 
    if not cur_name then
       return non_versioned
-   elseif name < cur_name or (name == cur_name and deps.compare_versions(version, cur_version)) then
+   elseif name < cur_name or (name == cur_name and vers.compare_versions(version, cur_version)) then
       -- New version has priority. Move currently provided version back using versioned name.
       local cur_deploy_type, cur_file_path = manif.get_providing_file(cur_name, cur_version, item_type, item_name)
       local cur_non_versioned, cur_versioned = get_deploy_paths(cur_name, cur_version, cur_deploy_type, cur_file_path)
@@ -271,15 +276,15 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    assert(type(version) == "string")
    assert(type(wrap_bin_scripts) == "boolean")
 
-   local rock_manifest = manif.load_rock_manifest(name, version)
+   local rock_manifest, load_err = manif.load_rock_manifest(name, version)
+   if not rock_manifest then return nil, load_err end
 
    local function deploy_file_tree(deploy_type, source_dir, move_fn, suffix)
       if not rock_manifest[deploy_type] then
          return true
       end
 
-      return recurse_rock_manifest_tree(rock_manifest[deploy_type], function(parent_path, parent_module, file)
-         local file_path = parent_path .. file
+      return recurse_rock_manifest_tree(rock_manifest[deploy_type], function(file_path)
          local source = dir.path(source_dir, file_path)
 
          local target, prepare_err = prepare_target(name, version, deploy_type, file_path, suffix)
@@ -331,7 +336,8 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    ok, err = deploy_file_tree("lib", path.lib_dir(name, version), make_mover(cfg.perm_exec))
    if not ok then return nil, err end
 
-   return manif.add_to_manifest(name, version, nil, deps_mode)
+   local writer = require("luarocks.manif.writer")
+   return writer.add_to_manifest(name, version, nil, deps_mode)
 end
 
 --- Delete a package from the local repository.
@@ -349,18 +355,15 @@ function repos.delete_version(name, version, deps_mode, quick)
    assert(type(version) == "string")
    assert(type(deps_mode) == "string")
 
-   local rock_manifest = manif.load_rock_manifest(name, version)
-   if not rock_manifest then
-      return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks 2 tree?"
-   end
+   local rock_manifest, load_err = manif.load_rock_manifest(name, version)
+   if not rock_manifest then return nil, load_err end
 
    local function delete_deployed_file_tree(deploy_type, suffix)
       if not rock_manifest[deploy_type] then
          return true
       end
 
-      return recurse_rock_manifest_tree(rock_manifest[deploy_type], function(parent_path, parent_module, file)
-         local file_path = parent_path .. file
+      return recurse_rock_manifest_tree(rock_manifest[deploy_type], function(file_path)
          local non_versioned, versioned = get_deploy_paths(name, version, deploy_type, file_path)
 
          -- Figure out if the file is deployed using versioned or non-versioned name.
@@ -417,7 +420,30 @@ function repos.delete_version(name, version, deps_mode, quick)
       return true
    end
 
-   return manif.remove_from_manifest(name, version, nil, deps_mode)
+   local writer = require("luarocks.manif.writer")
+   return writer.remove_from_manifest(name, version, nil, deps_mode)
+end
+
+--- Find full path to a file providing a module or a command
+-- in a package.
+-- @param name string: name of package.
+-- @param version string: exact package version in string format.
+-- @param item_type string: "module" or "command".
+-- @param item_name string: module or command name.
+-- @param root string or nil: A local root dir for a rocks tree. If not given, the default is used.
+-- @return string: absolute path to the file providing given module
+-- or command.
+function repos.which(name, version, item_type, item_name, repo)
+   local deploy_type, file_path = manif.get_providing_file(name, version, item_type, item_name, repo)
+   local non_versioned, versioned = get_deploy_paths(name, version, deploy_type, file_path, repo)
+   local cur_name, cur_version = manif.get_current_provider(item_type, item_name)
+   local deploy_path = (name == cur_name and version == cur_version) and non_versioned or versioned
+
+   if deploy_type == "bin" and cfg.wrapper_suffix and cfg.wrapper_suffix ~= "" then
+      deploy_path = find_suffixed(deploy_path, cfg.wrapper_suffix) or deploy_path
+   end
+
+   return deploy_path
 end
 
 --- Find full path to a file providing a module or a command

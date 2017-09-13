@@ -2,19 +2,17 @@
 --- Module implementing the LuaRocks "purge" command.
 -- Remove all rocks from a given tree.
 local purge = {}
-package.loaded["luarocks.purge"] = purge
 
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local search = require("luarocks.search")
-local deps = require("luarocks.deps")
+local vers = require("luarocks.vers")
 local repos = require("luarocks.repos")
-local manif = require("luarocks.manif")
-local cfg = require("luarocks.cfg")
+local writer = require("luarocks.manif.writer")
+local cfg = require("luarocks.core.cfg")
 local remove = require("luarocks.remove")
 
-util.add_run_function(purge)
 purge.help_summary = "Remove all installed rocks from a tree."
 purge.help_arguments = "--tree=<tree> [--old-versions]"
 purge.help = [[
@@ -50,13 +48,13 @@ function purge.command(flags)
 
    search.manifest_search(results, path.rocks_dir(tree), query)
 
-   local sort = function(a,b) return deps.compare_versions(b,a) end
+   local sort = function(a,b) return vers.compare_versions(b,a) end
    if flags["old-versions"] then
-      sort = deps.compare_versions
+      sort = vers.compare_versions
    end
 
    for package, versions in util.sortedpairs(results) do
-      for version, repositories in util.sortedpairs(versions, sort) do
+      for version, _ in util.sortedpairs(versions, sort) do
          if flags["old-versions"] then
             util.printout("Keeping "..package.." "..version.."...")
             local ok, err = remove.remove_other_versions(package, version, flags["force"], flags["force-fast"])
@@ -73,7 +71,7 @@ function purge.command(flags)
          end
       end
    end
-   return manif.make_manifest(cfg.rocks_dir, "one")
+   return writer.make_manifest(cfg.rocks_dir, "one")
 end
 
 return purge

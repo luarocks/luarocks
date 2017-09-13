@@ -4,19 +4,17 @@
 -- it does not fetch sources, etc., assuming everything is 
 -- available in the current directory.
 local make = {}
-package.loaded["luarocks.make"] = make
 
 local build = require("luarocks.build")
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local fetch = require("luarocks.fetch")
 local pack = require("luarocks.pack")
 local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
-local manif = require("luarocks.manif")
+local writer = require("luarocks.manif.writer")
 
-util.add_run_function(make)
 make.help_summary = "Compile package in current directory using a rockspec."
 make.help_arguments = "[--pack-binary-rock] [<rockspec>]"
 make.help = [[
@@ -87,7 +85,7 @@ function make.command(flags, rockspec)
          if not ok then util.printerr(err) end
       end
 
-      manif.check_dependencies(nil, deps.get_deps_mode(flags))
+      writer.check_dependencies(nil, deps.get_deps_mode(flags))
       return name, version
    end
 end

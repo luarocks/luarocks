@@ -2,15 +2,13 @@
 --- Module implementing the LuaRocks "list" command.
 -- Lists currently installed rocks.
 local list = {}
-package.loaded["luarocks.list"] = list
 
 local search = require("luarocks.search")
-local deps = require("luarocks.deps")
-local cfg = require("luarocks.cfg")
+local vers = require("luarocks.vers")
+local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 
-util.add_run_function(list)
 list.help_summary = "List currently installed rocks."
 list.help_arguments = "[--porcelain] <filter>"
 list.help = [[
@@ -30,7 +28,7 @@ local function check_outdated(trees, query)
    local outdated = {}
    for name, versions in util.sortedpairs(results_installed) do
       versions = util.keys(versions)
-      table.sort(versions, deps.compare_versions)
+      table.sort(versions, vers.compare_versions)
       local latest_installed = versions[1]
 
       local query_available = search.make_query(name:lower())
@@ -39,11 +37,11 @@ local function check_outdated(trees, query)
       
       if results_available[name] then
          local available_versions = util.keys(results_available[name])
-         table.sort(available_versions, deps.compare_versions)
+         table.sort(available_versions, vers.compare_versions)
          local latest_available = available_versions[1]
          local latest_available_repo = results_available[name][latest_available][1].repo
          
-         if deps.compare_versions(latest_available, latest_installed) then
+         if vers.compare_versions(latest_available, latest_installed) then
             table.insert(outdated, { name = name, installed = latest_installed, available = latest_available, repo = latest_available_repo })
          end
       end

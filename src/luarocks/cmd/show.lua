@@ -1,18 +1,16 @@
 --- Module implementing the LuaRocks "show" command.
 -- Shows information about an installed rock.
 local show = {}
-package.loaded["luarocks.show"] = show
 
 local search = require("luarocks.search")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
-local deps = require("luarocks.deps")
+local vers = require("luarocks.vers")
 local fetch = require("luarocks.fetch")
 local manif = require("luarocks.manif")
 local repos = require("luarocks.repos")
 
-util.add_run_function(show)
 show.help_summary = "Show information about an installed rock."
 
 show.help = [[
@@ -103,6 +101,8 @@ function show.command(flags, name, version)
    if flags["rock-tree"] then util.printout(path.rocks_tree_to_string(repo))
    elseif flags["rock-dir"] then util.printout(directory)
    elseif flags["home"] then util.printout(descript.homepage)
+   elseif flags["issues"] then util.printout(descript.issues_url)
+   elseif flags["labels"] then util.printout(descript.labels and table.concat(descript.labels, "\n"))
    elseif flags["modules"] then util.printout(keys_as_string(minfo.modules, "\n"))
    elseif flags["deps"] then util.printout(keys_as_string(minfo.dependencies))
    elseif flags["rockspec"] then util.printout(rockspec_file)
@@ -120,6 +120,12 @@ function show.command(flags, name, version)
       end
       if descript.homepage then
          util.printout("Homepage: ", descript.homepage)
+      end
+      if descript.issues_url then
+         util.printout("Issues: ", descript.issues_url)
+      end
+      if descript.labels then
+         util.printout("Labels: ", table.concat(descript.labels, ", "))
       end
       util.printout("Installed in: ", path.rocks_tree_to_string(repo))
 
@@ -141,7 +147,7 @@ function show.command(flags, name, version)
          util.printout("Depends on:")
          for _, dep in ipairs(rockspec.dependencies) do
             direct_deps[dep.name] = true
-            util.printout("\t"..deps.show_dep(dep).." "..installed_rock_label(dep.name, flags["tree"]))
+            util.printout("\t"..vers.show_dep(dep).." "..installed_rock_label(dep.name, flags["tree"]))
          end
       end
       local has_indirect_deps

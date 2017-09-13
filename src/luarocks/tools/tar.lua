@@ -56,10 +56,11 @@ end
 local function read_header_block(block)
    local header = {}
    header.name = nullterm(block:sub(1,100))
-   header.mode = nullterm(block:sub(101,108))
+   header.mode = nullterm(block:sub(101,108)):gsub(" ", "")
    header.uid = octal_to_number(nullterm(block:sub(109,116)))
    header.gid = octal_to_number(nullterm(block:sub(117,124)))
    header.size = octal_to_number(nullterm(block:sub(125,136)))
+print("{"..block:sub(125,136).."}", "{"..nullterm(block:sub(125,136)).."}", "{"..octal_to_number(nullterm(block:sub(125,136))).."}", header.size)
    header.mtime = octal_to_number(nullterm(block:sub(137,148)))
    header.chksum = octal_to_number(nullterm(block:sub(149,156)))
    header.typeflag = get_typeflag(block:sub(157,157))
@@ -93,13 +94,14 @@ function tar.untar(filename, destdir)
    local long_name, long_link_name
    while true do
       local block
-      repeat 
+      repeat
          block = tar_handle:read(blocksize)
       until (not block) or checksum_header(block) > 256
       if not block then break end
       local header, err = read_header_block(block)
       if not header then
          util.printerr(err)
+         return nil, err
       end
 
       local file_data = tar_handle:read(math.ceil(header.size / blocksize) * blocksize):sub(1,header.size)

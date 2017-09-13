@@ -7,7 +7,7 @@ local unpack = unpack or table.unpack
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 
 --- Run a command displaying its execution on standard output.
@@ -49,7 +49,7 @@ end
 -- nil and an error message otherwise.
 function builtin.run(rockspec)
    assert(type(rockspec) == "table")
-   local compile_object, compile_library, compile_wrapper_binary --TODO EXEWRAPPER
+   local compile_object, compile_library, compile_static_library, compile_wrapper_binary --TODO EXEWRAPPER
 
    local build = rockspec.build
    local variables = rockspec.variables
@@ -83,6 +83,15 @@ function builtin.run(rockspec)
          local ok = execute(variables.LD.." "..variables.LIBFLAG, "-o", library, unpack(extras))
          return ok
       end
+      --[[ TODO disable static libs until we fix the conflict in the manifest, which will take extending the manifest format.
+      compile_static_library = function(library, objects, libraries, libdirs, name)
+         local ok = execute(variables.AR, "rc", library, unpack(objects))
+         if ok then
+            ok = execute(variables.RANLIB, library)
+         end
+         return ok
+      end
+      ]]
       compile_wrapper_binary = function(fullname, name)
          --TODO EXEWRAPPER
          local fullbasename = fullname:gsub("%.lua$", ""):gsub("/", "\\")
@@ -129,6 +138,12 @@ function builtin.run(rockspec)
          end
          return ok
       end
+      --[[ TODO disable static libs until we fix the conflict in the manifest, which will take extending the manifest format.
+      compile_static_library = function(library, objects, libraries, libdirs, name)
+         local ok = execute(variables.AR, "-out:"..library, unpack(objects))
+         return ok
+      end
+      ]]
       compile_wrapper_binary = function(fullname, name)
          --TODO EXEWRAPPER
          local fullbasename = fullname:gsub("%.lua$", ""):gsub("/", "\\")
@@ -169,6 +184,13 @@ function builtin.run(rockspec)
             add_flags(extras, "-l%s", {"lua"})
          end
          return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, "-L"..variables.LUA_LIBDIR, unpack(extras))
+      end
+      compile_static_library = function(library, objects, libraries, libdirs, name)
+         local ok = execute(variables.AR, "rc", library, unpack(objects))
+         if ok then
+            ok = execute(variables.RANLIB, library)
+         end
+         return ok
       end
       compile_wrapper_binary = function(_, name) return true, name end
       --TODO EXEWRAPPER
@@ -253,6 +275,17 @@ function builtin.run(rockspec)
          if not ok then
             return nil, "Failed compiling module "..module_name
          end
+         --[[ TODO disable static libs until we fix the conflict in the manifest, which will take extending the manifest format.
+         module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.static_lib_extension)
+         if moddir ~= "" then
+            module_name = dir.path(moddir, module_name)
+         end
+         lib_modules[module_name] = dir.path(libdir, module_name)
+         ok = compile_static_library(module_name, objects, info.libraries, info.libdirs, name)
+         if not ok then
+            return nil, "Failed compiling static library "..module_name
+         end
+         ]]
       end
    end
    for _, mods in ipairs({{ tbl = lua_modules, perms = cfg.perm_read }, { tbl = lib_modules, perms = cfg.perm_exec }}) do

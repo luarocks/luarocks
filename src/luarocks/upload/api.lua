@@ -1,7 +1,7 @@
 
 local api = {}
 
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")

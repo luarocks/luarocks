@@ -6,21 +6,24 @@
 -- used to load previous modules, so that the loader chooses versions
 -- that are declared to be compatible with the ones loaded earlier.
 local loaders = package.loaders or package.searchers
-local package, require, ipairs, table, type, next, tostring, error =
-      package, require, ipairs, table, type, next, tostring, error
+local require, ipairs, table, type, next, tostring, error =
+      require, ipairs, table, type, next, tostring, error
 local unpack = unpack or table.unpack
 
---module("luarocks.loader")
 local loader = {}
-package.loaded["luarocks.loader"] = loader
 
-local cfg = require("luarocks.cfg")
+local is_clean = not package.loaded["luarocks.core.cfg"]
+
+-- This loader module depends only on core modules.
+local cfg = require("luarocks.core.cfg")
 cfg.init_package_paths()
 
-local path = require("luarocks.path")
-local manif_core = require("luarocks.manif_core")
-local deps = require("luarocks.deps")
-local util = require("luarocks.util")
+local path = require("luarocks.core.path")
+local manif = require("luarocks.core.manif")
+local vers = require("luarocks.core.vers")
+local util = require("luarocks.core.util")
+local require = nil
+--------------------------------------------------------------------------------
 
 -- Workaround for wrappers produced by older versions of LuaRocks
 local temporary_global = false
@@ -55,7 +58,7 @@ local function load_rocks_trees()
    local any_ok = false
    local trees = {}
    for _, tree in ipairs(cfg.rocks_trees) do
-      local manifest, err = manif_core.load_local_manifest(path.rocks_dir(tree))
+      local manifest, err = manif.load_local_manifest(path.rocks_dir(tree))
       if manifest then
          any_ok = true
          table.insert(trees, {tree=tree, manifest=manifest})
@@ -109,8 +112,8 @@ function loader.add_context(name, version)
          for _, tree in ipairs(loader.rocks_trees) do
             local entries = tree.manifest.repository[pkg]
             if entries then
-               for version, pkgs in util.sortedpairs(entries, deps.compare_versions) do
-                  if (not constraints) or deps.match_constraints(deps.parse_version(version), constraints) then
+               for ver, pkgs in util.sortedpairs(entries, vers.compare_versions) do
+                  if (not constraints) or vers.match_constraints(vers.parse_version(ver), constraints) then
                      loader.add_context(pkg, version)
                   end
                end
@@ -142,7 +145,7 @@ end
 -- @return table or (nil, string): The module table as returned by some other loader,
 -- or nil followed by an error message if no other loader managed to load the module.
 local function call_other_loaders(module, name, version, module_name)
-   for i, a_loader in ipairs(loaders) do
+   for _, a_loader in ipairs(loaders) do
       if a_loader ~= loader.luarocks_loader then
          local results = { a_loader(module_name) }
          if type(results[1]) == "function" then
@@ -187,7 +190,7 @@ local function select_module(module, filter_file_name)
             if loader.context[name] == version then
                return name, version, file_name
             end
-            version = deps.parse_version(version)
+            version = vers.parse_version(version)
             table.insert(providers, {name = name, version = version, module_name = file_name, tree = tree})
          end
       end
@@ -245,5 +248,13 @@ function loader.luarocks_loader(module)
 end
 
 table.insert(loaders, 1, loader.luarocks_loader)
+
+if is_clean then
+   for modname, _ in pairs(package.loaded) do
+      if modname:match("^luarocks%.") then
+         package.loaded[modname] = nil
+      end
+   end
+end
 
 return loader

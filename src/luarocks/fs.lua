@@ -8,9 +8,10 @@
 local pairs = pairs
 
 local fs = {}
+-- To avoid a loop when loading the other fs modules.
 package.loaded["luarocks.fs"] = fs
 
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 
 local pack = table.pack or function(...) return { n = select("#", ...), ... } end
 local unpack = table.unpack or unpack

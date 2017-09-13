@@ -1,7 +1,6 @@
 --- Module implementing the LuaRocks "install" command.
 -- Installs binary rocks.
 local install = {}
-package.loaded["luarocks.install"] = install
 
 local path = require("luarocks.path")
 local repos = require("luarocks.repos")
@@ -9,11 +8,11 @@ local fetch = require("luarocks.fetch")
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
 local deps = require("luarocks.deps")
-local manif = require("luarocks.manif")
+local writer = require("luarocks.manif.writer")
 local remove = require("luarocks.remove")
-local cfg = require("luarocks.cfg")
+local search = require("luarocks.search")
+local cfg = require("luarocks.core.cfg")
 
-util.add_run_function(install)
 install.help_summary = "Install a rock."
 
 install.help_arguments = "{<rock>|<name> [<version>]}"
@@ -75,7 +74,7 @@ function install.install_binary_rock(rock_file, deps_mode)
 
    -- For compatibility with .rock files built with LuaRocks 1
    if not fs.exists(path.rock_manifest_file(name, version)) then
-      ok, err = manif.make_rock_manifest(name, version)
+      ok, err = writer.make_rock_manifest(name, version)
       if err then return nil, err end
    end
 
@@ -156,7 +155,7 @@ function install.command(flags, name, version)
    if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
-      local build = require("luarocks.build")
+      local build = require("luarocks.cmd.build")
       return build.command(flags, name)
    elseif name:match("%.rock$") then
       if flags["only-deps"] then
@@ -172,10 +171,9 @@ function install.command(flags, name, version)
          if not ok then util.printerr(err) end
       end
 
-      manif.check_dependencies(nil, deps.get_deps_mode(flags))
+      writer.check_dependencies(nil, deps.get_deps_mode(flags))
       return name, version
    else
-      local search = require("luarocks.search")
       local url, err = search.find_suitable_rock(search.make_query(name:lower(), version))
       if not url then
          return nil, err

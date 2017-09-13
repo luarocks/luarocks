@@ -50,7 +50,15 @@ describe("LuaRocks unpack tests #blackbox #b_unpack", function()
          os.remove("lua-cprint")
          test_env.remove_dir("cprint-0.1-2")
       end)
-      
+
+      -- #595 luarocks unpack of a git:// rockspec fails to copy the rockspec
+      it("LuaRocks unpack git:// rockspec", function()
+         assert.is_true(run.luarocks_bool("download --rockspec luazip"))
+         assert.is_true(run.luarocks_bool("unpack luazip-1.2.4-1.rockspec"))
+         assert.is_truthy(lfs.attributes("luazip-1.2.4-1/luazip/luazip-1.2.4-1.rockspec"))
+         test_env.remove_dir("luazip-1.2.4-1")
+      end)
+
       it("LuaRocks unpack binary", function()
          assert.is_true(run.luarocks_bool("build cprint"))
          assert.is_true(run.luarocks_bool("pack cprint"))

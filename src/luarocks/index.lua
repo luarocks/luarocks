@@ -1,11 +1,10 @@
 
 --- Module which builds the index.html page to be used in rocks servers.
 local index = {}
-package.loaded["luarocks.index"] = index
 
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
-local deps = require("luarocks.deps")
+local vers = require("luarocks.vers")
 local persist = require("luarocks.persist")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
@@ -135,7 +134,7 @@ function index.make_index(repo)
    for package, version_list in util.sortedpairs(manifest.repository) do
       local latest_rockspec = nil
       local output = index_package_begin
-      for version, data in util.sortedpairs(version_list, deps.compare_versions) do
+      for version, data in util.sortedpairs(version_list, vers.compare_versions) do
          local versions = {}
          output = output..version..':&nbsp;'
          table.sort(data, function(a,b) return a.arch < b.arch end)

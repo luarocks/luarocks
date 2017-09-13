@@ -2,17 +2,15 @@
 --- Module implementing the luarocks-admin "make_manifest" command.
 -- Compile a manifest file for a repository.
 local make_manifest = {}
-package.loaded["luarocks.make_manifest"] = make_manifest
 
-local manif = require("luarocks.manif")
+local writer = require("luarocks.manif.writer")
 local index = require("luarocks.index")
-local cfg = require("luarocks.cfg")
+local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local deps = require("luarocks.deps")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 
-util.add_run_function(make_manifest)
 make_manifest.help_summary = "Compile a manifest file for a repository."
 
 make_manifest.help = [[
@@ -37,7 +35,7 @@ function make_manifest.command(flags, repo)
       util.warning("This looks like a local rocks tree, but you did not pass --local-tree.")
    end
    
-   local ok, err = manif.make_manifest(repo, deps.get_deps_mode(flags), not flags["local-tree"])
+   local ok, err = writer.make_manifest(repo, deps.get_deps_mode(flags), not flags["local-tree"])
    if ok and not flags["local-tree"] then
       util.printout("Generating index.html for "..repo)
       index.make_index(repo)
