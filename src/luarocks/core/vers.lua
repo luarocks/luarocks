@@ -126,6 +126,9 @@ end
 -- @param b string: another version.
 -- @return boolean: True if a > b.
 function vers.compare_versions(a, b)
+   if a == b then
+      return false
+   end
    return vers.parse_version(a) > vers.parse_version(b)
 end
 

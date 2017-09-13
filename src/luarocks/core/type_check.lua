@@ -98,10 +98,12 @@ end
 -- @see type_check_table
 local function type_check_item(version, item, typetbl, context)
    assert(type(version) == "string")
-   
-   local ok, err = check_version(version, typetbl, context)
-   if not ok then
-      return nil, err
+
+   if typetbl._version and typetbl._version ~= "1.0" then
+      local ok, err = check_version(version, typetbl, context)
+      if not ok then
+         return nil, err
+      end
    end
    
    local item_type = type(item) or "nil"
