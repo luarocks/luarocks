@@ -91,30 +91,30 @@ function vers.parse_version(vstring)
    end
    
    -- trim leading and trailing spaces
-   vstring = vstring:match("^%s*(.*)%s*$")
-   version.string = vstring
+   local v = vstring:match("^%s*(.*)%s*$")
+   version.string = v
    -- store revision separately if any
-   local main, revision = vstring:match("(.*)%-(%d+)$")
+   local main, revision = v:match("(.*)%-(%d+)$")
    if revision then
-      vstring = main
+      v = main
       version.revision = tonumber(revision)
    end
-   while #vstring > 0 do
+   while #v > 0 do
       -- extract a number
-      local token, rest = vstring:match("^(%d+)[%.%-%_]*(.*)")
+      local token, rest = v:match("^(%d+)[%.%-%_]*(.*)")
       if token then
          add_token(tonumber(token))
       else
          -- extract a word
-         token, rest = vstring:match("^(%a+)[%.%-%_]*(.*)")
+         token, rest = v:match("^(%a+)[%.%-%_]*(.*)")
          if not token then
-            util.printerr("Warning: version number '"..vstring.."' could not be parsed.")
+            util.printerr("Warning: version number '"..v.."' could not be parsed.")
             version[i] = 0
             break
          end
          version[i] = deltas[token] or (token:byte() / 1000)
       end
-      vstring = rest
+      v = rest
    end
    setmetatable(version, version_mt)
    version_cache[vstring] = version
