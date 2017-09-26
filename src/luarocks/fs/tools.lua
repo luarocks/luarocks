@@ -144,7 +144,7 @@ function tools.get_md5(file)
    local cmd = md5_cmd[cfg.md5checker]
    if not cmd then return nil, "no MD5 checker command configured" end
    local pipe = io.popen(cmd.." "..fs.Q(fs.absolute_name(file)))
-   local computed = pipe:read("*a")
+   local computed = pipe:read("*l")
    pipe:close()
    if computed then
       computed = computed:match("("..("%x"):rep(32)..")")
