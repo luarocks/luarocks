@@ -1,5 +1,18 @@
 language: python
 
+cache:
+  directories:
+  - test/testing_cache-5.1
+  - test/testing_cache-5.2
+  - test/testing_cache-5.3
+  - test/testing_cache-2.0
+  - test/testing_cache-2.1
+  - test/testing_server-5.1
+  - test/testing_server-5.2
+  - test/testing_server-5.3
+  - test/testing_server-2.0
+  - test/testing_server-2.1
+
 matrix:
   include:
     - os: linux
