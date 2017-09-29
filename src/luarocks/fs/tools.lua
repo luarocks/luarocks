@@ -92,6 +92,8 @@ end
 -- resulting local filename of the remote file as the basename of the URL;
 -- if that is not correct (due to a redirection, for example), the local
 -- filename can be given explicitly as this second argument.
+-- @param cache boolean: compare remote timestamps via HTTP HEAD prior to
+-- re-downloading the file.
 -- @return (boolean, string): true and the filename on success,
 -- false and the error message on failure.
 function tools.use_downloader(url, filename, cache)

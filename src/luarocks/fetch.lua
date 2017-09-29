@@ -24,6 +24,8 @@ end
 -- resulting local filename of the remote file as the basename of the URL;
 -- if that is not correct (due to a redirection, for example), the local
 -- filename can be given explicitly as this second argument.
+-- @param cache boolean: compare remote timestamps via HTTP HEAD prior to
+-- re-downloading the file.
 -- @return string or (nil, string, [string]): the absolute local pathname for the
 -- fetched file, or nil and a message in case of errors, followed by
 -- an optional error code.
