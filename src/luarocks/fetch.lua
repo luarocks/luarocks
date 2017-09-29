@@ -363,19 +363,18 @@ function fetch.get_sources(rockspec, extract, dest_dir)
          -- we're looking for.
          -- We only do this if the rockspec source.dir was not set, and only
          -- with rockspecs newer than 3.0.
-         local dir_count, found_dir = 0
+         local file_count, found_dir = 0
 
          if not rockspec.source.dir_set and rockspec:format_is_at_least("3.0") then
-            local files = fs.list_dir()
-            for _, f in ipairs(files) do
-               if fs.is_dir(f) then
-                  dir_count = dir_count + 1
-                  found_dir = f
+            for file in fs.dir() do
+               file_count = file_count + 1
+               if fs.is_dir(file) then
+                  found_dir = file
                end
             end
          end
 
-         if dir_count == 1 then
+         if file_count == 1 and found_dir then
             rockspec.source.dir = found_dir
          else
             return nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file, "source.dir", source_file, store_dir
