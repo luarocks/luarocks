@@ -51,8 +51,8 @@ install:
   - luarocks install luacov-coveralls
 
 script:
-  - busted -Xhelper travis --verbose
-  - busted -Xhelper travis,env=full --verbose
+  - busted -o gtest --verbose -Xhelper travis
+  - busted -o gtest --verbose -Xhelper travis,env=full
 
 after_success:
   - luacov -c $TRAVIS_BUILD_DIR/test/luacov.config

@@ -94,7 +94,7 @@ function test_env.execute_helper(command, print_command, env_variables)
    local final_command = ""
 
    if print_command then 
-      print("\n[EXECUTING]: " .. command)
+      print("[EXECUTING]: " .. command)
    end
 
    if env_variables then
@@ -448,7 +448,6 @@ local function reset_environment(testing_paths, md5sums)
       test_env.remove_dir(testing_paths.testing_sys_tree)
       test_env.copy_dir(testing_paths.testing_sys_tree_copy, testing_paths.testing_sys_tree)
    end
-   print("\n[ENVIRONMENT RESET]")
 end
 
 local function create_paths(luaversion_full)
