@@ -58,7 +58,8 @@ function cmd_search.command(flags, name, version)
    query.exact_name = false
    local results, err = search.search_repos(query)
    local porcelain = flags["porcelain"]
-   util.title("Search results:", porcelain, "=")
+   local full_name = name .. (version and " " .. version or "")
+   util.title(full_name .. " - Search results for Lua "..cfg.lua_version..":", porcelain, "=")
    local sources, binaries = split_source_and_binary_results(results)
    if next(sources) and not flags["binary"] then
       util.title("Rockspecs and source rocks:", porcelain)
