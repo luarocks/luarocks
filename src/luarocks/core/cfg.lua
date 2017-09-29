@@ -731,8 +731,8 @@ end
 
 function cfg.init_package_paths()
    local lr_path, lr_cpath, lr_bin = cfg.package_paths()
-   package.path = util.remove_path_dupes(package.path .. ";" .. lr_path, ";")
-   package.cpath = util.remove_path_dupes(package.cpath .. ";" .. lr_cpath, ";")
+   package.path = util.cleanup_path(package.path .. ";" .. lr_path, ";", cfg.lua_version)
+   package.cpath = util.cleanup_path(package.cpath .. ";" .. lr_cpath, ";", cfg.lua_version)
 end
 
 function cfg.which_config()

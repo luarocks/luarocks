@@ -37,13 +37,13 @@ function path_cmd.command(flags)
    local path_sep = cfg.export_path_separator
 
    if flags["lr-path"] then
-      util.printout(util.remove_path_dupes(lr_path, ';'))
+      util.printout(util.cleanup_path(lr_path, ';', cfg.lua_version))
       return true
    elseif flags["lr-cpath"] then
-      util.printout(util.remove_path_dupes(lr_cpath, ';'))
+      util.printout(util.cleanup_path(lr_cpath, ';', cfg.lua_version))
       return true
    elseif flags["lr-bin"] then
-      util.printout(util.remove_path_dupes(lr_bin, path_sep))
+      util.printout(util.cleanup_path(lr_bin, path_sep))
       return true
    end
    
@@ -57,10 +57,10 @@ function path_cmd.command(flags)
       lr_bin = lr_bin .. path_sep .. os.getenv("PATH")
    end
 
-   util.printout(cfg.export_lua_path:format(util.remove_path_dupes(lr_path, ';')))
-   util.printout(cfg.export_lua_cpath:format(util.remove_path_dupes(lr_cpath, ';')))
+   util.printout(cfg.export_lua_path:format(util.cleanup_path(lr_path, ';', cfg.lua_version)))
+   util.printout(cfg.export_lua_cpath:format(util.cleanup_path(lr_cpath, ';', cfg.lua_version)))
    if flags["bin"] then
-      util.printout(cfg.export_path:format(util.remove_path_dupes(lr_bin, path_sep)))
+      util.printout(cfg.export_path:format(util.cleanup_path(lr_bin, path_sep)))
    end
    return true
 end

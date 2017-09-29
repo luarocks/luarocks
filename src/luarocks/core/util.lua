@@ -135,17 +135,23 @@ function util.deep_merge(dst, src)
    end
 end
 
---- Remove repeated entries from a path-style string.
+--- Clean up a path-style string ($PATH, $LUA_PATH/package.path, etc.),
+-- removing repeated entries and making sure only the relevant
+-- Lua version is used.
 -- Example: given ("a;b;c;a;b;d", ";"), returns "a;b;c;d".
 -- @param list string: A path string (from $PATH or package.path)
 -- @param sep string: The separator
-function util.remove_path_dupes(list, sep)
+-- @param lua_version (optional) string: The Lua version to use.
+function util.cleanup_path(list, sep, lua_version)
    assert(type(list) == "string")
    assert(type(sep) == "string")
    local parts = util.split_string(list, sep)
    local final, entries = {}, {}
    for _, part in ipairs(parts) do
       part = part:gsub("//", "/")
+      if lua_version then
+         part = part:gsub("/lua/[%d.]+/", "/lua/"..lua_version)
+      end
       if not entries[part] then
          table.insert(final, part)
          entries[part] = true

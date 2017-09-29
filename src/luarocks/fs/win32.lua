@@ -141,8 +141,8 @@ function win32.wrap_script(file, dest, name, version)
    local wrapname = fs.is_dir(dest) and dest.."/"..base or dest
    wrapname = wrapname..".bat"
    local lpath, lcpath = cfg.package_paths()
-   lpath = util.remove_path_dupes(lpath, ";")
-   lcpath = util.remove_path_dupes(lcpath, ";")
+   lpath = util.cleanup_path(lpath, ";", cfg.lua_version)
+   lcpath = util.cleanup_path(lcpath, ";", cfg.lua_version)
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
       return nil, "Could not open "..wrapname.." for writing."
