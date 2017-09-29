@@ -606,34 +606,58 @@ local function request(url, method, http, loop_control)
    end
 end
 
-local function http_request(url, http, cached)
-   if cached then
-      local tsfd = io.open(cached..".timestamp", "r")
+-- @param url string: URL to fetch.
+-- @param filename string: local filename of the file to fetch.
+-- @param http table: The library to use (http from LuaSocket or LuaSec)
+-- @param cache boolean: Whether to use a `.timestamp` file to check
+-- via the HTTP Last-Modified header if the full download is needed.
+-- @return (boolean | (nil, string, string?)): True if successful, or 
+-- nil, error message and optionally HTTPS error in case of errors.
+local function http_request(url, filename, http, cache)
+   if cache then
+      local tsfd = io.open(filename..".timestamp", "r")
       if tsfd then
          local timestamp = tsfd:read("*a")
          tsfd:close()
          local result, status, headers, err = request(url, "HEAD", http)
-         if status == 200 and headers["last-modified"] == timestamp then
-            return true
-         end
          if not result then
             return nil, status, headers
+         end
+         if status == 200 and headers["last-modified"] == timestamp then
+            return true
          end
       end
    end
    local result, status, headers, err = request(url, "GET", http)
-   if result then
-      if cached and headers["last-modified"] then
-         local tsfd = io.open(cached..".timestamp", "w")
-         if tsfd then
-            tsfd:write(headers["last-modified"])
-            tsfd:close()
-         end
-      end
-      return table.concat(result)
-   else
+   if not result then
       return nil, status, headers
    end
+   if cache and headers["last-modified"] then
+      local tsfd = io.open(filename..".timestamp", "w")
+      if tsfd then
+         tsfd:write(headers["last-modified"])
+         tsfd:close()
+      end
+   end
+   local file = io.open(filename, "wb")
+   if not file then return nil, 0, {} end
+   for _, data in ipairs(result) do
+      file:write(data)
+   end
+   file:close()
+   return true
+end
+
+local function ftp_request(url, filename)
+   local content, err = ftp.get(url)
+   if not content then
+      return false, err
+   end
+   local file = io.open(filename, "wb")
+   if not file then return false, err end
+   file:write(content)
+   file:close()
+   return true
 end
 
 local downloader_warning = false
@@ -656,16 +680,16 @@ function fs_lua.download(url, filename, cache)
    if cfg.no_proxy then
       return fs.use_downloader(url, filename, cache)
    end
-   
-   local content, err, https_err
+
+   local ok, err, https_err
    if util.starts_with(url, "http:") then
-      content, err, https_err = http_request(url, http, cache and filename)
+      ok, err, https_err = http_request(url, filename, http, cache)
    elseif util.starts_with(url, "ftp:") then
-      content, err = ftp.get(url)
+      ok, err = ftp_request(url, filename)
    elseif util.starts_with(url, "https:") then
       -- skip LuaSec when proxy is enabled since it is not supported
       if luasec_ok and not cfg.https_proxy then
-         content, err = http_request(url, https, cache and filename)
+         ok, err = http_request(url, filename, https, cache)
       else
          https_err = true
       end
@@ -678,17 +702,9 @@ function fs_lua.download(url, filename, cache)
          downloader_warning = true
       end
       return fs.use_downloader(url, filename, cache)
+   elseif not ok then
+      return nil, err
    end
-   if cache and content == true then
-      return true, filename
-   end
-   if not content then
-      return false, tostring(err)
-   end
-   local file = io.open(filename, "wb")
-   if not file then return false end
-   file:write(content)
-   file:close()
    return true, filename
 end
 
