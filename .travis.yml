@@ -1,5 +1,19 @@
 language: python
 
+cache:
+  directories:
+  - lua_install
+  - test/testing_cache-5.1
+  - test/testing_cache-5.2
+  - test/testing_cache-5.3
+  - test/testing_cache-2.0
+  - test/testing_cache-2.1
+  - test/testing_server-5.1
+  - test/testing_server-5.2
+  - test/testing_server-5.3
+  - test/testing_server-2.0
+  - test/testing_server-2.1
+
 matrix:
   include:
     - os: linux
@@ -40,17 +54,18 @@ matrix:
 
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update;fi
-  - pip install hererocks
-  - hererocks lua_install -r^ --$LUA
+  - if [ ! -f lua_install/bin/luarocks ]; then pip install hererocks; fi
+  - if [ ! -f lua_install/bin/luarocks ]; then hererocks lua_install -r^ --$LUA; fi
   - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
 
 install:
-  - luarocks install busted
-  - luarocks install luacov
-  - luarocks install luacov-coveralls
+  - if [ ! -f lua_install/bin/busted ]; then luarocks install busted; fi
+  - if [ ! -f lua_install/bin/luacov ]; then luarocks install luacov; luarocks install luacov-coveralls; fi
 
 script:
+  - lua -v
+  - ./configure --with-lua=lua_install
+  - ./makedist scm
   - busted -o gtest --verbose -Xhelper travis
   - busted -o gtest --verbose -Xhelper travis,env=full
 
