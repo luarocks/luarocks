@@ -2,6 +2,7 @@ language: python
 
 cache:
   directories:
+  - lua_install
   - test/testing_cache-5.1
   - test/testing_cache-5.2
   - test/testing_cache-5.3
@@ -53,9 +54,8 @@ matrix:
 
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update;fi
-  - pip install hererocks
-  - hererocks lua_install --luarocks @luarocks-3 --$LUA
+  - if [ ! -d lua_install ]; then pip install hererocks; fi
+  - if [ ! -d lua_install ]; then hererocks lua_install -r^ --$LUA; fi
   - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
 
 install:
