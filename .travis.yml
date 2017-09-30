@@ -54,8 +54,8 @@ matrix:
 
 
 before_install:
-  - if [ ! -d lua_install ]; then pip install hererocks; fi
-  - if [ ! -d lua_install ]; then hererocks lua_install -r^ --$LUA; fi
+  - if [ ! -f lua_install/bin/luarocks ]; then pip install hererocks; fi
+  - if [ ! -f lua_install/bin/luarocks ]; then hererocks lua_install -r^ --$LUA; fi
   - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
 
 install:
