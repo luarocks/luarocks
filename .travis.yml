@@ -59,9 +59,8 @@ before_install:
   - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
 
 install:
-  - luarocks install busted
-  - luarocks install luacov
-  - luarocks install luacov-coveralls
+  - if [ ! -f lua_install/bin/busted ]; then luarocks install busted; fi
+  - if [ ! -f lua_install/bin/luacov ]; then luarocks install luacov; luarocks install luacov-coveralls; fi
 
 script:
   - busted -o gtest --verbose -Xhelper travis
