@@ -1,5 +1,4 @@
-#!/Programs/Lua/5.3.3/bin/lua-5.3
-package.path = [[/Users/hisham/projects/luarocks/src/?.lua;]]..package.path
+#!/usr/bin/env lua
 
 -- this should be loaded first.
 local cfg = require("luarocks.core.cfg")
