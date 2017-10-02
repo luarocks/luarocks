@@ -101,33 +101,16 @@ function vers.parse_dep(dep)
    return { name = name, constraints = constraints }
 end
 
---- Convert a version table to a string.
--- @param v table: The version table
--- @param internal boolean or nil: Whether to display versions in their
--- internal representation format or how they were specified.
--- @return string: The dependency information pretty-printed as a string.
-function vers.show_version(v, internal)
-   assert(type(v) == "table")
-   assert(type(internal) == "boolean" or not internal)
-
-   return (internal
-           and table.concat(v, ":")..(v.revision and tostring(v.revision) or "")
-           or v.string)
-end
-
 --- Convert a dependency in table format to a string.
 -- @param dep table: The dependency in table format
--- @param internal boolean or nil: Whether to display versions in their
--- internal representation format or how they were specified.
 -- @return string: The dependency information pretty-printed as a string.
-function vers.show_dep(dep, internal)
+function vers.show_dep(dep)
    assert(type(dep) == "table")
-   assert(type(internal) == "boolean" or not internal)
 
    if #dep.constraints > 0 then
       local pretty = {}
       for _, c in ipairs(dep.constraints) do
-         table.insert(pretty, c.op .. " " .. vers.show_version(c.version, internal))
+         table.insert(pretty, c.op .. " " .. tostring(c.version))
       end
       return dep.name.." "..table.concat(pretty, ", ")
    else

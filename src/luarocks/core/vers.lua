@@ -54,7 +54,13 @@ local version_mt = {
          return (v1.revision < v2.revision)
       end
       return false
-   end
+   end,
+   --- Return version as a string.
+   -- @param v The version table. 
+   -- @return The string representation.
+   __tostring = function(v)
+      return v.string
+   end,  
 }
 
 local version_cache = {}
