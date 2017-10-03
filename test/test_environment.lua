@@ -132,11 +132,10 @@ local function execute_bool(command, print_command, env_variables)
       redirect = " > "..redirect_filename
       os.remove(redirect_filename)
    end
-print(command .. redirect)
    local ok = os.execute(command .. redirect)
    ok = (ok == true or ok == 0) -- normalize Lua 5.1 output to boolean
    if redirect ~= "" then
-      if not ok or true then
+      if not ok then
          local fd = io.open(redirect_filename, "r")
          if fd then
             print(fd:read("*a"))
@@ -152,7 +151,7 @@ end
 -- @return output string: output the command execution
 local function execute_output(command, print_command, env_variables)
    command = test_env.execute_helper(command, print_command, env_variables)
-print(command)
+
    local file = assert(io.popen(command))
    local output = file:read('*all')
    file:close()
@@ -210,7 +209,7 @@ function test_env.set_args()
    if not test_env.TEST_TARGET_OS then
       title("OS CHECK")
 
-      if execute_bool("sw_vers") then
+      if execute_bool("sw_vers") then 
          test_env.TEST_TARGET_OS = "osx"
          if test_env.TRAVIS then
             test_env.OPENSSL_DIRS = "OPENSSL_LIBDIR=/usr/local/opt/openssl/lib OPENSSL_INCDIR=/usr/local/opt/openssl/include"

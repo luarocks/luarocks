@@ -22,7 +22,6 @@ local version_suffix = cfg.lua_version:gsub("%.", "_")
 local ok, site_config = pcall(require, "luarocks.core.site_config_"..version_suffix)
 if not ok then
    io.stderr:write("Site-local luarocks/core/site_config_"..version_suffix..".lua file not found. Incomplete installation?\n")
-   io.stderr:write("Error: " .. site_config .. "\n")
    site_config = {}
 end
 

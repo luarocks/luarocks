@@ -972,7 +972,7 @@ if vars.SYSCONFFORCE then  -- only write this value when explcitly given, otherw
 end
 f:write("return site_config\n")
 f:close()
-print(S([[Created LuaRocks site-config file: $LUADIR\luarocks\]]..site_config..[[.lua]]))
+print(S([[Created LuaRocks site-config file: $LUADIR\luarocks\core\]]..site_config..[[.lua]]))
 
 -- create config file
 if not exists(vars.SYSCONFDIR) then
