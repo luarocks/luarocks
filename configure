@@ -426,7 +426,7 @@ if [ -f config.unix ]; then
    rm -f config.unix
 fi
 
-SITE_CONFIG=src/luarocks/core/site_config_${LUA_VERSION//./_}.lua
+SITE_CONFIG=src/luarocks/core/site_config_$(echo "$LUA_VERSION" | sed 's,\.,_,').lua
 
 # Write config
 
