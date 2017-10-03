@@ -130,6 +130,7 @@ local function execute_bool(command, print_command, env_variables)
    if print_command ~= nil then
       redirect_filename = test_env.testing_paths.luarocks_tmp.."/output.txt"
       redirect = " > "..redirect_filename
+      os.remove(redirect_filename)
    end
 print(command .. redirect)
    local ok = os.execute(command .. redirect)
@@ -670,7 +671,7 @@ local function install_luarocks(install_env_vars)
       local compiler_flag = test_env.MINGW and "/MW" or ""
       local install_cmd = "install.bat /LUA " .. testing_paths.luadir .. " " .. compiler_flag .. " /P " .. testing_paths.testing_lrprefix .. " /NOREG /NOADMIN /F /Q /CONFIG " .. testing_paths.testing_lrprefix .. "/etc/luarocks"
       assert(execute_bool(install_cmd, false, install_env_vars))
-      assert(execute_bool("DIR " .. testing_paths.testing_lrprefix .. "/lua/luarocks/core", true, install_env_vars))
+      assert(execute_bool("DIR " .. (testing_paths.testing_lrprefix .. "/lua/luarocks/core"):gsub("/", "\\"), true, install_env_vars))
    else
       local configure_cmd = "./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix
       assert(execute_bool(configure_cmd, false, install_env_vars))
