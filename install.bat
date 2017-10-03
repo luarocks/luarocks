@@ -937,13 +937,14 @@ print("Configuring LuaRocks...")
 
 -- Create a site-config file
 local site_config = S("site_config_$LUA_VERSION"):gsub("%.","_")
-if exists(S([[$LUADIR\luarocks\]]..site_config..[[.lua]])) then
-	local nname = backup(S([[$LUADIR\luarocks\]]..site_config..[[.lua]]), site_config..".lua.bak")
+
+if exists(S([[$LUADIR\luarocks\core\]]..site_config..[[.lua]])) then
+	local nname = backup(S([[$LUADIR\luarocks\core\]]..site_config..[[.lua]]), site_config..".lua.bak")
 	print("***************")
 	print("*** WARNING *** LuaRocks site_config file already exists: '"..site_config..".lua'. The old file has been renamed to '"..nname.."'")
 	print("***************")
 end
-local f = io.open(vars.LUADIR.."\\luarocks\\"..site_config..".lua", "w")
+local f = io.open(vars.LUADIR.."\\luarocks\\core\\"..site_config..".lua", "w")
 f:write(S[=[
 local site_config = {}
 site_config.LUA_INCDIR=[[$LUA_INCDIR]]
