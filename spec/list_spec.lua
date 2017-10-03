@@ -22,7 +22,7 @@ describe("LuaRocks list tests #blackbox #b_list", function()
 
    it("LuaRocks list porcelain", function()
       local output = run.luarocks("list --porcelain")
-      assert.is.truthy(output:find("luacov\t0.11.0-1\tinstalled\t" .. path .. "/lib/luarocks/rocks-", 1, true))
+      assert.is.truthy(output:find("luacov\t0.11.0-1\tinstalled\t" .. testing_paths.testing_sys_rocks, 1, true))
    end)
 
    it("LuaRocks install outdated and list it", function()

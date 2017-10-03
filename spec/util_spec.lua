@@ -55,7 +55,7 @@ describe("Basic tests #blackbox #b_util", function()
    end)
    
    it("LuaRocks test site config", function()
-      local scname = "src/luarocks/core/site_config"..test_env.lua_version("%.", "_")..".lua"
+      local scname = "src/luarocks/core/site_config"..test_env.lua_version:gsub("%.", "_")..".lua"
    
       assert.is.truthy(os.rename(scname, scname..".tmp"))
       assert.is.falsy(lfs.attributes(scname))

@@ -53,7 +53,7 @@ describe("LuaRocks doc tests #blackbox #b_doc", function()
       it("LuaRocks doc of luacov and list doc folder", function()
          assert.is_true(run.luarocks_bool("install luacov"))
          local output = assert.is.truthy(run.luarocks("doc luacov --list"))
-         assert.is.truthy(output:find("/lib/luarocks/rocks-.*/luacov/0.11.0-1/doc/", 1, true))
+         assert.is.truthy(output:find("/lib/luarocks/rocks%-.*/luacov/0.11.0%-1/doc/", 1))
       end)
       
       it("LuaRocks doc of luacov local", function()
