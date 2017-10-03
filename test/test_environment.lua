@@ -348,7 +348,12 @@ local function create_env(testing_paths)
    local env_variables = {}
    env_variables.LUA_VERSION = luaversion_short
    env_variables.LUAROCKS_CONFIG = testing_paths.testing_dir .. "/testing_config.lua"
-   env_variables.LUA_PATH = testing_paths.testing_tree .. "/share/lua/" .. luaversion_short .. "/?.lua;"
+   if test_env.TEST_TARGET_OS == "windows" then
+      env_variables.LUA_PATH = testing_paths.testing_lrprefix .. "\\lua\\?.lua;"
+   else
+      env_variables.LUA_PATH = testing_paths.testing_lrprefix .. "/share/lua/" .. luaversion_short .. "/?.lua;"
+   end
+   env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_tree .. "/share/lua/" .. luaversion_short .. "/?.lua;"
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_tree .. "/share/lua/".. luaversion_short .. "/?/init.lua;"
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_sys_tree .. "/share/lua/" .. luaversion_short .. "/?.lua;"
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_sys_tree .. "/share/lua/".. luaversion_short .. "/?/init.lua;"
