@@ -481,6 +481,9 @@ local function create_paths(luaversion_full)
    testing_paths.testing_cache = testing_paths.testing_dir .. "/testing_cache-" .. luaversion_full
    testing_paths.testing_server = testing_paths.testing_dir .. "/testing_server-" .. luaversion_full
 
+   testing_paths.testing_rocks = testing_paths.testing_tree .. "/lib/luarocks/rocks-" .. test_env.lua_version
+   testing_paths.testing_sys_rocks = testing_paths.testing_sys_tree .. "/lib/luarocks/rocks-" .. test_env.lua_version
+
    if test_env.TEST_TARGET_OS == "windows" then
       testing_paths.win_tools = testing_paths.testing_lrprefix .. "/tools"
    end
@@ -665,7 +668,7 @@ local function install_luarocks(install_env_vars)
       local configure_cmd = "./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix
       assert(execute_bool(configure_cmd, false, install_env_vars))
       assert(execute_bool("make clean", false, install_env_vars))
-      assert(execute_bool("make src/luarocks/site_config_"..test_env.lua_version..".lua", false, install_env_vars))
+      assert(execute_bool("make src/luarocks/core/site_config_"..test_env.lua_version:gsub("%.", "_")..".lua", false, install_env_vars))
       assert(execute_bool("make dev", false, install_env_vars))
    end
    print("LuaRocks installed correctly!")
