@@ -12,13 +12,15 @@ REQUIREMENTS
 USAGE
    busted [-Xhelper <arguments>]
 ARGUMENTS
-   env=<type>     Set type of environment to use ("minimal" or "full",
-                  default: "minimal").
-   noreset        Don't reset environment after each test
-   clean          Remove existing testing environment.
-   travis         Add if running on TravisCI.
-   appveyor       Add if running on Appveyor.
-   os=<type>      Set OS ("linux", "osx", or "windows").
+   env=<type>             Set type of environment to use ("minimal" or "full",
+                          default: "minimal").
+   noreset                Don't reset environment after each test
+   clean                  Remove existing testing environment.
+   travis                 Add if running on TravisCI.
+   appveyor               Add if running on Appveyor.
+   os=<type>              Set OS ("linux", "osx", or "windows").
+   lua_dir=<path>         Path of Lua installation (default "/usr/local")
+   lua_interpreter=<lua>  Name of the interpreter (default "lua")
 ]]
 
 local function help()
@@ -194,6 +196,10 @@ function test_env.set_args()
          test_env.MINGW = true
       elseif argument == "vs" then
          test_env.MINGW = false
+      elseif argument:find("^lua_dir=") then
+         test_env.LUA_DIR = argument:match("^lua_dir=(.*)$")
+      elseif argument:find("^lua_interpreter=") then
+         test_env.LUA_INTERPRETER = argument:match("^lua_interpreter=(.*)$")
       else
          help()
       end
@@ -202,7 +208,7 @@ function test_env.set_args()
    if not test_env.TEST_TARGET_OS then
       title("OS CHECK")
 
-      if execute_bool("sw_vers") then 
+      if execute_bool("sw_vers &> /dev/null") then
          test_env.TEST_TARGET_OS = "osx"
          if test_env.TRAVIS then
             test_env.OPENSSL_DIRS = "OPENSSL_LIBDIR=/usr/local/opt/openssl/lib OPENSSL_INCDIR=/usr/local/opt/openssl/include"
@@ -453,11 +459,10 @@ local function reset_environment(testing_paths, md5sums)
 end
 
 local function create_paths(luaversion_full)
-   local cfg = require("luarocks.core.cfg")
 
    local testing_paths = {}
-   testing_paths.luadir = cfg.variables.LUA_BINDIR:gsub("/bin/?$", "")
-   testing_paths.lua = cfg.variables.LUA_BINDIR .. "/" .. cfg.lua_interpreter
+   testing_paths.luadir = (test_env.LUA_DIR or "/usr/local")
+   testing_paths.lua = testing_paths.luadir .. "/bin/" .. (test_env.LUA_INTERPRETER or "lua")
 
    if test_env.TEST_TARGET_OS == "windows" then
       testing_paths.luarocks_tmp = os.getenv("TEMP")
