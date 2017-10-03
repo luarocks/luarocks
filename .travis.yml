@@ -73,6 +73,7 @@ install:
   - if [ ! -f lua_install/bin/luacov ]; then luarocks install luacov; luarocks install luacov-coveralls; fi
 
 script:
+  - ls $HOME/lua_install
   - busted -o gtest --verbose -Xhelper "lua_dir=$HOME/lua_install,lua_interpreter=$LUA_INTERPRETER,travis"
   - busted -o gtest --verbose -Xhelper "lua_dir=$HOME/lua_install,lua_interpreter=$LUA_INTERPRETER,travis,env=full"
 
