@@ -19,48 +19,38 @@ matrix:
     - os: linux
       env:
         - LUA="lua=5.1"
-        - LUA_INTERPRETER="lua"
     - os: linux
       env:
         - LUA="lua=5.2"
-        - LUA_INTERPRETER="lua"
     - os: linux
       env:
         - LUA="lua=5.3"
-        - LUA_INTERPRETER="lua"
     - os: linux
       env:
         - LUA="luajit=2.0"
-        - LUA_INTERPRETER="luajit"
     - os: linux
       env:
         - LUA="luajit=2.1"
-        - LUA_INTERPRETER="luajit"
     - os: osx
       language: generic
       env:
         - LUA="lua=5.1"
-        - LUA_INTERPRETER="lua"
     - os: osx
       language: generic
       env:
         - LUA="lua=5.2"
-        - LUA_INTERPRETER="lua"
     - os: osx
       language: generic
       env:
         - LUA="lua=5.3"
-        - LUA_INTERPRETER="lua"
     - os: osx
       language: generic
       env:
         - LUA="luajit=2.0"
-        - LUA_INTERPRETER="luajit"
     - os: osx
       language: generic
       env:
         - LUA="luajit=2.1"
-        - LUA_INTERPRETER="luajit"
 
 
 before_install:
@@ -73,9 +63,9 @@ install:
   - if [ ! -f lua_install/bin/luacov ]; then luarocks install luacov; luarocks install luacov-coveralls; fi
 
 script:
-  - ls $PWD/lua_install/bin
-  - busted -o gtest --verbose -Xhelper "lua_dir=$PWD/lua_install,lua_interpreter=$LUA_INTERPRETER,travis"
-  - busted -o gtest --verbose -Xhelper "lua_dir=$PWD/lua_install,lua_interpreter=$LUA_INTERPRETER,travis,env=full"
+  - lua -v
+  - busted -o gtest --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
+  - busted -o gtest --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
 
 after_success:
   - luacov -c $TRAVIS_BUILD_DIR/test/luacov.config
