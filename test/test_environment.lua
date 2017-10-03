@@ -135,7 +135,7 @@ print(command .. redirect)
    local ok = os.execute(command .. redirect)
    ok = (ok == true or ok == 0) -- normalize Lua 5.1 output to boolean
    if redirect ~= "" then
-      if not ok then
+      if not ok or true then
          local fd = io.open(redirect_filename, "r")
          if fd then
             print(fd:read("*a"))
