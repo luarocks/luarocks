@@ -131,6 +131,7 @@ local function execute_bool(command, print_command, env_variables)
       redirect_filename = test_env.testing_paths.luarocks_tmp.."/output.txt"
       redirect = " > "..redirect_filename
    end
+print(command .. redirect)
    local ok = os.execute(command .. redirect)
    ok = (ok == true or ok == 0) -- normalize Lua 5.1 output to boolean
    if redirect ~= "" then
@@ -150,7 +151,7 @@ end
 -- @return output string: output the command execution
 local function execute_output(command, print_command, env_variables)
    command = test_env.execute_helper(command, print_command, env_variables)
-
+print(command)
    local file = assert(io.popen(command))
    local output = file:read('*all')
    file:close()
