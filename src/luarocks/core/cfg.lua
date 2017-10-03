@@ -19,12 +19,9 @@ cfg.lua_version = _VERSION:match(" (5%.[123])$") or "5.1"
 local version_suffix = cfg.lua_version:gsub("%.", "_")
 
 -- Load site-local global configurations
-local ok, site_config = pcall(require, "luarocks.site_config_"..version_suffix)
+local ok, site_config = pcall(require, "luarocks.core.site_config_"..version_suffix)
 if not ok then
-   ok, site_config = pcall(require, "luarocks.site_config")
-end
-if not ok then
-   io.stderr:write("Site-local luarocks/site_config.lua file not found. Incomplete installation?\n")
+   io.stderr:write("Site-local luarocks/core/site_config"..version_suffix..".lua file not found. Incomplete installation?\n")
    site_config = {}
 end
 
@@ -229,7 +226,6 @@ do
    sys_config_file_default = sys_config_dir.."/config-"..cfg.lua_version..".lua"
    sys_config_file = load_config_file({
       site_config.LUAROCKS_SYSCONFIG or sys_config_file_default,
-      sys_config_dir.."/config.lua",
    })
    sys_config_ok = (sys_config_file ~= nil)
 end
@@ -260,7 +256,6 @@ if not site_config.LUAROCKS_FORCE_CONFIG then
    if not home_config_ok then
       local list = {
          home_config_file_default,
-         home_config_dir.."/config.lua",
       }
       home_config_file = load_config_file(list)
       home_config_ok = (home_config_file ~= nil)
@@ -337,7 +332,7 @@ local defaults = {
 
    lua_modules_path = "/share/lua/"..cfg.lua_version,
    lib_modules_path = "/lib/lua/"..cfg.lua_version,
-   rocks_subdir = site_config.LUAROCKS_ROCKS_SUBDIR or "/lib/luarocks/rocks",
+   rocks_subdir = "/lib/luarocks/rocks-"..cfg.lua_version,
 
    arch = "unknown",
    lib_extension = "unknown",

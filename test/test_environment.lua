@@ -160,8 +160,10 @@ end
 function test_env.set_lua_version()
    if _G.jit then
       test_env.LUAJIT_V = _G.jit.version:match("(2%.%d)%.%d")
+      test_env.lua_version = "5.1"
    else
       test_env.LUA_V = _VERSION:match("5%.%d")
+      test_env.lua_version = test_env.LUA_V
    end
 end
 
@@ -658,12 +660,12 @@ local function install_luarocks(install_env_vars)
    if test_env.TEST_TARGET_OS == "windows" then
       local compiler_flag = test_env.MINGW and "/MW" or ""
       assert(execute_bool("install.bat /LUA " .. testing_paths.luadir .. " " .. compiler_flag .. " /P " .. testing_paths.testing_lrprefix .. " /NOREG /NOADMIN /F /Q /CONFIG " .. testing_paths.testing_lrprefix .. "/etc/luarocks", false, install_env_vars))
-      assert(execute_bool(testing_paths.win_tools .. "/cp " .. testing_paths.testing_lrprefix .. "/lua/luarocks/site_config* " .. testing_paths.src_dir .. "/luarocks/site_config.lua"))
+      assert(execute_bool(testing_paths.win_tools .. "/cp " .. testing_paths.testing_lrprefix .. "/lua/luarocks/site_config* "))
    else
       local configure_cmd = "./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix
       assert(execute_bool(configure_cmd, false, install_env_vars))
       assert(execute_bool("make clean", false, install_env_vars))
-      assert(execute_bool("make src/luarocks/site_config.lua", false, install_env_vars))
+      assert(execute_bool("make src/luarocks/site_config_"..test_env.lua_version..".lua", false, install_env_vars))
       assert(execute_bool("make dev", false, install_env_vars))
    end
    print("LuaRocks installed correctly!")
