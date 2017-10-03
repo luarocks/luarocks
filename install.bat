@@ -604,14 +604,14 @@ local function backup_config_files()
   vars.CONFBACKUPDIR = temppath
   mkdir(vars.CONFBACKUPDIR)
   exec(S[[COPY "$PREFIX\config*.*" "$CONFBACKUPDIR" >NUL]])
-  exec(S[[COPY "$PREFIX\lua\luarocks\site_config*.*" "$CONFBACKUPDIR" >NUL]])
+  exec(S[[COPY "$PREFIX\lua\luarocks\core\site_config*.*" "$CONFBACKUPDIR" >NUL]])
 end
 
 -- restore previously backed up config files
 local function restore_config_files()
   if not vars.CONFBACKUPDIR then return end -- there is no backup to restore
   exec(S[[COPY "$CONFBACKUPDIR\config*.*" "$PREFIX" >NUL]])
-  exec(S[[COPY "$CONFBACKUPDIR\site_config*.*" "$PREFIX\lua\luarocks" >NUL]])
+  exec(S[[COPY "$CONFBACKUPDIR\site_config*.*" "$PREFIX\lua\luarocks\core" >NUL]])
   -- cleanup
   exec(S[[RD /S /Q "$CONFBACKUPDIR"]])
   vars.CONFBACKUPDIR = nil
