@@ -104,7 +104,7 @@ function show.command(flags, name, version)
    elseif flags["issues"] then util.printout(descript.issues_url)
    elseif flags["labels"] then util.printout(descript.labels and table.concat(descript.labels, "\n"))
    elseif flags["modules"] then util.printout(keys_as_string(minfo.modules, "\n"))
-   elseif flags["deps"] then util.printout(keys_as_string(minfo.dependencies))
+   elseif flags["deps"] then util.printout(keys_as_string(minfo.dependencies or {}))
    elseif flags["rockspec"] then util.printout(rockspec_file)
    elseif flags["mversion"] then util.printout(version)
    else
@@ -151,7 +151,7 @@ function show.command(flags, name, version)
          end
       end
       local has_indirect_deps
-      for dep_name in util.sortedpairs(minfo.dependencies) do
+      for dep_name in util.sortedpairs(minfo.dependencies or {}) do
          if not direct_deps[dep_name] then
             if not has_indirect_deps then
                util.printout()
