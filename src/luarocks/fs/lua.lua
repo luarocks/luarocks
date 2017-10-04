@@ -810,13 +810,14 @@ end
 --- Apply a patch.
 -- @param patchname string: The filename of the patch.
 -- @param patchdata string or nil: The actual patch as a string.
-function fs_lua.apply_patch(patchname, patchdata)
+-- @param create_delete boolean: Support creating and deleting files in a patch.
+function fs_lua.apply_patch(patchname, patchdata, create_delete)
    local p, all_ok = patch.read_patch(patchname, patchdata)
    if not all_ok then
       return nil, "Failed reading patch "..patchname
    end
    if p then
-      return patch.apply_patch(p, 1)
+      return patch.apply_patch(p, 1, create_delete)
    end
 end
 

@@ -91,7 +91,8 @@ function build.apply_patches(rockspec)
       extract_from_rockspec(build_spec.patches)
       for patch, patchdata in util.sortedpairs(build_spec.patches) do
          util.printout("Applying patch "..patch.."...")
-         local ok, err = fs.apply_patch(tostring(patch), patchdata)
+         local create_delete = rockspec:format_is_at_least("3.0")
+         local ok, err = fs.apply_patch(tostring(patch), patchdata, create_delete)
          if not ok then
             return nil, "Failed applying patch "..patch
          end

@@ -30,4 +30,6 @@ These features are only enabled if `rockspec_format = "3.0"` is set in the rocks
 * `cmake` build type now supports `build.build_pass` and `build_install_pass`
   to disable `make` passes.
 * `git` fetch type fetches submodules by default.
+* Patches added in `patches` can create and delete files, following standard
+  patch rules.
 
