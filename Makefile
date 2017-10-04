@@ -125,8 +125,8 @@ run_luarocks:
 	'$(LUA_BINDIR)/lua$(LUA_SUFFIX)' -e "package.path=[[$(SAFEPWD)/src/?.lua;]]..package.path" src/bin/luarocks make rockspec --tree="$(PREFIX)"
 
 install_site_config: $(SITE_CONFIG)
-	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks"
-	cp $(SITE_CONFIG) "$(DESTDIR)$(LUADIR)/luarocks"
+	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks/core"
+	cp $(SITE_CONFIG) "$(DESTDIR)$(LUADIR)/luarocks/core"
 
 write_sysconfig:
 	mkdir -p "$(DESTDIR)$(ROCKS_TREE)"
