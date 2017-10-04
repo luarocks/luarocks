@@ -93,7 +93,7 @@ end
 function tools.delete(arg)
    assert(arg)
    assert(arg:match("^[a-zA-Z]?:?[\\/]"))
-   fs.execute_quiet("if exist "..fs.Q(arg.."\\").." ( RMDIR /S /Q "..fs.Q(arg).." ) else ( DEL /Q /F "..fs.Q(arg).." )")
+   fs.execute_quiet("if exist "..fs.Q(arg.."\\*").." ( RMDIR /S /Q "..fs.Q(arg).." ) else ( DEL /Q /F "..fs.Q(arg).." )")
 end
 
 --- Recursively scan the contents of a directory.
