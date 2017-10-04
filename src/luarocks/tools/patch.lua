@@ -84,6 +84,13 @@ local function file_copy(src, dest)
   return true
 end
 
+local function overwrite_file(filename)
+  local fh = io.open(filename, "w+")
+  if not fh then return false end
+  fh:close()
+  return true
+end
+
 local function string_as_file(s)
    return {
       at = 0,
@@ -565,7 +572,12 @@ function patch.apply_patch(the_patch, strip)
   local all_ok = true
   local total = #the_patch.source
   for fileno, filename in ipairs(the_patch.source) do
-    filename = strip_dirs(filename, strip)
+    if filename == "/dev/null" then
+      filename = strip_dirs(the_patch.target[fileno], strip)
+      assert(overwrite_file(filename))
+    else
+      filename = strip_dirs(filename, strip)
+    end
     local continue
     local f2patch = filename
     if not exists(f2patch) then
