@@ -12,13 +12,15 @@ REQUIREMENTS
 USAGE
    busted [-Xhelper <arguments>]
 ARGUMENTS
-   env=<type>     Set type of environment to use ("minimal" or "full",
-                  default: "minimal").
-   noreset        Don't reset environment after each test
-   clean          Remove existing testing environment.
-   travis         Add if running on TravisCI.
-   appveyor       Add if running on Appveyor.
-   os=<type>      Set OS ("linux", "osx", or "windows").
+   env=<type>             Set type of environment to use ("minimal" or "full",
+                          default: "minimal").
+   noreset                Don't reset environment after each test
+   clean                  Remove existing testing environment.
+   travis                 Add if running on TravisCI.
+   appveyor               Add if running on Appveyor.
+   os=<type>              Set OS ("linux", "osx", or "windows").
+   lua_dir=<path>         Path of Lua installation (default "/usr/local")
+   lua_interpreter=<lua>  Name of the interpreter (default "lua")
 ]]
 
 local function help()
@@ -128,6 +130,7 @@ local function execute_bool(command, print_command, env_variables)
    if print_command ~= nil then
       redirect_filename = test_env.testing_paths.luarocks_tmp.."/output.txt"
       redirect = " > "..redirect_filename
+      os.remove(redirect_filename)
    end
    local ok = os.execute(command .. redirect)
    ok = (ok == true or ok == 0) -- normalize Lua 5.1 output to boolean
@@ -160,8 +163,10 @@ end
 function test_env.set_lua_version()
    if _G.jit then
       test_env.LUAJIT_V = _G.jit.version:match("(2%.%d)%.%d")
+      test_env.lua_version = "5.1"
    else
       test_env.LUA_V = _VERSION:match("5%.%d")
+      test_env.lua_version = test_env.LUA_V
    end
 end
 
@@ -192,6 +197,10 @@ function test_env.set_args()
          test_env.MINGW = true
       elseif argument == "vs" then
          test_env.MINGW = false
+      elseif argument:find("^lua_dir=") then
+         test_env.LUA_DIR = argument:match("^lua_dir=(.*)$")
+      elseif argument:find("^lua_interpreter=") then
+         test_env.LUA_INTERPRETER = argument:match("^lua_interpreter=(.*)$")
       else
          help()
       end
@@ -338,7 +347,12 @@ local function create_env(testing_paths)
    local env_variables = {}
    env_variables.LUA_VERSION = luaversion_short
    env_variables.LUAROCKS_CONFIG = testing_paths.testing_dir .. "/testing_config.lua"
-   env_variables.LUA_PATH = testing_paths.testing_tree .. "/share/lua/" .. luaversion_short .. "/?.lua;"
+   if test_env.TEST_TARGET_OS == "windows" then
+      env_variables.LUA_PATH = testing_paths.testing_lrprefix .. "\\lua\\?.lua;"
+   else
+      env_variables.LUA_PATH = testing_paths.testing_lrprefix .. "/share/lua/" .. luaversion_short .. "/?.lua;"
+   end
+   env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_tree .. "/share/lua/" .. luaversion_short .. "/?.lua;"
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_tree .. "/share/lua/".. luaversion_short .. "/?/init.lua;"
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_sys_tree .. "/share/lua/" .. luaversion_short .. "/?.lua;"
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_sys_tree .. "/share/lua/".. luaversion_short .. "/?/init.lua;"
@@ -451,11 +465,10 @@ local function reset_environment(testing_paths, md5sums)
 end
 
 local function create_paths(luaversion_full)
-   local cfg = require("luarocks.core.cfg")
 
    local testing_paths = {}
-   testing_paths.luadir = cfg.variables.LUA_BINDIR:gsub("/bin/?$", "")
-   testing_paths.lua = cfg.variables.LUA_BINDIR .. "/" .. cfg.lua_interpreter
+   testing_paths.luadir = (test_env.LUA_DIR or "/usr/local")
+   testing_paths.lua = testing_paths.luadir .. "/bin/" .. (test_env.LUA_INTERPRETER or "lua")
 
    if test_env.TEST_TARGET_OS == "windows" then
       testing_paths.luarocks_tmp = os.getenv("TEMP")
@@ -478,6 +491,9 @@ local function create_paths(luaversion_full)
    testing_paths.testing_sys_tree_copy = testing_paths.testing_dir .. "/testing_sys_copy-" .. luaversion_full
    testing_paths.testing_cache = testing_paths.testing_dir .. "/testing_cache-" .. luaversion_full
    testing_paths.testing_server = testing_paths.testing_dir .. "/testing_server-" .. luaversion_full
+
+   testing_paths.testing_rocks = testing_paths.testing_tree .. "/lib/luarocks/rocks-" .. test_env.lua_version
+   testing_paths.testing_sys_rocks = testing_paths.testing_sys_tree .. "/lib/luarocks/rocks-" .. test_env.lua_version
 
    if test_env.TEST_TARGET_OS == "windows" then
       testing_paths.win_tools = testing_paths.testing_lrprefix .. "/tools"
@@ -658,12 +674,12 @@ local function install_luarocks(install_env_vars)
    if test_env.TEST_TARGET_OS == "windows" then
       local compiler_flag = test_env.MINGW and "/MW" or ""
       assert(execute_bool("install.bat /LUA " .. testing_paths.luadir .. " " .. compiler_flag .. " /P " .. testing_paths.testing_lrprefix .. " /NOREG /NOADMIN /F /Q /CONFIG " .. testing_paths.testing_lrprefix .. "/etc/luarocks", false, install_env_vars))
-      assert(execute_bool(testing_paths.win_tools .. "/cp " .. testing_paths.testing_lrprefix .. "/lua/luarocks/site_config* " .. testing_paths.src_dir .. "/luarocks/site_config.lua"))
+      assert(execute_bool(testing_paths.win_tools .. "/cp " .. testing_paths.testing_lrprefix .. "/lua/luarocks/core/site_config* " .. testing_paths.src_dir .. "/luarocks/core"))
    else
       local configure_cmd = "./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix
       assert(execute_bool(configure_cmd, false, install_env_vars))
       assert(execute_bool("make clean", false, install_env_vars))
-      assert(execute_bool("make src/luarocks/site_config.lua", false, install_env_vars))
+      assert(execute_bool("make src/luarocks/core/site_config_"..test_env.lua_version:gsub("%.", "_")..".lua", false, install_env_vars))
       assert(execute_bool("make dev", false, install_env_vars))
    end
    print("LuaRocks installed correctly!")

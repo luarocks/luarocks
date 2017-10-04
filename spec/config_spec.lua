@@ -12,7 +12,7 @@ describe("LuaRocks config tests #blackbox #b_config", function()
    before_each(function()
       test_env.setup_specs()
       test_env.unload_luarocks() -- need to be required here, because site_config is created after first loading of specs
-      site_config = require("luarocks.site_config")
+      site_config = require("luarocks.core.site_config_" .. test_env.lua_version:gsub("%.", "_"))
    end)
 
    describe("LuaRocks config - basic tests", function()
@@ -64,15 +64,7 @@ describe("LuaRocks config tests #blackbox #b_config", function()
 
    describe("LuaRocks config - more complex tests", function()
       local scdir = testing_paths.testing_lrprefix .. "/etc/luarocks"
-      local versioned_scname = scdir .. "/config-" .. env_variables.LUA_VERSION .. ".lua"
-      local scname = scdir .. "/config.lua"
-
-      local configfile
-      if test_env.TEST_TARGET_OS == "windows" then
-         configfile = versioned_scname
-      else
-         configfile = scname
-      end
+      local configfile = scdir .. "/config-" .. env_variables.LUA_VERSION .. ".lua"
 
       it("LuaRocks fail system config", function()
          os.rename(configfile, configfile .. ".bak")

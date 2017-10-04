@@ -38,14 +38,14 @@ init:
 before_build:
   - set PATH=C:\Python27\Scripts;%PATH% # Add directory containing 'pip' to PATH
   - pip install hererocks
-  - hererocks env --%LUA% --luarocks @luarocks-3 --target=%COMPILER%
-  - call env\bin\activate
+  - hererocks lua_install --%LUA% --luarocks @luarocks-3 --target=%COMPILER%
+  - call lua_install\bin\activate
 
 build_script:
   - luarocks install busted 1> NUL 2> NUL
 
 test_script:
-  - busted --lpath=.//?.lua --exclude-tags=ssh,unix,mock -Xhelper appveyor,%COMPILER%
+  - busted --lpath=.//?.lua --exclude-tags=ssh,unix,mock -Xhelper lua_dir=%CD%\lua_install,appveyor,%COMPILER%
 
 after_test:
   - if "%LUA%"=="lua 5.1" (luarocks show bit32 || luarocks install bit32)

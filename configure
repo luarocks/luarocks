@@ -58,9 +58,6 @@ system's package manager.
 --with-md5-checker=TOOL     Which tool to use as a downloader.
                             Valid options are: md5sum, openssl
                             Default is to auto-detect.
---versioned-rocks-dir       Use a versioned rocks dir, such as
-                            \$PREFIX/lib/luarocks/rocks-$LUA_VERSION/.
-                            Default is to auto-detect the necessity.
 --force-config              Use a single config location. Do not use the
                             \$LUAROCKS_CONFIG variable or the user's home
                             directory. Useful to avoid conflicts when LuaRocks
@@ -155,7 +152,8 @@ do
       FORCE_CONFIG=yes
       ;;
    --versioned-rocks-dir)
-      VERSIONED_ROCKS_DIR=yes
+      echo "--versioned-rocks-dir is no longer necessary."
+      echo "The rocks tree in LuaRocks 3.0 is always versioned."
       ;;
    --lua-suffix)
       [ -n "$value" ] || die "Missing value in flag $key."
@@ -411,25 +409,6 @@ for v in 5.1 5.2 5.3; do
   fi
 done
 
-LUAROCKS_ROCKS_SUBDIR=/lib/luarocks/rocks
-if [ "$VERSIONED_ROCKS_DIR" = "yes" ]
-then
-   LUAROCKS_ROCKS_SUBDIR=$LUAROCKS_ROCKS_SUBDIR-$LUA_VERSION
-   echo "Using versioned rocks dir: $PREFIX$LUAROCKS_ROCKS_SUBDIR"
-elif [ -e "$PREFIX/share/lua/$LUA_VERSION/luarocks/site_config.lua" ]
-then
-   echo "Existing installation detected."
-   LUAROCKS_ROCKS_SUBDIR=`grep "LUAROCKS_ROCKS_SUBDIR" "$PREFIX/share/lua/$LUA_VERSION/luarocks/site_config.lua" | sed 's,.*=\[\[\(.*\)\]\],\1,'`
-   echo "Using previously configured rocks dir: $PREFIX$LUAROCKS_ROCKS_SUBDIR"
-elif [ -n "$LUA_OTHER_VERSION" ]
-then
-   echo "Existing installation detected for other Lua version ($LUA_OTHER_VERSION)."
-   LUAROCKS_ROCKS_SUBDIR=$LUAROCKS_ROCKS_SUBDIR-$LUA_VERSION
-   echo "Using versioned rocks dir: $PREFIX$LUAROCKS_ROCKS_SUBDIR"
-else
-   echo "Using unversioned rocks dir: $PREFIX$LUAROCKS_ROCKS_SUBDIR"
-fi
-
 if [ "$LUAROCKS_UNAME_S" = Linux ]
 then
    GCC_ARCH=`gcc -print-multiarch 2>/dev/null`
@@ -447,6 +426,8 @@ if [ -f config.unix ]; then
    rm -f config.unix
 fi
 
+SITE_CONFIG=src/luarocks/core/site_config_$(echo "$LUA_VERSION" | sed 's,\.,_,').lua
+
 # Write config
 
 echo "Writing configuration..."
@@ -458,6 +439,7 @@ cat <<EOF > config.unix
 # Run "./configure --help" for details.
 
 LUA_VERSION=$LUA_VERSION
+SITE_CONFIG=$SITE_CONFIG
 PREFIX=$PREFIX
 SYSCONFDIR=$SYSCONFDIR
 ROCKS_TREE=$ROCKS_TREE
@@ -472,7 +454,6 @@ LUAROCKS_UNAME_M=$LUAROCKS_UNAME_M
 LUAROCKS_UNAME_S=$LUAROCKS_UNAME_S
 LUAROCKS_DOWNLOADER=$LUAROCKS_DOWNLOADER
 LUAROCKS_MD5CHECKER=$LUAROCKS_MD5CHECKER
-LUAROCKS_ROCKS_SUBDIR=$LUAROCKS_ROCKS_SUBDIR
 MULTIARCH_SUBDIR=$MULTIARCH_SUBDIR
 
 EOF

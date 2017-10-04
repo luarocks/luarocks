@@ -35,7 +35,7 @@ describe("LuaRocks make tests #blackbox #b_make", function()
 
       -- test it
       assert.is_true(run.luarocks_bool("show luasocket"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/luasocket/3.0rc1-2/luasocket-3.0rc1-2.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket/3.0rc1-2/luasocket-3.0rc1-2.rockspec"))
 
       -- delete downloaded and unpacked files
       lfs.chdir(testing_paths.luarocks_dir)
@@ -63,7 +63,7 @@ describe("LuaRocks make tests #blackbox #b_make", function()
          assert.is_true(run.luarocks_bool("make"))
 
          assert.is_true(run.luarocks_bool("show lxsh"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-3/lxsh-0.8.6-3.rockspec"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-3/lxsh-0.8.6-3.rockspec"))
       end)
 
       it("LuaRocks make unnamed rockspec", function()
@@ -71,7 +71,7 @@ describe("LuaRocks make tests #blackbox #b_make", function()
          assert.is_true(run.luarocks_bool("make"))
 
          assert.is_true(run.luarocks_bool("show lxsh"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
          os.remove("rockspec")
       end)
       
@@ -81,7 +81,7 @@ describe("LuaRocks make tests #blackbox #b_make", function()
          assert.is.truthy(output:match("Error: Inconsistency between rockspec filename"))
 
          assert.is_false(run.luarocks_bool("show lxsh"))
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
       end)
 
       it("LuaRocks make ambiguous unnamed rockspec", function()
@@ -91,7 +91,7 @@ describe("LuaRocks make tests #blackbox #b_make", function()
          assert.is.truthy(output:match("Error: Please specify which rockspec file to use"))
 
          assert.is_false(run.luarocks_bool("show lxsh"))
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/luarocks/rocks/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
       end)
       
       it("LuaRocks make pack binary rock", function()

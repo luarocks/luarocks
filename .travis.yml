@@ -63,8 +63,9 @@ install:
   - if [ ! -f lua_install/bin/luacov ]; then luarocks install luacov; luarocks install luacov-coveralls; fi
 
 script:
-  - busted -o gtest --verbose -Xhelper travis
-  - busted -o gtest --verbose -Xhelper travis,env=full
+  - lua -v
+  - busted -o gtest --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
+  - busted -o gtest --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
 
 after_success:
   - luacov -c $TRAVIS_BUILD_DIR/test/luacov.config
