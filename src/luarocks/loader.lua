@@ -222,10 +222,11 @@ end
 
 --- Return the pathname of the file that would be loaded for a module.
 -- @param module string: module name (eg. "socket.core")
--- @return string: filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so")
+-- @return filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so"),
+-- the rock name and the rock version.
 function loader.which(module)
-   local _, _, file_name = select_module(module, path.which_i)
-   return file_name
+   local rock_name, rock_version, file_name = select_module(module, path.which_i)
+   return file_name, rock_name, rock_version
 end
 
 --- Package loader for LuaRocks support.
