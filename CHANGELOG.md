@@ -6,11 +6,6 @@ What's new in LuaRocks 3.0
   For example, if you have `/some/dir/lua/5.1/` in your `$LUA_PATH` and
   you are running Lua 5.2, `luarocks.loader` and the `luarocks` command-line
   tool will convert it to `/some/dir/lua/5.2/`.
-* Modules needed by `luarocks.loader` were moved into the `luarocks.core` namespace.
-  Modules in `luarocks.core` only depend on other `luarocks.core` modules.
-  (Notably, `luarocks.core` does not use `luarocks.fs`.)
-* Modules representing `luarocks` commands were moved into the `luarocks.cmd` namespace.
-* Modules representing `luarocks-admin` commands were moved into the `luarocks.admin.cmd` namespace.
 
 Rockspec 3.0
 ------------
@@ -33,3 +28,11 @@ These features are only enabled if `rockspec_format = "3.0"` is set in the rocks
 * Patches added in `patches` can create and delete files, following standard
   patch rules.
 
+Internal changes
+----------------
+
+* Modules needed by `luarocks.loader` were moved into the `luarocks.core` namespace.
+  Modules in `luarocks.core` only depend on other `luarocks.core` modules.
+  (Notably, `luarocks.core` does not use `luarocks.fs`.)
+* Modules representing `luarocks` commands were moved into the `luarocks.cmd` namespace.
+* Modules representing `luarocks-admin` commands were moved into the `luarocks.admin.cmd` namespace.
