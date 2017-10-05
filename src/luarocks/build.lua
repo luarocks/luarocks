@@ -3,6 +3,7 @@ local build = {}
 
 local path = require("luarocks.path")
 local util = require("luarocks.util")
+local fun = require("luarocks.fun")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
@@ -254,7 +255,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
          build_spec.type = "builtin"
       end
 
-      if cfg.accepted_build_types and util.array_contains(cfg.accepted_build_types, build_spec.type) then
+      if cfg.accepted_build_types and fun.contains(cfg.accepted_build_types, build_spec.type) then
          return nil, "This rockspec uses the '"..build_spec.type.."' build type, which is blocked by the 'accepted_build_types' setting in your LuaRocks configuration."
       end
 

@@ -442,15 +442,6 @@ function util.get_default_rockspec()
    end
 end
 
-function util.array_contains(tbl, value)
-   for _, v in ipairs(tbl) do
-      if v == value then
-         return true
-      end
-   end
-   return false
-end
-
 -- Quote Lua string, analogous to fs.Q.
 -- @param s A string, such as "hello"
 -- @return string: A quoted string, such as '"hello"'
