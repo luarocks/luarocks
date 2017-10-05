@@ -7,10 +7,10 @@ local loader = require("luarocks.loader")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 
-which_cmd.help_summary = "Tell which file is loaded for a given module name."
+which_cmd.help_summary = "Tell which file corresponds to a given module name."
 which_cmd.help_arguments = "<modname>"
 which_cmd.help = [[
-Given a module name like "foo.bar", return which file would be loaded to resolve
+Given a module name like "foo.bar", output which file would be loaded to resolve
 that module by luarocks.loader, like "/usr/local/lua/]]..cfg.lua_version..[[/foo/bar.lua".
 ]]
 
