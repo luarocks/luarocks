@@ -7,9 +7,9 @@ local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local writer = require("luarocks.manif.writer")
-local index = require("luarocks.index")
 local fs = require("luarocks.fs")
 local cache = require("luarocks.admin.cache")
+local index = require("luarocks.admin.index")
 
 admin_remove.help_summary = "Remove a rock or rockspec from a rocks server."
 admin_remove.help_arguments = "[--server=<server>] [--no-refresh] {<rockspec>|<rock>...}"

@@ -4,7 +4,7 @@
 local make_manifest = {}
 
 local writer = require("luarocks.manif.writer")
-local index = require("luarocks.index")
+local index = require("luarocks.admin.index")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local deps = require("luarocks.deps")
