@@ -23,7 +23,7 @@ function fun.contains(xs, v)
    return false
 end
 
-function fun.map(f, xs)
+function fun.map(xs, f)
    local rs = {}
    for i = 1, #xs do
       rs[i] = f(xs[i])
@@ -31,10 +31,10 @@ function fun.map(f, xs)
    return rs
 end
 
-function fun.traverse(f, t)
-   return fun.map(function(x)
-      return type(x) == "table" and fun.traverse(f, x) or f(x)
-   end, t)
+function fun.traverse(t, f)
+   return fun.map(t, function(x)
+      return type(x) == "table" and fun.traverse(x, f) or f(x)
+   end)
 end
 
 return fun
