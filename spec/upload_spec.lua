@@ -1,11 +1,10 @@
 local test_env = require("test/test_environment")
-local test_mock_server = require("test/test_mock_server")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
-local extra_rocks = test_mock_server.extra_rocks()
+local extra_rocks = test_env.mock_server_extra_rocks()
 
 describe("LuaRocks upload tests #blackbox #b_upload", function()
 
@@ -35,9 +34,9 @@ describe("LuaRocks upload tests #blackbox #b_upload", function()
    end)
 
    describe("LuaRocks upload tests with Xavante server #mock", function()
-      before_each(test_mock_server.init)
+      before_each(test_env.mock_server_init)
       
-      after_each(test_mock_server.done)
+      after_each(test_env.mock_server_done)
 
       it("LuaRocks upload rockspec with api-key", function()
          assert.is_true(run.luarocks_bool("upload " .. testing_paths.testing_dir .. "/testfiles/a_rock-1.0-1.rockspec " .. test_env.OPENSSL_DIRS .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/luarocks_site.lua"}))

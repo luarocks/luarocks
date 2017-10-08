@@ -1,12 +1,11 @@
 local test_env = require("test/test_environment")
-local test_mock_server = require("test/test_mock_server")
 local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
-local extra_rocks = test_mock_server.extra_rocks({
+local extra_rocks = test_env.mock_server_extra_rocks({
    "/abelhas-1.0-1.rockspec",
    "/lpeg-0.12-1.rockspec"
 })
@@ -38,12 +37,12 @@ describe("LuaRocks new_version tests #blackbox #b_new_version", function()
 
    describe("LuaRocks new_version more complex tests", function()
       it("LuaRocks new version with remote spec", function()
-         test_mock_server.init()
+         test_env.mock_server_init()
          assert.is_true(run.luarocks_bool("new_version http://localhost:8080/file/a_rock-1.0-1.rockspec"))
          assert.is.truthy(lfs.attributes("a_rock-1.0-1.rockspec"))
          assert.is.truthy(lfs.attributes("a_rock-1.0-2.rockspec"))
          test_env.remove_files(lfs.currentdir(), "luasocket--")
-         test_mock_server.done()
+         test_env.mock_server_done()
       end)
 
       it("LuaRocks new_version of luacov", function()
