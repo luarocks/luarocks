@@ -64,6 +64,23 @@ server:add_resource("/api/1/{id:[0-9]+}/upload_rock/{id:[0-9]+}", {
    }
 })
 
+server:add_resource("/file/{name:[^/]+}", {
+   {
+      method = "GET",
+      path = "/",
+      produces = "text/plain",
+      handler = function(query, name)
+         local fd = io.open("test/testfiles/"..name, "r")
+         if not fd then
+            return restserver.response():status(404)
+         end
+         local data = fd:read("*a")
+         fd:close()
+         return restserver.response():status(200):entity(data)
+      end
+   }
+})
+
 -- SHUTDOWN this mock-server
 server:add_resource("/shutdown", {
    {
