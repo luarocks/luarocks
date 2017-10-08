@@ -1,7 +1,11 @@
 
 --- Generic utilities for handling pathnames.
 local dir = {}
-setmetatable(dir, { __index = require("luarocks.core.dir") })
+
+local core = require("luarocks.core.dir")
+
+dir.path = core.path
+dir.split_url = core.split_url
 
 --- Strip the path off a path+filename.
 -- @param pathname string: A path+name, such as "/a/b/c"

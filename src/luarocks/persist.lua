@@ -4,9 +4,11 @@
 -- Implemented separately to avoid interdependencies,
 -- as it is used in the bootstrapping stage of the cfg module.
 local persist = {}
-setmetatable(persist, { __index = require("luarocks.core.persist") })
 
+local core = require("luarocks.core.persist")
 local util = require("luarocks.util")
+
+persist.load_into_table = core.load_into_table
 
 local write_table
 

@@ -3,8 +3,8 @@
 -- They are loaded into manifest tables, which are then used for
 -- performing searches, matching dependencies, etc.
 local manif = {}
-setmetatable(manif, { __index = require("luarocks.core.manif") })
 
+local core = require("luarocks.core.manif")
 local persist = require("luarocks.persist")
 local fetch = require("luarocks.fetch")
 local dir = require("luarocks.dir")
@@ -12,8 +12,31 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
+local type_manifest = require("luarocks.type.manifest")
+
+manif.cache_manifest = core.cache_manifest
 
 manif.rock_manifest_cache = {}
+
+local function check_manifest(repo_url, manifest, globals)
+   local ok, err = type_manifest.check(manifest, globals)
+   if not ok then
+      core.cache_manifest(repo_url, cfg.lua_version, nil)
+      return nil, "Error checking manifest: "..err, "type"
+   end
+   return manifest
+end
+
+function manif.load_local_manifest(repo_url)
+   local manifest, err, errcode = core.load_local_manifest(repo_url)
+   if not manifest then
+      return nil, err, errcode
+   end
+   if err then
+      return check_manifest(repo_url, manifest, err)
+   end
+   return manifest
+end
 
 function manif.load_rock_manifest(name, version, root)
    assert(type(name) == "string")
@@ -60,7 +83,7 @@ function manif.load_manifest(repo_url, lua_version)
    assert(type(lua_version) == "string" or not lua_version)
    lua_version = lua_version or cfg.lua_version
 
-   local cached_manifest = manif.get_cached_manifest(repo_url, lua_version)
+   local cached_manifest = core.get_cached_manifest(repo_url, lua_version)
    if cached_manifest then
       return cached_manifest
    end
@@ -94,8 +117,8 @@ function manif.load_manifest(repo_url, lua_version)
    end
    if pathname:match(".*%.zip$") then
       pathname = fs.absolute_name(pathname)
-      local dir = dir.dir_name(pathname)
-      fs.change_dir(dir)
+      local dirname = dir.dir_name(pathname)
+      fs.change_dir(dirname)
       local nozip = pathname:match("(.*)%.zip$")
       fs.delete(nozip)
       local ok = fs.unzip(pathname)
@@ -107,7 +130,11 @@ function manif.load_manifest(repo_url, lua_version)
       end
       pathname = nozip
    end
-   return manif.manifest_loader(pathname, repo_url, lua_version)
+   local manifest, err, errcode = core.manifest_loader(pathname, repo_url, lua_version)
+   if not manifest then
+      return nil, err, errcode
+   end
+   return check_manifest(repo_url, manifest, err)
 end
 
 --- Get type and name of an item (a module or a command) provided by a file.

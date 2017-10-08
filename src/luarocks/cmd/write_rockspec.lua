@@ -7,7 +7,7 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local persist = require("luarocks.persist")
-local type_check = require("luarocks.type_check")
+local type_rockspec = require("luarocks.type.rockspec")
 local util = require("luarocks.util")
 local vers = require("luarocks.vers")
 
@@ -364,7 +364,7 @@ function write_rockspec.command(flags, name, version, url_or_dir)
       
    rockspec_cleanup(rockspec)
    
-   persist.save_from_table(filename, rockspec, type_check.rockspec_order)
+   persist.save_from_table(filename, rockspec, type_rockspec.order)
 
    util.printout()   
    util.printout("Wrote template at "..filename.." -- you should now edit and finish it.")

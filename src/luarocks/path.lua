@@ -3,11 +3,17 @@
 -- All paths are configured in this module, making it a single
 -- point where the layout of the local installation is defined in LuaRocks.
 local path = {}
-setmetatable(path, { __index = require("luarocks.core.path") })
 
+local core = require("luarocks.core.path")
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
+
+path.rocks_dir = core.rocks_dir
+path.versioned_name = core.versioned_name
+path.path_to_module = core.path_to_module
+path.deploy_lua_dir = core.deploy_lua_dir
+path.deploy_lib_dir = core.deploy_lib_dir
 
 --- Infer rockspec filename from a rock filename.
 -- @param rock_name string: Pathname of a rock file.

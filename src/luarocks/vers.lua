@@ -10,7 +10,12 @@
 -- "common sense" heuristics. The precise specification of the
 -- comparison criteria is the source code of this module.
 local vers = {}
-setmetatable(vers, { __index = require("luarocks.core.vers") })
+
+local core = require("luarocks.core.vers")
+
+vers.parse_version = core.parse_version
+vers.compare_versions = core.compare_versions
+vers.match_constraints = core.match_constraints
 
 --- Check if rockspec format version satisfies version requirement.
 -- @param rockspec table: The rockspec table.

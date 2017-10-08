@@ -5,7 +5,15 @@
 -- as this is used in the bootstrapping stage of luarocks.core.cfg.
 
 local util = {}
-setmetatable(util, { __index = require("luarocks.core.util") })
+
+local core = require("luarocks.core.util")
+
+util.popen_read = core.popen_read
+util.cleanup_path = core.cleanup_path
+util.split_string = core.split_string
+util.keys = core.keys
+util.printerr = core.printerr
+util.sortedpairs = core.sortedpairs
 
 local unpack = unpack or table.unpack
 
@@ -223,7 +231,7 @@ function util.platform_overrides(tbl)
       for _, platform in ipairs(cfg.platforms) do
          local platform_tbl = tbl.platforms[platform]
          if platform_tbl then
-            util.deep_merge(tbl, platform_tbl)
+            core.deep_merge(tbl, platform_tbl)
          end
       end
    end
@@ -243,7 +251,7 @@ local var_format_pattern = "%$%((%a[%a%d_]+)%)"
 -- needed variables.
 -- @param msg string: the warning message to display.
 function util.warn_if_not_used(var_defs, needed_set, msg)
-   needed_set = util.make_shallow_copy(needed_set)
+   needed_set = core.make_shallow_copy(needed_set)
    for _, val in pairs(var_defs) do
       for used in val:gmatch(var_format_pattern) do
          needed_set[used] = nil

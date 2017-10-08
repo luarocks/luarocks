@@ -3,7 +3,6 @@
 local manif = {}
 
 local persist = require("luarocks.core.persist")
-local type_check = require("luarocks.core.type_check")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.core.dir")
 local require = nil
@@ -37,24 +36,15 @@ end
 -- @param file string: The local filename of the manifest file.
 -- @param repo_url string: The repository identifier.
 -- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
--- @param quick boolean: If given, skips type checking.
 -- @return table or (nil, string, string): the manifest or nil,
--- error message and error code ("open", "load", "run" or "type").
-function manif.manifest_loader(file, repo_url, lua_version, quick)
+-- error message and error code ("open", "load", "run").
+function manif.manifest_loader(file, repo_url, lua_version)
    local manifest, err, errcode = persist.load_into_table(file)
    if not manifest then
       return nil, "Failed loading manifest for "..repo_url..": "..err, errcode
    end
-   local globals = err
-   if not quick then
-      local ok, err = type_check.type_check_manifest(manifest, globals)
-      if not ok then
-         return nil, "Error checking manifest: "..err, "type"
-      end
-   end
-
    manif.cache_manifest(repo_url, lua_version, manifest)
-   return manifest
+   return manifest, err, errcode
 end
 
 --- Load a local manifest describing a repository.

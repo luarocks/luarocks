@@ -8,7 +8,7 @@ local download = require("luarocks.download")
 local fetch = require("luarocks.fetch")
 local persist = require("luarocks.persist")
 local fs = require("luarocks.fs")
-local type_check = require("luarocks.type_check")
+local type_rockspec = require("luarocks.type.rockspec")
 
 new_version.help_summary = "Auto-write a rockspec for a new version of a rock."
 new_version.help_arguments = "[--tag=<tag>] [<package>|<rockspec>] [<new_version>] [<new_url>]"
@@ -184,7 +184,7 @@ function new_version.command(flags, input, version, url)
    
    local out_filename = out_name.."-"..new_rockver.."-"..new_rev..".rockspec"
    
-   persist.save_from_table(out_filename, out_rs, type_check.rockspec_order)
+   persist.save_from_table(out_filename, out_rs, type_rockspec.order)
    
    util.printout("Wrote "..out_filename)
 
