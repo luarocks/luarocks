@@ -52,6 +52,8 @@ function help.command(flags, command)
       util.printout([[
 	These apply to all commands, as appropriate:
 
+	--dev                  Enable the sub-repositories in rocks servers
+	                       for rockspecs of in-development versions
 	--server=<server>      Fetch rocks/rockspecs from this server
 	                       (takes priority over config file)
 	--only-server=<server> Fetch rocks/rockspecs from this server only

@@ -10,6 +10,7 @@ local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
 local fs = require("luarocks.fs")
+local fun = require("luarocks.fun")
 
 local program = util.this_program("luarocks")
 
@@ -172,11 +173,23 @@ function command_line.run_command(...)
    cfg.variables.SCRIPTS_DIR = cfg.deploy_bin_dir
 
    if flags["server"] then
-      local protocol, path = dir.split_url(flags["server"])
-      table.insert(cfg.rocks_servers, 1, protocol.."://"..path)
+      local protocol, pathname = dir.split_url(flags["server"])
+      table.insert(cfg.rocks_servers, 1, protocol.."://"..pathname)
+   end
+
+   if flags["dev"] then
+      local append_dev = function(s) return dir.path(s, "dev") end
+      local dev_servers = fun.traverse(cfg.rocks_servers, append_dev)
+      cfg.rocks_servers = fun.concat(dev_servers, cfg.rocks_servers)
    end
    
    if flags["only-server"] then
+      if flags["dev"] then
+         die("--only-server cannot be used with --dev")
+      end
+      if flags["server"] then
+         die("--only-server cannot be used with --server")
+      end
       cfg.rocks_servers = { flags["only-server"] }
    end
 
