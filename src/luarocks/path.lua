@@ -200,7 +200,7 @@ end
 -- @return string: A directory name using the platform's separator.
 function path.module_to_path(mod)
    assert(type(mod) == "string")
-   return (mod:gsub("[^.]*$", ""):gsub("%.", dir.separator))
+   return (mod:gsub("[^.]*$", ""):gsub("%.", "/"))
 end
 
 --- Set up path-related variables for a given rock.

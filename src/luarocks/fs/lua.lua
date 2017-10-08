@@ -28,8 +28,6 @@ local patch = require("luarocks.tools.patch")
 
 local dir_stack = {}
 
-local dir_separator = "/"
-
 --- Test is file/dir is writable.
 -- Warning: testing if a file/dir is writable does not guarantee
 -- that it will remain writable and therefore it is no replacement
@@ -236,8 +234,8 @@ function fs_lua.make_dir(directory)
         path = ""
      end
    end
-   for d in directory:gmatch("([^"..dir.separator.."]+)"..dir.separator.."*") do
-      path = path and path .. dir.separator .. d or d
+   for d in directory:gmatch("([^/]+)/*") do
+      path = path and path .. "/" .. d or d
       local mode = lfs.attributes(path, "mode")
       if not mode then
          local ok, err = lfs.mkdir(path)
@@ -416,7 +414,7 @@ local function recursive_find(cwd, prefix, result)
          table.insert(result, item)
          local pathname = dir.path(cwd, file)
          if lfs.attributes(pathname, "mode") == "directory" then
-            recursive_find(pathname, item..dir_separator, result)
+            recursive_find(pathname, item.."/", result)
          end
       end
    end
@@ -798,7 +796,7 @@ function fs_lua.make_temp_dir(name)
    assert(type(name) == "string")
    name = dir.normalize(name)
 
-   return posix.mkdtemp((os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-XXXXXX")
+   return posix.mkdtemp((os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name:gsub("/", "_") .. "-XXXXXX")
 end
 
 end

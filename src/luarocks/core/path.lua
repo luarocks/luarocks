@@ -44,7 +44,7 @@ function path.path_to_module(file)
 
    local name = file:match("(.*)%."..cfg.lua_extension.."$")
    if name then
-      name = name:gsub(dir.separator, ".")
+      name = name:gsub("/", ".")
       local init = name:match("(.*)%.init$")
       if init then
          name = init
@@ -52,12 +52,12 @@ function path.path_to_module(file)
    else
       name = file:match("(.*)%."..cfg.lib_extension.."$")
       if name then
-         name = name:gsub(dir.separator, ".")
+         name = name:gsub("/", ".")
       --[[ TODO disable static libs until we fix the conflict in the manifest, which will take extending the manifest format.
       else
          name = file:match("(.*)%."..cfg.static_lib_extension.."$")
          if name then
-            name = name:gsub(dir.separator, ".")
+            name = name:gsub("/", ".")
          end
       ]]
       end

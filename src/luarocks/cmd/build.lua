@@ -76,7 +76,7 @@ local function do_build(name, version, deps_mode, build_only_deps)
       return build_rock(name, true, deps_mode, build_only_deps)
    elseif name:match("%.rock$") then
       return build_rock(name, true, deps_mode, build_only_deps)
-   elseif not name:match(dir.separator) then
+   elseif not name:match("/") then
       local search = require("luarocks.search")
       return search.act_on_src_or_rockspec(do_build, name:lower(), version, nil, deps_mode, build_only_deps)
    end

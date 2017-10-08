@@ -4,8 +4,6 @@ local dir = {}
 local require = nil
 --------------------------------------------------------------------------------
 
-dir.separator = "/"
-
 --- Describe a path in a cross-platform way.
 -- Use this function to avoid platform-specific directory
 -- separators in other modules. Removes trailing slashes from

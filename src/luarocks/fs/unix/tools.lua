@@ -230,7 +230,7 @@ function tools.make_temp_dir(name)
    assert(type(name) == "string")
    name = dir.normalize(name)
 
-   local template = (os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-XXXXXX"
+   local template = (os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name:gsub("/", "_") .. "-XXXXXX"
    local pipe = io.popen(vars.MKTEMP.." -d "..fs.Q(template))
    local dirname = pipe:read("*l")
    pipe:close()

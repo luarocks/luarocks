@@ -255,7 +255,7 @@ function win32.make_temp_dir(name)
    assert(type(name) == "string")
    name = dir.normalize(name)
 
-   local temp_dir = os.getenv("TMP") .. "/luarocks_" .. name:gsub(dir.separator, "_") .. "-" .. tostring(math.floor(math.random() * 10000))
+   local temp_dir = os.getenv("TMP") .. "/luarocks_" .. name:gsub("/", "_") .. "-" .. tostring(math.floor(math.random() * 10000))
    local ok, err = fs.make_dir(temp_dir)
    if ok then
       return temp_dir
