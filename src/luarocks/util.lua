@@ -316,6 +316,10 @@ function util.starts_with(s, prefix)
    return s:sub(1,#prefix) == prefix
 end
 
+function util.ends_with(s, suffix)
+   return s:sub(-#suffix) == suffix
+end
+
 --- Print a line to standard output
 function util.printout(...)
    io.stdout:write(table.concat({...},"\t"))

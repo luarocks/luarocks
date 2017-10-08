@@ -13,6 +13,7 @@ local fetch = require("luarocks.fetch")
 local path = require("luarocks.path")
 local persist = require("luarocks.persist")
 local manif = require("luarocks.manif")
+local fun = require("luarocks.fun")
 
 --- Update storage table to account for items provided by a package.
 -- @param storage table: a table storing items in the following format:
@@ -120,21 +121,9 @@ local function sort_package_matching_table(tbl)
    assert(type(tbl) == "table")
 
    if next(tbl) then
-      for item, pkgs in pairs(tbl) do
+      for _, pkgs in pairs(tbl) do
          if #pkgs > 1 then
-            table.sort(pkgs, sort_pkgs)
-            -- Remove duplicates from the sorted array.
-            local prev = nil
-            local i = 1
-            while pkgs[i] do
-               local curr = pkgs[i]
-               if curr == prev then
-                  table.remove(pkgs, i)
-               else
-                  prev = curr
-                  i = i + 1
-               end
-            end
+            fun.sort_uniq_in(pkgs, sort_pkgs)
          end
       end
    end

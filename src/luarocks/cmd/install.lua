@@ -8,6 +8,7 @@ local fetch = require("luarocks.fetch")
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
 local deps = require("luarocks.deps")
+local external = require("luarocks.deps.external")
 local writer = require("luarocks.manif.writer")
 local remove = require("luarocks.remove")
 local search = require("luarocks.search")
@@ -68,7 +69,7 @@ function install.install_binary_rock(rock_file, deps_mode)
    if deps_mode == "none" then
       util.warning("skipping dependency checks.")
    else
-      ok, err, errcode = deps.check_external_deps(rockspec, "install")
+      ok, err, errcode = external.check_external_deps(rockspec, "install")
       if err then return nil, err, errcode end
    end
 

@@ -8,6 +8,7 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
+local external = require("luarocks.deps.external")
 local cfg = require("luarocks.core.cfg")
 local repos = require("luarocks.repos")
 local writer = require("luarocks.manif.writer")
@@ -173,7 +174,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
 
    local ok
    if not build_only_deps then
-      ok, err, errcode = deps.check_external_deps(rockspec, "build")
+      ok, err, errcode = external.check_external_deps(rockspec, "build")
       if err then
          return nil, err, errcode
       end
