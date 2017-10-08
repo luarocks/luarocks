@@ -12,6 +12,10 @@ What's new in LuaRocks 3.0
   in `rocks_servers` is prepended with a list containing "/dev" in their paths.
 * Wrappers installed using `--tree` now prepend the tree's prefix to their
   package paths.
+* External dependencies are searched for in subdirectories of
+  `external_deps_dirs` as well, using breadth-first search up to
+  four levels deep. This should improve the automatic location of dependencies
+  and reduce the need for explicit `*DIR` variables in the command line.
 
 Rockspec 3.0
 ------------
