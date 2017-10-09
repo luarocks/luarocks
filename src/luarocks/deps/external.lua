@@ -62,15 +62,17 @@ local function search_files(d, files)
          return name
       end
       for i, f in ipairs(files) do
-         if patterns[i] and dir.base_name(name):match(patterns[i]) or util.ends_with(name, "/"..f) then
-            return true, name
+         if patterns[i] and dir.base_name(name):match(patterns[i]) then
+            return true, dir.dir_name(name)
+         elseif util.ends_with(name, "/"..f) then
+            return true, name:sub(1, -(#f + 1))
          end
       end
       return false
    end)
    
    if ok then
-      return dir.dir_name(name)
+      return name
    end
    return nil, errs
 end
