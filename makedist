@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash -e
 
 if ! [ "$1" ]
 then
@@ -13,6 +13,9 @@ then
 fi
 
 make clean || exit 1
+
+if [ "$1" != "scm" ]
+then
 
 grep -q "\"$1\"" rockspec || {
    echo
@@ -52,6 +55,8 @@ grep -q "vars.VERSION = \"$program_series\"" install.bat || {
    echo "vars.VERSION in install.bat is incorrect. Please fix it."
    exit 1
 }
+
+fi
 
 out="luarocks-$1"
 rm -rf "$out"

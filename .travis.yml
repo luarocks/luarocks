@@ -64,6 +64,7 @@ install:
 
 script:
   - lua -v
+  - ./makedist scm
   - busted -o gtest --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
   - busted -o gtest --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
 
