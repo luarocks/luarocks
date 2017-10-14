@@ -188,7 +188,17 @@ local function fill_as_builtin(rockspec, libs)
    for _, file in ipairs(fs.find()) do
       local luamod = file:match("(.*)%.lua$")
       if luamod and not luamod_blacklist[luamod] then
-         rockspec.build.modules[path.path_to_module(file)] = prefix..file
+         local path_to_module = path.path_to_module(file)
+         if rockspec.build.modules[path_to_module] then
+            if file:match("init%.lua$") then
+               rockspec.build.modules[path_to_module..".init"] = prefix..file
+            else
+               rockspec.build.modules[path_to_module..".init"] = rockspec.build.modules[path_to_module]
+               rockspec.build.modules[path_to_module] = prefix..file
+            end
+         else
+            rockspec.build.modules[path_to_module] = prefix..file
+         end
       else
          local cmod = file:match("(.*)%.c$")
          if cmod then
