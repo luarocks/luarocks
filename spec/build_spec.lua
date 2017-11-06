@@ -189,12 +189,30 @@ describe("LuaRocks build tests #blackbox #b_build", function()
          assert.is_true(os.remove("validate-args-1.5.4-1.rockspec"))
       end)
 
-      it("LuaRocks build missing external", function()
-         assert.is_false(run.luarocks_bool("build " .. testing_paths.testing_dir .. "/testfiles/missing_external-0.1-1.rockspec INEXISTENT_INCDIR=\"/invalid/dir\""))
-      end)
-      
       it("LuaRocks build invalid patch", function()
          assert.is_false(run.luarocks_bool("build " .. testing_paths.testing_dir .. "/testfiles/invalid_patch-0.1-1.rockspec"))
       end)
    end)
+
+   describe("external dependencies", function()
+      setup(function()
+         test_env.mock_server_init()
+      end)
+      
+      teardown(function()
+         test_env.mock_server_done()
+      end)
+
+      it("fails when missing external dependency", function()
+         assert.is_false(run.luarocks_bool("build " .. testing_paths.testing_dir .. "/testfiles/missing_external-0.1-1.rockspec INEXISTENT_INCDIR=\"/invalid/dir\""))
+      end)
+
+      it("builds with external dependency", function()
+         local rockspec = testing_paths.testing_dir .. "/testfiles/with_external_dep-0.1-1.rockspec"
+         local foo_incdir = testing_paths.testing_dir .. "/testfiles/with_external_dep"
+         assert.is_truthy(run.luarocks_bool("build " .. rockspec .. " FOO_INCDIR=\"" .. foo_incdir .. "\""))
+         assert.is.truthy(run.luarocks("show with_external_dep"))
+      end)
+   end)
+
 end)
