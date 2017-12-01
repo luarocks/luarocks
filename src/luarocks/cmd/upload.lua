@@ -20,6 +20,10 @@ upload.help = [[
                  increment the revision number instead.
 ]]
 
+local function is_dev_version(version)
+   return version:match("^dev") or version:match("^scm")
+end
+
 function upload.command(flags, fname)
    if not fname then
       return nil, "Missing rockspec. "..util.see_help("upload")
@@ -53,7 +57,7 @@ function upload.command(flags, fname)
    end
 
    local rock_fname
-   if not flags["skip-pack"] and not rockspec.version:match("^scm") then
+   if not flags["skip-pack"] and not is_dev_version(rockspec.version) then
       util.printout("Packing " .. tostring(rockspec.package))
       rock_fname, err = pack.pack_source_rock(fname)
       if not rock_fname then

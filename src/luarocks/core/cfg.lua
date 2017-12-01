@@ -30,7 +30,7 @@ local persist = require("luarocks.core.persist")
 local require = nil
 --------------------------------------------------------------------------------
 
-cfg.program_version = "scm"
+cfg.program_version = "dev"
 cfg.program_series = "3.0"
 cfg.major_version = (cfg.program_version:match("([^.]%.[^.])")) or cfg.program_series
 cfg.variables = {}

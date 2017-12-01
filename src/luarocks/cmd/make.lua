@@ -45,7 +45,7 @@ only dependencies of the rockspec (see `luarocks help install`).
 
 --branch=<name>     Override the `source.branch` field in the loaded
                     rockspec. Allows to specify a different branch to 
-                    fetch. Particularly for SCM rocks.
+                    fetch. Particularly for "dev" rocks.
 
 ]]
 

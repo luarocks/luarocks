@@ -21,7 +21,7 @@ second one is the location.
 If only one argument is given, it must be the location.
 If no arguments are given, current directory is used as location.
 LuaRocks will attempt to infer name and version if not given,
-using 'scm' as default version.
+using 'dev' as a fallback default version.
 
 Note that the generated file is a _starting point_ for writing a
 rockspec, and is not guaranteed to be complete or correct.
@@ -261,7 +261,7 @@ function write_rockspec.command(flags, name, version, url_or_dir)
    if not name then
       return nil, "Could not infer rock name. "..util.see_help("write_rockspec")
    end
-   version = version or "scm"
+   version = version or "dev"
 
    local filename = flags["output"] or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
 
@@ -296,7 +296,7 @@ function write_rockspec.command(flags, name, version, url_or_dir)
       rockspec.source.file = dir.base_name(url_or_dir)
       rockspec.source.dir = "dummy"
       if not fetch.is_basic_protocol(rockspec.source.protocol) then
-         if version ~= "scm" then
+         if version ~= "dev" then
             rockspec.source.tag = flags["tag"] or "v" .. version
          end
       end
