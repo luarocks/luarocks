@@ -13,7 +13,7 @@ describe("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
    describe("LuaRocks write_rockspec basic tests", function()
       it("LuaRocks write_rockspec with no flags/arguments", function()
          assert.is_true(run.luarocks_bool("write_rockspec"))
-         os.remove("luarocks-scm-1.rockspec")
+         os.remove("luarocks-dev-1.rockspec")
       end)
 
       it("LuaRocks write_rockspec with invalid argument", function()
@@ -28,8 +28,8 @@ describe("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
    describe("LuaRocks write_rockspec more complex tests", function()
       it("LuaRocks write_rockspec git luarocks", function()
          assert.is_true(run.luarocks_bool("write_rockspec git://github.com/keplerproject/luarocks"))
-         assert.is.truthy(lfs.attributes("luarocks-scm-1.rockspec"))
-         assert.is_true(os.remove("luarocks-scm-1.rockspec"))
+         assert.is.truthy(lfs.attributes("luarocks-dev-1.rockspec"))
+         assert.is_true(os.remove("luarocks-dev-1.rockspec"))
       end)
       
       it("LuaRocks write_rockspec git luarocks --tag=v2.3.0", function()
@@ -39,16 +39,16 @@ describe("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
       end)
       
       it("LuaRocks write_rockspec git luarocks with format flag", function()
-         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/mbalmer/luarocks --rockspec-format=1.1 --lua-version=5.1,5.2"))
-         assert.is.truthy(lfs.attributes("luarocks-scm-1.rockspec"))
-         assert.is_true(os.remove("luarocks-scm-1.rockspec"))
+         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/luarocks/luarocks --rockspec-format=1.1 --lua-version=5.1,5.2"))
+         assert.is.truthy(lfs.attributes("luarocks-dev-1.rockspec"))
+         assert.is_true(os.remove("luarocks-dev-1.rockspec"))
       end)
       
       it("LuaRocks write_rockspec git luarocks with full flags", function()
-         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/mbalmer/luarocks --lua-version=5.1,5.2 --license=\"MIT/X11\" "
+         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/luarocks/luarocks --lua-version=5.1,5.2 --license=\"MIT/X11\" "
                                              .. " --homepage=\"http://www.luarocks.org\" --summary=\"A package manager for Lua modules\" "))
-         assert.is.truthy(lfs.attributes("luarocks-scm-1.rockspec"))
-         assert.is_true(os.remove("luarocks-scm-1.rockspec"))
+         assert.is.truthy(lfs.attributes("luarocks-dev-1.rockspec"))
+         assert.is_true(os.remove("luarocks-dev-1.rockspec"))
       end)
       
       it("LuaRocks write_rockspec rockspec via http", function()
@@ -65,8 +65,8 @@ describe("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
       
       it("LuaRocks write_rockspec git luafcgi with many flags", function()
          assert.is_true(run.luarocks_bool("write_rockspec git://github.com/mbalmer/luafcgi --lib=fcgi --license=\"3-clause BSD\" " .. "--lua-version=5.1,5.2"))
-         assert.is.truthy(lfs.attributes("luafcgi-scm-1.rockspec")) -- TODO maybe read it content and find arguments from flags?
-         assert.is_true(os.remove("luafcgi-scm-1.rockspec"))
+         assert.is.truthy(lfs.attributes("luafcgi-dev-1.rockspec")) -- TODO maybe read it content and find arguments from flags?
+         assert.is_true(os.remove("luafcgi-dev-1.rockspec"))
       end)
    end)
 end)
