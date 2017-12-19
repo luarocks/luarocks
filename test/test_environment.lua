@@ -35,7 +35,7 @@ local function title(str)
    print(("-"):rep(#str))
 end
 
-local function exists(path)
+function test_env.exists(path)
    return lfs.attributes(path, "mode") ~= nil
 end
 
@@ -235,7 +235,7 @@ end
 --- Remove directory recursively
 -- @param path string: directory path to delete
 function test_env.remove_dir(path)
-   if exists(path) then
+   if test_env.exists(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
             local full_path = path..'/'..file
@@ -255,7 +255,7 @@ end
 -- @param path string: path to directory
 -- @param pattern string: pattern matching basenames of subdirectories to be removed
 function test_env.remove_subdirs(path, pattern)
-   if exists(path) then
+   if test_env.exists(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
             local full_path = path..'/'..file
@@ -274,7 +274,7 @@ end
 -- @return result_check boolean: true if one or more files deleted
 function test_env.remove_files(path, pattern)
    local result_check = false
-   if exists(path) then
+   if test_env.exists(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
             if file:find(pattern) then
@@ -299,7 +299,7 @@ local function download_rocks(urls, save_path)
 
    for _, url in ipairs(urls) do
       -- check if already downloaded
-      if not exists(save_path .. url) then
+      if not test_env.exists(save_path .. url) then
          if test_env.TEST_TARGET_OS == "windows" then
             execute_bool(test_env.testing_paths.win_tools .. "/wget -cP " .. save_path .. " " .. luarocks_repo .. url .. " --no-check-certificate")
          else
@@ -514,10 +514,10 @@ end
 
 --- Function for initially setup of environment, variables, md5sums for spec files
 function test_env.setup_specs(extra_rocks)
-   -- if global variable about successful creation of testing environment doesn't exists, build environment
+   -- if global variable about successful creation of testing environment doesn't exist, build environment
    if not test_env.setup_done then
       if test_env.TRAVIS then
-         if not exists(os.getenv("HOME") .. "/.ssh/id_rsa.pub") then
+         if not test_env.exists(os.getenv("HOME") .. "/.ssh/id_rsa.pub") then
             execute_bool("ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa")
             execute_bool("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
             execute_bool("chmod og-wx ~/.ssh/authorized_keys")
