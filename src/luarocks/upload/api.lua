@@ -62,7 +62,7 @@ function Api:check_version()
          return nil, "Your upload client is too out of date to continue, please upgrade LuaRocks."
       end
       if res.version ~= tool_version then
-         util.printerr("Warning: Your LuaRocks is out of date, consider upgrading.")
+         util.warning("your LuaRocks is out of date, consider upgrading.")
       end
    end
    return true

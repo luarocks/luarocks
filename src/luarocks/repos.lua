@@ -300,7 +300,7 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
                backup = backup.."~"
             until not fs.exists(backup) -- Slight race condition here, but shouldn't be a problem.
 
-            util.printerr("Warning: "..suffixed_target.." is not tracked by this installation of LuaRocks. Moving it to "..backup)
+            util.warning(suffixed_target.." is not tracked by this installation of LuaRocks. Moving it to "..backup)
             local move_ok, move_err = fs.move(suffixed_target, backup)
             if not move_ok then return nil, move_err end
          end

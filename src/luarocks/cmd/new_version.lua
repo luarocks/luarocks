@@ -59,7 +59,7 @@ end
 local function check_url_and_update_md5(out_rs)
    local file, temp_dir = fetch.fetch_url_at_temp_dir(out_rs.source.url, "luarocks-new-version-"..out_rs.package)
    if not file then
-      util.printerr("Warning: invalid URL - "..temp_dir)
+      util.warning("invalid URL - "..temp_dir)
       return true, false
    end
 
@@ -118,7 +118,7 @@ local function update_source_section(out_rs, url, tag, old_ver, new_ver)
       return nil, md5_changed
    end
    if md5_changed then
-      util.printerr("Warning: URL is the same, but MD5 has changed. Old rockspec is broken.")
+      util.warning("URL is the same, but MD5 has changed. Old rockspec is broken.")
    end
    return true
 end

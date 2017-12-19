@@ -696,7 +696,7 @@ function fs_lua.download(url, filename, cache)
    end
    if https_err then
       if not downloader_warning then
-         util.printerr("Warning: falling back to "..cfg.downloader.." - install luasec to get native HTTPS support")
+         util.warning("falling back to "..cfg.downloader.." - install luasec to get native HTTPS support")
          downloader_warning = true
       end
       return fs.use_downloader(url, filename, cache)

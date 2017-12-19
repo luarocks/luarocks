@@ -104,7 +104,7 @@ function unix.is_actual_binary(filename)
    local first = file:read(2)
    file:close()
    if not first then
-      util.printerr("Warning: could not read "..filename)
+      util.warning("could not read "..filename)
       return true
    end
    return first ~= "#!"

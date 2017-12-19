@@ -180,7 +180,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    end
 
    if deps_mode == "none" then
-      util.printerr("Warning: skipping dependency checks.")
+      util.warning("skipping dependency checks.")
    else
       local ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
       if err then

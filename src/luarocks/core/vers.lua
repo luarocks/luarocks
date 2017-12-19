@@ -115,7 +115,7 @@ function vers.parse_version(vstring)
          -- extract a word
          token, rest = v:match("^(%a+)[%.%-%_]*(.*)")
          if not token then
-            util.printerr("Warning: version number '"..v.."' could not be parsed.")
+            util.warning("version number '"..v.."' could not be parsed.")
             version[i] = 0
             break
          end

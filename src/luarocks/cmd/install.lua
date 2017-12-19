@@ -66,7 +66,7 @@ function install.install_binary_rock(rock_file, deps_mode)
    end
 
    if deps_mode == "none" then
-      util.printerr("Warning: skipping dependency checks.")
+      util.warning("skipping dependency checks.")
    else
       ok, err, errcode = deps.check_external_deps(rockspec, "install")
       if err then return nil, err, errcode end
