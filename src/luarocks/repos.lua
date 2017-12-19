@@ -209,12 +209,12 @@ end
 local function delete_suffixed(file, suffix)
    local suffixed_file, err = find_suffixed(file, suffix)
    if not suffixed_file then
-      return nil, "Could not remove " .. file .. ": " .. err
+      return nil, "Could not remove " .. file .. ": " .. err, "not found"
    end
 
    fs.delete(suffixed_file)
    if fs.exists(suffixed_file) then
-      return nil, "Failed deleting " .. suffixed_file .. ": file still exists"
+      return nil, "Failed deleting " .. suffixed_file .. ": file still exists", "fail"
    end
 
    return true
@@ -375,8 +375,14 @@ function repos.delete_version(name, version, deps_mode, quick)
             target = versioned
          end
 
-         local ok, err = delete_suffixed(target, suffix)
-         if not ok then return nil, err end
+         local ok, err, err_type = delete_suffixed(target, suffix)
+         if not ok then
+            if err_type == "not found" then
+               util.warning(err)
+            else
+               return nil, err
+            end
+         end
 
          if not quick and target == non_versioned then
             -- If another package provides this file, move its version
