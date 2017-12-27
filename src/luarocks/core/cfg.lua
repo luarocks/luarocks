@@ -465,7 +465,7 @@ if cfg.platforms.windows then
 
    defaults.external_deps_patterns = {
       bin = { "?.exe", "?.bat" },
-      lib = { "?.lib", "?.dll", "lib?.dll" },
+      lib = { "?.lib", "?.dll", "lib?.lib", "lib?.dll" },
       include = { "?.h" }
    }
    defaults.runtime_external_deps_patterns = {
