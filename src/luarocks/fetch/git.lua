@@ -55,6 +55,9 @@ local function git_identifier(git_cmd, ver)
       return nil
    end
    local date_hash = util.popen_read(fs.Q(git_cmd).." log --pretty=format:'%ai %h' -n 1")
+   if not date_hash then
+      return nil
+   end
    local date, time, tz, hash = date_hash:match("([^%s]+) ([^%s]+) ([^%s]+) ([^%s]+)")
    date = date:gsub("%-", "")
    time = time:gsub(":", "")
