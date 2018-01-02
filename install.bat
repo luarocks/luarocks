@@ -675,12 +675,12 @@ local find_gcc_suite = function()
         end
     end
 
-    vars.MINGW_MAKE = (result.make and '[['..result.make..']]') or "nil  -- not found by intaller"
-    vars.MINGW_CC = (result.gcc and '[['..result.gcc..']]') or "nil  -- not found by intaller"
-    vars.MINGW_RC = (result.windres and '[['..result.windres..']]') or "nil  -- not found by intaller"
-    vars.MINGW_LD = (result.gcc and '[['..result.gcc..']]') or "nil  -- not found by intaller"
-    vars.MINGW_AR = (result.ar and '[['..result.ar..']]') or "nil  -- not found by intaller"
-    vars.MINGW_RANLIB = (result.ranlib and '[['..result.ranlib..']]') or "nil  -- not found by intaller"
+    vars.MINGW_MAKE = (result.make and '[['..result.make..']]') or "nil  -- not found by installer"
+    vars.MINGW_CC = (result.gcc and '[['..result.gcc..']]') or "nil  -- not found by installer"
+    vars.MINGW_RC = (result.windres and '[['..result.windres..']]') or "nil  -- not found by installer"
+    vars.MINGW_LD = (result.gcc and '[['..result.gcc..']]') or "nil  -- not found by installer"
+    vars.MINGW_AR = (result.ar and '[['..result.ar..']]') or "nil  -- not found by installer"
+    vars.MINGW_RANLIB = (result.ranlib and '[['..result.ranlib..']]') or "nil  -- not found by installer"
     return true
 end
 
