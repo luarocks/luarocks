@@ -45,7 +45,7 @@ build_script:
   - luarocks install busted 1> NUL 2> NUL
 
 test_script:
-  - busted --lpath=.//?.lua --exclude-tags=ssh,unix,mock -Xhelper lua_dir=%CD%\lua_install,appveyor,%COMPILER%
+  - busted -o gtest -v --lpath=.//?.lua --exclude-tags=ssh,unix,mock -Xhelper lua_dir=%CD%\lua_install,appveyor,%COMPILER%
 
 after_test:
   - if "%LUA%"=="lua 5.1" (luarocks show bit32 || luarocks install bit32)
