@@ -50,6 +50,17 @@ local function git_supports_shallow_submodules(git_cmd)
    return git_is_at_least(git_cmd, "1.8.4")
 end
 
+local function git_identifier(git_cmd, ver)
+   if not (ver:match("^dev%-%d+$") or ver:match("^scm%-%d+$")) then
+      return nil
+   end
+   local date_hash = util.popen_read(fs.Q(git_cmd).." log --pretty=format:'%ai %h' -n 1")
+   local date, time, tz, hash = date_hash:match("([^%s]+) ([^%s]+) ([^%s]+) ([^%s]+)")
+   date = date:gsub("%-", "")
+   time = time:gsub(":", "")
+   return date .. "." .. time .. "." .. hash
+end
+
 --- Download sources for building a rock, using git.
 -- @param rockspec table: The rockspec table
 -- @param extract boolean: Unused in this module (required for API purposes.)
@@ -121,6 +132,10 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
       if not fs.execute(unpack(command)) then
          return nil, 'Failed to fetch submodules.'
       end
+   end
+   
+   if not rockspec.source.tag then
+      rockspec.source.identifier = git_identifier(git_cmd, rockspec.version)
    end
 
    fs.delete(dir.path(store_dir, module, ".git"))
