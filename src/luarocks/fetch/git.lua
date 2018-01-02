@@ -54,7 +54,12 @@ local function git_identifier(git_cmd, ver)
    if not (ver:match("^dev%-%d+$") or ver:match("^scm%-%d+$")) then
       return nil
    end
-   local date_hash = util.popen_read(fs.Q(git_cmd).." log --pretty=format:'%ai %h' -n 1")
+   local pd = io.popen(fs.command_at(fs.current_dir(), fs.Q(git_cmd).." log --pretty=format:'%ai %h' -n 1"))
+   if not pd then
+      return nil
+   end
+   local date_hash = pd:read("*l")
+   pd:close()
    if not date_hash then
       return nil
    end
