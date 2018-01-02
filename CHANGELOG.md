@@ -10,6 +10,8 @@ What's new in LuaRocks 3.0
   This adds support for easily requesting `dev` modules from LuaRocks.org, as in:
   `luarocks install --dev luafilesystem`. The list of URLs configured
   in `rocks_servers` is prepended with a list containing "/dev" in their paths.
+* Wrappers installed using `--tree` now prepend the tree's prefix to their
+  package paths.
 
 Rockspec 3.0
 ------------

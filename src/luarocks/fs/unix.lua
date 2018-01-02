@@ -70,7 +70,7 @@ function unix.wrap_script(file, dest, name, version)
    
    local base = dir.base_name(file)
    local wrapname = fs.is_dir(dest) and dest.."/"..base or dest
-   local lpath, lcpath = cfg.package_paths()
+   local lpath, lcpath = cfg.package_paths(cfg.root_dir)
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
       return nil, "Could not open "..wrapname.." for writing."
