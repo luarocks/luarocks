@@ -194,7 +194,7 @@ describe("LuaRocks build tests #blackbox #b_build", function()
       end)
    end)
 
-   describe("external dependencies", function()
+   describe("#mock external dependencies", function()
       setup(function()
          test_env.mock_server_init()
       end)
