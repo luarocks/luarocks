@@ -64,7 +64,7 @@ describe("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
       end)
       
       it("LuaRocks write_rockspec git luafcgi with many flags", function()
-         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/mbalmer/luafcgi --lib=fcgi --license=\"3-clause BSD\" " .. "--lua-version=5.1,5.2"))
+         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/arcapos/luafcgi --lib=fcgi --license=\"3-clause BSD\" " .. "--lua-version=5.1,5.2"))
          assert.is.truthy(lfs.attributes("luafcgi-dev-1.rockspec")) -- TODO maybe read it content and find arguments from flags?
          assert.is_true(os.remove("luafcgi-dev-1.rockspec"))
       end)
