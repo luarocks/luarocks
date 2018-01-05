@@ -473,10 +473,7 @@ if cfg.platforms.windows then
       lib = { "?.dll", "lib?.dll" },
       include = { "?.h" }
    }
-   defaults.export_path = "SET PATH=%s"
    defaults.export_path_separator = ";"
-   defaults.export_lua_path = "SET LUA_PATH=%s"
-   defaults.export_lua_cpath = "SET LUA_CPATH=%s"
    defaults.wrapper_suffix = ".bat"
 
    local localappdata = os.getenv("LOCALAPPDATA")
@@ -541,10 +538,7 @@ if cfg.platforms.unix then
       lib = { "lib?.so", "lib?.so.*" },
       include = { "?.h" }
    }
-   defaults.export_path = "export PATH='%s'"
    defaults.export_path_separator = ":"
-   defaults.export_lua_path = "export LUA_PATH='%s'"
-   defaults.export_lua_cpath = "export LUA_CPATH='%s'"
    defaults.wrapper_suffix = ""
    defaults.local_cache = cfg.home.."/.cache/luarocks"
    if not defaults.variables.CFLAGS:match("-fPIC") then

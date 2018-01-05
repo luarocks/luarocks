@@ -2,6 +2,9 @@
 What's new in LuaRocks 3.0
 ==========================
 
+* `luarocks path` now exports versioned variables `LUA_PATH_5_x` and
+  `LUA_CPATH_5_x` instead of `LUA_PATH` and `LUA_CPATH`
+  when those are in use in your system.
 * Package paths are sanitized to only reference the current Lua version.
   For example, if you have `/some/dir/lua/5.1/` in your `$LUA_PATH` and
   you are running Lua 5.2, `luarocks.loader` and the `luarocks` command-line

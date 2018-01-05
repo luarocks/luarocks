@@ -272,4 +272,8 @@ function win32.current_user()
    return os.getenv("USERNAME")
 end
 
+function win32.export_cmd(var, val)
+   return ("SET %s=%s"):format(var, val)
+end
+
 return win32

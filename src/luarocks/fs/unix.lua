@@ -136,4 +136,8 @@ function unix.current_user()
    return os.getenv("USER")
 end
 
+function unix.export_cmd(var, val)
+   return ("export %s='%s'"):format(var, val)
+end
+
 return unix
