@@ -1,4 +1,4 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 
 test_env.unload_luarocks()
 local fs = require("luarocks.fs")

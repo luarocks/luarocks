@@ -1,4 +1,4 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 
@@ -26,7 +26,7 @@ describe("LuaRocks unpack tests #blackbox #b_unpack", function()
       end)
       
       it("LuaRocks unpack with invalid patch", function()
-         assert.is_false(run.luarocks_bool("unpack " .. testing_paths.testing_dir .. "/testfiles/invalid_patch-0.1-1.rockspec"))
+         assert.is_false(run.luarocks_bool("unpack " .. testing_paths.fixtures_dir .. "/invalid_patch-0.1-1.rockspec"))
       end)
    end)
 

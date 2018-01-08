@@ -346,7 +346,7 @@ local function create_env(testing_paths)
    
    local env_variables = {}
    env_variables.LUA_VERSION = luaversion_short
-   env_variables.LUAROCKS_CONFIG = testing_paths.testing_dir .. "/testing_config.lua"
+   env_variables.LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/testing_config.lua"
    if test_env.TEST_TARGET_OS == "windows" then
       env_variables.LUA_PATH = testing_paths.testing_lrprefix .. "\\lua\\?.lua;"
    else
@@ -379,7 +379,7 @@ local function make_run_function(cmd_name, exec_function, with_coverage, do_prin
    local cmd_prefix = Q(test_env.testing_paths.lua) .. " "
 
    if with_coverage then
-      cmd_prefix = cmd_prefix .. "-e \"require('luacov.runner')('" .. test_env.testing_paths.testing_dir .. "/luacov.config')\" "
+      cmd_prefix = cmd_prefix .. "-e \"require('luacov.runner')('" .. test_env.testing_paths.testrun_dir .. "/luacov.config')\" "
    end
    
    if test_env.TEST_TARGET_OS == "windows" then
@@ -482,15 +482,17 @@ local function create_paths(luaversion_full)
       testing_paths.luarocks_dir = testing_paths.luarocks_dir:gsub("\\","/")
    end
 
-   testing_paths.testing_dir = testing_paths.luarocks_dir .. "/test"
+   testing_paths.fixtures_dir = testing_paths.luarocks_dir .. "/spec/fixtures"
+   testing_paths.util_dir = testing_paths.luarocks_dir .. "/spec/util"
+   testing_paths.testrun_dir = testing_paths.luarocks_dir .. "/testrun"
    testing_paths.src_dir = testing_paths.luarocks_dir .. "/src"
-   testing_paths.testing_lrprefix = testing_paths.testing_dir .. "/testing_lrprefix-" .. luaversion_full
-   testing_paths.testing_tree = testing_paths.testing_dir .. "/testing-" .. luaversion_full
-   testing_paths.testing_tree_copy = testing_paths.testing_dir .. "/testing_copy-" .. luaversion_full
-   testing_paths.testing_sys_tree = testing_paths.testing_dir .. "/testing_sys-" .. luaversion_full
-   testing_paths.testing_sys_tree_copy = testing_paths.testing_dir .. "/testing_sys_copy-" .. luaversion_full
-   testing_paths.testing_cache = testing_paths.testing_dir .. "/testing_cache-" .. luaversion_full
-   testing_paths.testing_server = testing_paths.testing_dir .. "/testing_server-" .. luaversion_full
+   testing_paths.testing_lrprefix = testing_paths.testrun_dir .. "/testing_lrprefix-" .. luaversion_full
+   testing_paths.testing_tree = testing_paths.testrun_dir .. "/testing-" .. luaversion_full
+   testing_paths.testing_tree_copy = testing_paths.testrun_dir .. "/testing_copy-" .. luaversion_full
+   testing_paths.testing_sys_tree = testing_paths.testrun_dir .. "/testing_sys-" .. luaversion_full
+   testing_paths.testing_sys_tree_copy = testing_paths.testrun_dir .. "/testing_sys_copy-" .. luaversion_full
+   testing_paths.testing_cache = testing_paths.testrun_dir .. "/testing_cache-" .. luaversion_full
+   testing_paths.testing_server = testing_paths.testrun_dir .. "/testing_server-" .. luaversion_full
 
    testing_paths.testing_rocks = testing_paths.testing_tree .. "/lib/luarocks/rocks-" .. test_env.lua_version
    testing_paths.testing_sys_rocks = testing_paths.testing_sys_tree .. "/lib/luarocks/rocks-" .. test_env.lua_version
@@ -609,8 +611,8 @@ local function create_configs()
       testing_cache = test_env.testing_paths.testing_cache
    })
 
-   write_file(test_env.testing_paths.testing_dir .. "/testing_config.lua", config_content .. " \nweb_browser = \"true\"")
-   write_file(test_env.testing_paths.testing_dir .. "/testing_config_show_downloads.lua", config_content
+   write_file(test_env.testing_paths.testrun_dir .. "/testing_config.lua", config_content .. " \nweb_browser = \"true\"")
+   write_file(test_env.testing_paths.testrun_dir .. "/testing_config_show_downloads.lua", config_content
                   .. "show_downloads = true \n rocks_servers={\"http://luarocks.org/repositories/rocks\"}")
 
    -- testing_config_sftp.lua
@@ -634,13 +636,13 @@ local function create_configs()
       testing_cache = test_env.testing_paths.testing_cache
    })
 
-   write_file(test_env.testing_paths.testing_dir .. "/testing_config_sftp.lua", config_content)
+   write_file(test_env.testing_paths.testrun_dir .. "/testing_config_sftp.lua", config_content)
 
    -- luacov.config
    config_content = substitute([[
       return {
-         statsfile = "%{testing_dir}/luacov.stats.out",
-         reportfile = "%{testing_dir}/luacov.report.out",
+         statsfile = "%{testrun_dir}/luacov.stats.out",
+         reportfile = "%{testrun_dir}/luacov.report.out",
          modules = {
             ["luarocks"] = "src/bin/luarocks",
             ["luarocks-admin"] = "src/bin/luarocks-admin",
@@ -650,20 +652,31 @@ local function create_configs()
          }
       }
    ]], {
-      testing_dir = test_env.testing_paths.testing_dir
+      testrun_dir = test_env.testing_paths.testrun_dir
    })
 
-   write_file(test_env.testing_paths.testing_dir .. "/luacov.config", config_content)
+   write_file(test_env.testing_paths.testrun_dir .. "/luacov.config", config_content)
+
+   config_content = [[
+      -- Config file of mock LuaRocks.org site for tests
+      upload = {
+         server = "http://localhost:8080",
+         tool_version = "1.0.0",
+         api_version = "1",
+      }
+   ]]
+   write_file(test_env.testing_paths.testrun_dir .. "/luarocks_site.lua", config_content)
 end
 
 --- Remove testing directories.
 local function clean()
    print("Cleaning testing directory...")
    test_env.remove_dir(test_env.testing_paths.luarocks_tmp)
-   test_env.remove_subdirs(test_env.testing_paths.testing_dir, "testing[_%-]")
-   test_env.remove_files(test_env.testing_paths.testing_dir, "testing_")
-   test_env.remove_files(test_env.testing_paths.testing_dir, "luacov")
-   test_env.remove_files(test_env.testing_paths.testing_dir, "upload_config")
+   test_env.remove_subdirs(test_env.testing_paths.testrun_dir, "testing[_%-]")
+   test_env.remove_files(test_env.testing_paths.testrun_dir, "testing_")
+   test_env.remove_files(test_env.testing_paths.testrun_dir, "luacov")
+   test_env.remove_files(test_env.testing_paths.testrun_dir, "upload_config")
+   test_env.remove_files(test_env.testing_paths.testrun_dir, "luarocks_site")
    print("Cleaning done!")
 end
 
@@ -714,7 +727,7 @@ function test_env.mock_server_init()
    local assert = require("luassert")
    local testing_paths = test_env.testing_paths
    assert.is_true(test_env.need_rock("restserver-xavante"))
-   local final_command = test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.testing_dir .. "/mock-server.lua &", true, test_env.env_variables)
+   local final_command = test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.util_dir .. "/mock-server.lua &", true, test_env.env_variables)
    os.execute(final_command)
 end
 
@@ -731,13 +744,14 @@ function test_env.main()
       clean()
    end
 
+   lfs.mkdir(testing_paths.testrun_dir)
    lfs.mkdir(testing_paths.testing_cache)
    lfs.mkdir(testing_paths.luarocks_tmp)
 
    create_configs()
 
    local install_env_vars = {
-      LUAROCKS_CONFIG = test_env.testing_paths.testing_dir .. "/testing_config.lua"
+      LUAROCKS_CONFIG = test_env.testing_paths.testrun_dir .. "/testing_config.lua"
    }
 
    install_luarocks(install_env_vars)

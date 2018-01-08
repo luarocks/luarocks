@@ -1,4 +1,4 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
@@ -43,7 +43,7 @@ describe("LuaRocks install tests #blackbox #b_install", function()
       end)
 
       it("LuaRocks install invalid patch", function()
-         assert.is_false(run.luarocks_bool("install " .. testing_paths.testing_dir .. "/testfiles/invalid_patch-0.1-1.rockspec"))
+         assert.is_false(run.luarocks_bool("install " .. testing_paths.fixtures_dir .. "/invalid_patch-0.1-1.rockspec"))
       end)      
 
       it("LuaRocks install invalid rock", function()
@@ -55,7 +55,7 @@ describe("LuaRocks install tests #blackbox #b_install", function()
       end)
 
       it("LuaRocks install not a zip file", function()
-         assert.is_false(run.luarocks_bool("install " .. testing_paths.testing_dir .. "/testfiles/not_a_zipfile-1.0-1.src.rock"))
+         assert.is_false(run.luarocks_bool("install " .. testing_paths.fixtures_dir .. "/not_a_zipfile-1.0-1.src.rock"))
       end)
 
       it("LuaRocks install only-deps of lxsh show there is no lxsh", function()

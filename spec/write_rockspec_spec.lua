@@ -1,4 +1,4 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local lfs = require("lfs")
 local run = test_env.run
 
@@ -27,28 +27,28 @@ describe("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
 
    describe("LuaRocks write_rockspec more complex tests", function()
       it("LuaRocks write_rockspec git luarocks", function()
-         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/keplerproject/luarocks"))
-         assert.is.truthy(lfs.attributes("luarocks-dev-1.rockspec"))
-         assert.is_true(os.remove("luarocks-dev-1.rockspec"))
+         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/luarocks/testrock"))
+         assert.is.truthy(lfs.attributes("testrock-dev-1.rockspec"))
+         assert.is_true(os.remove("testrock-dev-1.rockspec"))
       end)
       
       it("LuaRocks write_rockspec git luarocks --tag=v2.3.0", function()
-         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/keplerproject/luarocks --tag=v2.3.0"))
-         assert.is.truthy(lfs.attributes("luarocks-2.3.0-1.rockspec"))
-         assert.is_true(os.remove("luarocks-2.3.0-1.rockspec"))
+         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/luarocks/testrock --tag=v2.3.0"))
+         assert.is.truthy(lfs.attributes("testrock-2.3.0-1.rockspec"))
+         assert.is_true(os.remove("testrock-2.3.0-1.rockspec"))
       end)
       
       it("LuaRocks write_rockspec git luarocks with format flag", function()
-         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/luarocks/luarocks --rockspec-format=1.1 --lua-version=5.1,5.2"))
-         assert.is.truthy(lfs.attributes("luarocks-dev-1.rockspec"))
-         assert.is_true(os.remove("luarocks-dev-1.rockspec"))
+         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/luarocks/testrock --rockspec-format=1.1 --lua-version=5.1,5.2"))
+         assert.is.truthy(lfs.attributes("testrock-dev-1.rockspec"))
+         assert.is_true(os.remove("testrock-dev-1.rockspec"))
       end)
       
       it("LuaRocks write_rockspec git luarocks with full flags", function()
-         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/luarocks/luarocks --lua-version=5.1,5.2 --license=\"MIT/X11\" "
+         assert.is_true(run.luarocks_bool("write_rockspec git://github.com/luarocks/testrock --lua-version=5.1,5.2 --license=\"MIT/X11\" "
                                              .. " --homepage=\"http://www.luarocks.org\" --summary=\"A package manager for Lua modules\" "))
-         assert.is.truthy(lfs.attributes("luarocks-dev-1.rockspec"))
-         assert.is_true(os.remove("luarocks-dev-1.rockspec"))
+         assert.is.truthy(lfs.attributes("testrock-dev-1.rockspec"))
+         assert.is_true(os.remove("testrock-dev-1.rockspec"))
       end)
       
       it("LuaRocks write_rockspec rockspec via http", function()

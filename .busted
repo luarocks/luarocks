@@ -1,6 +1,6 @@
 return {
    default = {
-      helper = "test/test_environment",
+      helper = "spec.util.test_env",
       ["auto-insulate"] = false
    }
 }

@@ -1,4 +1,4 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local lfs = require("lfs")
 local run = test_env.run
 

@@ -1,4 +1,4 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 
@@ -39,10 +39,10 @@ describe("LuaRocks upload tests #blackbox #b_upload", function()
       after_each(test_env.mock_server_done)
 
       it("LuaRocks upload rockspec with api-key", function()
-         assert.is_true(run.luarocks_bool("upload " .. testing_paths.testing_dir .. "/testfiles/a_rock-1.0-1.rockspec " .. test_env.OPENSSL_DIRS .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/luarocks_site.lua"}))
+         assert.is_true(run.luarocks_bool("upload " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec " .. test_env.OPENSSL_DIRS .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/luarocks_site.lua"}))
       end)
       it("LuaRocks upload rockspec with api-key and skip-pack", function()
-         assert.is_true(run.luarocks_bool("upload --skip-pack " .. testing_paths.testing_dir .. "/testfiles/a_rock-1.0-1.rockspec " .. test_env.OPENSSL_DIRS .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/luarocks_site.lua"}))
+         assert.is_true(run.luarocks_bool("upload --skip-pack " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec " .. test_env.OPENSSL_DIRS .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/luarocks_site.lua"}))
       end)
    end)
 end)

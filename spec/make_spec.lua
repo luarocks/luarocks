@@ -1,4 +1,4 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
@@ -102,7 +102,7 @@ describe("LuaRocks make tests #blackbox #b_make", function()
 
    describe("LuaRocks make upgrading rockspecs with mixed deploy types", function()
       before_each(function()
-         test_env.copy_dir(testing_paths.testing_dir .. "/testfiles/mixed_deploy_type", "mdt")
+         test_env.copy_dir(testing_paths.fixtures_dir .. "/mixed_deploy_type", "mdt")
       end)
 
       after_each(function()

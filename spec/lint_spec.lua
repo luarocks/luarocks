@@ -1,4 +1,4 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 
@@ -31,19 +31,19 @@ describe("LuaRocks lint tests #blackbox #b_lint", function()
    
    describe("LuaRocks lint mismatch set", function()
       it("LuaRocks lint mismatch string", function()
-         assert.is_false(run.luarocks_bool("lint " .. testing_paths.testing_dir .. "/testfiles/type_mismatch_string-1.0-1.rockspec"))
+         assert.is_false(run.luarocks_bool("lint " .. testing_paths.fixtures_dir .. "/type_mismatch_string-1.0-1.rockspec"))
       end)
    
       it("LuaRocks lint mismatch version", function()
-         assert.is_false(run.luarocks_bool("lint " .. testing_paths.testing_dir .. "/testfiles/type_mismatch_version-1.0-1.rockspec"))
+         assert.is_false(run.luarocks_bool("lint " .. testing_paths.fixtures_dir .. "/type_mismatch_version-1.0-1.rockspec"))
       end)
    
       it("LuaRocks lint mismatch table", function()
-         assert.is_false(run.luarocks_bool("lint " .. testing_paths.testing_dir .. "/testfiles/type_mismatch_table-1.0-1.rockspec"))
+         assert.is_false(run.luarocks_bool("lint " .. testing_paths.fixtures_dir .. "/type_mismatch_table-1.0-1.rockspec"))
       end)
    
       it("LuaRocks lint mismatch no build table", function()
-         assert.is_false(run.luarocks_bool("lint " .. testing_paths.testing_dir .. "/testfiles/no_build_table-1.0-1.rockspec"))
+         assert.is_false(run.luarocks_bool("lint " .. testing_paths.fixtures_dir .. "/no_build_table-1.0-1.rockspec"))
       end)
    end)
 end)

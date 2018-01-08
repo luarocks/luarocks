@@ -1,4 +1,4 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
@@ -30,7 +30,7 @@ describe("LuaRocks pack tests #blackbox #b_pack", function()
    end)
 
    it("LuaRocks pack invalid rockspec", function()
-      assert.is_false(run.luarocks_bool("pack " .. testing_paths.testing_dir .. "/testfiles/invaild_validate-args-1.5.4-1.rockspec"))
+      assert.is_false(run.luarocks_bool("pack " .. testing_paths.fixtures_dir .. "/invaild_validate-args-1.5.4-1.rockspec"))
    end)
 
    it("LuaRocks pack not installed rock", function()
