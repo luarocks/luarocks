@@ -27,6 +27,13 @@ vars.LUA_SHORTV = nil   -- "51"
 vars.LUA_RUNTIME = nil
 vars.UNAME_M = nil
 vars.COMPILER_ENV_CMD = nil
+vars.MINGW_BIN_PATH = nil
+vars.MINGW_CC = nil
+vars.MINGW_MAKE = nil
+vars.MINGW_RC = nil
+vars.MINGW_LD = nil
+vars.MINGW_AR = nil
+vars.MINGW_RANLIB = nil
 
 local FORCE = false
 local FORCE_CONFIG = false
@@ -617,6 +624,66 @@ local function restore_config_files()
   vars.CONFBACKUPDIR = nil
 end
 
+-- Find GCC based toolchain
+local find_gcc_suite = function()
+
+    -- read output os-command
+    local read_output = function(cmd)
+        local f = io.popen("type NUL && " .. cmd .. ' 2>NUL')
+        if not f then return nil, "failed to open command: " .. tostring(cmd) end
+        local lines = {}
+        while true do
+            local l = f:read()
+            if not l then
+                f:close()
+                return lines
+            end
+            table.insert(lines, l)
+        end
+    end
+    
+    -- returns: full filename, path, filename
+    local find_file = function(mask, path)
+        local cmd
+        if path then
+            cmd = 'where.exe /R "' .. path .. '" ' .. mask
+        else
+            cmd = 'where.exe ' .. mask
+        end
+        local files, err = read_output(cmd)
+        if not files or not files[1] then
+            return nil, "couldn't find '".. mask .. "', " .. (err or "not found")
+        end
+        local path, file = string.match(files[1], "^(.+)%\\([^%\\]+)$")
+        return files[1], path, file
+    end
+
+    local first_one = "*gcc.exe"  -- first file we're assuming to point to the compiler suite
+    local full, path, filename = find_file(first_one, nil)
+    if not full then
+        return nil, path
+    end
+    vars.MINGW_BIN_PATH = path
+
+    local result = {
+        gcc = full
+    }
+    for i, name in ipairs({"make", "ar", "windres", "ranlib"}) do
+        result[name] = find_file(name..".exe", path)
+        if not result[name] then
+            result[name] = find_file("*"..name.."*.exe", path)
+        end
+    end
+
+    vars.MINGW_MAKE = (result.make and '[['..result.make..']]') or "nil  -- not found by installer"
+    vars.MINGW_CC = (result.gcc and '[['..result.gcc..']]') or "nil  -- not found by installer"
+    vars.MINGW_RC = (result.windres and '[['..result.windres..']]') or "nil  -- not found by installer"
+    vars.MINGW_LD = (result.gcc and '[['..result.gcc..']]') or "nil  -- not found by installer"
+    vars.MINGW_AR = (result.ar and '[['..result.ar..']]') or "nil  -- not found by installer"
+    vars.MINGW_RANLIB = (result.ranlib and '[['..result.ranlib..']]') or "nil  -- not found by installer"
+    return true
+end
+
 -- ***********************************************************
 -- Installer script start
 -- ***********************************************************
@@ -765,7 +832,15 @@ if SELFCONTAINED then
 	vars.TREE_ROOT = vars.PREFIX..[[\systree]]
 	REGISTRY = false
 end
-vars.COMPILER_ENV_CMD = (USE_MINGW and "") or (USE_MSVC_MANUAL and "") or get_msvc_env_setup_cmd()
+if USE_MINGW then
+    vars.COMPILER_ENV_CMD = ""
+    local found, err = find_gcc_suite()
+    if not found then
+        die("Failed to find MinGW/gcc based toolchain, make sure it is in your path: " .. tostring(err))
+    end
+else
+    vars.COMPILER_ENV_CMD = (USE_MSVC_MANUAL and "") or get_msvc_env_setup_cmd()
+end
 
 print(S[[
 
@@ -787,7 +862,8 @@ Lua interpreter : $LUA_BINDIR\$LUA_INTERPRETER
 ]])
 
 if USE_MINGW then
-  print("Compiler        : MinGW (make sure it is in your path before using LuaRocks)")
+  print(S[[Compiler        : MinGW/gcc (make sure it is in your path before using LuaRocks)]])
+  print(S[[                  in: $MINGW_BIN_PATH]])
 else
   if vars.COMPILER_ENV_CMD == "" then
     print("Compiler        : Microsoft (make sure it is in your path before using LuaRocks)")
@@ -1012,7 +1088,17 @@ if USE_MINGW and vars.LUA_RUNTIME == "MSVCRT" then
 else
 	f:write("    MSVCRT = '"..vars.LUA_RUNTIME.."',\n")
 end
-f:write(S"    LUALIB = '$LUA_LIBNAME'\n")
+f:write(S"    LUALIB = '$LUA_LIBNAME',\n")
+if USE_MINGW then
+        f:write(S[[
+    CC = $MINGW_CC,
+    MAKE = $MINGW_MAKE,
+    RC = $MINGW_RC,
+    LD = $MINGW_LD,
+    AR = $MINGW_AR,
+    RANLIB = $MINGW_RANLIB,
+]])
+end
 f:write("}\n")
 f:write("verbose = false   -- set to 'true' to enable verbose output\n")
 f:close()
