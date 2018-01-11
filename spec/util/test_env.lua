@@ -209,15 +209,18 @@ function test_env.set_args()
    if not test_env.TEST_TARGET_OS then
       title("OS CHECK")
 
-      if execute_bool("sw_vers") then 
-         test_env.TEST_TARGET_OS = "osx"
-         if test_env.TRAVIS then
-            test_env.OPENSSL_DIRS = "OPENSSL_LIBDIR=/usr/local/opt/openssl/lib OPENSSL_INCDIR=/usr/local/opt/openssl/include"
-         end
-      elseif execute_output("uname -s") == "Linux" then
-         test_env.TEST_TARGET_OS = "linux"
-      else
+      if package.config:sub(1,1) == "\\" then
          test_env.TEST_TARGET_OS = "windows"
+      else
+         local system = execute_output("uname -s")
+         if system == "Linux" then
+            test_env.TEST_TARGET_OS = "linux"
+         elseif system == "Darwin" then
+            test_env.TEST_TARGET_OS = "osx"
+            if test_env.TRAVIS then
+               test_env.OPENSSL_DIRS = "OPENSSL_LIBDIR=/usr/local/opt/openssl/lib OPENSSL_INCDIR=/usr/local/opt/openssl/include"
+            end
+         end
       end
    end
    return true
