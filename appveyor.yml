@@ -43,13 +43,12 @@ before_build:
 
 build_script:
   - luarocks install busted 1> NUL 2> NUL
+  - luarocks install cluacov 1> NUL 2> NUL
 
 test_script:
   - busted -o gtest -v --lpath=.//?.lua --exclude-tags=ssh,unix,mock -Xhelper lua_dir=%CD%\lua_install,appveyor,%COMPILER%
 
 after_test:
-  - if "%LUA%"=="lua 5.1" (luarocks show bit32 || luarocks install bit32)
-  - luarocks install luacov
   - pip install codecov
-  - luacov -c test/luacov.config
-  - cd test && codecov
+  - luacov -c testrun/luacov.config
+  - cd testrun && codecov -f luacov.report.out -X gcov

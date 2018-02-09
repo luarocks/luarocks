@@ -54,13 +54,13 @@ matrix:
 
 
 before_install:
-  - if [ ! -f lua_install/bin/luarocks ]; then pip install hererocks; fi
+  - if [ ! -f lua_install/bin/luarocks ]; then pip2 install hererocks; fi
   - if [ ! -f lua_install/bin/luarocks ]; then hererocks lua_install -r^ --$LUA; fi
   - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
 
 install:
   - if [ ! -f lua_install/bin/busted ]; then luarocks install busted; fi
-  - if [ ! -f lua_install/bin/luacov ]; then luarocks install luacov; luarocks install luacov-coveralls; fi
+  - if [ ! -f lua_install/bin/luacov ]; then luarocks install cluacov; fi
 
 script:
   - lua -v
@@ -70,9 +70,9 @@ script:
   - busted -o gtest --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
 
 after_success:
-  - luacov -c $TRAVIS_BUILD_DIR/test/luacov.config
-  - cd $TRAVIS_BUILD_DIR/test/ && bash <(curl -s https://codecov.io/bash)
-  - grep "Summary" -B1 -A1000 $TRAVIS_BUILD_DIR/test/luacov.report.out
+  - luacov -c $TRAVIS_BUILD_DIR/testrun/luacov.config
+  - cd $TRAVIS_BUILD_DIR/testrun/ && bash <(curl -s https://codecov.io/bash)
+  - grep "Summary" -B1 -A1000 $TRAVIS_BUILD_DIR/testrun/luacov.report.out
 
 notifications:
   email:
