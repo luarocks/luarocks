@@ -113,8 +113,10 @@ function builtin.run(rockspec)
          local basename = dir.base_name(library):gsub(".[^.]*$", "")
          local deffile = basename .. ".def"
          local def = io.open(dir.path(fs.current_dir(), deffile), "w+")
+         local exported_name = name:gsub("%.", "_")
+         exported_name = exported_name:match('^[^%-]+%-(.+)$') or exported_name
          def:write("EXPORTS\n")
-         def:write("luaopen_"..name:gsub("%.", "_").."\n")
+         def:write("luaopen_"..exported_name.."\n")
          def:close()
          local ok = execute(variables.LD, "-dll", "-def:"..deffile, "-out:"..library, dir.path(variables.LUA_LIBDIR, variables.LUALIB), unpack(extras))
          local basedir = ""
