@@ -1,5 +1,7 @@
 return {
    default = {
+      output = "gtest",
+      verbose = true,
       helper = "spec.util.test_env",
       ["auto-insulate"] = false
    }
