@@ -210,7 +210,7 @@ end
 function fs_lua.pop_dir()
    local d = table.remove(dir_stack)
    if d then
-      lfs.chdir(d)
+      lfs.chdir("../")
       return true
    else
       return false
