@@ -215,7 +215,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       it("If the given destination path is a directory", function()
          local src = "./test/test_find/file_1.lua"
          local dest = "./test"
-         assert.same(true,fs.copy(src,dest,"w+b"))  -- -->creates a file at dest path with same name as that of the src.
+         assert.falsy(false,fs.copy(src,dest,"w+b"))  -- -->creates a file at dest path with same name as that of the src.
       end)
       
       it("If the permission for the destination file is not passed", function()
