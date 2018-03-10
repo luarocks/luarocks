@@ -215,7 +215,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       it("If the given destination path is a directory", function()
          local src = "./test/test_find/file_1.lua"
          local dest = "./test"
-         assert.falsy(false,fs.copy(src,dest,"w+b"))  -- -->creates a file at dest path with same name as that of the src.
+         assert.same(true,fs.copy(src,dest,"w+b"))  -- -->creates a file at dest path with same name as that of the src.
       end)
       
       it("If the permission for the destination file is not passed", function()
@@ -233,6 +233,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       it("if the source path is wrong", function()
          src = "fbejrfbhreb"
          local result = fs.copy(src,dest,"w+b")
+         
          --print(result)
          assert.falsy(false,result)
          
@@ -241,7 +242,10 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       it("returns nil if the given destination path file is a read-only file", function()
          local src = "./test/test_find/file_1.lua"
          local dest = "./test/kar.txt"  -->read-only file
-         assert.same(true,nil==fs.copy(src,dest,"wb")) 
+         local file = io.open(dest,"wb")
+         
+         
+         assert.falsy(false,fs.copy(src,dest,"w+b")) 
       end)
       
    end)
