@@ -195,7 +195,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          local file = "./test/kar.txt" --> read only file
          local result = fs.is_writable(file)
        
-         assert.same(false,result)
+         assert.falsy(false,result)
       end)
       it("if the path passed is a dir", function()
          local path = "./test"
