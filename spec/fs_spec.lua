@@ -105,7 +105,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       it("returns false if the file doesnt exists",function()
          local path = "./test/nonexistance"
          local bool = fs.is_dir(path)
-         assert.falsy(false,bool)
+         assert.same(false,bool)
       end)
 
       it("returns true if it is a dir",function()
@@ -117,7 +117,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       it("returns false if file exists and it is not a directory",function()
          local path = "./test/kar.txt"
          local bool = fs.is_dir(path)
-         assert.falsy(false,bool)
+         assert.same(false,bool)
       end)
       
    end)
@@ -143,7 +143,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
      
      it("return false if path cannot be made a directory", function()
         local path = "./test/test.zip"
-        assert.falsy(false,fs.make_dir(path))
+        assert.same(false,fs.make_dir(path))
      end)
    end)
 
@@ -165,13 +165,13 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("returns true if the given md5 checksum matches",function()
          local path = "./test/test_find/file_2.lua"
-         local checksum = "F615700EB732783BE3C4CBAFC8FB240C"
-         assert.truthy(true,fs.check_md5(path,checksum))
+         local checksum = "f615700eb732783be3c4cbafc8fb240c"
+         assert.same(true,fs.check_md5(path,checksum))
       end)
       it("returns false if the given md5 checksum does not match",function()
          local path ="./test/test_find/file_2.lua"
-         local checksum = "F615700EB732783BE2C4CBAFC8FB240C" --> one character changed  
-         assert.falsy(false,fs.check_md5(path,checksum))
+         local checksum = "3e43a9cb478e4683133e1a214611db8c"   
+         assert.same(false,fs.check_md5(path,checksum))
       end)
    end)
 
@@ -195,11 +195,11 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          local file = "./test/kar.txt" --> read only file
          local result = fs.is_writable(file)
        
-         assert.falsy(false,result)
+         assert.same(false,result)
       end)
       it("if the path passed is a dir", function()
          local path = "./test"
-         assert.falsy(false,fs.is_writable(path))
+         assert.same(true,fs.is_writable(path))
       end)
       it("returns true if the file passed is writable",function()
          local path = "./test/test_find/file_1.lua"
@@ -235,7 +235,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
        end)
        it("Given path file does not exists",function()
           local src = "nonexistance"
-          assert.falsy(false,fs.exists(src))
+          assert.same(false,fs.exists(src))
        end)
    end)
 
@@ -555,11 +555,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          assert.same(true,bool)
       end)
 
-      it("returns false if not able to unzip a zip file", function()
-         local path = "./test/test_zip.zip" --> locked zip file with read-only permission 
-         assert.truthy(true,fs.unzip(path))
-      end)
-
       it("returns false if the file is not zip file",function()
          local path = "./test/kar.txt"
          local bool = fs.unzip(path)
@@ -597,37 +592,8 @@ describe("Luarocks fs test #whitebox #w_fs", function()
        it("returns false if the command cannot be executed",function()
           local var = "non_existance"
           local ans = fs.execute_string(var)
-          assert.falsy(false,ans)
+          assert.same(false,ans)
        end)
     end)
-
--- testing fs.is_lua 
-   describe("Testing fs.is_lua", function()
-      local olddir
-
-      before_each(function()
-         olddir = lfs.currentdir()
-      end)
-
-      after_each(function()
-        if olddir then
-           lfs.chdir(olddir)
-         end
-      end)
-
-      it("returns true if it is a lua script", function()
-         local path = "./src/luarocks/fs/lua.lua"
-         assert.truthy(true,fs.is_lua(path))
-      end)
-      it("returns false if the script exists and is not a lua script", function()
-         local path = "./test/dummyfile.java"
-         assert.falsy(falsy,fs.is_lua(path))
-      end)
-      
-      it("returns false if the script does not exists", function()
-         local path = "./test/non_existance"
-         assert.falsy(false,fs.is_lua(path))
-      end)
-   end)
    
 end)
