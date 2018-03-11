@@ -161,11 +161,12 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          end
       end)
 
-    
+    -- --> checksum for ./test/test_find/file_2.lua --> F615700EB732783BE3C4CBAFC8FB240C --> generated locally on my computer
 
       it("returns true if the given md5 checksum matches",function()
          local path = "./test/test_find/file_2.lua"
          local checksum = "f615700eb732783be3c4cbafc8fb240c"
+         local bool = fs.check_md5(path,checksum)
          assert.truthy(true,fs.check_md5(path,checksum))
       end)
       it("returns false if the given md5 checksum does not match",function()
@@ -194,10 +195,14 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       it("returns false if file is not writable",function()
          local file = "./test/kar.txt" --> read only file
          local result = fs.is_writable(file)
-       
+         
          assert.falsy(false,result)
       end)
-      it("if the path passed is a dir", function()
+      it("if the path passed is a non-accessible dir", function()
+         local path = "./test/test2"
+         assert.falsy(false,fs.is_writable(path))
+      end)
+      it("if the path passed is an accessible dir", function()
          local path = "./test"
          assert.same(true,fs.is_writable(path))
       end)
@@ -595,5 +600,56 @@ describe("Luarocks fs test #whitebox #w_fs", function()
           assert.same(false,ans)
        end)
     end)
+--testing fs.move 
+   describe("Testing fs.move",function()
+      before_each(function()
+         local src = "./test/dummy_luascript.lua"
+         local dest = "./"
+         fs.copy(src,dest)
+      end)
+      it("returns false if the src path is wrong", function()
+         local src = "./nonexistance"
+         local dest = "./test"
+         assert.falsy(false,fs.move(src,dest,"w+b"))
+      end)
+      
+      it("returns true if the src is copied to the dest", function()
+         local src = "./dummy_luascript.lua"
+         local dest = "./test"
+         assert.same(true,fs.move(src,dest,"w+b"))
+      end)
+      it("returns false if the dest file already exists and is not a directory", function()
+         local dest = "./test/dummy_luascript.lua"
+         local src = "./dummy_luascript.lua"
+         assert.falsy(false,fs.move(src,dest,"w+b"))
+      end)
+      it("returns false if the src file cannot be deleted after copying ", function()
+         local dest = "./test"
+         local src = "./undeletable"
+         assert.falsy(false,fs.move(src,dest,"w+b"))
+      end)
+      it("returns false if the file couldnt be copied to the dest", function()
+         local src = "./dummy_luascript.lua"
+         local dest = "./test/kar.txt" --> read-only file
+         assert.falsy(false,fs.move(src,dest,"w+b"))
+      end)
+   end)
+-- testing fs.is_lua
+   describe("Testing the fs.is_lua",function()
+       it("returns true if it is a lua script", function()
+          local path = "./src/luarocks/fs/lua.lua"
+          
+          assert.same(true,fs.is_lua(path))
+       end)
+       it("returns false if it is not lua script", function()
+          local path = "./test/dummy.java"
+          assert.falsy(false,fs.is_lua(path))
+       end)
+       it("returns false if the script doesnt exist", function()
+          local path = "./test/nonexistance.lua"
+          assert.falsy(false,fs.is_lua(path))
+       end)
+       
+   end)
    
 end)
