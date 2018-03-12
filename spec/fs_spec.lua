@@ -624,8 +624,8 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          assert.falsy(false,fs.move(src,dest,"w+b"))
       end)
       it("returns false if the src file cannot be deleted after copying ", function()
-         local dest = "./test"
-         local src = "./undeletable"
+         local dest = "./test/dummy_folder"
+         local src = "./test/undeletable"
          assert.falsy(false,fs.move(src,dest,"w+b"))
       end)
       it("returns false if the file couldnt be copied to the dest", function()
