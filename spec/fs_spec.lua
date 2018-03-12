@@ -288,13 +288,13 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       it("returns false when the source is not available", function()
          src = os.tmpname()
          os.remove(src)
-         assert.falsy(false,fs.copy(src,dest,"w+b"))
+         assert.falsy(fs.copy(src,dest,"w+b"))
       end)
      
       it("if the source path is wrong", function()
          src = "nonexistance"
          local result = fs.copy(src,dest,"w+b")
-         assert.falsy(false,result)
+         assert.falsy(result)
       end)
       
       it("returns false if the given destination path file is a read-only file", function()
@@ -571,7 +571,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       it("returns false if the src path is wrong", function()
          local src = "./nonexistance"
          local dest = "./test"
-         assert.falsy(false,fs.move(src,dest,"w+b"))
+         assert.falsy(fs.move(src,dest,"w+b"))
       end)
       
       it("returns true if the src is copied to the dest", function()
@@ -583,7 +583,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       it("returns false if the dest file already exists and is not a directory", function()
          local dest = "./test/dummy_luascript.lua"
          local src = "./dummy_luascript.lua"
-         assert.falsy(false,fs.move(src,dest,"w+b"))
+         assert.falsy(fs.move(src,dest,"w+b"))
       end)
             
       it("returns false if the src file doesnt have appropriate permission to access", function()
@@ -623,11 +623,11 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       end)
       it("returns false if it is not lua script", function()
          local path = "./test/dummy.java"
-         assert.falsy(false,fs.is_lua(path))
+         assert.falsy(fs.is_lua(path))
       end)
       it("returns false if the script doesnt exist", function()
          local path = "./test/nonexistance.lua"
-         assert.falsy(false,fs.is_lua(path))
+         assert.falsy(fs.is_lua(path))
       end)
    end)  
 end)
