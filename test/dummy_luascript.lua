@@ -1,11 +1,11 @@
-var = 13
+var = 18
 
-if var>13 then
-   print("Hi i have puberty")
+if var>18 then
+   print("Racheal gets 2 chocolates")
 end
-elseif var==13 then
-   print("I will have puberty next year")
+elseif var==18 then
+   print("Racheal gets 1 chocolate")
 end
 else
-   print("I too young to have puberty") 
+   print("Racheal gets no chocolates") 
 end
