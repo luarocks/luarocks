@@ -150,7 +150,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("returns true if the given md5 checksum matches",function()
          local path = "./test/test_find/file_2.lua"
-         local checksum = fs.get_md5(path)
+         local checksum = "932946a9fe478c1259196da26f91c807"
          local bool = fs.check_md5(path,checksum)
          assert.same(true,bool)
       end)
