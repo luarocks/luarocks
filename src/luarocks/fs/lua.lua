@@ -9,7 +9,6 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
-local path = require("luarocks.path")
 
 local socket_ok, zip_ok, unzip_ok, lfs_ok, md5_ok, posix_ok, _
 local http, ftp, lrzip, luazip, lfs, md5, posix
@@ -788,6 +787,9 @@ function fs_lua.current_user()
    return posix.getpwuid(posix.geteuid()).pw_name
 end
 
+-- This call is not available on all systems, see #677
+if posix.mkdtemp then
+
 --- Create a temporary directory.
 -- @param name string: name pattern to use for avoiding conflicts
 -- when creating temporary directory.
@@ -798,6 +800,8 @@ function fs_lua.make_temp_dir(name)
 
    return posix.mkdtemp((os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name:gsub("/", "_") .. "-XXXXXX")
 end
+
+end -- if posix.mkdtemp
 
 end
 
