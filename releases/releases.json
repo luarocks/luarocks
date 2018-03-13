@@ -1,5 +1,17 @@
 [
 {
+"2.4.4": {
+"date": "2018-03-12", 
+"files": ["luarocks-2.4.4.tar.gz", "luarocks-2.4.4.tar.gz.asc", "luarocks-2.4.4-win32.zip", "luarocks-2.4.4-win32.zip.asc"], 
+"about": [
+"Do not halt a package deletion process when a file from the package is missing",
+"Updated bundled binaries in Windows package: Lua 5.1.5, Wget 1.19.4, 7zip 18.01",
+"Updated Windows installer to better handle gcc toolchains",
+"Fix detection of directories on Windows",
+"Fixes .def generation on Windows"
+]
+}},
+{
 "2.4.3": {
 "date": "2017-09-12", 
 "files": ["luarocks-2.4.3.tar.gz", "luarocks-2.4.3.tar.gz.asc", "luarocks-2.4.3-win32.zip", "luarocks-2.4.3-win32.zip.asc"], 
