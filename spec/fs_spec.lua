@@ -152,7 +152,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          local path = "./test/test_find/file_2.lua"
          local checksum = "932946a9fe478c1259196da26f91c807"
          local bool = fs.check_md5(path,checksum)
-         assert.same(true,bool)
+         assert.truthy(true,bool)
       end)
 
       it("returns false if the given md5 checksum does not match",function()
@@ -352,26 +352,25 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          end
       end)
    
-      it("returns nil if the dir doesnt exist",function()
-         local src = "nonexistance"
-         assert.same(true,nil==fs.remove_dir_if_empty(src))
-      end)
+     it("returns nil if the dir doesnt exist",function()
+        local src = "nonexistance"
+        assert.same(true,nil==fs.remove_dir_if_empty(src))
+     end)
 
-      it("Deletes the dir and returns nil if the given dir exists and is empty", function()
-         local src = "./test/test_empty_dir2"
-         local ans = fs.remove_dir_if_empty(src)
-         if ans==nil then
+     it("Deletes the dir and returns nil if the given dir exists and is empty", function()
+        local src = "./test/test_empty_dir2"
+        local ans = fs.remove_dir_if_empty(src)
+        if ans==nil then
            assert.same(false,fs.exists(src))
-         end
-      end)
-            
-      it("Does not delete the directory if it is not empty and returns nil", function()
-         local src = "./test/test_find"
-         local bool = fs.remove_dir_if_empty(src)
-         if bool==nil then
-            assert.same(true,fs.exists(src))
-         end
-      end)
+        end
+     end)
+     it("Does not delete the directory if it is not empty and returns nil", function()
+        local src = "./test/test_find"
+        local bool = fs.remove_dir_if_empty(src)
+        if bool==nil then
+           assert.same(true,fs.exists(src))
+        end
+     end)
    end)
 
 
@@ -396,6 +395,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       it("returns nil if the directory is successfully deleted ", function()
          local src = "./test/test_empty_dir2"
          local ans = fs.remove_dir_tree_if_empty(src)
+        
          if ans==nil then
             assert.same(false,fs.exists(src))
          end
@@ -404,6 +404,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       it("returns nil if the directory exists and is not deleted because it is not empty",function()
          local src = "./test/test_find"
          local ans = fs.remove_dir_tree_if_empty(src)
+        
          if ans==nil then
             assert.same(true,fs.exists(src))
          end
@@ -515,7 +516,8 @@ describe("Luarocks fs test #whitebox #w_fs", function()
         end
       end)
       
-      it("returns true if it is able to unzip a file",function()   
+      it("returns true if it is able to unzip a file",function()
+         
          local path = "./test/test.zip"
          local bool = fs.unzip(path)
          assert.same(true,bool)
@@ -538,13 +540,13 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       local olddir
 
       before_each(function()
-         olddir = lfs.currentdir()
+        olddir = lfs.currentdir()
       end)
 
       after_each(function()
-         if olddir then
-            lfs.chdir(olddir)
-         end
+        if olddir then
+          lfs.chdir(olddir)
+        end
       end)
 
       it("returns true if the command can be executed", function()
@@ -552,7 +554,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          local ans = fs.execute_string(var)
          assert.same(true,ans)
       end)
-            
       it("returns false if the command cannot be executed",function()
          local var = "non_existance"
          local ans = fs.execute_string(var)
@@ -567,7 +568,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          local dest = "./"
          fs.copy(src,dest)
       end)
-            
       it("returns false if the src path is wrong", function()
          local src = "./nonexistance"
          local dest = "./test"
@@ -579,18 +579,16 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          local dest = "./test"
          assert.same(true,fs.move(src,dest,"w+b"))
       end)
-            
       it("returns false if the dest file already exists and is not a directory", function()
          local dest = "./test/dummy_luascript.lua"
          local src = "./dummy_luascript.lua"
          assert.falsy(fs.move(src,dest,"w+b"))
       end)
-            
+
       it("returns false if the src file doesnt have appropriate permission to access", function()
          local dest = os.tmpname()
          os.remove(dest)
          lfs.mkdir(dest)
-         
          local src = os.tmpname()
          local file = assert(io.open(src,"w"))
          assert(file:write("foo"))
@@ -598,12 +596,13 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          fs.chmod(src,"0") 
          assert.falsy(fs.move(src,dest,"w+b"))
       end)
-            
+
       it("returns false if the file couldnt be copied to the dest", function()
          local src = os.tmpname()
          local file = assert(io.open(src,"w"))
          file:write("foo is my fav food")
          file:close()
+         
          local dest = os.tmpname()
          os.remove(dest)
          lfs.mkdir(dest)
@@ -617,17 +616,24 @@ describe("Luarocks fs test #whitebox #w_fs", function()
    end)
 
    describe("Testing the fs.is_lua",function()
-      it("returns true if it is a lua script", function()
-         local path = "./src/luarocks/fs/lua.lua"    
-         assert.same(true,fs.is_lua(path))
-      end)
-      it("returns false if it is not lua script", function()
-         local path = "./test/dummy.java"
-         assert.falsy(fs.is_lua(path))
-      end)
-      it("returns false if the script doesnt exist", function()
-         local path = "./test/nonexistance.lua"
-         assert.falsy(fs.is_lua(path))
-      end)
-   end)  
+       it("returns true if it is a lua script", function()
+          local path = "./src/luarocks/fs/lua.lua"
+          
+          assert.same(true,fs.is_lua(path))
+       end)
+       it("returns false if it is not lua script", function()
+          local path = "./test/dummy.java"
+          assert.falsy(fs.is_lua(path))
+       end)
+       it("returns false if a lua script is not valid", function()
+          local path = "./test/dummy_luascript.lua"
+          assert.falsy(fs.is_lua(path))
+       end)
+       it("returns false if the script doesnt exist", function()
+          local path = "./test/nonexistance.lua"
+          assert.falsy(fs.is_lua(path))
+       end)
+       
+   end)
+   
 end)
