@@ -158,7 +158,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          local rfile = assert(io.open(src,"w"))
          rfile:write("foo is my food")
          rfile:close()
-         fs.chmod(src,"0") 
+         assert(fs.chmod(src,"4")) 
          local result = fs.is_writable(src)         
          assert.falsy(result)
       end)
@@ -170,7 +170,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          tmp = "/internalfile"
          local dir = src..tmp
          lfs.mkdir(dir)
-         fs.chmod(dir,"0")
+         assert(fs.chmod(dir,"4"))
          assert.falsy(fs.is_writable(dir))
       end)
 
@@ -279,7 +279,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          local file1 = assert(io.open(dest,"w"))
          assert(file1:write("what is your fav food?"))
          file1:close()
-         fs.chmod(dest,"4")
+         assert(fs.chmod(dest,"4"))
          assert.falsy(fs.copy(src,dest,"w+b")) 
       end)
    end)
@@ -532,13 +532,22 @@ describe("Luarocks fs test #whitebox #w_fs", function()
    end)
 
    describe("Testing fs.move",function()
-
+      local src
+      local dest
       before_each(function()
-         local src = "./test/dummy_luascript.lua"
-         local dest = "./"
+         src = "./test/dummy_luascript.lua"
+         dest = "./"
          fs.copy(src,dest)
       end)
-
+      
+      after_each(function()
+         if src then 
+            src=nil
+         end
+         if dest then
+            dest=nil
+         end
+      end)
       it("returns false if the src path is wrong", function()
          local src = "./nonexistance"
          local dest = "./test"
@@ -565,8 +574,16 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          local file = assert(io.open(src,"w"))
          assert(file:write("foo"))
          file:close()
-         fs.chmod(src,"0") 
+         assert(fs.chmod(dest,"4")) 
          assert.falsy(fs.move(src,dest,"w+b"))
+         if dest then
+            lfs.rmdir(dest)
+            dest=nil
+         end
+         if src then
+            os.remove(src)
+            src=nil
+         end
       end)
 
       it("returns false if the file couldnt be copied to the dest", function()
@@ -578,12 +595,16 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          local dest = os.tmpname()
          os.remove(dest)
          lfs.mkdir(dest)
-         fs.chmod(dest,"0") 
+         assert(fs.chmod(dest,"4")) 
          assert.falsy(fs.move(src,dest,"w+b"))
-         lfs.rmdir(dest)
-         dest=nil
-         os.remove(src)
-         src=nil
+         if dest then
+            lfs.rmdir(dest)
+            dest=nil
+         end
+         if src then
+            os.remove(src)
+            src=nil
+         end
       end)
    end)
 
