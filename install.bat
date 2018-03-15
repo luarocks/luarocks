@@ -127,7 +127,7 @@ Configuring the destinations:
                if you create a self contained installation.
                
 Configuring the Lua interpreter:
-/LV [version]  Lua version to use; either 5.1, 5.2, or 5.3.
+/LV [version]  Lua version to use; either 5.1, 5.2, 5.3, or 5.4.
                Default is auto-detected.
 /LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
                If not provided, the installer will search the system
@@ -250,8 +250,8 @@ local function check_flags()
 			die("Bundled Lua version is 5.1, cannot install "..vars.LUA_VERSION)
 		end
 	end
-	if not vars.LUA_VERSION:match("^5%.[123]$") then
-		die("Bad argument: /LV must either be 5.1, 5.2, or 5.3")
+	if not vars.LUA_VERSION:match("^5%.[1234]$") then
+		die("Bad argument: /LV must either be 5.1, 5.2, 5.3, or 5.4")
 	end
   if USE_MSVC_MANUAL and USE_MINGW then
     die("Cannot combine option /MSVC and /MW")
@@ -269,7 +269,7 @@ local function detect_lua_version(interpreter_path)
 	local full_version = handler:read("*a")
 	handler:close()
 
-	local version = full_version:match(" (5%.[123])$")
+	local version = full_version:match(" (5%.[1234])$")
 	if not version then
 		return nil, "unknown interpreter version '" .. full_version .. "'"
 	end
@@ -281,7 +281,7 @@ local function look_for_interpreter(directory)
 	if lua_version_set then
 		names = {S"lua$LUA_VERSION.exe", S"lua$LUA_SHORTV.exe"}
 	else
-		names = {"lua5.3.exe", "lua53.exe", "lua5.2.exe", "lua52.exe", "lua5.1.exe", "lua51.exe"}
+		names = {"lua5.4.exe", "lua54.exe", "lua5.3.exe", "lua53.exe", "lua5.2.exe", "lua52.exe", "lua5.1.exe", "lua51.exe"}
 	end
 	table.insert(names, "lua.exe")
 	table.insert(names, "luajit.exe")
