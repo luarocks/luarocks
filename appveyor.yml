@@ -38,7 +38,7 @@ init:
 before_build:
   - set PATH=C:\Python27\Scripts;%PATH% # Add directory containing 'pip' to PATH
   - pip install hererocks
-  - hererocks lua_install --%LUA% --luarocks @luarocks-3 --target=%COMPILER%
+  - hererocks lua_install --%LUA% --luarocks latest --target=%COMPILER%
   - call lua_install\bin\activate
 
 build_script:
