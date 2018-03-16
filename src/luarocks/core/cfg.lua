@@ -20,7 +20,10 @@ local version_suffix = cfg.lua_version:gsub("%.", "_")
 
 -- Load site-local global configurations
 local ok, site_config = pcall(require, "luarocks.core.site_config_"..version_suffix)
-if not ok then
+if type(site_config) ~= "table" then
+   io.stderr:write("Result of require('luarocks.core.site_config_"..version_suffix.."') was invalid.\n")
+   site_config = {}
+elseif not ok then
    io.stderr:write("Site-local luarocks/core/site_config_"..version_suffix..".lua file not found. Incomplete installation?\n")
    site_config = {}
 end
