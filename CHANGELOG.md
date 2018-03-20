@@ -9,6 +9,9 @@ What's new in LuaRocks 3.0
   For example, if you have `/some/dir/lua/5.1/` in your `$LUA_PATH` and
   you are running Lua 5.2, `luarocks.loader` and the `luarocks` command-line
   tool will convert it to `/some/dir/lua/5.2/`.
+* New flag `--temp-key` for `luarocks upload`, allowing you to easily
+  upload rocks into an alternate account without disrupting the
+  stored configuration of your main account.
 * New flag `--dev`, for enabling development-branch sub-repositories.
   This adds support for easily requesting `dev` modules from LuaRocks.org, as in:
   `luarocks install --dev luafilesystem`. The list of URLs configured

@@ -137,6 +137,7 @@ local supported_flags = {
    ["summary"] = "\"<text>\"",
    ["system-config"] = true,
    ["tag"] = "<tag>",
+   ["temp-key"] = "<key>",
    ["timeout"] = "<seconds>",
    ["to"] = "<path>",
    ["tree"] = "<path>",
