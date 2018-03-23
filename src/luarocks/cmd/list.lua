@@ -87,7 +87,7 @@ function list.command(flags, filter, version)
          util.warning(err)
       end
    end
-   util.title("Installed rocks:", flags["porcelain"])
+   util.title("Installed rocks for Lua "..cfg.lua_version..":", flags["porcelain"])
    search.print_results(results, flags["porcelain"])
    return true
 end
