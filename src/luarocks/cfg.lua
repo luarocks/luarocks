@@ -521,7 +521,7 @@ if cfg.platforms.unix then
    defaults.lib_extension = "so"
    defaults.external_lib_extension = "so"
    defaults.obj_extension = "o"
-   defaults.external_deps_dirs = { "/usr/local", "/usr" }
+   defaults.external_deps_dirs = { "/usr/local", "/usr", site_config.LUAROCKS_PREFIX }
    defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR or "/usr/local/bin"
    defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR or "/usr/local/include"
    defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR or "/usr/local/lib"
