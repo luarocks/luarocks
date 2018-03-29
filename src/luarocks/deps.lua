@@ -8,6 +8,7 @@ local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local vers = require("luarocks.vers")
+local queries = require("luarocks.queries")
 
 --- Attempt to match a dependency to an installed rock.
 -- @param dep table: A dependency parsed in table format.
@@ -90,8 +91,7 @@ local function values_set(tbl)
 end
 
 local function rock_status(name, deps_mode, rocks_provided)
-   local search = require("luarocks.search")
-   local installed = match_dep(search.make_query(name), nil, deps_mode, rocks_provided)
+   local installed = match_dep(queries.new(name), nil, deps_mode, rocks_provided)
    local installation_type = rocks_provided[name] and "provided by VM" or "installed"
    return installed and installed.." "..installation_type or "not installed"
 end
@@ -184,7 +184,7 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
             return nil, "Failed matching dependencies"
          end
 
-         local url, search_err = search.find_suitable_rock(dep)
+         local url, search_err = search.find_suitable_rock(queries.from_constraints(dep.name, dep.constraints))
          if not url then
             return nil, "Could not satisfy dependency "..vers.show_dep(dep)..": "..search_err
          end

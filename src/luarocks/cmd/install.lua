@@ -11,6 +11,7 @@ local deps = require("luarocks.deps")
 local writer = require("luarocks.manif.writer")
 local remove = require("luarocks.remove")
 local search = require("luarocks.search")
+local queries = require("luarocks.queries")
 local cfg = require("luarocks.core.cfg")
 
 install.help_summary = "Install a rock."
@@ -174,7 +175,7 @@ function install.command(flags, name, version)
       writer.check_dependencies(nil, deps.get_deps_mode(flags))
       return name, version
    else
-      local url, err = search.find_suitable_rock(search.make_query(name:lower(), version))
+      local url, err = search.find_suitable_rock(queries.new(name:lower(), version))
       if not url then
          return nil, err
       end
