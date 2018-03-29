@@ -98,15 +98,30 @@ function test_env.execute_helper(command, print_command, env_variables)
    if print_command then 
       print("[EXECUTING]: " .. command)
    end
+   
+   local unset_variables = {
+      "LUA_PATH",
+      "LUA_CPATH",
+      "LUA_PATH_5_2",
+      "LUA_CPATH_5_2",
+      "LUA_PATH_5_3",
+      "LUA_CPATH_5_3",
+   }
 
    if env_variables then
       if test_env.TEST_TARGET_OS == "windows" then
+         for _, k in ipairs(unset_variables) do
+            final_command = final_command .. "set " .. k .. "=&"
+         end
          for k,v in pairs(env_variables) do
             final_command = final_command .. "set " .. k .. "=" .. v .. "&"
          end
          final_command = final_command:sub(1, -2) .. "&"
       else
-         final_command = "export "
+         for _, k in ipairs(unset_variables) do
+            final_command = final_command .. "unset " .. k .. "; "
+         end
+         final_command = final_command .. "export "
          for k,v in pairs(env_variables) do
             final_command = final_command .. k .. "='" .. v .. "' "
          end
