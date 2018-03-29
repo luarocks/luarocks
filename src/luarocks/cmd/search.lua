@@ -6,6 +6,7 @@ local cmd_search = {}
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local search = require("luarocks.search")
+local queries = require("luarocks.queries")
 
 cmd_search.help_summary = "Query the LuaRocks servers."
 cmd_search.help_arguments = "[--source] [--binary] { <name> [<version>] | --all }"
@@ -55,8 +56,7 @@ function cmd_search.command(flags, name, version)
       return nil, "Enter name and version or use --all. "..util.see_help("search")
    end
    
-   local query = search.make_query(name:lower(), version)
-   query.exact_name = false
+   local query = queries.new(name:lower(), version, true)
    local results, err = search.search_repos(query)
    local porcelain = flags["porcelain"]
    local full_name = name .. (version and " " .. version or "")

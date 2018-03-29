@@ -3,6 +3,7 @@ local download = {}
 local path = require("luarocks.path")
 local fetch = require("luarocks.fetch")
 local search = require("luarocks.search")
+local queries = require("luarocks.queries")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.core.cfg")
@@ -22,12 +23,11 @@ local function get_file(filename)
 end
 
 function download.download(arch, name, version, all)
-   local query = search.make_query(name, version)
-   if arch then query.arch = arch end
+   local substring = (all and name == "")
+   local query = queries.new(name, version, substring, arch)
    local search_err
 
    if all then
-      if name == "" then query.exact_name = false end
       local results = search.search_repos(query)
       local has_result = false
       local all_ok = true

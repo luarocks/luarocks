@@ -6,29 +6,7 @@ local manif = require("luarocks.manif")
 local vers = require("luarocks.vers")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
-
---- Convert the arch field of a query table to table format.
--- @param query table: A query table.
-local function query_arch_as_table(query)
-   local format = type(query.arch)
-   if format == "table" then
-      return
-   elseif format == "nil" then
-      local accept = {}
-      accept["src"] = true
-      accept["all"] = true
-      accept["rockspec"] = true
-      accept["installed"] = true
-      accept[cfg.arch] = true
-      query.arch = accept
-   elseif format == "string" then
-      local accept = {}
-      for a in query.arch:gmatch("[%w_-]+") do
-         accept[a] = true
-      end
-      query.arch = accept
-   end
-end
+local queries = require("luarocks.queries")
 
 --- Store a search result (a rock or rockspec) in the results table.
 -- @param results table: The results table, where keys are package names and
@@ -56,7 +34,7 @@ function search.store_result(results, name, version, arch, repo)
 end
 
 --- Test the name field of a query.
--- If query has a boolean field exact_name set to false,
+-- If query has a boolean field substring set to true,
 -- then substring match is performed; otherwise, exact string
 -- comparison is done.
 -- @param query table: A query in dependency table format.
@@ -65,7 +43,7 @@ end
 local function match_name(query, name)
    assert(type(query) == "table")
    assert(type(name) == "string")
-   if query.exact_name == false then
+   if query.substring then
       return name:find(query.name, 0, true) and true or false
    else
       return name == query.name
@@ -84,7 +62,7 @@ end
 -- @param version string: The version of the package being tested.
 -- @param arch string: The arch of the package being tested.
 -- @param query table: A table describing the query in dependency
--- format (for example, {name = "filesystem", exact_name = false,
+-- format (for example, {name = "filesystem", substring = true,
 -- constraints = {op = "~>", version = {1,0}}}, arch = "rockspec").
 -- If the arch field is omitted, the local architecture (cfg.arch)
 -- is used. The special value "any" is also recognized, returning all
@@ -102,7 +80,7 @@ end
 --- Perform search on a local repository.
 -- @param repo string: The pathname of the local repository.
 -- @param query table: A table describing the query in dependency
--- format (for example, {name = "filesystem", exact_name = false,
+-- format (for example, {name = "filesystem", substring = true,
 -- constraints = {op = "~>", version = {1,0}}}, arch = "rockspec").
 -- If the arch field is omitted, the local architecture (cfg.arch)
 -- is used. The special value "any" is also recognized, returning all
@@ -123,7 +101,6 @@ function search.disk_search(repo, query, results)
    if not results then
       results = {}
    end
-   query_arch_as_table(query)
    
    for name in fs.dir(repo) do
       local pathname = dir.path(repo, name)
@@ -149,7 +126,7 @@ end
 -- @param repo string: The URL of a rocks server or
 -- the pathname of a rocks tree (as returned by path.rocks_dir()).
 -- @param query table: A table describing the query in dependency
--- format (for example, {name = "filesystem", exact_name = false,
+-- format (for example, {name = "filesystem", substring = true,
 -- constraints = {op = "~>", version = {1,0}}}, arch = "rockspec").
 -- If the arch field is omitted, the local architecture (cfg.arch)
 -- is used. The special value "any" is also recognized, returning all
@@ -160,8 +137,11 @@ function search.manifest_search(results, repo, query, lua_version)
    assert(type(results) == "table")
    assert(type(repo) == "string")
    assert(type(query) == "table")
-   
-   query_arch_as_table(query)
+
+   if query.namespace then
+      repo = repo .. "/manifests/" .. query.namespace
+   end
+
    local manifest, err, errcode = manif.load_manifest(repo, lua_version)
    if not manifest then
       return nil, err, errcode
@@ -214,24 +194,6 @@ function search.search_repos(query, lua_version)
       store_if_match(results, provided_repo, name, versions, "installed", query)
    end
    return results
-end
-
---- Prepare a query in dependency table format.
--- @param name string: The query name.
--- @param version string or nil: 
--- @return table: A query in table format
-function search.make_query(name, version)
-   assert(type(name) == "string")
-   assert(type(version) == "string" or not version)
-   
-   local query = {
-      name = name,
-      constraints = {}
-   }
-   if version then
-      table.insert(query.constraints, { op = "==", version = vers.parse_version(version)})
-   end
-   return query
 end
 
 --- Get the URL for the latest in a set of versions.
@@ -369,8 +331,7 @@ function search.act_on_src_or_rockspec(action, name, version, ...)
    assert(type(name) == "string")
    assert(type(version) == "string" or not version)
 
-   local query = search.make_query(name, version)
-   query.arch = "src|rockspec"
+   local query = queries.new(name, version, nil, "src|rockspec")
    local url, err = search.find_suitable_rock(query)
    if not url then
       return nil, "Could not find a result named "..name..(version and " "..version or "")..": "..err
@@ -380,8 +341,7 @@ end
 
 function search.pick_installed_rock(name, version, given_tree)
    local results = {}
-   local query = search.make_query(name, version)
-   query.exact_name = true
+   local query = queries.new(name, version, true)
    local tree_map = {}
    local trees = cfg.rocks_trees
    if given_tree then

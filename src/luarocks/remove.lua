@@ -7,6 +7,7 @@ local repos = require("luarocks.repos")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
+local queries = require("luarocks.queries")
 
 --- Obtain a list of packages that depend on the given set of packages
 -- (where all packages of the set are versions of one program).
@@ -22,8 +23,7 @@ local function check_dependents(name, versions, deps_mode)
       blacklist[name][version] = true
    end
    local local_rocks = {}
-   local query_all = search.make_query("")
-   query_all.exact_name = false
+   local query_all = queries.all()
    search.manifest_search(local_rocks, cfg.rocks_dir, query_all)
    local_rocks[name] = nil
    for rock_name, rock_versions in pairs(local_rocks) do
@@ -105,7 +105,8 @@ end
 
 function remove.remove_other_versions(name, version, force, fast)
    local results = {}
-   search.manifest_search(results, cfg.rocks_dir, { name = name, exact_name = true, constraints = {{ op = "~=", version = version}} })
+   local query = queries.new(name, version, false, nil, "~=")
+   search.manifest_search(results, cfg.rocks_dir, query)
    if results[name] then
       return remove.remove_search_results(results, name, cfg.deps_mode, force, fast)
    end

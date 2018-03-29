@@ -13,6 +13,7 @@ local fetch = require("luarocks.fetch")
 local path = require("luarocks.path")
 local persist = require("luarocks.persist")
 local manif = require("luarocks.manif")
+local queries = require("luarocks.queries")
 
 --- Update storage table to account for items provided by a package.
 -- @param storage table: a table storing items in the following format:
@@ -296,9 +297,7 @@ function writer.make_manifest(repo, deps_mode, remote)
       return nil, "Cannot access repository at "..repo
    end
 
-   local query = search.make_query("")
-   query.exact_name = false
-   query.arch = "any"
+   local query = queries.all("any")
    local results = search.disk_search(repo, query)
    local manifest = { repository = {}, modules = {}, commands = {} }
 

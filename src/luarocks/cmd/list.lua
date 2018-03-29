@@ -4,6 +4,7 @@
 local list = {}
 
 local search = require("luarocks.search")
+local queries = require("luarocks.queries")
 local vers = require("luarocks.vers")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
@@ -31,8 +32,7 @@ local function check_outdated(trees, query)
       table.sort(versions, vers.compare_versions)
       local latest_installed = versions[1]
 
-      local query_available = search.make_query(name:lower())
-      query.exact_name = true
+      local query_available = queries.new(name:lower(), nil, false)
       local results_available, err = search.search_repos(query_available)
       
       if results_available[name] then
@@ -69,8 +69,7 @@ end
 -- @param version string or nil: a version may also be passed.
 -- @return boolean: True if succeeded, nil on errors.
 function list.command(flags, filter, version)
-   local query = search.make_query(filter and filter:lower() or "", version)
-   query.exact_name = false
+   local query = queries.new(filter and filter:lower() or "", version, true)
    local trees = cfg.rocks_trees
    if flags["tree"] then
       trees = { flags["tree"] }
