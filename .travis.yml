@@ -66,8 +66,8 @@ script:
   - lua -v
   - ./configure --with-lua=lua_install
   - ./makedist scm
-  - busted -o gtest --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
-  - busted -o gtest --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
+  - busted -o gtest --exclude-tags=git --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
+  - busted -o gtest --exclude-tags=git --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
 
 after_success:
   - luacov -c $TRAVIS_BUILD_DIR/testrun/luacov.config
