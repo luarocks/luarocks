@@ -85,7 +85,7 @@ describe("LuaRocks deps tests #blackbox #b_deps", function()
       lfs.chdir("lxsh-0.8.6-2/lxsh-0.8.6-1/")
       assert.is_true(run.luarocks_bool("make --tree=" .. testing_paths.testing_tree .. " --deps-mode=order"))
 
-      lfs.chdir(testing_paths.luarocks_dir)
+      lfs.chdir(testing_paths.testrun_dir)
       test_env.remove_dir("lxsh-0.8.6-2")
       assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
 
@@ -102,7 +102,7 @@ describe("LuaRocks deps tests #blackbox #b_deps", function()
       lfs.chdir("lxsh-0.8.6-2/lxsh-0.8.6-1/")
       assert.is_true(run.luarocks_bool("make --tree=" .. testing_paths.testing_sys_tree .. " --deps-mode=order"))
 
-      lfs.chdir(testing_paths.luarocks_dir)
+      lfs.chdir(testing_paths.testrun_dir)
       test_env.remove_dir("lxsh-0.8.6-2")
       assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
 

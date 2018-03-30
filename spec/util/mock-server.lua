@@ -70,7 +70,7 @@ server:add_resource("/file/{name:[^/]+}", {
       path = "/",
       produces = "text/plain",
       handler = function(query, name)
-         local fd = io.open("spec/fixtures/"..name, "r")
+         local fd = io.open("../spec/fixtures/"..name, "r")
          if not fd then
             return restserver.response():status(404)
          end

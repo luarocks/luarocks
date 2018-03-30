@@ -6,21 +6,25 @@ local testing_paths = test_env.testing_paths
 test_env.unload_luarocks()
 
 local extra_rocks = test_env.mock_server_extra_rocks({
-   "/abelhas-1.0-1.rockspec",
+   "/abelhas-1.1-1.rockspec",
    "/lpeg-0.12-1.rockspec"
 })
 
 describe("LuaRocks new_version tests #blackbox #b_new_version", function()
 
-   before_each(function()
+   setup(function()
       test_env.setup_specs(extra_rocks)
    end)
    
    describe("basic tests", function()
       it("with no flags/arguments", function()
-         lfs.chdir("test")
+         finally(function()
+            lfs.chdir(testing_paths.testrun_dir)
+            test_env.remove_dir("empty")
+         end)
+         assert(lfs.mkdir("empty"))
+         assert(lfs.chdir("empty"))
          assert.is_false(run.luarocks_bool("new_version"))
-         lfs.chdir(testing_paths.luarocks_dir)
       end)
       
       it("with invalid", function()

@@ -494,16 +494,16 @@ local function create_paths(luaversion_full)
       testing_paths.luarocks_tmp = "/tmp/luarocks_testing"
    end
 
-   testing_paths.luarocks_dir = lfs.currentdir()
+   local base_dir = lfs.currentdir()
 
    if test_env.TEST_TARGET_OS == "windows" then
-      testing_paths.luarocks_dir = testing_paths.luarocks_dir:gsub("\\","/")
+      base_dir = base_dir:gsub("\\","/")
    end
 
-   testing_paths.fixtures_dir = testing_paths.luarocks_dir .. "/spec/fixtures"
-   testing_paths.util_dir = testing_paths.luarocks_dir .. "/spec/util"
-   testing_paths.testrun_dir = testing_paths.luarocks_dir .. "/testrun"
-   testing_paths.src_dir = testing_paths.luarocks_dir .. "/src"
+   testing_paths.fixtures_dir = base_dir .. "/spec/fixtures"
+   testing_paths.util_dir = base_dir .. "/spec/util"
+   testing_paths.testrun_dir = base_dir .. "/testrun"
+   testing_paths.src_dir = base_dir .. "/src"
    testing_paths.testing_lrprefix = testing_paths.testrun_dir .. "/testing_lrprefix-" .. luaversion_full
    testing_paths.testing_tree = testing_paths.testrun_dir .. "/testing-" .. luaversion_full
    testing_paths.testing_tree_copy = testing_paths.testrun_dir .. "/testing_copy-" .. luaversion_full
@@ -566,6 +566,8 @@ function test_env.setup_specs(extra_rocks)
    if test_env.RESET_ENV then
       reset_environment(test_env.testing_paths, test_env.md5sums, test_env.env_variables)
    end
+   
+   lfs.chdir(test_env.testing_paths.testrun_dir)
 end
 
 --- Test if required rock is installed and if not, install it.

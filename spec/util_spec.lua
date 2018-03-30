@@ -53,9 +53,9 @@ describe("Basic tests #blackbox #b_util", function()
    it("LuaRocks only server=testing", function()
       assert.is.truthy(run.luarocks("--only-server=testing"))
    end)
-   
-   it("LuaRocks test site config", function()
-      local scname = "src/luarocks/core/site_config_"..test_env.lua_version:gsub("%.", "_")..".lua"
+
+   it("#only LuaRocks test site config", function()
+      local scname = testing_paths.src_dir .. "/luarocks/core/site_config_"..test_env.lua_version:gsub("%.", "_")..".lua"
    
       assert.is.truthy(os.rename(scname, scname..".tmp"))
       assert.is.falsy(lfs.attributes(scname))
