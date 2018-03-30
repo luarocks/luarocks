@@ -1,5 +1,6 @@
-local lfs = require("lfs")
 local test_env = {}
+
+local lfs = require("lfs")
 
 local help_message = [[
 LuaRocks test-suite
@@ -135,6 +136,11 @@ function test_env.execute_helper(command, print_command, env_variables)
    return final_command
 end
 
+function test_env.execute(cmd)
+   local ok = os.execute(cmd)
+   return (ok == true or ok == 0) -- normalize Lua 5.1 output to boolean
+end
+
 --- Execute command and returns true/false
 -- @return true/false boolean: status of the command execution
 local function execute_bool(command, print_command, env_variables)
@@ -147,8 +153,7 @@ local function execute_bool(command, print_command, env_variables)
       redirect = " > "..redirect_filename
       os.remove(redirect_filename)
    end
-   local ok = os.execute(command .. redirect)
-   ok = (ok == true or ok == 0) -- normalize Lua 5.1 output to boolean
+   local ok = test_env.execute(command .. redirect)
    if redirect ~= "" then
       if not ok then
          local fd = io.open(redirect_filename, "r")
@@ -530,9 +535,13 @@ function test_env.unload_luarocks()
          package.loaded[modname] = nil
       end
    end
+   local src_pattern = test_env.testing_paths.src_dir .. "/?.lua"
+   if not package.path:find(src_pattern, 1, true) then
+      package.path = src_pattern .. ";" .. package.path
+   end
 end
 
---- Function for initially setup of environment, variables, md5sums for spec files
+--- Function for initial setup of environment, variables, md5sums for spec files
 function test_env.setup_specs(extra_rocks)
    -- if global variable about successful creation of testing environment doesn't exist, build environment
    if not test_env.setup_done then
@@ -546,6 +555,10 @@ function test_env.setup_specs(extra_rocks)
       end
 
       test_env.main()
+      
+      -- preload before meddling with package.path
+      require("spec.util.git_repo")
+
       package.path = test_env.env_variables.LUA_PATH
 
       test_env.platform = execute_output(test_env.testing_paths.lua .. " -e \"print(require('luarocks.core.cfg').arch)\"", false, test_env.env_variables)
@@ -744,9 +757,8 @@ function test_env.mock_server_extra_rocks(more)
 end
 
 function test_env.mock_server_init()
-   local assert = require("luassert")
    local testing_paths = test_env.testing_paths
-   assert.is_true(test_env.need_rock("restserver-xavante"))
+   assert(test_env.need_rock("restserver-xavante"))
    local final_command = test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.util_dir .. "/mock-server.lua &", true, test_env.env_variables)
    os.execute(final_command)
 end
