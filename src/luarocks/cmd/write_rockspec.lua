@@ -220,6 +220,7 @@ end
 local function rockspec_cleanup(rockspec)
    rockspec.source.file = nil
    rockspec.source.protocol = nil
+   rockspec.source.identifier = nil
    rockspec.variables = nil
    rockspec.name = nil
    rockspec.format_is_at_least = nil
