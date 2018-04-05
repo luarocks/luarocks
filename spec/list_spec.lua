@@ -17,7 +17,7 @@ describe("LuaRocks list tests #blackbox #b_list", function()
 
    it("LuaRocks list with no flags/arguments", function()
       local output = run.luarocks("list")
-      assert.is.truthy(output:find("luacov"))
+      assert.match("luacov", output)
    end)
 
    it("LuaRocks list porcelain", function()
@@ -33,6 +33,6 @@ describe("LuaRocks list tests #blackbox #b_list", function()
    
    it("LuaRocks list invalid tree", function()
       local output = run.luarocks("--tree=/some/invalid/tree list")
-      assert(output:find("Installed rocks for Lua "..test_env.lua_version..":----------------", 1, true))
+      assert(output:find("Installed rocks for Lua "..test_env.lua_version, 1, true))
    end)
 end)

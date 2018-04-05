@@ -204,6 +204,12 @@ function util.printerr(...)
    io.stderr:write("\n")
 end
 
+--- Display a warning message.
+-- @param msg string: the warning message
+function util.warning(msg)
+   util.printerr("Warning: "..msg)
+end
+
 --- Simple sort function used as a default for util.sortedpairs.
 local function default_sort(a, b)
    local ta = type(a)

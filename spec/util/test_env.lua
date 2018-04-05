@@ -175,7 +175,7 @@ local function execute_output(command, print_command, env_variables)
    local file = assert(io.popen(command))
    local output = file:read('*all')
    file:close()
-   return output:gsub("\n","") -- output adding new line, need to be removed
+   return (output:gsub("\r\n", "\n"):gsub("\n$", "")) -- remove final newline
 end
 
 --- Set test_env.LUA_V or test_env.LUAJIT_V based

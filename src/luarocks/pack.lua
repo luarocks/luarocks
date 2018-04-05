@@ -4,6 +4,7 @@ local pack = {}
 
 local unpack = unpack or table.unpack
 
+local queries = require("luarocks.queries")
 local path = require("luarocks.path")
 local repos = require("luarocks.repos")
 local fetch = require("luarocks.fetch")
@@ -80,8 +81,9 @@ function pack.pack_installed_rock(name, version, tree)
    assert(type(name) == "string")
    assert(type(version) == "string" or not version)
 
+   local query = queries.new(name, version)
    local repo, repo_url
-   name, version, repo, repo_url = search.pick_installed_rock(name, version, tree)
+   name, version, repo, repo_url = search.pick_installed_rock(query, tree)
    if not name then
       return nil, version
    end
@@ -126,7 +128,7 @@ function pack.pack_installed_rock(name, version, tree)
    return rock_file
 end
 
-function pack.pack_binary_rock(name, version, cmd, ...)
+function pack.pack_binary_rock(name, version, cmd)
 
    -- The --pack-binary-rock option for "luarocks build" basically performs
    -- "luarocks build" on a temporary tree and then "luarocks pack". The
@@ -142,7 +144,7 @@ function pack.pack_binary_rock(name, version, cmd, ...)
    util.schedule_function(fs.delete, temp_dir)
 
    path.use_tree(temp_dir)
-   local ok, err = cmd(...)
+   local ok, err = cmd()
    if not ok then
       return nil, err
    end

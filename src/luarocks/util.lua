@@ -14,6 +14,7 @@ util.split_string = core.split_string
 util.keys = core.keys
 util.printerr = core.printerr
 util.sortedpairs = core.sortedpairs
+util.warning = core.warning
 
 local unpack = unpack or table.unpack
 
@@ -113,6 +114,7 @@ local supported_flags = {
    ["lua-libdir"] = true,
    ["modules"] = true,
    ["mversion"] = true,
+   ["namespace"] = "<namespace>",
    ["no-refresh"] = true,
    ["nodeps"] = true,
    ["old-versions"] = true,
@@ -323,12 +325,6 @@ function util.printout(...)
    io.stdout:write("\n")
 end
 
---- Display a warning message.
--- @param msg string: the warning message
-function util.warning(msg)
-   util.printerr("Warning: "..msg)
-end
-
 function util.title(msg, porcelain, underline)
    if porcelain then return end
    util.printout()
@@ -397,7 +393,7 @@ local function collect_rockspecs(versions, paths, unnamed_paths, subdir)
    local fs = require("luarocks.fs")
    local dir = require("luarocks.dir")
    local path = require("luarocks.path")
-   local vers = require("luarocks.vers")
+   local vers = require("luarocks.core.vers")
 
    if fs.is_dir(subdir) then
       for file in fs.dir(subdir) do
@@ -457,6 +453,42 @@ end
 -- @return string: A quoted string, such as '"hello"'
 function util.LQ(s)
    return ("%q"):format(s)
+end
+
+--- Normalize the --namespace flag and the user/rock syntax for namespaces.
+-- If a namespace is given in user/rock syntax, update the --namespace flag;
+-- If a namespace is given in --namespace flag, update the user/rock syntax.
+-- In case of conflicts, the user/rock syntax takes precedence.
+function util.adjust_name_and_namespace(name, flags)
+   assert(type(name) == "string" or not name)
+   assert(type(flags) == "table")
+
+   if not name then
+      return
+   elseif name:match("%.rockspec$") or name:match("%.rock$") then
+      return name
+   end
+
+   local namespace
+   name, namespace = util.split_namespace(name)
+   if namespace then
+      flags["namespace"] = namespace
+   end
+   if flags["namespace"] then
+      name = flags["namespace"] .. "/" .. name
+   end
+   return name:lower()
+end
+
+-- Split name and namespace of a package name.
+-- @param name a name that may be in "namespace/name" format
+-- @return string, string? - name and optionally a namespace
+function util.split_namespace(name)
+   local p1, p2 = name:match("^([^/]+)/([^/]+)$")
+   if p1 then
+      return p2, p1
+   end
+   return name
 end
 
 return util

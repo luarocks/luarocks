@@ -7,6 +7,7 @@ local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local search = require("luarocks.search")
 local queries = require("luarocks.queries")
+local results = require("luarocks.results")
 
 cmd_search.help_summary = "Query the LuaRocks servers."
 cmd_search.help_arguments = "[--source] [--binary] { <name> [<version>] | --all }"
@@ -22,19 +23,20 @@ cmd_search.help = [[
 --- Splits a list of search results into two lists, one for "source" results
 -- to be used with the "build" command, and one for "binary" results to be
 -- used with the "install" command.
--- @param results table: A search results table.
+-- @param result_tree table: A search results table.
 -- @return (table, table): Two tables, one for source and one for binary
 -- results.
-local function split_source_and_binary_results(results)
+local function split_source_and_binary_results(result_tree)
    local sources, binaries = {}, {}
-   for name, versions in pairs(results) do
+   for name, versions in pairs(result_tree) do
       for version, repositories in pairs(versions) do
          for _, repo in ipairs(repositories) do
             local where = sources
             if repo.arch == "all" or repo.arch == cfg.arch then
                where = binaries
             end
-            search.store_result(where, name, version, repo.arch, repo.repo)
+            local entry = results.new(name, version, repo.repo, repo.arch)
+            search.store_result(where, entry)
          end
       end
    end
@@ -47,6 +49,9 @@ end
 -- @return boolean or (nil, string): True if build was successful; nil and an
 -- error message otherwise.
 function cmd_search.command(flags, name, version)
+
+   name = util.adjust_name_and_namespace(name, flags)
+
    if flags["all"] then
       name, version = "", nil
    end
@@ -56,18 +61,18 @@ function cmd_search.command(flags, name, version)
    end
    
    local query = queries.new(name:lower(), version, true)
-   local results, err = search.search_repos(query)
+   local result_tree, err = search.search_repos(query)
    local porcelain = flags["porcelain"]
    local full_name = name .. (version and " " .. version or "")
    util.title(full_name .. " - Search results for Lua "..cfg.lua_version..":", porcelain, "=")
-   local sources, binaries = split_source_and_binary_results(results)
+   local sources, binaries = split_source_and_binary_results(result_tree)
    if next(sources) and not flags["binary"] then
       util.title("Rockspecs and source rocks:", porcelain)
-      search.print_results(sources, porcelain)
+      search.print_result_tree(sources, porcelain)
    end
    if next(binaries) and not flags["source"] then    
       util.title("Binary and pure-Lua rocks:", porcelain)
-      search.print_results(binaries, porcelain)
+      search.print_result_tree(binaries, porcelain)
    end
    return true
 end

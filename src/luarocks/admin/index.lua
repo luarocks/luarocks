@@ -4,7 +4,7 @@ local index = {}
 
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 local persist = require("luarocks.persist")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")

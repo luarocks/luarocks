@@ -39,7 +39,14 @@ local rockspec_types = {
    },
    dependencies = {
       platforms = {}, -- recursively defined below
-      _any = string_1,
+      _any = {
+         _type = "string",
+         _name = "a valid dependency string",
+         _patterns = {
+            ["1.0"] = "%s*([a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
+            ["3.0"] = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
+         },
+      },
    },
    supported_platforms = {
       _any = string_1,
@@ -123,8 +130,13 @@ function type_rockspec.check(rockspec, globals)
       rockspec.rockspec_format = "1.0"
    end
    local ok, err = type_check.check_undeclared_globals(globals, rockspec_types)
-   if not ok then return nil, err end
-   return type_check.type_check_table(rockspec.rockspec_format, rockspec, rockspec_types, "")
+   if ok then
+      ok, err = type_check.type_check_table(rockspec.rockspec_format, rockspec, rockspec_types, "")
+   end
+   if ok then
+      return true
+   end
+   return nil, err .. " (rockspec format " .. rockspec.rockspec_format .. ")"
 end
 
 return type_rockspec

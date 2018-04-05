@@ -24,7 +24,7 @@ local function check_dependents(name, versions, deps_mode)
    end
    local local_rocks = {}
    local query_all = queries.all()
-   search.manifest_search(local_rocks, cfg.rocks_dir, query_all)
+   search.local_manifest_search(local_rocks, cfg.rocks_dir, query_all)
    local_rocks[name] = nil
    for rock_name, rock_versions in pairs(local_rocks) do
       for rock_version, _ in pairs(rock_versions) do
@@ -106,7 +106,7 @@ end
 function remove.remove_other_versions(name, version, force, fast)
    local results = {}
    local query = queries.new(name, version, false, nil, "~=")
-   search.manifest_search(results, cfg.rocks_dir, query)
+   search.local_manifest_search(results, cfg.rocks_dir, query)
    if results[name] then
       return remove.remove_search_results(results, name, cfg.deps_mode, force, fast)
    end

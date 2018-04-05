@@ -6,14 +6,14 @@ local unpack = unpack or table.unpack
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
 
 local cached_git_version
 
 --- Get git version.
 -- @param git_cmd string: name of git command.
--- @return table: git version as returned by luarocks.vers.parse_version.
+-- @return table: git version as returned by luarocks.core.vers.parse_version.
 local function git_version(git_cmd)
    if not cached_git_version then
       local version_line = io.popen(fs.Q(git_cmd)..' --version'):read()

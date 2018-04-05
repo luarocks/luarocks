@@ -3,7 +3,6 @@ local git_repo = require("spec.util.git_repo")
 
 test_env.unload_luarocks()
 local fetch = require("luarocks.fetch")
-local vers = require("luarocks.vers")
 
 describe("Luarocks fetch test #whitebox #w_fetch", function()
    it("Fetch url to base dir", function()
@@ -30,12 +29,14 @@ describe("Luarocks fetch test #whitebox #w_fetch", function()
 
       it("from #git", function()
          local rockspec = {
-            format_is_at_least = vers.format_is_at_least,
+            format_is_at_least = function()
+               return true
+            end,
             name = "testrock",
             version = "dev-1",
             source = {
                protocol = "git",
-               url = "git://localhost:20000/testrock",
+               url = "git://localhost/testrock",
             },
             variables = {
                GIT = "git",

@@ -32,7 +32,8 @@ function cmd_pack.command(flags, arg, version)
    if arg:match(".*%.rockspec") then
       file, err = pack.pack_source_rock(arg)
    else
-      file, err = pack.pack_installed_rock(arg:lower(), version, flags["tree"])
+      local name = util.adjust_name_and_namespace(arg, flags)
+      file, err = pack.pack_installed_rock(name, version, flags["tree"])
    end
    if err then
       return nil, err
