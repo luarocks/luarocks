@@ -24,7 +24,7 @@ end
 -- @return string: a pathname with the same directory parts and a versioned basename.
 function path.versioned_name(file, prefix, name, version)
    assert(type(file) == "string")
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local rest = file:sub(#prefix+1):gsub("^/*", "")

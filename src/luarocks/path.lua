@@ -53,7 +53,7 @@ end
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- the package (and by extension, the path) exists.
 function path.versions_dir(name, tree)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name)
 end
@@ -65,7 +65,7 @@ end
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
 function path.install_dir(name, version, tree)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version)
@@ -78,7 +78,7 @@ end
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the file) exists.
 function path.rockspec_file(name, version, tree)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, name.."-"..version..".rockspec")
@@ -91,7 +91,7 @@ end
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the file) exists.
 function path.rock_manifest_file(name, version, tree)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "rock_manifest")
@@ -104,7 +104,7 @@ end
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the file) exists.
 function path.rock_namespace_file(name, version, tree)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "rock_namespace")
@@ -117,7 +117,7 @@ end
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
 function path.lib_dir(name, version, tree)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "lib")
@@ -130,7 +130,7 @@ end
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
 function path.lua_dir(name, version, tree)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "lua")
@@ -143,7 +143,7 @@ end
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
 function path.doc_dir(name, version, tree)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "doc")
@@ -156,7 +156,7 @@ end
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
 function path.conf_dir(name, version, tree)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "conf")
@@ -170,7 +170,7 @@ end
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
 function path.bin_dir(name, version, tree)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "bin")
@@ -198,7 +198,7 @@ end
 -- @return string: A URL or pathname following LuaRocks naming conventions.
 function path.make_url(pathname, name, version, arch)
    assert(type(pathname) == "string")
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    assert(type(arch) == "string")
 

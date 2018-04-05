@@ -12,7 +12,7 @@ function result_mt.type()
 end
 
 function results.new(name, version, repo, arch, namespace)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    assert(type(repo) == "string")
    assert(type(arch) == "string" or not arch)

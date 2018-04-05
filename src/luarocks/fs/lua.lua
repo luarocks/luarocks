@@ -791,14 +791,14 @@ end
 if posix.mkdtemp then
 
 --- Create a temporary directory.
--- @param name string: name pattern to use for avoiding conflicts
+-- @param name_pattern string: name pattern to use for avoiding conflicts
 -- when creating temporary directory.
 -- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
-function fs_lua.make_temp_dir(name)
-   assert(type(name) == "string")
-   name = dir.normalize(name)
+function fs_lua.make_temp_dir(name_pattern)
+   assert(type(name_pattern) == "string")
+   name_pattern = dir.normalize(name_pattern)
 
-   return posix.mkdtemp((os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name:gsub("/", "_") .. "-XXXXXX")
+   return posix.mkdtemp((os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name_pattern:gsub("/", "_") .. "-XXXXXX")
 end
 
 end -- if posix.mkdtemp
@@ -892,13 +892,13 @@ end
 --- Check whether a file is a Lua script
 -- When the file can be succesfully compiled by the configured
 -- Lua interpreter, it's considered to be a valid Lua file.
--- @param name filename of file to check
+-- @param filename filename of file to check
 -- @return boolean true, if it is a Lua script, false otherwise
-function fs_lua.is_lua(name)
-  name = name:gsub([[%\]],"/")   -- normalize on fw slash to prevent escaping issues
+function fs_lua.is_lua(filename)
+  filename = filename:gsub([[%\]],"/")   -- normalize on fw slash to prevent escaping issues
   local lua = fs.Q(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter))  -- get lua interpreter configured
   -- execute on configured interpreter, might not be the same as the interpreter LR is run on
-  local result = fs.execute_string(lua..[[ -e "if loadfile(']]..name..[[') then os.exit() else os.exit(1) end"]])
+  local result = fs.execute_string(lua..[[ -e "if loadfile(']]..filename..[[') then os.exit() else os.exit(1) end"]])
   return (result == true) 
 end
 

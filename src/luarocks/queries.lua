@@ -36,15 +36,15 @@ local function arch_to_table(input)
 end
 
 --- Prepare a query in dependency table format.
--- @param name string: the package name, may contain a namespace.
+-- @param ns_name string: the package name, may contain a namespace.
 -- @param version string?: the package version.
 -- @param substring boolean?: match substrings of the name
 -- (default is false, match full name)
 -- @param arch string?: a string with pipe-separated accepted arch values
 -- @param operator string?: operator for version matching (default is "==")
 -- @return table: A query in table format
-function queries.new(name, version, substring, arch, operator)
-   assert(type(name) == "string")
+function queries.new(ns_name, version, substring, arch, operator)
+   assert(type(ns_name) == "string")
    assert(type(version) == "string" or not version)
    assert(type(substring) == "boolean" or not substring)
    assert(type(arch) == "string" or not arch)
@@ -52,8 +52,7 @@ function queries.new(name, version, substring, arch, operator)
    
    operator = operator or "=="
 
-   local namespace
-   name, namespace = util.split_namespace(name)
+   local name, namespace = util.split_namespace(ns_name)
    
    local self = {
       name = name,

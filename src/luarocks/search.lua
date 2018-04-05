@@ -53,7 +53,7 @@ end
 -- @param tree string: The local tree to use.
 -- @return string?: The namespace if it exists, or nil.
 local function read_namespace(name, version, tree)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    assert(type(tree) == "string")
 
@@ -198,7 +198,7 @@ end
 -- @return string or nil: the URL for the latest version if one could
 -- be picked, or nil.
 local function pick_latest_version(name, versions)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(versions) == "table")
 
    local vtables = {}
@@ -318,24 +318,26 @@ end
 -- user possibilities if it couldn't narrow down a single match.
 -- @param action function: A function that takes a .src.rock or
 -- .rockspec URL as a parameter.
--- @param name string: A rock name
+-- @param ns_name string: A rock name, may be namespaced
 -- @param version string or nil: A version number may also be given.
 -- @return The result of the action function, or nil and an error message. 
-function search.act_on_src_or_rockspec(action, name, version, ...)
+function search.act_on_src_or_rockspec(action, ns_name, version, ...)
    assert(type(action) == "function")
-   assert(type(name) == "string")
+   assert(type(ns_name) == "string")
    assert(type(version) == "string" or not version)
 
-   local _, namespace = util.split_namespace(name)
-   local query = queries.new(name, version, false, "src|rockspec")
+   local query = queries.new(ns_name, version, false, "src|rockspec")
    local url, err = search.find_suitable_rock(query)
    if not url then
-      return nil, "Could not find a result named "..name..(version and " "..version or "")..": "..err
+      return nil, "Could not find a result named "..tostring(query)..": "..err
    end
+   local _, namespace = util.split_namespace(ns_name)
    return action(url, namespace, ...)
 end
 
 function search.pick_installed_rock(query, given_tree)
+   assert(query:type() == "query")
+
    local result_tree = {}
    local tree_map = {}
    local trees = cfg.rocks_trees
