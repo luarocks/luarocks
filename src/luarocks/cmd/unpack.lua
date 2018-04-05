@@ -92,7 +92,7 @@ end
 -- @param file string: A rockspec or .rock URL.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-local function run_unpacker(file, force)
+local function run_unpacker(file, namespace, force)
    assert(type(file) == "string")
    
    local base_name = dir.base_name(file)
@@ -153,11 +153,13 @@ function unpack.command(flags, name, version)
       return nil, "Argument missing. "..util.see_help("unpack")
    end
 
+   name = util.adjust_name_and_namespace(name, flags)
+
    if name:match(".*%.rock") or name:match(".*%.rockspec") then
-      return run_unpacker(name, flags["force"])
+      return run_unpacker(name, flags["namespace"], flags["force"])
    else
       local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(run_unpacker, name:lower(), version)
+      return search.act_on_src_or_rockspec(run_unpacker, name, version)
    end
 end
 

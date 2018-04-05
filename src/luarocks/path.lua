@@ -97,6 +97,19 @@ function path.rock_manifest_file(name, version, tree)
    return dir.path(path.rocks_dir(tree), name, version, "rock_manifest")
 end
 
+--- Get the local filename of the rock_namespace file of an installed rock.
+-- @param name string: The package name (without a namespace).
+-- @param version string: The package version.
+-- @param tree string or nil: If given, specifies the local tree to use.
+-- @return string: The resulting path -- does not guarantee that
+-- the package (and by extension, the file) exists.
+function path.rock_namespace_file(name, version, tree)
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+   tree = tree or cfg.root_dir
+   return dir.path(path.rocks_dir(tree), name, version, "rock_namespace")
+end
+
 --- Get the local installation directory for C libraries of a package.
 -- @param name string: The package name. 
 -- @param version string: The package version.

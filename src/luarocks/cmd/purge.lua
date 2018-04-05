@@ -7,7 +7,7 @@ local util = require("luarocks.util")
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local search = require("luarocks.search")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 local repos = require("luarocks.repos")
 local writer = require("luarocks.manif.writer")
 local cfg = require("luarocks.core.cfg")
@@ -45,7 +45,7 @@ function purge.command(flags)
    local ok, err = fs.check_command_permissions(flags)
    if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
 
-   search.manifest_search(results, path.rocks_dir(tree), queries.all())
+   search.local_manifest_search(results, path.rocks_dir(tree), queries.all())
 
    local sort = function(a,b) return vers.compare_versions(b,a) end
    if flags["old-versions"] then

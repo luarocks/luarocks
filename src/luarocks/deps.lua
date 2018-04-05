@@ -7,7 +7,7 @@ local manif = require("luarocks.manif")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 local queries = require("luarocks.queries")
 
 --- Attempt to match a dependency to an installed rock.
@@ -28,7 +28,7 @@ local function match_dep(dep, blacklist, deps_mode, rocks_provided)
       -- Provided rocks have higher priority than manifest's rocks.
       versions = { provided }
    else
-      versions = manif.get_versions(dep.name, deps_mode)
+      versions = manif.get_versions(dep, deps_mode)
    end
 
    local latest_version
@@ -115,7 +115,7 @@ function deps.report_missing_dependencies(name, version, dependencies, deps_mode
             first_missing_dep = false
          end
 
-         util.printout(("   %s (%s)"):format(vers.show_dep(dep), rock_status(dep.name, deps_mode, rocks_provided)))
+         util.printout(("   %s (%s)"):format(tostring(dep), rock_status(dep.name, deps_mode, rocks_provided)))
       end
    end
 end
@@ -172,11 +172,11 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
          end
 
          util.printout(("%s %s depends on %s (%s)"):format(
-            rockspec.name, rockspec.version, vers.show_dep(dep), rock_status(dep.name, deps_mode, rockspec.rocks_provided)))
+            rockspec.name, rockspec.version, tostring(dep), rock_status(dep.name, deps_mode, rockspec.rocks_provided)))
 
          if dep.constraints[1] and dep.constraints[1].no_upgrade then
             util.printerr("This version of "..rockspec.name.." is designed for use with")
-            util.printerr(vers.show_dep(dep)..", but is configured to avoid upgrading it")
+            util.printerr(tostring(dep)..", but is configured to avoid upgrading it")
             util.printerr("automatically. Please upgrade "..dep.name.." with")
             util.printerr("   luarocks install "..dep.name)
             util.printerr("or choose an older version of "..rockspec.name.." with")
@@ -184,12 +184,12 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
             return nil, "Failed matching dependencies"
          end
 
-         local url, search_err = search.find_suitable_rock(queries.from_constraints(dep.name, dep.constraints))
+         local url, search_err = search.find_suitable_rock(dep)
          if not url then
-            return nil, "Could not satisfy dependency "..vers.show_dep(dep)..": "..search_err
+            return nil, "Could not satisfy dependency "..tostring(dep)..": "..search_err
          end
          util.printout("Installing "..url)
-         local ok, install_err, errcode = install.command({deps_mode = deps_mode}, url)
+         local ok, install_err, errcode = install.command({deps_mode = deps_mode, namespace = dep.namespace}, url)
          if not ok then
             return nil, "Failed installing dependency: "..url.." - "..install_err, errcode
          end

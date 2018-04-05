@@ -2,11 +2,12 @@
 -- Shows information about an installed rock.
 local show = {}
 
+local queries = require("luarocks.queries")
 local search = require("luarocks.search")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 local fetch = require("luarocks.fetch")
 local manif = require("luarocks.manif")
 local repos = require("luarocks.repos")
@@ -57,12 +58,12 @@ local function format_text(text)
    return (table.concat(paragraphs, "\n\n"):gsub("%s$", ""))
 end
 
-local function installed_rock_label(name, tree)
+local function installed_rock_label(dep, tree)
    local installed, version
-   if cfg.rocks_provided[name] then
-      installed, version = true, cfg.rocks_provided[name]
+   if cfg.rocks_provided[dep.name] then
+      installed, version = true, cfg.rocks_provided[dep.name]
    else
-      installed, version = search.pick_installed_rock(name, nil, tree)
+      installed, version = search.pick_installed_rock(dep, tree)
    end
    return installed and "(using "..version..")" or "(missing)"
 end
@@ -81,14 +82,17 @@ function show.command(flags, name, version)
    if not name then
       return nil, "Argument missing. "..util.see_help("show")
    end
+
+   name = util.adjust_name_and_namespace(name, flags)
+   local query = queries.new(name, version)
    
    local repo, repo_url
-   name, version, repo, repo_url = search.pick_installed_rock(name:lower(), version, flags["tree"])
+   name, version, repo, repo_url = search.pick_installed_rock(query, flags["tree"])
    if not name then
       return nil, version
    end
 
-   local directory = path.install_dir(name,version,repo)
+   local directory = path.install_dir(name, version, repo)
    local rockspec_file = path.rockspec_file(name, version, repo)
    local rockspec, err = fetch.load_local_rockspec(rockspec_file)
    if not rockspec then return nil,err end
@@ -147,7 +151,7 @@ function show.command(flags, name, version)
          util.printout("Depends on:")
          for _, dep in ipairs(rockspec.dependencies) do
             direct_deps[dep.name] = true
-            util.printout("\t"..vers.show_dep(dep).." "..installed_rock_label(dep.name, flags["tree"]))
+            util.printout("\t"..tostring(dep).." "..installed_rock_label(dep, flags["tree"]))
          end
       end
       local has_indirect_deps

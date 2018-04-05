@@ -5,7 +5,7 @@ local list = {}
 
 local search = require("luarocks.search")
 local queries = require("luarocks.queries")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
@@ -24,7 +24,7 @@ list.help = [[
 local function check_outdated(trees, query)
    local results_installed = {}
    for _, tree in ipairs(trees) do
-      search.manifest_search(results_installed, path.rocks_dir(tree), query)
+      search.local_manifest_search(results_installed, path.rocks_dir(tree), query)
    end
    local outdated = {}
    for name, versions in util.sortedpairs(results_installed) do
@@ -32,7 +32,7 @@ local function check_outdated(trees, query)
       table.sort(versions, vers.compare_versions)
       local latest_installed = versions[1]
 
-      local query_available = queries.new(name:lower(), nil, false)
+      local query_available = queries.new(name:lower())
       local results_available, err = search.search_repos(query_available)
       
       if results_available[name] then
@@ -81,13 +81,13 @@ function list.command(flags, filter, version)
    
    local results = {}
    for _, tree in ipairs(trees) do
-      local ok, err, errcode = search.manifest_search(results, path.rocks_dir(tree), query)
+      local ok, err, errcode = search.local_manifest_search(results, path.rocks_dir(tree), query)
       if not ok and errcode ~= "open" then
          util.warning(err)
       end
    end
    util.title("Installed rocks for Lua "..cfg.lua_version..":", flags["porcelain"])
-   search.print_results(results, flags["porcelain"])
+   search.print_result_tree(results, flags["porcelain"])
    return true
 end
 

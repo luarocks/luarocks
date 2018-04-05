@@ -14,6 +14,7 @@ local remove = require("luarocks.remove")
 local cfg = require("luarocks.core.cfg")
 local build = require("luarocks.build")
 local writer = require("luarocks.manif.writer")
+local search = require("luarocks.search")
 
 cmd_build.help_summary = "build/compile a rock."
 cmd_build.help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
@@ -47,9 +48,10 @@ or the name of a rock to be fetched from a repository.
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
 -- @param build_only_deps boolean: true to build the listed dependencies only.
+-- @param namespace string?: an optional namespace
 -- @return boolean or (nil, string, [string]): True if build was successful,
 -- or false and an error message and an optional error code.
-local function build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
+local function build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps, namespace)
    assert(type(rock_file) == "string")
    assert(type(need_to_fetch) == "boolean")
 
@@ -62,25 +64,29 @@ local function build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
    local rockspec_file = path.rockspec_name_from_rock(rock_file)
    ok, err = fs.change_dir(unpack_dir)
    if not ok then return nil, err end
-   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps)
+   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps, namespace)
    fs.pop_dir()
    return ok, err, errcode
 end
- 
-local function do_build(name, version, deps_mode, build_only_deps)
-   if name:match("%.rockspec$") then
-      return build.build_rockspec(name, true, false, deps_mode, build_only_deps)
-   elseif name:match("%.src%.rock$") then
-      return build_rock(name, false, deps_mode, build_only_deps)
-   elseif name:match("%.all%.rock$") then
-      return build_rock(name, true, deps_mode, build_only_deps)
-   elseif name:match("%.rock$") then
-      return build_rock(name, true, deps_mode, build_only_deps)
-   elseif not name:match("/") then
-      local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(do_build, name:lower(), version, nil, deps_mode, build_only_deps)
+
+local function build_file(filename, namespace, deps_mode, build_only_deps)
+   if filename:match("%.rockspec$") then
+      return build.build_rockspec(filename, true, false, deps_mode, build_only_deps, namespace)
+   elseif filename:match("%.src%.rock$") then
+      return build_rock(filename, false, deps_mode, build_only_deps, namespace)
+   elseif filename:match("%.all%.rock$") then
+      return build_rock(filename, true, deps_mode, build_only_deps, namespace)
+   elseif filename:match("%.rock$") then
+      return build_rock(filename, true, deps_mode, build_only_deps, namespace)
    end
-   return nil, "Don't know what to do with "..name
+end
+
+local function do_build(name, version, namespace, deps_mode, build_only_deps)
+   if name:match("%.rockspec$") or name:match("%.rock$") then
+      return build_file(name, namespace, deps_mode, build_only_deps)
+   else
+      return search.act_on_src_or_rockspec(build_file, name, version, deps_mode, build_only_deps)
+   end
 end
 
 --- Driver function for "build" command.
@@ -97,16 +103,22 @@ function cmd_build.command(flags, name, version)
    end
    assert(type(version) == "string" or not version)
 
+   name = util.adjust_name_and_namespace(name, flags)
+   local deps_mode = deps.get_deps_mode(flags)
+   local namespace = flags["namespace"]
+   local build_only_deps = flags["only-deps"]
+
    if flags["pack-binary-rock"] then
-      return pack.pack_binary_rock(name, version, do_build, name, version, deps.get_deps_mode(flags))
+      return pack.pack_binary_rock(name, version, function() return do_build(name, version, namespace, deps_mode) end)
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
-      ok, err = do_build(name, version, deps.get_deps_mode(flags), flags["only-deps"])
+
+      ok, err = do_build(name, version, namespace, deps_mode, build_only_deps)
       if not ok then return nil, err end
       name, version = ok, err
 
-      if (not flags["only-deps"]) and (not flags["keep"]) and not cfg.keep_other_versions then
+      if (not build_only_deps) and (not flags["keep"]) and not cfg.keep_other_versions then
          local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
          if not ok then util.printerr(err) end
       end

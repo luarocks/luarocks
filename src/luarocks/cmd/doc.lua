@@ -4,6 +4,7 @@
 local doc = {}
 
 local util = require("luarocks.util")
+local queries = require("luarocks.queries")
 local search = require("luarocks.search")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
@@ -61,9 +62,9 @@ function doc.command(flags, name, version)
       return nil, "Argument missing. "..util.see_help("doc")
    end
 
-   name = name:lower()
-
-   local iname, iversion, repo = search.pick_installed_rock(name, version, flags["tree"])
+   name = util.adjust_name_and_namespace(name, flags)
+   local query = queries.new(name, version)
+   local iname, iversion, repo = search.pick_installed_rock(query, flags["tree"])
    if not iname then
       util.printout(name..(version and " "..version or "").." is not installed. Looking for it in the rocks servers...")
       return try_to_open_homepage(name, version)
@@ -78,7 +79,7 @@ function doc.command(flags, name, version)
       return show_homepage(descript.homepage, name, version)
    end
 
-   local directory = path.install_dir(name,version,repo)
+   local directory = path.install_dir(name, version, repo)
    
    local docdir
    local directories = { "doc", "docs" }

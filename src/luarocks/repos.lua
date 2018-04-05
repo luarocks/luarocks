@@ -8,7 +8,7 @@ local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 
 -- Tree of files installed by a package are stored
 -- in its rock manifest. Some of these files have to

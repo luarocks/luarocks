@@ -12,6 +12,7 @@ local writer = require("luarocks.manif.writer")
 local remove = require("luarocks.remove")
 local search = require("luarocks.search")
 local queries = require("luarocks.queries")
+local vers = require("luarocks.core.vers")
 local cfg = require("luarocks.core.cfg")
 
 install.help_summary = "Install a rock."
@@ -36,10 +37,13 @@ or a filename of a locally available rock.
 -- @param deps_mode: string: Which trees to check dependencies for:
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
+-- @param namespace: string?: an optional namespace.
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function install.install_binary_rock(rock_file, deps_mode)
+function install.install_binary_rock(rock_file, deps_mode, namespace)
    assert(type(rock_file) == "string")
+   assert(type(deps_mode) == "string")
+   assert(type(namespace) == "string" or namespace == nil)
 
    local name, version, arch = path.parse_name(rock_file)
    if not name then
@@ -76,6 +80,11 @@ function install.install_binary_rock(rock_file, deps_mode)
    -- For compatibility with .rock files built with LuaRocks 1
    if not fs.exists(path.rock_manifest_file(name, version)) then
       ok, err = writer.make_rock_manifest(name, version)
+      if err then return nil, err end
+   end
+
+   if namespace then
+      ok, err = writer.make_namespace_file(name, version, namespace)
       if err then return nil, err end
    end
 
@@ -137,6 +146,34 @@ function install.install_binary_rock_deps(rock_file, deps_mode)
    return name, version
 end
 
+local function install_rock_file_deps(filename, deps_mode)
+   local name, version = install.install_binary_rock_deps(filename, deps_mode)
+   if not name then return nil, version end
+
+   writer.check_dependencies(nil, deps_mode)
+   return name, version
+end
+
+local function install_rock_file(filename, namespace, deps_mode, keep, force, force_fast)
+   assert(type(filename) == "string")
+   assert(type(namespace) == "string" or namespace == nil)
+   assert(type(deps_mode) == "string")
+   assert(type(keep) == "boolean" or keep == nil)
+   assert(type(force) == "boolean" or force == nil)
+   assert(type(force_fast) == "boolean" or force_fast == nil)
+
+   local name, version = install.install_binary_rock(filename, deps_mode, namespace)
+   if not name then return nil, version end
+
+   if (not keep) and not cfg.keep_other_versions then
+      local ok, err = remove.remove_other_versions(name, version, force, force_fast)
+      if not ok then util.printerr(err) end
+   end
+
+   writer.check_dependencies(nil, deps_mode)
+   return name, version
+end
+
 --- Driver function for the "install" command.
 -- @param name string: name of a binary rock. If an URL or pathname
 -- to a binary rock is given, fetches and installs it. If a rockspec or a
@@ -152,6 +189,8 @@ function install.command(flags, name, version)
       return nil, "Argument missing. "..util.see_help("install")
    end
 
+   name = util.adjust_name_and_namespace(name, flags)
+
    local ok, err = fs.check_command_permissions(flags)
    if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
 
@@ -159,21 +198,12 @@ function install.command(flags, name, version)
       local build = require("luarocks.cmd.build")
       return build.command(flags, name)
    elseif name:match("%.rock$") then
+      local deps_mode = deps.get_deps_mode(flags)
       if flags["only-deps"] then
-         ok, err = install.install_binary_rock_deps(name, deps.get_deps_mode(flags))
+         return install_rock_file_deps(name, deps_mode)
       else
-         ok, err = install.install_binary_rock(name, deps.get_deps_mode(flags))
+         return install_rock_file(name, flags["namespace"], deps_mode, flags["keep"], flags["force"], flags["force-fast"])
       end
-      if not ok then return nil, err end
-      name, version = ok, err
-
-      if (not flags["only-deps"]) and (not flags["keep"]) and not cfg.keep_other_versions then
-         local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
-         if not ok then util.printerr(err) end
-      end
-
-      writer.check_dependencies(nil, deps.get_deps_mode(flags))
-      return name, version
    else
       local url, err = search.find_suitable_rock(queries.new(name:lower(), version))
       if not url then

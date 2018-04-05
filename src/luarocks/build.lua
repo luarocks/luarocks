@@ -156,11 +156,13 @@ end
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for no trees.
 -- @param build_only_deps boolean: true to build the listed dependencies only.
+-- @param namespace string?: a namespace for the rockspec
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode, build_only_deps)
+function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_mode, build_only_deps, namespace)
    assert(type(rockspec_file) == "string")
    assert(type(need_to_fetch) == "boolean")
+   assert(type(namespace) == "string" or not namespace)
 
    local rockspec, err, errcode = fetch.load_rockspec(rockspec_file)
    if err then
@@ -317,6 +319,9 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    end
 
    ok, err = writer.make_rock_manifest(name, version)
+   if err then return nil, err end
+
+   ok, err = writer.make_namespace_file(name, version, namespace)
    if err then return nil, err end
 
    ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), deps_mode)

@@ -5,7 +5,7 @@ local cfg = require("luarocks.core.cfg")
 local search = require("luarocks.search")
 local repos = require("luarocks.repos")
 local deps = require("luarocks.deps")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
@@ -275,6 +275,33 @@ function writer.make_rock_manifest(name, version)
    local rock_manifest = { rock_manifest=tree }
    manif.rock_manifest_cache[name.."/"..version] = rock_manifest
    save_table(install_dir, "rock_manifest", rock_manifest )
+end
+
+-- Writes a 'rock_namespace' file in a locally installed rock directory.
+-- @param name string: the rock name (may be in user/rock format)
+-- @param version string: the rock version
+-- @param namespace string?: the namespace
+-- @return true if successful (or unnecessary, if there is no namespace),
+-- or nil and an error message.
+function writer.make_namespace_file(name, version, namespace)
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+   assert(type(namespace) == "string" or not namespace)
+   name = util.adjust_name_and_namespace(name, { namespace = namespace })
+   name, namespace = util.split_namespace(name)
+   if not namespace then
+      return true
+   end
+   local fd, err = io.open(path.rock_namespace_file(name, version), "w")
+   if not fd then
+      return nil, err
+   end
+   local ok, err = fd:write(namespace)
+   if not ok then
+      return nil, err
+   end
+   fd:close()
+   return true
 end
 
 --- Scan a LuaRocks repository and output a manifest file.

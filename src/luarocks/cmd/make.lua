@@ -72,7 +72,7 @@ function make.command(flags, rockspec)
       if not rspec then
          return nil, err
       end
-      return pack.pack_binary_rock(rspec.name, rspec.version, build.build_rockspec, rockspec, false, true, deps.get_deps_mode(flags))
+      return pack.pack_binary_rock(rspec.name, rspec.version, function() return build.build_rockspec(rockspec, false, true, deps.get_deps_mode(flags)) end)
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end

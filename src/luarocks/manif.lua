@@ -230,9 +230,12 @@ end
 -- or "all", to use all trees.
 -- @return table: An array of strings listing installed
 -- versions of a package.
-function manif.get_versions(name, deps_mode)
-   assert(type(name) == "string")
+function manif.get_versions(dep, deps_mode)
+   assert(type(dep) == "table")
    assert(type(deps_mode) == "string")
+   
+   local name = dep.name
+   local namespace = dep.namespace
 
    local version_set = {}
    path.map_trees(deps_mode, function(tree)
@@ -240,7 +243,19 @@ function manif.get_versions(name, deps_mode)
 
       if manifest and manifest.repository[name] then
          for version in pairs(manifest.repository[name]) do
-            version_set[version] = true
+            if dep.namespace then
+               local ns_file = path.rock_namespace_file(name, version, tree)
+               local fd = io.open(ns_file, "r")
+               if fd then
+                  local ns = fd:read("*a")
+                  fd:close()
+                  if ns == namespace then
+                     version_set[version] = true
+                  end
+               end
+            else
+               version_set[version] = true
+            end
          end
       end
    end)

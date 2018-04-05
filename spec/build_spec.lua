@@ -62,6 +62,7 @@ describe("LuaRocks build tests #blackbox #b_build", function()
       end)
       
       it("LuaRocks build lpeg branch=master", function()
+         -- FIXME should use dev package
          assert.is_true(run.luarocks_bool("build --branch=master lpeg"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
       end)
@@ -134,6 +135,40 @@ describe("LuaRocks build tests #blackbox #b_build", function()
          elseif test_env.LUA_V == "5.3" then
             assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lmathx/20150505-1/lmathx-20150505-1.rockspec"))
          end
+      end)
+   end)
+
+   describe("#namespaces", function()
+      it("builds a namespaced package from the command-line", function()
+         assert(run.luarocks_bool("build a_user/a_rock --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+         assert.is_false(run.luarocks_bool("show a_rock 1.0"))
+         assert(run.luarocks_bool("show a_rock 2.0"))
+         assert(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/2.0-1/rock_namespace"))
+      end)
+
+      it("builds a package with a namespaced dependency", function()
+         assert(run.luarocks_bool("build has_namespaced_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+         assert(run.luarocks_bool("show has_namespaced_dep"))
+         assert.is_false(run.luarocks_bool("show a_rock 1.0"))
+         assert(run.luarocks_bool("show a_rock 2.0"))
+      end)
+
+      it("builds a package reusing a namespaced dependency", function()
+         assert(run.luarocks_bool("build a_user/a_rock --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+         assert(run.luarocks_bool("show a_rock 2.0"))
+         assert(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/2.0-1/rock_namespace"))
+         local output = run.luarocks("build has_namespaced_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" )
+         assert.has.no.match("Missing dependencies", output)
+      end)
+
+      it("builds a package considering namespace of locally installed package", function()
+         assert(run.luarocks_bool("build a_user/a_rock --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+         assert(run.luarocks_bool("show a_rock 2.0"))
+         assert(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/2.0-1/rock_namespace"))
+         local output = run.luarocks("build has_another_namespaced_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" )
+         assert.has.match("Missing dependencies", output)
+         print(output)
+         assert(run.luarocks_bool("show a_rock 3.0"))
       end)
    end)
 

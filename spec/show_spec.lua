@@ -30,7 +30,7 @@ describe("LuaRocks show tests #blackbox #b_show", function()
       
       it("LuaRocks show modules of luacov", function()
          local output = run.luarocks("show --modules luacov")
-         assert.is.truthy(output:match("luacovluacov.defaultsluacov.reporterluacov.reporter.defaultluacov.runnerluacov.statsluacov.tick"))
+         assert.match("luacov.*luacov.defaults.*luacov.reporter.*luacov.reporter.default.*luacov.runner.*luacov.stats.*luacov.tick", output)
       end)
       
       it("LuaRocks show dependencies of luacov", function()

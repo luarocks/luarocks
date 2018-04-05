@@ -6,7 +6,8 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local type_rockspec = require("luarocks.type.rockspec")
 local path = require("luarocks.path")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
+local queries = require("luarocks.queries")
 local persist = require("luarocks.persist")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
@@ -210,8 +211,21 @@ function fetch.load_local_rockspec(filename, quick)
          return nil, filename..": "..err
       end
    end
-   
-   rockspec.format_is_at_least = vers.format_is_at_least
+
+   rockspec.format_is_at_least = function(_, v)
+      return parsed_format >= vers.parse_version(v)
+   end
+
+   --- Check if rockspec format version satisfies version requirement.
+   -- @param rockspec table: The rockspec table.
+   -- @param version string: required version.
+   -- @return boolean: true if rockspec format matches version or is newer, false otherwise.
+   do
+      local parsed_format = vers.parse_version(rockspec.rockspec_format or "1.0")
+      rockspec.format_is_at_least = function(self, version)
+         return parsed_format >= vers.parse_version(version)
+      end
+   end
 
    util.platform_overrides(rockspec.build)
    util.platform_overrides(rockspec.dependencies)
@@ -262,7 +276,7 @@ function fetch.load_local_rockspec(filename, quick)
 
    if rockspec.dependencies then
       for i = 1, #rockspec.dependencies do
-         local parsed, err = vers.parse_dep(rockspec.dependencies[i])
+         local parsed, err = queries.from_dep_string(rockspec.dependencies[i])
          if not parsed then
             return nil, "Parse error processing dependency '"..rockspec.dependencies[i].."': "..tostring(err)
          end

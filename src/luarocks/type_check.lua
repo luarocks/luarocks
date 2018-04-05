@@ -55,9 +55,11 @@ local function type_check_item(version, item, typetbl, context)
       if item_type ~= "string" then
          return nil, "Type mismatch on field "..context..": expected a string, got "..item_type
       end
-      if typetbl._pattern then
-         if not item:match("^"..typetbl._pattern.."$") then
-            return nil, "Type mismatch on field "..context..": invalid value "..item.." does not match '"..typetbl._pattern.."'"
+      local pattern = (typetbl._patterns and typetbl._patterns[version]) or typetbl._pattern
+      if pattern then
+         if not item:match("^"..pattern.."$") then
+            local what = typetbl._name or ("'"..pattern.."'")
+            return nil, "Type mismatch on field "..context..": invalid value '"..item.."' does not match " .. what
          end
       end
    elseif expected_type == "table" then
