@@ -348,7 +348,7 @@ end
 -- @return md5sum string: md5sum of directory
 local function hash_environment(path)
    if test_env.TEST_TARGET_OS == "linux" then
-      return execute_output("find " .. path .. " -printf \"%s %p\n\" | md5sum")
+      return execute_output("cd " .. path .. " && find . -printf \"%s %p\n\"")
    elseif test_env.TEST_TARGET_OS == "osx" then
       return execute_output("find " .. path .. " -type f -exec stat -f \"%z %N\" {} \\; | md5")
    elseif test_env.TEST_TARGET_OS == "windows" then
