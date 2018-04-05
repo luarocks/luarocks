@@ -155,7 +155,7 @@ local function execute_bool(command, print_command, env_variables)
    end
    local ok = test_env.execute(command .. redirect)
    if redirect ~= "" then
-      if not ok then
+      if not ok or test_env.VERBOSE then
          local fd = io.open(redirect_filename, "r")
          if fd then
             print(fd:read("*a"))
