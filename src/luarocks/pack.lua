@@ -77,13 +77,9 @@ end
 -- @param tree string or nil: An optional tree to pick the package from.
 -- @return string or (nil, string): The filename of the resulting
 -- .src.rock file; or nil and an error message.
-function pack.pack_installed_rock(name, version, tree)
-   assert(type(name) == "string")
-   assert(type(version) == "string" or not version)
+function pack.pack_installed_rock(query, tree)
 
-   local query = queries.new(name, version)
-   local repo, repo_url
-   name, version, repo, repo_url = search.pick_installed_rock(query, tree)
+   local name, version, repo, repo_url = search.pick_installed_rock(query, tree)
    if not name then
       return nil, version
    end
@@ -152,7 +148,8 @@ function pack.pack_binary_rock(name, version, cmd)
    if not rname then
       rname, rversion = name, version
    end
-   return pack.pack_installed_rock(rname, rversion, temp_dir)
+   local query = queries.new(rname, rversion)
+   return pack.pack_installed_rock(query, temp_dir)
 end
 
 return pack
