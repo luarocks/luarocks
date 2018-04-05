@@ -47,6 +47,25 @@ local function store_if_match(result_tree, result, query)
    end
 end
 
+--- Get the namespace of a locally-installed rock, if any.
+-- @param name string: The rock name, without a namespace.
+-- @param version string: The rock version.
+-- @param tree string: The local tree to use.
+-- @return string?: The namespace if it exists, or nil.
+local function read_namespace(name, version, tree)
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+   assert(type(tree) == "string")
+
+   local namespace
+   local fd = io.open(path.rock_namespace_file(name, version, tree), "r")
+   if fd then
+      namespace = fd:read("*a")
+      fd:close()
+   end
+   return namespace
+end
+
 --- Perform search on a local repository.
 -- @param repo string: The pathname of the local repository.
 -- @param query table: a query object.
@@ -77,8 +96,7 @@ function search.disk_search(repo, query, result_tree)
       elseif fs.is_dir(pathname) then
          for version in fs.dir(pathname) do
             if version:match("-%d+$") then
-               local namespace = nil
-               -- FIXME read rock_namespace file
+               local namespace = read_namespace(name, version, repo)
                local result = results.new(name, version, repo, "installed", namespace)
                store_if_match(result_tree, result, query)
             end
@@ -86,16 +104,6 @@ function search.disk_search(repo, query, result_tree)
       end
    end
    return result_tree
-end
-
-local function read_namespace(name, version, tree)
-   local namespace
-   local fd = io.open(path.rock_namespace_file(name, version, tree), "r")
-   if fd then
-      namespace = fd:read("*a")
-      fd:close()
-   end
-   return namespace
 end
 
 --- Perform search on a rocks server or tree.
