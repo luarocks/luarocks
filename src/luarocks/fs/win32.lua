@@ -248,14 +248,14 @@ function win32.is_writable(file)
 end
 
 --- Create a temporary directory.
--- @param name string: name pattern to use for avoiding conflicts
+-- @param name_pattern string: name pattern to use for avoiding conflicts
 -- when creating temporary directory.
 -- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
-function win32.make_temp_dir(name)
-   assert(type(name) == "string")
-   name = dir.normalize(name)
+function win32.make_temp_dir(name_pattern)
+   assert(type(name_pattern) == "string")
+   name_pattern = dir.normalize(name_pattern)
 
-   local temp_dir = os.getenv("TMP") .. "/luarocks_" .. name:gsub("/", "_") .. "-" .. tostring(math.floor(math.random() * 10000))
+   local temp_dir = os.getenv("TMP") .. "/luarocks_" .. name_pattern:gsub("/", "_") .. "-" .. tostring(math.floor(math.random() * 10000))
    local ok, err = fs.make_dir(temp_dir)
    if ok then
       return temp_dir

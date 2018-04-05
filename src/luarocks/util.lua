@@ -459,18 +459,17 @@ end
 -- If a namespace is given in user/rock syntax, update the --namespace flag;
 -- If a namespace is given in --namespace flag, update the user/rock syntax.
 -- In case of conflicts, the user/rock syntax takes precedence.
-function util.adjust_name_and_namespace(name, flags)
-   assert(type(name) == "string" or not name)
+function util.adjust_name_and_namespace(ns_name, flags)
+   assert(type(ns_name) == "string" or not ns_name)
    assert(type(flags) == "table")
 
-   if not name then
+   if not ns_name then
       return
-   elseif name:match("%.rockspec$") or name:match("%.rock$") then
-      return name
+   elseif ns_name:match("%.rockspec$") or ns_name:match("%.rock$") then
+      return ns_name
    end
 
-   local namespace
-   name, namespace = util.split_namespace(name)
+   local name, namespace = util.split_namespace(ns_name)
    if namespace then
       flags["namespace"] = namespace
    end
@@ -481,14 +480,14 @@ function util.adjust_name_and_namespace(name, flags)
 end
 
 -- Split name and namespace of a package name.
--- @param name a name that may be in "namespace/name" format
+-- @param ns_name a name that may be in "namespace/name" format
 -- @return string, string? - name and optionally a namespace
-function util.split_namespace(name)
-   local p1, p2 = name:match("^([^/]+)/([^/]+)$")
+function util.split_namespace(ns_name)
+   local p1, p2 = ns_name:match("^([^/]+)/([^/]+)$")
    if p1 then
       return p2, p1
    end
-   return name
+   return ns_name
 end
 
 return util

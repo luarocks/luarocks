@@ -39,7 +39,7 @@ function manif.load_local_manifest(repo_url)
 end
 
 function manif.load_rock_manifest(name, version, root)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local name_version = name.."/"..version

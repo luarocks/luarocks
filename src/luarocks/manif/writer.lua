@@ -25,7 +25,7 @@ local queries = require("luarocks.queries")
 local function store_package_items(storage, name, version, items)
    assert(type(storage) == "table")
    assert(type(items) == "table")
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local package_identifier = name.."/"..version
@@ -49,7 +49,7 @@ end
 local function remove_package_items(storage, name, version, items)
    assert(type(storage) == "table")
    assert(type(items) == "table")
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local package_identifier = name.."/"..version
@@ -235,7 +235,7 @@ end
 -- message in case of errors.
 local function save_table(where, name, tbl)
    assert(type(where) == "string")
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(tbl) == "table")
 
    local filename = dir.path(where, name)
@@ -284,7 +284,7 @@ end
 -- @return true if successful (or unnecessary, if there is no namespace),
 -- or nil and an error message.
 function writer.make_namespace_file(name, version, namespace)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    assert(type(namespace) == "string" or not namespace)
    name = util.adjust_name_and_namespace(name, { namespace = namespace })
@@ -360,7 +360,7 @@ end
 -- @return boolean or (nil, string): True if manifest was updated successfully,
 -- or nil and an error message.
 function writer.add_to_manifest(name, version, repo, deps_mode)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
    assert(type(deps_mode) == "string")
@@ -397,7 +397,7 @@ end
 -- @return boolean or (nil, string): True if manifest was updated successfully,
 -- or nil and an error message.
 function writer.remove_from_manifest(name, version, repo, deps_mode)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
    assert(type(deps_mode) == "string")

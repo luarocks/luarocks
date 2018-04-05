@@ -223,14 +223,14 @@ function tools.set_time(file, time)
 end
 
 --- Create a temporary directory.
--- @param name string: name pattern to use for avoiding conflicts
+-- @param name_pattern string: name pattern to use for avoiding conflicts
 -- when creating temporary directory.
 -- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
-function tools.make_temp_dir(name)
-   assert(type(name) == "string")
-   name = dir.normalize(name)
+function tools.make_temp_dir(name_pattern)
+   assert(type(name_pattern) == "string")
+   name_pattern = dir.normalize(name_pattern)
 
-   local template = (os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name:gsub("/", "_") .. "-XXXXXX"
+   local template = (os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name_pattern:gsub("/", "_") .. "-XXXXXX"
    local pipe = io.popen(vars.MKTEMP.." -d "..fs.Q(template))
    local dirname = pipe:read("*l")
    pipe:close()

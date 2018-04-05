@@ -394,7 +394,7 @@ end
 function deps.scan_deps(results, manifest, name, version, deps_mode)
    assert(type(results) == "table")
    assert(type(manifest) == "table")
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local fetch = require("luarocks.fetch")

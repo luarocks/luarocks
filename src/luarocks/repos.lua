@@ -32,7 +32,7 @@ local vers = require("luarocks.core.vers")
 -- @return table or nil: An array of strings listing installed
 -- versions of a package, or nil if none is available.
 local function get_installed_versions(name)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    
    local dirs = fs.list_dir(path.versions_dir(name))
    return (dirs and #dirs > 0) and dirs or nil
@@ -45,7 +45,7 @@ end
 -- @return boolean: true if a package is installed,
 -- false otherwise.
 function repos.is_installed(name, version)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
       
    return fs.is_dir(path.install_dir(name, version))
@@ -93,7 +93,7 @@ end
 -- If no modules are found or if package name or version
 -- are invalid, an empty table is returned.
 function repos.package_modules(name, version)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local result = {}
@@ -114,7 +114,7 @@ end
 -- If no commands are found or if package name or version
 -- are invalid, an empty table is returned.
 function repos.package_commands(name, version)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local result = {}
@@ -131,7 +131,7 @@ end
 -- @return boolean: returns true if rock contains platform-specific
 -- binary executables, or false if it is a pure-Lua rock.
 function repos.has_binaries(name, version)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local rock_manifest = manif.load_rock_manifest(name, version)
@@ -272,7 +272,7 @@ end
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
 function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    assert(type(wrap_bin_scripts) == "boolean")
 
@@ -351,7 +351,7 @@ end
 -- was deleted. This is used during 'purge', as every module
 -- will be eventually deleted.
 function repos.delete_version(name, version, deps_mode, quick)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    assert(type(deps_mode) == "string")
 
