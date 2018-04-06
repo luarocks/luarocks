@@ -591,7 +591,11 @@ function test_env.need_rock(rock)
    if test_env.run.luarocks_noprint_nocov(test_env.quiet("show " .. rock)) then
       return true
    else
-      return test_env.run.luarocks_noprint_nocov(test_env.quiet("install " .. rock))
+      local ok = test_env.run.luarocks_noprint_nocov(test_env.quiet("install " .. rock))
+      if not ok then
+         print("WARNING: failed installing " .. rock)
+      end
+      return ok
    end
 end
 
@@ -763,6 +767,7 @@ function test_env.mock_server_init()
    lfs.chdir(testing_paths.fixtures_dir)
    local final_command = test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.util_dir .. "/mock-server.lua &", true, test_env.env_variables)
    os.execute(final_command)
+   os.execute("sleep 1")
    lfs.chdir(pwd)
 end
 
