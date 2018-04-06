@@ -759,8 +759,11 @@ end
 function test_env.mock_server_init()
    local testing_paths = test_env.testing_paths
    assert(test_env.need_rock("restserver-xavante"))
+   local pwd = lfs.currentdir()
+   lfs.chdir(testing_paths.fixtures_dir)
    local final_command = test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.util_dir .. "/mock-server.lua &", true, test_env.env_variables)
    os.execute(final_command)
+   lfs.chdir(pwd)
 end
 
 function test_env.mock_server_done()
