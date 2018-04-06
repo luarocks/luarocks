@@ -176,7 +176,7 @@ end
 -- Includes namespace, name and version, but not arch or constraints.
 -- @param query table: a query table
 -- @return string: a result such as `my_user/my_rock 1.0` or `my_rock`.
-function queries:__tostring()
+function query_mt:__tostring()
    local out = {}
    if self.namespace then
       table.insert(out, self.namespace)
