@@ -1,70 +1,79 @@
 local test_env = require("spec.util.test_env")
 local run = test_env.run
+local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
-describe("LuaRocks show tests #blackbox #b_show", function()
+describe("LuaRocks show #blackbox #b_show", function()
    
    before_each(function()
       test_env.setup_specs()
    end)
 
-   it("LuaRocks show with no flags/arguments", function()
+   it("with no flags/arguments", function()
          assert.is_false(run.luarocks_bool("show"))
    end)
    
-   describe("LuaRocks show basic tests with flags", function()
-      it("LuaRocks show invalid", function()
+   describe("basic tests with flags", function()
+      it("invalid", function()
          assert.is_false(run.luarocks_bool("show invalid"))
       end)
       
-      it("LuaRocks show luacov", function()
+      it("luacov", function()
          local output = run.luarocks("show luacov")
          assert.is.truthy(output:match("LuaCov"))
       end)
 
-      it("LuaRocks show luacov with uppercase name", function()
+      it("luacov with uppercase name", function()
          local output = run.luarocks("show LuaCov")
          assert.is.truthy(output:match("LuaCov"))
       end)
       
-      it("LuaRocks show modules of luacov", function()
+      it("modules of luacov", function()
          local output = run.luarocks("show --modules luacov")
          assert.match("luacov.*luacov.defaults.*luacov.reporter.*luacov.reporter.default.*luacov.runner.*luacov.stats.*luacov.tick", output)
       end)
       
-      it("LuaRocks show dependencies of luacov", function()
-         local output = run.luarocks("show --deps luacov")
+      it("--deps", function()
+         assert(run.luarocks_bool("build has_namespaced_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+         local output = run.luarocks("show --deps has_namespaced_dep")
+         assert.match("a_user/a_rock", output)
+      end)
+
+      it("list dependencies", function()
+         assert(run.luarocks_bool("build has_namespaced_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+         local output = run.luarocks("show has_namespaced_dep")
+         assert.match("a_user/a_rock.*2.0", output)
       end)
       
-      it("LuaRocks show rockspec of luacov", function()
+      it("rockspec of luacov", function()
          local output = run.luarocks("show --rockspec luacov")
          assert.is.truthy(output:match("luacov--0.11.0--1.rockspec"))
       end)
       
-      it("LuaRocks show mversion of luacov", function()
+      it("mversion of luacov", function()
          local output = run.luarocks("show --mversion luacov")
          assert.is.truthy(output:match("0.11.0--1"))
       end)
       
-      it("LuaRocks show rock tree of luacov", function()
+      it("rock tree of luacov", function()
          local output = run.luarocks("show --rock-tree luacov")
       end)
       
-      it("LuaRocks show rock directory of luacov", function()
+      it("rock directory of luacov", function()
          local output = run.luarocks("show --rock-dir luacov")
       end)
 
-      it("LuaRocks show issues URL of luacov", function()
+      it("issues URL of luacov", function()
          local output = run.luarocks("show --issues luacov")
       end)
       
-      it("LuaRocks show labels of luacov", function()
+      it("labels of luacov", function()
          local output = run.luarocks("show --labels luacov")
       end)
    end)
 
-   it("LuaRocks show old version of luacov", function()
+   it("old version of luacov", function()
       run.luarocks("install luacov 0.11.0")
       run.luarocks_bool("show luacov 0.11.0")
    end)

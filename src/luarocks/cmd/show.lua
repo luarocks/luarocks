@@ -108,7 +108,10 @@ function show.command(flags, name, version)
    elseif flags["issues"] then util.printout(descript.issues_url)
    elseif flags["labels"] then util.printout(descript.labels and table.concat(descript.labels, "\n"))
    elseif flags["modules"] then util.printout(keys_as_string(minfo.modules, "\n"))
-   elseif flags["deps"] then util.printout(keys_as_string(minfo.dependencies or {}))
+   elseif flags["deps"] then
+      for _, dep in ipairs(rockspec.dependencies) do
+         util.printout(tostring(dep))
+      end
    elseif flags["rockspec"] then util.printout(rockspec_file)
    elseif flags["mversion"] then util.printout(version)
    else
