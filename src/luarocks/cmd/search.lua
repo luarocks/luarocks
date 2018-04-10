@@ -10,12 +10,13 @@ local search = require("luarocks.search")
 cmd_search.help_summary = "Query the LuaRocks servers."
 cmd_search.help_arguments = "[--source] [--binary] { <name> [<version>] | --all }"
 cmd_search.help = [[
---source  Return only rockspecs and source rocks,
-          to be used with the "build" command.
---binary  Return only pure Lua and binary rocks (rocks that can be used
-          with the "install" command without requiring a C toolchain).
---all     List all contents of the server that are suitable to
-          this platform, do not filter by name.
+--source     Return only rockspecs and source rocks,
+             to be used with the "build" command.
+--binary     Return only pure Lua and binary rocks (rocks that can be used
+             with the "install" command without requiring a C toolchain).
+--all        List all contents of the server that are suitable to
+             this platform, do not filter by name.
+--porcelain  Return a machine readable format.
 ]]
 
 --- Splits a list of search results into two lists, one for "source" results
