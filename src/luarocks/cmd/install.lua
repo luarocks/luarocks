@@ -12,7 +12,6 @@ local writer = require("luarocks.manif.writer")
 local remove = require("luarocks.remove")
 local search = require("luarocks.search")
 local queries = require("luarocks.queries")
-local vers = require("luarocks.core.vers")
 local cfg = require("luarocks.core.cfg")
 
 install.help_summary = "Install a rock."
@@ -89,7 +88,7 @@ function install.install_binary_rock(rock_file, deps_mode, namespace)
    end
 
    if deps_mode ~= "none" then
-      ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+      ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", deps_mode)
       if err then return nil, err, errcode end
    end
 
@@ -137,7 +136,7 @@ function install.install_binary_rock_deps(rock_file, deps_mode)
       return nil, "Failed loading rockspec for installed package: "..err, errcode
    end
 
-   ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+   ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", deps_mode)
    if err then return nil, err, errcode end
 
    util.printout()

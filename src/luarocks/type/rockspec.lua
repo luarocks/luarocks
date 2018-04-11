@@ -48,6 +48,15 @@ local rockspec_types = {
          },
       },
    },
+   build_dependencies = {
+      _version = "3.0",
+      platforms = {}, -- recursively defined below
+      _any = {
+         _type = "string",
+         _name = "a valid dependency string",
+         _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
+      },
+   },
    supported_platforms = {
       _any = string_1,
    },
