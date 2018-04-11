@@ -180,6 +180,20 @@ function fetch.url_to_base_dir(url)
    return (base:gsub("%.([^.]*)$", known_exts):gsub("%.tar", ""))
 end
 
+local function convert_dependencies(rockspec, key)
+   if rockspec[key] then
+      for i = 1, #rockspec[key] do
+         local parsed, err = queries.from_dep_string(rockspec[key][i])
+         if not parsed then
+            return nil, "Parse error processing dependency '"..rockspec[key][i].."': "..tostring(err)
+         end
+         rockspec[key][i] = parsed
+      end
+   else
+      rockspec[key] = {}
+   end
+end
+
 --- Back-end function that actually loads the local rockspec.
 -- Performs some validation and postprocessing of the rockspec contents.
 -- @param filename string: The local filename of the rockspec file.
@@ -212,10 +226,6 @@ function fetch.load_local_rockspec(filename, quick)
       end
    end
 
-   rockspec.format_is_at_least = function(_, v)
-      return parsed_format >= vers.parse_version(v)
-   end
-
    --- Check if rockspec format version satisfies version requirement.
    -- @param rockspec table: The rockspec table.
    -- @param version string: required version.
@@ -229,6 +239,7 @@ function fetch.load_local_rockspec(filename, quick)
 
    util.platform_overrides(rockspec.build)
    util.platform_overrides(rockspec.dependencies)
+   util.platform_overrides(rockspec.build_dependencies)
    util.platform_overrides(rockspec.external_dependencies)
    util.platform_overrides(rockspec.source)
    util.platform_overrides(rockspec.hooks)
@@ -274,17 +285,9 @@ function fetch.load_local_rockspec(filename, quick)
                               and cfg.rocks_provided_3_0
                               or  cfg.rocks_provided)
 
-   if rockspec.dependencies then
-      for i = 1, #rockspec.dependencies do
-         local parsed, err = queries.from_dep_string(rockspec.dependencies[i])
-         if not parsed then
-            return nil, "Parse error processing dependency '"..rockspec.dependencies[i].."': "..tostring(err)
-         end
-         rockspec.dependencies[i] = parsed
-      end
-   else
-      rockspec.dependencies = {}
-   end
+   convert_dependencies(rockspec, "dependencies")
+   convert_dependencies(rockspec, "build_dependencies")
+
    if not quick then
       path.configure_paths(rockspec)
    end

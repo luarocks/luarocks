@@ -124,10 +124,11 @@ end
 -- Packages are installed using the LuaRocks "install" command.
 -- Aborts the program if a dependency could not be fulfilled.
 -- @param rockspec table: A rockspec in table format.
+-- @param depskey table: Rockspec key to fetch to get dependency table.
 -- @return boolean or (nil, string, [string]): True if no errors occurred, or
 -- nil and an error message if any test failed, followed by an optional
 -- error code.
-function deps.fulfill_dependencies(rockspec, deps_mode)
+function deps.fulfill_dependencies(rockspec, depskey, deps_mode)
 
    local search = require("luarocks.search")
    local install = require("luarocks.cmd.install")
@@ -160,11 +161,11 @@ function deps.fulfill_dependencies(rockspec, deps_mode)
       end
    end
 
-   deps.report_missing_dependencies(rockspec.name, rockspec.version, rockspec.dependencies, deps_mode, rockspec.rocks_provided)
+   deps.report_missing_dependencies(rockspec.name, rockspec.version, rockspec[depskey], deps_mode, rockspec.rocks_provided)
 
    local first_missing_dep = true
 
-   for _, dep in ipairs(rockspec.dependencies) do
+   for _, dep in ipairs(rockspec[depskey]) do
       if not match_dep(dep, nil, deps_mode, rockspec.rocks_provided) then
          if first_missing_dep then
             util.printout()
