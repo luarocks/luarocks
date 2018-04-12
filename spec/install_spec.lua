@@ -223,4 +223,13 @@ describe("luarocks install #blackbox #b_install", function()
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/say/1.0-1"))
       end)
    end)
+
+   describe("#build_dependencies", function()
+      it("install does not install a build dependency", function()
+         assert(run.luarocks_bool("install has_build_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+         assert(run.luarocks_bool("show has_build_dep 1.0"))
+         assert.falsy(run.luarocks_bool("show a_build_dep 1.0"))
+      end)
+   end)
+
 end)
