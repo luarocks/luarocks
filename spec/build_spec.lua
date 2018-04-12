@@ -249,5 +249,13 @@ describe("LuaRocks build tests #blackbox #b_build", function()
          assert.is.truthy(run.luarocks("show with_external_dep"))
       end)
    end)
+   
+   describe("#build_dependencies", function()
+      it("builds with a build dependency", function()
+         assert(run.luarocks_bool("build has_build_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+         assert(run.luarocks_bool("show has_build_dep 1.0"))
+         assert(run.luarocks_bool("show a_build_dep 1.0"))
+      end)
+   end)
 
 end)
