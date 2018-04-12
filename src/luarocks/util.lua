@@ -86,6 +86,7 @@ local supported_flags = {
    ["bin"] = true,
    ["binary"] = true,
    ["branch"] = "<branch-name>",
+   ["build-deps"] = true,
    ["debug"] = true,
    ["deps"] = true,
    ["deps-mode"] = "<mode>",

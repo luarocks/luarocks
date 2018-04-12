@@ -7,7 +7,6 @@ local search = require("luarocks.search")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
-local vers = require("luarocks.core.vers")
 local fetch = require("luarocks.fetch")
 local manif = require("luarocks.manif")
 local repos = require("luarocks.repos")
@@ -19,13 +18,14 @@ show.help = [[
 Without any flags, show all module information.
 With these flags, return only the desired information:
 
---home      home page of project
---modules   all modules provided by this package as used by require()
---deps      packages this package depends on
---rockspec  the full path of the rockspec file
---mversion  the package version
---rock-tree local tree where rock is installed
---rock-dir  data directory of the installed rock
+--home       home page of project
+--modules    all modules provided by this package as used by require()
+--deps       packages this package depends on
+--build-deps build-only dependencies for this package
+--rockspec   the full path of the rockspec file
+--mversion   the package version
+--rock-tree  local tree where rock is installed
+--rock-dir   data directory of the installed rock
 ]]
 
 local function keys_as_string(t, sep)
@@ -112,6 +112,10 @@ function show.command(flags, name, version)
       for _, dep in ipairs(rockspec.dependencies) do
          util.printout(tostring(dep))
       end
+   elseif flags["build-deps"] then
+      for _, dep in ipairs(rockspec.build_dependencies) do
+         util.printout(tostring(dep))
+      end
    elseif flags["rockspec"] then util.printout(rockspec_file)
    elseif flags["mversion"] then util.printout(version)
    else
@@ -148,6 +152,14 @@ function show.command(flags, name, version)
          print_items(name, version, minfo.modules, "module", repo)
       end
 
+      if #rockspec.build_dependencies > 0 then
+         util.printout()
+         util.printout("Has build dependency on:")
+         for _, dep in ipairs(rockspec.build_dependencies) do
+            util.printout("\t"..tostring(dep).." "..installed_rock_label(dep, flags["tree"]))
+         end
+      end
+
       local direct_deps = {}
       if #rockspec.dependencies > 0 then
          util.printout()
@@ -166,7 +178,7 @@ function show.command(flags, name, version)
                has_indirect_deps = true
             end
 
-            util.printout("\t"..dep_name.." "..installed_rock_label(dep_name, flags["tree"]))
+            util.printout("\t"..tostring(dep_name).." "..installed_rock_label(queries.new(dep_name), flags["tree"]))
          end
       end
       util.printout()

@@ -77,4 +77,15 @@ describe("LuaRocks show #blackbox #b_show", function()
       run.luarocks("install luacov 0.11.0")
       run.luarocks_bool("show luacov 0.11.0")
    end)
+
+   it("shows #build_dependencies", function()
+      assert(run.luarocks_bool("install has_build_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+      assert.match("a_build_dep", run.luarocks("show has_build_dep"))
+   end)
+
+   it("gets #build_dependencies via --build-deps", function()
+      assert(run.luarocks_bool("install has_build_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+      assert.match("a_build_dep", run.luarocks("show has_build_dep --build-deps"))
+   end)
+
 end)
