@@ -367,7 +367,7 @@ function writer.add_to_manifest(name, version, repo, deps_mode)
 
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
-   local manifest, err = manif.load_local_manifest(rocks_dir)
+   local manifest, err = manif.load_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
       -- Manifest built by `writer.make_manifest` should already
@@ -404,7 +404,7 @@ function writer.remove_from_manifest(name, version, repo, deps_mode)
 
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
-   local manifest, err = manif.load_local_manifest(rocks_dir)
+   local manifest, err = manif.load_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
       -- Manifest built by `writer.make_manifest` should already
@@ -442,7 +442,7 @@ function writer.check_dependencies(repo, deps_mode)
    assert(type(deps_mode) == "string")
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
-   local manifest = manif.load_local_manifest(rocks_dir)
+   local manifest = manif.load_manifest(rocks_dir)
    if not manifest then
       return
    end

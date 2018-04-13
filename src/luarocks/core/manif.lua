@@ -48,12 +48,11 @@ function manif.manifest_loader(file, repo_url, lua_version)
 end
 
 --- Load a local manifest describing a repository.
--- All functions that use manifest tables assume they were obtained
--- through either this function or load_manifest.
+-- This is used by the luarocks.loader only.
 -- @param repo_url string: URL or pathname for the repository.
 -- @return table or (nil, string, string): A table representing the manifest,
 -- or nil followed by an error message and an error code, see manifest_loader.
-function manif.load_local_manifest(repo_url)
+function manif.fast_load_local_manifest(repo_url)
    assert(type(repo_url) == "string")
 
    local cached_manifest = manif.get_cached_manifest(repo_url)

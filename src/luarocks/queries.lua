@@ -172,6 +172,10 @@ do
    end
 end
 
+function queries.from_persisted_table(tbl)
+   return setmetatable(tbl, query_mt)
+end
+
 --- Build a string representation of a query package name.
 -- Includes namespace, name and version, but not arch or constraints.
 -- @param query table: a query table
