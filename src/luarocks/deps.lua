@@ -106,6 +106,12 @@ end
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
 function deps.report_missing_dependencies(name, version, dependencies, deps_mode, rocks_provided)
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+   assert(type(dependencies) == "table")
+   assert(type(deps_mode) == "string")
+   assert(type(rocks_provided) == "table")
+
    local first_missing_dep = true
 
    for _, dep in ipairs(dependencies) do
