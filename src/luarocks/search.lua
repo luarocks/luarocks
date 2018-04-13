@@ -25,7 +25,8 @@ function search.store_result(result_tree, result)
    if not result_tree[name][version] then result_tree[name][version] = {} end
    table.insert(result_tree[name][version], {
       arch = result.arch,
-      repo = result.repo
+      repo = result.repo,
+      namespace = result.namespace,
    })
 end
 
@@ -45,25 +46,6 @@ local function store_if_match(result_tree, result, query)
    if result:satisfies(query) then
       search.store_result(result_tree, result)
    end
-end
-
---- Get the namespace of a locally-installed rock, if any.
--- @param name string: The rock name, without a namespace.
--- @param version string: The rock version.
--- @param tree string: The local tree to use.
--- @return string?: The namespace if it exists, or nil.
-local function read_namespace(name, version, tree)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
-   assert(type(tree) == "string")
-
-   local namespace
-   local fd = io.open(path.rock_namespace_file(name, version, tree), "r")
-   if fd then
-      namespace = fd:read("*a")
-      fd:close()
-   end
-   return namespace
 end
 
 --- Perform search on a local repository.
@@ -96,7 +78,7 @@ function search.disk_search(repo, query, result_tree)
       elseif fs.is_dir(pathname) then
          for version in fs.dir(pathname) do
             if version:match("-%d+$") then
-               local namespace = read_namespace(name, version, repo)
+               local namespace = path.read_namespace(name, version, repo)
                local result = results.new(name, version, repo, "installed", namespace)
                store_if_match(result_tree, result, query)
             end
@@ -132,7 +114,7 @@ local function manifest_search(result_tree, repo, query, lua_version, is_local)
    end
    for name, versions in pairs(manifest.repository) do
       for version, items in pairs(versions) do
-         local namespace = is_local and read_namespace(name, version, repo) or query.namespace
+         local namespace = is_local and path.read_namespace(name, version, repo) or query.namespace
          for _, item in ipairs(items) do
             local result = results.new(name, version, repo, item.arch, namespace)
             store_if_match(result_tree, result, query)
@@ -292,21 +274,32 @@ function search.print_result_tree(result_tree, porcelain)
    assert(type(result_tree) == "table")
    assert(type(porcelain) == "boolean" or not porcelain)
    
-   for package, versions in util.sortedpairs(result_tree) do
-      if not porcelain then
-         util.printout(package)
-      end
-      for version, repos in util.sortedpairs(versions, vers.compare_versions) do
-         for _, repo in ipairs(repos) do
-            repo.repo = dir.normalize(repo.repo)
-            if porcelain then
-               util.printout(package, version, repo.arch, repo.repo)
-            else
-               util.printout("   "..version.." ("..repo.arch..") - "..repo.repo)
+   if porcelain then
+      for package, versions in util.sortedpairs(result_tree) do
+         for version, repos in util.sortedpairs(versions, vers.compare_versions) do
+            for _, repo in ipairs(repos) do
+               local nrepo = dir.normalize(repo.repo)
+               util.printout(package, version, repo.arch, nrepo, repo.namespace)
             end
          end
       end
-      if not porcelain then
+      return
+   end
+   
+   for package, versions in util.sortedpairs(result_tree) do
+      local namespaces = {}
+      for version, repos in util.sortedpairs(versions, vers.compare_versions) do
+         for _, repo in ipairs(repos) do
+            local key = repo.namespace or ""
+            local list = namespaces[key] or {}
+            namespaces[key] = list
+
+            repo.repo = dir.normalize(repo.repo)
+            table.insert(list, "   "..version.." ("..repo.arch..") - "..repo.repo)
+         end
+      end
+      for key, list in util.sortedpairs(namespaces) do
+         util.printout(key == "" and package or key .. "/" .. package)
          util.printout()
       end
    end

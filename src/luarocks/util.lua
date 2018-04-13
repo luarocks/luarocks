@@ -130,6 +130,7 @@ local supported_flags = {
    ["porcelain"] = true,
    ["quick"] = true,
    ["rock-dir"] = true,
+   ["rock-namespace"] = true,
    ["rock-tree"] = true,
    ["rock-trees"] = true,
    ["rockspec"] = true,
