@@ -91,8 +91,9 @@ function show.command(flags, name, version)
    if not name then
       return nil, version
    end
-
+   local tree = path.rocks_tree_to_string(repo)
    local directory = path.install_dir(name, version, repo)
+   local namespace = path.read_namespace(name, version, tree)
    local rockspec_file = path.rockspec_file(name, version, repo)
    local rockspec, err = fetch.load_local_rockspec(rockspec_file)
    if not rockspec then return nil,err end
@@ -102,7 +103,8 @@ function show.command(flags, name, version)
    if not manifest then return nil,err end
    local minfo = manifest.repository[name][version][1]
 
-   if flags["rock-tree"] then util.printout(path.rocks_tree_to_string(repo))
+   if flags["rock-tree"] then util.printout(tree)
+   elseif flags["rock-namespace"] then util.printout(namespace)
    elseif flags["rock-dir"] then util.printout(directory)
    elseif flags["home"] then util.printout(descript.homepage)
    elseif flags["issues"] then util.printout(descript.issues_url)
@@ -120,7 +122,7 @@ function show.command(flags, name, version)
    elseif flags["mversion"] then util.printout(version)
    else
       util.printout()
-      util.printout(rockspec.package.." "..rockspec.version.." - "..(descript.summary or ""))
+      util.printout((namespace and namespace .."/" or "") .. rockspec.package.." "..rockspec.version.." - "..(descript.summary or ""))
       util.printout()
       if descript.detailed then
          util.printout(format_text(descript.detailed))

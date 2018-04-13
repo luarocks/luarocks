@@ -88,4 +88,9 @@ describe("LuaRocks show #blackbox #b_show", function()
       assert.match("a_build_dep", run.luarocks("show has_build_dep --build-deps"))
    end)
 
+   it("shows #namespaces via --rock-namespace", function()
+      assert(run.luarocks_bool("build a_user/a_rock --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+      assert.match("a_user", run.luarocks("show a_rock --rock-namespace"))
+   end)
+
 end)

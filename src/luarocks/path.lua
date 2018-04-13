@@ -287,4 +287,23 @@ function path.map_trees(deps_mode, fn, ...)
    return result
 end
 
+--- Get the namespace of a locally-installed rock, if any.
+-- @param name string: The rock name, without a namespace.
+-- @param version string: The rock version.
+-- @param tree string: The local tree to use.
+-- @return string?: The namespace if it exists, or nil.
+function path.read_namespace(name, version, tree)
+   assert(type(name) == "string" and not name:match("/"))
+   assert(type(version) == "string")
+   assert(type(tree) == "string")
+
+   local namespace
+   local fd = io.open(path.rock_namespace_file(name, version, tree), "r")
+   if fd then
+      namespace = fd:read("*a")
+      fd:close()
+   end
+   return namespace
+end
+
 return path
