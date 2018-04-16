@@ -21,6 +21,10 @@ config_cmd.help = [[
 
 --rock-trees     Rocks trees in use. First the user tree, then the system tree.
 ]]
+config_cmd.help_see_also = [[
+	https://github.com/luarocks/luarocks/wiki/Config-file-format
+	for detailed information on the LuaRocks config file format.
+]]
 
 local function config_file(conf)
    print(dir.normalize(conf.file))

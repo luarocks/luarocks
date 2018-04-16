@@ -108,6 +108,9 @@ function help.command(flags, command)
          print_section("DESCRIPTION")
          util.printout("",(cmd.help:gsub("\n","\n\t"):gsub("\n\t$","")))
          print_section("SEE ALSO")
+         if cmd.help_see_also then
+            util.printout(cmd.help_see_also)
+         end
          util.printout("","'"..program.." help' for general options and configuration.\n")
       else
          return nil, "Unknown command: "..command
