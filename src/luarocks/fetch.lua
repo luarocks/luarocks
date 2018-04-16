@@ -243,6 +243,7 @@ function fetch.load_local_rockspec(filename, quick)
    util.platform_overrides(rockspec.external_dependencies)
    util.platform_overrides(rockspec.source)
    util.platform_overrides(rockspec.hooks)
+   util.platform_overrides(rockspec.test)
 
    local basename = dir.base_name(filename)
    if basename == "rockspec" then
