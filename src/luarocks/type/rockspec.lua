@@ -117,12 +117,13 @@ local rockspec_types = {
 type_rockspec.order = {"rockspec_format", "package", "version", 
    { "source", { "url", "tag", "branch", "md5" } },
    { "description", {"summary", "detailed", "homepage", "license" } },
-   "supported_platforms", "dependencies", "external_dependencies",
+   "supported_platforms", "dependencies", "build_dependencies", "external_dependencies",
    { "build", {"type", "modules", "copy_directories", "platforms"} },
    "hooks"}
 
 rockspec_types.build.platforms._any = rockspec_types.build
 rockspec_types.dependencies.platforms._any = rockspec_types.dependencies
+rockspec_types.build_dependencies.platforms._any = rockspec_types.build_dependencies
 rockspec_types.external_dependencies.platforms._any = rockspec_types.external_dependencies
 rockspec_types.source.platforms._any = rockspec_types.source
 rockspec_types.hooks.platforms._any = rockspec_types.hooks
