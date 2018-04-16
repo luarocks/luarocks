@@ -160,13 +160,12 @@ function util.parse_flags(...)
    local flags = {}
    local i = 1
    local out = {}
-   local ignore_flags = false
+   local state = "initial"
    while i <= #args do
       local flag = args[i]:match("^%-%-(.*)")
-      if flag == "--" then
-         ignore_flags = true
-      end
-      if flag and not ignore_flags then
+      if state == "initial" and flag == "" then
+         state = "ignore_flags"
+      elseif state == "initial" and flag then
          local var,val = flag:match("([a-z_%-]*)=(.*)")
          if val then
             local vartype = supported_flags[var]
@@ -205,7 +204,7 @@ function util.parse_flags(...)
                return { ERROR = "Invalid argument: unknown flag --"..var.."." }
             end
          end
-      else
+      elseif state == "ignore_flags" or (state == "initial" and not flag) then
          table.insert(out, args[i])
       end
       i = i + 1
