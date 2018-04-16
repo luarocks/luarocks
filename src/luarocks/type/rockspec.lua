@@ -104,6 +104,12 @@ local rockspec_types = {
       _more = true,
       _mandatory = true
    },
+   test = {
+      _version = "3.0",
+      platforms = {}, -- recursively defined below
+      type = string_1,
+      _more = true,
+   },
    hooks = {
       platforms = {}, -- recursively defined below
       post_install = string_1,
@@ -119,6 +125,7 @@ type_rockspec.order = {"rockspec_format", "package", "version",
    { "description", {"summary", "detailed", "homepage", "license" } },
    "supported_platforms", "dependencies", "build_dependencies", "external_dependencies",
    { "build", {"type", "modules", "copy_directories", "platforms"} },
+   { "test", {"type"} },
    "hooks"}
 
 rockspec_types.build.platforms._any = rockspec_types.build
@@ -127,6 +134,7 @@ rockspec_types.build_dependencies.platforms._any = rockspec_types.build_dependen
 rockspec_types.external_dependencies.platforms._any = rockspec_types.external_dependencies
 rockspec_types.source.platforms._any = rockspec_types.source
 rockspec_types.hooks.platforms._any = rockspec_types.hooks
+rockspec_types.test.platforms._any = rockspec_types.test
 
 --- Type check a rockspec table.
 -- Verify the correctness of elements from a 
