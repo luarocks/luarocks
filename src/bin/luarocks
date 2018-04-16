@@ -29,6 +29,7 @@ commands = {
    upload = "luarocks.cmd.upload",
    config = "luarocks.cmd.config",
    which = "luarocks.cmd.which",
+   test = "luarocks.cmd.test",
 }
 
 command_line.run_command(...)
