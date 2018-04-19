@@ -228,6 +228,9 @@ function path.configure_paths(rockspec)
    vars.CONFDIR = path.conf_dir(name, version)
    vars.BINDIR = path.bin_dir(name, version)
    vars.DOCDIR = path.doc_dir(name, version)
+   if rockspec:format_is_at_least("3.0") then
+      vars.LUA_VERSION = _VERSION:match(" (5%.[123])$") or "5.1"
+   end
    rockspec.variables = vars
 end
 
