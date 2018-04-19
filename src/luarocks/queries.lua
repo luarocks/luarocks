@@ -13,6 +13,18 @@ function query_mt.type()
    return "query"
 end
 
+-- Fallback default value for the `arch` field, if not explicitly set.
+query_mt.arch = {
+   src = true,
+   all = true,
+   rockspec = true,
+   installed = true,
+   [cfg.arch] = true,
+}
+
+-- Fallback default value for the `substring` field, if not explicitly set.
+query_mt.substring = false
+
 --- Convert the arch field of a query table to table format.
 -- @param input string, table or nil
 local function arch_to_table(input)
@@ -23,14 +35,6 @@ local function arch_to_table(input)
       for a in input:gmatch("[%w_-]+") do
          arch[a] = true
       end
-      return arch
-   else
-      local arch = {}
-      arch["src"] = true
-      arch["all"] = true
-      arch["rockspec"] = true
-      arch["installed"] = true
-      arch[cfg.arch] = true
       return arch
    end
 end
@@ -165,8 +169,6 @@ do
          name = name,
          namespace = namespace,
          constraints = constraints,
-         substring = false,
-         arch = arch_to_table(nil),
       }
       return setmetatable(self, query_mt)
    end
