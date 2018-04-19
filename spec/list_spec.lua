@@ -25,10 +25,17 @@ describe("LuaRocks list tests #blackbox #b_list", function()
       assert.is.truthy(output:find("luacov\t0.11.0-1\tinstalled\t" .. testing_paths.testing_sys_rocks, 1, true))
    end)
 
+   it("LuaRocks list shows version number", function()
+      local output = run.luarocks("list")
+      assert.is.truthy(output:find("luacov"))
+      assert.matches("0.11.0-1", output, 1, true)
+   end)
+
    it("LuaRocks install outdated and list it", function()
       assert.is_true(run.luarocks_bool("install say 1.0-1"))
       local output = run.luarocks("list --outdated")
       assert.is.truthy(output:find("say"))
+      assert.matches("1.0-1 < 1.2-1", output, 1, true)
    end)
    
    it("LuaRocks list invalid tree", function()

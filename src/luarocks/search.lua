@@ -300,6 +300,9 @@ function search.print_result_tree(result_tree, porcelain)
       end
       for key, list in util.sortedpairs(namespaces) do
          util.printout(key == "" and package or key .. "/" .. package)
+         for _, line in ipairs(list) do
+            util.printout(line)
+         end
          util.printout()
       end
    end
