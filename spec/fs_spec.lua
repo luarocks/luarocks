@@ -564,9 +564,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          fd:close()
          dstdir = os.tmpname()
          os.remove(dstdir)
-         if is_win then
-            lfs.mkdir(dstdir)
-         end
       end
 
       it("returns true and copies the contents (with their permissions) of the source dir to the destination dir", function()
@@ -604,11 +601,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          os.remove(srcdir)
          dstdir = os.tmpname()
          os.remove(dstdir)
-         if is_win then
-            fs.copy_contents(srcdir, dstdir, nil)
-         else
-            assert.falsy(pcall(fs.copy_contents, srcdir, dstdir, nil))
-         end
+         assert.falsy(fs.copy_contents(srcdir, dstdir, nil))
          assert.falsy(exists_file(dstdir))
       end)
 
@@ -619,18 +612,14 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          fd:close()
          dstdir = os.tmpname()
          os.remove(dstdir)
-         if is_win then
-            fs.copy_contents(srcdir, dstdir, nil)
-         else
-            assert.falsy(pcall(fs.copy_contents, srcdir, dstdir, nil))
-         end
+         assert.falsy(fs.copy_contents(srcdir, dstdir, nil))
          assert.falsy(exists_file(dstdir))
       end)
 
       it("returns false and does nothing if the source dir doesn't have the proper permissions #unix", function()
          create_dir_tree()
          assert(fs.chmod(srcdir, "333"))
-         assert.falsy(pcall(fs.copy_contents, srcdir, dstdir, nil))
+         assert.falsy(fs.copy_contents(srcdir, dstdir, nil))
          assert.falsy(exists_file(dstdir))
       end)
    end)

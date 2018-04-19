@@ -323,6 +323,9 @@ local function recursive_copy(src, dest, perms)
       local subdir = dir.path(dest, dir.base_name(src))
       local ok, err = fs.make_dir(subdir)
       if not ok then return nil, err end
+      if pcall(lfs.dir, src) == false then
+         return false
+      end
       for file in lfs.dir(src) do
          if file ~= "." and file ~= ".." then
             local ok = recursive_copy(dir.path(src, file), subdir, perms)
@@ -336,15 +339,19 @@ end
 --- Recursively copy the contents of a directory.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
--- @param perms string or nil: Optional permissions. 
+-- @param perms string or nil: Optional permissions.
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
 function fs_lua.copy_contents(src, dest, perms)
    assert(src and dest)
    src = dir.normalize(src)
    dest = dir.normalize(dest)
-   assert(lfs.attributes(src, "mode") == "directory")
-
+   if not fs.is_dir(src) then
+      return false, src .. " is not a directory"
+   end
+   if pcall(lfs.dir, src) == false then
+      return false, "Permission denied"
+   end
    for file in lfs.dir(src) do
       if file ~= "." and file ~= ".." then
          local ok = recursive_copy(dir.path(src, file), dest, perms)
@@ -539,14 +546,14 @@ local redirect_protocols = {
 
 local function request(url, method, http, loop_control)
    local result = {}
-   
+
    local proxy = cfg.http_proxy
    if type(proxy) ~= "string" then proxy = nil end
    -- LuaSocket's http.request crashes when given URLs missing the scheme part.
    if proxy and not proxy:find("://") then
       proxy = "http://" .. proxy
    end
-   
+
    if cfg.show_downloads then
       io.write(method.." "..url.." ...\n")
    end
@@ -608,7 +615,7 @@ end
 -- @param http table: The library to use (http from LuaSocket or LuaSec)
 -- @param cache boolean: Whether to use a `.timestamp` file to check
 -- via the HTTP Last-Modified header if the full download is needed.
--- @return (boolean | (nil, string, string?)): True if successful, or 
+-- @return (boolean | (nil, string, string?)): True if successful, or
 -- nil, error message and optionally HTTPS error in case of errors.
 local function http_request(url, filename, http, cache)
    if cache then
@@ -899,7 +906,7 @@ function fs_lua.is_lua(filename)
   local lua = fs.Q(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter))  -- get lua interpreter configured
   -- execute on configured interpreter, might not be the same as the interpreter LR is run on
   local result = fs.execute_string(lua..[[ -e "if loadfile(']]..filename..[[') then os.exit() else os.exit(1) end"]])
-  return (result == true) 
+  return (result == true)
 end
 
 return fs_lua
