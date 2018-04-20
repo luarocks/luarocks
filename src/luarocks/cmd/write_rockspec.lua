@@ -146,16 +146,15 @@ local function detect_scm_url(directory)
       detect_url_from_command("hg", "paths default", directory)
 end
 
-local function show_license(rockspec)
+local function check_license()
    local fd = open_file("COPYING") or open_file("LICENSE") or open_file("MIT-LICENSE.txt")
    if not fd then return nil end
    local data = fd:read("*a")
    fd:close()
-   local is_mit = detect_mit_license(data)
-   util.title("License for "..rockspec.package..":")
-   util.printout(data)
-   util.printout()
-   return is_mit
+   if detect_mit_license(data) then
+      return "MIT", data
+   end
+   return nil, data
 end
 
 local function get_cmod_name(file)
@@ -371,10 +370,16 @@ function write_rockspec.command(flags, name, version, url_or_dir)
       rockspec.description.detailed = flags["detailed"] or detailed
    end
 
-   local is_mit = show_license(rockspec)
-   
-   if is_mit and not flags["license"] then
-      rockspec.description.license = "MIT"
+   if not flags["license"] then
+      local license, fulltext = check_license()
+      if license then
+         rockspec.description.license = license
+      elseif license then
+         util.title("Could not auto-detect type for project license:")
+         util.printout(fulltext)
+         util.printout()
+         util.title("Please fill in the source.license field manually or use --license.")
+      end
    end
    
    fill_as_builtin(rockspec, libs)
