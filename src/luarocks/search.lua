@@ -295,7 +295,7 @@ function search.print_result_tree(result_tree, porcelain)
             namespaces[key] = list
 
             repo.repo = dir.normalize(repo.repo)
-            table.insert(list, "   "..version.." ("..repo.arch..") - "..repo.repo)
+            table.insert(list, "   "..version.." ("..repo.arch..") - "..path.root_dir(repo.repo))
          end
       end
       for key, list in util.sortedpairs(namespaces) do
