@@ -26,12 +26,20 @@ init.help = [[
 ]]
 
 local function write_gitignore()
-   if fs.exists(".gitignore") then
-      return
+   local gitignore = ""
+   local fd = io.open(".gitignore", "r")
+   if fd then
+      gitignore = fd:read("*a")
+      fd:close()
+      gitignore = "\n" .. gitignore .. "\n"
    end
-   local fd = io.open(".gitignore", "w")
-   fd:write("lua_modules\n")
-   fd:write("lua\n")
+   
+   fd = io.open(".gitignore", gitignore and "a" or "w")
+   for _, entry in ipairs({"/lua", "/lua_modules"}) do
+      if not gitignore:find("\n"..entry.."\n", 1, true) then
+         fd:write(entry.."\n")
+      end
+   end
    fd:close()
 end
 
@@ -45,19 +53,35 @@ function init.command(flags, name, version)
       name = dir.base_name(pwd)
    end
 
-   util.printout("Initializing project " .. name)
+   util.printout("Initializing project " .. name .. " ...")
    
    local ok, err = write_rockspec.command(flags, name, version or "dev", pwd)
    if not ok then
       util.printerr(err)
    end
    
+   util.printout("Adding entries to .gitignore ...")
    write_gitignore()
+
+   util.printout("Preparing ./.luarocks/ ...")
+   fs.make_dir(".luarocks")
+   local config_file = ".luarocks/config-" .. cfg.lua_version .. ".lua"
+   if not fs.exists(config_file) then
+      local fd = io.open(config_file, "w")
+      fd:write("-- add your configuration here\n")
+      fd:close()
+   end
+
+   util.printout("Preparing ./lua_modules/ ...")
 
    fs.make_dir("lua_modules/lib/luarocks/rocks-" .. cfg.lua_version)
    local tree = dir.path(pwd, "lua_modules")
 
-   fs.wrap_script(arg[0], "luarocks", nil, nil, "--tree", tree)
+   util.printout("Preparing ./luarocks ...")
+
+   fs.wrap_script(arg[0], "luarocks", nil, nil, "--project-tree", tree)
+
+   util.printout("Preparing ./lua ...")
 
    path.use_tree(tree)
    fs.wrap_script(nil, "lua")
