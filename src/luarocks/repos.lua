@@ -136,9 +136,9 @@ function repos.has_binaries(name, version)
 
    local rock_manifest = manif.load_rock_manifest(name, version)
    if rock_manifest and rock_manifest.bin then
-      for name, md5 in pairs(rock_manifest.bin) do
+      for bin_name, md5 in pairs(rock_manifest.bin) do
          -- TODO verify that it is the same file. If it isn't, find the actual command.
-         if fs.is_actual_binary(dir.path(cfg.deploy_bin_dir, name)) then
+         if fs.is_actual_binary(dir.path(cfg.deploy_bin_dir, bin_name)) then
             return true
          end
       end

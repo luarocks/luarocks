@@ -164,6 +164,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    assert(type(need_to_fetch) == "boolean")
    assert(type(namespace) == "string" or not namespace)
 
+   local ok
    local rockspec, err, errcode = fetch.load_rockspec(rockspec_file)
    if err then
       return nil, err, errcode

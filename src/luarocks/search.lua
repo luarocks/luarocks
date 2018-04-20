@@ -351,7 +351,7 @@ function search.pick_installed_rock(query, given_tree)
 
    local version = nil
    local repo_url
-   local package, versions = util.sortedpairs(result_tree)()
+   local _, versions = util.sortedpairs(result_tree)()
    --question: what do we do about multiple versions? This should
    --give us the latest version on the last repo (which is usually the global one)
    for vs, repositories in util.sortedpairs(versions, vers.compare_versions) do
