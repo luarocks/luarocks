@@ -79,22 +79,25 @@ function help.command(flags, command)
       end
       print_section("CONFIGURATION")
       util.printout("\tLua version: " .. cfg.lua_version)
+      util.printout()
       util.printout("\tConfiguration files:")
       util.printout("\t\tSystem: ".. dir.normalize(conf.system.file) .. " (" .. get_status(conf.system.ok) ..")")
       if conf.user.file then
-         util.printout("\t\tUser  : ".. dir.normalize(conf.user.file) .. " (" .. get_status(conf.user.ok) ..")\n")
+         util.printout("\t\tUser  : ".. dir.normalize(conf.user.file) .. " (" .. get_status(conf.user.ok) ..")")
       else
-         util.printout("\t\tUser  : disabled in this LuaRocks installation.\n")
+         util.printout("\t\tUser  : disabled in this LuaRocks installation.")
       end
+      util.printout()
       util.printout("\tRocks trees in use: ")
       for _, tree in ipairs(cfg.rocks_trees) do
-      	if type(tree) == "string" then
-      	   util.printout("\t\t"..dir.normalize(tree))
-      	else
-      	   local name = tree.name and " (\""..tree.name.."\")" or ""
-      	   util.printout("\t\t"..dir.normalize(tree.root)..name)
-      	end
+         if type(tree) == "string" then
+            util.printout("\t\t"..dir.normalize(tree))
+         else
+            local name = tree.name and " (\""..tree.name.."\")" or ""
+            util.printout("\t\t"..dir.normalize(tree.root)..name)
+         end
       end
+      util.printout()
    else
       command = command:gsub("-", "_")
       local cmd = commands[command] and require(commands[command])
