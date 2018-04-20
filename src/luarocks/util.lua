@@ -129,6 +129,7 @@ local supported_flags = {
    ["output"] = "<file>",
    ["pack-binary-rock"] = true,
    ["porcelain"] = true,
+   ["project-tree"] = "<tree>",
    ["quick"] = true,
    ["rock-dir"] = true,
    ["rock-namespace"] = true,

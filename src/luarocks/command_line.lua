@@ -131,6 +131,10 @@ function command_line.run_command(...)
      cfg.branch = flags["branch"]
    end
    
+   if flags["project-tree"] then
+      table.insert(cfg.rocks_trees, 1, { name = "project", root = flags["project-tree"] } )
+   end
+
    if flags["tree"] then
       local named = false
       for _, tree in ipairs(cfg.rocks_trees) do
