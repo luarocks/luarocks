@@ -40,6 +40,6 @@ describe("LuaRocks list tests #blackbox #b_list", function()
    
    it("LuaRocks list invalid tree", function()
       local output = run.luarocks("--tree=/some/invalid/tree list")
-      assert(output:find("Installed rocks for Lua "..test_env.lua_version, 1, true))
+      assert(output:find("Rocks installed for Lua "..test_env.lua_version.." in /some/invalid/tree", 1, true))
    end)
 end)
