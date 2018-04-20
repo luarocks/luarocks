@@ -2,6 +2,7 @@
 local test = {}
 
 local fetch = require("luarocks.fetch")
+local deps = require("luarocks.deps")
 
 local test_types = {
    "busted",
@@ -49,7 +50,14 @@ function test.run_test_suite(rockspec_arg, args)
    if not test_type then
       return nil, err
    end
-   
+
+   if next(rockspec.test_dependencies) then
+      local ok, err, errcode = deps.fulfill_dependencies(rockspec, "test_dependencies", "all")
+      if err then
+         return nil, err, errcode
+      end
+   end
+
    local mod_name = "luarocks.test." .. test_type
    local pok, test_mod = pcall(require, mod_name)
    if not pok then

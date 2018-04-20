@@ -22,6 +22,7 @@ With these flags, return only the desired information:
 --modules    all modules provided by this package as used by require()
 --deps       packages this package depends on
 --build-deps build-only dependencies for this package
+--test-deps  dependencies for testing this package
 --rockspec   the full path of the rockspec file
 --mversion   the package version
 --rock-tree  local tree where rock is installed
@@ -118,6 +119,10 @@ function show.command(flags, name, version)
       for _, dep in ipairs(rockspec.build_dependencies) do
          util.printout(tostring(dep))
       end
+   elseif flags["test-deps"] then
+      for _, dep in ipairs(rockspec.test_dependencies) do
+         util.printout(tostring(dep))
+      end
    elseif flags["rockspec"] then util.printout(rockspec_file)
    elseif flags["mversion"] then util.printout(version)
    else
@@ -158,6 +163,14 @@ function show.command(flags, name, version)
          util.printout()
          util.printout("Has build dependency on:")
          for _, dep in ipairs(rockspec.build_dependencies) do
+            util.printout("\t"..tostring(dep).." "..installed_rock_label(dep, flags["tree"]))
+         end
+      end
+
+      if #rockspec.test_dependencies > 0 then
+         util.printout()
+         util.printout("Tests depend on:")
+         for _, dep in ipairs(rockspec.test_dependencies) do
             util.printout("\t"..tostring(dep).." "..installed_rock_label(dep, flags["tree"]))
          end
       end

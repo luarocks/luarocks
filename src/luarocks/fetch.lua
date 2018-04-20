@@ -240,6 +240,7 @@ function fetch.load_local_rockspec(filename, quick)
    util.platform_overrides(rockspec.build)
    util.platform_overrides(rockspec.dependencies)
    util.platform_overrides(rockspec.build_dependencies)
+   util.platform_overrides(rockspec.test_dependencies)
    util.platform_overrides(rockspec.external_dependencies)
    util.platform_overrides(rockspec.source)
    util.platform_overrides(rockspec.hooks)
@@ -288,6 +289,7 @@ function fetch.load_local_rockspec(filename, quick)
 
    convert_dependencies(rockspec, "dependencies")
    convert_dependencies(rockspec, "build_dependencies")
+   convert_dependencies(rockspec, "test_dependencies")
 
    if not quick then
       path.configure_paths(rockspec)

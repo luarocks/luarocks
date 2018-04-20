@@ -57,6 +57,15 @@ local rockspec_types = {
          _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
       },
    },
+   test_dependencies = {
+      _version = "3.0",
+      platforms = {}, -- recursively defined below
+      _any = {
+         _type = "string",
+         _name = "a valid dependency string",
+         _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
+      },
+   },
    supported_platforms = {
       _any = string_1,
    },
@@ -125,7 +134,7 @@ type_rockspec.order = {"rockspec_format", "package", "version",
    { "description", {"summary", "detailed", "homepage", "license" } },
    "supported_platforms", "dependencies", "build_dependencies", "external_dependencies",
    { "build", {"type", "modules", "copy_directories", "platforms"} },
-   { "test", {"type"} },
+   "test_dependencies", { "test", {"type"} },
    "hooks"}
 
 rockspec_types.build.platforms._any = rockspec_types.build
