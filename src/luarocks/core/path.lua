@@ -8,12 +8,14 @@ local require = nil
 --------------------------------------------------------------------------------
 
 function path.rocks_dir(tree)
+   if tree == nil then
+      tree = cfg.root_dir
+   end
    if type(tree) == "string" then
       return dir.path(tree, cfg.rocks_subdir)
-   else
-      assert(type(tree) == "table")
-      return tree.rocks_dir or dir.path(tree.root, cfg.rocks_subdir)
    end
+   assert(type(tree) == "table")
+   return tree.rocks_dir or dir.path(tree.root, cfg.rocks_subdir)
 end
 
 --- Produce a versioned version of a filename.
