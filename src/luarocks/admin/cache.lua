@@ -47,30 +47,36 @@ function cache.split_server_url(server, url, user, password)
    return local_cache, protocol, server_path, user, password
 end
 
-function cache.refresh_local_cache(server, url, user, password)
-   local local_cache, protocol, server_path, user, password = cache.split_server_url(server, url, user, password)
-   local ok, err = fs.make_dir(local_cache)
-   if not ok then
-      return nil, "Failed creating local cache dir: "..err
-   end
-   fs.change_dir(local_cache)
-   if not ok then return nil, err end
-   util.printout("Refreshing cache "..local_cache.."...")
-
+local function download_cache(protocol, server_path, user, password)
    -- TODO abstract away explicit 'wget' call
-   local ok = false
    if protocol == "rsync" then
       local srv, path = server_path:match("([^/]+)(/.+)")
-      ok = fs.execute(cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..user.."@"..srv..":"..path.."/ "..local_cache.."/")
+      return fs.execute(cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..user.."@"..srv..":"..path.."/ ./")
    else 
       local login_info = ""
       if user then login_info = " --user="..user end
       if password then login_info = login_info .. " --password="..password end
-      ok = fs.execute(cfg.variables.WGET.." --no-cache -q -m -np -nd "..protocol.."://"..server_path..login_info)
+      return fs.execute(cfg.variables.WGET.." --no-cache -q -m -np -nd "..protocol.."://"..server_path..login_info)
    end
+end
+
+function cache.refresh_local_cache(server, url, given_user, given_password)
+   local local_cache, protocol, server_path, user, password = cache.split_server_url(server, url, given_user, given_password)
+
+   local ok, err = fs.make_dir(local_cache)
+   if not ok then
+      return nil, "Failed creating local cache dir: "..err
+   end
+
+   fs.change_dir(local_cache)
+   
+   util.printout("Refreshing cache "..local_cache.."...")
+
+   ok = download_cache(protocol, server_path, user, password)
    if not ok then
       return nil, "Failed downloading cache."
    end
+
    return local_cache, protocol, server_path, user, password
 end
 
