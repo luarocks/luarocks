@@ -24,27 +24,26 @@ function path.rockspec_name_from_rock(rock_name)
    return base_name:match("(.*)%.[^.]*.rock") .. ".rockspec"
 end
 
-function path.root_dir(rocks_dir)
+function path.root_from_rocks_dir(rocks_dir)
    assert(type(rocks_dir) == "string")
    return rocks_dir:match("(.*)" .. util.matchquote(cfg.rocks_subdir) .. ".*$")
 end
 
-function path.deploy_bin_dir(tree)
+function path.root_dir(tree)
    if type(tree) == "string" then
-      return dir.path(tree, "bin")
+      return tree
    else
       assert(type(tree) == "table")
-      return tree.bin_dir or dir.path(tree.root, "bin")
+      return tree.root
    end
 end
 
+function path.deploy_bin_dir(tree)
+   return dir.path(path.root_dir(tree), "bin")
+end
+
 function path.manifest_file(tree)
-   if type(tree) == "string" then
-      return dir.path(tree, cfg.rocks_subdir, "manifest")
-   else
-      assert(type(tree) == "table")
-      return (tree.rocks_dir and dir.path(tree.rocks_dir, "manifest")) or dir.path(tree.root, cfg.rocks_subdir, "manifest")
-   end
+   return dir.path(path.rocks_dir(tree), "manifest")
 end
 
 --- Get the directory for all versions of a package in a tree.
@@ -54,7 +53,6 @@ end
 -- the package (and by extension, the path) exists.
 function path.versions_dir(name, tree)
    assert(type(name) == "string" and not name:match("/"))
-   tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name)
 end
 
@@ -67,7 +65,6 @@ end
 function path.install_dir(name, version, tree)
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
-   tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version)
 end
 
@@ -80,7 +77,6 @@ end
 function path.rockspec_file(name, version, tree)
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
-   tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, name.."-"..version..".rockspec")
 end
 
@@ -93,7 +89,6 @@ end
 function path.rock_manifest_file(name, version, tree)
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
-   tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "rock_manifest")
 end
 
@@ -106,7 +101,6 @@ end
 function path.rock_namespace_file(name, version, tree)
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
-   tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "rock_namespace")
 end
 
@@ -119,7 +113,6 @@ end
 function path.lib_dir(name, version, tree)
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
-   tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "lib")
 end
 
@@ -132,7 +125,6 @@ end
 function path.lua_dir(name, version, tree)
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
-   tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "lua")
 end
 
@@ -145,7 +137,6 @@ end
 function path.doc_dir(name, version, tree)
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
-   tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "doc")
 end
 
@@ -158,7 +149,6 @@ end
 function path.conf_dir(name, version, tree)
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
-   tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "conf")
 end
 
@@ -172,7 +162,6 @@ end
 function path.bin_dir(name, version, tree)
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
-   tree = tree or cfg.root_dir
    return dir.path(path.rocks_dir(tree), name, version, "bin")
 end
 

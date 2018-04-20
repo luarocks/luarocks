@@ -379,8 +379,7 @@ function util.announce_install(rockspec)
       suffix = " (license: "..rockspec.description.license..")"
    end
 
-   local root_dir = path.root_dir(cfg.rocks_dir)
-   util.printout(rockspec.name.." "..rockspec.version.." is now installed in "..root_dir..suffix)
+   util.printout(rockspec.name.." "..rockspec.version.." is now installed in "..path.root_dir(cfg.root_dir)..suffix)
    util.printout()
 end
 

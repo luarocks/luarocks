@@ -84,7 +84,7 @@ function pack.pack_installed_rock(query, tree)
       return nil, version
    end
 
-   local root = path.root_dir(repo_url)
+   local root = path.root_from_rocks_dir(repo_url)
    local prefix = path.install_dir(name, version, root)
    if not fs.exists(prefix) then
       return nil, "'"..name.." "..version.."' does not seem to be an installed rock."
