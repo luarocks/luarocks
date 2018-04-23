@@ -7,7 +7,7 @@ local util = require("luarocks.util")
 local test = require("luarocks.test")
 
 cmd_test.help_summary = "Run the test suite in the current directory."
-cmd_test.help_arguments = "[<rockspec>] [-- <args>]"
+cmd_test.help_arguments = "[--test-type=<type>] [<rockspec>] [-- <args>]"
 cmd_test.help = [[
 Run the test suite for the Lua project in the current directory.
 If the first argument is a rockspec, it will use it to determine
@@ -18,6 +18,11 @@ Any additional arguments are forwarded to the test suite.
 To make sure that any flags passed in <args> are not interpreted
 as LuaRocks flags, use -- to separate LuaRocks arguments from
 test suite arguments.
+
+--test-type=<type>  Specify the test suite type manually if it was not
+                    specified in the rockspec and it could not be
+                    auto-detected.
+
 ]]..util.deps_mode_help()
 
 --- Driver function for "build" command.
@@ -34,7 +39,7 @@ function cmd_test.command(flags, arg, ...)
    local args = { ... }
 
    if arg and arg:match("rockspec$") then
-      return test.run_test_suite(arg, args)
+      return test.run_test_suite(arg, flags["test-type"], args)
    end
    
    table.insert(args, 1, arg)
@@ -44,7 +49,7 @@ function cmd_test.command(flags, arg, ...)
       return nil, err
    end
 
-   return test.run_test_suite(rockspec, args)
+   return test.run_test_suite(rockspec, flags["test-type"], args)
 end
 
 return cmd_test

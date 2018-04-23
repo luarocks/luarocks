@@ -33,7 +33,7 @@ local function get_test_type(rockspec)
 end
 
 -- Run test suite as configured in rockspec in the current directory.
-function test.run_test_suite(rockspec_arg, args)
+function test.run_test_suite(rockspec_arg, test_type, args)
    local rockspec
    if type(rockspec_arg) == "string" then
       local err, errcode
@@ -46,10 +46,14 @@ function test.run_test_suite(rockspec_arg, args)
       rockspec = rockspec_arg
    end
    
-   local test_type, err = get_test_type(rockspec)
    if not test_type then
-      return nil, err
+      local err
+      test_type, err = get_test_type(rockspec, test_type)
+      if not test_type then
+         return nil, err
+      end
    end
+   assert(test_type)
 
    if next(rockspec.test_dependencies) then
       local ok, err, errcode = deps.fulfill_dependencies(rockspec, "test_dependencies", "all")
