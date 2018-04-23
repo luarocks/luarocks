@@ -16,7 +16,7 @@ local program = util.this_program("luarocks")
 
 local function error_handler(err)
    return debug.traceback("LuaRocks "..cfg.program_version..
-      " bug (please report at https://github.com/keplerproject/luarocks/issues).\n"..err, 2)
+      " bug (please report at https://github.com/luarocks/luarocks/issues).\n"..err, 2)
 end
 
 --- Display an error message and exit.
