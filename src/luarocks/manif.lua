@@ -242,7 +242,7 @@ end
 -- (use the current tree and all trees below it on the list)
 -- or "all", to use all trees.
 -- @return table: An array of strings listing installed
--- versions of a package.
+-- versions of a package, and a table indicating where they are found.
 function manif.get_versions(dep, deps_mode)
    assert(type(dep) == "table")
    assert(type(deps_mode) == "string")
@@ -263,17 +263,17 @@ function manif.get_versions(dep, deps_mode)
                   local ns = fd:read("*a")
                   fd:close()
                   if ns == namespace then
-                     version_set[version] = true
+                     version_set[version] = tree
                   end
                end
             else
-               version_set[version] = true
+               version_set[version] = tree
             end
          end
       end
    end)
 
-   return util.keys(version_set)
+   return util.keys(version_set), version_set
 end
 
 return manif
