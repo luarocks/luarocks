@@ -35,7 +35,7 @@ describe("LuaRocks list tests #blackbox #b_list", function()
       assert.is_true(run.luarocks_bool("install say 1.0-1"))
       local output = run.luarocks("list --outdated")
       assert.is.truthy(output:find("say"))
-      assert.matches("1.0-1 < 1.2-1", output, 1, true)
+      assert.matches("1.0-1 < ", output, 1, true)
    end)
    
    it("LuaRocks list invalid tree", function()
