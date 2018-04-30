@@ -9,7 +9,7 @@ LUAROCKS_FILES = fs.lua dir.lua repos.lua command_line.lua upload/api.lua upload
 admin/index.lua build.lua search.lua fs/win32.lua fs/win32/tools.lua \
 fs/unix/tools.lua fs/lua.lua fs/tools.lua fs/unix.lua loader.lua cmd/help.lua \
 cmd/unpack.lua cmd/upload.lua cmd/lint.lua cmd/purge.lua cmd/install.lua \
-cmd/config.lua cmd/write_rockspec.lua cmd/build.lua cmd/search.lua \
+cmd/config.lua cmd/write_rockspec.lua cmd/build.lua cmd/search.lua cmd/test.lua \
 cmd/make.lua cmd/list.lua cmd/show.lua cmd/path.lua cmd/new_version.lua \
 cmd/pack.lua cmd/download.lua cmd/doc.lua cmd/remove.lua tools/patch.lua \
 tools/zip.lua tools/tar.lua manif/writer.lua build/cmake.lua build/make.lua \
@@ -22,4 +22,6 @@ admin/cmd/refresh_cache.lua remove.lua fetch/git_file.lua fetch/sscm.lua \
 fetch/cvs.lua fetch/git_https.lua fetch/git_ssh.lua fetch/hg_http.lua \
 fetch/git_http.lua fetch/svn.lua fetch/git.lua fetch/hg_ssh.lua \
 fetch/hg_https.lua fetch/hg.lua core/vers.lua cmd/which.lua \
-fun.lua type/manifest.lua type/rockspec.lua queries.lua results.lua
+fun.lua type/manifest.lua type/rockspec.lua queries.lua results.lua \
+test/busted.lua test/command.lua
+
