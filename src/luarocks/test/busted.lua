@@ -31,7 +31,11 @@ function busted.run_tests(test, args)
       busted_exe = test.busted_executable
    else
       busted_exe = dir.path(path.root_dir(where), "bin", "busted")
-      if not fs.exists(busted_exe) then
+
+      -- Windows fallback
+      local busted_bat = dir.path(path.root_dir(where), "bin", "busted.bat")
+
+      if not fs.exists(busted_exe) and not fs.exists(busted_bat) then
          return nil, "'busted' executable failed to be installed"
       end
    end
