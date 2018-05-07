@@ -506,6 +506,7 @@ local function create_paths(luaversion_full)
    end
 
    testing_paths.fixtures_dir = base_dir .. "/spec/fixtures"
+   testing_paths.fixtures_repo_dir = base_dir .. "/spec/fixtures/a_repo"
    testing_paths.util_dir = base_dir .. "/spec/util"
    testing_paths.testrun_dir = base_dir .. "/testrun"
    testing_paths.src_dir = base_dir .. "/src"
@@ -763,12 +764,9 @@ end
 function test_env.mock_server_init()
    local testing_paths = test_env.testing_paths
    assert(test_env.need_rock("restserver-xavante"))
-   local pwd = lfs.currentdir()
-   lfs.chdir(testing_paths.fixtures_dir)
-   local final_command = test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.util_dir .. "/mock-server.lua &", true, test_env.env_variables)
+   local final_command = test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.util_dir .. "/mock-server.lua " .. testing_paths.fixtures_dir .. " &", true, test_env.env_variables)
    os.execute(final_command)
    os.execute("sleep 1")
-   lfs.chdir(pwd)
 end
 
 function test_env.mock_server_done()
