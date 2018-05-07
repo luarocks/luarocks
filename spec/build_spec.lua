@@ -121,7 +121,7 @@ describe("LuaRocks build tests #blackbox #b_build", function()
       end)
       
       it("LuaRocks build luasec with skipping dependency checks", function()
-         assert.is_true(run.luarocks_bool("build luasec " .. test_env.OPENSSL_DIRS .. " --nodeps"))
+         assert.is_true(run.luarocks_bool("build luasec 0.6-1 " .. test_env.OPENSSL_DIRS .. " --nodeps"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasec/0.6-1/luasec-0.6-1.rockspec"))
       end)
       
