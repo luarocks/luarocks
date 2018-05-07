@@ -32,7 +32,7 @@ function cache.get_server_urls(server, upload_server)
    return download_url, login_url
 end
 
-function cache.split_server_url(server, url, user, password)
+function cache.split_server_url(url, user, password)
    local protocol, server_path = dir.split_url(url)
    if protocol == "file" then
       server_path = fs.absolute_name(server_path)
@@ -50,6 +50,7 @@ function cache.split_server_url(server, url, user, password)
 end
 
 local function download_cache(protocol, server_path, user, password)
+   os.remove("index.html")
    -- TODO abstract away explicit 'wget' call
    if protocol == "rsync" then
       local srv, path = server_path:match("([^/]+)(/.+)")
@@ -64,8 +65,8 @@ local function download_cache(protocol, server_path, user, password)
    end
 end
 
-function cache.refresh_local_cache(server, url, given_user, given_password)
-   local local_cache, protocol, server_path, user, password = cache.split_server_url(server, url, given_user, given_password)
+function cache.refresh_local_cache(url, given_user, given_password)
+   local local_cache, protocol, server_path, user, password = cache.split_server_url(url, given_user, given_password)
 
    local ok, err = fs.make_dir(local_cache)
    if not ok then

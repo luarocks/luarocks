@@ -18,8 +18,12 @@ Arguments are local files, which may be rockspecs or rocks.
 The flag --server indicates which server to use.
 If not given, the default server set in the upload_server variable
 from the configuration file is used instead.
-The flag --no-refresh indicates the local cache should not be refreshed
-prior to generation of the updated manifest.
+
+--no-refresh  The local cache should not be refreshed
+              prior to generation of the updated manifest.
+--index       Produce an index.html file for the manifest.
+              This flag is automatically set if an index.html
+              file already exists.
 ]]
 
 local function zip_manifests()
@@ -31,7 +35,7 @@ local function zip_manifests()
    end
 end
 
-local function add_files_to_server(refresh, rockfiles, server, upload_server)
+local function add_files_to_server(refresh, rockfiles, server, upload_server, do_index)
    assert(type(refresh) == "boolean" or not refresh)
    assert(type(rockfiles) == "table")
    assert(type(server) == "string")
@@ -41,7 +45,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    local at = fs.current_dir()
    local refresh_fn = refresh and cache.refresh_local_cache or cache.split_server_url
    
-   local local_cache, protocol, server_path, user, password = refresh_fn(server, download_url, cfg.upload_user, cfg.upload_password)
+   local local_cache, protocol, server_path, user, password = refresh_fn(download_url, cfg.upload_user, cfg.upload_password)
    if not local_cache then
       return nil, protocol
    end
@@ -76,8 +80,14 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    
    zip_manifests()
    
-   util.printout("Updating index.html...")
-   index.make_index(local_cache)
+   if fs.exists("index.html") then
+      do_index = true
+   end
+   
+   if do_index then
+      util.printout("Updating index.html...")
+      index.make_index(local_cache)
+   end
 
    local login_info = ""
    if user then login_info = " -u "..user end
@@ -86,7 +96,9 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
       login_url = login_url .. "/"
    end
 
-   table.insert(files, "index.html")
+   if do_index then
+      table.insert(files, "index.html")
+   end
    table.insert(files, "manifest")
    for ver in util.lua_versions() do
       table.insert(files, "manifest-"..ver)
@@ -119,7 +131,7 @@ function add.command(flags, ...)
    end
    local server, server_table = cache.get_upload_server(flags["server"])
    if not server then return nil, server_table end
-   return add_files_to_server(not flags["no-refresh"], files, server, server_table)
+   return add_files_to_server(not flags["no-refresh"], files, server, server_table, flags["index"])
 end
 
 

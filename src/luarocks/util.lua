@@ -98,6 +98,7 @@ local supported_flags = {
    ["help"] = true,
    ["home"] = true,
    ["homepage"] = "\"<url>\"",
+   ["index"] = true,
    ["issues"] = true,
    ["keep"] = true,
    ["labels"] = true,

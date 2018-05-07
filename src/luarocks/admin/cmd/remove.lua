@@ -32,7 +32,7 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    local at = fs.current_dir()
    local refresh_fn = refresh and cache.refresh_local_cache or cache.split_server_url
    
-   local local_cache, protocol, server_path, user, password = refresh_fn(server, download_url, cfg.upload_user, cfg.upload_password)
+   local local_cache, protocol, server_path, user, password = refresh_fn(download_url, cfg.upload_user, cfg.upload_password)
    if not local_cache then
       return nil, protocol
    end

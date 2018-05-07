@@ -82,11 +82,11 @@ describe("LuaRocks remove tests #blackbox #b_remove", function()
       end)
    end)
 
-   it("LuaRocks-admin remove #ssh", function()
+   it("#admin remove #ssh", function()
       assert.is_true(run.luarocks_admin_bool("--server=testing remove luasocket-3.0rc1-2.src.rock"))
    end)
    
-   it("LuaRocks-admin remove missing", function()
+   it("#admin remove missing", function()
       assert.is_false(run.luarocks_admin_bool("--server=testing remove"))
    end)
 end)
