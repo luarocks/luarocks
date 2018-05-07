@@ -45,9 +45,6 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    if not local_cache then
       return nil, protocol
    end
-   if protocol == "file" then
-      return nil, "Server "..server.." is not recognized, check your configuration."
-   end
    
    if not login_url then
       login_url = protocol.."://"..server_path
@@ -102,6 +99,8 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    if protocol == "rsync" then
       local srv, path = server_path:match("([^/]+)(/.+)")
       cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
+   elseif protocol == "file" then
+      return fs.copy_contents(local_cache, server_path)
    elseif upload_server and upload_server.sftp then
       local part1, part2 = upload_server.sftp:match("^([^/]*)/(.*)$")
       cmd = cfg.variables.SCP.." "..table.concat(files, " ").." "..user.."@"..part1..":/"..part2
@@ -110,9 +109,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    end
 
    util.printout(cmd)
-   fs.execute(cmd)
-
-   return true
+   return fs.execute(cmd)
 end
 
 function add.command(flags, ...)

@@ -34,7 +34,9 @@ end
 
 function cache.split_server_url(server, url, user, password)
    local protocol, server_path = dir.split_url(url)
-   if server_path:match("@") then
+   if protocol == "file" then
+      server_path = fs.absolute_name(server_path)
+   elseif server_path:match("@") then
       local credentials
       credentials, server_path = server_path:match("([^@]*)@(.*)")
       if credentials:match(":") then
@@ -43,7 +45,7 @@ function cache.split_server_url(server, url, user, password)
          user = credentials
       end
    end
-   local local_cache = cfg.local_cache .. "/" .. server
+   local local_cache = cfg.local_cache .. "/" .. server_path:gsub("[\\/]", "_")
    return local_cache, protocol, server_path, user, password
 end
 
@@ -52,6 +54,8 @@ local function download_cache(protocol, server_path, user, password)
    if protocol == "rsync" then
       local srv, path = server_path:match("([^/]+)(/.+)")
       return fs.execute(cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..user.."@"..srv..":"..path.."/ ./")
+   elseif protocol == "file" then
+      return fs.copy_contents(server_path, ".")
    else 
       local login_info = ""
       if user then login_info = " --user="..user end
