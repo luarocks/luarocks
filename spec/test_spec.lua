@@ -39,16 +39,17 @@ describe("luarocks test #blackbox #b_test", function()
          finally(function()
             -- delete downloaded and unpacked files
             lfs.chdir(testing_paths.testrun_dir)
-            test_env.remove_dir("luassert-1.7.10-0")
-            os.remove("luassert-1.7.10-0.rockspec")
+            test_env.remove_dir("busted_project-0.1-1")
+            os.remove("busted_project-0.1-1.src.rock")
          end)
    
          -- make luassert
-         assert.is_true(run.luarocks_bool("download --rockspec luassert 1.7.10-0"))
-         assert.is_true(run.luarocks_bool("unpack luassert-1.7.10-0.rockspec"))
-         lfs.chdir("luassert-1.7.10-0/luassert-1.7.10/")
+         assert.is_true(run.luarocks_bool("download --server="..testing_paths.fixtures_repo_dir.." busted_project 0.1-1"))
+         assert.is_true(run.luarocks_bool("unpack busted_project-0.1-1.src.rock"))
+         lfs.chdir("busted_project-0.1-1/busted_project")
          assert.is_true(run.luarocks_bool("make"))
-         local output = run.luarocks("test --test-type=busted luassert-1.7.10-0.rockspec")
+         local output = run.luarocks("test")
+         print(output)
          -- Assert that busted ran, whether successfully or not
          assert.match("%d+ success.* / %d+ failure.* / %d+ error.* / %d+ pending", output)
       end)
