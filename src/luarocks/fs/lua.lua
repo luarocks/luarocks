@@ -241,7 +241,7 @@ function fs_lua.make_dir(directory)
          if not ok then
             return false, err
          end
-         ok, err = fs.chmod(path, cfg.perm_exec)
+         ok, err = fs.set_permissions(path, "exec", "user")
          if not ok then
             return false, err
          end
@@ -278,8 +278,8 @@ end
 --- Copy a file.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
--- @param perms string or nil: Permissions for destination file,
--- or nil to use the source filename permissions
+-- @param perms string ("read" or "exec") or nil: Permissions for destination
+-- file or nil to use the source file permissions
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
 function fs_lua.copy(src, dest, perms)
@@ -290,7 +290,6 @@ function fs_lua.copy(src, dest, perms)
    if destmode == "directory" then
       dest = dir.path(dest, dir.base_name(src))
    end
-   if not perms then perms = fs.attributes(src, "permissions") end
    local src_h, err = io.open(src, "rb")
    if not src_h then return nil, err end
    local dest_h, err = io.open(dest, "w+b")
@@ -302,15 +301,26 @@ function fs_lua.copy(src, dest, perms)
    end
    src_h:close()
    dest_h:close()
-   fs.chmod(dest, perms)
-   return true
+
+   local fullattrs
+   if not perms then
+      fullattrs = lfs.attributes(src, "permissions")
+   end
+   if fullattrs and posix_ok then
+      return posix.chmod(dest, fullattrs)
+   else
+      if not perms then
+         perms = fullattrs:match("x") and "exec" or "read"
+      end
+      return fs.set_permissions(dest, perms, "all")
+   end
 end
 
 --- Implementation function for recursive copy of directory contents.
 -- Assumes paths are normalized.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
--- @param perms string or nil: Optional permissions.
+-- @param perms string ("read" or "exec") or nil: Optional permissions.
 -- If not given, permissions of the source are copied over to the destination.
 -- @return boolean or (boolean, string): true on success, false on failure
 local function recursive_copy(src, dest, perms)
@@ -339,7 +349,7 @@ end
 --- Recursively copy the contents of a directory.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
--- @param perms string or nil: Optional permissions.
+-- @param perms string ("read" or "exec") or nil: Optional permissions.
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
 function fs_lua.copy_contents(src, dest, perms)
@@ -833,8 +843,8 @@ end
 --- Move a file.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
--- @param perms string or nil: Permissions for destination file,
--- or nil to use the source filename permissions.
+-- @param perms string ("read" or "exec") or nil: Permissions for destination
+-- file or nil to use the source file permissions.
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
 function fs_lua.move(src, dest, perms)

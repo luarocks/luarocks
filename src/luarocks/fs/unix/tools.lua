@@ -51,7 +51,8 @@ end
 --- Copy a file.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
--- @param perm string or nil: Permissions for destination file,
+-- @param perm string ("read" or "exec") or nil: Permissions for destination 
+-- file or nil to use the source permissions
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
 function tools.copy(src, dest, perm)
@@ -61,7 +62,7 @@ function tools.copy(src, dest, perm)
          if fs.is_dir(dest) then
             dest = dir.path(dest, dir.base_name(src))
          end
-         if fs.chmod(dest, perm) then
+         if fs.set_permissions(dest, perm, "all") then
             return true
          else
             return false, "Failed setting permissions of "..dest
@@ -159,12 +160,71 @@ function tools.is_file(file)
    return fs.execute(vars.TEST, "-f", file)
 end
 
-function tools.chmod(pathname, mode)
-   if mode then 
-      return fs.execute(vars.CHMOD, mode, pathname)
-   else
-      return false
+--- Moderate the given permissions based on the local umask
+-- @param perms string: permissions to moderate
+-- @return string: the moderated permissions
+local function moderate_permissions(perms)
+   local octal_to_rwx = {
+      ["0"] = "---",
+      ["1"] = "--x",
+      ["2"] = "-w-",
+      ["3"] = "-wx",
+      ["4"] = "r--",
+      ["5"] = "r-x",
+      ["6"] = "rw-",
+      ["7"] = "rwx",
+   }
+   local rwx_to_octal = {}
+   for octal, rwx in pairs(octal_to_rwx) do
+      rwx_to_octal[rwx] = octal
    end
+
+   local fd = assert(io.popen("umask"))
+   local umask = assert(fd:read("*a"))
+   umask = umask:gsub("\n", "")
+   umask = umask:sub(2, 4)
+
+   local moderated_perms = ""
+   for i = 1, 3 do
+      local p_rwx = octal_to_rwx[perms:sub(i, i)]
+      local u_rwx = octal_to_rwx[umask:sub(i, i)]
+      local new_perm = ""
+      for j = 1, 3 do
+         local p_val = p_rwx:sub(j, j)
+         local u_val = u_rwx:sub(j, j)
+         if p_val == u_val then
+            new_perm = new_perm .. "-"
+         else
+            new_perm = new_perm .. p_val
+         end
+      end
+      moderated_perms = moderated_perms .. rwx_to_octal[new_perm]
+   end
+   return moderated_perms
+end
+
+--- Set permissions for file or directory
+-- @param filename string: filename whose permissions are to be modified
+-- @param mode string ("read" or "exec"): permissions to set
+-- @param scope string ("user" or "all"): the user(s) to whom the permission applies
+-- @return boolean or (boolean, string): true on success, false on failure,
+-- plus an error message
+function tools.set_permissions(filename, mode, scope)
+   assert(filename and mode and scope)
+
+   local perms
+   if mode == "read" and scope == "user" then
+      perms = moderate_permissions("600")
+   elseif mode == "exec" and scope == "user" then
+      perms = moderate_permissions("700")
+   elseif mode == "read" and scope == "all" then
+      perms = moderate_permissions("644")
+   elseif mode == "exec" and scope == "all" then
+      perms = moderate_permissions("755")
+   else
+      return false, "Invalid permission " .. mode .. " for " .. scope
+   end
+   return fs.execute(vars.CHMOD, perms, filename)
 end
 
 --- Unpack an archive.

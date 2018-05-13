@@ -290,7 +290,7 @@ function builtin.run(rockspec)
          ]]
       end
    end
-   for _, mods in ipairs({{ tbl = lua_modules, perms = cfg.perm_read }, { tbl = lib_modules, perms = cfg.perm_exec }}) do
+   for _, mods in ipairs({{ tbl = lua_modules, perms = "read" }, { tbl = lib_modules, perms = "exec" }}) do
       for name, dest in pairs(mods.tbl) do
          fs.make_dir(dir.dir_name(dest))
          ok, err = fs.copy(name, dest, mods.perms)

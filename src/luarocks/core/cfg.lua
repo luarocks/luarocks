@@ -327,8 +327,6 @@ local defaults = {
    hooks_enabled = true,
    deps_mode = "one",
    check_certificates = false,
-   perm_read = "0644",
-   perm_exec = "0755",
 
    lua_modules_path = "/share/lua/"..cfg.lua_version,
    lib_modules_path = "/lib/lua/"..cfg.lua_version,
@@ -388,6 +386,7 @@ local defaults = {
       FIND = "find",
       TEST = "test",
       CHMOD = "chmod",
+      ICACLS = "icacls",
       MKTEMP = "mktemp",
 
       ZIP = "zip",
