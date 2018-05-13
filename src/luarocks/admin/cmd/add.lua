@@ -62,7 +62,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
       if fs.exists(rockfile) then
          util.printout("Copying file "..rockfile.." to "..local_cache.."...")
          local absolute = fs.absolute_name(rockfile)
-         fs.copy(absolute, local_cache, cfg.perm_read)
+         fs.copy(absolute, local_cache, "read")
          table.insert(files, dir.base_name(absolute))
       else
          util.printerr("File "..rockfile.." not found")
@@ -83,7 +83,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
    if fs.exists("index.html") then
       do_index = true
    end
-   
+
    if do_index then
       util.printout("Updating index.html...")
       index.make_index(local_cache)

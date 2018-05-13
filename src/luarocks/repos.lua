@@ -330,10 +330,10 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    local ok, err = deploy_file_tree("bin", path.bin_dir(name, version), install_binary, cfg.wrapper_suffix)
    if not ok then return nil, err end
 
-   ok, err = deploy_file_tree("lua", path.lua_dir(name, version), make_mover(cfg.perm_read))
+   ok, err = deploy_file_tree("lua", path.lua_dir(name, version), make_mover("read"))
    if not ok then return nil, err end
 
-   ok, err = deploy_file_tree("lib", path.lib_dir(name, version), make_mover(cfg.perm_exec))
+   ok, err = deploy_file_tree("lib", path.lib_dir(name, version), make_mover("exec"))
    if not ok then return nil, err end
 
    local writer = require("luarocks.manif.writer")

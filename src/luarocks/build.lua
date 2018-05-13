@@ -24,7 +24,7 @@ local writer = require("luarocks.manif.writer")
 -- @param location string: The base directory files should be copied to.
 -- @param is_module_path boolean: True if string keys in files should be
 -- interpreted as dotted module paths.
--- @param perms string: Permissions of the newly created files installed.
+-- @param perms string ("read" or "exec"): Permissions of the newly created files installed.
 -- Directories are always created with the default permissions.
 -- @return boolean or (nil, string): True if succeeded or 
 -- nil and an error message.
@@ -113,7 +113,7 @@ local function install_default_docs(name, version)
                fs.make_dir(dest)
                has_dir = true
             end
-            fs.copy(file, dest, cfg.perm_read)
+            fs.copy(file, dest, "read")
             break
          end
       end
@@ -229,10 +229,10 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
    end
    
    local dirs = {
-      lua = { name = path.lua_dir(name, version), is_module_path = true, perms = cfg.perm_read },
-      lib = { name = path.lib_dir(name, version), is_module_path = true, perms = cfg.perm_exec },
-      conf = { name = path.conf_dir(name, version), is_module_path = false, perms = cfg.perm_read },
-      bin = { name = path.bin_dir(name, version), is_module_path = false, perms = cfg.perm_exec },
+      lua = { name = path.lua_dir(name, version), is_module_path = true, perms = "read" },
+      lib = { name = path.lib_dir(name, version), is_module_path = true, perms = "exec" },
+      conf = { name = path.conf_dir(name, version), is_module_path = false, perms = "read" },
+      bin = { name = path.bin_dir(name, version), is_module_path = false, perms = "exec" },
    }
    
    for _, d in pairs(dirs) do
@@ -322,7 +322,7 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
 
    fs.pop_dir()
    
-   fs.copy(rockspec.local_filename, path.rockspec_file(name, version), cfg.perm_read)
+   fs.copy(rockspec.local_filename, path.rockspec_file(name, version), "read")
    if need_to_fetch then
       fs.pop_dir()
    end

@@ -11,7 +11,7 @@ local cfg = require("luarocks.core.cfg")
 local function get_file(filename)
    local protocol, pathname = dir.split_url(filename)
    if protocol == "file" then
-      local ok, err = fs.copy(pathname, fs.current_dir(), cfg.perm_read)
+      local ok, err = fs.copy(pathname, fs.current_dir(), "read")
       if ok then
          return pathname
       else

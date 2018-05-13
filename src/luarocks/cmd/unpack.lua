@@ -126,7 +126,7 @@ local function run_unpacker(file, namespace, force)
    end
    if kind == "src" or kind == "rockspec" then
       if rockspec.source.dir ~= "." then
-         local ok = fs.copy(rockspec.local_filename, rockspec.source.dir, cfg.perm_read)
+         local ok = fs.copy(rockspec.local_filename, rockspec.source.dir, "read")
          if not ok then
             return nil, "Failed copying unpacked rockspec into unpacked source directory."
          end

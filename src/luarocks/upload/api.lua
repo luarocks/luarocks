@@ -42,7 +42,7 @@ function Api:save_config()
       return nil, err
    end
    persist.save_from_table(upload_conf, self.config)
-   fs.chmod(upload_conf, "0600")
+   fs.set_permissions(upload_conf, "read", "user")
 end
 
 function Api:check_version()
@@ -286,4 +286,3 @@ function api.new(flags)
 end
 
 return api
-

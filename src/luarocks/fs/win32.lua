@@ -187,10 +187,6 @@ function win32.copy_binary(filename, dest)
    return true
 end
 
-function win32.chmod(filename, mode)
-   return true
-end
-
 function win32.attributes(filename, attrtype)
    if attrtype == "permissions" then
       return "" -- FIXME
