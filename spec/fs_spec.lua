@@ -71,6 +71,24 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       end)
    end)
    
+   describe("fs.execute_string", function()
+      local tmpdir
+      
+      after_each(function()
+         if tmpdir then
+            lfs.rmdir(tmpdir)
+            tmpdir = nil
+         end
+      end)
+
+      it("returns the status code and runs the command given in the argument", function()
+         tmpdir = get_tmp_path()
+         assert.truthy(fs.execute_string("mkdir " .. fs.Q(tmpdir)))
+         assert.truthy(fs.is_dir(tmpdir))
+         assert.falsy(fs.execute_string("invalidcommand"))
+      end)
+   end)
+   
    describe("fs.dir_iterator", function()
       local tmpfile1
       local tmpfile2
@@ -671,6 +689,70 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          assert.truthy(exists_file(tmpdir))
       end)
    end)
+   
+   describe("fs.list_dir", function()
+      local intfile1
+      local intfile2
+      local intdir
+      local tmpdir
+      
+      before_each(function()
+         if intfile1 then
+            os.remove(intfile1)
+            intfile1 = nil
+         end
+         if intfile2 then
+            os.remove(intfile2)
+            intfile2 = nil
+         end
+         if intdir then
+            lfs.rmdir(intdir)
+            intdir = nil
+         end
+         if tmpdir then
+            lfs.rmdir(tmpdir)
+            tmpdir = nil
+         end
+      end)
+      
+      it("returns a table with the contents of the given directory", function()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         intfile1 = tmpdir .. "/intfile1"
+         create_file(intfile1)
+         intdir = tmpdir .. "/intdir"
+         lfs.mkdir(intdir)
+         intfile2 = intdir .. "/intfile2"
+         create_file(intfile2)
+         local result = fs.list_dir(tmpdir)
+         assert.same(#result, 2)
+         assert.truthy(result[1] == "intfile1" or result[1] == "intdir")
+         assert.truthy(result[2] == "intfile1" or result[2] == "intdir")
+         assert.is_not.same(result[1], result[2])
+      end)
+      
+      it("returns an empty table if the argument is a file", function()
+         intfile1 = get_tmp_path()
+         create_file(intfile1)
+         local result = fs.list_dir(intfile1)
+         assert.same(#result, 0)
+      end)
+      
+      it("does nothing if the argument is nonexistent", function()
+         assert.falsy(pcall(fs.list_dir("/nonexistent")))
+      end)
+      
+      it("does nothing if the argument doesn't have the proper permissions", function()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         make_unreadable(tmpdir)
+         if is_win then
+            assert.same(fs.list_dir(tmpdir), {})
+         else
+            assert.falsy(pcall(fs.list_dir, tmpdir))
+         end
+      end)
+   end)
 
    describe("fs.copy", function()
       local srcfile
@@ -837,6 +919,213 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          assert.falsy(fs.copy_contents(srcdir, dstdir))
          assert.falsy(exists_file(dstdir .. "/internaldir"))
          assert.falsy(exists_file(dstdir .. "/internalfile"))
+      end)
+   end)
+   
+   describe("fs.find", function()
+      local tmpdir
+      local intdir
+      local intfile1
+      local intfile2
+      
+      after_each(function()
+         if intfile1 then
+            os.remove(intfile1)
+            intfile1 = nil
+         end
+         if intfile2 then
+            os.remove(intfile2)
+            intfile2 = nil
+         end
+         if intdir then
+            lfs.rmdir(intdir)
+            intdir = nil
+         end
+         if tmpdir then
+            lfs.rmdir(tmpdir)
+            tmpdir = nil
+         end
+      end)
+      
+      local create_dir_tree = function()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         intfile1 = tmpdir .. "/intfile1"
+         create_file(intfile1)
+         intdir = tmpdir .. "/intdir"
+         lfs.mkdir(intdir)
+         intfile2 = intdir .. "/intfile2"
+         create_file(intfile2)
+      end
+      
+      it("returns a table of all the contents in the directory given as argument", function()
+         create_dir_tree()
+         local contents = {}
+         local count = 0
+         for _, file in pairs(fs.find(tmpdir)) do
+            contents[file] = true
+            count = count + 1
+         end
+         assert.same(count, 3)
+         assert.is_not.same(contents[tmpdir], true)
+         assert.same(contents["intfile1"], true)
+         assert.same(contents["intdir"], true)
+         assert.same(contents["intdir/intfile2"], true)
+      end)
+      
+      it("uses the current working directory if the argument is nil", function()
+         create_dir_tree()
+         local olddir = fs.current_dir()
+         fs.change_dir(intdir)
+         local contents = {}
+         local count = 0
+         for _, file in pairs(fs.find()) do
+            contents[file] = true
+            count = count + 1
+         end
+         assert.same(count, 1)
+         assert.is_not.same(contents["intfile1"], true)
+         assert.is_not.same(contents["intdir"], true)
+         assert.same(contents["intfile2"], true)
+         fs.change_dir(olddir)
+      end)
+      
+      it("returns an empty table if the argument is nonexistent", function()
+         local contents = fs.find("/nonexistent")
+         local count = 0
+         for _, file in pairs(contents) do
+            count = count + 1
+         end
+         assert.same(count, 0)
+      end)
+      
+      it("returns an empty table if the argument is a file", function()
+         intfile1 = get_tmp_path()
+         create_file(intfile1)
+         local contents = fs.find(intfile1)
+         local count = 0
+         for _, file in pairs(contents) do
+            count = count + 1
+         end
+         assert.same(count, 0)
+      end)
+      
+      it("does nothing if the argument doesn't have the proper permissions", function()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         make_unreadable(tmpdir)
+         if is_win then
+            assert.same(fs.find(tmpdir), {})
+         else
+            assert.falsy(pcall(fs.find, tmpdir))
+         end
+      end)
+   end)
+   
+   describe("fs.move", function()
+      local srcfile
+      local dstfile
+      local tmpdir
+      
+      after_each(function()
+         if srcfile then
+            os.remove(srcfile)
+            srcfile = nil
+         end
+         if dstfile then
+            os.remove(dstfile)
+            dstfile = nil
+         end
+         if tmpdir then
+            lfs.rmdir(tmpdir)
+            tmpdir  = nil
+         end
+      end)
+      
+      it("returns true and moves the source (together with its permissions) to the destination", function()
+         srcfile = get_tmp_path()
+         create_file(srcfile)
+         dstfile = get_tmp_path()
+         local oldperms = lfs.attributes(srcfile, "permissions")
+         assert.truthy(fs.move(srcfile, dstfile))
+         assert.truthy(fs.exists(dstfile))
+         assert.falsy(fs.exists(srcfile))
+         fd = assert(io.open(dstfile, "r"))
+         local dstcontents = assert(fd:read("*a"))
+         assert.same(dstcontents, "foo")
+         if posix_ok then
+            assert.same(oldperms, lfs.attributes(dstfile, "permissions"))
+         end
+      end)
+      
+      it("returns true and moves the source (with custom permissions) to the destination", function()
+         srcfile = get_tmp_path()
+         create_file(srcfile)
+         dstfile = get_tmp_path()
+         assert.truthy(fs.move(srcfile, dstfile, "read"))
+         assert.truthy(fs.exists(dstfile))
+         assert.falsy(fs.exists(srcfile))
+         fd = assert(io.open(dstfile, "r"))
+         local dstcontents = assert(fd:read("*a"))
+         assert.same(dstcontents, "foo")
+      end)
+      
+      it("returns false and does nothing if the source doesn't exist", function()
+         dstfile = get_tmp_path()
+         assert.falsy(fs.move("/nonexistent", dstfile))
+         assert.falsy(fs.exists(dstfile))
+      end)
+      
+      it("returns false and does nothing if the destination already exists", function()
+         srcfile = get_tmp_path()
+         create_file(srcfile)
+         dstfile = get_tmp_path()
+         create_file(dstfile, "bar")
+         assert.falsy(fs.move(srcfile, dstfile))
+         assert.truthy(fs.exists(srcfile))
+         fd = assert(io.open(dstfile, "r"))
+         local dstcontents = assert(fd:read("*a"))
+         assert.same(dstcontents, "bar")
+      end)
+      
+      it("returns false and does nothing if the destination path doesn't have the proper permissions", function()
+         srcfile = get_tmp_path()
+         create_file(srcfile)
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         make_unwritable(tmpdir)
+         assert.falsy(fs.move(srcfile, tmpdir .. "/dstfile"))
+         assert.falsy(fs.exists(tmpdir .. "/dstfile"))
+      end)
+   end)
+   
+   describe("fs.is_lua", function()
+      local tmpfile
+      
+      after_each(function()
+         if tmpfile then
+            os.remove(tmpfile)
+            tmpfile = nil
+         end
+      end)
+      
+      it("returns true if the argument is a valid lua script", function()
+         tmpfile = get_tmp_path()
+         create_file(tmpfile, "print(\"foo\")")
+         assert.truthy(fs.is_lua(tmpfile))
+      end)
+      
+      it("returns false if the argument is not a valid lua script", function()
+         tmpfile = os.tmpname()
+         create_file(tmpfile)
+         assert.falsy(fs.is_lua(tmpfile))
+      end)
+      
+      it("returns false if the argument is a valid lua script but doesn't have the proper permissions", function()
+         tmpfile = get_tmp_path()
+         create_file(tmpfile, "print(\"foo\")")
+         make_unreadable(tmpfile)
+         assert.falsy(fs.is_lua(tmpfile))
       end)
    end)
 
