@@ -12,6 +12,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       if is_win and not path:find(":") then
          path = os.getenv("TEMP") .. path
       end
+      os.remove(path)
       return path
    end
 
@@ -69,6 +70,173 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          assert.are.same(is_win and [["\\"%" \\\\" \\\\\\"]] or [['\% \\" \\\']], fs.Q([[\% \\" \\\]]))
       end)
    end)
+   
+   describe("fs.dir_iterator", function()
+      local tmpfile1
+      local tmpfile2
+      local tmpdir
+      local intdir
+
+      after_each(function()
+         if tmpfile1 then
+            os.remove(tmpfile1)
+            tmpfile1 = nil
+         end
+         if tmpfile2 then
+            os.remove(tmpfile2)
+            tmpfile2 = nil
+         end
+         if intdir then
+            lfs.rmdir(intdir)
+            intdir = nil
+         end
+         if tmpdir then
+            lfs.rmdir(tmpdir)
+            tmpdir = nil
+         end
+      end)
+
+      it("yields all files and directories in the directory given as argument during the iterations", function()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         tmpfile1 = tmpdir .. "/file1"
+         create_file(tmpfile1)
+         tmpfile2 = tmpdir .. "/file2"
+         create_file(tmpfile2)
+         intdir = tmpdir .. "/intdir"
+         lfs.mkdir(intdir)
+         local dirTable = {}
+         local dirCount = 0
+         local crt = coroutine.create(fs.dir_iterator)
+         while coroutine.status(crt) ~= "dead" do
+            local ok, val = coroutine.resume(crt, tmpdir)
+            if ok and val ~= nil then
+               dirTable[val] = true
+               dirCount = dirCount + 1
+            end
+         end
+         assert.same(dirCount, 3)
+         assert.is_not.same(dirTable["file1"], nil)
+         assert.is_not.same(dirTable["file2"], nil)
+         assert.is_not.same(dirTable["intdir"], nil)
+         dirCount = 0
+         crt = coroutine.create(fs.dir_iterator)
+         while coroutine.status(crt) ~= "dead" do
+            local ok, val = coroutine.resume(crt, intdir)
+            if ok and val ~= nil then
+               dirCount = dirCount + 1
+            end
+         end
+         assert.same(dirCount, 0)
+      end)
+
+      it("does nothing if the argument is a file", function()
+         tmpfile1 = get_tmp_path()
+         create_file(tmpfile1)
+         assert.falsy(pcall(fs.dir_iterator, tmpfile1))
+      end)
+
+      it("does nothing if the argument is invalid", function()
+         assert.falsy(pcall(fs.dir_iterator, "/nonexistent"))
+      end)
+   end)
+   
+   describe("fs.is_writable", function()
+      local tmpfile
+      local tmpdir
+
+      after_each(function()
+         if tmpfile then
+            os.remove(tmpfile)
+            tmpfile = nil
+         end
+         if tmpdir then
+            lfs.rmdir(tmpdir)
+            tmpdir = nil
+         end
+      end)
+
+      it("returns true if the file given as argument is writable", function()
+         tmpfile = get_tmp_path()
+         create_file(tmpfile)
+         assert.truthy(fs.is_writable(tmpfile))
+      end)
+
+      it("returns true if the directory given as argument is writable", function()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         assert.truthy(fs.is_writable(tmpdir))
+         tmpfile = tmpdir .. "/internalfile"
+         create_file(tmpfile)
+         make_unwritable(tmpfile)
+         assert.truthy(fs.is_writable(tmpdir))
+      end)
+
+      it("returns false if the file given as argument is not writable", function()
+         tmpfile = get_tmp_path()
+         create_file(tmpfile)
+         make_unwritable(tmpfile)
+         assert.falsy(fs.is_writable(tmpfile))
+      end)
+
+      it("returns false if the directory given as argument is not writable", function()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         make_unwritable(tmpdir)
+         assert.falsy(fs.is_writable(tmpdir))
+      end)
+
+      it("returns false if the file or directory given as argument does not exist", function()
+         assert.falsy(fs.is_writable("/nonexistent"))
+      end)
+   end)
+   
+   describe("fs.set_time #unix", function()
+      local tmpfile
+      local tmpdir
+      local intdir
+
+      after_each(function()
+         if tmpfile then
+            os.remove(tmpfile)
+            tmpfile = nil
+         end
+         if intdir then
+            os.remove(intdir)
+            intdir = nil
+         end
+         if tmpdir then
+            lfs.rmdir(tmpdir)
+            tmpdir = nil
+         end
+      end)
+
+      it("returns true and modifies the access time of the file given as argument", function()
+         tmpfile = get_tmp_path()
+         create_file(tmpfile)
+         local newtime = os.time() - 100
+         assert.truthy(fs.set_time(tmpfile, newtime))
+         assert.same(lfs.attributes(tmpfile, "access"), newtime)
+         assert.same(lfs.attributes(tmpfile, "modification"), newtime)
+      end)
+
+      it("returns true and modifies the access time of the directory given as argument", function()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         tmpfile = tmpdir .. "/internalfile"
+         create_file(tmpfile)
+         local newtime = os.time() - 100
+         assert.truthy(fs.set_time(tmpdir, newtime))
+         assert.same(lfs.attributes(tmpdir, "access"), newtime)
+         assert.same(lfs.attributes(tmpdir, "modification"), newtime)
+         assert.is_not.same(lfs.attributes(tmpfile, "access"), newtime)
+         assert.is_not.same(lfs.attributes(tmpfile, "modification"), newtime)
+      end)
+
+      it("returns false and does nothing if the file or directory given as arguments doesn't exist", function()
+         assert.falsy(fs.set_time("/nonexistent"))
+      end)
+   end)
 
    describe("fs.set_permissions", function()
       local readfile
@@ -117,7 +285,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          fd:close()
 
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          make_unexecutable(tmpdir)
          fd = assert(io.popen("cd " .. fs.Q(tmpdir) .. " 2>&1"))
@@ -163,7 +330,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("returns false when the argument exists but is not a file", function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          assert.same(false, fs.is_file("/nonexistent"))
       end)
@@ -186,7 +352,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("returns true when the argument is a directory", function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          assert.truthy(fs.is_dir(tmpdir))
       end)
@@ -225,7 +390,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("returns true when the argument is a directory", function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          assert.truthy(fs.exists(tmpdir))
       end)
@@ -258,7 +422,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          local currentdir = lfs.currentdir()
          assert.same(currentdir, fs.current_dir())
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          assert.truthy(fs.change_dir(tmpdir))
          if is_win then
@@ -295,7 +458,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("returns true and changes the current working directory if the argument is a directory", function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          assert.truthy(fs.change_dir(tmpdir))
          if is_win then
@@ -338,7 +500,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("returns true and changes the current directory to root if the current directory is valid", function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          assert.truthy(fs.change_dir(tmpdir))
          local success = fs.change_dir_to_root()
@@ -350,7 +511,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("returns false and does nothing if the current directory is not valid #unix", function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          lfs.chdir(tmpdir)
          lfs.rmdir(tmpdir)
@@ -379,7 +539,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("returns true and changes the current directory to the previous one in the dir stack if the dir stack is not empty", function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          assert.truthy(fs.change_dir(tmpdir))
          assert.truthy(fs.pop_dir())
@@ -409,14 +568,12 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("returns true and creates the directory specified by the argument", function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          assert.truthy(fs.make_dir(tmpdir))
          assert.same("directory", lfs.attributes(tmpdir, "mode"))
       end)
 
       it("returns true and creates the directory path specified by the argument", function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          intdir = "/internaldir"
          local dirpath = tmpdir .. intdir
          assert.truthy(fs.make_dir(dirpath))
@@ -458,7 +615,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("removes the directory specified by the argument if it is empty", function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          fs.remove_dir_if_empty(tmpdir)
          assert.falsy(exists_file(tmpdir))
@@ -466,7 +622,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("does nothing if the directory specified by the argument is not empty", function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          tmpfile = "/internalfile"
          local filepath = tmpdir .. tmpfile
@@ -498,7 +653,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("removes the directory path specified by the argument if it is empty", function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          fs.remove_dir_tree_if_empty(tmpdir)
          assert.falsy(exists_file(tmpdir))
@@ -506,7 +660,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("does nothing if the directory path specified by the argument is not empty", function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          intdir = "/internaldir"
          local dirpath = tmpdir .. intdir
@@ -540,10 +693,9 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       end)
 
       it("returns true and copies the contents and the permissions of the source file to the destination file", function()
-         srcfile = os.tmpname()
+         srcfile = get_tmp_path()
          create_file(srcfile, srccontent)
-         dstfile = os.tmpname()
-         os.remove(dstfile)
+         dstfile = get_tmp_path()
          assert.truthy(fs.copy(srcfile, dstfile))
          fd = assert(io.open(dstfile, "r"))
          local dstcontent = fd:read("*a")
@@ -554,10 +706,9 @@ describe("Luarocks fs test #whitebox #w_fs", function()
       end)
 
       it("returns true and copies contents of the source file to the destination file with custom permissions", function()
-         srcfile = os.tmpname()
+         srcfile = get_tmp_path()
          create_file(srcfile, srccontent)
-         dstfile = os.tmpname()
-         os.remove(dstfile)
+         dstfile = get_tmp_path()
          assert.truthy(fs.copy(srcfile, dstfile, "exec"))
          fd = assert(io.open(dstfile, "r"))
          local dstcontent = fd:read("*a")
@@ -566,9 +717,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("returns false and does nothing if the source file does not exist", function()
          srcfile = get_tmp_path()
-         os.remove(srcfile)
          dstfile = get_tmp_path()
-         os.remove(dstfile)
          assert.falsy(fs.copy(srcfile, dstfile, nil))
          assert.falsy(exists_file(dstfile))
       end)
@@ -578,7 +727,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          create_file(srcfile)
          make_unreadable(srcfile)
          dstfile = get_tmp_path()
-         os.remove(dstfile)
          assert.falsy(fs.copy(srcfile, dstfile, nil))
          assert.falsy(exists_file(dstfile))
       end)
@@ -587,7 +735,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          srcfile = get_tmp_path()
          create_file(srcfile)
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          make_unwritable(tmpdir)
          dstfile = tmpdir .. "/dstfile"
@@ -634,14 +781,12 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       local create_dir_tree = function()
          srcdir = get_tmp_path()
-         os.remove(srcdir)
          lfs.mkdir(srcdir)
          srcintdir = srcdir .. "/internaldir"
          lfs.mkdir(srcintdir)
          srcfile = srcintdir .. "/internalfile"
          create_file(srcfile)
          dstdir = get_tmp_path()
-         os.remove(dstdir)
       end
 
       it("returns true and copies the contents (with their permissions) of the source dir to the destination dir", function()
@@ -673,9 +818,7 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       it("returns false and does nothing if the source dir doesn't exist", function()
          srcdir = get_tmp_path()
-         os.remove(srcdir)
          dstdir = get_tmp_path()
-         os.remove(dstdir)
          assert.falsy(fs.copy_contents(srcdir, dstdir))
          assert.falsy(exists_file(dstdir))
       end)
@@ -684,7 +827,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
          srcdir = get_tmp_path()
          create_file(srcdir)
          dstdir = get_tmp_path()
-         os.remove(dstdir)
          assert.falsy(fs.copy_contents(srcdir, dstdir))
          assert.falsy(exists_file(dstdir))
       end)
@@ -725,7 +867,6 @@ describe("Luarocks fs test #whitebox #w_fs", function()
 
       local create_dir_tree = function()
          tmpdir = get_tmp_path()
-         os.remove(tmpdir)
          lfs.mkdir(tmpdir)
          tmpintdir = tmpdir .. "/internaldir"
          lfs.mkdir(tmpintdir)
