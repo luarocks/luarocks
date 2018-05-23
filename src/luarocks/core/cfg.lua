@@ -200,22 +200,19 @@ local merge_overrides = function(overrides)
    util.deep_merge(cfg, overrides)
 end
 
--- load config file from a list until first succesful one. Info is 
--- added to `cfg` module table, returns filepath of succesfully loaded
--- file or nil if it failed
-local load_config_file = function(list)
-   for _, filepath in ipairs(list) do
-      local result, err, errcode = persist.load_into_table(filepath, env_for_config_file())
-      if (not result) and errcode ~= "open" then
-         -- errcode is either "load" or "run"; bad config file, so error out
-         io.stderr:write(err.."\n")
-         os.exit(cfg.errorcodes.CONFIGFILE)
-      end
-      if result then
-         -- succes in loading and running, merge contents and exit
-         merge_overrides(result)
-         return filepath
-      end
+-- Load config file and merge its contents into the `cfg` module table.
+-- @return filepath of succesfully loaded file or nil if it failed
+local load_config_file = function(filepath)
+   local result, err, errcode = persist.load_into_table(filepath, env_for_config_file())
+   if (not result) and errcode ~= "open" then
+      -- errcode is either "load" or "run"; bad config file, so error out
+      io.stderr:write(err.."\n")
+      os.exit(cfg.errorcodes.CONFIGFILE)
+   end
+   if result then
+      -- success in loading and running, merge contents and exit
+      merge_overrides(result)
+      return filepath
    end
    return nil -- nothing was loaded
 end
@@ -224,9 +221,9 @@ end
 -- Load system configuration file
 do 
    sys_config_file_default = sys_config_dir.."/config-"..cfg.lua_version..".lua"
-   sys_config_file = load_config_file({
-      site_config.LUAROCKS_SYSCONFIG or sys_config_file_default,
-   })
+   sys_config_file = load_config_file(
+      site_config.LUAROCKS_SYSCONFIG or sys_config_file_default
+   )
    sys_config_ok = (sys_config_file ~= nil)
 end
 
@@ -244,8 +241,7 @@ if not site_config.LUAROCKS_FORCE_CONFIG then
    
    -- first try environment provided file, so we can explicitly warn when it is missing
    if config_env_value then 
-      local list = { config_env_value }
-      home_config_file = load_config_file(list)
+      home_config_file = load_config_file(config_env_value)
       home_config_ok = (home_config_file ~= nil)
       if not home_config_ok then
          io.stderr:write("Warning: could not load configuration file `"..config_env_value.."` given in environment variable "..config_env_var.."\n")
@@ -254,10 +250,7 @@ if not site_config.LUAROCKS_FORCE_CONFIG then
 
    -- try the alternative defaults if there was no environment specified file or it didn't work
    if not home_config_ok then
-      local list = {
-         home_config_file_default,
-      }
-      home_config_file = load_config_file(list)
+      home_config_file = load_config_file(home_config_file_default)
       home_config_ok = (home_config_file ~= nil)
    end
 end
