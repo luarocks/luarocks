@@ -53,6 +53,17 @@ local function is_ownership_ok(directory)
    return false
 end
 
+local function find_project_dir()
+   local try = "."
+   for _ = 1, 10 do -- FIXME detect when root dir was hit instead
+      local abs = fs.absolute_name(try)
+      if fs.is_dir(abs .. "/.luarocks") and fs.is_dir(abs .. "/lua_modules") then
+         return abs, abs .. "/lua_modules"
+      end
+      try = try .. "/.."
+   end
+end
+
 --- Main command-line processor.
 -- Parses input arguments and calls the appropriate driver function
 -- to execute the action requested on the command-line, forwarding
@@ -159,8 +170,13 @@ function command_line.run_command(...)
       end
       replace_tree(flags, cfg.home_tree)
    else
-      local trees = cfg.rocks_trees
-      path.use_tree(trees[#trees])
+      local project_dir, rocks_tree = find_project_dir()
+      if project_dir then
+         path.use_tree(rocks_tree)
+      else
+         local trees = cfg.rocks_trees
+         path.use_tree(trees[#trees])
+      end
    end
 
    if type(cfg.root_dir) == "string" then
