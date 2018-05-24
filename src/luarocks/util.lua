@@ -318,6 +318,23 @@ function util.lua_versions()
    end
 end
 
+function util.lua_path_variables()
+   local cfg = require("luarocks.core.cfg")
+   local lpath_var = "LUA_PATH"
+   local lcpath_var = "LUA_CPATH"
+
+   local lv = cfg.lua_version:gsub("%.", "_")
+   if lv ~= "5_1" then
+      if os.getenv("LUA_PATH_" .. lv) then
+         lpath_var = "LUA_PATH_" .. lv
+      end
+      if os.getenv("LUA_CPATH_" .. lv) then
+         lcpath_var = "LUA_CPATH_" .. lv
+      end
+   end
+   return lpath_var, lcpath_var
+end
+
 function util.starts_with(s, prefix)
    return s:sub(1,#prefix) == prefix
 end
