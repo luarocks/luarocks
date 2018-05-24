@@ -71,7 +71,7 @@ server:add_resource("/file/{name:[^/]+}", {
       produces = "text/plain",
       handler = function(query, name)
          local basedir = arg[1] or "./spec/fixtures"
-         local fd = io.open(basedir .. "/" .. name, "r")
+         local fd = io.open(basedir .. "/" .. name, "rb")
          if not fd then
             return restserver.response():status(404)
          end

@@ -380,8 +380,12 @@ local function create_env(testing_paths)
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_sys_tree .. "/share/lua/" .. luaversion_short .. "/?.lua;"
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_sys_tree .. "/share/lua/".. luaversion_short .. "/?/init.lua;"
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.src_dir .. "/?.lua;"
-   env_variables.LUA_CPATH = testing_paths.testing_tree .. "/lib/lua/" .. luaversion_short .. "/?.so;"
-                           .. testing_paths.testing_sys_tree .. "/lib/lua/" .. luaversion_short .. "/?.so;"
+   local lib_extension = "so"
+   if test_env.TEST_TARGET_OS == "windows" then
+      lib_extension = "dll"
+   end
+   env_variables.LUA_CPATH = testing_paths.testing_tree .. "/lib/lua/" .. luaversion_short .. "/?." .. lib_extension .. ";"
+                           .. testing_paths.testing_sys_tree .. "/lib/lua/" .. luaversion_short .. "/?." .. lib_extension .. ";"
    env_variables.PATH = os.getenv("PATH") .. ";" .. testing_paths.testing_tree .. "/bin;" .. testing_paths.testing_sys_tree .. "/bin;"
 
    return env_variables
@@ -764,13 +768,25 @@ end
 function test_env.mock_server_init()
    local testing_paths = test_env.testing_paths
    assert(test_env.need_rock("restserver-xavante"))
-   local final_command = test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.util_dir .. "/mock-server.lua " .. testing_paths.fixtures_dir .. " &", true, test_env.env_variables)
+   local final_command
+   local sleep_command
+   if test_env.TEST_TARGET_OS == "windows" then
+      final_command = test_env.execute_helper("start /b \"\" " .. Q(testing_paths.lua) .. " " .. Q(testing_paths.util_dir .. "/mock-server.lua") .. " " .. Q(testing_paths.fixtures_dir), true, test_env.env_variables)
+      sleep_command = "timeout 1 > NUL"
+   else
+      final_command = test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.util_dir .. "/mock-server.lua " .. testing_paths.fixtures_dir .. " &", true, test_env.env_variables)
+      sleep_command = "sleep 1"
+   end
    os.execute(final_command)
-   os.execute("sleep 1")
+   os.execute(sleep_command)
 end
 
 function test_env.mock_server_done()
-   os.execute("curl localhost:8080/shutdown")
+   if test_env.TEST_TARGET_OS == "windows" then
+      os.execute(Q(test_env.testing_paths.win_tools .. "/wget") .. " --quiet --timeout=5 --tries=1 localhost:8080/shutdown")
+   else
+      os.execute("curl localhost:8080/shutdown")
+   end
 end
 
 ---
