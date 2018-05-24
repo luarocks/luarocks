@@ -10,6 +10,7 @@ program_description = "LuaRocks main command-line interface"
 
 commands = {
    help = "luarocks.cmd.help",
+   init = "luarocks.cmd.init",
    pack = "luarocks.cmd.pack",
    unpack = "luarocks.cmd.unpack",
    build = "luarocks.cmd.build",
