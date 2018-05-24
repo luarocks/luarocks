@@ -64,23 +64,48 @@ end
 -- @param version string: rock version to be used in loader context.
 -- @return boolean or (nil, string): True if succeeded, or nil and
 -- an error message.
-function unix.wrap_script(file, dest, name, version)
-   assert(type(file) == "string")
+function unix.wrap_script(file, dest, name, version, ...)
+   assert(type(file) == "string" or not file)
    assert(type(dest) == "string")
+   assert(type(name) == "string" or not name)
+   assert(type(version) == "string" or not version)
    
-   local base = dir.base_name(file)
-   local wrapname = fs.is_dir(dest) and dest.."/"..base or dest
-   local lpath, lcpath = cfg.package_paths(cfg.root_dir)
+   local wrapname = fs.is_dir(dest) and dest.."/"..dir.base_name(file) or dest
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
       return nil, "Could not open "..wrapname.." for writing."
    end
+
+   local lpath, lcpath = cfg.package_paths(cfg.root_dir)
+   lpath = util.cleanup_path(lpath, ";", cfg.lua_version)
+   lcpath = util.cleanup_path(lcpath, ";", cfg.lua_version)
+
+   local luainit = {
+      "package.path="..util.LQ(lpath..";").."..package.path",
+      "package.cpath="..util.LQ(lcpath..";").."..package.cpath",
+   }
+   if dest == "luarocks" then
+      luainit = {
+         "package.path="..util.LQ(package.path),
+         "package.cpath="..util.LQ(package.cpath),
+      }
+   end
+   if name and version then
+      local addctx = "local k,l,_=pcall(require,"..util.LQ("luarocks.loader")..") _=k " ..
+                     "and l.add_context("..util.LQ(name)..","..util.LQ(version)..")"
+      table.insert(luainit, addctx)
+   end
+
+   local argv = {
+      fs.Q(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)),
+      file and fs.Q(file) or "",
+      ...
+   }
+
    wrapper:write("#!/bin/sh\n\n")
-   local lua = dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)
-   local ppaths = "package.path="..util.LQ(lpath..";").."..package.path; package.cpath="..util.LQ(lcpath..";").."..package.cpath"
-   local addctx = "local k,l,_=pcall(require,"..util.LQ("luarocks.loader")..") _=k and l.add_context("..util.LQ(name)..","..util.LQ(version)..")"
-   wrapper:write('exec '..fs.Q(lua)..' -e '..fs.Q(ppaths)..' -e '..fs.Q(addctx)..' '..fs.Q(file)..' "$@"\n')
+   wrapper:write("LUA_INIT="..fs.Q(table.concat(luainit, ";")).." exec "..table.concat(argv, " ")..' "$@"\n')
    wrapper:close()
+
    if fs.set_permissions(wrapname, "exec", "user") then
       return true
    else

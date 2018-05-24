@@ -58,18 +58,7 @@ function path_cmd.command(flags)
       lr_bin = lr_bin .. path_sep .. os.getenv("PATH")
    end
    
-   local lpath_var = "LUA_PATH"
-   local lcpath_var = "LUA_CPATH"
-   
-   local lv = cfg.lua_version:gsub("%.", "_")
-   if lv ~= "5_1" then
-      if os.getenv("LUA_PATH_" .. lv) then
-         lpath_var = "LUA_PATH_" .. lv
-      end
-      if os.getenv("LUA_CPATH_" .. lv) then
-         lcpath_var = "LUA_CPATH_" .. lv
-      end
-   end
+   local lpath_var, lcpath_var = util.lua_path_variables()
 
    util.printout(fs.export_cmd(lpath_var, util.cleanup_path(lr_path, ';', cfg.lua_version)))
    util.printout(fs.export_cmd(lcpath_var, util.cleanup_path(lr_cpath, ';', cfg.lua_version)))
