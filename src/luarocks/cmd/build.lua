@@ -14,6 +14,7 @@ local cfg = require("luarocks.core.cfg")
 local build = require("luarocks.build")
 local writer = require("luarocks.manif.writer")
 local search = require("luarocks.search")
+local make = require("luarocks.cmd.make")
 
 cmd_build.help_summary = "build/compile a rock."
 cmd_build.help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
@@ -97,10 +98,12 @@ end
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
 function cmd_build.command(flags, name, version)
-   if type(name) ~= "string" then
-      return nil, "Argument missing. "..util.see_help("build")
-   end
+   assert(type(name) == "string" or not name)
    assert(type(version) == "string" or not version)
+   
+   if not name then
+      return make.command(flags)
+   end
 
    name = util.adjust_name_and_namespace(name, flags)
    local deps_mode = deps.get_deps_mode(flags)
