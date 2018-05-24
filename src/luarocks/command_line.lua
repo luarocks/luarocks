@@ -143,15 +143,10 @@ function command_line.run_command(...)
    end
    
    if flags["project-tree"] then
-      table.insert(cfg.rocks_trees, 1, { name = "project", root = flags["project-tree"] } )
-   else
-      local project_dir, rocks_tree = find_project_dir()
-      if project_dir then
-         table.insert(cfg.rocks_trees, 1, { name = "project", root = rocks_tree } )
-      end
-   end
-
-   if flags["tree"] then
+      local tree = flags["project-tree"]
+      table.insert(cfg.rocks_trees, 1, { name = "project", root = tree } )
+      path.use_tree(tree)
+   elseif flags["tree"] then
       local named = false
       for _, tree in ipairs(cfg.rocks_trees) do
          if type(tree) == "table" and flags["tree"] == tree.name then
@@ -175,8 +170,14 @@ function command_line.run_command(...)
       end
       replace_tree(flags, cfg.home_tree)
    else
-      local trees = cfg.rocks_trees
-      path.use_tree(trees[#trees])
+      local project_dir, rocks_tree = find_project_dir()
+      if project_dir then
+         table.insert(cfg.rocks_trees, 1, { name = "project", root = rocks_tree } )
+         path.use_tree(rocks_tree)
+      else
+         local trees = cfg.rocks_trees
+         path.use_tree(trees[#trees])
+      end
    end
 
    if type(cfg.root_dir) == "string" then
