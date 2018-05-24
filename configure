@@ -39,7 +39,7 @@ system's package manager.
 --rocks-tree=DIR            Root of the local tree of installed rocks.
                             Default is \$PREFIX
 
---lua-version=VERSION       Use specific Lua version: 5.1, 5.2, or 5.3
+--lua-version=VERSION       Use specific Lua version: 5.1, 5.2, 5.3, or 5.4
                             Default is auto-detected.
 --lua-suffix=SUFFIX         Versioning suffix to use in Lua filenames.
                             Default is "$LUA_SUFFIX" (lua$LUA_SUFFIX...)
@@ -163,7 +163,7 @@ do
    --lua-version|--with-lua-version)
       [ -n "$value" ] || die "Missing value in flag $key."
       LUA_VERSION="$value"
-      [ "$LUA_VERSION" = "5.1" -o "$LUA_VERSION" = "5.2" -o "$LUA_VERSION" = "5.3" ] || die "Invalid Lua version in flag $key."
+      [ "$LUA_VERSION" = "5.1" -o "$LUA_VERSION" = "5.2" -o "$LUA_VERSION" = "5.3" -o "$LUA_VERSION" = "5.4" ] || die "Invalid Lua version in flag $key."
       LUA_VERSION_SET=yes
       ;;
    --with-lua)
@@ -224,7 +224,7 @@ then
 fi
 
 detect_lua_version() {
-   detected_lua=`$1 -e 'print(_VERSION:match(" (5%.[123])$"))' 2> /dev/null`
+   detected_lua=`$1 -e 'print(_VERSION:match(" (5%.[1234])$"))' 2> /dev/null`
    if [ "$detected_lua" != "nil" ]
    then
       if [ "$LUA_VERSION_SET" != "yes" ]
@@ -286,9 +286,12 @@ then
       suffixes="5.2 52 -5.2 -52"
    elif [ "$LUA_VERSION_SET" = "yes" -a "$LUA_VERSION" = "5.3" ]
    then
+      suffixes="5.4 54 -5.4 -54"
+   elif [ "$LUA_VERSION_SET" = "yes" -a "$LUA_VERSION" = "5.4" ]
+   then
       suffixes="5.3 53 -5.3 -53"
    else
-      suffixes="5.3 53 -5.3 -53 5.2 52 -5.2 -52 5.1 51 -5.1 -51"
+      suffixes="5.4 54 -5.4 -54 5.3 53 -5.3 -53 5.2 52 -5.2 -52 5.1 51 -5.1 -51"
    fi
    for suffix in `echo $suffixes` ""
    do
@@ -400,7 +403,7 @@ else
    die "Could not determine processor architecture. 'uname -m' failed."
 fi
 
-for v in 5.1 5.2 5.3; do
+for v in 5.1 5.2 5.3 5.4; do
   if [ "$v" != "$LUA_VERSION" ]; then
     if [ -e "$PREFIX/share/lua/$v/luarocks/site_config.lua" ]; then
       LUA_OTHER_VERSION="$v"
