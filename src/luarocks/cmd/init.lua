@@ -77,14 +77,20 @@ function init.command(flags, name, version)
    fs.make_dir("lua_modules/lib/luarocks/rocks-" .. cfg.lua_version)
    local tree = dir.path(pwd, "lua_modules")
 
-   util.printout("Preparing ./luarocks ...")
+   local ext = cfg.wrapper_suffix
 
-   fs.wrap_script(arg[0], "luarocks", nil, nil, "--project-tree", tree)
+   local luarocks_wrapper = "./luarocks" .. ext
+   if not fs.exists(luarocks_wrapper) then
+      util.printout("Preparing " .. luarocks_wrapper .. " ...")
+      fs.wrap_script(arg[0], "luarocks", nil, nil, "--project-tree", tree)
+   end
 
-   util.printout("Preparing ./lua ...")
-
-   path.use_tree(tree)
-   fs.wrap_script(nil, "lua")
+   local lua_wrapper = "./lua" .. ext
+   if not fs.exists(lua_wrapper) then
+      util.printout("Preparing " .. lua_wrapper .. " ...")
+      path.use_tree(tree)
+      fs.wrap_script(nil, "lua")
+   end
 
    return true
 end
