@@ -310,7 +310,7 @@ function util.variable_substitutions(tbl, vars)
 end
 
 function util.lua_versions()
-   local versions = { "5.1", "5.2", "5.3" }
+   local versions = { "5.1", "5.2", "5.3", "5.4" }
    local i = 0
    return function()
       i = i + 1

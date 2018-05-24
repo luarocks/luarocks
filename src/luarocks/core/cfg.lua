@@ -15,7 +15,7 @@ local rawset, next, table, pairs, require, io, os, setmetatable, pcall, ipairs, 
 
 local cfg = {}
 
-cfg.lua_version = _VERSION:match(" (5%.[123])$") or "5.1"
+cfg.lua_version = _VERSION:match(" (5%.[1234])$") or "5.1"
 local version_suffix = cfg.lua_version:gsub("%.", "_")
 
 -- Load site-local global configurations
