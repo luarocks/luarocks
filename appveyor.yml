@@ -46,7 +46,7 @@ build_script:
   - luarocks install cluacov 1> NUL 2> NUL
 
 test_script:
-  - busted -o gtest -v --lpath=.//?.lua --exclude-tags=ssh,unix,mock -Xhelper lua_dir=%CD%\lua_install,appveyor,%COMPILER%
+  - busted -o gtest -v --lpath=.//?.lua --exclude-tags=ssh,unix -Xhelper lua_dir=%CD%\lua_install,appveyor,%COMPILER%
 
 after_test:
   - pip install codecov
