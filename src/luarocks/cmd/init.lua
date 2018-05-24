@@ -55,9 +55,19 @@ function init.command(flags, name, version)
 
    util.printout("Initializing project " .. name .. " ...")
    
-   local ok, err = write_rockspec.command(flags, name, version or "dev", pwd)
-   if not ok then
-      util.printerr(err)
+   local has_rockspec = false
+   for file in fs.dir() do
+      if file:match("%.rockspec$") then
+         has_rockspec = true
+         break
+      end
+   end
+
+   if not has_rockspec then
+      local ok, err = write_rockspec.command(flags, name, version or "dev", pwd)
+      if not ok then
+         util.printerr(err)
+      end
    end
    
    util.printout("Adding entries to .gitignore ...")
