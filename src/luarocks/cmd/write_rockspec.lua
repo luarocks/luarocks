@@ -33,8 +33,9 @@ rockspec, and is not guaranteed to be complete or correct.
 --summary="<txt>"        A short one-line description summary.
 --detailed="<txt>"       A longer description string.
 --homepage=<url>         Project homepage.
---lua-version=<ver>      Supported Lua versions. Accepted values are "5.1", "5.2",
-                         "5.3", "5.1,5.2", "5.2,5.3", or "5.1,5.2,5.3".
+--lua-version=<ver>      Supported Lua versions.  Accepted values are: "5.1", "5.2",
+                         "5.3", "5.4", "5.1,5.2", "5.2,5.3", "5.3,5.4", "5.1,5.2,5.3",
+                         "5.2,5.3,5.4", or "5.1,5.2,5.3,5.4"
 --rockspec-format=<ver>  Rockspec format version, such as "1.0" or "1.1".
 --tag=<tag>              Tag to use. Will attempt to extract version number from it.
 --lib=<lib>[,<lib>]      A comma-separated list of libraries that C files need to
@@ -68,12 +69,20 @@ local function configure_lua_version(rockspec, luaver)
       table.insert(rockspec.dependencies, "lua ~> 5.2")
    elseif luaver == "5.3" then
       table.insert(rockspec.dependencies, "lua ~> 5.3")
+   elseif luaver == "5.4" then
+      table.insert(rockspec.dependencies, "lua ~> 5.4")
    elseif luaver == "5.1,5.2" then
       table.insert(rockspec.dependencies, "lua >= 5.1, < 5.3")
    elseif luaver == "5.2,5.3" then
       table.insert(rockspec.dependencies, "lua >= 5.2, < 5.4")
+   elseif luaver == "5.3,5.4" then
+      table.insert(rockspec.dependencies, "lua >= 5.3, < 5.5")
    elseif luaver == "5.1,5.2,5.3" then
       table.insert(rockspec.dependencies, "lua >= 5.1, < 5.4")
+   elseif luaver == "5.2,5.3,5.4" then
+      table.insert(rockspec.dependencies, "lua >= 5.2, < 5.5")
+   elseif luaver == "5.1,5.2,5.3,5.4" then
+      table.insert(rockspec.dependencies, "lua >= 5.1, < 5.5")
    else
       util.warning("Please specify supported Lua version with --lua-version=<ver>. "..util.see_help("write_rockspec"))
    end
