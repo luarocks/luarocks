@@ -8,6 +8,14 @@ local command_line = require("luarocks.command_line")
 
 program_description = "LuaRocks main command-line interface"
 
+local function only_if_available(command_name)
+   local ok = pcall(require, command_name)
+   if not ok then
+      return nil
+   end
+   return command_name
+end
+
 commands = {
    help = "luarocks.cmd.help",
    pack = "luarocks.cmd.pack",
@@ -29,6 +37,9 @@ commands = {
    upload = "luarocks.cmd.upload",
    config = "luarocks.cmd.config",
    which = "luarocks.cmd.which",
+   -- add some potential commands
+   -- gui = only_if_available("luarocks.cmd.gui"),
+   gui1 = only_if_available("luarocks_gui.gui1"),
 }
 
 command_line.run_command(...)
