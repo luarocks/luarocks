@@ -2,6 +2,7 @@
 local luarocks = {}
 
 local cfg = require("luarocks.core.cfg")
+local list = require("luarocks.cmd.list")
 
 --- Obtain version of LuaRocks and its API.
 -- @return (string, string) Full version of this LuaRocks instance
@@ -9,6 +10,16 @@ local cfg = require("luarocks.core.cfg")
 -- in-development code), and the API version, in "x.y" format.
 function luarocks.version()
    return cfg.program_version, cfg.program_series
+end
+
+--- Return 1
+function luarocks.test_func()
+	return 1
+end
+
+--- Doesn't work right now
+function luarocks.list(flags, filter, version)
+	list.command(flags, filter, version)
 end
 
 return luarocks
