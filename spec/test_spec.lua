@@ -35,6 +35,27 @@ describe("luarocks test #blackbox #b_test", function()
    end)
 
    describe("busted backend", function()
+
+      setup(function()
+         -- Try to cache rocks from the host system to speed up test
+         os.execute("luarocks pack busted")
+         os.execute("luarocks pack lua_cliargs")
+         os.execute("luarocks pack luafilesystem")
+         os.execute("luarocks pack dkjson")
+         os.execute("luarocks pack luasystem")
+         os.execute("luarocks pack say")
+         os.execute("luarocks pack luassert")
+         os.execute("luarocks pack lua-term")
+         os.execute("luarocks pack penlight")
+         os.execute("luarocks pack mediator_lua")
+         if test_env.TEST_TARGET_OS == "windows" then
+            os.execute("move *.rock " .. testing_paths.testing_server)
+         else
+            os.execute("mv *.rock " .. testing_paths.testing_server)
+         end
+         test_env.run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
+      end)
+
       it("with rockspec, installing busted", function()
          finally(function()
             -- delete downloaded and unpacked files
