@@ -3,8 +3,6 @@ local git_repo = require("spec.util.git_repo")
 local lfs = require("lfs")
 local run = test_env.run
 
-local extra_rocks = test_env.mock_server_extra_rocks()
-
 describe("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
 
    before_each(function()
@@ -79,7 +77,6 @@ describe("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
    describe("from tarball #mock", function()
 
       setup(function()
-         test_env.setup_specs(extra_rocks)
          test_env.mock_server_init()
       end)
       teardown(function()

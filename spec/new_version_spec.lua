@@ -5,10 +5,10 @@ local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
-local extra_rocks = test_env.mock_server_extra_rocks({
+local extra_rocks = {
    "/abelhas-1.1-1.rockspec",
    "/lpeg-0.12-1.rockspec"
-})
+}
 
 describe("LuaRocks new_version tests #blackbox #b_new_version", function()
 

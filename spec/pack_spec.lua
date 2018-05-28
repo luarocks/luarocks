@@ -5,14 +5,14 @@ local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
-local extra_rocks = test_env.mock_server_extra_rocks({
+local extra_rocks = {
    "/luasec-0.6-1.rockspec",
    "/luassert-1.7.0-1.src.rock",
    "/luasocket-3.0rc1-2.src.rock",
    "/luasocket-3.0rc1-2.rockspec",
    "/say-1.2-1.src.rock",
    "/say-1.0-1.src.rock"
-})
+}
 
 describe("LuaRocks pack #blackbox #b_pack", function()
 
@@ -50,14 +50,7 @@ describe("LuaRocks pack #blackbox #b_pack", function()
       assert(test_env.remove_files(lfs.currentdir(), "say%-"))
    end)
 
-   it("src", function()
-      assert(run.luarocks_bool("install luasec " .. test_env.OPENSSL_DIRS))
-      assert(run.luarocks_bool("download --rockspec luasocket 3.0rc1-2"))
-      assert(run.luarocks_bool("pack luasocket-3.0rc1-2.rockspec"))
-      assert(test_env.remove_files(lfs.currentdir(), "luasocket%-"))
-   end)
-   
-   describe("#mock namespaced dependencies", function()
+   describe("#mock", function()
 
       setup(function()
          test_env.mock_server_init()
@@ -67,12 +60,23 @@ describe("LuaRocks pack #blackbox #b_pack", function()
          test_env.mock_server_done()
       end)
 
-      it("can pack rockspec with namespaced dependencies", function()
+      it("can pack a rockspec into a .src.rock", function()
          finally(function()
-            os.remove("has_namespaced_dep-1.0-1.src.rock")
+            os.remove("a_rock-1.0-1.src.rock")
          end)
-         assert(run.luarocks_bool("pack " .. testing_paths.fixtures_dir .. "/a_repo/has_namespaced_dep-1.0-1.rockspec"))
-         assert.is_truthy(lfs.attributes("has_namespaced_dep-1.0-1.src.rock"))
+         assert(run.luarocks_bool("download --rockspec --server=" .. testing_paths.fixtures_dir .. "/a_repo a_rock 1.0-1"))
+         assert(run.luarocks_bool("pack a_rock-1.0-1.rockspec"))
+         assert.is_truthy(lfs.attributes("a_rock-1.0-1.src.rock"))
+      end)
+      
+      describe("namespaced dependencies", function()
+         it("can pack rockspec with namespaced dependencies", function()
+            finally(function()
+               os.remove("has_namespaced_dep-1.0-1.src.rock")
+            end)
+            assert(run.luarocks_bool("pack " .. testing_paths.fixtures_dir .. "/a_repo/has_namespaced_dep-1.0-1.rockspec"))
+            assert.is_truthy(lfs.attributes("has_namespaced_dep-1.0-1.src.rock"))
+         end)
       end)
    end)
 

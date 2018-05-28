@@ -5,7 +5,7 @@ local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
-local extra_rocks = test_env.mock_server_extra_rocks({
+local extra_rocks = {
    "/lmathx-20120430.51-1.src.rock",
    "/lmathx-20120430.51-1.rockspec",
    "/lmathx-20120430.52-1.src.rock",
@@ -26,7 +26,7 @@ local extra_rocks = test_env.mock_server_extra_rocks({
    "/lxsh-0.8.6-2.rockspec",
    "/stdlib-41.0.0-1.src.rock",
    "/validate-args-1.5.4-1.rockspec"
-})
+}
 
 describe("LuaRocks build tests #blackbox #b_build", function()
 

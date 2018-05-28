@@ -317,12 +317,12 @@ end
 -- @param save_path string: path to directory, where to download rocks/rockspecs
 -- @return make_manifest boolean: true if new rocks downloaded
 local function download_rocks(urls, save_path)
-   local luarocks_repo = "https://luarocks.org"
+   local luarocks_repo = "https://luarocks.org/"
    local make_manifest = false
 
    for _, url in ipairs(urls) do
       -- check if already downloaded
-      if not test_env.exists(save_path .. url) then
+      if not test_env.exists(save_path .. "/" .. url) then
          if test_env.TEST_TARGET_OS == "windows" then
             assert(execute_bool(test_env.testing_paths.win_tools .. "/wget -cP " .. save_path .. " " .. luarocks_repo .. url .. " --no-check-certificate"))
          else
@@ -442,6 +442,14 @@ local function make_run_functions()
    }
 end
 
+local function move_file(src, dst)
+   if test_env.TEST_TARGET_OS == "windows" then
+      execute_bool(test_env.testing_paths.win_tools .. "/mv " .. src .. " " .. dst)
+   else
+      execute_bool("mv " .. src .. " " .. dst)
+   end
+end
+
 --- Rebuild environment.
 -- Remove old installed rocks and install new ones,
 -- updating manifests and tree copies.
@@ -461,13 +469,9 @@ local function build_environment(rocks, env_variables)
 
    for _, rock in ipairs(rocks) do
       if not test_env.run.luarocks_nocov("install --only-server=" .. testing_paths.testing_cache .. " --tree=" .. testing_paths.testing_sys_tree .. " " .. Q(rock), env_variables) then
-         test_env.run.luarocks_nocov("build --tree=" .. Q(testing_paths.testing_sys_tree) .. " " .. Q(rock) .. "", env_variables)
+         test_env.run.luarocks_nocov("build --tree=" .. Q(testing_paths.testing_sys_tree) .. " " .. Q(rock), env_variables)
          test_env.run.luarocks_nocov("pack --tree=" .. Q(testing_paths.testing_sys_tree) .. " " .. Q(rock), env_variables)
-         if test_env.TEST_TARGET_OS == "windows" then
-            execute_bool(testing_paths.win_tools .. "/mv " .. rock .. "-*.rock " .. testing_paths.testing_cache)
-         else
-            execute_bool("mv " .. rock .. "-*.rock " .. testing_paths.testing_cache)
-         end
+         move_file(rock .. "-*.rock", testing_paths.testing_cache)
       end
    end
    
@@ -740,31 +744,6 @@ local function install_luarocks(install_env_vars)
    print("LuaRocks installed correctly!")
 end
 
-function test_env.mock_server_extra_rocks(more)
-   local rocks = {
-      -- rocks needed for mock-server
-      "/copas-2.0.1-1.src.rock",
-      "/coxpcall-1.16.0-1.src.rock",
-      "/dkjson-2.5-2.src.rock",
-      "/luafilesystem-1.6.3-1.src.rock",
-      "/luasec-0.6-1.rockspec",
-      "/luasocket-3.0rc1-2.src.rock",
-      "/luasocket-3.0rc1-2.rockspec",
-      "/restserver-0.1-1.src.rock",
-      "/restserver-xavante-0.2-1.src.rock",
-      "/rings-1.3.0-1.src.rock",
-      "/wsapi-1.6.1-1.src.rock",
-      "/wsapi-xavante-1.6.1-1.src.rock",
-      "/xavante-2.4.0-1.src.rock"
-   }
-   if more then
-      for _, rock in ipairs(more) do
-         table.insert(rocks, rock)
-      end
-   end
-   return rocks
-end
-
 function test_env.mock_server_init()
    local testing_paths = test_env.testing_paths
    assert(test_env.need_rock("restserver-xavante"))
@@ -787,6 +766,33 @@ function test_env.mock_server_done()
    else
       os.execute("curl localhost:8080/shutdown")
    end
+end
+
+local function prepare_mock_server_binary_rocks()
+   local testing_paths = test_env.testing_paths
+
+   local rocks = {
+      -- rocks needed for mock-server
+      "luasocket-3.0rc1-2.src.rock",
+      "coxpcall-1.16.0-1.src.rock",
+      "copas-2.0.1-1.src.rock",
+      "luafilesystem-1.7.0-2.src.rock",
+      "xavante-2.4.0-1.src.rock",
+      "wsapi-1.6.1-1.src.rock",
+      "rings-1.3.0-1.src.rock",
+      "wsapi-xavante-1.6.1-1.src.rock",
+      "dkjson-2.5-2.src.rock",
+      "restserver-0.1-1.src.rock",
+      "restserver-xavante-0.2-1.src.rock",
+   }
+   download_rocks(rocks, testing_paths.testing_server)
+   for _, rock in ipairs(rocks) do
+      test_env.run.luarocks_nocov("build " .. Q(testing_paths.testing_server .. "/" .. rock) .. " --tree=" .. testing_paths.testing_cache)
+      local rockname = rock:gsub("%-[^-]+%-%d+%.[%a.]+$", "")
+      test_env.run.luarocks_nocov("pack " .. rockname .. " --tree=" .. testing_paths.testing_cache)
+      move_file(rockname .. "-*.rock", testing_paths.testing_server)
+   end
+   test_env.run.luarocks_admin_nocov("make_manifest " .. Q(testing_paths.testing_server))
 end
 
 ---
@@ -837,7 +843,10 @@ function test_env.main()
    -- Download rocks needed for LuaRocks testing environment
    lfs.mkdir(testing_paths.testing_server)
    download_rocks(urls, testing_paths.testing_server)
+   
    build_environment(rocks, install_env_vars)
+
+   prepare_mock_server_binary_rocks()
 end
 
 test_env.set_lua_version()
