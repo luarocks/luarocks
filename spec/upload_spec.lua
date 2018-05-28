@@ -4,12 +4,10 @@ local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
-local extra_rocks = test_env.mock_server_extra_rocks()
-
 describe("LuaRocks upload tests #blackbox #b_upload", function()
 
    before_each(function()
-      test_env.setup_specs(extra_rocks)
+      test_env.setup_specs()
    end)
 
    it("LuaRocks upload with no flags/arguments", function()
