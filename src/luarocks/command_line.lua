@@ -142,11 +142,7 @@ function command_line.run_command(...)
      cfg.branch = flags["branch"]
    end
    
-   if flags["project-tree"] then
-      local tree = flags["project-tree"]
-      table.insert(cfg.rocks_trees, 1, { name = "project", root = tree } )
-      path.use_tree(tree)
-   elseif flags["tree"] then
+   if flags["tree"] then
       local named = false
       for _, tree in ipairs(cfg.rocks_trees) do
          if type(tree) == "table" and flags["tree"] == tree.name then
@@ -162,6 +158,10 @@ function command_line.run_command(...)
          local root_dir = fs.absolute_name(flags["tree"])
          replace_tree(flags, root_dir)
       end
+   elseif flags["project-tree"] then
+      local tree = flags["project-tree"]
+      table.insert(cfg.rocks_trees, 1, { name = "project", root = tree } )
+      path.use_tree(tree)
    elseif flags["local"] then
       if not cfg.home_tree then
          die("The --local flag is meant for operating in a user's home directory.\n"..
