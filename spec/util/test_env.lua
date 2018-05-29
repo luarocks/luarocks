@@ -88,6 +88,15 @@ function test_env.copy(source, destination)
    r_destination:close()
 end
 
+function test_env.get_tmp_path()
+   local path = os.tmpname()
+   if test_env.TEST_TARGET_OS == "windows" and not path:find(":") then
+      path = os.getenv("TEMP") .. path
+   end
+   os.remove(path)
+   return path
+end
+
 --- Helper function for execute_bool and execute_output
 -- @param command string: command to execute
 -- @param print_command boolean: print command if 'true'
