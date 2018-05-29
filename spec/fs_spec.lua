@@ -6,17 +6,9 @@ local lfs = require("lfs")
 local is_win = test_env.TEST_TARGET_OS == "windows"
 local posix_ok = pcall(require, "posix")
 local testing_paths = test_env.testing_paths
+local get_tmp_path = test_env.get_tmp_path
 
 describe("Luarocks fs test #whitebox #w_fs", function()
-   local get_tmp_path = function()
-      local path = os.tmpname()
-      if is_win and not path:find(":") then
-         path = os.getenv("TEMP") .. path
-      end
-      os.remove(path)
-      return path
-   end
-
    local exists_file = function(path)
       local ok, err, code = os.rename(path, path)
       if not ok and code == 13 then
