@@ -129,6 +129,7 @@ function tools.use_downloader(url, filename, cache)
    if ok then
       return true, filename
    else
+      os.remove(filename)
       return false
    end
 end
