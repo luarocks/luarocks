@@ -22,31 +22,27 @@ function luarocks.test_func()
 end
 
 --- Return a table of installed rocks
-function luarocks.list(...)
-	--- hardcode flags empty for now
-	flags = {}
-
-	local query = search.make_query(filter and filter:lower() or "", version)
-	query.exact_name = false
-	local trees = cfg.rocks_trees
-	if flags["tree"] then
-	  trees = { flags["tree"] }
-	end
-
-	--if flags["outdated"] then
-	--   return list_outdated(trees, query, flags["porcelain"])
-	--end
-
-	local results = {}
-	for _, tree in ipairs(trees) do
-	  local ok, err, errcode = search.manifest_search(results, path.rocks_dir(tree), query)
-	  if not ok and errcode ~= "open" then
-	     util.warning(err)
-	  end
-	end
-	--- hardcoding flags["porcelain"] to true
-	results = search.return_results(results, true)
-	return results
+function luarocks.list(filter, outdated, version, tree)
+   local query = search.make_query(filter and filter:lower() or "", version)
+   query.exact_name = false
+   local trees = cfg.rocks_trees
+   if tree then
+     trees = { tree }
+   end
+   
+   if outdated then
+      return check_outdated(trees, query)
+   end
+   
+   local results = {}
+   for _, tree in ipairs(trees) do
+     local ok, err, errcode = search.manifest_search(results, path.rocks_dir(tree), query)
+     if not ok and errcode ~= "open" then
+        util.warning(err)
+     end
+   end
+   results = search.return_results(results)
+   return results
 end
 
 return luarocks
