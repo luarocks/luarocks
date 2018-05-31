@@ -69,7 +69,7 @@ function luarocks.list(filter, outdated, version, tree)
    for _, tree in ipairs(trees) do
      local ok, err, errcode = search.manifest_search(results, path.rocks_dir(tree), query)
      if not ok and errcode ~= "open" then
-        util.warning(err)
+        return {err, errcode}
      end
    end
    results = search.return_results(results)
