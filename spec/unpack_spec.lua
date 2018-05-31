@@ -10,7 +10,7 @@ local extra_rocks = {
    "/luazip-1.2.4-1.rockspec"
 }
 
-describe("LuaRocks unpack tests #blackbox #b_unpack", function()
+describe("LuaRocks unpack tests #integration", function()
    
    before_each(function()
       test_env.setup_specs(extra_rocks)
@@ -68,5 +68,3 @@ describe("LuaRocks unpack tests #blackbox #b_unpack", function()
       end)
    end)
 end)
-
-

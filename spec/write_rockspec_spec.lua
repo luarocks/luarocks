@@ -3,7 +3,7 @@ local git_repo = require("spec.util.git_repo")
 local lfs = require("lfs")
 local run = test_env.run
 
-describe("LuaRocks write_rockspec tests #blackbox #b_write_rockspec", function()
+describe("LuaRocks write_rockspec tests #integration", function()
 
    before_each(function()
       test_env.setup_specs()

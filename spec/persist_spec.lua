@@ -3,7 +3,7 @@ local test_env = require("spec.util.test_env")
 test_env.unload_luarocks()
 local persist = require("luarocks.persist")
 
-describe("Luarocks persist test #whitebox #w_persist", function()
+describe("Luarocks persist test #unit", function()
    describe("persist.save_from_table_to_string", function()
       it("simple table", function()
          assert.are.same([[

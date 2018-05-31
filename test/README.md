@@ -5,7 +5,7 @@
 
 Test suite for LuaRocks project with Busted unit testing framework(http://olivinelabs.com/busted/). 
 
-* Contains white-box & black-box tests
+* Contains unit & integration tests
 * Easy setup for your purpose on command line or from configuration file
 
 ## Dependencies
@@ -33,9 +33,9 @@ os=<version>,     type your OS ["linux", "os x", "windows"]
 ---------------------------------------------------------------------------------------------
 ####_**Tags** of tests are required and are in this format:_
 
-**whitebox** - run all whitebox tests
+**unit** - run all unit tests
 
-**blackbox** - run all blackbox tests
+**integration** - run all integration tests
 
 **ssh** - run all tests which require ssh
 
@@ -43,31 +43,16 @@ os=<version>,     type your OS ["linux", "os x", "windows"]
 
 **unix** - run all tests which are UNIX based, won't work on Windows systems
 
-**w**\_*name-of-command* - whitebox testing of command
-
-**b**\_*name-of-command* - blackbox testing of command
-
-for example: `b_install`  or `w_help`
-
 ## Examples
 
 To run all tests:
 
 `busted`
 
-To run white-box tests in LuaRocks directory type :
+To run unit tests in LuaRocks directory type :
 
-`busted -t "whitebox"`
+`busted -t "unit"`
 
-To run black-box tests just of *install* command (we defined our OS, so OS check is skipped.):
+To run integration tests without tests which use ssh:
 
-`busted -Xhelper os=linux -t "b_install"`
-
-To run black-box tests of *install* command, whitebox of *help* command (using *full* type of environment):
-
-`busted -Xhelper env=full -t "b_install", "w_help"`
-
-To run black-box tests without tests, which use ssh:
-
-`busted -t "blackbox" --exclude-tags=ssh`
-
+`busted -t "integration" --exclude-tags=ssh`

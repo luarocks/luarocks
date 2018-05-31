@@ -4,7 +4,7 @@ local run = test_env.run
 local testing_paths = test_env.testing_paths
 local env_variables = test_env.env_variables
 
-describe("Basic tests #blackbox #b_util", function()
+describe("Basic tests #integration", function()
 
    before_each(function()
       test_env.setup_specs()
@@ -73,7 +73,7 @@ end)
 test_env.unload_luarocks()
 local util = require("luarocks.util")
 
-describe("Luarocks util test #whitebox #w_util", function()
+describe("Luarocks util test #unit", function()
    describe("util.sortedpairs", function()
       local function collect(iter, state, var)
          local collected = {}

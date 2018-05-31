@@ -27,7 +27,7 @@ local extra_rocks = {
    "/sailor-0.5-4.src.rock",
 }
 
-describe("luarocks install #blackbox #b_install", function()
+describe("luarocks install #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)

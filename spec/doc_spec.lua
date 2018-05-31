@@ -9,7 +9,7 @@ local extra_rocks = {
   "/c3-1.0-1.src.rock"
 }
 
-describe("LuaRocks doc tests #blackbox #b_doc", function()
+describe("LuaRocks doc tests #integration", function()
    
    before_each(function()
       test_env.setup_specs(extra_rocks)
@@ -75,5 +75,3 @@ describe("LuaRocks doc tests #blackbox #b_doc", function()
       end)
    end)
 end)
-
-

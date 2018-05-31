@@ -8,7 +8,7 @@ local extra_rocks = {
    "/say-1.0-1.src.rock",
 }
 
-describe("LuaRocks purge tests #blackbox #b_purge", function()
+describe("LuaRocks purge tests #integration", function()
    before_each(function()
       test_env.setup_specs(extra_rocks)
    end)
@@ -34,5 +34,3 @@ describe("LuaRocks purge tests #blackbox #b_purge", function()
       end)
    end)
 end)
-
-

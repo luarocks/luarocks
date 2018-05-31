@@ -4,7 +4,7 @@ local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
-describe("LuaRocks upload tests #blackbox #b_upload", function()
+describe("LuaRocks upload tests #integration", function()
 
    before_each(function()
       test_env.setup_specs()
@@ -44,4 +44,3 @@ describe("LuaRocks upload tests #blackbox #b_upload", function()
       end)
    end)
 end)
-

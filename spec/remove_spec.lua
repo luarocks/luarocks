@@ -12,7 +12,7 @@ local extra_rocks = {
    "/luasocket-3.0rc1-2.rockspec"
 }
 
-describe("LuaRocks remove tests #blackbox #b_remove", function()
+describe("LuaRocks remove tests #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
