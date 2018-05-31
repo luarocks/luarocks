@@ -3,6 +3,10 @@ local luarocks = {}
 
 local cfg = require("luarocks.core.cfg")
 local list = require("luarocks.cmd.list")
+local search = require("luarocks.search")
+local vers = require("luarocks.vers")
+local util = require("luarocks.util")
+local path = require("luarocks.path")
 
 --- Obtain version of LuaRocks and its API.
 -- @return (string, string) Full version of this LuaRocks instance
@@ -17,26 +21,8 @@ function luarocks.test_func()
 	return 1
 end
 
---- Print the list of installed rocks
---local list = require("luarocks.cmd.list")
---flags = {}
---function luarocks.list(flags)
---	list.command(flags)
---end
-
-
-local search = require("luarocks.search")
-local vers = require("luarocks.vers")
---local cfg = require("luarocks.core.cfg")
-local util = require("luarocks.util")
-local path = require("luarocks.path")
-
-
 --- Return a table of installed rocks
 function luarocks.list(...)
-
-	---[[ here there should be a function that parses the ... into flags, filter, version]]
-
 	--- hardcode flags empty for now
 	flags = {}
 
@@ -58,10 +44,6 @@ function luarocks.list(...)
 	     util.warning(err)
 	  end
 	end
-
-	--util.title("Installed rocks:", flags["porcelain"])
-	--results = search.return_results(results, flags["porcelain"])
-
 	--- hardcoding flags["porcelain"] to true
 	results = search.return_results(results, true)
 	return results
