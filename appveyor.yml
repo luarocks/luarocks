@@ -8,25 +8,34 @@ environment:
   matrix:
   - LUA: "lua 5.1"
     COMPILER: "vs"
+    FILES: ".//?.lua"
   - LUA: "lua 5.1"
     COMPILER: "mingw"
+    FILES: ".//build_spec.lua"
   - LUA: "lua 5.2"
     COMPILER: "vs"
+    FILES: ".//?.lua"
   - LUA: "lua 5.2"
     COMPILER: "mingw"
+    FILES: ".//build_spec.lua"
   - LUA: "lua 5.3"
     COMPILER: "vs"
+    FILES: ".//?.lua"
   - LUA: "lua 5.3"
     COMPILER: "mingw"
+    FILES: ".//build_spec.lua"
   - LUA: "luajit 2.0"
     COMPILER: "vs"
+    FILES: ".//?.lua"
   - LUA: "luajit 2.0"
     COMPILER: "mingw"
+    FILES: ".//build_spec.lua"
   - LUA: "luajit 2.1"
     COMPILER: "vs"
+    FILES: ".//?.lua"
   - LUA: "luajit 2.1"
     COMPILER: "mingw"
-
+    FILES: ".//build_spec.lua"
 
 init:
 # Setup Lua development/build environment
@@ -46,7 +55,7 @@ build_script:
   - luarocks install cluacov 1> NUL 2> NUL
 
 test_script:
-  - busted -o gtest -v --lpath=.//?.lua --exclude-tags=ssh,unix -Xhelper lua_dir=%CD%\lua_install,appveyor,%COMPILER%
+  - busted -o gtest -v --lpath=%FILES% --exclude-tags=ssh,unix -Xhelper lua_dir=%CD%\lua_install,appveyor,%COMPILER%
 
 after_test:
   - pip install codecov
