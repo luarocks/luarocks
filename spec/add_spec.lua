@@ -9,7 +9,7 @@ local extra_rocks = {
    "/luasocket-3.0rc1-2.rockspec"
 }
 
-describe("LuaRocks add tests #blackbox #b_add", function()
+describe("LuaRocks add tests #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)

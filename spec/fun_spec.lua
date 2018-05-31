@@ -3,7 +3,7 @@ local fun = require("luarocks.fun")
 
 test_env.unload_luarocks()
 
-describe("LuaRocks fun tests", function()
+describe("LuaRocks fun tests #unit", function()
    describe("fun.concat", function()
       it("returns the concatenation of the two tables given as arguments", function()
          local t1, t2

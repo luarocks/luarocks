@@ -3,7 +3,7 @@ local run = test_env.run
 
 test_env.unload_luarocks()
 
-describe("LuaRocks path tests #blackbox #b_path", function()
+describe("LuaRocks path tests #integration", function()
    before_each(function()
       test_env.setup_specs()
    end)

@@ -7,7 +7,7 @@ local site_config
 
 test_env.unload_luarocks()
 
-describe("LuaRocks config tests #blackbox #b_config", function()
+describe("LuaRocks config tests #integration", function()
    
    before_each(function()
       test_env.setup_specs()

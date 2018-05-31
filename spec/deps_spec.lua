@@ -13,7 +13,7 @@ local extra_rocks = {
    "/lpeg-1.0.0-1.src.rock",
 }
 
-describe("LuaRocks deps tests #blackbox #b_deps", function()
+describe("LuaRocks deps tests #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)

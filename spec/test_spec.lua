@@ -18,7 +18,7 @@ local extra_rocks = {
    "/mediator_lua-1.1.2-0.rockspec",   
 }
 
-describe("luarocks test #blackbox #b_test", function()
+describe("luarocks test #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)

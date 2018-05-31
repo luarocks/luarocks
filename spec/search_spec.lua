@@ -7,7 +7,7 @@ local extra_rocks = {
 "/lzlib-0.4.1.53-1.src.rock"
 }
 
-describe("LuaRocks search tests #blackbox #b_search", function()
+describe("LuaRocks search tests #integration", function()
    
    before_each(function()
       test_env.setup_specs(extra_rocks)

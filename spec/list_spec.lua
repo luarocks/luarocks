@@ -9,7 +9,7 @@ local extra_rocks = {
    "/say-1.2-1.src.rock"
 }
 
-describe("LuaRocks list tests #blackbox #b_list", function()
+describe("LuaRocks list tests #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)

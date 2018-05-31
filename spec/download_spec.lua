@@ -9,7 +9,7 @@ local extra_rocks = {
    "/validate-args-1.5.4-1.rockspec"
 }
 
-describe("LuaRocks download tests #blackbox #b_download", function()
+describe("LuaRocks download tests #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)

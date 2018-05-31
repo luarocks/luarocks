@@ -8,11 +8,10 @@ local lfs = require("lfs")
 local testing_paths = test_env.testing_paths
 local get_tmp_path = test_env.get_tmp_path
 
-describe("Luarocks fetch test #blackbox #b_fetch", function()
+describe("Luarocks fetch test #unit", function()
    local are_same_files = function(file1, file2)
       return file1 == file2 or lfs.attributes(file1).ino == lfs.attributes(file2).ino
-   end
-   
+   end   
    
    describe("fetch.is_basic_protocol", function()
       it("checks whether the arguments represent a valid protocol and returns the result of the check", function()
@@ -25,7 +24,7 @@ describe("Luarocks fetch test #blackbox #b_fetch", function()
       end)
    end)
    
-   describe("fetch.fetch_url", function()
+   describe("fetch.fetch_url #mock", function()
       setup(function()
          test_env.mock_server_init()
       end)
@@ -61,7 +60,7 @@ describe("Luarocks fetch test #blackbox #b_fetch", function()
       end)
    end)
    
-   describe("fetch.fetch_url_at_temp_dir", function()
+   describe("fetch.fetch_url_at_temp_dir #mock", function()
       local tmpfile
       local tmpdir
       
@@ -129,7 +128,7 @@ describe("Luarocks fetch test #blackbox #b_fetch", function()
       end)
    end)
 
-   describe("fetch.find_base_dir", function()
+   describe("fetch.find_base_dir #mock", function()
       setup(function()
          test_env.mock_server_init()
       end)
@@ -160,7 +159,7 @@ describe("Luarocks fetch test #blackbox #b_fetch", function()
       end)
    end)
    
-   describe("fetch.fetch_and_unpack_rock", function()
+   describe("fetch.fetch_and_unpack_rock #mock", function()
       local tmpdir
       
       after_each(function()
@@ -271,7 +270,7 @@ describe("Luarocks fetch test #blackbox #b_fetch", function()
       end)
    end)
    
-   describe("fetch.load_rockspec", function()
+   describe("fetch.load_rockspec #mock", function()
       setup(function()
          test_env.mock_server_init()
       end)
@@ -318,7 +317,7 @@ describe("Luarocks fetch test #blackbox #b_fetch", function()
       end)
    end)
    
-   describe("fetch.get_sources", function()
+   describe("fetch.get_sources #mock", function()
       setup(function()
          test_env.mock_server_init()
       end)

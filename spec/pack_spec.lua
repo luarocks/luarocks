@@ -14,7 +14,7 @@ local extra_rocks = {
    "/say-1.0-1.src.rock"
 }
 
-describe("LuaRocks pack #blackbox #b_pack", function()
+describe("LuaRocks pack #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
@@ -93,5 +93,3 @@ describe("LuaRocks pack #blackbox #b_pack", function()
    end)
 
 end)
-
-
