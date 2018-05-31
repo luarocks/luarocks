@@ -17,9 +17,12 @@ function luarocks.test_func()
 	return 1
 end
 
---- Doesn't work right now
-function luarocks.list(flags, filter, version)
-	list.command(flags, filter, version)
+--- Print the list of installed rocks
+local list = require("luarocks.cmd.list")
+flags = {}
+function luarocks.list(flags)
+       list.command(flags)
 end
+
 
 return luarocks
