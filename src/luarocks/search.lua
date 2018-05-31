@@ -334,32 +334,13 @@ end
 function search.return_results(results, porcelain)
    assert(type(results) == "table")
    assert(type(porcelain) == "boolean" or not porcelain)
-
-   --- iterator for results table
-   i=1
    for package, versions in util.sortedpairs(results) do
-      --if not porcelain then
-      --   util.printout(package)
-      --end
-      
       for version, repos in util.sortedpairs(versions, vers.compare_versions) do
          for _, repo in ipairs(repos) do
             repo.repo = dir.normalize(repo.repo)
-            if porcelain then
-               --util.printout(package, version, repo.arch, repo.repo)
-               results[i] = {package, version, repo.arch, repo.repo}
-            else
-               --util.printout("   "..version.." ("..repo.arch..") - "..repo.repo)
-               results[i] = {"   ", version, repo.arch, repo.repo}
-            end
+            table.insert(results, {package, version, repo.arch, repo.repo})
          end
       end
-      --if not porcelain then
-      --   util.printout()
-      --end
-      i = i+1
-      --print(i)
-
    end
    return results
 end
