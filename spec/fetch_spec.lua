@@ -2,6 +2,7 @@ local test_env = require("spec.util.test_env")
 local git_repo = require("spec.util.git_repo")
 
 test_env.unload_luarocks()
+test_env.setup_specs()
 local fetch = require("luarocks.fetch")
 local path = require("luarocks.path")
 local lfs = require("lfs")
@@ -11,7 +12,7 @@ local get_tmp_path = test_env.get_tmp_path
 describe("Luarocks fetch test #unit", function()
    local are_same_files = function(file1, file2)
       return file1 == file2 or lfs.attributes(file1).ino == lfs.attributes(file2).ino
-   end   
+   end
    
    describe("fetch.is_basic_protocol", function()
       it("checks whether the arguments represent a valid protocol and returns the result of the check", function()
