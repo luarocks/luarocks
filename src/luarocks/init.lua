@@ -194,4 +194,177 @@ function luarocks.doc(name, version)
    return descript.homepage, docdir, files
 end
 
+local function word_wrap(line) 
+   local width = tonumber(os.getenv("COLUMNS")) or 80
+   if width > 80 then width = 80 end
+   if #line > width then
+      local brk = width
+      while brk > 0 and line:sub(brk, brk) ~= " " do
+         brk = brk - 1
+      end
+      if brk > 0 then
+         return line:sub(1, brk-1) .. "\n" .. word_wrap(line:sub(brk+1))
+      end
+   end
+   return line
+end
+
+local function format_text(text)
+   text = text:gsub("^%s*",""):gsub("%s$", ""):gsub("\n[ \t]+","\n"):gsub("([^\n])\n([^\n])","%1 %2")
+   local paragraphs = util.split_string(text, "\n\n")
+   for n, line in ipairs(paragraphs) do
+      paragraphs[n] = word_wrap(line)
+   end
+   return (table.concat(paragraphs, "\n\n"):gsub("%s$", ""))
+end
+
+local function installed_rock_label(name, tree)
+   local installed, version
+   if cfg.rocks_provided[name] then
+      installed, version = true, cfg.rocks_provided[name]
+   else
+      installed, version = search.pick_installed_rock(name, nil, tree)
+   end
+   return installed and "(using "..version..")" or "(missing)"
+end
+
+local function return_items_table(name, version, item_set, item_type, repo)
+   local return_table = {}
+   for item_name in util.sortedpairs(item_set) do
+      --util.printout("\t"..item_name.." ("..repos.which(name, version, item_type, item_name, repo)..")")
+      table.insert(return_table, {item_name, repos.which(name, version, item_type, item_name, repo)})
+   end
+   return return_table
+end
+
+function luarocks.show(name, version)
+
+   --- The following code has been copied from command_line.lua; because without this, an error was poppong up:
+   --[[ lua: ...a/vert/api1_sandbox/share/lua/5.2/luarocks/core/path.lua:17: assertion failed!
+   stack traceback:
+      [C]: in function 'assert'
+      ...a/vert/api1_sandbox/share/lua/5.2/luarocks/core/path.lua:17: in function 'rocks_dir'
+      ...la/lua/vert/api1_sandbox/share/lua/5.2/luarocks/path.lua:78: in function 'install_dir'
+      ...la/lua/vert/api1_sandbox/share/lua/5.2/luarocks/path.lua:230: in function 'configure_paths'
+      ...a/lua/vert/api1_sandbox/share/lua/5.2/luarocks/fetch.lua:275: in function 'load_local_rockspec'
+      ...la/lua/vert/api1_sandbox/share/lua/5.2/luarocks/init.lua:124: in function 'doc'
+      api_testing.lua:29: in main chunk
+      [C]: in ?
+   --]]
+   -- because in path.install_dir, cfg.root_dir is called, which has to be specified, which the code below does.
+   if 1 then
+      local named = false
+      for _, tree in ipairs(cfg.rocks_trees) do
+         if type(tree) == "table" then
+            if not tree.root then
+               die("Configuration error: tree '"..tree.name.."' has no 'root' field.")
+            end
+            replace_tree(flags, tree.root)
+            named = true
+            break
+         end
+      end
+      if not named then
+         local root_dir = fs.absolute_name(flags["tree"])
+         replace_tree(flags, root_dir)
+      end
+   elseif flags["local"] then
+      if not cfg.home_tree then
+         die("The --local flag is meant for operating in a user's home directory.\n"..
+             "You are running as a superuser, which is intended for system-wide operation.\n"..
+             "To force using the superuser's home, use --tree explicitly.")
+      end
+      replace_tree(flags, cfg.home_tree)
+   else
+      local trees = cfg.rocks_trees
+      path.use_tree(trees[#trees])
+   end
+   
+   if type(cfg.root_dir) == "string" then
+      cfg.root_dir = cfg.root_dir:gsub("/+$", "")
+   else
+      cfg.root_dir.root = cfg.root_dir.root:gsub("/+$", "")
+   end
+   -- command_line.lua copied code ends here
+   
+   if not name then
+      return nil, "Argument missing. "..util.see_help("show")
+   end
+   
+   local repo, repo_url
+   -- for now i can do away with flags["tree"]
+   name, version, repo, repo_url = search.pick_installed_rock(name:lower(), version)
+   if not name then
+      return nil, version
+   end
+
+   local directory = path.install_dir(name,version,repo)
+   local rockspec_file = path.rockspec_file(name, version, repo)
+   local rockspec, err = fetch.load_local_rockspec(rockspec_file)
+   if not rockspec then
+      return nil,err
+   end
+
+   local descript = rockspec.description or {}
+   local manifest, err = manif.load_manifest(repo_url)
+   if not manifest then
+      return nil,err
+   end
+   local minfo = manifest.repository[name][version][1]
+
+   local show_table = {}
+
+   show_table["package"] = rockspec.package
+   show_table["version"] = rockspec.version
+   show_table["summary"] = rockspec.summary
+   if descript.detailed then
+      show_table["detailed"] = format_text(descript.detailed)
+   end
+   if descript.license then
+      show_table["license"] = rockspec.license
+   end
+   if descript.homepage then
+      show_table["homepage"] = rockspec.homepage
+   end
+   if descript.issues_url then
+      show_table["issues"] = rockspec.issues
+   end
+   if descript.labels then
+      show_table["labels"] = rockspec.labels
+   end
+   show_table["install_loc"] = path.rocks_tree_to_string(repo)
+   
+   if next(minfo.commands) then
+      show_table["commands"] = return_items_table(name, version, minfo.commands, "command", repo)
+   end
+
+   if next(minfo.modules) then
+      show_table["modules"] = return_items_table(name, version, minfo.modules, "module", repo)
+   end
+   
+   show_table["deps"] = {}
+   local direct_deps = {}
+   if #rockspec.dependencies > 0 then
+      for _, dep in ipairs(rockspec.dependencies) do
+         direct_deps[dep.name] = true
+         --util.printout("\t"..vers.show_dep(dep).." "..installed_rock_label(dep.name, flags["tree"]))
+         table.insert(show_table["deps"], {vers.show_dep(dep), installed_rock_label(dep.name )})
+      end
+   end
+   show_table["in_deps"] = {}
+   local has_indirect_deps
+   for dep_name in util.sortedpairs(minfo.dependencies or {}) do
+      if not direct_deps[dep_name] then
+         if not has_indirect_deps then
+            util.printout()
+            util.printout("Indirectly pulling:")
+            has_indirect_deps = true
+         end
+         --util.printout("\t"..dep_name.." "..installed_rock_label(dep_name, flags["tree"]))
+         table.insert(show_table["in_deps"], {dep_name, installed_rock_label(dep_name )})
+      end
+   end
+   return show_table
+end
+
 return luarocks
