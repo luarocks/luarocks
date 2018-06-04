@@ -323,16 +323,16 @@ function luarocks.show(name, version)
       show_table["detailed"] = format_text(descript.detailed)
    end
    if descript.license then
-      show_table["license"] = rockspec.license
+      show_table["license"] = descript.license
    end
    if descript.homepage then
-      show_table["homepage"] = rockspec.homepage
+      show_table["homepage"] = descript.homepage
    end
    if descript.issues_url then
-      show_table["issues"] = rockspec.issues
+      show_table["issues"] = descript.issues
    end
    if descript.labels then
-      show_table["labels"] = rockspec.labels
+      show_table["labels"] = descript.labels
    end
    show_table["install_loc"] = path.rocks_tree_to_string(repo)
    
