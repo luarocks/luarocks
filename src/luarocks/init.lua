@@ -10,6 +10,8 @@ local dir = require("luarocks.dir")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local download = require("luarocks.download")
+local manif = require("luarocks.manif")
+local repos = require("luarocks.repos")
 
 --- Obtain version of LuaRocks and its API.
 -- @return (string, string) Full version of this LuaRocks instance
