@@ -344,12 +344,17 @@ local function download_rocks(urls, save_path)
 end
 
 --- Create a file containing a string.
--- @param path string: path to file.
+-- @param pathname string: path to file.
 -- @param str string: content of the file.
-local function write_file(path, str)
-   local file = assert(io.open(path, "w"))
+function test_env.write_file(pathname, str, finally)
+   local file = assert(io.open(pathname, "w"))
    file:write(str)
    file:close()
+   if finally then
+      finally(function()
+         os.remove(pathname)
+      end)
+   end
 end
 
 --- Create md5sum of directory structure recursively, based on filename and size
@@ -666,8 +671,8 @@ local function create_configs()
       testing_cache = test_env.testing_paths.testing_cache
    })
 
-   write_file(test_env.testing_paths.testrun_dir .. "/testing_config.lua", config_content .. " \nweb_browser = \"true\"")
-   write_file(test_env.testing_paths.testrun_dir .. "/testing_config_show_downloads.lua", config_content
+   test_env.write_file(test_env.testing_paths.testrun_dir .. "/testing_config.lua", config_content .. " \nweb_browser = \"true\"")
+   test_env.write_file(test_env.testing_paths.testrun_dir .. "/testing_config_show_downloads.lua", config_content
                   .. "show_downloads = true \n rocks_servers={\"http://luarocks.org/repositories/rocks\"}")
 
    -- testing_config_sftp.lua
@@ -691,7 +696,7 @@ local function create_configs()
       testing_cache = test_env.testing_paths.testing_cache
    })
 
-   write_file(test_env.testing_paths.testrun_dir .. "/testing_config_sftp.lua", config_content)
+   test_env.write_file(test_env.testing_paths.testrun_dir .. "/testing_config_sftp.lua", config_content)
 
    -- luacov.config
    config_content = substitute([[
@@ -710,7 +715,7 @@ local function create_configs()
       testrun_dir = test_env.testing_paths.testrun_dir
    })
 
-   write_file(test_env.testing_paths.testrun_dir .. "/luacov.config", config_content)
+   test_env.write_file(test_env.testing_paths.testrun_dir .. "/luacov.config", config_content)
 
    config_content = [[
       -- Config file of mock LuaRocks.org site for tests
@@ -720,7 +725,7 @@ local function create_configs()
          api_version = "1",
       }
    ]]
-   write_file(test_env.testing_paths.testrun_dir .. "/luarocks_site.lua", config_content)
+   test_env.write_file(test_env.testing_paths.testrun_dir .. "/luarocks_site.lua", config_content)
 end
 
 --- Remove testing directories.

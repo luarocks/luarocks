@@ -244,6 +244,33 @@ describe("LuaRocks build tests #integration", function()
       end)
    end)
 
+   describe("rockspec format 3.0 #rs3", function()
+      it("defaults to build.type == 'builtin'", function()
+         local rockspec = "a_rock-1.0-1.rockspec"
+         test_env.write_file(rockspec, [[
+            rockspec_format = "3.0"
+            package = "a_rock"
+            version = "1.0-1"
+            source = {
+               url = "file://]] .. testing_paths.fixtures_dir .. [[/a_rock.lua"
+            }
+            description = {
+               summary = "An example rockspec",
+            }
+            dependencies = {
+               "lua >= 5.1"
+            }
+            build = {
+               modules = {
+                  build = "a_rock.lua"
+               },
+            }
+         ]], finally)
+         assert.truthy(run.luarocks_bool("build " .. rockspec))
+         assert.is.truthy(run.luarocks("show a_rock"))
+      end)
+   end)
+
    describe("#mock external dependencies", function()
       setup(function()
          test_env.mock_server_init()

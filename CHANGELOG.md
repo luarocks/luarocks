@@ -48,6 +48,7 @@ Rockspec 3.0
 
 These features are only enabled if `rockspec_format = "3.0"` is set in the rockspec:
 
+* Build type `builtin` is the default if `build.type` is not specified.
 * New table `build_dependencies`: dependencies used only for running `luarocks build`
   but not when installing binary rocks.
 * New table `test_dependencies`: dependencies used only for running `luarocks test`

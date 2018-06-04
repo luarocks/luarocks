@@ -170,8 +170,14 @@ function build.build_rockspec(rockspec_file, need_to_fetch, minimal_mode, deps_m
       return nil, err, errcode
    elseif not rockspec.build then
       return nil, "Rockspec error: build table not specified"
-   elseif not rockspec.build.type then
-      return nil, "Rockspec error: build type not specified"
+   end
+
+   if not rockspec.build.type then
+      if rockspec:format_is_at_least("3.0") then
+         rockspec.build.type = "builtin"
+      else
+         return nil, "Rockspec error: build type not specified"
+      end
    end
 
    if not build_only_deps then
