@@ -127,6 +127,12 @@ function builtin.run(rockspec)
          def:write("EXPORTS\n")
          def:write("luaopen_"..exported_name.."\n")
          def:close()
+
+         -- TODO: Refactor the code below to make changes in the proper locations.
+         -- For some reason the lib extension here is ".dll". It must be ".lib" !!.
+         variables.LUALIB = string.gsub(variables.LUALIB, ".dll$", ".lib") -- Changing in place because I don't know where it is being defined. (cfg.lua does not help)
+         -- For some reason the lib directory is not ".../lib". I'll append it in place because I don't know where it is bein defined. (cfg.lua does not help)
+         variables.LUA_LIBDIR = variables.LUA_LIBDIR .. "/lib"
          local ok = execute(variables.LD, "-dll", "-def:"..deffile, "-out:"..library, dir.path(variables.LUA_LIBDIR, variables.LUALIB), unpack(extras))
          local basedir = ""
          if name:find("%.") ~= nil then
@@ -220,7 +226,7 @@ function builtin.run(rockspec)
        end
      end
    end
-   
+
    if not build.modules then
       return nil, "Missing build.modules table"
    end
