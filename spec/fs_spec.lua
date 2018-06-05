@@ -50,6 +50,17 @@ describe("Luarocks fs test #unit", function()
          fs.execute("chmod -x " .. fs.Q(path))
       end
    end
+   
+   local runner
+   
+   setup(function()
+      runner = require("luacov.runner")
+      runner.init(testing_paths.testrun_dir .. "/luacov.config")
+   end)
+   
+   teardown(function()
+      runner.shutdown()
+   end)
 
    describe("fs.Q", function()
       it("simple argument", function()

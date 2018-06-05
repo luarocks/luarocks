@@ -74,6 +74,17 @@ test_env.unload_luarocks()
 local util = require("luarocks.util")
 
 describe("Luarocks util test #unit", function()
+   local runner
+   
+   setup(function()
+      runner = require("luacov.runner")
+      runner.init(testing_paths.testrun_dir .. "/luacov.config")
+   end)
+   
+   teardown(function()
+      runner.shutdown()
+   end)
+   
    describe("util.sortedpairs", function()
       local function collect(iter, state, var)
          local collected = {}

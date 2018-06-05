@@ -14,6 +14,17 @@ describe("Luarocks fetch test #unit", function()
       return file1 == file2 or lfs.attributes(file1).ino == lfs.attributes(file2).ino
    end
    
+   local runner
+   
+   setup(function()
+      runner = require("luacov.runner")
+      runner.init(testing_paths.testrun_dir .. "/luacov.config")
+   end)
+   
+   teardown(function()
+      runner.shutdown()
+   end)
+   
    describe("fetch.is_basic_protocol", function()
       it("checks whether the arguments represent a valid protocol and returns the result of the check", function()
          assert.truthy(fetch.is_basic_protocol("http"))
