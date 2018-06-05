@@ -72,6 +72,7 @@ end)
 
 test_env.unload_luarocks()
 local util = require("luarocks.util")
+local core_util = require("luarocks.core.util")
 
 describe("Luarocks util test #unit", function()
    local runner
@@ -133,6 +134,39 @@ describe("Luarocks util test #unit", function()
          }, collect(util.sortedpairs({
             k1 = "v1", k2 = "v2", k3 = "v3", k4 = "v4", k5 = "v5"
          }, {"k3", {"k2", {"sub order"}}, "k1"})))
+      end)
+   end)
+   
+   describe("core.util.show_table", function()
+      it("returns a pretty-printed string containing the representation of the given table", function()
+         local result
+         
+         local t1 = {1, 2, 3}
+         result = core_util.show_table(t1)
+         assert.truthy(result:find("[1] = 1", 1, true))
+         assert.truthy(result:find("[2] = 2", 1, true))
+         assert.truthy(result:find("[3] = 3", 1, true))
+         
+         local t2 = {a = 1, b = 2, c = 3}
+         result = core_util.show_table(t2)
+         assert.truthy(result:find("[\"a\"] = 1", 1, true))
+         assert.truthy(result:find("[\"b\"] = 2", 1, true))
+         assert.truthy(result:find("[\"c\"] = 3", 1, true))
+         
+         local t3 = {a = 1, b = "2", c = {3}}
+         result = core_util.show_table(t3)
+         assert.truthy(result:find("[\"a\"] = 1", 1, true))
+         assert.truthy(result:find("[\"b\"] = \"2\"", 1, true))
+         assert.truthy(result:find("[\"c\"] = {", 1, true))
+         assert.truthy(result:find("[1] = 3", 1, true))
+         
+         local t4 = {a = 1, b = {c = 2, d = {e = "4"}}}
+         result = core_util.show_table(t4)
+         assert.truthy(result:find("[\"a\"] = 1", 1, true))
+         assert.truthy(result:find("[\"b\"] = {", 1, true))
+         assert.truthy(result:find("[\"c\"] = 2", 1, true))
+         assert.truthy(result:find("[\"d\"] = {", 1, true))
+         assert.truthy(result:find("[\"e\"] = \"4\"", 1, true))
       end)
    end)
 end)
