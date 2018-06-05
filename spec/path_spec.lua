@@ -57,4 +57,19 @@ describe("LuaRocks path tests #integration", function()
    it("LuaRocks path with tree", function()
       assert.is_true(run.luarocks_bool("path --tree=lua_modules"))
    end)
+   
+   it("LuaRocks path with project-tree", function()
+      local path1 = "/share/lua/5%." .. test_env.lua_version:sub(3, 3) .. "/%?%.lua"
+      local path2 = "/share/lua/5%." .. test_env.lua_version:sub(3, 3) .. "/%?/init%.lua"
+      
+      local path = run.luarocks("path --project-tree=foo")
+      assert.truthy(path:find("foo" .. path1))
+      assert.truthy(path:find("foo" .. path2))
+      
+      path = run.luarocks("path --project-tree=foo --tree=bar")
+      assert.falsy(path:find("foo" .. path1))
+      assert.falsy(path:find("foo" .. path2))
+      assert.truthy(path:find("bar" .. path1))
+      assert.truthy(path:find("bar" .. path2))
+   end)
 end)

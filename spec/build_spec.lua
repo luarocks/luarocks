@@ -35,12 +35,27 @@ describe("LuaRocks build tests #integration", function()
    end)
 
    describe("LuaRocks build - basic testing set", function()
-      it("LuaRocks build with no flags/arguments", function()
-         assert.is_false(run.luarocks_bool("build"))
-      end)
-      
       it("LuaRocks build invalid", function()
          assert.is_false(run.luarocks_bool("build invalid"))
+      end)
+      
+      it("LuaRocks build with no arguments behaves as luarocks make", function()
+         local tmpdir = test_env.get_tmp_path()
+         lfs.mkdir(tmpdir)
+         local olddir = lfs.currentdir()
+         lfs.chdir(tmpdir)
+         test_env.copy(testing_paths.fixtures_dir .. "/c_module-1.0-1.rockspec", tmpdir .. "/c_module-1.0-1.rockspec")
+         test_env.copy(testing_paths.fixtures_dir .. "/c_module.c", tmpdir .. "/c_module.c")
+         
+         assert.is_true(run.luarocks_bool("build"))
+         if test_env.TEST_TARGET_OS == "windows" then
+            assert.truthy(lfs.attributes(tmpdir .. "/c_module.dll"))
+         else
+            assert.truthy(lfs.attributes(tmpdir .. "/c_module.so"))
+         end
+         
+         lfs.chdir(olddir)
+         lfs.rmdir(tmpdir)
       end)
    end)
 
