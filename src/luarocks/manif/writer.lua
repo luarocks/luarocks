@@ -275,6 +275,7 @@ function writer.make_rock_manifest(name, version)
    local rock_manifest = { rock_manifest=tree }
    manif.rock_manifest_cache[name.."/"..version] = rock_manifest
    save_table(install_dir, "rock_manifest", rock_manifest )
+   return true
 end
 
 -- Writes a 'rock_namespace' file in a locally installed rock directory.

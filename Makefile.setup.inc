@@ -23,5 +23,5 @@ fetch/cvs.lua fetch/git_https.lua fetch/git_ssh.lua fetch/hg_http.lua \
 fetch/git_http.lua fetch/svn.lua fetch/git.lua fetch/hg_ssh.lua \
 fetch/hg_https.lua fetch/hg.lua core/vers.lua cmd/which.lua \
 fun.lua type/manifest.lua type/rockspec.lua queries.lua results.lua \
-test/busted.lua test/command.lua cmd/init.lua
+test/busted.lua test/command.lua cmd/init.lua rockspecs.lua
 

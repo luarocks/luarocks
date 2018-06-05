@@ -147,7 +147,7 @@ function repos.has_binaries(name, version)
 end
 
 function repos.run_hook(rockspec, hook_name)
-   assert(type(rockspec) == "table")
+   assert(rockspec:type() == "rockspec")
    assert(type(hook_name) == "string")
 
    local hooks = rockspec.hooks
@@ -174,7 +174,7 @@ function repos.run_hook(rockspec, hook_name)
 end
 
 function repos.should_wrap_bin_scripts(rockspec)
-   assert(type(rockspec) == "table")
+   assert(rockspec:type() == "rockspec")
 
    if cfg.wrap_bin_scripts ~= nil then
       return cfg.wrap_bin_scripts

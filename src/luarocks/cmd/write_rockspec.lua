@@ -7,9 +7,9 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local persist = require("luarocks.persist")
+local rockspecs = require("luarocks.rockspecs")
 local type_rockspec = require("luarocks.type.rockspec")
 local util = require("luarocks.util")
-local vers = require("luarocks.core.vers")
 
 write_rockspec.help_summary = "Write a template for a rockspec file."
 write_rockspec.help_arguments = "[--output=<file> ...] [<name>] [<version>] [<url>|<path>]"
@@ -46,7 +46,7 @@ local function open_file(name)
    return io.open(dir.path(fs.current_dir(), name), "r")
 end
 
-local function get_url(rockspec)
+local function fetch_url(rockspec)
    local file, temp_dir, err_code, err_file, err_temp_dir = fetch.fetch_sources(rockspec, false)
    if err_code == "source.dir" then
       file, temp_dir = err_file, err_temp_dir
@@ -55,37 +55,78 @@ local function get_url(rockspec)
       return false
    end
    util.printout("File successfully downloaded. Making checksum and checking base dir...")
-   if fetch.is_basic_protocol(rockspec.source.protocol) then
+   if dir.is_basic_protocol(rockspec.source.protocol) then
       rockspec.source.md5 = fs.get_md5(file)
    end
    local inferred_dir, found_dir = fetch.find_base_dir(file, temp_dir, rockspec.source.url)
    return true, found_dir or inferred_dir, temp_dir
 end
 
-local function configure_lua_version(rockspec, luaver)
-   if luaver == "5.1" then
-      table.insert(rockspec.dependencies, "lua ~> 5.1")
-   elseif luaver == "5.2" then
-      table.insert(rockspec.dependencies, "lua ~> 5.2")
-   elseif luaver == "5.3" then
-      table.insert(rockspec.dependencies, "lua ~> 5.3")
-   elseif luaver == "5.4" then
-      table.insert(rockspec.dependencies, "lua ~> 5.4")
-   elseif luaver == "5.1,5.2" then
-      table.insert(rockspec.dependencies, "lua >= 5.1, < 5.3")
-   elseif luaver == "5.2,5.3" then
-      table.insert(rockspec.dependencies, "lua >= 5.2, < 5.4")
-   elseif luaver == "5.3,5.4" then
-      table.insert(rockspec.dependencies, "lua >= 5.3, < 5.5")
-   elseif luaver == "5.1,5.2,5.3" then
-      table.insert(rockspec.dependencies, "lua >= 5.1, < 5.4")
-   elseif luaver == "5.2,5.3,5.4" then
-      table.insert(rockspec.dependencies, "lua >= 5.2, < 5.5")
-   elseif luaver == "5.1,5.2,5.3,5.4" then
-      table.insert(rockspec.dependencies, "lua >= 5.1, < 5.5")
-   else
-      util.warning("Please specify supported Lua version with --lua-version=<ver>. "..util.see_help("write_rockspec"))
+local lua_version_dep = {
+   ["5.1"] = "lua ~> 5.1",
+   ["5.2"] = "lua ~> 5.2",
+   ["5.3"] = "lua ~> 5.3",
+   ["5.4"] = "lua ~> 5.4",
+   ["5.1,5.2"] = "lua >= 5.1, < 5.3",
+   ["5.2,5.3"] = "lua >= 5.2, < 5.4",
+   ["5.3,5.4"] = "lua >= 5.3, < 5.5",
+   ["5.1,5.2,5.3"] = "lua >= 5.1, < 5.4",
+   ["5.2,5.3,5.4"] = "lua >= 5.2, < 5.5",
+   ["5.1,5.2,5.3,5.4"] = "lua >= 5.1, < 5.5",
+}
+
+local simple_scm_protocols = {
+   git = true, ["git+http"] = true, ["git+https"] = true,
+   hg = true, ["hg+http"] = true, ["hg+https"] = true
+}
+
+local detect_url
+do
+   local function detect_url_from_command(program, args, directory)
+      local command = fs.Q(cfg.variables[program:upper()]).. " "..args
+      local pipe = io.popen(fs.command_at(directory, fs.quiet_stderr(command)))
+      if not pipe then return nil end
+      local url = pipe:read("*a"):match("^([^\r\n]+)")
+      pipe:close()
+      if not url then return nil end
+      if not util.starts_with(url, program.."://") then
+         url = program.."+"..url
+      end
+   
+      if simple_scm_protocols[dir.split_url(url)] then
+         return url
+      end
    end
+   
+   local function detect_scm_url(directory)
+      return detect_url_from_command("git", "config --get remote.origin.url", directory) or
+         detect_url_from_command("hg", "paths default", directory)
+   end
+
+   detect_url = function(url_or_dir)
+      if url_or_dir:match("://") then
+         return url_or_dir
+      else
+         return detect_scm_url(url_or_dir) or "*** please add URL for source tarball, zip or repository here ***"
+      end
+   end
+end
+
+local function detect_homepage(url, homepage)
+   if homepage then
+      return homepage
+   end
+   local url_protocol, url_path = dir.split_url(url)
+
+   if simple_scm_protocols[url_protocol] then
+      for _, domain in ipairs({"github.com", "bitbucket.org", "gitlab.com"}) do
+         if util.starts_with(url_path, domain) then
+            return "https://"..url_path:gsub("%.git$", "")
+         end
+      end
+   end
+
+   return "*** please enter a project homepage ***"
 end
 
 local function detect_description()
@@ -118,32 +159,6 @@ local function detect_mit_license(data)
       end
    end
    return sum == 78656
-end
-
-local simple_scm_protocols = {
-   git = true, ["git+http"] = true, ["git+https"] = true,
-   hg = true, ["hg+http"] = true, ["hg+https"] = true
-}
-
-local function detect_url_from_command(program, args, directory)
-   local command = fs.Q(cfg.variables[program:upper()]).. " "..args
-   local pipe = io.popen(fs.command_at(directory, fs.quiet_stderr(command)))
-   if not pipe then return nil end
-   local url = pipe:read("*a"):match("^([^\r\n]+)")
-   pipe:close()
-   if not url then return nil end
-   if not util.starts_with(url, program.."://") then
-      url = program.."+"..url
-   end
-
-   if simple_scm_protocols[dir.split_url(url)] then
-      return url
-   end
-end
-
-local function detect_scm_url(directory)
-   return detect_url_from_command("git", "config --get remote.origin.url", directory) or
-      detect_url_from_command("hg", "paths default", directory)
 end
 
 local function check_license()
@@ -182,7 +197,7 @@ local function fill_as_builtin(rockspec, libs)
          break
       end
    end
-   
+
    local incdirs, libdirs
    if libs then
       incdirs, libdirs = {}, {}
@@ -259,7 +274,7 @@ function write_rockspec.command(flags, name, version, url_or_dir)
       if pathname == "." then
          name = name or dir.base_name(fs.current_dir())
       end
-   elseif fetch.is_basic_protocol(protocol) then
+   elseif dir.is_basic_protocol(protocol) then
       local filename = dir.base_name(url_or_dir)
       local newname, newversion = filename:match("(.*)-([^-]+)")
       if newname then
@@ -276,48 +291,47 @@ function write_rockspec.command(flags, name, version, url_or_dir)
    version = version or "dev"
 
    local filename = flags["output"] or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
-
-   local rockspec = {
+   
+   local url = detect_url(url_or_dir)
+   local homepage = detect_homepage(url, flags["homepage"])
+   
+   local rockspec, err = rockspecs.from_persisted_table(filename, {
       rockspec_format = flags["rockspec-format"],
       package = name,
-      name = name:lower(),
       version = version.."-1",
       source = {
-         url = "*** please add URL for source tarball, zip or repository here ***",
+         url = url,
          tag = flags["tag"],
       },
       description = {
          summary = flags["summary"] or "*** please specify description summary ***",
          detailed = flags["detailed"] or "*** please enter a detailed description ***",
-         homepage = flags["homepage"] or "*** please enter a project homepage ***",
+         homepage = homepage,
          license = flags["license"] or "*** please specify a license ***",
       },
-      dependencies = {},
+      dependencies = {
+         lua_version_dep[flags["lua-version"]],
+      },
       build = {},
-   }
-   path.configure_paths(rockspec)
+   })
+   assert(not err, err)
    rockspec.source.protocol = protocol
    
-   local parsed_format = vers.parse_version(rockspec.rockspec_format or "1.0")
-   rockspec.format_is_at_least = function(_, v)
-      return parsed_format >= vers.parse_version(v)
+   if not next(rockspec.dependencies) then
+      util.warning("Please specify supported Lua version with --lua-version=<ver>. "..util.see_help("write_rockspec"))
    end
-   
-   configure_lua_version(rockspec, flags["lua-version"])
    
    local local_dir = url_or_dir
 
    if url_or_dir:match("://") then
-      rockspec.source.url = url_or_dir
       rockspec.source.file = dir.base_name(url_or_dir)
-      rockspec.source.dir = "dummy"
-      if not fetch.is_basic_protocol(rockspec.source.protocol) then
+      if not dir.is_basic_protocol(rockspec.source.protocol) then
          if version ~= "dev" then
             rockspec.source.tag = flags["tag"] or "v" .. version
          end
       end
       rockspec.source.dir = nil
-      local ok, base_dir, temp_dir = get_url(rockspec)
+      local ok, base_dir, temp_dir = fetch_url(rockspec)
       if ok then
          if base_dir ~= dir.base_name(url_or_dir) then
             rockspec.source.dir = base_dir
@@ -328,25 +342,10 @@ function write_rockspec.command(flags, name, version, url_or_dir)
       else
          local_dir = nil
       end
-   else
-      rockspec.source.url = detect_scm_url(local_dir) or rockspec.source.url
    end
    
    if not local_dir then
       local_dir = "."
-   end
-
-   if not flags["homepage"] then
-      local url_protocol, url_path = dir.split_url(rockspec.source.url)
-
-      if simple_scm_protocols[url_protocol] then
-         for _, domain in ipairs({"github.com", "bitbucket.org", "gitlab.com"}) do
-            if util.starts_with(url_path, domain) then
-               rockspec.description.homepage = "https://"..url_path:gsub("%.git$", "")
-               break
-            end
-         end
-      end
    end
    
    local libs = nil
@@ -364,7 +363,7 @@ function write_rockspec.command(flags, name, version, url_or_dir)
    local ok, err = fs.change_dir(local_dir)
    if not ok then return nil, "Failed reaching files from project - error entering directory "..local_dir end
 
-   if (not flags["summary"]) or (not flags["detailed"]) then
+   if not (flags["summary"] and flags["detailed"]) then
       local summary, detailed = detect_description()
       rockspec.description.summary = flags["summary"] or summary
       rockspec.description.detailed = flags["detailed"] or detailed

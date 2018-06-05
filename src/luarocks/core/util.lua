@@ -116,7 +116,6 @@ end
 --- Merges contents of src on top of dst's contents.
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.
--- @see platform_overrides
 function util.deep_merge(dst, src)
    for k, v in pairs(src) do
       if type(v) == "table" then

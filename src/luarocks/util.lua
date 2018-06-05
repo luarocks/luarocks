@@ -215,37 +215,6 @@ function util.parse_flags(...)
    return flags, unpack(out)
 end
 
---- Perform platform-specific overrides on a table.
--- Overrides values of table with the contents of the appropriate
--- subset of its "platforms" field. The "platforms" field should
--- be a table containing subtables keyed with strings representing
--- platform names. Names that match the contents of the global
--- cfg.platforms setting are used. For example, if
--- cfg.platforms= {"foo"}, then the fields of
--- tbl.platforms.foo will overwrite those of tbl with the same
--- names. For table values, the operation is performed recursively
--- (tbl.platforms.foo.x.y.z overrides tbl.x.y.z; other contents of
--- tbl.x are preserved).
--- @param tbl table or nil: Table which may contain a "platforms" field;
--- if it doesn't (or if nil is passed), this function does nothing.
-function util.platform_overrides(tbl)
-   assert(type(tbl) == "table" or not tbl)
-   
-   local cfg = require("luarocks.core.cfg")
-   
-   if not tbl then return end
-   
-   if tbl.platforms then
-      for _, platform in ipairs(cfg.platforms) do
-         local platform_tbl = tbl.platforms[platform]
-         if platform_tbl then
-            core.deep_merge(tbl, platform_tbl)
-         end
-      end
-   end
-   tbl.platforms = nil
-end
-
 local var_format_pattern = "%$%((%a[%a%d_]+)%)"
 
 -- Check if a set of needed variables are referenced

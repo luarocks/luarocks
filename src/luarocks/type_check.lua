@@ -110,12 +110,12 @@ function type_check.type_check_table(version, tbl, typetbl, context)
    assert(type(version) == "string")
    assert(type(tbl) == "table")
    assert(type(typetbl) == "table")
-   
+
    local ok, err = check_version(version, typetbl, context)
    if not ok then
       return nil, err
    end
-   
+
    for k, v in pairs(tbl) do
       local t = typetbl[k] or typetbl._any
       if t then 

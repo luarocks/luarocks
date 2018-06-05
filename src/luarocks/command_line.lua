@@ -23,7 +23,7 @@ end
 -- @param message string: The error message.
 -- @param exitcode number: the exitcode to use
 local function die(message, exitcode)
-   assert(type(message) == "string")
+   assert(type(message) == "string", "bad error, expected string, got: " .. type(message))
    util.printerr("\nError: "..message)
 
    local ok, err = xpcall(util.run_scheduled_functions, error_handler)
@@ -136,10 +136,6 @@ function command_line.run_command(...)
 
    if flags["deps-mode"] and not deps.check_deps_mode_flag(flags["deps-mode"]) then
       die("Invalid entry for --deps-mode.")
-   end
-   
-   if flags["branch"] then
-     cfg.branch = flags["branch"]
    end
    
    if flags["tree"] then

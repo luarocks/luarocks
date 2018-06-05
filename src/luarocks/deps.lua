@@ -14,7 +14,7 @@ local queries = require("luarocks.queries")
 -- @param dep table: A dependency parsed in table format.
 -- @param blacklist table: Versions that can't be accepted. Table where keys
 -- are program versions and values are 'true'.
--- @param rocks_provided table: A table of auto-dependencies provided 
+-- @param rocks_provided table: A table of auto-provided dependencies.
 -- by this Lua implementation for the given dependency.
 -- @return string or nil: latest installed version of the rock matching the dependency
 -- or nil if it could not be matched.
@@ -48,7 +48,8 @@ local function match_dep(dep, blacklist, deps_mode, rocks_provided)
 end
 
 --- Attempt to match dependencies of a rockspec to installed rocks.
--- @param rockspec table: The rockspec loaded as a table.
+-- @param dependencies table: The table of dependencies.
+-- @param rocks_provided table: The table of auto-provided dependencies.
 -- @param blacklist table or nil: Program versions to not use as valid matches.
 -- Table where keys are program names and values are tables where keys
 -- are program versions and values are 'true'.
@@ -58,15 +59,14 @@ end
 -- parsed as tables; and a table of "no-upgrade" missing dependencies
 -- (to be used in plugin modules so that a plugin does not force upgrade of
 -- its parent application).
-function deps.match_deps(rockspec, blacklist, deps_mode)
-   assert(type(rockspec) == "table")
+function deps.match_deps(dependencies, rocks_provided, blacklist, deps_mode)
    assert(type(blacklist) == "table" or not blacklist)
    local matched, missing, no_upgrade = {}, {}, {}
    
-   for _, dep in ipairs(rockspec.dependencies) do
-      local found = match_dep(dep, blacklist and blacklist[dep.name] or nil, deps_mode, rockspec.rocks_provided)
+   for _, dep in ipairs(dependencies) do
+      local found = match_dep(dep, blacklist and blacklist[dep.name] or nil, deps_mode, rocks_provided)
       if found then
-         if not rockspec.rocks_provided[dep.name] then
+         if not rocks_provided[dep.name] then
             matched[dep] = {name = dep.name, version = found}
          end
       else
@@ -266,7 +266,7 @@ end
 -- @return boolean or (nil, string): True if no errors occurred, or
 -- nil and an error message if any test failed.
 function deps.check_external_deps(rockspec, mode)
-   assert(type(rockspec) == "table")
+   assert(rockspec:type() == "rockspec")
 
    local fs = require("luarocks.fs")
    
@@ -431,25 +431,24 @@ function deps.scan_deps(results, manifest, name, version, deps_mode)
       return
    end
    if not manifest.dependencies then manifest.dependencies = {} end
-   local dependencies = manifest.dependencies
-   if not dependencies[name] then dependencies[name] = {} end
-   local dependencies_name = dependencies[name]
-   local deplist = dependencies_name[version]
-   local rockspec, err
-   if not deplist then
-      rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version), false)
+   local md = manifest.dependencies
+   if not md[name] then md[name] = {} end
+   local mdn = md[name]
+   local dependencies = mdn[version]
+   local rocks_provided
+   if not dependencies then
+      local rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version), false)
       if not rockspec then
          util.printerr("Couldn't load rockspec for "..name.." "..version..": "..err)
          return
       end
-      dependencies_name[version] = rockspec.dependencies
+      dependencies = rockspec.dependencies
+      rocks_provided = rockspec.rocks_provided
+      mdn[version] = dependencies
    else
-      rockspec = {
-         dependencies = deplist,
-         rocks_provided = setmetatable({}, { __index = cfg.rocks_provided_3_0 })
-      }
+      rocks_provided = setmetatable({}, { __index = cfg.rocks_provided_3_0 })
    end
-   local matched = deps.match_deps(rockspec, nil, deps_mode)
+   local matched = deps.match_deps(dependencies, rocks_provided, nil, deps_mode)
    results[name] = version
    for _, match in pairs(matched) do
       deps.scan_deps(results, manifest, match.name, match.version, deps_mode)

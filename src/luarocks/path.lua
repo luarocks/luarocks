@@ -211,26 +211,6 @@ function path.module_to_path(mod)
    return (mod:gsub("[^.]*$", ""):gsub("%.", "/"))
 end
 
---- Set up path-related variables for a given rock.
--- Create a "variables" table in the rockspec table, containing
--- adjusted variables according to the configuration file.
--- @param rockspec table: The rockspec table.
-function path.configure_paths(rockspec)
-   assert(type(rockspec) == "table")
-   local vars = {}
-   for k,v in pairs(cfg.variables) do
-      vars[k] = v
-   end
-   local name, version = rockspec.name, rockspec.version
-   vars.PREFIX = path.install_dir(name, version)
-   vars.LUADIR = path.lua_dir(name, version)
-   vars.LIBDIR = path.lib_dir(name, version)
-   vars.CONFDIR = path.conf_dir(name, version)
-   vars.BINDIR = path.bin_dir(name, version)
-   vars.DOCDIR = path.doc_dir(name, version)
-   rockspec.variables = vars
-end
-
 function path.use_tree(tree)
    cfg.root_dir = tree
    cfg.rocks_dir = path.rocks_dir(tree)

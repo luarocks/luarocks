@@ -4,17 +4,10 @@ local fetch = {}
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
-local type_rockspec = require("luarocks.type.rockspec")
-local path = require("luarocks.path")
-local vers = require("luarocks.core.vers")
-local queries = require("luarocks.queries")
+local rockspecs = require("luarocks.rockspecs")
 local persist = require("luarocks.persist")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
-
-function fetch.is_basic_protocol(protocol, remote)
-   return protocol == "http" or protocol == "https" or protocol == "ftp" or (not remote and protocol == "file")
-end
 
 --- Fetch a local or remote file.
 -- Make a remote or local URL/pathname local, fetching the file if necessary.
@@ -37,7 +30,7 @@ function fetch.fetch_url(url, filename, cache)
    local protocol, pathname = dir.split_url(url)
    if protocol == "file" then
       return fs.absolute_name(pathname)
-   elseif fetch.is_basic_protocol(protocol, true) then
+   elseif dir.is_basic_protocol(protocol) then
       local ok, name = fs.download(url, filename, cache)
       if not ok then
          return nil, "Failed downloading "..url..(filename and " - "..filename or ""), "network"
@@ -105,7 +98,7 @@ function fetch.find_base_dir(file, temp_dir, src_url, src_dir)
    local ok, err = fs.change_dir(temp_dir)
    if not ok then return nil, err end
    fs.unpack_archive(file)
-   local inferred_dir = src_dir or fetch.url_to_base_dir(src_url)
+   local inferred_dir = src_dir or dir.deduce_base_dir(src_url)
    local found_dir = nil
    if fs.exists(inferred_dir) then
       found_dir = inferred_dir
@@ -170,131 +163,39 @@ function fetch.fetch_and_unpack_rock(rock_file, dest)
    return unpack_dir
 end
 
-function fetch.url_to_base_dir(url)
-   -- for extensions like foo.tar.gz, "gz" is stripped first
-   local known_exts = {}
-   for _, ext in ipairs{"zip", "git", "tgz", "tar", "gz", "bz2"} do
-      known_exts[ext] = ""
-   end
-   local base = dir.base_name(url)
-   return (base:gsub("%.([^.]*)$", known_exts):gsub("%.tar", ""))
-end
-
-local function convert_dependencies(rockspec, key)
-   if rockspec[key] then
-      for i = 1, #rockspec[key] do
-         local parsed, err = queries.from_dep_string(rockspec[key][i])
-         if not parsed then
-            return nil, "Parse error processing dependency '"..rockspec[key][i].."': "..tostring(err)
-         end
-         rockspec[key][i] = parsed
-      end
-   else
-      rockspec[key] = {}
-   end
-end
-
 --- Back-end function that actually loads the local rockspec.
 -- Performs some validation and postprocessing of the rockspec contents.
--- @param filename string: The local filename of the rockspec file.
+-- @param rel_filename string: The local filename of the rockspec file.
 -- @param quick boolean: if true, skips some steps when loading
 -- rockspec.
 -- @return table or (nil, string): A table representing the rockspec
 -- or nil followed by an error message.
-function fetch.load_local_rockspec(filename, quick)
-   assert(type(filename) == "string")
-   filename = fs.absolute_name(filename)
-   local rockspec, err = persist.load_into_table(filename)
-   if not rockspec then
-      return nil, "Could not load rockspec file "..filename.." ("..err..")"
-   end
-   if cfg.branch and (type(rockspec.source) == "table") then
-      rockspec.source.branch = cfg.branch
-   end
-   local globals = err
+function fetch.load_local_rockspec(rel_filename, quick)
+   assert(type(rel_filename) == "string")
+   local abs_filename = fs.absolute_name(rel_filename)
 
-   if rockspec.rockspec_format then
-      if vers.compare_versions(rockspec.rockspec_format, type_rockspec.rockspec_format) then
-         return nil, "Rockspec format "..rockspec.rockspec_format.." is not supported, please upgrade LuaRocks."
-      end
-   end
-
-   if not quick then
-      local ok, err = type_rockspec.check(rockspec, globals)
-      if not ok then
-         return nil, filename..": "..err
-      end
-   end
-
-   --- Check if rockspec format version satisfies version requirement.
-   -- @param rockspec table: The rockspec table.
-   -- @param version string: required version.
-   -- @return boolean: true if rockspec format matches version or is newer, false otherwise.
-   do
-      local parsed_format = vers.parse_version(rockspec.rockspec_format or "1.0")
-      rockspec.format_is_at_least = function(self, version)
-         return parsed_format >= vers.parse_version(version)
-      end
-   end
-
-   util.platform_overrides(rockspec.build)
-   util.platform_overrides(rockspec.dependencies)
-   util.platform_overrides(rockspec.build_dependencies)
-   util.platform_overrides(rockspec.test_dependencies)
-   util.platform_overrides(rockspec.external_dependencies)
-   util.platform_overrides(rockspec.source)
-   util.platform_overrides(rockspec.hooks)
-   util.platform_overrides(rockspec.test)
-
-   local basename = dir.base_name(filename)
-   if basename == "rockspec" then
-      rockspec.name = rockspec.package:lower()
-   else
-      rockspec.name = basename:match("(.*)-[^-]*-[0-9]*")
-      if not rockspec.name then
+   local basename = dir.base_name(abs_filename)
+   if basename ~= "rockspec" then
+      if not basename:match("(.*)%-[^-]*%-[0-9]*") then
          return nil, "Expected filename in format 'name-version-revision.rockspec'."
       end
    end
 
-   local protocol, pathname = dir.split_url(rockspec.source.url)
-   if fetch.is_basic_protocol(protocol) then
-      rockspec.source.file = rockspec.source.file or dir.base_name(rockspec.source.url)
+   local tbl, err = persist.load_into_table(abs_filename)
+   if not tbl then
+      return nil, "Could not load rockspec file "..abs_filename.." ("..err..")"
    end
-   rockspec.source.protocol, rockspec.source.pathname = protocol, pathname
-
-   -- Temporary compatibility
-   if rockspec.source.cvs_module then rockspec.source.module = rockspec.source.cvs_module end
-   if rockspec.source.cvs_tag then rockspec.source.tag = rockspec.source.cvs_tag end
+   
+   local rockspec, err = rockspecs.from_persisted_table(abs_filename, tbl, err, quick)
+   if not rockspec then
+      return nil, abs_filename .. ": " .. err
+   end
 
    local name_version = rockspec.package:lower() .. "-" .. rockspec.version
    if basename ~= "rockspec" and basename ~= name_version .. ".rockspec" then
       return nil, "Inconsistency between rockspec filename ("..basename..") and its contents ("..name_version..".rockspec)."
    end
-
-   rockspec.local_filename = filename
-   local filebase = rockspec.source.file or rockspec.source.url
-   local base = fetch.url_to_base_dir(filebase)
-   rockspec.source.dir_set = rockspec.source.dir ~= nil
-   rockspec.source.dir = rockspec.source.dir
-                      or rockspec.source.module
-                      or ( (filebase:match("%.lua$") or filebase:match("%.c$"))
-                           and (rockspec:format_is_at_least("3.0")
-                                and (fetch.is_basic_protocol(protocol) and "." or base)
-                                or  ".") )
-                      or base
-
-   rockspec.rocks_provided = (rockspec:format_is_at_least("3.0")
-                              and cfg.rocks_provided_3_0
-                              or  cfg.rocks_provided)
-
-   convert_dependencies(rockspec, "dependencies")
-   convert_dependencies(rockspec, "build_dependencies")
-   convert_dependencies(rockspec, "test_dependencies")
-
-   if not quick then
-      path.configure_paths(rockspec)
-   end
-
+   
    return rockspec
 end
 
@@ -347,7 +248,7 @@ end
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message and optional error code.
 function fetch.get_sources(rockspec, extract, dest_dir)
-   assert(type(rockspec) == "table")
+   assert(rockspec:type() == "rockspec")
    assert(type(extract) == "boolean")
    assert(type(dest_dir) == "string" or not dest_dir)
 
@@ -417,13 +318,13 @@ end
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
 function fetch.fetch_sources(rockspec, extract, dest_dir)
-   assert(type(rockspec) == "table")
+   assert(rockspec:type() == "rockspec")
    assert(type(extract) == "boolean")
    assert(type(dest_dir) == "string" or not dest_dir)
 
    local protocol = rockspec.source.protocol
    local ok, proto
-   if fetch.is_basic_protocol(protocol) then
+   if dir.is_basic_protocol(protocol) then
       proto = fetch
    else
       ok, proto = pcall(require, "luarocks.fetch."..protocol:gsub("[+-]", "_"))

@@ -221,6 +221,15 @@ local function supported_lua_versions(query)
    return result_tree
 end
 
+function search.find_src_or_rockspec(ns_name, version)
+   local query = queries.new(ns_name, version, false, "src|rockspec")
+   local url, err = search.find_suitable_rock(query)
+   if not url then
+      return nil, "Could not find a result named "..tostring(query)..": "..err
+   end
+   return url
+end
+
 --- Attempt to get a single URL for a given search for a rock.
 -- @param query table: a query object.
 -- @return string or (nil, string): URL for latest matching version
@@ -306,29 +315,6 @@ function search.print_result_tree(result_tree, porcelain)
          util.printout()
       end
    end
-end
-
---- Given a name and optionally a version, try to find in the rocks
--- servers a single .src.rock or .rockspec file that satisfies
--- the request, and run the given function on it; or display to the
--- user possibilities if it couldn't narrow down a single match.
--- @param action function: A function that takes a .src.rock or
--- .rockspec URL as a parameter.
--- @param ns_name string: A rock name, may be namespaced
--- @param version string or nil: A version number may also be given.
--- @return The result of the action function, or nil and an error message. 
-function search.act_on_src_or_rockspec(action, ns_name, version, ...)
-   assert(type(action) == "function")
-   assert(type(ns_name) == "string")
-   assert(type(version) == "string" or not version)
-
-   local query = queries.new(ns_name, version, false, "src|rockspec")
-   local url, err = search.find_suitable_rock(query)
-   if not url then
-      return nil, "Could not find a result named "..tostring(query)..": "..err
-   end
-   local _, namespace = util.split_namespace(ns_name)
-   return action(url, namespace, ...)
 end
 
 function search.pick_installed_rock(query, given_tree)

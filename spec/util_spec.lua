@@ -2,7 +2,6 @@ local test_env = require("spec.util.test_env")
 local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
-local env_variables = test_env.env_variables
 
 describe("Basic tests #integration", function()
 

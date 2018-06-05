@@ -41,7 +41,7 @@ or the name of a rock to be fetched from a repository.
 ]]..util.deps_mode_help()
 
 --- Build and install a rock.
--- @param rock_file string: local or remote filename of a rock.
+-- @param rock_filename string: local or remote filename of a rock.
 -- @param need_to_fetch boolean: true if sources need to be fetched,
 -- false if the rockspec was obtained from inside a source rock.
 -- @param deps_mode: string: Which trees to check dependencies for:
@@ -51,42 +51,65 @@ or the name of a rock to be fetched from a repository.
 -- @param namespace string?: an optional namespace
 -- @return boolean or (nil, string, [string]): True if build was successful,
 -- or false and an error message and an optional error code.
-local function build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps, namespace)
-   assert(type(rock_file) == "string")
-   assert(type(need_to_fetch) == "boolean")
+local function build_rock(rock_filename, opts)
+   assert(type(rock_filename) == "string")
+   assert(opts:type() == "build.opts")
 
    local ok, err, errcode
+
    local unpack_dir
-   unpack_dir, err, errcode = fetch.fetch_and_unpack_rock(rock_file)
+   unpack_dir, err, errcode = fetch.fetch_and_unpack_rock(rock_filename)
    if not unpack_dir then
       return nil, err, errcode
    end
-   local rockspec_file = path.rockspec_name_from_rock(rock_file)
+
+   local rockspec_filename = path.rockspec_name_from_rock(rock_filename)
+
    ok, err = fs.change_dir(unpack_dir)
    if not ok then return nil, err end
-   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps, namespace)
+
+   local rockspec
+   rockspec, err, errcode = fetch.load_rockspec(rockspec_filename)
+   if not rockspec then
+      return nil, err, errcode
+   end
+
+   ok, err, errcode = build.build_rockspec(rockspec, opts)
+
    fs.pop_dir()
    return ok, err, errcode
 end
 
-local function build_file(filename, namespace, deps_mode, build_only_deps)
-   if filename:match("%.rockspec$") then
-      return build.build_rockspec(filename, true, false, deps_mode, build_only_deps, namespace)
-   elseif filename:match("%.src%.rock$") then
-      return build_rock(filename, false, deps_mode, build_only_deps, namespace)
-   elseif filename:match("%.all%.rock$") then
-      return build_rock(filename, true, deps_mode, build_only_deps, namespace)
-   elseif filename:match("%.rock$") then
-      return build_rock(filename, true, deps_mode, build_only_deps, namespace)
-   end
-end
+local function do_build(ns_name, version, opts)
+   assert(type(ns_name) == "string")
+   assert(version == nil or type(version) == "string")
+   assert(opts:type() == "build.opts")
 
-local function do_build(name, version, namespace, deps_mode, build_only_deps)
-   if name:match("%.rockspec$") or name:match("%.rock$") then
-      return build_file(name, namespace, deps_mode, build_only_deps)
+   local url, err
+   if ns_name:match("%.rockspec$") or ns_name:match("%.rock$") then
+      url = ns_name
    else
-      return search.act_on_src_or_rockspec(build_file, name, version, deps_mode, build_only_deps)
+      url, err = search.find_src_or_rockspec(ns_name, version)
+      if not url then
+         return nil, err
+      end
+      local _, namespace = util.split_namespace(ns_name)
+      opts.namespace = namespace
    end
+
+   if url:match("%.rockspec$") then
+      local rockspec, err, errcode = fetch.load_rockspec(url)
+      if not rockspec then
+         return nil, err, errcode
+      end
+      return build.build_rockspec(rockspec, opts)
+   end
+
+   if url:match("%.src%.rock$") then
+      opts.need_to_fetch = false
+   end
+
+   return build_rock(url, opts)
 end
 
 --- Driver function for "build" command.
@@ -106,28 +129,46 @@ function cmd_build.command(flags, name, version)
    end
 
    name = util.adjust_name_and_namespace(name, flags)
-   local deps_mode = deps.get_deps_mode(flags)
-   local namespace = flags["namespace"]
-   local build_only_deps = flags["only-deps"]
+
+   local opts = build.opts({
+      need_to_fetch = true,
+      minimal_mode = false,
+      deps_mode = deps.get_deps_mode(flags),
+      build_only_deps = not not flags["only-deps"],
+      namespace = flags["namespace"],
+      branch = not not flags["branch"],
+   })
 
    if flags["pack-binary-rock"] then
-      return pack.pack_binary_rock(name, version, function() return do_build(name, version, namespace, deps_mode) end)
-   else
-      local ok, err = fs.check_command_permissions(flags)
-      if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
-
-      ok, err = do_build(name, version, namespace, deps_mode, build_only_deps)
-      if not ok then return nil, err end
-      name, version = ok, err
-
-      if (not build_only_deps) and (not flags["keep"]) and not cfg.keep_other_versions then
-         local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
-         if not ok then util.printerr(err) end
-      end
-
-      writer.check_dependencies(nil, deps.get_deps_mode(flags))
-      return name, version
+      return pack.pack_binary_rock(name, version, function()
+         opts.build_only_deps = false
+         return do_build(name, version, opts)
+      end)
    end
+   
+   local ok, err = fs.check_command_permissions(flags)
+   if not ok then
+      return nil, err, cfg.errorcodes.PERMISSIONDENIED
+   end
+
+   ok, err = do_build(name, version, opts)
+   if not ok then return nil, err end
+   name, version = ok, err
+
+   if opts.build_only_deps then
+      util.printout("Stopping after installing dependencies for " ..name.." "..version)
+      util.printout()
+   else
+      if (not flags["keep"]) and not cfg.keep_other_versions then
+         local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
+         if not ok then
+            util.printerr(err)
+         end
+      end
+   end
+
+   writer.check_dependencies(nil, deps.get_deps_mode(flags))
+   return name, version
 end
 
 return cmd_build

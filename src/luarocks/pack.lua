@@ -29,7 +29,7 @@ function pack.pack_source_rock(rockspec_file)
    if err then
       return nil, "Error loading rockspec: "..err
    end
-   rockspec_file = rockspec.local_filename
+   rockspec_file = rockspec.local_abs_filename
 
    local name_version = rockspec.name .. "-" .. rockspec.version
    local rock_file = fs.absolute_name(name_version .. ".src.rock")

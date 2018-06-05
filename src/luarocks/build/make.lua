@@ -39,7 +39,7 @@ end
 -- @return boolean or (nil, string): true if no errors ocurred,
 -- nil and an error message otherwise.
 function make.run(rockspec)
-   assert(type(rockspec) == "table")
+   assert(rockspec:type() == "rockspec")
 
    local build = rockspec.build
    

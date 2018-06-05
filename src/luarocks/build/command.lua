@@ -10,7 +10,7 @@ local util = require("luarocks.util")
 -- @return boolean or (nil, string): true if no errors ocurred,
 -- nil and an error message otherwise.
 function command.run(rockspec)
-   assert(type(rockspec) == "table")
+   assert(rockspec:type() == "rockspec")
 
    local build = rockspec.build
    
