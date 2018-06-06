@@ -4,18 +4,11 @@ local type_check = require("luarocks.type_check")
 
 type_rockspec.rockspec_format = "3.0"
 
-local string_1 = type_check.string_1
-local mandatory_string_1 = type_check.mandatory_string_1
-
-local string_3 = { _type = "string", _version = "3.0" }
-local list_of_strings_3 = { _any = string_3, _version = "3.0" }
-
 -- Syntax for type-checking tables:
 --
 -- A type-checking table describes typing data for a value.
 -- Any key starting with an underscore has a special meaning:
 -- _type (string) is the Lua type of the value. Default is "table".
--- _version (string) is the minimum rockspec_version that supports this value. Default is "1.0".
 -- _mandatory (boolean) indicates if the value is a mandatory key in its container table. Default is false.
 -- For "string" types only:
 --    _pattern (string) is the string-matching pattern, valid for string types only. Default is ".*".
@@ -24,110 +17,123 @@ local list_of_strings_3 = { _any = string_3, _version = "3.0" }
 --    _more (boolean) indicates that the table accepts unspecified keys and does not type-check them.
 --    Any other string keys that don't start with an underscore represent known keys and are type-checking tables, recursively checked.
 
-local rockspec_types = {
-   rockspec_format = string_1,
-   package = mandatory_string_1,
-   version = { _type = "string", _pattern = "[%w.]+-[%d]+", _mandatory = true },
-   description = {
-      summary = string_1,
-      detailed = string_1,
-      homepage = string_1,
-      license = string_1,
-      maintainer = string_1,
-      labels = list_of_strings_3,
-      issues_url = string_3,
-   },
-   dependencies = {
-      platforms = {}, -- recursively defined below
-      _any = {
-         _type = "string",
-         _name = "a valid dependency string",
-         _patterns = {
-            ["1.0"] = "%s*([a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
-            ["3.0"] = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
+local rockspec_formats = type_check.declare_schemas({
+   ["1.0"] = {
+      rockspec_format = { _type = "string" },
+      package = { _type = "string", _mandatory = true },
+      version = { _type = "string", _pattern = "[%w.]+-[%d]+", _mandatory = true },
+      description = {
+         summary = { _type = "string" },
+         detailed = { _type = "string" },
+         homepage = { _type = "string" },
+         license = { _type = "string" },
+         maintainer = { _type = "string" },
+      },
+      dependencies = {
+         platforms = type_check.MAGIC_PLATFORMS,
+         _any = {
+            _type = "string",
+            _name = "a valid dependency string",
+            _pattern = "%s*([a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
          },
       },
-   },
-   build_dependencies = {
-      _version = "3.0",
-      platforms = {}, -- recursively defined below
-      _any = {
-         _type = "string",
-         _name = "a valid dependency string",
-         _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
+      supported_platforms = {
+         _any = { _type = "string" },
       },
-   },
-   test_dependencies = {
-      _version = "3.0",
-      platforms = {}, -- recursively defined below
-      _any = {
-         _type = "string",
-         _name = "a valid dependency string",
-         _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
-      },
-   },
-   supported_platforms = {
-      _any = string_1,
-   },
-   external_dependencies = {
-      platforms = {}, -- recursively defined below
-      _any = {
-         program = string_1,
-         header = string_1,
-         library = string_1,
-      }
-   },
-   source = {
-      _mandatory = true,
-      platforms = {}, -- recursively defined below
-      url = mandatory_string_1,
-      md5 = string_1,
-      file = string_1,
-      dir = string_1,
-      tag = string_1,
-      branch = string_1,
-      module = string_1,
-      cvs_tag = string_1,
-      cvs_module = string_1,
-   },
-   build = {
-      platforms = {}, -- recursively defined below
-      type = string_1,
-      install = {
-         lua = {
-            _more = true
-         },
-         lib = {
-            _more = true
-         },
-         conf = {
-            _more = true
-         },
-         bin = {
-            _more = true
+      external_dependencies = {
+         platforms = type_check.MAGIC_PLATFORMS,
+         _any = {
+            program = { _type = "string" },
+            header = { _type = "string" },
+            library = { _type = "string" },
          }
       },
-      copy_directories = {
-         _any = string_1,
+      source = {
+         _mandatory = true,
+         platforms = type_check.MAGIC_PLATFORMS,
+         url = { _type = "string", _mandatory = true },
+         md5 = { _type = "string" },
+         file = { _type = "string" },
+         dir = { _type = "string" },
+         tag = { _type = "string" },
+         branch = { _type = "string" },
+         module = { _type = "string" },
+         cvs_tag = { _type = "string" },
+         cvs_module = { _type = "string" },
       },
-      _more = true,
-      _mandatory = true
+      build = {
+         platforms = type_check.MAGIC_PLATFORMS,
+         type = { _type = "string" },
+         install = {
+            lua = {
+               _more = true
+            },
+            lib = {
+               _more = true
+            },
+            conf = {
+               _more = true
+            },
+            bin = {
+               _more = true
+            }
+         },
+         copy_directories = {
+            _any = { _type = "string" },
+         },
+         _more = true,
+         _mandatory = true
+      },
+      hooks = {
+         platforms = type_check.MAGIC_PLATFORMS,
+         post_install = { _type = "string" },
+      },
    },
-   test = {
-      _version = "3.0",
-      platforms = {}, -- recursively defined below
-      type = string_1,
-      _more = true,
+   
+   ["1.1"] = {
+      deploy = {
+         wrap_bin_scripts = { _type = "boolean" },
+      }
    },
-   hooks = {
-      platforms = {}, -- recursively defined below
-      post_install = string_1,
-   },
-   deploy = {
-      _version = "1.1",
-      wrap_bin_scripts = { _type = "boolean", _version = "1.1" },
+   
+   ["3.0"] = {
+      description = {
+         labels = {
+            _any = { _type = "string" }
+         },
+         issues_url = { _type = "string" },
+      },
+      dependencies = {
+         _any = {
+            _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
+         },
+      },
+      build_dependencies = {
+         platforms = type_check.MAGIC_PLATFORMS,
+         _any = {
+            _type = "string",
+            _name = "a valid dependency string",
+            _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
+         },
+      },
+      test_dependencies = {
+         platforms = type_check.MAGIC_PLATFORMS,
+         _any = {
+            _type = "string",
+            _name = "a valid dependency string",
+            _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
+         },
+      },
+      build = {
+         _mandatory = false,
+      },
+      test = {
+         platforms = type_check.MAGIC_PLATFORMS,
+         type = { _type = "string" },
+         _more = true,
+      },
    }
-}
+})
 
 type_rockspec.order = {"rockspec_format", "package", "version", 
    { "source", { "url", "tag", "branch", "md5" } },
@@ -137,14 +143,6 @@ type_rockspec.order = {"rockspec_format", "package", "version",
    "test_dependencies", { "test", {"type"} },
    "hooks"}
 
-rockspec_types.build.platforms._any = rockspec_types.build
-rockspec_types.dependencies.platforms._any = rockspec_types.dependencies
-rockspec_types.build_dependencies.platforms._any = rockspec_types.build_dependencies
-rockspec_types.external_dependencies.platforms._any = rockspec_types.external_dependencies
-rockspec_types.source.platforms._any = rockspec_types.source
-rockspec_types.hooks.platforms._any = rockspec_types.hooks
-rockspec_types.test.platforms._any = rockspec_types.test
-
 --- Type check a rockspec table.
 -- Verify the correctness of elements from a 
 -- rockspec table, reporting on unknown fields and type
@@ -153,17 +151,19 @@ rockspec_types.test.platforms._any = rockspec_types.test
 -- succeeded, or nil and an error message if it failed.
 function type_rockspec.check(rockspec, globals)
    assert(type(rockspec) == "table")
-   if not rockspec.rockspec_format then
-      rockspec.rockspec_format = "1.0"
+   local version = rockspec.rockspec_format or "1.0"
+   local schema = rockspec_formats[version]
+   if not schema then
+      return nil, "unknown rockspec format " .. version
    end
-   local ok, err = type_check.check_undeclared_globals(globals, rockspec_types)
+   local ok, err = type_check.check_undeclared_globals(globals, schema)
    if ok then
-      ok, err = type_check.type_check_table(rockspec.rockspec_format, rockspec, rockspec_types, "")
+      ok, err = type_check.type_check_table(version, rockspec, schema, "")
    end
    if ok then
       return true
    end
-   return nil, err .. " (rockspec format " .. rockspec.rockspec_format .. ")"
+   return nil, err .. " (rockspec format " .. version .. ")"
 end
 
 return type_rockspec

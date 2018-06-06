@@ -15,6 +15,7 @@ util.keys = core.keys
 util.printerr = core.printerr
 util.sortedpairs = core.sortedpairs
 util.warning = core.warning
+util.deep_merge = core.deep_merge
 
 local unpack = unpack or table.unpack
 
@@ -477,6 +478,18 @@ function util.split_namespace(ns_name)
       return p2, p1
    end
    return ns_name
+end
+
+function util.deep_copy(tbl)
+   local copy = {}
+   for k, v in pairs(tbl) do
+      if type(v) == "table" then
+         copy[k] = util.deep_copy(v)
+      else
+         copy[k] = v
+      end
+   end
+   return copy
 end
 
 return util
