@@ -10,6 +10,85 @@ local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 
+local function autoextract_libs(external_dependencies, variables)
+   if not external_dependencies then
+      return nil, nil, nil
+   end
+   local libs = {}
+   local incdirs = {}
+   local libdirs = {}
+   for name, data in pairs(external_dependencies) do
+      if data.library then
+         table.insert(libs, data.library)
+         table.insert(incdirs, variables[name .. "_INCDIR"])
+         table.insert(libdirs, variables[name .. "_LIBDIR"])
+      end
+   end
+   return libs, incdirs, libdirs
+end
+
+do
+   local function get_cmod_name(file)
+      local fd = io.open(dir.path(fs.current_dir(), file), "r")
+      if not fd then return nil end
+      local data = fd:read("*a")
+      fd:close()
+      return (data:match("int%s+luaopen_([a-zA-Z0-9_]+)"))
+   end
+
+   local luamod_blacklist = {
+      test = true,
+      tests = true,
+   }
+
+   function builtin.autodetect_modules(libs, incdirs, libdirs)
+      local modules = {}
+      local copy_directories
+
+      local prefix = ""
+      for _, parent in ipairs({"src", "lua"}) do
+         if fs.is_dir(parent) then
+            fs.change_dir(parent)
+            prefix = parent.."/"
+            break
+         end
+      end
+
+      for _, file in ipairs(fs.find()) do
+         local luamod = file:match("(.*)%.lua$")
+         if luamod and not luamod_blacklist[luamod] then
+            modules[path.path_to_module(file)] = prefix..file
+         else
+            local cmod = file:match("(.*)%.c$")
+            if cmod then
+               local modname = get_cmod_name(file) or path.path_to_module(file:gsub("%.c$", ".lua"))
+               modules[modname] = {
+                  sources = prefix..file,
+                  libraries = libs,
+                  incdirs = incdirs,
+                  libdirs = libdirs,
+               }
+            end
+         end
+      end
+
+      for _, directory in ipairs({ "doc", "docs", "samples", "tests" }) do
+         if fs.is_dir(directory) then
+            if not copy_directories then
+               copy_directories = {}
+            end
+            table.insert(copy_directories, directory)
+         end
+      end
+
+      if prefix ~= "" then
+         fs.pop_dir()
+      end
+
+      return modules, copy_directories
+   end
+end
+
 --- Run a command displaying its execution on standard output.
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
@@ -140,7 +219,12 @@ function builtin.run(rockspec)
    local libdir = path.lib_dir(rockspec.name, rockspec.version)
    
    if not build.modules then
-      return nil, "Missing build.modules table"
+      if rockspec:format_is_at_least("3.0") then
+         local libs, incdirs, libdirs = autoextract_libs(rockspec.external_dependencies, rockspec.variables)
+         build.modules = builtin.autodetect_modules(libs, incdirs, libdirs)
+      else
+         return nil, "Missing build.modules table"
+      end
    end
    for name, info in pairs(build.modules) do
       local moddir = path.module_to_path(name)

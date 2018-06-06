@@ -353,7 +353,13 @@ function build.build_rockspec(rockspec, opts)
    assert(opts:type() == "build.opts")
 
    if not rockspec.build then
-      return nil, "Rockspec error: build table not specified"
+      if rockspec:format_is_at_least("3.0") then
+         rockspec.build = {
+            type = "builtin"
+         }
+      else
+         return nil, "Rockspec error: build table not specified"
+      end
    end
 
    if not rockspec.build.type then
