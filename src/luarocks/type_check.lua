@@ -3,12 +3,86 @@ local type_check = {}
 
 local cfg = require("luarocks.core.cfg")
 local vers = require("luarocks.core.vers")
+local util = require("luarocks.util")
 local require = nil
 --------------------------------------------------------------------------------
 
-type_check.string_1 = { _type = "string" }
-type_check.number_1 = { _type = "number" }
-type_check.mandatory_string_1 = { _type = "string", _mandatory = true }
+type_check.MAGIC_PLATFORMS = {}
+
+do
+   local function fill_in_version(tbl, version)
+      for _, v in pairs(tbl) do
+         if type(v) == "table" then
+            if v._version == nil then
+               v._version = version
+            end
+            fill_in_version(v)
+         end
+      end
+   end
+   
+   local function expand_magic_platforms(tbl)
+      for k,v in pairs(tbl) do
+         if v == type_check.MAGIC_PLATFORMS then
+            tbl[k] = {
+               _any = util.deep_copy(tbl)
+            }
+            tbl[k]._any[v] = nil
+         elseif type(v) == "table" then
+            expand_magic_platforms(v)
+         end
+      end
+   end
+   
+   local function merge_under(dst, src)
+      for k, v in pairs(src) do
+         if dst[k] == nil then
+            if type(dst[k]) == "table" then
+               util.deep_merge(dst[k], v)
+            else
+               dst[k] = v
+            end
+         end
+      end
+   end
+   
+   -- Build a table of schemas.
+   -- @param versions a table where each key is a version number as a string,
+   -- and the value is a schema specification. Schema versions are considered
+   -- incremental: version "2.0" only needs to specify what's new/changed from
+   -- version "1.0".
+   function type_check.declare_schemas(versions)
+      local schemas = {}
+      local parent_version
+   
+      local version_list = {}
+      -- FIXME sorting lexicographically! "1.9" > "1.10"
+      for version, schema in util.sortedpairs(versions) do
+         table.insert(version_list, version)
+         if parent_version ~= nil then
+            local copy = util.deep_copy(schemas[parent_version])
+            util.deep_merge(copy, schema)
+            schemas[version] = copy
+         else
+            schemas[version] = schema
+         end
+         fill_in_version(schemas[version], version)
+         expand_magic_platforms(schemas[version])
+         parent_version = version
+      end
+      
+      -- Merge future versions as fallbacks under the old versions,
+      -- so that error messages can inform users when they try
+      -- to use new features without bumping rockspec_format in their rockspecs.
+      for i = #version_list, 2, -1 do
+         merge_under(schemas[version_list[i - 1]], schemas[version_list[i]])
+      end
+
+      return schemas
+   end
+end
+
+--------------------------------------------------------------------------------
 
 local function check_version(version, typetbl, context)
    local typetbl_version = typetbl._version or "1.0"
@@ -55,7 +129,7 @@ local function type_check_item(version, item, typetbl, context)
       if item_type ~= "string" then
          return nil, "Type mismatch on field "..context..": expected a string, got "..item_type
       end
-      local pattern = (typetbl._patterns and typetbl._patterns[version]) or typetbl._pattern
+      local pattern = typetbl._pattern
       if pattern then
          if not item:match("^"..pattern.."$") then
             local what = typetbl._name or ("'"..pattern.."'")
