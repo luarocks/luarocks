@@ -269,6 +269,48 @@ describe("LuaRocks build tests #integration", function()
          assert.truthy(run.luarocks_bool("build " .. rockspec))
          assert.is.truthy(run.luarocks("show a_rock"))
       end)
+
+      it("'builtin' detects lua files if modules are not given", function()
+         local rockspec = "autodetect-1.0-1.rockspec"
+         test_env.write_file(rockspec, [[
+            rockspec_format = "3.0"
+            package = "autodetect"
+            version = "1.0-1"
+            source = {
+               url = "file://]] .. testing_paths.fixtures_dir .. [[/autodetect/bla.lua"
+            }
+            description = {
+               summary = "An example rockspec",
+            }
+            dependencies = {
+               "lua >= 5.1"
+            }
+            build = {
+            }
+         ]], finally)
+         assert.truthy(run.luarocks_bool("build " .. rockspec))
+         assert.match("bla.lua", run.luarocks("show autodetect"))
+      end)
+
+      it("'builtin' detects lua files if build is not given", function()
+         local rockspec = "autodetect-1.0-1.rockspec"
+         test_env.write_file(rockspec, [[
+            rockspec_format = "3.0"
+            package = "autodetect"
+            version = "1.0-1"
+            source = {
+               url = "file://]] .. testing_paths.fixtures_dir .. [[/autodetect/bla.lua"
+            }
+            description = {
+               summary = "An example rockspec",
+            }
+            dependencies = {
+               "lua >= 5.1"
+            }
+         ]], finally)
+         assert.truthy(run.luarocks_bool("build " .. rockspec))
+         assert.match("bla.lua", run.luarocks("show autodetect"))
+      end)
    end)
 
    describe("#mock external dependencies", function()

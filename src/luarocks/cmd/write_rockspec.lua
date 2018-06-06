@@ -1,11 +1,11 @@
 
 local write_rockspec = {}
 
+local builtin = require("luarocks.build.builtin")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
-local path = require("luarocks.path")
 local persist = require("luarocks.persist")
 local rockspecs = require("luarocks.rockspecs")
 local type_rockspec = require("luarocks.type.rockspec")
@@ -172,31 +172,8 @@ local function check_license()
    return nil, data
 end
 
-local function get_cmod_name(file)
-   local fd = open_file(file)
-   if not fd then return nil end
-   local data = fd:read("*a")
-   fd:close()
-   return (data:match("int%s+luaopen_([a-zA-Z0-9_]+)"))
-end
-
-local luamod_blacklist = {
-   test = true,
-   tests = true,
-}
-
 local function fill_as_builtin(rockspec, libs)
    rockspec.build.type = "builtin"
-   rockspec.build.modules = {}
-   local prefix = ""
-
-   for _, parent in ipairs({"src", "lua"}) do
-      if fs.is_dir(parent) then
-         fs.change_dir(parent)
-         prefix = parent.."/"
-         break
-      end
-   end
 
    local incdirs, libdirs
    if libs then
@@ -207,37 +184,8 @@ local function fill_as_builtin(rockspec, libs)
          libdirs[#libdirs+1] = "$("..upper.."_LIBDIR)"
       end
    end
-
-   for _, file in ipairs(fs.find()) do
-      local luamod = file:match("(.*)%.lua$")
-      if luamod and not luamod_blacklist[luamod] then
-         rockspec.build.modules[path.path_to_module(file)] = prefix..file
-      else
-         local cmod = file:match("(.*)%.c$")
-         if cmod then
-            local modname = get_cmod_name(file) or path.path_to_module(file:gsub("%.c$", ".lua"))
-            rockspec.build.modules[modname] = {
-               sources = prefix..file,
-               libraries = libs,
-               incdirs = incdirs,
-               libdirs = libdirs,
-            }
-         end
-      end
-   end
    
-   for _, directory in ipairs({ "doc", "docs", "samples", "tests" }) do
-      if fs.is_dir(directory) then
-         if not rockspec.build.copy_directories then
-            rockspec.build.copy_directories = {}
-         end
-         table.insert(rockspec.build.copy_directories, directory)
-      end
-   end
-   
-   if prefix ~= "" then
-      fs.pop_dir()
-   end
+   rockspec.build.modules, rockspec.build.copy_directories = builtin.autodetect_modules(libs, incdirs, libdirs)
 end
 
 local function rockspec_cleanup(rockspec)
