@@ -782,6 +782,16 @@ function test_env.mock_server_done()
    end
 end
 
+local function find_binary_rock(src_rock, dir)
+   local patt = src_rock:gsub("([.-])", "%%%1"):gsub("src", ".*[^s][^r][^c]")
+   for name in lfs.dir(dir) do
+      if name:match(patt) then
+         return true
+      end
+   end
+   return false
+end
+
 local function prepare_mock_server_binary_rocks()
    local testing_paths = test_env.testing_paths
 
@@ -799,14 +809,19 @@ local function prepare_mock_server_binary_rocks()
       "restserver-0.1-1.src.rock",
       "restserver-xavante-0.2-1.src.rock",
    }
-   download_rocks(rocks, testing_paths.testing_server)
+   local make_manifest = download_rocks(rocks, testing_paths.testing_server)
    for _, rock in ipairs(rocks) do
-      test_env.run.luarocks_nocov("build " .. Q(testing_paths.testing_server .. "/" .. rock) .. " --tree=" .. testing_paths.testing_cache)
       local rockname = rock:gsub("%-[^-]+%-%d+%.[%a.]+$", "")
-      test_env.run.luarocks_nocov("pack " .. rockname .. " --tree=" .. testing_paths.testing_cache)
-      move_file(rockname .. "-*.rock", testing_paths.testing_server)
+      if not find_binary_rock(rock, testing_paths.testing_server) then
+         test_env.run.luarocks_nocov("build " .. Q(testing_paths.testing_server .. "/" .. rock) .. " --tree=" .. testing_paths.testing_cache)
+         test_env.run.luarocks_nocov("pack " .. rockname .. " --tree=" .. testing_paths.testing_cache)
+         move_file(rockname .. "-*.rock", testing_paths.testing_server)
+         make_manifest = true
+      end
    end
-   test_env.run.luarocks_admin_nocov("make_manifest " .. Q(testing_paths.testing_server))
+   if make_manifest then
+      test_env.run.luarocks_admin_nocov("make_manifest " .. Q(testing_paths.testing_server))
+   end
 end
 
 ---
