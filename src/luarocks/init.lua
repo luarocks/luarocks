@@ -61,6 +61,11 @@ function luarocks.test_func()
 	return 1
 end
 
+--- Return a list of rock-trees
+function luarocks.list_rock_trees()
+	return cfg.rocks_trees
+end
+
 --- Return table of outdated installed rocks
 -- called only by list() function
 local function check_outdated(trees, query)
