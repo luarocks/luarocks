@@ -13,39 +13,113 @@ cache:
   - test/testing_server-5.3
   - test/testing_server-2.0
   - test/testing_server-2.1
-
-matrix:
+  
+unit_script: &unit_script
+  - busted -o gtest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
+  - busted -o gtest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
+  
+integration_script: &integration_script
+  - lua -v
+  - ./configure --with-lua=lua_install
+  - ./makedist scm
+  - busted -o gtest --exclude-tags=git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
+  - busted -o gtest --exclude-tags=git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
+          
+jobs:
   include:
-    - os: linux
+    # Unit tests for linux
+    - stage: unit
+      script: *unit_script
+      os: linux
       env:
         - LUA="lua=5.1"
-    - os: linux
+    - stage: unit
+      script: *unit_script
+      os: linux
       env:
         - LUA="lua=5.2"
-    - os: linux
+    - stage: unit
+      script: *unit_script
+      os: linux
       env:
         - LUA="lua=5.3"
-    - os: linux
+    - stage: unit
+      script: *unit_script
+      os: linux
       env:
         - LUA="luajit=2.1"
-    - os: osx
-      language: generic
+    # Unit tests for osx
+    - stage: unit
+      script: *unit_script
+      os: osx
       env:
         - LUA="lua=5.1"
-    - os: osx
       language: generic
+    - stage: unit
+      script: *unit_script
+      os: osx
       env:
         - LUA="lua=5.2"
-    - os: osx
       language: generic
+    - stage: unit
+      script: *unit_script
+      os: osx
       env:
         - LUA="lua=5.3"
-    - os: osx
       language: generic
+    - stage: unit
+      script: *unit_script
+      os: osx
       env:
         - LUA="luajit=2.1"
-
-
+      language: generic
+    # Integration tests for linux
+    - stage: integration
+      script: *integration_script
+      os: linux
+      env:
+        - LUA="lua=5.1"
+    - stage: integration
+      script: *integration_script
+      os: linux
+      env:
+        - LUA="lua=5.2"
+    - stage: integration
+      script: *integration_script
+      os: linux
+      env:
+        - LUA="lua=5.3"
+    - stage: integration
+      script: *integration_script
+      os: linux
+      env:
+        - LUA="luajit=2.1"
+    # Integration tests for osx
+    - stage: integration
+      script: *integration_script
+      os: osx
+      env:
+        - LUA="lua=5.1"
+      language: generic
+    - stage: integration
+      script: *integration_script
+      os: osx
+      env:
+        - LUA="lua=5.2"
+      language: generic
+    - stage: integration
+      script: *integration_script
+      os: osx
+      env:
+        - LUA="lua=5.3"
+      language: generic
+    - stage: integration
+      script: *integration_script
+      os: osx
+      env:
+        - LUA="luajit=2.1"
+      language: generic
+              
 before_install:
   - if [ ! -f lua_install/bin/luarocks ]; then pip2 install hererocks; fi
   - if [ ! -f lua_install/bin/luarocks ]; then hererocks lua_install -r^ --$LUA; fi
@@ -54,15 +128,6 @@ before_install:
 install:
   - if [ ! -f lua_install/bin/busted ]; then luarocks install busted; fi
   - if [ ! -f lua_install/bin/luacov ]; then luarocks install cluacov; fi
-
-script:
-  - lua -v
-  - ./configure --with-lua=lua_install
-  - ./makedist scm
-  - busted -o gtest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
-  - busted -o gtest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
-  - busted -o gtest --exclude-tags=git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
-  - busted -o gtest --exclude-tags=git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
 
 after_success:
   - luacov -c $TRAVIS_BUILD_DIR/testrun/luacov.config
