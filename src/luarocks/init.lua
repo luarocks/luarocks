@@ -13,6 +13,41 @@ local download = require("luarocks.download")
 local manif = require("luarocks.manif")
 local repos = require("luarocks.repos")
 
+local function replace_tree(flags, tree)
+   tree = dir.normalize(tree)
+   path.use_tree(tree)
+end
+
+local function set_rock_tree(tree_arg)
+   if tree_arg then
+      local named = false
+      for _, tree in ipairs(cfg.rocks_trees) do
+         if type(tree) == "table" then
+            if not tree.root then
+               die("Configuration error: tree '"..tree.name.."' has no 'root' field.")
+            end
+            replace_tree(flags, tree.root)
+            named = true
+            break
+         end
+      end
+      if not named then
+         local root_dir = fs.absolute_name(tree_arg)
+         replace_tree(flags, root_dir)
+      end
+   else
+      local trees = cfg.rocks_trees
+      path.use_tree(trees[#trees])
+   end
+   
+   if type(cfg.root_dir) == "string" then
+      cfg.root_dir = cfg.root_dir:gsub("/+$", "")
+   else
+      cfg.root_dir.root = cfg.root_dir.root:gsub("/+$", "")
+   end
+end
+
+
 --- Obtain version of LuaRocks and its API.
 -- @return (string, string) Full version of this LuaRocks instance
 -- (in "x.y.z" format for releases, or "dev" for a checkout of
@@ -81,11 +116,6 @@ function luarocks.list(filter, outdated, version, tree)
    return results
 end
 
-local function replace_tree(flags, tree)
-   tree = dir.normalize(tree)
-   --flags["tree"] = tree
-   path.use_tree(tree)
-end
 
 local function try_to_get_homepage(name, version)
    local temp_dir, err = fs.make_temp_dir("doc-"..name.."-"..(version or ""))
@@ -106,55 +136,9 @@ local function try_to_get_homepage(name, version)
 end
 
 --- Return homepage and doc file names of an installed rock
-function luarocks.doc(name, version)
+function luarocks.doc(name, version, tree)
 
-   --- The following code has been copied from command_line.lua; because without this, an error was poppong up:
-   --[[ lua: ...a/vert/api1_sandbox/share/lua/5.2/luarocks/core/path.lua:17: assertion failed!
-   stack traceback:
-      [C]: in function 'assert'
-      ...a/vert/api1_sandbox/share/lua/5.2/luarocks/core/path.lua:17: in function 'rocks_dir'
-      ...la/lua/vert/api1_sandbox/share/lua/5.2/luarocks/path.lua:78: in function 'install_dir'
-      ...la/lua/vert/api1_sandbox/share/lua/5.2/luarocks/path.lua:230: in function 'configure_paths'
-      ...a/lua/vert/api1_sandbox/share/lua/5.2/luarocks/fetch.lua:275: in function 'load_local_rockspec'
-      ...la/lua/vert/api1_sandbox/share/lua/5.2/luarocks/init.lua:124: in function 'doc'
-      api_testing.lua:29: in main chunk
-      [C]: in ?
-   --]]
-   -- because in path.install_dir, cfg.root_dir is called, which has to be specified, which the code below does.
-   if 1 then
-      local named = false
-      for _, tree in ipairs(cfg.rocks_trees) do
-         if type(tree) == "table" then
-            if not tree.root then
-               die("Configuration error: tree '"..tree.name.."' has no 'root' field.")
-            end
-            replace_tree(flags, tree.root)
-            named = true
-            break
-         end
-      end
-      if not named then
-         local root_dir = fs.absolute_name(flags["tree"])
-         replace_tree(flags, root_dir)
-      end
-   elseif flags["local"] then
-      if not cfg.home_tree then
-         die("The --local flag is meant for operating in a user's home directory.\n"..
-             "You are running as a superuser, which is intended for system-wide operation.\n"..
-             "To force using the superuser's home, use --tree explicitly.")
-      end
-      replace_tree(flags, cfg.home_tree)
-   else
-      local trees = cfg.rocks_trees
-      path.use_tree(trees[#trees])
-   end
-   
-   if type(cfg.root_dir) == "string" then
-      cfg.root_dir = cfg.root_dir:gsub("/+$", "")
-   else
-      cfg.root_dir.root = cfg.root_dir.root:gsub("/+$", "")
-   end
-   -- command_line.lua copied code ends here
+   set_rock_tree(tree)
 
    if not name then
       return nil, "Argument missing. "
@@ -162,9 +146,7 @@ function luarocks.doc(name, version)
 
    name = name:lower()
 
-   -- for now i can do away with flags["tree"]
-   --local iname, iversion, repo = search.pick_installed_rock(name, version, flags["tree"])
-   local iname, iversion, repo = search.pick_installed_rock(name, version)
+   local iname, iversion, repo = search.pick_installed_rock(name, version, tree)
    if not iname then
       return try_to_get_homepage(name, version)
    end
@@ -239,63 +221,17 @@ local function return_items_table(name, version, item_set, item_type, repo)
    return return_table
 end
 
-function luarocks.show(name, version)
+function luarocks.show(name, version, tree)
 
-   --- The following code has been copied from command_line.lua; because without this, an error was poppong up:
-   --[[ lua: ...a/vert/api1_sandbox/share/lua/5.2/luarocks/core/path.lua:17: assertion failed!
-   stack traceback:
-      [C]: in function 'assert'
-      ...a/vert/api1_sandbox/share/lua/5.2/luarocks/core/path.lua:17: in function 'rocks_dir'
-      ...la/lua/vert/api1_sandbox/share/lua/5.2/luarocks/path.lua:78: in function 'install_dir'
-      ...la/lua/vert/api1_sandbox/share/lua/5.2/luarocks/path.lua:230: in function 'configure_paths'
-      ...a/lua/vert/api1_sandbox/share/lua/5.2/luarocks/fetch.lua:275: in function 'load_local_rockspec'
-      ...la/lua/vert/api1_sandbox/share/lua/5.2/luarocks/init.lua:124: in function 'doc'
-      api_testing.lua:29: in main chunk
-      [C]: in ?
-   --]]
-   -- because in path.install_dir, cfg.root_dir is called, which has to be specified, which the code below does.
-   if 1 then
-      local named = false
-      for _, tree in ipairs(cfg.rocks_trees) do
-         if type(tree) == "table" then
-            if not tree.root then
-               die("Configuration error: tree '"..tree.name.."' has no 'root' field.")
-            end
-            replace_tree(flags, tree.root)
-            named = true
-            break
-         end
-      end
-      if not named then
-         local root_dir = fs.absolute_name(flags["tree"])
-         replace_tree(flags, root_dir)
-      end
-   elseif flags["local"] then
-      if not cfg.home_tree then
-         die("The --local flag is meant for operating in a user's home directory.\n"..
-             "You are running as a superuser, which is intended for system-wide operation.\n"..
-             "To force using the superuser's home, use --tree explicitly.")
-      end
-      replace_tree(flags, cfg.home_tree)
-   else
-      local trees = cfg.rocks_trees
-      path.use_tree(trees[#trees])
-   end
-   
-   if type(cfg.root_dir) == "string" then
-      cfg.root_dir = cfg.root_dir:gsub("/+$", "")
-   else
-      cfg.root_dir.root = cfg.root_dir.root:gsub("/+$", "")
-   end
-   -- command_line.lua copied code ends here
+   set_rock_tree(tree)
    
    if not name then
       return nil, "Argument missing. "..util.see_help("show")
    end
    
    local repo, repo_url
-   -- for now i can do away with flags["tree"]
-   name, version, repo, repo_url = search.pick_installed_rock(name:lower(), version)
+
+   name, version, repo, repo_url = search.pick_installed_rock(name:lower(), version, tree)
    if not name then
       return nil, version
    end
@@ -335,7 +271,7 @@ function luarocks.show(name, version)
       show_table["labels"] = descript.labels
    end
    show_table["install_loc"] = path.rocks_tree_to_string(repo)
-   
+
    if next(minfo.commands) then
       show_table["commands"] = return_items_table(name, version, minfo.commands, "command", repo)
    end
@@ -349,8 +285,7 @@ function luarocks.show(name, version)
    if #rockspec.dependencies > 0 then
       for _, dep in ipairs(rockspec.dependencies) do
          direct_deps[dep.name] = true
-         --util.printout("\t"..vers.show_dep(dep).." "..installed_rock_label(dep.name, flags["tree"]))
-         table.insert(show_table["deps"], {vers.show_dep(dep), installed_rock_label(dep.name )})
+         table.insert(show_table["deps"], {vers.show_dep(dep), installed_rock_label(dep.name, tree)})
       end
    end
    show_table["in_deps"] = {}
@@ -362,8 +297,7 @@ function luarocks.show(name, version)
             util.printout("Indirectly pulling:")
             has_indirect_deps = true
          end
-         --util.printout("\t"..dep_name.." "..installed_rock_label(dep_name, flags["tree"]))
-         table.insert(show_table["in_deps"], {dep_name, installed_rock_label(dep_name )})
+         table.insert(show_table["in_deps"], {dep_name, installed_rock_label(dep_name, tree)})
       end
    end
    return show_table
