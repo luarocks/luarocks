@@ -27,9 +27,6 @@ matrix:
         - LUA="lua=5.3"
     - os: linux
       env:
-        - LUA="luajit=2.0"
-    - os: linux
-      env:
         - LUA="luajit=2.1"
     - os: osx
       language: generic
@@ -43,10 +40,6 @@ matrix:
       language: generic
       env:
         - LUA="lua=5.3"
-    - os: osx
-      language: generic
-      env:
-        - LUA="luajit=2.0"
     - os: osx
       language: generic
       env:
