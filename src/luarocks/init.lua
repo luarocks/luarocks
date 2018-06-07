@@ -308,4 +308,49 @@ function luarocks.show(name, version, tree)
    return show_table
 end
 
+--- Splits a list of search results into two lists, one for "source" results
+-- to be used with the "build" command, and one for "binary" results to be
+-- used with the "install" command.
+-- @param results table: A search results table.
+-- @return (table, table): Two tables, one for source and one for binary
+-- results.
+local function split_source_and_binary_results(results)
+   local sources, binaries = {}, {}
+   for name, versions in pairs(results) do
+      for version, repositories in pairs(versions) do
+         for _, repo in ipairs(repositories) do
+            local where = sources
+            if repo.arch == "all" or repo.arch == cfg.arch then
+               where = binaries
+            end
+            search.store_result(where, name, version, repo.arch, repo.repo)
+         end
+      end
+   end
+   return sources, binaries
+end
+
+--- Return a table of queried rocks from LuaRocks servers
+function luarocks.search(name, version, binary_or_source)
+   local search_table = {}
+
+   if not name then
+      name, version = "", nil
+   end
+
+   local query = search.make_query(name:lower(), version)
+   query.exact_name = false
+   local results, err = search.search_repos(query)
+   local sources, binaries = split_source_and_binary_results(results)
+   if binary_or_source == nil then
+   	  search_table["sources"] = sources
+   	  search_table["binary"] =  binary
+   elseif next(sources) and (binary_or_source == "source") then
+      search_table["sources"] = sources
+   elseif next(binaries) and (binary_or_source == "binary") then
+      search_table["binary"] =  binary
+   end
+   return search_table
+end
+
 return luarocks
