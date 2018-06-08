@@ -31,7 +31,7 @@ travis,           add just if running on TravisCI
 os=<version>,     type your OS ["linux", "os x", "windows"]
 ```
 ---------------------------------------------------------------------------------------------
-####_**Tags** of tests are required and are in this format:_
+## _**Tags** of tests are required and are in this format:_
 
 **unit** - run all unit tests
 
@@ -56,3 +56,11 @@ To run unit tests in LuaRocks directory type :
 To run integration tests without tests which use ssh:
 
 `busted -t "integration" --exclude-tags=ssh`
+
+## To do
+
+Cover files that currently have 0% coverage:
+* build/cmake.lua
+* build/command.lua
+* fetch/\*.lua except for git.lua
+* tools/tar.lua
