@@ -13,6 +13,10 @@ local download = require("luarocks.download")
 local manif = require("luarocks.manif")
 local repos = require("luarocks.repos")
 
+local remove = require("luarocks.remove")
+local deps = require("luarocks.deps")
+local writer = require("luarocks.manif.writer")
+
 local function replace_tree(flags, tree)
    tree = dir.normalize(tree)
    path.use_tree(tree)
@@ -351,6 +355,70 @@ function luarocks.search(name, version, binary_or_source)
       search_table["binary"] =  binary
    end
    return search_table
+end
+
+--- force = nil for not forcing
+-- "force" for force
+-- "force-fast" for fast-force
+function luarocks.remove(name, version, force)
+
+   set_rock_tree(tree)
+
+   cfg.rocks_dir = cfg.rocks_dir:gsub("/+$", "")
+   cfg.deploy_bin_dir = cfg.deploy_bin_dir:gsub("/+$", "")
+   cfg.deploy_lua_dir = cfg.deploy_lua_dir:gsub("/+$", "")
+   cfg.deploy_lib_dir = cfg.deploy_lib_dir:gsub("/+$", "")
+   
+   cfg.variables.ROCKS_TREE = cfg.rocks_dir
+   cfg.variables.SCRIPTS_DIR = cfg.deploy_bin_dir
+
+
+   if type(name) ~= "string" then
+      return nil, "Argument missing. "
+   end
+   
+   --local deps_mode = flags["deps-mode"] or cfg.deps_mode
+   deps_mode = cfg.deps_mode
+   --
+
+   --local ok, err = fs.check_command_permissions_no_flags(flags)
+   local ok, err = fs.check_command_permissions_no_flags()
+   --
+   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
+   
+   local rock_type = name:match("%.(rock)$") or name:match("%.(rockspec)$")
+   local filename = name
+   if rock_type then
+      name, version = path.parse_name(filename)
+      if not name then return nil, "Invalid "..rock_type.." filename: "..filename end
+   end
+
+   local results = {}
+   name = name:lower()
+   search.manifest_search(results, cfg.rocks_dir, search.make_query(name, version))
+   if not results[name] then
+      return nil, "Could not find rock '"..name..(version and " "..version or "").."' in "..path.rocks_tree_to_string(cfg.root_dir)
+   end
+
+   --local ok, err = remove.remove_search_results(results, name, deps_mode, flags["force"], flags["force-fast"])
+   local ok, err = nil, nil
+   if force == "force" then
+   	  ok, err = remove.remove_search_results(results, name, deps_mode, true, false)
+   elseif force == "force-fast" then
+   	  ok, err = remove.remove_search_results(results, name, deps_mode, false, true)
+   else
+   	  ok, err = remove.remove_search_results(results, name, deps_mode, false, false)
+   end
+   --
+
+   if not ok then
+      return nil, err
+   end
+
+   --writer.check_dependencies(nil, deps.get_deps_mode(flags))
+   --
+
+   return true
 end
 
 return luarocks
