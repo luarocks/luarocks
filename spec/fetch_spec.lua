@@ -9,7 +9,7 @@ local lfs = require("lfs")
 local testing_paths = test_env.testing_paths
 local get_tmp_path = test_env.get_tmp_path
 
-describe("Luarocks fetch test #unit", function()
+describe("Luarocks fetch test #unit", function()   
    local are_same_files = function(file1, file2)
       return file1 == file2 or lfs.attributes(file1).ino == lfs.attributes(file2).ino
    end
@@ -19,6 +19,7 @@ describe("Luarocks fetch test #unit", function()
    setup(function()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
+      runner.tick = true
    end)
    
    teardown(function()
