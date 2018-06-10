@@ -9,7 +9,7 @@ local posix_ok = pcall(require, "posix")
 local testing_paths = test_env.testing_paths
 local get_tmp_path = test_env.get_tmp_path
 
-describe("Luarocks fs test #unit", function()
+describe("Luarocks fs test #unit", function()   
    local exists_file = function(path)
       local ok, err, code = os.rename(path, path)
       if not ok and code == 13 then
@@ -56,6 +56,7 @@ describe("Luarocks fs test #unit", function()
    setup(function()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
+      runner.tick = true
    end)
    
    teardown(function()
