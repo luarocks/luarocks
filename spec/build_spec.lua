@@ -311,6 +311,33 @@ describe("LuaRocks build tests #integration", function()
          assert.truthy(run.luarocks_bool("build " .. rockspec))
          assert.match("bla.lua", run.luarocks("show autodetect"))
       end)
+
+      it("'builtin' synthesizes external_dependencies if not given but a library is given in build", function()
+         local rockspec = "autodetect-1.0-1.rockspec"
+         test_env.write_file(rockspec, [[
+            rockspec_format = "3.0"
+            package = "autodetect"
+            version = "1.0-1"
+            source = {
+               url = "file://]] .. testing_paths.fixtures_dir .. [[/c_module.c"
+            }
+            description = {
+               summary = "An example rockspec",
+            }
+            dependencies = {
+               "lua >= 5.1"
+            }
+            build = {
+               modules = {
+                  c_module = {
+                     sources = "c_module.c",
+                     libraries = "inexistent_library",
+                  }
+               }
+            }
+         ]], finally)
+         assert.match("INEXISTENT_LIBRARY_DIR", run.luarocks("build " .. rockspec))
+      end)
    end)
 
    describe("#mock external dependencies", function()

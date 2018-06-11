@@ -9,6 +9,7 @@ local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
 local queries = require("luarocks.queries")
+local builtin = require("luarocks.build.builtin")
 
 --- Attempt to match a dependency to an installed rock.
 -- @param dep table: A dependency parsed in table format.
@@ -276,6 +277,9 @@ function deps.check_external_deps(rockspec, mode)
    if mode == "install" then
       patterns = cfg.runtime_external_deps_patterns
       subdirs = cfg.runtime_external_deps_subdirs
+   end
+   if not rockspec.external_dependencies then
+      rockspec.external_dependencies = builtin.autodetect_external_dependencies(rockspec.build)
    end
    if rockspec.external_dependencies then
       for name, ext_files in util.sortedpairs(rockspec.external_dependencies) do
