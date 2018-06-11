@@ -10,6 +10,38 @@ local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 
+function builtin.autodetect_external_dependencies(build)
+   if not build or not build.modules then
+      return nil
+   end
+   local extdeps = {}
+   local any = false
+   for _, data in pairs(build.modules) do
+      if type(data) == "table" and data.libraries then
+         local libraries = data.libraries
+         if type(libraries) == "string" then
+            libraries = { libraries }
+         end
+         local incdirs = {}
+         local libdirs = {}
+         for _, lib in ipairs(libraries) do
+            local upper = lib:upper()
+            any = true
+            extdeps[upper] = { library = lib }
+            table.insert(incdirs, "$(" .. upper .. "_INCDIR)")
+            table.insert(libdirs, "$(" .. upper .. "_LIBDIR)")
+         end
+         if not data.incdirs then
+            data.incdirs = incdirs
+         end
+         if not data.libdirs then
+            data.libdirs = libdirs
+         end
+      end
+   end
+   return any and extdeps or nil
+end
+
 local function autoextract_libs(external_dependencies, variables)
    if not external_dependencies then
       return nil, nil, nil
