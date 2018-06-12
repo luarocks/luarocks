@@ -5,11 +5,12 @@ test_env.unload_luarocks()
 test_env.setup_specs()
 local fetch = require("luarocks.fetch")
 local path = require("luarocks.path")
+local rockspecs = require("luarocks.rockspecs")
 local lfs = require("lfs")
 local testing_paths = test_env.testing_paths
 local get_tmp_path = test_env.get_tmp_path
 
-describe("Luarocks fetch test #unit", function()   
+describe("Luarocks fetch test #unit #mock", function()   
    local are_same_files = function(file1, file2)
       return file1 == file2 or lfs.attributes(file1).ino == lfs.attributes(file2).ino
    end
@@ -17,23 +18,20 @@ describe("Luarocks fetch test #unit", function()
    local runner
    
    setup(function()
+      test_env.mock_server_init()
+
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
       runner.tick = true
    end)
    
    teardown(function()
+      test_env.mock_server_done()
+
       runner.shutdown()
    end)
    
-   describe("fetch.fetch_url #mock", function()
-      setup(function()
-         test_env.mock_server_init()
-      end)
-      
-      teardown(function()
-         test_env.mock_server_done()
-      end)
+   describe("fetch.fetch_url", function()
       
       it("fetches the url argument and returns the absolute path of the fetched file", function()
          local fetchedfile = fetch.fetch_url("http://localhost:8080/file/a_rock.lua")
@@ -62,7 +60,7 @@ describe("Luarocks fetch test #unit", function()
       end)
    end)
    
-   describe("fetch.fetch_url_at_temp_dir #mock", function()
+   describe("fetch.fetch_url_at_temp_dir", function()
       local tmpfile
       local tmpdir
       
@@ -76,15 +74,7 @@ describe("Luarocks fetch test #unit", function()
             tmpdir = nil
          end
       end)
-      
-      setup(function()
-         test_env.mock_server_init()
-      end)
-      
-      teardown(function()
-         test_env.mock_server_done()
-      end)
-      
+
       it("returns the absolute path and the parent directory of the file specified by the url", function()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
@@ -130,15 +120,8 @@ describe("Luarocks fetch test #unit", function()
       end)
    end)
 
-   describe("fetch.find_base_dir #mock", function()
-      setup(function()
-         test_env.mock_server_init()
-      end)
-      
-      teardown(function()
-         test_env.mock_server_done()
-      end)
-      
+   describe("fetch.find_base_dir", function()
+
       it("extracts the archive given by the file argument and returns the inferred and the actual root directory in the archive", function()
          local url = "http://localhost:8080/file/an_upstream_tarball-0.1.tar.gz"
          local file, tmpdir = assert(fetch.fetch_url_at_temp_dir(url, "test"))
@@ -161,7 +144,7 @@ describe("Luarocks fetch test #unit", function()
       end)
    end)
    
-   describe("fetch.fetch_and_unpack_rock #mock", function()
+   describe("fetch.fetch_and_unpack_rock", function()
       local tmpdir
       
       after_each(function()
@@ -169,14 +152,6 @@ describe("Luarocks fetch test #unit", function()
             lfs.rmdir(tmpdir)
             tmpdir = nil
          end
-      end)
-      
-      setup(function()
-         test_env.mock_server_init()
-      end)
-      
-      teardown(function()
-         test_env.mock_server_done()
       end)
       
       it("unpacks the rock file from the url and returns its resulting temporary parent directory", function()
@@ -226,9 +201,9 @@ describe("Luarocks fetch test #unit", function()
          assert.same(rockspec.name, "unknown_field")
          assert.same(rockspec.version, "1.0-1")
          assert.same(rockspec.source.url, "http://example.com/foo.tar.gz")
-         
+
          -- The previous calls fail if the detailed checking is done
-         assert.falsy(pcall(fetch.load_local_rockspec, testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec"))
+         path.use_tree(testing_paths.testing_tree)
          assert.falsy(fetch.load_local_rockspec(testing_paths.fixtures_dir .. "/missing_mandatory_field-1.0-1.rockspec"))
          assert.falsy(fetch.load_local_rockspec(testing_paths.fixtures_dir .. "/unknown_field-1.0-1.rockspec"))
       end)
@@ -263,15 +238,8 @@ describe("Luarocks fetch test #unit", function()
       end)
    end)
    
-   describe("fetch.load_rockspec #mock", function()
-      setup(function()
-         test_env.mock_server_init()
-      end)
-      
-      teardown(function()
-         test_env.mock_server_done()
-      end)
-      
+   describe("fetch.load_rockspec", function()
+
       it("returns a table containing the requested rockspec by downloading it into a temporary directory", function()
          path.use_tree(testing_paths.testing_tree)
          local rockspec = fetch.load_rockspec("http://localhost:8080/file/a_rock-1.0-1.rockspec")
@@ -310,14 +278,7 @@ describe("Luarocks fetch test #unit", function()
       end)
    end)
    
-   describe("fetch.get_sources #mock", function()
-      setup(function()
-         test_env.mock_server_init()
-      end)
-      
-      teardown(function()
-         test_env.mock_server_done()
-      end)
+   describe("fetch.get_sources", function()
       
       it("downloads the sources for building a rock and returns the resulting source filename and its parent directory", function()
          local rockspec = assert(fetch.load_rockspec("http://localhost:8080/file/a_rock-1.0-1.rockspec"))
@@ -374,20 +335,14 @@ describe("Luarocks fetch test #unit", function()
       end)
 
       it("from #git", function()
-         local rockspec = {
-            format_is_at_least = function()
-               return true
-            end,
-            name = "testrock",
+         local rockspec, err = rockspecs.from_persisted_table("testrock-dev-1.rockspec", {
+            package = "testrock",
             version = "dev-1",
             source = {
-               protocol = "git",
                url = "git://localhost/testrock",
             },
-            variables = {
-               GIT = "git",
-            },
-         }
+         }, nil)
+         assert.falsy(err)
          local pathname, tmpdir = fetch.fetch_sources(rockspec, false)
          assert.are.same("testrock", pathname)
          assert.match("luarocks_testrock%-dev%-1%-", tmpdir)
