@@ -430,7 +430,7 @@ if cfg.platforms.windows then
    defaults.external_lib_extension = "dll"
    defaults.static_lib_extension = "lib"
    defaults.obj_extension = "obj"
-   defaults.external_deps_dirs = { "c:/external/" }
+   defaults.external_deps_dirs = { "c:/external", "c:/windows/system32" }
    defaults.variables.LUA_BINDIR = site_config.LUA_BINDIR and site_config.LUA_BINDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/bin"
    defaults.variables.LUA_INCDIR = site_config.LUA_INCDIR and site_config.LUA_INCDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/include"
    defaults.variables.LUA_LIBDIR = site_config.LUA_LIBDIR and site_config.LUA_LIBDIR:gsub("\\", "/") or "c:/lua"..cfg.lua_version.."/lib"
@@ -475,6 +475,18 @@ if cfg.platforms.windows then
    end
    defaults.local_cache = localappdata.."/LuaRocks/Cache"
    defaults.web_browser = "start"
+
+   defaults.external_deps_subdirs = site_config.LUAROCKS_EXTERNAL_DEPS_SUBDIRS or {
+      bin = {".", "bin"},
+      lib = {".", "lib"},
+      include = {".", "include"},
+   }
+   defaults.runtime_external_deps_subdirs = site_config.LUAROCKS_RUNTIME_EXTERNAL_DEPS_SUBDIRS or {
+      bin = {".", "bin"},
+      lib = {".", "lib"},
+      include = {".", "include"},
+   }
+
 end
 
 if cfg.platforms.mingw32 then
