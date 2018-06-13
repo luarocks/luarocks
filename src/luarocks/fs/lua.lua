@@ -743,6 +743,8 @@ if not md5.sumhexa and md5.digest then
    end
 end
 
+if md5.sumhexa then
+
 --- Get the MD5 checksum for a file.
 -- @param file string: The file to be computed.
 -- @return string: The MD5 checksum or nil + error
@@ -756,6 +758,7 @@ function fs_lua.get_md5(file)
    return nil, "Failed to compute MD5 hash for file "..file
 end
 
+end
 end
 
 ---------------------------------------------------------------------
