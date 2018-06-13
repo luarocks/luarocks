@@ -1,6 +1,0 @@
-rock_manifest = {
-  lib={
-    ['zip.dll']='2d450eb4b48a5d6fd8a7ce99f3e24e8e'
-  },
-  ['luazip-1.2.3-2.rockspec']='b0086cd00fa9693c0083199e9b57e717'
-}
