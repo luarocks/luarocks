@@ -651,18 +651,6 @@ local function create_configs()
             rsync = "localhost/tmp/luarocks_testing",
          },
       }
-      external_deps_dirs = {
-         "/usr/local",
-         "/usr",
-         -- These are used for a test that fails, so it
-         -- can point to invalid paths:
-         {
-            prefix = "/opt",
-            bin = "bin",
-            include = "include",
-            lib = { "lib", "lib64" },
-         }
-      }
    ]], {
       user = os.getenv("USER"),
       testing_sys_tree = test_env.testing_paths.testing_sys_tree,
