@@ -12,3 +12,5 @@
 /dev_*
 /gh-pages
 /wiki
+/lua
+/lua_modules

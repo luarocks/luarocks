@@ -58,6 +58,7 @@ local function find_project_dir()
    for _ = 1, 10 do -- FIXME detect when root dir was hit instead
       local abs = fs.absolute_name(try)
       if fs.is_dir(abs .. "/.luarocks") and fs.is_dir(abs .. "/lua_modules") then
+         abs = abs:gsub("/.$", "")
          return abs, abs .. "/lua_modules"
       end
       try = try .. "/.."
