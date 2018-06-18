@@ -1,7 +1,9 @@
 local test_env = require("spec.util.test_env")
 local lfs = require("lfs")
+local get_tmp_path = test_env.get_tmp_path
 local run = test_env.run
 local testing_paths = test_env.testing_paths
+local write_file = test_env.write_file
 
 test_env.unload_luarocks()
 
@@ -40,12 +42,35 @@ describe("LuaRocks build tests #integration", function()
       end)
       
       it("LuaRocks build with no arguments behaves as luarocks make", function()
-         local tmpdir = test_env.get_tmp_path()
-         lfs.mkdir(tmpdir)
          local olddir = lfs.currentdir()
+         local tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
          lfs.chdir(tmpdir)
-         test_env.copy(testing_paths.fixtures_dir .. "/c_module-1.0-1.rockspec", tmpdir .. "/c_module-1.0-1.rockspec")
-         test_env.copy(testing_paths.fixtures_dir .. "/c_module.c", tmpdir .. "/c_module.c")
+         
+         write_file("c_module-1.0-1.rockspec", [[
+            package = "c_module"
+            version = "1.0-1"
+            source = {
+               url = "http://example.com/c_module"
+            }
+            build = {
+               type = "builtin",
+               modules = {
+                  c_module = { "c_module.c" }
+               }
+            }
+         ]], finally)
+         write_file("c_module.c", [[
+            #include <lua.h>
+            #include <lauxlib.h>
+
+            int luaopen_c_module(lua_State* L) {
+              lua_newtable(L);
+              lua_pushinteger(L, 1);
+              lua_setfield(L, -2, "c_module");
+              return 1;
+            }
+         ]], finally)
          
          assert.is_true(run.luarocks_bool("build"))
          if test_env.TEST_TARGET_OS == "windows" then
@@ -245,6 +270,32 @@ describe("LuaRocks build tests #integration", function()
    end)
 
    describe("rockspec format 3.0 #rs3", function()
+      local tmpdir
+      local olddir
+      
+      before_each(function()
+         tmpdir = get_tmp_path()
+         olddir = lfs.currentdir()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+         
+         lfs.mkdir("autodetect")
+         write_file("autodetect/bla.lua", "return {}", finally)
+         write_file("c_module.c", [[
+            
+         ]], finally)
+      end)
+      
+      after_each(function()
+         if olddir then
+            lfs.chdir(olddir)
+            if tmpdir then
+               lfs.rmdir("autodetect")
+               lfs.rmdir(tmpdir)
+            end
+         end
+      end)
+      
       it("defaults to build.type == 'builtin'", function()
          local rockspec = "a_rock-1.0-1.rockspec"
          test_env.write_file(rockspec, [[
@@ -277,7 +328,7 @@ describe("LuaRocks build tests #integration", function()
             package = "autodetect"
             version = "1.0-1"
             source = {
-               url = "file://]] .. testing_paths.fixtures_dir .. [[/autodetect/bla.lua"
+               url = "file://autodetect/bla.lua"
             }
             description = {
                summary = "An example rockspec",
@@ -299,7 +350,7 @@ describe("LuaRocks build tests #integration", function()
             package = "autodetect"
             version = "1.0-1"
             source = {
-               url = "file://]] .. testing_paths.fixtures_dir .. [[/autodetect/bla.lua"
+               url = "file://autodetect/bla.lua"
             }
             description = {
                summary = "An example rockspec",
@@ -319,7 +370,7 @@ describe("LuaRocks build tests #integration", function()
             package = "autodetect"
             version = "1.0-1"
             source = {
-               url = "file://]] .. testing_paths.fixtures_dir .. [[/c_module.c"
+               url = "file://c_module.c"
             }
             description = {
                summary = "An example rockspec",
@@ -348,9 +399,39 @@ describe("LuaRocks build tests #integration", function()
       teardown(function()
          test_env.mock_server_done()
       end)
-
+      
       it("fails when missing external dependency", function()
-         assert.is_false(run.luarocks_bool("build " .. testing_paths.fixtures_dir .. "/missing_external-0.1-1.rockspec INEXISTENT_INCDIR=\"/invalid/dir\""))
+         local tmpdir = get_tmp_path()
+         local olddir = lfs.currentdir()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+         
+         write_file("missing_external-0.1-1.rockspec", [[
+            package = "missing_external"
+            version = "0.1-1"
+            source = {
+               url = "https://example.com/build.lua"
+            }
+            external_dependencies = {
+               INEXISTENT = {
+                  library = "inexistentlib*",
+                  header = "inexistentheader*.h",
+               }
+            }
+            dependencies = {
+               "lua >= 5.1"
+            }
+            build = {
+               type = "builtin",
+               modules = {
+                  build = "build.lua"
+               }
+            }
+         ]], finally)
+         assert.is_false(run.luarocks_bool("build missing_external-0.1-1.rockspec INEXISTENT_INCDIR=\"/invalid/dir\""))
+         
+         lfs.chdir(olddir)
+         lfs.rmdir(tmpdir)
       end)
 
       it("builds with external dependency", function()

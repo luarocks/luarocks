@@ -3,6 +3,8 @@ local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 local env_variables = test_env.env_variables
+local get_tmp_path = test_env.get_tmp_path
+local write_file = test_env.write_file
 
 test_env.unload_luarocks()
 
@@ -55,7 +57,18 @@ describe("luarocks install #integration", function()
       end)
 
       it("fails not a zip file", function()
-         assert.is_false(run.luarocks_bool("install " .. testing_paths.fixtures_dir .. "/not_a_zipfile-1.0-1.src.rock"))
+         local olddir = lfs.currentdir()
+         local tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+         
+         write_file("not_a_zipfile-1.0-1.src.rock", [[
+            I am not a .zip file!
+         ]], finally)
+         assert.is_false(run.luarocks_bool("install not_a_zipfile-1.0-1.src.rock"))
+         
+         lfs.chdir(olddir)
+         lfs.rmdir(tmpdir)
       end)
 
       it("only-deps of lxsh show there is no lxsh", function()
