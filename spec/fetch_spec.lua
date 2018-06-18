@@ -4,11 +4,13 @@ local git_repo = require("spec.util.git_repo")
 test_env.unload_luarocks()
 test_env.setup_specs()
 local fetch = require("luarocks.fetch")
+local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local rockspecs = require("luarocks.rockspecs")
 local lfs = require("lfs")
-local testing_paths = test_env.testing_paths
 local get_tmp_path = test_env.get_tmp_path
+local testing_paths = test_env.testing_paths
+local write_file = test_env.write_file
 
 describe("Luarocks fetch test #unit #mock", function()   
    local are_same_files = function(file1, file2)
@@ -121,7 +123,6 @@ describe("Luarocks fetch test #unit #mock", function()
    end)
 
    describe("fetch.find_base_dir", function()
-
       it("extracts the archive given by the file argument and returns the inferred and the actual root directory in the archive", function()
          local url = "http://localhost:8080/file/an_upstream_tarball-0.1.tar.gz"
          local file, tmpdir = assert(fetch.fetch_url_at_temp_dir(url, "test"))
@@ -185,6 +186,26 @@ describe("Luarocks fetch test #unit #mock", function()
    end)
 
    describe("fetch.load_local_rockspec", function()
+      local tmpdir
+      local olddir
+      
+      before_each(function()
+         tmpdir = get_tmp_path()
+         olddir = lfs.currentdir()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+         fs.change_dir(tmpdir)
+      end)
+      
+      after_each(function()
+         if olddir then
+            lfs.chdir(olddir)
+            if tmpdir then
+               lfs.rmdir(tmpdir)
+            end
+         end
+      end)
+      
       it("returns a table representing the rockspec from the given file skipping some checks if the quick argument is enabled", function()
          local rockspec = fetch.load_local_rockspec(testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec", true)
          assert.same(rockspec.name, "a_rock")
@@ -192,20 +213,35 @@ describe("Luarocks fetch test #unit #mock", function()
          assert.same(rockspec.source.url, "http://localhost:8080/file/a_rock.lua")
          assert.same(rockspec.description, { summary = "An example rockspec" })
          
-         rockspec = fetch.load_local_rockspec(testing_paths.fixtures_dir .. "/missing_mandatory_field-1.0-1.rockspec", true)
+         write_file("missing_mandatory_field-1.0-1.rockspec", [[
+            package="missing_mandatory_field"
+            version="1.0-1"
+            source = {
+               url = "http://example.com/foo.tar.gz"
+            }
+         ]], finally)
+         rockspec = fetch.load_local_rockspec("missing_mandatory_field-1.0-1.rockspec", true)
          assert.same(rockspec.name, "missing_mandatory_field")
          assert.same(rockspec.version, "1.0-1")
          assert.same(rockspec.source.url, "http://example.com/foo.tar.gz")
          
-         rockspec = fetch.load_local_rockspec(testing_paths.fixtures_dir .. "/unknown_field-1.0-1.rockspec", true)
+         write_file("unknown_field-1.0-1.rockspec", [[
+            package="unknown_field"
+            version="1.0-1"
+            source = {
+               url = "http://example.com/foo.tar.gz"
+            }
+            unknown="foo"
+         ]], finally)
+         rockspec = fetch.load_local_rockspec("unknown_field-1.0-1.rockspec", true)
          assert.same(rockspec.name, "unknown_field")
          assert.same(rockspec.version, "1.0-1")
          assert.same(rockspec.source.url, "http://example.com/foo.tar.gz")
 
          -- The previous calls fail if the detailed checking is done
          path.use_tree(testing_paths.testing_tree)
-         assert.falsy(fetch.load_local_rockspec(testing_paths.fixtures_dir .. "/missing_mandatory_field-1.0-1.rockspec"))
-         assert.falsy(fetch.load_local_rockspec(testing_paths.fixtures_dir .. "/unknown_field-1.0-1.rockspec"))
+         assert.falsy(fetch.load_local_rockspec("missing_mandatory_field-1.0-1.rockspec"))
+         assert.falsy(fetch.load_local_rockspec("unknown_field-1.0-1.rockspec"))
       end)
       
       it("returns a table representing the rockspec from the given file", function()
@@ -222,24 +258,47 @@ describe("Luarocks fetch test #unit #mock", function()
       end)
       
       it("returns false if the rockspec version is not supported", function()
-         assert.falsy(fetch.load_local_rockspec(testing_paths.fixtures_dir .. "/invalid_version.rockspec"))
+         assert.falsy(fetch.load_local_rockspec("invalid_version.rockspec"))
       end)
       
       it("returns false if the rockspec doesn't pass the type checking", function()
-         assert.falsy(fetch.load_local_rockspec(testing_paths.fixtures_dir .. "/type_mismatch_string-1.0-1.rockspec"))
+         write_file("type_mismatch_string-1.0-1.rockspec", [[
+            package="type_mismatch_version"
+            version=1.0
+         ]], finally)
+         assert.falsy(fetch.load_local_rockspec("type_mismatch_string-1.0-1.rockspec"))
       end)
       
       it("returns false if the rockspec file name is not right", function()
-         assert.falsy(fetch.load_local_rockspec(testing_paths.fixtures_dir .. "/invalid_rockspec_name.rockspec"))
+         write_file("invalid_rockspec_name.rockspec", [[
+            package="invalid_rockspec_name"
+            version="1.0-1"
+            source = {
+               url = "http://example.com/foo.tar.gz"
+            }
+            build = {
+               
+            }
+         ]], finally)
+         assert.falsy(fetch.load_local_rockspec("invalid_rockspec_name.rockspec"))
       end)
       
       it("returns false if the version in the rockspec file name doesn't match the version declared in the rockspec", function()
-         assert.falsy(fetch.load_local_rockspec(testing_paths.fixtures_dir .. "/inconsistent_versions-1.0-1.rockspec"))
+         write_file("inconsistent_versions-1.0-1.rockspec", [[
+            package="inconsistent_versions"
+            version="1.0-2"
+            source = {
+               url = "http://example.com/foo.tar.gz"
+            }
+            build = {
+               
+            }
+         ]], finally)
+         assert.falsy(fetch.load_local_rockspec("inconsistent_versions-1.0-1.rockspec"))
       end)
    end)
    
    describe("fetch.load_rockspec", function()
-
       it("returns a table containing the requested rockspec by downloading it into a temporary directory", function()
          path.use_tree(testing_paths.testing_tree)
          local rockspec = fetch.load_rockspec("http://localhost:8080/file/a_rock-1.0-1.rockspec")
@@ -279,6 +338,25 @@ describe("Luarocks fetch test #unit #mock", function()
    end)
    
    describe("fetch.get_sources", function()
+      local tmpdir
+      local olddir
+      
+      before_each(function()
+         tmpdir = get_tmp_path()
+         olddir = lfs.currentdir()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+         fs.change_dir(tmpdir)
+      end)
+      
+      after_each(function()
+         if olddir then
+            lfs.chdir(olddir)
+            if tmpdir then
+               lfs.rmdir(tmpdir)
+            end
+         end
+      end)
       
       it("downloads the sources for building a rock and returns the resulting source filename and its parent directory", function()
          local rockspec = assert(fetch.load_rockspec("http://localhost:8080/file/a_rock-1.0-1.rockspec"))
@@ -311,12 +389,33 @@ describe("Luarocks fetch test #unit #mock", function()
       end)
       
       it("returns false and does nothing if the rockspec source url is invalid", function()
-         local rockspec = assert(fetch.load_rockspec("http://localhost:8080/file/invalid_url-1.0-1.rockspec"))
+         write_file("invalid_url-1.0-1.rockspec", [[
+            package="invalid_url"
+            version="1.0-1"
+            source = {
+               url = "http://localhost:8080/file/nonexistent"
+            }
+            build = {
+               
+            }
+         ]], finally)
+         local rockspec = assert(fetch.load_rockspec("invalid_url-1.0-1.rockspec"))
          assert.falsy(fetch.get_sources(rockspec, false))
       end)
       
       it("returns false and does nothing if the downloaded rockspec has an invalid md5 checksum", function()
-         local rockspec = assert(fetch.load_rockspec("http://localhost:8080/file/invalid_checksum-1.0-1.rockspec"))
+         write_file("invalid_checksum-1.0-1.rockspec", [[
+            package="invalid_checksum"
+            version="1.0-1"
+            source = {
+               url = "http://localhost:8080/file/a_rock.lua",
+               md5 = "invalid"
+            }
+            build = {
+               
+            }
+         ]], finally)
+         local rockspec = assert(fetch.load_rockspec("invalid_checksum-1.0-1.rockspec"))
          assert.falsy(fetch.get_sources(rockspec, false))
       end)
    end)
