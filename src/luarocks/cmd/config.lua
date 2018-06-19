@@ -5,6 +5,7 @@ local config_cmd = {}
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
+local fun = require("luarocks.fun")
 
 config_cmd.help_summary = "Query information about the LuaRocks configuration."
 config_cmd.help_arguments = "<flag>"
@@ -32,6 +33,77 @@ local function config_file(conf)
       return true
    else
       return nil, "file not found"
+   end
+end
+
+local function printf(fmt, ...)
+   print((fmt):format(...))
+end
+
+local cfg_maps = {
+   external_deps_patterns = true,
+   external_deps_subdirs = true,
+   rocks_provided = true,
+   rocks_provided_3_0 = true,
+   runtime_external_deps_patterns = true,
+   runtime_external_deps_subdirs = true,
+   upload = true,
+   variables = true,
+}
+
+local cfg_arrays = {
+   disabled_servers = true,
+   external_deps_dirs = true,
+   rocks_trees = true,
+   rocks_servers = true,
+}
+
+local function print_config(cfg)
+   for k, v in util.sortedpairs(cfg) do
+      if type(v) == "string" or type(v) == "boolean" or type(v) == "number" then
+         printf("%s = %q", k, v)
+      elseif type(v) == "function" then
+         -- skip
+      elseif cfg_maps[k] then
+         printf("%s = {", k)
+         for kk, vv in util.sortedpairs(v) do
+            local keyfmt = kk:match("^[a-zA-Z_][a-zA-Z0-9_]*$") and "%s" or "[%q]"
+            if type(vv) == "table" then
+               local qvs = fun.map(vv, function(e) return string.format("%q", e) end)
+               printf("   "..keyfmt.." = {%s},", kk, table.concat(qvs, ", "))
+            else
+               printf("   "..keyfmt.." = %q,", kk, vv)
+            end
+         end
+         printf("}")
+      elseif cfg_arrays[k] then
+         if #v == 0 then
+            printf("%s = {}", k)
+         else
+            printf("%s = {", k)
+            for _, vv in ipairs(v) do
+               if type(vv) == "string" then
+                  printf("   %q,", vv)
+               elseif type(vv) == "table" then
+                  printf("   {")
+                  if next(vv) == 1 then
+                     for _, v3 in ipairs(vv) do
+                        printf("      %q,", v3)
+                     end
+                  else
+                     for k3, v3 in util.sortedpairs(vv) do
+                        local keyfmt = tostring(k3):match("^[a-zA-Z_][a-zA-Z0-9_]*$") and "%s" or "[%q]"
+                        printf("      "..keyfmt.." = %q,", k3, v3)
+                     end
+                  end
+                  printf("   },")
+               end
+            end
+            printf("}")
+         end
+      else
+         error(k)
+      end
    end
 end
 
@@ -69,7 +141,8 @@ function config_cmd.command(flags)
       return true
    end
    
-   return nil, "Please provide a flag for querying configuration values. "..util.see_help("config")
+   print_config(cfg)
+   return true
 end
 
 return config_cmd
