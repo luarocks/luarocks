@@ -19,7 +19,7 @@ query_mt.arch = {
    all = true,
    rockspec = true,
    installed = true,
-   [cfg.arch] = true,
+   -- [cfg.arch] = true, -- this is set later
 }
 
 -- Fallback default value for the `substring` field, if not explicitly set.
@@ -68,6 +68,8 @@ function queries.new(ns_name, version, substring, arch, operator)
    if version then
       table.insert(self.constraints, { op = operator, version = vers.parse_version(version)})
    end
+
+   query_mt.arch[cfg.arch] = true
    return setmetatable(self, query_mt)
 end
 
@@ -170,11 +172,14 @@ do
          namespace = namespace,
          constraints = constraints,
       }
+
+      query_mt.arch[cfg.arch] = true
       return setmetatable(self, query_mt)
    end
 end
 
 function queries.from_persisted_table(tbl)
+   query_mt.arch[cfg.arch] = true
    return setmetatable(tbl, query_mt)
 end
 
