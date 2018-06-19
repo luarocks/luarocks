@@ -80,7 +80,7 @@ end
 -- Uses the global table "commands", which contains
 -- the loaded modules representing commands.
 -- @param ... string: Arguments given on the command-line.
-function cmd.run_command(...)
+function cmd.run_command(description, commands, ...)
    local args = {...}
    local cmdline_vars = {}
    for i = #args, 1, -1 do
@@ -131,7 +131,7 @@ function cmd.run_command(...)
 
    if flags["version"] then
       util.printout(program.." "..cfg.program_version)
-      util.printout(program_description)
+      util.printout(description)
       util.printout()
       os.exit(cmd.errorcodes.OK)
    elseif flags["help"] or #nonflags == 0 then
