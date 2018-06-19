@@ -284,12 +284,20 @@ function util.variable_substitutions(tbl, vars)
    end
 end
 
-function util.lua_versions()
+function util.lua_versions(sort)
    local versions = { "5.1", "5.2", "5.3", "5.4" }
    local i = 0
-   return function()
-      i = i + 1
-      return versions[i]
+   if sort == "descending" then
+      i = #versions + 1
+      return function()
+         i = i - 1
+         return versions[i]
+      end
+   else
+      return function()
+         i = i + 1
+         return versions[i]
+      end
    end
 end
 
