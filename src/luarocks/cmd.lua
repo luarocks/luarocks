@@ -1,6 +1,6 @@
 
 --- Functions for command-line scripts.
-local command_line = {}
+local cmd = {}
 
 local unpack = unpack or table.unpack
 
@@ -72,7 +72,7 @@ end
 -- Uses the global table "commands", which contains
 -- the loaded modules representing commands.
 -- @param ... string: Arguments given on the command-line.
-function command_line.run_command(...)
+function cmd.run_command(...)
    local args = {...}
    local cmdline_vars = {}
    for i = #args, 1, -1 do
@@ -239,8 +239,8 @@ function command_line.run_command(...)
    end
    
    if commands[command] then
-      local cmd = require(commands[command])
-      local call_ok, ok, err, exitcode = xpcall(function() return cmd.command(flags, unpack(nonflags)) end, error_handler)
+      local cmd_mod = require(commands[command])
+      local call_ok, ok, err, exitcode = xpcall(function() return cmd_mod.command(flags, unpack(nonflags)) end, error_handler)
       if not call_ok then
          die(ok, cfg.errorcodes.CRASH)
       elseif not ok then
@@ -252,4 +252,4 @@ function command_line.run_command(...)
    util.run_scheduled_functions()
 end
 
-return command_line
+return cmd

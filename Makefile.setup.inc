@@ -5,7 +5,7 @@ BINDIR ?= $(PREFIX)/bin
 LUADIR ?= $(PREFIX)/share/lua/$(LUA_VERSION)
 
 BIN_FILES = luarocks luarocks-admin
-LUAROCKS_FILES = fs.lua dir.lua repos.lua command_line.lua upload/api.lua upload/multipart.lua \
+LUAROCKS_FILES = fs.lua dir.lua repos.lua cmd.lua upload/api.lua upload/multipart.lua \
 admin/index.lua build.lua search.lua fs/win32.lua fs/win32/tools.lua fs/win32/pe-parser.lua \
 fs/unix/tools.lua fs/lua.lua fs/tools.lua fs/unix.lua loader.lua cmd/help.lua \
 cmd/unpack.lua cmd/upload.lua cmd/lint.lua cmd/purge.lua cmd/install.lua \
