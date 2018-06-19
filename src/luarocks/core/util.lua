@@ -54,7 +54,7 @@ function util.show_table(t, tname, top_indent)
 
    local function is_empty_table(tbl) return next(tbl) == nil end
    
-   local function basic_serialize (o)
+   local function basic_serialize(o)
       local so = tostring(o)
       if type(o) == "function" then
          local info = debug.getinfo(o, "S")
@@ -72,7 +72,7 @@ function util.show_table(t, tname, top_indent)
       end
    end
    
-   local function add_to_cart (value, name, indent, saved, field)
+   local function add_to_cart(value, name, indent, saved, field)
       indent = indent or ""
       saved = saved or {}
       field = field or name
@@ -128,6 +128,24 @@ function util.deep_merge(dst, src)
             dst[k] = v
          end
       else
+         dst[k] = v
+      end
+   end
+end
+
+--- Merges contents of src below those of dst's contents.
+-- @param dst Destination table, which will receive src's contents.
+-- @param src Table which provides new contents to dst.
+function util.deep_merge_under(dst, src)
+   for k, v in pairs(src) do
+      if type(v) == "table" then
+         if not dst[k] then
+            dst[k] = {}
+         end
+         if type(dst[k]) == "table" then
+            util.deep_merge_under(dst[k], v)
+         end
+      elseif dst[k] == nil then
          dst[k] = v
       end
    end

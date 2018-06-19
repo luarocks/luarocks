@@ -8,14 +8,16 @@ local util = {}
 
 local core = require("luarocks.core.util")
 
-util.popen_read = core.popen_read
 util.cleanup_path = core.cleanup_path
 util.split_string = core.split_string
-util.keys = core.keys
-util.printerr = core.printerr
 util.sortedpairs = core.sortedpairs
-util.warning = core.warning
 util.deep_merge = core.deep_merge
+util.deep_merge_under = core.deep_merge_under
+util.popen_read = core.popen_read
+util.show_table = core.show_table
+util.printerr = core.printerr
+util.warning = core.warning
+util.keys = core.keys
 
 local unpack = unpack or table.unpack
 

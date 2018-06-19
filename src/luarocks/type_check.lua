@@ -4,7 +4,6 @@ local type_check = {}
 local cfg = require("luarocks.core.cfg")
 local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
-local require = nil
 --------------------------------------------------------------------------------
 
 type_check.MAGIC_PLATFORMS = {}
@@ -30,18 +29,6 @@ do
             tbl[k]._any[v] = nil
          elseif type(v) == "table" then
             expand_magic_platforms(v)
-         end
-      end
-   end
-   
-   local function merge_under(dst, src)
-      for k, v in pairs(src) do
-         if dst[k] == nil then
-            if type(dst[k]) == "table" then
-               util.deep_merge(dst[k], v)
-            else
-               dst[k] = v
-            end
          end
       end
    end
@@ -75,7 +62,7 @@ do
       -- so that error messages can inform users when they try
       -- to use new features without bumping rockspec_format in their rockspecs.
       for i = #version_list, 2, -1 do
-         merge_under(schemas[version_list[i - 1]], schemas[version_list[i]])
+         util.deep_merge_under(schemas[version_list[i - 1]], schemas[version_list[i]])
       end
 
       return schemas
