@@ -51,7 +51,7 @@ local lua_version_set = false
 -- Some helpers
 -- 
 
-local pe = assert(loadfile(".\\win32\\pe-parser.lua"))()
+local pe = assert(loadfile(".\\src\\luarocks\\fs\\win32\\pe-parser.lua"))()
 
 local function die(message)
 	if message then print(message) end
@@ -1139,8 +1139,6 @@ end
 -- ***********************************************************
 -- remove regsitry related files, no longer needed
 exec( S[[del "$PREFIX\LuaRocks.reg.*" >NUL]] )
--- remove pe-parser module
-exec( S[[del "$PREFIX\pe-parser.lua" >NUL]] )
 
 -- ***********************************************************
 -- Exit handlers 
