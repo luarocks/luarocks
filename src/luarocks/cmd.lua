@@ -22,27 +22,6 @@ cmd.errorcodes = {
    CRASH = 99
 }
 
-local function error_handler(err)
-   return debug.traceback("LuaRocks "..cfg.program_version..
-      " bug (please report at https://github.com/luarocks/luarocks/issues).\n"..err, 2)
-end
-
---- Display an error message and exit.
--- @param message string: The error message.
--- @param exitcode number: the exitcode to use
-local function die(message, exitcode)
-   assert(type(message) == "string", "bad error, expected string, got: " .. type(message))
-   util.printerr("\nError: "..message)
-
-   local ok, err = xpcall(util.run_scheduled_functions, error_handler)
-   if not ok then
-      util.printerr("\nError: "..err)
-      exitcode = cmd.errorcodes.CRASH
-   end
-
-   os.exit(exitcode or cmd.errorcodes.UNSPECIFIED)
-end
-
 local function replace_tree(flags, tree)
    tree = dir.normalize(tree)
    flags["tree"] = tree
@@ -81,6 +60,28 @@ end
 -- the loaded modules representing commands.
 -- @param ... string: Arguments given on the command-line.
 function cmd.run_command(description, commands, ...)
+
+   local function error_handler(err)
+      return debug.traceback("LuaRocks "..cfg.program_version..
+         " bug (please report at https://github.com/luarocks/luarocks/issues).\n"..err, 2)
+   end
+
+   --- Display an error message and exit.
+   -- @param message string: The error message.
+   -- @param exitcode number: the exitcode to use
+   local function die(message, exitcode)
+      assert(type(message) == "string", "bad error, expected string, got: " .. type(message))
+      util.printerr("\nError: "..message)
+
+      local ok, err = xpcall(util.run_scheduled_functions, error_handler)
+      if not ok then
+         util.printerr("\nError: "..err)
+         exitcode = cmd.errorcodes.CRASH
+      end
+
+      os.exit(exitcode or cmd.errorcodes.UNSPECIFIED)
+   end
+
    local args = {...}
    local cmdline_vars = {}
    for i = #args, 1, -1 do
