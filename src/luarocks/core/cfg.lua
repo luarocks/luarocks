@@ -763,4 +763,12 @@ function cfg.is_platform(query)
    end
 end
 
+function cfg.each_platform()
+   local i = 0
+   return function()
+      i = i + 1
+      return cfg.platforms[i]
+   end
+end
+
 return cfg

@@ -5,7 +5,7 @@ local write_file = test_env.write_file
 
 test_env.unload_luarocks()
 local fs = require("luarocks.fs")
-local patch = package.loaded["luarocks.tools.patch"]
+local patch = require("luarocks.tools.patch")
 
 local lao = 
 [[The Nameless is the origin of Heaven and Earth;
@@ -148,6 +148,7 @@ describe("Luarocks patch test #unit", function()
    local runner
    
    setup(function()
+      fs.init()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
       runner.tick = true

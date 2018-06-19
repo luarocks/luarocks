@@ -55,6 +55,7 @@ describe("Luarocks fs test #unit", function()
    local runner
    
    setup(function()
+      fs.init()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
       runner.tick = true

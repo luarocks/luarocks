@@ -93,6 +93,8 @@ function command_line.run_command(...)
       die(flags.ERROR.." See --help.")
    end
    
+   fs.init()
+
    if flags["from"] then flags["server"] = flags["from"] end
    if flags["only-from"] then flags["only-server"] = flags["only-from"] end
    if flags["only-sources-from"] then flags["only-sources"] = flags["only-sources-from"] end

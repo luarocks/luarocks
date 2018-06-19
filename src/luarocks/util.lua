@@ -59,7 +59,9 @@ end
 -- Functions are executed in the inverse order they were scheduled.
 function util.run_scheduled_functions()
    local fs = require("luarocks.fs")
-   fs.change_dir_to_root()
+   if fs.change_dir_to_root then
+      fs.change_dir_to_root()
+   end
    for i = #scheduled_functions, 1, -1 do
       local item = scheduled_functions[i]
       item.fn(unpack(item.args))

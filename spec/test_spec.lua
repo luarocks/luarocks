@@ -82,6 +82,7 @@ end)
 test_env.unload_luarocks()
 
 local fs = require("luarocks.fs")
+local cfg = require("luarocks.core.cfg")
 local path = require("luarocks.path")
 local test = require("luarocks.test")
 local test_busted = require("luarocks.test.busted")
@@ -91,6 +92,8 @@ describe("LuaRocks test #unit", function()
    local runner
    
    setup(function()
+      cfg.init()
+      fs.init()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
       runner.tick = true
