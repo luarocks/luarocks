@@ -21,9 +21,9 @@ end
 -- subset of its "platforms" field. The "platforms" field should
 -- be a table containing subtables keyed with strings representing
 -- platform names. Names that match the contents of the global
--- cfg.platforms setting are used. For example, if
--- cfg.platforms= {"foo"}, then the fields of
--- tbl.platforms.foo will overwrite those of tbl with the same
+-- detected platforms setting are used. For example, if
+-- platform "unix" is detected, then the fields of
+-- tbl.platforms.unix will overwrite those of tbl with the same
 -- names. For table values, the operation is performed recursively
 -- (tbl.platforms.foo.x.y.z overrides tbl.x.y.z; other contents of
 -- tbl.x are preserved).
@@ -35,7 +35,7 @@ local function platform_overrides(tbl)
    if not tbl then return end
    
    if tbl.platforms then
-      for _, platform in ipairs(cfg.platforms) do
+      for platform in cfg.each_platform() do
          local platform_tbl = tbl.platforms[platform]
          if platform_tbl then
             util.deep_merge(tbl, platform_tbl)
