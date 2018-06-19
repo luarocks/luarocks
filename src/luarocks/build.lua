@@ -98,7 +98,7 @@ local function check_macosx_deployment_target(rockspec)
          rockspec.variables[var] = "env MACOSX_DEPLOYMENT_TARGET="..target.." "..rockspec.variables[var]
       end
    end
-   if cfg.platforms.macosx and rockspec:format_is_at_least("3.0") and target then
+   if cfg.is_platform("macosx") and rockspec:format_is_at_least("3.0") and target then
       local version = util.popen_read("sw_vers -productVersion")
       local versionminor = minor(version)
       local targetminor = minor(target)
