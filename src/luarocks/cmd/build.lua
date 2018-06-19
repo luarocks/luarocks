@@ -15,6 +15,7 @@ local build = require("luarocks.build")
 local writer = require("luarocks.manif.writer")
 local search = require("luarocks.search")
 local make = require("luarocks.cmd.make")
+local cmd = require("luarocks.cmd")
 
 cmd_build.help_summary = "build/compile a rock."
 cmd_build.help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
@@ -148,7 +149,7 @@ function cmd_build.command(flags, name, version)
    
    local ok, err = fs.check_command_permissions(flags)
    if not ok then
-      return nil, err, cfg.errorcodes.PERMISSIONDENIED
+      return nil, err, cmd.errorcodes.PERMISSIONDENIED
    end
 
    ok, err = do_build(name, version, opts)

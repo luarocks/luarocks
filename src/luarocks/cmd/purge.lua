@@ -13,6 +13,7 @@ local writer = require("luarocks.manif.writer")
 local cfg = require("luarocks.core.cfg")
 local remove = require("luarocks.remove")
 local queries = require("luarocks.queries")
+local cmd = require("luarocks.cmd")
 
 purge.help_summary = "Remove all installed rocks from a tree."
 purge.help_arguments = "--tree=<tree> [--old-versions]"
@@ -43,7 +44,7 @@ function purge.command(flags)
    end
 
    local ok, err = fs.check_command_permissions(flags)
-   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
+   if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
 
    search.local_manifest_search(results, path.rocks_dir(tree), queries.all())
 

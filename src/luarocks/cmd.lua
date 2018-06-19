@@ -14,6 +14,14 @@ local fun = require("luarocks.fun")
 
 local program = util.this_program("luarocks")
 
+cmd.errorcodes = {
+   OK = 0,
+   UNSPECIFIED = 1,
+   PERMISSIONDENIED = 2,
+   CONFIGFILE = 3,
+   CRASH = 99
+}
+
 local function error_handler(err)
    return debug.traceback("LuaRocks "..cfg.program_version..
       " bug (please report at https://github.com/luarocks/luarocks/issues).\n"..err, 2)
@@ -29,10 +37,10 @@ local function die(message, exitcode)
    local ok, err = xpcall(util.run_scheduled_functions, error_handler)
    if not ok then
       util.printerr("\nError: "..err)
-      exitcode = cfg.errorcodes.CRASH
+      exitcode = cmd.errorcodes.CRASH
    end
 
-   os.exit(exitcode or cfg.errorcodes.UNSPECIFIED)
+   os.exit(exitcode or cmd.errorcodes.UNSPECIFIED)
 end
 
 local function replace_tree(flags, tree)
@@ -125,7 +133,7 @@ function cmd.run_command(...)
       util.printout(program.." "..cfg.program_version)
       util.printout(program_description)
       util.printout()
-      os.exit(cfg.errorcodes.OK)
+      os.exit(cmd.errorcodes.OK)
    elseif flags["help"] or #nonflags == 0 then
       command = "help"
    else
@@ -242,7 +250,7 @@ function cmd.run_command(...)
       local cmd_mod = require(commands[command])
       local call_ok, ok, err, exitcode = xpcall(function() return cmd_mod.command(flags, unpack(nonflags)) end, error_handler)
       if not call_ok then
-         die(ok, cfg.errorcodes.CRASH)
+         die(ok, cmd.errorcodes.CRASH)
       elseif not ok then
          die(err, exitcode)
       end

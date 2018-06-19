@@ -13,6 +13,7 @@ local remove = require("luarocks.remove")
 local search = require("luarocks.search")
 local queries = require("luarocks.queries")
 local cfg = require("luarocks.core.cfg")
+local cmd = require("luarocks.cmd")
 
 install.help_summary = "Install a rock."
 
@@ -191,7 +192,7 @@ function install.command(flags, name, version)
    name = util.adjust_name_and_namespace(name, flags)
 
    local ok, err = fs.check_command_permissions(flags)
-   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
+   if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       local build = require("luarocks.cmd.build")

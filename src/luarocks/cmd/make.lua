@@ -14,6 +14,7 @@ local pack = require("luarocks.pack")
 local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
 local writer = require("luarocks.manif.writer")
+local cmd = require("luarocks.cmd")
 
 make.help_summary = "Compile package in current directory using a rockspec."
 make.help_arguments = "[--pack-binary-rock] [<rockspec>]"
@@ -89,7 +90,7 @@ function make.command(flags, rockspec_filename)
       end)
    else
       local ok, err = fs.check_command_permissions(flags)
-      if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
+      if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
       ok, err = build.build_rockspec(rockspec, opts)
       if not ok then return nil, err end
       local name, version = ok, err

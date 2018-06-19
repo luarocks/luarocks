@@ -37,23 +37,6 @@ cfg.variables = {}
 cfg.rocks_trees = {}
 cfg.platforms = {}
 
-cfg.errorcodes = setmetatable({
-   OK = 0,
-   UNSPECIFIED = 1,
-   PERMISSIONDENIED = 2,
-   CONFIGFILE = 3,
-   CRASH = 99
-},{
-   __index = function(t, key)
-      local val = rawget(t, key)
-      if not val then
-         error("'"..tostring(key).."' is not a valid errorcode", 2)
-      end
-      return val
-   end
-})
-
-
 local popen_ok, popen_result = pcall(io.popen, "")
 if popen_ok then
    if popen_result then
@@ -62,7 +45,7 @@ if popen_ok then
 else
    io.stderr:write("Your version of Lua does not support io.popen,\n")
    io.stderr:write("which is required by LuaRocks. Please check your Lua installation.\n")
-   os.exit(cfg.errorcodes.UNSPECIFIED)
+   os.exit(1) -- FIXME
 end
 
 -- System detection:
@@ -207,7 +190,7 @@ local load_config_file = function(filepath)
    if (not result) and errcode ~= "open" then
       -- errcode is either "load" or "run"; bad config file, so error out
       io.stderr:write(err.."\n")
-      os.exit(cfg.errorcodes.CONFIGFILE)
+      os.exit(3) -- FIXME
    end
    if result then
       -- success in loading and running, merge contents and exit

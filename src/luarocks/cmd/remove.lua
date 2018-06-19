@@ -12,6 +12,7 @@ local path = require("luarocks.path")
 local deps = require("luarocks.deps")
 local writer = require("luarocks.manif.writer")
 local queries = require("luarocks.queries")
+local cmd = require("luarocks.cmd")
 
 cmd_remove.help_summary = "Uninstall a rock."
 cmd_remove.help_arguments = "[--force|--force-fast] <name> [<version>]"
@@ -42,7 +43,7 @@ function cmd_remove.command(flags, name, version)
    local deps_mode = flags["deps-mode"] or cfg.deps_mode
    
    local ok, err = fs.check_command_permissions(flags)
-   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
+   if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
    
    local rock_type = name:match("%.(rock)$") or name:match("%.(rockspec)$")
    local filename = name
