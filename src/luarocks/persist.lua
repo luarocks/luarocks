@@ -58,7 +58,7 @@ write_table = function(out, tbl, level, field_order)
    for k, v, sub_order in util.sortedpairs(tbl, field_order) do
       out:write(sep)
       if indent then
-         for n = 1,level do out:write(indentation) end
+         for _ = 1, level do out:write(indentation) end
       end
 
       if k == i then
@@ -86,7 +86,7 @@ write_table = function(out, tbl, level, field_order)
    end
    if sep ~= "\n" then
       out:write("\n")
-      for n = 1,level-1 do out:write(indentation) end
+      for _ = 1, level - 1 do out:write(indentation) end
    end
    out:write("}")
 end
@@ -101,6 +101,19 @@ local function write_table_as_assignments(out, tbl, field_order)
       write_value(out, v, 0, sub_order)
       out:write("\n")
    end
+end
+
+--- Write a table as series of assignments to a writer object.
+-- @param out table or userdata: a writer object supporting :write() method.
+-- @param tbl table: the table to be written.
+local function write_table_as_table(out, tbl)
+   out:write("return {\n")
+   for k, v, sub_order in util.sortedpairs(tbl) do
+      out:write("   " .. k .. " = ")
+      write_value(out, v, 1, sub_order)
+      out:write(",\n")
+   end
+   out:write("}\n")
 end
 
 --- Save the contents of a table to a string.
@@ -132,6 +145,24 @@ function persist.save_from_table(filename, tbl, field_order)
       return nil, "Cannot create file at "..filename
    end
    write_table_as_assignments(out, tbl, field_order)
+   out:close()
+   return true
+end
+
+--- Save the contents of a table as a module.
+-- Each element of the table is saved as a global assignment.
+-- Only numbers, strings and tables (containing numbers, strings
+-- or other recursively processed tables) are supported.
+-- @param filename string: the output filename
+-- @param tbl table: the table containing the data to be written
+-- @return boolean or (nil, string): true if successful, or nil and a
+-- message in case of errors.
+function persist.save_as_module(filename, tbl)
+   local out = io.open(filename, "w")
+   if not out then
+      return nil, "Cannot create file at "..filename
+   end
+   write_table_as_table(out, tbl)
    out:close()
    return true
 end
