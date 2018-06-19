@@ -143,7 +143,7 @@ function Api:request(url, params, post_params)
    local json_ok, json = require_json()
    if not json_ok then return nil, "A JSON library is required for this command. "..json end
    
-   if cfg.downloader == "wget" then
+   if fs.which_tool("downloader") == "wget" then
       local curl_ok, err = fs.is_tool_available(vars.CURL, "curl")
       if not curl_ok then
          return nil, err
