@@ -5,6 +5,7 @@ local write_file = test_env.write_file
 
 test_env.unload_luarocks()
 local fs = require("luarocks.fs")
+local cfg = require("luarocks.core.cfg")
 local patch = require("luarocks.tools.patch")
 
 local lao = 
@@ -148,6 +149,7 @@ describe("Luarocks patch test #unit", function()
    local runner
    
    setup(function()
+      cfg.init()
       fs.init()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")

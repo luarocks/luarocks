@@ -40,6 +40,10 @@ function test_env.exists(path)
    return lfs.attributes(path, "mode") ~= nil
 end
 
+function test_env.file_if_exists(path)
+   return lfs.attributes(path, "mode") and path
+end
+
 --- Quote argument for shell processing. Fixes paths on Windows.
 -- Adds double quotes and escapes. Based on function in fs/win32.lua.
 -- @param arg string: Unquoted argument.
@@ -251,7 +255,15 @@ function test_env.set_args()
             end
          end
       end
+      print(test_env.TEST_TARGET_OS)
    end
+
+   if test_env.TEST_TARGET_OS == "windows" then
+      test_env.lib_extension = "dll"
+   else
+      test_env.lib_extension = "so"
+   end
+
    return true
 end
 
@@ -394,12 +406,8 @@ local function create_env(testing_paths)
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_sys_tree .. "/share/lua/" .. luaversion_short .. "/?.lua;"
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.testing_sys_tree .. "/share/lua/".. luaversion_short .. "/?/init.lua;"
    env_variables.LUA_PATH = env_variables.LUA_PATH .. testing_paths.src_dir .. "/?.lua;"
-   local lib_extension = "so"
-   if test_env.TEST_TARGET_OS == "windows" then
-      lib_extension = "dll"
-   end
-   env_variables.LUA_CPATH = testing_paths.testing_tree .. "/lib/lua/" .. luaversion_short .. "/?." .. lib_extension .. ";"
-                           .. testing_paths.testing_sys_tree .. "/lib/lua/" .. luaversion_short .. "/?." .. lib_extension .. ";"
+   env_variables.LUA_CPATH = testing_paths.testing_tree .. "/lib/lua/" .. luaversion_short .. "/?." .. test_env.lib_extension .. ";"
+                           .. testing_paths.testing_sys_tree .. "/lib/lua/" .. luaversion_short .. "/?." .. test_env.lib_extension .. ";"
    env_variables.PATH = os.getenv("PATH") .. ";" .. testing_paths.testing_tree .. "/bin;" .. testing_paths.testing_sys_tree .. "/bin;"
 
    return env_variables
@@ -584,8 +592,7 @@ function test_env.setup_specs(extra_rocks)
 
       package.path = test_env.env_variables.LUA_PATH
 
-      test_env.platform = execute_output(test_env.testing_paths.lua .. " -e \"print(require('luarocks.core.cfg').arch)\"", false, test_env.env_variables)
-      test_env.lib_extension = execute_output(test_env.testing_paths.lua .. " -e \"print(require('luarocks.core.cfg').lib_extension)\"", false, test_env.env_variables)
+      test_env.platform = execute_output(test_env.testing_paths.lua .. " -e \"cfg = require('luarocks.core.cfg'); cfg.init(); print(cfg.arch)\"", false, test_env.env_variables)
       test_env.wrapper_extension = test_env.TEST_TARGET_OS == "windows" and ".bat" or ""
       test_env.md5sums = create_md5sums(test_env.testing_paths)
       test_env.setup_done = true
@@ -737,11 +744,21 @@ local function install_luarocks(install_env_vars)
       assert(execute_bool("install.bat /LUA " .. testing_paths.luadir .. " " .. compiler_flag .. " /P " .. testing_paths.testing_lrprefix .. " /NOREG /NOADMIN /F /Q /CONFIG " .. testing_paths.testing_lrprefix .. "/etc/luarocks", false, install_env_vars))
       assert(execute_bool(testing_paths.win_tools .. "/cp " .. testing_paths.testing_lrprefix .. "/lua/luarocks/core/site_config* " .. testing_paths.src_dir .. "/luarocks/core"))
    else
-      local configure_cmd = "./configure --with-lua=" .. testing_paths.luadir .. " --prefix=" .. testing_paths.testing_lrprefix
-      assert(execute_bool(configure_cmd, false, install_env_vars))
-      assert(execute_bool("make clean", false, install_env_vars))
-      assert(execute_bool("make src/luarocks/core/site_config_"..test_env.lua_version:gsub("%.", "_")..".lua", false, install_env_vars))
-      assert(execute_bool("make dev", false, install_env_vars))
+      local incfile = test_env.file_if_exists(testing_paths.luadir .. "/include/lua.h")
+                   or test_env.file_if_exists(testing_paths.luadir .. "/include/lua/" .. test_env.lua_version .. "/lua.h")
+                   or test_env.file_if_exists(testing_paths.luadir .. "/include/lua" .. test_env.lua_version .. "/lua.h")
+      local incdir = assert(incfile):gsub("/lua.h$", "")
+
+      local lines = {
+         "return {",
+         ("SYSCONFDIR = %q,"):format(testing_paths.testing_lrprefix .. "/etc/luarocks"),
+         ("LUA_DIR = %q,"):format(testing_paths.luadir),
+         ("LUA_INCDIR = %q,"):format(incdir),
+         ("LUA_LIBDIR = %q,"):format(testing_paths.luadir .. "/lib"),
+         ("LUA_BINDIR = %q,"):format(testing_paths.luadir .. "/bin"),
+         "}",
+      }
+      test_env.write_file("src/luarocks/core/hardcoded.lua", table.concat(lines, "\n") .. "\n")
    end
    print("LuaRocks installed correctly!")
 end

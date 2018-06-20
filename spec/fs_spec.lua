@@ -3,6 +3,7 @@ local test_env = require("spec.util.test_env")
 test_env.unload_luarocks()
 test_env.setup_specs()
 local fs = require("luarocks.fs")
+local cfg = require("luarocks.core.cfg")
 local lfs = require("lfs")
 local is_win = test_env.TEST_TARGET_OS == "windows"
 local posix_ok = pcall(require, "posix")
@@ -55,6 +56,7 @@ describe("Luarocks fs test #unit", function()
    local runner
    
    setup(function()
+      cfg.init()
       fs.init()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")

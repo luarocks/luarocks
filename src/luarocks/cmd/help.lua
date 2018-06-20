@@ -63,6 +63,7 @@ function help.command(description, commands, command)
 	                       (overrides any entries in the config file)
 	--only-sources=<url>   Restrict downloads to paths matching the
 	                       given URL.
+        --lua-dir=<prefix>     Which Lua installation to use.
 	--tree=<tree>          Which tree to operate on.
 	--local                Use the tree in the user's home directory.
 	                       To enable it, see ']]..program..[[ help path'.

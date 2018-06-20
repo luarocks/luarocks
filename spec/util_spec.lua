@@ -53,20 +53,6 @@ describe("Basic tests #integration", function()
       assert.is.truthy(run.luarocks("--only-server=testing"))
    end)
 
-   it("#only LuaRocks test site config", function()
-      local scname = testing_paths.src_dir .. "/luarocks/core/site_config_"..test_env.lua_version:gsub("%.", "_")..".lua"
-   
-      assert.is.truthy(os.rename(scname, scname..".tmp"))
-      assert.is.falsy(lfs.attributes(scname))
-      assert.is.truthy(lfs.attributes(scname..".tmp"))
-
-      assert.is.truthy(run.luarocks(""))
-      
-      assert.is.truthy(os.rename(scname..".tmp", scname))
-      assert.is.falsy(lfs.attributes(scname..".tmp"))
-      assert.is.truthy(lfs.attributes(scname))
-   end)
-
 end)
 
 test_env.unload_luarocks()

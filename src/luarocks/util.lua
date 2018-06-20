@@ -115,6 +115,7 @@ local supported_flags = {
    ["lr-bin"] = true,
    ["lr-cpath"] = true,
    ["lr-path"] = true,
+   ["lua-dir"] = "<path>",
    ["lua-version"] = "<vers>",
    ["lua-ver"] = true,
    ["lua-incdir"] = true,

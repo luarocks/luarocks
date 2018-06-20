@@ -3,7 +3,7 @@ local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 local env_variables = test_env.env_variables
-local site_config
+local hardcoded
 
 test_env.unload_luarocks()
 
@@ -11,30 +11,30 @@ describe("LuaRocks config tests #integration", function()
    
    before_each(function()
       test_env.setup_specs()
-      test_env.unload_luarocks() -- need to be required here, because site_config is created after first loading of specs
-      site_config = require("luarocks.core.site_config_" .. test_env.lua_version:gsub("%.", "_"))
+      test_env.unload_luarocks() -- need to be required here, because hardcoded is created after first loading of specs
+      hardcoded = require("luarocks.core.hardcoded")
    end)
 
    describe("LuaRocks config - basic tests", function()
       it("LuaRocks config with no flags/arguments", function()
-         assert.is_false(run.luarocks_bool("config"))
+         assert.match("rocks_servers", run.luarocks("config"))
       end)
       
       it("LuaRocks config include dir", function()
          local output = run.luarocks("config --lua-incdir")
          if test_env.TEST_TARGET_OS == "windows" then
-            assert.are.same(output, site_config.LUA_INCDIR:gsub("\\","/"))
+            assert.are.same(output, hardcoded.LUA_INCDIR:gsub("\\","/"))
          else
-            assert.are.same(output, site_config.LUA_INCDIR)
+            assert.are.same(output, hardcoded.LUA_INCDIR)
          end
       end)
       
       it("LuaRocks config library dir", function()
          local output = run.luarocks("config --lua-libdir")
          if test_env.TEST_TARGET_OS == "windows" then
-            assert.are.same(output, site_config.LUA_LIBDIR:gsub("\\","/"))
+            assert.are.same(output, hardcoded.LUA_LIBDIR:gsub("\\","/"))
          else
-            assert.are.same(output, site_config.LUA_LIBDIR)
+            assert.are.same(output, hardcoded.LUA_LIBDIR)
          end
       end)
       

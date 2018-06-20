@@ -557,7 +557,7 @@ local redirect_protocols = {
 local function request(url, method, http, loop_control)
    local result = {}
 
-   local proxy = cfg.http_proxy
+   local proxy = os.getenv("http_proxy")
    if type(proxy) ~= "string" then proxy = nil end
    -- LuaSocket's http.request crashes when given URLs missing the scheme part.
    if proxy and not proxy:find("://") then
@@ -691,7 +691,7 @@ function fs_lua.download(url, filename, cache)
    filename = fs.absolute_name(filename or dir.base_name(url))
 
    -- delegate to the configured downloader so we don't have to deal with whitelists
-   if cfg.no_proxy then
+   if os.getenv("no_proxy") then
       return fs.use_downloader(url, filename, cache)
    end
 
@@ -702,7 +702,7 @@ function fs_lua.download(url, filename, cache)
       ok, err = ftp_request(url, filename)
    elseif util.starts_with(url, "https:") then
       -- skip LuaSec when proxy is enabled since it is not supported
-      if luasec_ok and not cfg.https_proxy then
+      if luasec_ok and not os.getenv("https_proxy") then
          ok, err = http_request(url, filename, https, cache)
       else
          https_err = true
@@ -919,7 +919,7 @@ function fs_lua.is_lua(filename)
   filename = filename:gsub([[%\]],"/")   -- normalize on fw slash to prevent escaping issues
   local lua = fs.Q(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter))  -- get lua interpreter configured
   -- execute on configured interpreter, might not be the same as the interpreter LR is run on
-  local result = fs.execute_string(lua..[[ -e "if loadfile(']]..filename..[[') then os.exit() else os.exit(1) end"]])
+  local result = fs.execute_string(lua..[[ -e "if loadfile(']]..filename..[[') then os.exit(0) else os.exit(1) end"]])
   return (result == true)
 end
 

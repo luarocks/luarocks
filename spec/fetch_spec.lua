@@ -3,6 +3,7 @@ local git_repo = require("spec.util.git_repo")
 
 test_env.unload_luarocks()
 test_env.setup_specs()
+local cfg = require("luarocks.core.cfg")
 local fs = require("luarocks.fs")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
@@ -21,6 +22,7 @@ describe("Luarocks fetch test #unit #mock", function()
    local runner
    
    setup(function()
+      cfg.init()
       fs.init()
       test_env.mock_server_init()
 

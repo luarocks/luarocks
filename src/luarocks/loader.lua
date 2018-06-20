@@ -16,7 +16,10 @@ local is_clean = not package.loaded["luarocks.core.cfg"]
 
 -- This loader module depends only on core modules.
 local cfg = require("luarocks.core.cfg")
-cfg.init_package_paths()
+local cfg_ok, err = cfg.init()
+if cfg_ok then
+   cfg.init_package_paths()
+end
 
 local path = require("luarocks.core.path")
 local manif = require("luarocks.core.manif")

@@ -187,30 +187,24 @@ end
 -- nil and an error message if any test failed, followed by an optional
 -- error code.
 function deps.fulfill_dependencies(rockspec, depskey, deps_mode)
-   if rockspec.supported_platforms then
-      if not deps.platforms_set then
-         deps.platforms_set = values_set(cfg.platforms)
-      end
-      local supported = nil
+   if rockspec.supported_platforms and next(rockspec.supported_platforms) then
+      local supported = false
       for _, plat in pairs(rockspec.supported_platforms) do
          local neg
          neg, plat = plat:match("^(!?)(.*)")
          if neg == "!" then
-            if deps.platforms_set[plat] then
+            if cfg.is_platform(plat) then
                return nil, "This rockspec for "..rockspec.package.." does not support "..plat.." platforms."
             end
          else
-            if deps.platforms_set[plat] then
+            if cfg.is_platform(plat) then
                supported = true
-            else
-               if supported == nil then
-                  supported = false
-               end
+               break
             end
          end
       end
       if supported == false then
-         local plats = table.concat(cfg.platforms, ", ")
+         local plats = cfg.print_platforms()
          return nil, "This rockspec for "..rockspec.package.." does not support "..plats.." platforms."
       end
    end
