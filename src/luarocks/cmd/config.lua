@@ -68,6 +68,7 @@ local cfg_skip = {
 
 local function print_config(cfg)
    for k, v in util.sortedpairs(cfg) do
+      k = tostring(k)
       if type(v) == "string" or type(v) == "boolean" or type(v) == "number" then
          printf("%s = %q", k, v)
       elseif type(v) == "function" or cfg_skip[k] then
@@ -109,8 +110,6 @@ local function print_config(cfg)
             end
             printf("}")
          end
-      else
-         error(k)
       end
    end
 end
