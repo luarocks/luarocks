@@ -58,11 +58,19 @@ local cfg_arrays = {
    rocks_servers = true,
 }
 
+local cfg_skip = {
+   errorcodes = true,
+   flags = true,
+   platforms = true,
+   root_dir = true,
+   upload_servers = true,
+}
+
 local function print_config(cfg)
    for k, v in util.sortedpairs(cfg) do
       if type(v) == "string" or type(v) == "boolean" or type(v) == "number" then
          printf("%s = %q", k, v)
-      elseif type(v) == "function" then
+      elseif type(v) == "function" or cfg_skip[k] then
          -- skip
       elseif cfg_maps[k] then
          printf("%s = {", k)
