@@ -500,7 +500,7 @@ end
 
 local cfg = {}
 
-function cfg.init(lua_data, warning)
+function cfg.init(lua_data, project_dir, warning)
    lua_data = lua_data or {}
 
    local hc_ok, hardcoded = pcall(require, "luarocks.core.hardcoded")
@@ -581,9 +581,11 @@ function cfg.init(lua_data, warning)
 
    local sys_config_file
    local home_config_file
+   local project_config_file
    do
       local sysconfdir = os.getenv("LUAROCKS_SYSCONFDIR") or hardcoded.SYSCONFDIR
       local sdir, hdir
+      local name = "config-"..cfg.lua_version..".lua"
       if platforms.windows then
          cfg.home = os.getenv("APPDATA") or "c:"
          sdir = sysconfdir or (os.getenv("PROGRAMFILES") or "c:") .. "/luarocks"
@@ -595,11 +597,15 @@ function cfg.init(lua_data, warning)
          hdir = cfg.home.."/.luarocks"
          cfg.home_tree = (os.getenv("USER") ~= "root") and cfg.home.."/.luarocks/"
       end
-      sys_config_file = sdir .. "/config-"..cfg.lua_version..".lua"
-      home_config_file = hdir .. "/config-"..cfg.lua_version..".lua"
+      sys_config_file = sdir .. "/" .. name
+      home_config_file = hdir .. "/" .. name
 
       sys_config_file = sys_config_file:gsub("\\", "/")
       home_config_file = home_config_file:gsub("\\", "/")
+
+      if project_dir then
+         project_config_file = project_dir .. "/.luarocks/" .. name
+      end
    end
 
    -- Load system configuration file
@@ -610,6 +616,7 @@ function cfg.init(lua_data, warning)
 
    -- Load user configuration file (if allowed)
    local home_config_ok
+   local project_config_ok
    if not hardcoded.FORCE_CONFIG then
       local env_var   = "LUAROCKS_CONFIG_" .. lua_version:gsub("%.", "_")
       local env_value = os.getenv(env_var)
@@ -633,7 +640,15 @@ function cfg.init(lua_data, warning)
 
       -- try the alternative defaults if there was no environment specified file or it didn't work
       if not home_config_ok then
-         home_config_ok = load_config_file(cfg, platforms, home_config_file)
+         home_config_ok, err = load_config_file(cfg, platforms, home_config_file)
+         if err then
+            return nil, err, "config"
+         end
+      end
+
+      -- finally, use the project-specific config file if any
+      if project_dir then
+         project_config_ok, err = load_config_file(cfg, platforms, project_config_file)
          if err then
             return nil, err, "config"
          end
@@ -677,6 +692,10 @@ function cfg.init(lua_data, warning)
 
    function cfg.which_config()
       return {
+         project = project_dir and {
+            file = project_config_file,
+            ok = project_config_ok,
+         },
          system = {
             file = sys_config_file,
             ok = sys_config_ok,
@@ -685,7 +704,11 @@ function cfg.init(lua_data, warning)
             file = home_config_file,
             ok = home_config_ok,
          },
-         nearest = home_config_ok and home_config_file or sys_config_file,
+         nearest = project_config_ok
+                   and project_config_file
+                   or (home_config_ok
+                       and home_config_file
+                       or sys_config_file),
       }
    end
 

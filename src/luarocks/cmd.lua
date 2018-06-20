@@ -372,8 +372,13 @@ function cmd.run_command(description, commands, ...)
       lua_data = cmd.find_lua(flags["lua-dir"], flags["lua-version"])
    end
 
+   local project_dir
+   if flags["project-tree"] then
+      project_dir = flags["project-tree"]:gsub("[/\\][^/\\]+$", "")
+   end
+
    -----------------------------------------------------------------------------
-   local ok, err = cfg.init(lua_data, util.warning)
+   local ok, err = cfg.init(lua_data, project_dir, util.warning)
    if not ok then
       die(err)
    end
