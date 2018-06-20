@@ -61,6 +61,10 @@ do
          return
       end
 
+      if not cfg.each_platform then
+         error("cfg is not initalized, please run cfg.init() first")
+      end
+
       -- Load platform-specific functions
       local loaded_platform = nil
       for platform in cfg.each_platform() do
