@@ -839,6 +839,7 @@ function test_env.main()
    end
 
    lfs.mkdir(testing_paths.testrun_dir)
+   test_env.write_file(testing_paths.testrun_dir .. "/.luarocks-no-project", "")
    lfs.mkdir(testing_paths.testing_cache)
    lfs.mkdir(testing_paths.luarocks_tmp)
 

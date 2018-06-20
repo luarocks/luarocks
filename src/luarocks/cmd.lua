@@ -175,6 +175,8 @@ do
          if fs.is_dir(abs .. "/.luarocks") and fs.is_dir(abs .. "/lua_modules") then
             abs = abs:gsub("/.$", "")
             return abs, abs .. "/lua_modules"
+         elseif fs.exists(abs .. "/.luarocks-no-project") then
+            return nil
          end
          try = try .. "/.."
       end
