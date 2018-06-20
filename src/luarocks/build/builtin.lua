@@ -231,9 +231,10 @@ function builtin.run(rockspec)
          end
          add_flags(extras, "-l%s", libraries)
          if cfg.link_lua_explicitly then
-            add_flags(extras, "-l%s", {"lua"})
+            extras[#extras+1] = "-L"..variables.LUA_LIBDIR
+            extras[#extras+1] = "-llua"
          end
-         return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, "-L"..variables.LUA_LIBDIR, unpack(extras))
+         return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, unpack(extras))
       end
       compile_static_library = function(library, objects, libraries, libdirs, name)
          local ok = execute(variables.AR, "rc", library, unpack(objects))
