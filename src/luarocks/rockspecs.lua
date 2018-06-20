@@ -57,6 +57,7 @@ local function convert_dependencies(rockspec, key)
    else
       rockspec[key] = {}
    end
+   return true
 end
 
 --- Set up path-related variables for a given rock.
@@ -145,9 +146,12 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
                               and cfg.rocks_provided_3_0
                               or  cfg.rocks_provided)
 
-   convert_dependencies(rockspec, "dependencies")
-   convert_dependencies(rockspec, "build_dependencies")
-   convert_dependencies(rockspec, "test_dependencies")
+   for _, key in ipairs({"dependencies", "build_dependencies", "test_dependencies"}) do
+      local ok, err = convert_dependencies(rockspec, key)
+      if not ok then
+         return nil, err
+      end
+   end
 
    if not quick then
       configure_paths(rockspec)
