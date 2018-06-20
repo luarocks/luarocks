@@ -35,20 +35,6 @@ local function is_ownership_ok(directory)
 end
 
 do
-   local function check_lua_version(lua_exe, luaver)
-      local luajitver
-      if not (luaver and luaver:match("^[0-9]")) then
-         luaver = util.popen_read(lua_exe .. ' -e "io.write(_VERSION:sub(5))"')
-      end
-      if luaver == "5.1" then
-         luajitver = util.popen_read(lua_exe .. ' -e "io.write(tostring(jit and jit.version:sub(8)))"')
-         if luajitver == "nil" then
-            luajitver = nil
-         end
-      end
-      return luaver, luajitver
-   end
-
    local function exists(file)
       local fd = io.open(file, "r")
       if fd then
@@ -56,6 +42,24 @@ do
          return true
       end
       return false
+   end
+
+   local function check_lua_version(lua_exe, luaver)
+      if not exists(lua_exe) then
+         return nil
+      end
+      local lv = util.popen_read(lua_exe .. ' -e "io.write(_VERSION:sub(5))"')
+      if luaver and luaver ~= lv then
+         return nil
+      end
+      local ljv
+      if lv == "5.1" then
+         ljv = util.popen_read(lua_exe .. ' -e "io.write(tostring(jit and jit.version:sub(8)))"')
+         if ljv == "nil" then
+            ljv = nil
+         end
+      end
+      return lv, ljv
    end
 
    local find_lua_bindir
@@ -93,8 +97,9 @@ do
             for _, name in ipairs(names) do
                local lua_exe = dir.path(d, name)
                table.insert(tried, lua_exe)
-               if exists(lua_exe) then
-                  return name, d, luaver
+               local lv, ljv = check_lua_version(lua_exe, luaver)
+               if lv then
+                  return name, d, lv, ljv
                end
             end
          end
@@ -115,6 +120,7 @@ do
 
       for _, d in ipairs(incdirs) do
          local lua_h = dir.path(d, "lua.h")
+         -- TODO check that LUA_VERSION_MAJOR and LUA_VERSION_MINOR match luaver
          if exists(lua_h) then
             return d
          end
@@ -124,16 +130,12 @@ do
       return incdirs[1]
    end
 
-   find_lua = function(prefix, luaver)
-      local lua_interpreter, bindir
-      lua_interpreter, bindir, luaver = find_lua_bindir(prefix, luaver)
+   function cmd.find_lua(prefix, luaver)
+      local lua_interpreter, bindir, luajitver
+      lua_interpreter, bindir, luaver, luajitver = find_lua_bindir(prefix, luaver)
       if not lua_interpreter then
          return nil, bindir
       end
-
-      local luajitver
-      local lua_exe = dir.path(bindir, lua_interpreter)
-      luaver, luajitver = check_lua_version(lua_exe, luaver)
 
       return {
          lua_version = luaver,
@@ -367,7 +369,7 @@ function cmd.run_command(description, commands, ...)
 
    local lua_data
    if flags["lua-dir"] then
-      lua_data = find_lua(flags["lua-dir"], flags["lua-version"])
+      lua_data = cmd.find_lua(flags["lua-dir"], flags["lua-version"])
    end
 
    -----------------------------------------------------------------------------
