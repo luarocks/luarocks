@@ -744,9 +744,9 @@ local function install_luarocks(install_env_vars)
       assert(execute_bool("install.bat /LUA " .. testing_paths.luadir .. " " .. compiler_flag .. " /P " .. testing_paths.testing_lrprefix .. " /NOREG /NOADMIN /F /Q /CONFIG " .. testing_paths.testing_lrprefix .. "/etc/luarocks", false, install_env_vars))
       assert(execute_bool(testing_paths.win_tools .. "/cp " .. testing_paths.testing_lrprefix .. "/lua/luarocks/core/site_config* " .. testing_paths.src_dir .. "/luarocks/core"))
    else
-      local incfile = test_env.file_if_exists(testing_paths.luadir .. "/include/lua.h")
-                   or test_env.file_if_exists(testing_paths.luadir .. "/include/lua/" .. test_env.lua_version .. "/lua.h")
+      local incfile = test_env.file_if_exists(testing_paths.luadir .. "/include/lua/" .. test_env.lua_version .. "/lua.h")
                    or test_env.file_if_exists(testing_paths.luadir .. "/include/lua" .. test_env.lua_version .. "/lua.h")
+                   or test_env.file_if_exists(testing_paths.luadir .. "/include/lua.h")
       local incdir = assert(incfile):gsub("/lua.h$", "")
 
       local lines = {
