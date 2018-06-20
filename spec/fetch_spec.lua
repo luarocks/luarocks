@@ -439,6 +439,7 @@ describe("Luarocks fetch test #unit #mock", function()
 
       it("from #git", function()
          local rockspec, err = rockspecs.from_persisted_table("testrock-dev-1.rockspec", {
+            rockspec_format = "3.0",
             package = "testrock",
             version = "dev-1",
             source = {
