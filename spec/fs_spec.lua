@@ -8,6 +8,7 @@ local is_win = test_env.TEST_TARGET_OS == "windows"
 local posix_ok = pcall(require, "posix")
 local testing_paths = test_env.testing_paths
 local get_tmp_path = test_env.get_tmp_path
+local write_file = test_env.write_file
 
 describe("Luarocks fs test #unit", function()   
    local exists_file = function(path)
@@ -1190,7 +1191,7 @@ describe("Luarocks fs test #unit", function()
       end)
    end)
    
-   describe("fs.download", function()
+   describe("fs.download #mock", function()
       local tmpfile
       local tmpdir
       
@@ -1213,7 +1214,7 @@ describe("Luarocks fs test #unit", function()
          end
       end)
       
-      it("returns true and fetches the url argument into the specified filename #mock", function()
+      it("returns true and fetches the url argument into the specified filename", function()
          tmpfile = get_tmp_path()
          assert.truthy(fs.download("http://localhost:8080/file/a_rock.lua", tmpfile))
          local fd = assert(io.open(tmpfile, "r"))
@@ -1225,7 +1226,7 @@ describe("Luarocks fs test #unit", function()
          assert.same(downloadcontent, originalcontent)
       end)
       
-      it("returns true and fetches the url argument into a file whose name matches the basename of the url if the filename argument is not given #mock", function()
+      it("returns true and fetches the url argument into a file whose name matches the basename of the url if the filename argument is not given", function()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
          fs.change_dir(tmpdir)
@@ -1241,13 +1242,147 @@ describe("Luarocks fs test #unit", function()
          fs.pop_dir()
       end)
       
-      it("returns false and does nothing if the url argument contains a nonexistent file #mock", function()
+      it("returns false and does nothing if the url argument contains a nonexistent file", function()
          tmpfile = get_tmp_path()
          assert.falsy(fs.download("http://localhost:8080/file/nonexistent", tmpfile))
       end)
       
       it("returns false and does nothing if the url argument is invalid", function()
          assert.falsy(fs.download("invalidurl"))
+      end)
+   end)
+   
+   describe("fs.zip", function()
+      local tmpdir
+      local olddir
+      
+      before_each(function()
+         olddir = lfs.currentdir()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+         
+         write_file("file1", "content1", finally)
+         write_file("file2", "content2", finally)
+         lfs.mkdir("dir")
+         write_file("dir/file3", "content3", finally)
+      end)
+      
+      after_each(function()
+         if olddir then
+            lfs.chdir(olddir)
+            if tmpdir then
+               lfs.rmdir(tmpdir .. "/dir")
+               lfs.rmdir(tmpdir)
+            end
+         end
+      end)
+      
+      it("returns true and creates a zip archive of the given files", function()
+         assert.truthy(fs.zip("archive.zip", "file1", "file2", "dir"))
+         assert.truthy(exists_file("archive.zip"))
+      end)
+      
+      it("returns false and does nothing if the files specified in the arguments are invalid", function()
+         assert.falsy(fs.zip("archive.zip", "nonexistent"))
+         assert.falsy(exists_file("nonexistent"))
+      end)
+   end)
+   
+   describe("fs.unzip", function()
+      local tmpdir
+      local olddir
+      
+      before_each(function()
+         olddir = lfs.currentdir()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+         
+         write_file("file1", "content1", finally)
+         write_file("file2", "content2", finally)
+         lfs.mkdir("dir")
+         write_file("dir/file3", "content3", finally)
+      end)
+      
+      after_each(function()
+         if olddir then
+            lfs.chdir(olddir)
+            if tmpdir then
+               lfs.rmdir(tmpdir .. "/dir")
+               lfs.rmdir(tmpdir)
+            end
+         end
+      end)
+      
+      it("returns true and unzips the given zip archive", function()
+         assert.truthy(fs.zip("archive.zip", "file1", "file2", "dir"))
+         os.remove("file1")
+         os.remove("file2")
+         lfs.rmdir("dir")
+         
+         assert.truthy(fs.unzip("archive.zip"))
+         assert.truthy(exists_file("file1"))
+         assert.truthy(exists_file("file2"))
+         assert.truthy(exists_file("dir/file3"))
+         
+         local fd
+         
+         fd = assert(io.open("file1", "r"))
+         assert.same(fd:read("*a"), "content1")
+         fd:close()
+         
+         fd = assert(io.open("file2", "r"))
+         assert.same(fd:read("*a"), "content2")
+         fd:close()
+         
+         fd = assert(io.open("dir/file3", "r"))
+         assert.same(fd:read("*a"), "content3")
+         fd:close()
+      end)
+      
+      it("does nothing if the given archive is invalid", function()
+         assert.falsy(fs.unzip("archive.zip"))
+      end)
+   end)
+   
+   describe("fs.copy_binary", function()
+      local tmpdir
+      local olddir
+      
+      before_each(function()
+         olddir = lfs.currentdir()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+         
+         write_file("test.exe", "", finally)
+      end)
+      
+      after_each(function()
+         if olddir then
+            lfs.chdir(olddir)
+            if tmpdir then
+               lfs.rmdir(tmpdir)
+            end
+         end
+      end)
+      
+      it("returns true and copies the given binary file to the file specified in the dest argument", function()
+         assert.truthy(fs.copy_binary("test.exe", lfs.currentdir() .. "/copy.exe"))
+         assert.truthy(exists_file("copy.exe"))
+         if is_win then
+            assert.truthy(exists_file("test.lua"))
+            local fd = assert(io.open("test.lua", "r"))
+            local content = assert(fd:read("*a"))
+            assert.truthy(content:find("package.path", 1, true))
+            assert.truthy(content:find("package.cpath", 1, true))
+            fd:close()
+         end
+      end)
+      
+      it("returns false and does nothing if the source file is invalid", function()
+         assert.falsy(fs.copy_binary("invalid.exe", "copy.exe"))
       end)
    end)
 end)
