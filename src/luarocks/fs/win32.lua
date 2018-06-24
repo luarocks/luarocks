@@ -9,8 +9,6 @@ local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 
-math.randomseed(os.time())
-
 -- Monkey patch io.popen and os.execute to make sure quoting
 -- works as expected.
 -- See http://lua-users.org/lists/lua-l/2013-11/msg00367.html

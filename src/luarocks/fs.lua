@@ -16,6 +16,8 @@ local cfg = require("luarocks.core.cfg")
 local pack = table.pack or function(...) return { n = select("#", ...), ... } end
 local unpack = table.unpack or unpack
 
+math.randomseed(os.time())
+
 do
    local old_popen, old_execute
 
