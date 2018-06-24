@@ -839,6 +839,24 @@ end
 -- Other functions
 ---------------------------------------------------------------------
 
+if lfs_ok and not fs_lua.make_temp_dir then
+
+function fs_lua.make_temp_dir(name_pattern)
+   assert(type(name_pattern) == "string")
+   name_pattern = dir.normalize(name_pattern)
+
+   local pattern = (os.getenv("TMPDIR") or os.getenv("TEMP") or "/tmp") .. "/luarocks_" .. name_pattern:gsub("/", "_") .. "-"
+
+   while true do
+      local name = pattern .. tostring(math.random(10000000))
+      if lfs.mkdir(name) then
+         return name
+      end
+   end
+end
+
+end
+
 --- Apply a patch.
 -- @param patchname string: The filename of the patch.
 -- @param patchdata string or nil: The actual patch as a string.
