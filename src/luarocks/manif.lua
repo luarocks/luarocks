@@ -220,7 +220,7 @@ function manif.get_providing_file(name, version, item_type, item_name, repo)
    end
 
    -- Fallback to rock manifest scanning.
-   local rock_manifest = manif.load_rock_manifest(name, version)
+   local rock_manifest = manif.load_rock_manifest(name, version, repo and repo.root)
    local subtree = rock_manifest.lib
 
    for path_part in file_path:gmatch("[^/]+") do
