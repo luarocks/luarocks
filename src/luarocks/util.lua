@@ -138,6 +138,7 @@ local supported_flags = {
    ["project-tree"] = "<tree>",
    ["quick"] = true,
    ["rock-dir"] = true,
+   ["rock-license"] = true,
    ["rock-namespace"] = true,
    ["rock-tree"] = true,
    ["rock-trees"] = true,

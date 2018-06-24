@@ -29,6 +29,59 @@ With these flags, return only the desired information:
 --rock-dir   data directory of the installed rock
 ]]
 
+
+local friendly_template = [[
+          :
+?namespace:${namespace}/${package} ${version} - ${summary}
+!namespace:${package} ${version} - ${summary}
+          :
+*detailed :${detailed}
+?detailed :
+?license  :License:      \t${license}
+?homepage :Homepage:     \t${homepage}
+?issues   :Issues:       \t${issues}
+?labels   :Labels:       \t${labels}
+?location :Installed in: \t${location}
+?commands :
+?commands :Commands:
+*commands :\t${name} (${repo})
+?modules  :
+?modules  :Modules:
+*modules  :\t${name} (${repo})
+?bdeps    :
+?bdeps    :Has build dependency on:
+*bdeps    :\t${name} (${label})
+?tdeps    :
+?tdeps    :Tests depend on:
+*tdeps    :\t${name} (${label})
+?deps     :
+?deps     :Depends on:
+*deps     :\t${name} (${label})
+?ideps    :
+?ideps    :Indirectly pulling:
+*ideps    :\t${name} (${label})
+          :
+]]
+
+local porcelain_template = [[
+?namespace:namespace\t${namespace}
+?package  :package\t${package}
+?version  :version\t${version}
+?summary  :summary\t${summary}
+*detailed :detailed\t${detailed}
+?license  :license\t${license}
+?homepage :homepage\t${homepage}
+?issues   :issues\t${issues}
+?labels   :labels\t${labels}
+?location :location\t${location}
+*commands :command\t${name}\t${repo}
+*modules  :module\t${name}\t${repo}
+*bdeps    :build_dependency\t${name}\t${label}
+*tdeps    :test_dependency\t${name}\t${label}
+*deps     :dependency\t${name}\t${label}
+*ideps    :indirect_dependency\t${name}\t${label}
+]]
+
 local function keys_as_string(t, sep)
    local keys = util.keys(t)
    table.sort(keys)
@@ -66,13 +119,82 @@ local function installed_rock_label(dep, tree)
    else
       installed, version = search.pick_installed_rock(dep, tree)
    end
-   return installed and "(using "..version..")" or "(missing)"
+   return installed and "using "..version or "missing"
 end
 
-local function print_items(name, version, item_set, item_type, repo)
-   for item_name in util.sortedpairs(item_set) do
-      util.printout("\t"..item_name.." ("..repos.which(name, version, item_type, item_name, repo)..")")
+local function render(template, data)
+   local out = {}
+   for cmd, var, line in template:gmatch("(.)([a-z]*)%s*:([^\n]*)\n") do
+      line = line:gsub("\\t", "\t")
+      local d = data[var]
+      if cmd == " " then
+         table.insert(out, line)
+      elseif cmd == "?" or cmd == "*" or cmd == "!" then
+         if (cmd == "!" and d == nil)
+             or (cmd ~= "!" and (type(d) == "string"
+                                 or (type(d) == "table" and next(d)))) then
+            local n = cmd == "*" and #d or 1
+            for i = 1, n do
+               local tbl = cmd == "*" and d[i] or data
+               table.insert(out, (line:gsub("${([a-z]+)}", tbl)))
+            end
+         end
+      end
    end
+   return table.concat(out, "\n")
+end
+
+local function files_to_list(name, version, item_set, item_type, repo)
+   local ret = {}
+   for item_name in util.sortedpairs(item_set) do
+      table.insert(ret, { name = item_name, repo = repos.which(name, version, item_type, item_name, repo) })
+   end
+   return ret
+end
+
+local function deps_to_list(dependencies, tree)
+   local ret = {}
+   for _, dep in ipairs(dependencies or {}) do
+      table.insert(ret, { name = tostring(dep), label = installed_rock_label(dep, tree) })
+   end
+   return ret
+end
+
+local function indirect_deps(mdeps, rdeps, tree)
+   local ret = {}
+   local direct_deps = {}
+   for _, dep in ipairs(rdeps) do
+      direct_deps[dep] = true
+   end
+   for dep_name in util.sortedpairs(mdeps or {}) do
+      if not direct_deps[dep_name] then
+         table.insert(ret, { name = tostring(dep_name), label = installed_rock_label(queries.new(dep_name), tree) })
+      end
+   end
+   return ret
+end
+
+local function show_rock(template, namespace, name, version, rockspec, repo, minfo, tree)
+   local desc = rockspec.description
+   local data = {
+      namespace = namespace,
+      package = rockspec.package,
+      version = rockspec.version,
+      summary = desc.summary or "",
+      detailed = desc.detailed and util.split_string(format_text(desc.detailed), "\n"),
+      license = desc.license,
+      homepage = desc.homepage,
+      issues = desc.issues_url,
+      labels = desc.labels and table.concat(desc.labels, ", "),
+      location = path.rocks_tree_to_string(repo),
+      commands = files_to_list(name, version, minfo.commands, "command", repo),
+      modules = files_to_list(name, version, minfo.modules, "module", repo),
+      bdeps = deps_to_list(rockspec.build_dependencies, tree),
+      tdeps = deps_to_list(rockspec.test_dependencies, tree),
+      deps = deps_to_list(rockspec.dependencies, tree),
+      ideps = indirect_deps(minfo.dependencies, rockspec.dependencies, tree),
+   }
+   util.printout(render(template, data))
 end
 
 --- Driver function for "show" command.
@@ -108,6 +230,7 @@ function show.command(flags, name, version)
    elseif flags["rock-namespace"] then util.printout(namespace)
    elseif flags["rock-dir"] then util.printout(directory)
    elseif flags["home"] then util.printout(descript.homepage)
+   elseif flags["rock-license"] then util.printout(descript.license)
    elseif flags["issues"] then util.printout(descript.issues_url)
    elseif flags["labels"] then util.printout(descript.labels and table.concat(descript.labels, "\n"))
    elseif flags["modules"] then util.printout(keys_as_string(minfo.modules, "\n"))
@@ -125,78 +248,10 @@ function show.command(flags, name, version)
       end
    elseif flags["rockspec"] then util.printout(rockspec_file)
    elseif flags["mversion"] then util.printout(version)
+   elseif flags["porcelain"] then
+      show_rock(porcelain_template, namespace, name, version, rockspec, repo, minfo, flags["tree"])
    else
-      util.printout()
-      util.printout((namespace and namespace .."/" or "") .. rockspec.package.." "..rockspec.version.." - "..(descript.summary or ""))
-      util.printout()
-      if descript.detailed then
-         util.printout(format_text(descript.detailed))
-         util.printout()
-      end
-      if descript.license then
-         util.printout("License: ", descript.license)
-      end
-      if descript.homepage then
-         util.printout("Homepage: ", descript.homepage)
-      end
-      if descript.issues_url then
-         util.printout("Issues: ", descript.issues_url)
-      end
-      if descript.labels then
-         util.printout("Labels: ", table.concat(descript.labels, ", "))
-      end
-      util.printout("Installed in: ", path.rocks_tree_to_string(repo))
-
-      if next(minfo.commands) then
-         util.printout()
-         util.printout("Commands: ")
-         print_items(name, version, minfo.commands, "command", repo)
-      end
-
-      if next(minfo.modules) then
-         util.printout()
-         util.printout("Modules: ")
-         print_items(name, version, minfo.modules, "module", repo)
-      end
-
-      if #rockspec.build_dependencies > 0 then
-         util.printout()
-         util.printout("Has build dependency on:")
-         for _, dep in ipairs(rockspec.build_dependencies) do
-            util.printout("\t"..tostring(dep).." "..installed_rock_label(dep, flags["tree"]))
-         end
-      end
-
-      if #rockspec.test_dependencies > 0 then
-         util.printout()
-         util.printout("Tests depend on:")
-         for _, dep in ipairs(rockspec.test_dependencies) do
-            util.printout("\t"..tostring(dep).." "..installed_rock_label(dep, flags["tree"]))
-         end
-      end
-
-      local direct_deps = {}
-      if #rockspec.dependencies > 0 then
-         util.printout()
-         util.printout("Depends on:")
-         for _, dep in ipairs(rockspec.dependencies) do
-            direct_deps[dep.name] = true
-            util.printout("\t"..tostring(dep).." "..installed_rock_label(dep, flags["tree"]))
-         end
-      end
-      local has_indirect_deps
-      for dep_name in util.sortedpairs(minfo.dependencies or {}) do
-         if not direct_deps[dep_name] then
-            if not has_indirect_deps then
-               util.printout()
-               util.printout("Indirectly pulling:")
-               has_indirect_deps = true
-            end
-
-            util.printout("\t"..tostring(dep_name).." "..installed_rock_label(queries.new(dep_name), flags["tree"]))
-         end
-      end
-      util.printout()
+      show_rock(friendly_template, namespace, name, version, rockspec, repo, minfo, flags["tree"])
    end
    return true
 end
