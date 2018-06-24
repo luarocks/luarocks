@@ -89,6 +89,15 @@ function fs_lua.execute_quiet(command, ...)
    end
 end
 
+function fs.execute_env(env, command, ...)
+   assert(type(command) == "string")
+   local envstr = {}
+   for var, val in pairs(env) do
+      table.insert(envstr, fs.export_cmd(var, val))
+   end
+   return fs.execute_string(table.concat(envstr, "\n") .. "\n" .. quote_args(command, ...))
+end
+
 --- Checks if the given tool is available.
 -- The tool is executed using a flag, usually just to ask its version.
 -- @param tool_cmd string: The command to be used to check the tool's presence (e.g. hg in case of Mercurial)
