@@ -160,47 +160,18 @@ function tools.is_file(file)
    return fs.execute(vars.TEST, "-f", file)
 end
 
---- Moderate the given permissions based on the local umask
--- @param perms string: permissions to moderate
--- @return string: the moderated permissions
-local function moderate_permissions(perms)
-   local octal_to_rwx = {
-      ["0"] = "---",
-      ["1"] = "--x",
-      ["2"] = "-w-",
-      ["3"] = "-wx",
-      ["4"] = "r--",
-      ["5"] = "r-x",
-      ["6"] = "rw-",
-      ["7"] = "rwx",
-   }
-   local rwx_to_octal = {}
-   for octal, rwx in pairs(octal_to_rwx) do
-      rwx_to_octal[rwx] = octal
-   end
-
-   local fd = assert(io.popen("umask"))
-   local umask = assert(fd:read("*a"))
-   umask = umask:gsub("\n", "")
-   umask = umask:sub(2, 4)
-
-   local moderated_perms = ""
-   for i = 1, 3 do
-      local p_rwx = octal_to_rwx[perms:sub(i, i)]
-      local u_rwx = octal_to_rwx[umask:sub(i, i)]
-      local new_perm = ""
-      for j = 1, 3 do
-         local p_val = p_rwx:sub(j, j)
-         local u_val = u_rwx:sub(j, j)
-         if p_val == u_val then
-            new_perm = new_perm .. "-"
-         else
-            new_perm = new_perm .. p_val
-         end
+do
+   local umask_cache
+   function tools._unix_umask()
+      if umask_cache then
+         return umask_cache
       end
-      moderated_perms = moderated_perms .. rwx_to_octal[new_perm]
+      local fd = assert(io.popen("umask"))
+      local umask = assert(fd:read("*a"))
+      umask = umask:gsub("\n", "")
+      umask_cache = umask:sub(2, 4)
+      return umask_cache
    end
-   return moderated_perms
 end
 
 --- Set permissions for file or directory
@@ -214,13 +185,13 @@ function tools.set_permissions(filename, mode, scope)
 
    local perms
    if mode == "read" and scope == "user" then
-      perms = moderate_permissions("600")
+      perms = fs._unix_moderate_permissions("600")
    elseif mode == "exec" and scope == "user" then
-      perms = moderate_permissions("700")
+      perms = fs._unix_moderate_permissions("700")
    elseif mode == "read" and scope == "all" then
-      perms = moderate_permissions("644")
+      perms = fs._unix_moderate_permissions("644")
    elseif mode == "exec" and scope == "all" then
-      perms = moderate_permissions("755")
+      perms = fs._unix_moderate_permissions("755")
    else
       return false, "Invalid permission " .. mode .. " for " .. scope
    end

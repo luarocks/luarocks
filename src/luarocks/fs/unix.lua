@@ -165,4 +165,44 @@ function unix.export_cmd(var, val)
    return ("export %s='%s'"):format(var, val)
 end
 
+--- Moderate the given permissions based on the local umask
+-- @param perms string: permissions to moderate
+-- @return string: the moderated permissions
+function unix._unix_moderate_permissions(perms)
+   local octal_to_rwx = {
+      ["0"] = "---",
+      ["1"] = "--x",
+      ["2"] = "-w-",
+      ["3"] = "-wx",
+      ["4"] = "r--",
+      ["5"] = "r-x",
+      ["6"] = "rw-",
+      ["7"] = "rwx",
+   }
+   local rwx_to_octal = {}
+   for octal, rwx in pairs(octal_to_rwx) do
+      rwx_to_octal[rwx] = octal
+   end
+
+   local umask = fs._unix_umask()
+
+   local moderated_perms = ""
+   for i = 1, 3 do
+      local p_rwx = octal_to_rwx[perms:sub(i, i)]
+      local u_rwx = octal_to_rwx[umask:sub(i, i)]
+      local new_perm = ""
+      for j = 1, 3 do
+         local p_val = p_rwx:sub(j, j)
+         local u_val = u_rwx:sub(j, j)
+         if p_val == u_val then
+            new_perm = new_perm .. "-"
+         else
+            new_perm = new_perm .. p_val
+         end
+      end
+      moderated_perms = moderated_perms .. rwx_to_octal[new_perm]
+   end
+   return moderated_perms
+end
+
 return unix

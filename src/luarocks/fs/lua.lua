@@ -788,16 +788,46 @@ local octal_to_rwx = {
    ["7"] = "rwx",
 }
 
-function fs_lua.chmod(file, mode)
-   -- LuaPosix (as of 5.1.15) does not support octal notation...
-   if mode:sub(1,1) == "0" then
-      local new_mode = {}
-      for c in mode:sub(-3):gmatch(".") do
-         table.insert(new_mode, octal_to_rwx[c])
+do
+   local umask_cache
+   function fs_lua._unix_umask()
+      if umask_cache then
+         return umask_cache
       end
-      mode = table.concat(new_mode)
+      -- LuaPosix (as of 34.0.4) only returns the umask as rwx
+      local rwx = posix.umask()
+      local oct = 0
+      for i = 1, 9 do
+         if rwx:sub(10 - i, 10 - i) == "-" then
+            oct = oct + 2^i
+         end
+      end
+      umask_cache = ("%03o"):format(oct)
+      return umask_cache
    end
-   local err = posix.chmod(file, mode)
+end
+
+function fs_lua.set_permissions(filename, mode, scope)
+   local perms
+   if mode == "read" and scope == "user" then
+      perms = fs._unix_moderate_permissions("600")
+   elseif mode == "exec" and scope == "user" then
+      perms = fs._unix_moderate_permissions("700")
+   elseif mode == "read" and scope == "all" then
+      perms = fs._unix_moderate_permissions("644")
+   elseif mode == "exec" and scope == "all" then
+      perms = fs._unix_moderate_permissions("755")
+   else
+      return false, "Invalid permission " .. mode .. " for " .. scope
+   end
+
+   -- LuaPosix (as of 5.1.15) does not support octal notation...
+   local new_perms = {}
+   for c in perms:sub(-3):gmatch(".") do
+      table.insert(new_perms, octal_to_rwx[c])
+   end
+   perms = table.concat(new_perms)
+   local err = posix.chmod(filename, perms)
    return err == 0
 end
 
