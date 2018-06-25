@@ -523,14 +523,17 @@ end
 local function create_paths(luaversion_full)
 
    local testing_paths = {}
-   testing_paths.luadir = (test_env.LUA_DIR or "/usr/local")
-   testing_paths.lua = testing_paths.luadir .. "/bin/" .. (test_env.LUA_INTERPRETER or "lua")
-
    if test_env.TEST_TARGET_OS == "windows" then
+      testing_paths.luadir = (test_env.LUA_DIR or os.getenv("ProgramFiles(x86)").."/LuaRocks")
       testing_paths.luarocks_tmp = os.getenv("TEMP")
    else
+      testing_paths.luadir = (test_env.LUA_DIR or "/usr/local")
       testing_paths.luarocks_tmp = "/tmp/luarocks_testing"
    end
+
+   testing_paths.lua = test_env.file_if_exists(testing_paths.luadir .. "/bin/" .. (test_env.LUA_INTERPRETER or "lua"))
+                    or test_env.file_if_exists(testing_paths.luadir .. "/" .. (test_env.LUA_INTERPRETER or "lua"))
+   assert(testing_paths.lua, "Lua interpreter not found! Run `busted -Xhelper help` for options")
 
    local base_dir = lfs.currentdir()
 
