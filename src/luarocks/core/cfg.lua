@@ -289,6 +289,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.external_deps_subdirs.lib = { "", "lib", "bin" }
       defaults.runtime_external_deps_subdirs.lib = { "", "lib", "bin" }
       defaults.link_lua_explicitly = true
+      defaults.fs_use_modules = false
    end
 
    if platforms.mingw32 then
