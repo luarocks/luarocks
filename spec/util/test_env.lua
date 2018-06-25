@@ -438,11 +438,7 @@ local function make_run_function(cmd_name, exec_function, with_coverage, do_prin
       cmd_prefix = cmd_prefix .. "-e \"require('luacov.runner')('" .. test_env.testing_paths.testrun_dir .. "/luacov.config')\" "
    end
    
-   if test_env.TEST_TARGET_OS == "windows" then
-      cmd_prefix = cmd_prefix .. Q(test_env.testing_paths.testing_lrprefix .. "/" .. cmd_name .. ".lua") .. " "
-   else
-      cmd_prefix = cmd_prefix .. test_env.testing_paths.src_dir .. "/bin/" .. cmd_name .. " "
-   end
+   cmd_prefix = cmd_prefix .. test_env.testing_paths.src_dir .. "/bin/" .. cmd_name .. " "
 
    return function(cmd, new_vars)
       local temp_vars = {}
@@ -559,7 +555,7 @@ local function create_paths(luaversion_full)
    testing_paths.testing_sys_rocks = testing_paths.testing_sys_tree .. "/lib/luarocks/rocks-" .. test_env.lua_version
 
    if test_env.TEST_TARGET_OS == "windows" then
-      testing_paths.win_tools = testing_paths.testing_lrprefix .. "/tools"
+      testing_paths.win_tools = base_dir .. "/win32/tools"
    end
 
    return testing_paths
@@ -742,32 +738,39 @@ local function clean()
    print("Cleaning done!")
 end
 
---- Install luarocks into testing prefix.
-local function install_luarocks(install_env_vars)
+--- Setup current checkout of luarocks to work with testing prefix.
+local function setup_luarocks()
    local testing_paths = test_env.testing_paths
-   title("Installing LuaRocks")
-   if test_env.TEST_TARGET_OS == "windows" then
-      local compiler_flag = test_env.MINGW and "/MW" or ""
-      assert(execute_bool("install.bat /LUA " .. testing_paths.luadir .. " " .. compiler_flag .. " /P " .. testing_paths.testing_lrprefix .. " /NOREG /NOADMIN /F /Q /CONFIG " .. testing_paths.testing_lrprefix .. "/etc/luarocks", false, install_env_vars))
-      assert(execute_bool(testing_paths.win_tools .. "/cp " .. testing_paths.testing_lrprefix .. "/lua/luarocks/core/site_config* " .. testing_paths.src_dir .. "/luarocks/core"))
-   else
-      local incfile = test_env.file_if_exists(testing_paths.luadir .. "/include/lua/" .. test_env.lua_version .. "/lua.h")
-                   or test_env.file_if_exists(testing_paths.luadir .. "/include/lua" .. test_env.lua_version .. "/lua.h")
-                   or test_env.file_if_exists(testing_paths.luadir .. "/include/lua.h")
-      local incdir = assert(incfile):gsub("/lua.h$", "")
+   title("Setting up LuaRocks")
 
-      local lines = {
-         "return {",
-         ("SYSCONFDIR = %q,"):format(testing_paths.testing_lrprefix .. "/etc/luarocks"),
-         ("LUA_DIR = %q,"):format(testing_paths.luadir),
-         ("LUA_INCDIR = %q,"):format(incdir),
-         ("LUA_LIBDIR = %q,"):format(testing_paths.luadir .. "/lib"),
-         ("LUA_BINDIR = %q,"):format(testing_paths.luadir .. "/bin"),
-         "}",
-      }
-      test_env.write_file("src/luarocks/core/hardcoded.lua", table.concat(lines, "\n") .. "\n")
+   local incfile = test_env.file_if_exists(testing_paths.luadir .. "/include/lua/" .. test_env.lua_version .. "/lua.h")
+                or test_env.file_if_exists(testing_paths.luadir .. "/include/lua" .. test_env.lua_version .. "/lua.h")
+                or test_env.file_if_exists(testing_paths.luadir .. "/include/lua.h")
+   local incdir = assert(incfile):gsub("/lua.h$", "")
+
+   local lines = {
+      "return {",
+      ("SYSCONFDIR = %q,"):format(testing_paths.testing_lrprefix .. "/etc/luarocks"),
+      ("LUA_DIR = %q,"):format(testing_paths.luadir),
+      ("LUA_INCDIR = %q,"):format(incdir),
+      ("LUA_LIBDIR = %q,"):format(testing_paths.luadir .. "/lib"),
+      ("LUA_BINDIR = %q,"):format(testing_paths.luadir .. "/bin"),
+   }
+
+   if test_env.TEST_TARGET_OS == "windows" then
+      if test_env.MINGW then
+         table.insert(lines, [[SYSTEM = "MINGW"]])
+      else
+         table.insert(lines, [[SYSTEM = "WindowsNT"]])
+      end
+      table.insert(lines, ("WIN_TOOLS = %q,"):format(testing_paths.win_tools))
    end
-   print("LuaRocks installed correctly!")
+
+   table.insert(lines, "}")
+
+   test_env.write_file("src/luarocks/core/hardcoded.lua", table.concat(lines, "\n") .. "\n")
+
+   print("LuaRocks set up correctly!")
 end
 
 function test_env.mock_server_init()
@@ -852,11 +855,7 @@ function test_env.main()
 
    create_configs()
 
-   local install_env_vars = {
-      LUAROCKS_CONFIG = test_env.testing_paths.testrun_dir .. "/testing_config.lua"
-   }
-
-   install_luarocks(install_env_vars)
+   setup_luarocks()
 
    -- Preparation of rocks for building environment
    local rocks = {} -- names of rocks, required for building environment
@@ -885,8 +884,12 @@ function test_env.main()
    -- Download rocks needed for LuaRocks testing environment
    lfs.mkdir(testing_paths.testing_server)
    download_rocks(urls, testing_paths.testing_server)
+
+   local env_vars = {
+      LUAROCKS_CONFIG = test_env.testing_paths.testrun_dir .. "/testing_config.lua"
+   }
    
-   build_environment(rocks, install_env_vars)
+   build_environment(rocks, env_vars)
 
    prepare_mock_server_binary_rocks()
 end
