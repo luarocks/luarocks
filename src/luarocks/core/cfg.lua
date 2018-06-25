@@ -679,6 +679,14 @@ function cfg.init(lua_data, project_dir, warning)
    end
 
    local defaults = make_defaults(lua_version, processor, platforms, cfg.home)
+
+   if platforms.windows and hardcoded.WIN_TOOLS then
+      local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "PWD", "RMDIR", "TEST", "WGET" }
+      for _, tool in ipairs(tools) do
+         defaults.variables[tool] = hardcoded.WIN_TOOLS .. "/" .. defaults.variables[tool] .. ".exe"
+      end
+   end
+
    defaults.rocks_provided, defaults.rocks_provided_3_0 = make_rocks_provided(lua_version, luajit_version)
    use_defaults(cfg, defaults)
 
