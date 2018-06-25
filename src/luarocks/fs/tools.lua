@@ -6,7 +6,7 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.core.cfg")
 
-local vars = cfg.variables
+local vars = setmetatable({}, { __index = function(_,k) return cfg.variables[k] end })
 
 local dir_stack = {}
 
@@ -20,23 +20,26 @@ do
       },
       md5checker = {
          { var = "MD5SUM", name = "md5sum" },
-         { var = "OPENSSL", name = "openssl" },
-         { var = "MD5", name = "md5", arg = "-v" },
+         { var = "OPENSSL", name = "openssl", cmdarg = "md5" },
+         { var = "MD5", name = "md5", checkarg = "-v" },
       },
    }
-   
+
    function tools.which_tool(tooltype)
-      if tool_cache[tooltype] then
-         return tool_cache[tooltype]
-      end
-      
-      for _, opt in ipairs(tool_options[tooltype]) do
-         if fs.is_tool_available(vars[opt.var], opt.name, opt.arg) then
-            tool_cache[tooltype] = opt.name
-            break
+      local tool = tool_cache[tooltype]
+      if not tool then
+         for _, opt in ipairs(tool_options[tooltype]) do
+            if fs.is_tool_available(vars[opt.var], opt.name, opt.checkarg) then
+               tool = opt
+               tool_cache[tooltype] = opt
+               break
+            end
          end
       end
-      return tool_cache[tooltype]
+      if not tool then
+         return nil
+      end
+      return tool.name, fs.Q(vars[tool.var]) .. (tool.cmdarg and " "..tool.cmdarg or "")
    end
 end
 
@@ -169,20 +172,13 @@ function tools.use_downloader(url, filename, cache)
    end
 end
 
-local md5_cmd = {
-   md5sum = fs.Q(vars.MD5SUM),
-   openssl = fs.Q(vars.OPENSSL).." md5",
-   md5 = fs.Q(vars.MD5),
-}
-
 --- Get the MD5 checksum for a file.
 -- @param file string: The file to be computed.
 -- @return string: The MD5 checksum or nil + message
 function tools.get_md5(file)
-   local md5checker = fs.which_tool("md5checker")
-   if md5checker then
-      local cmd = md5_cmd[md5checker]
-      local pipe = io.popen(cmd.." "..fs.Q(fs.absolute_name(file)))
+   local ok, md5checker = fs.which_tool("md5checker")
+   if ok then
+      local pipe = io.popen(md5checker.." "..fs.Q(fs.absolute_name(file)))
       local computed = pipe:read("*l")
       pipe:close()
       if computed then

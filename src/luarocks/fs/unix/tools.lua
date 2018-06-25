@@ -6,7 +6,7 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.core.cfg")
 
-local vars = cfg.variables
+local vars = setmetatable({}, { __index = function(_,k) return cfg.variables[k] end })
 
 --- Adds prefix to command to make it run from a directory.
 -- @param directory string: Path to a directory.
