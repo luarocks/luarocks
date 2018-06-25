@@ -526,14 +526,34 @@ local function create_paths(luaversion_full)
    if test_env.TEST_TARGET_OS == "windows" then
       testing_paths.luadir = (test_env.LUA_DIR or os.getenv("ProgramFiles(x86)").."/LuaRocks")
       testing_paths.luarocks_tmp = os.getenv("TEMP")
+      testing_paths.lua_interpreter = test_env.LUA_INTERPRETER or "lua.exe"
    else
       testing_paths.luadir = (test_env.LUA_DIR or "/usr/local")
       testing_paths.luarocks_tmp = "/tmp/luarocks_testing"
+      testing_paths.lua_interpreter = test_env.LUA_INTERPRETER or "lua"
    end
 
-   testing_paths.lua = test_env.file_if_exists(testing_paths.luadir .. "/bin/" .. (test_env.LUA_INTERPRETER or "lua"))
-                    or test_env.file_if_exists(testing_paths.luadir .. "/" .. (test_env.LUA_INTERPRETER or "lua"))
+   local bindirs = {
+      testing_paths.luadir .. "/bin",
+      testing_paths.luadir,
+   }
+   for _, bindir in ipairs(bindirs) do
+      local lua = bindir .. "/" .. testing_paths.lua_interpreter
+      if test_env.exists(lua) then
+         testing_paths.lua_bindir = bindir
+         testing_paths.lua = lua
+         break
+      end
+   end
    assert(testing_paths.lua, "Lua interpreter not found! Run `busted -Xhelper help` for options")
+
+   local incfile = test_env.file_if_exists(testing_paths.luadir .. "/include/lua/" .. test_env.lua_version .. "/lua.h")
+                or test_env.file_if_exists(testing_paths.luadir .. "/include/lua" .. test_env.lua_version .. "/lua.h")
+                or test_env.file_if_exists(testing_paths.luadir .. "/include/lua.h")
+   testing_paths.lua_incdir = assert(incfile, "Lua header lua.h not found!"):gsub("/lua.h$", "")
+
+   testing_paths.lua_libdir = test_env.file_if_exists(testing_paths.luadir .. "/lib")
+                           or test_env.file_if_exists(testing_paths.luadir)
 
    local base_dir = lfs.currentdir()
 
@@ -746,25 +766,21 @@ local function setup_luarocks()
    local testing_paths = test_env.testing_paths
    title("Setting up LuaRocks")
 
-   local incfile = test_env.file_if_exists(testing_paths.luadir .. "/include/lua/" .. test_env.lua_version .. "/lua.h")
-                or test_env.file_if_exists(testing_paths.luadir .. "/include/lua" .. test_env.lua_version .. "/lua.h")
-                or test_env.file_if_exists(testing_paths.luadir .. "/include/lua.h")
-   local incdir = assert(incfile):gsub("/lua.h$", "")
-
    local lines = {
       "return {",
       ("SYSCONFDIR = %q,"):format(testing_paths.testing_lrprefix .. "/etc/luarocks"),
       ("LUA_DIR = %q,"):format(testing_paths.luadir),
-      ("LUA_INCDIR = %q,"):format(incdir),
-      ("LUA_LIBDIR = %q,"):format(testing_paths.luadir .. "/lib"),
-      ("LUA_BINDIR = %q,"):format(testing_paths.luadir .. "/bin"),
+      ("LUA_INCDIR = %q,"):format(testing_paths.lua_incdir),
+      ("LUA_LIBDIR = %q,"):format(testing_paths.lua_libdir),
+      ("LUA_BINDIR = %q,"):format(testing_paths.lua_bindir),
+      ("LUA_INTERPRETER = %q,"):format(testing_paths.lua_interpreter),
    }
 
    if test_env.TEST_TARGET_OS == "windows" then
       if test_env.MINGW then
-         table.insert(lines, [[SYSTEM = "MINGW"]])
+         table.insert(lines, [[SYSTEM = "MINGW",]])
       else
-         table.insert(lines, [[SYSTEM = "WindowsNT"]])
+         table.insert(lines, [[SYSTEM = "WindowsNT",]])
       end
       table.insert(lines, ("WIN_TOOLS = %q,"):format(testing_paths.win_tools))
    end
