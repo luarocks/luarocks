@@ -286,8 +286,9 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.local_cache = localappdata.."/LuaRocks/Cache"
       defaults.web_browser = "start"
 
-      defaults.external_deps_subdirs.lib = { "", "lib" }
-      defaults.runtime_external_deps_subdirs.lib = { "", "lib" }
+      defaults.external_deps_subdirs.lib = { "", "lib", "bin" }
+      defaults.runtime_external_deps_subdirs.lib = { "", "lib", "bin" }
+      defaults.link_lua_explicitly = true
    end
 
    if platforms.mingw32 then

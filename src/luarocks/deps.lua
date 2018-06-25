@@ -247,6 +247,139 @@ local function add_all_patterns(file, patterns, files)
    end
 end
 
+local function get_external_deps_dirs(mode)
+   local patterns = cfg.external_deps_patterns
+   local subdirs = cfg.external_deps_subdirs
+   if mode == "install" then
+      patterns = cfg.runtime_external_deps_patterns
+      subdirs = cfg.runtime_external_deps_subdirs
+   end
+   local dirs = {
+      BINDIR = { subdir = subdirs.bin, testfile = "program", pattern = patterns.bin },
+      INCDIR = { subdir = subdirs.include, testfile = "header", pattern = patterns.include },
+      LIBDIR = { subdir = subdirs.lib, testfile = "library", pattern = patterns.lib }
+   }
+   if mode == "install" then
+      dirs.INCDIR = nil
+   end
+   return dirs
+end
+
+local function check_external_dependency_at(extdir, name, ext_files, vars, dirs, err_files)
+   local fs = require("luarocks.fs")
+   local prefix = vars[name.."_DIR"]
+   if not prefix then
+      prefix = extdir
+   end
+   if type(prefix) == "table" then
+      if prefix.bin then
+         dirs.BINDIR.subdir = prefix.bin
+      end
+      if prefix.include then
+         if dirs.INCDIR then
+            dirs.INCDIR.subdir = prefix.include
+         end
+      end
+      if prefix.lib then
+         dirs.LIBDIR.subdir = prefix.lib
+      end
+      prefix = prefix.prefix
+   end
+   for dirname, dirdata in util.sortedpairs(dirs) do
+      local paths
+      local path_var_value = vars[name.."_"..dirname]
+      if path_var_value then
+         paths = { path_var_value }
+      elseif type(dirdata.subdir) == "table" then
+         paths = {}
+         for i,v in ipairs(dirdata.subdir) do
+            paths[i] = dir.path(prefix, v)
+         end
+      else
+         paths = { dir.path(prefix, dirdata.subdir) }
+      end
+      dirdata.dir = paths[1]
+      local file = ext_files[dirdata.testfile]
+      if file then
+         local files = {}
+         if not file:match("%.") then
+            add_all_patterns(file, dirdata.pattern, files)
+         else
+            for _, pattern in ipairs(dirdata.pattern) do
+               local matched = deconstruct_pattern(file, pattern)
+               if matched then
+                  add_all_patterns(matched, dirdata.pattern, files)
+               end
+            end
+            table.insert(files, file)
+         end
+         local found = false
+         for _, f in ipairs(files) do
+
+            -- small convenience hack
+            if f:match("%.so$") or f:match("%.dylib$") or f:match("%.dll$") then
+               f = f:gsub("%.[^.]+$", "."..cfg.external_lib_extension)
+            end
+
+            local pattern
+            if f:match("%*") then
+               pattern = f:gsub("%.", "%%."):gsub("%*", ".*")
+               f = "matching "..f
+            end
+
+            for _, d in ipairs(paths) do
+               if pattern then
+                  for entry in fs.dir(d) do
+                     if entry:match(pattern) then
+                        found = true
+                        break
+                     end
+                  end
+               else
+                  found = fs.is_file(dir.path(d, f))
+               end
+               if found then
+                  dirdata.dir = d
+                  dirdata.file = f
+                  break
+               else
+                  table.insert(err_files[dirdata.testfile], f.." in "..d)
+               end
+            end
+            if found then
+               break
+            end
+         end
+         if not found then
+            return nil, dirname, dirdata.testfile
+         end
+      end
+   end
+
+   for dirname, dirdata in pairs(dirs) do
+      vars[name.."_"..dirname] = dirdata.dir
+      vars[name.."_"..dirname.."_FILE"] = dirdata.file
+   end
+   vars[name.."_DIR"] = prefix
+   return true
+end
+
+local function check_external_dependency(name, ext_files, vars, mode)
+   local err_files = {program = {}, header = {}, library = {}}
+   local err_dirname
+   local err_testfile
+   for _, extdir in ipairs(cfg.external_deps_dirs) do
+      local dirs = get_external_deps_dirs(mode)
+      local ok
+      ok, err_dirname, err_testfile = check_external_dependency_at(extdir, name, ext_files, vars, dirs, err_files)
+      if ok then
+         return true
+      end
+   end
+   
+   return nil, err_dirname, err_testfile, err_files
+end
+
 --- Set up path-related variables for external dependencies.
 -- For each key in the external_dependencies table in the
 -- rockspec file, four variables are created: <key>_DIR, <key>_BINDIR,
@@ -262,149 +395,31 @@ end
 -- nil and an error message if any test failed.
 function deps.check_external_deps(rockspec, mode)
    assert(rockspec:type() == "rockspec")
-
-   local fs = require("luarocks.fs")
    
-   local vars = rockspec.variables
-   local patterns = cfg.external_deps_patterns
-   local subdirs = cfg.external_deps_subdirs
-   if mode == "install" then
-      patterns = cfg.runtime_external_deps_patterns
-      subdirs = cfg.runtime_external_deps_subdirs
-   end
    if not rockspec.external_dependencies then
       rockspec.external_dependencies = builtin.autodetect_external_dependencies(rockspec.build)
    end
-   if rockspec.external_dependencies then
-      for name, ext_files in util.sortedpairs(rockspec.external_dependencies) do
-         local ok = true
-         local failed_files = {program = {}, header = {}, library = {}}
-         local failed_dirname
-         local failed_testfile
-         for _, extdir in ipairs(cfg.external_deps_dirs) do
-            ok = true
-            local prefix = vars[name.."_DIR"]
-            local dirs = {
-               BINDIR = { subdir = subdirs.bin, testfile = "program", pattern = patterns.bin },
-               INCDIR = { subdir = subdirs.include, testfile = "header", pattern = patterns.include },
-               LIBDIR = { subdir = subdirs.lib, testfile = "library", pattern = patterns.lib }
-            }
-            if mode == "install" then
-               dirs.INCDIR = nil
-            end
-            if not prefix then
-               prefix = extdir
-            end
-            if type(prefix) == "table" then
-               if prefix.bin then
-                  dirs.BINDIR.subdir = prefix.bin
-               end
-               if prefix.include then
-                  if dirs.INCDIR then
-                     dirs.INCDIR.subdir = prefix.include
-                  end
-               end
-               if prefix.lib then
-                  dirs.LIBDIR.subdir = prefix.lib
-               end
-               prefix = prefix.prefix
-            end
-            for dirname, dirdata in util.sortedpairs(dirs) do
-               local paths
-               local path_var_value = vars[name.."_"..dirname]
-               if path_var_value then
-                  paths = { path_var_value }
-               elseif type(dirdata.subdir) == "table" then
-                  paths = {}
-                  for i,v in ipairs(dirdata.subdir) do
-                     paths[i] = dir.path(prefix, v)
-                  end
-               else
-                  paths = { dir.path(prefix, dirdata.subdir) }
-               end
-               dirdata.dir = paths[1]
-               local file = ext_files[dirdata.testfile]
-               if file then
-                  local files = {}
-                  if not file:match("%.") then
-                     add_all_patterns(file, dirdata.pattern, files)
-                  else
-                     for _, pattern in ipairs(dirdata.pattern) do
-                        local matched = deconstruct_pattern(file, pattern)
-                        if matched then
-                           add_all_patterns(matched, dirdata.pattern, files)
-                        end
-                     end
-                     table.insert(files, file)
-                  end
-                  local found = false
-                  for _, f in ipairs(files) do
+   if not rockspec.external_dependencies then
+      return true
+   end
 
-                     -- small convenience hack
-                     if f:match("%.so$") or f:match("%.dylib$") or f:match("%.dll$") then
-                        f = f:gsub("%.[^.]+$", "."..cfg.external_lib_extension)
-                     end
-
-                     local pattern
-                     if f:match("%*") then
-                        pattern = f:gsub("%.", "%%."):gsub("%*", ".*")
-                        f = "matching "..f
-                     end
-
-                     for _, d in ipairs(paths) do
-                        if pattern then
-                           for entry in fs.dir(d) do
-                              if entry:match(pattern) then
-                                 found = true
-                                 break
-                              end
-                           end
-                        else
-                           found = fs.is_file(dir.path(d, f))
-                        end
-                        if found then
-                           dirdata.dir = d
-                           break
-                        else
-                           table.insert(failed_files[dirdata.testfile], f.." in "..d)
-                        end
-                     end
-                     if found then
-                        break
-                     end
-                  end
-                  if not found then
-                     ok = false
-                     failed_dirname = dirname
-                     failed_testfile = dirdata.testfile
-                     break
-                  end
-               end
-            end
-            if ok then
-               for dirname, dirdata in pairs(dirs) do
-                  vars[name.."_"..dirname] = dirdata.dir
-               end
-               vars[name.."_DIR"] = prefix
-               break
+   for name, ext_files in util.sortedpairs(rockspec.external_dependencies) do
+      local ok, err_dirname, err_testfile, err_files = check_external_dependency(name, ext_files, rockspec.variables, mode)
+      if not ok then
+         local lines = {"Could not find "..err_testfile.." file for "..name}
+      
+         local err_paths = {}
+         for _, err_file in ipairs(err_files[err_testfile]) do
+            if not err_paths[err_file] then
+               err_paths[err_file] = true
+               table.insert(lines, "  No file "..err_file)
             end
          end
-         if not ok then
-            local lines = {"Could not find "..failed_testfile.." file for "..name}
-
-            local failed_paths = {}
-            for _, failed_file in ipairs(failed_files[failed_testfile]) do
-               if not failed_paths[failed_file] then
-                  failed_paths[failed_file] = true
-                  table.insert(lines, "  No file "..failed_file)
-               end
-            end
-
-            table.insert(lines, "You may have to install "..name.." in your system and/or pass "..name.."_DIR or "..name.."_"..failed_dirname.." to the luarocks command.")
-            table.insert(lines, "Example: luarocks install "..rockspec.name.." "..name.."_DIR=/usr/local")
-
-            return nil, table.concat(lines, "\n"), "dependency"
-         end
+      
+         table.insert(lines, "You may have to install "..name.." in your system and/or pass "..name.."_DIR or "..name.."_"..err_dirname.." to the luarocks command.")
+         table.insert(lines, "Example: luarocks install "..rockspec.name.." "..name.."_DIR=/usr/local")
+      
+         return nil, table.concat(lines, "\n"), "dependency"
       end
    end
    return true
@@ -451,6 +466,22 @@ function deps.scan_deps(results, manifest, name, version, deps_mode)
    for _, match in pairs(matched) do
       deps.scan_deps(results, manifest, match.name, match.version, deps_mode)
    end
+end
+
+function deps.check_lua_library(rockspec)
+   local libnames = {
+      "lua" .. cfg.lua_version,
+      "lua" .. cfg.lua_version:gsub("%.", ""),
+      "lua",
+   }
+   for _, libname in ipairs(libnames) do
+      local ok = check_external_dependency("LUA", { library = libname }, rockspec.variables, "build")
+      if ok then
+         rockspec.variables.LUALIB = rockspec.variables.LUA_LIBDIR_FILE
+         return true
+      end
+   end
+   return nil, "Failed finding Lua library. You may need to configure LUA_LIBDIR.", "dependency"
 end
 
 local valid_deps_modes = {
