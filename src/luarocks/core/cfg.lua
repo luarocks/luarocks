@@ -323,7 +323,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.static_lib_extension = "a"
       defaults.external_lib_extension = "so"
       defaults.obj_extension = "o"
-      defaults.external_deps_dirs = { "/usr/local", "/usr" }
+      defaults.external_deps_dirs = { "/usr/local", "/usr", "/" }
       defaults.variables.CFLAGS = "-O2"
       defaults.cmake_generator = "Unix Makefiles"
       defaults.variables.CC = "gcc"
