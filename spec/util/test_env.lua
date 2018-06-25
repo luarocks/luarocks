@@ -339,20 +339,27 @@ end
 -- @return make_manifest boolean: true if new rocks downloaded
 local function download_rocks(urls, save_path)
    local luarocks_repo = "https://luarocks.org/"
-   local make_manifest = false
+   local any_downloads = false
 
+   local to_download = {}
    for _, url in ipairs(urls) do
       -- check if already downloaded
       if not test_env.exists(save_path .. "/" .. url) then
-         if test_env.TEST_TARGET_OS == "windows" then
-            assert(execute_bool(test_env.testing_paths.win_tools .. "/wget -cP " .. save_path .. " " .. luarocks_repo .. url .. " --no-check-certificate"))
-         else
-            assert(execute_bool("wget -cP " .. save_path .. " " .. luarocks_repo .. url))
-         end
-         make_manifest = true 
+         table.insert(to_download, luarocks_repo .. url)
+         any_downloads = true
       end
    end
-   return make_manifest
+   if not any_downloads then
+      return false
+   end
+   local cmd
+   if test_env.TEST_TARGET_OS == "windows" then
+      cmd = test_env.testing_paths.win_tools .. "/wget --no-check-certificate -cP " .. save_path
+   else
+      cmd = "wget -cP " .. save_path
+   end
+   assert(execute_bool(cmd.." "..table.concat(to_download, " ")))
+   return true
 end
 
 --- Create a file containing a string.
