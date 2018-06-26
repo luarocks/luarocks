@@ -56,11 +56,3 @@ To run unit tests in LuaRocks directory type :
 To run integration tests without tests which use ssh:
 
 `busted -t "integration" --exclude-tags=ssh`
-
-## To do
-
-Cover files that currently have 0% coverage:
-* build/cmake.lua
-* build/command.lua
-* fetch/\*.lua except for git.lua
-* tools/tar.lua
