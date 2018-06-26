@@ -22,20 +22,12 @@ describe("LuaRocks config tests #integration", function()
       
       it("LuaRocks config include dir", function()
          local output = run.luarocks("config --lua-incdir")
-         if test_env.TEST_TARGET_OS == "windows" then
-            assert.are.same(output, hardcoded.LUA_INCDIR:gsub("\\","/"))
-         else
-            assert.are.same(output, hardcoded.LUA_INCDIR)
-         end
+         assert.are.same(hardcoded.LUA_INCDIR, output)
       end)
       
       it("LuaRocks config library dir", function()
          local output = run.luarocks("config --lua-libdir")
-         if test_env.TEST_TARGET_OS == "windows" then
-            assert.are.same(output, hardcoded.LUA_LIBDIR:gsub("\\","/"))
-         else
-            assert.are.same(output, hardcoded.LUA_LIBDIR)
-         end
+         assert.are.same(hardcoded.LUA_LIBDIR, output)
       end)
       
       it("LuaRocks config lua version", function()
@@ -44,7 +36,7 @@ describe("LuaRocks config tests #integration", function()
          if test_env.LUAJIT_V then
             lua_version = "5.1"
          end
-         assert.are.same(output, lua_version)
+         assert.are.same(lua_version, output)
       end)
       
       it("LuaRocks config rock trees", function()
@@ -68,8 +60,10 @@ describe("LuaRocks config tests #integration", function()
 
       it("LuaRocks fail system config", function()
          os.rename(configfile, configfile .. ".bak")
+         finally(function()
+            os.rename(configfile .. ".bak", configfile)
+         end)
          assert.is_false(run.luarocks_bool("config --system-config"))
-         os.rename(configfile .. ".bak", configfile)
       end)
       
       it("LuaRocks system config", function()
@@ -77,18 +71,15 @@ describe("LuaRocks config tests #integration", function()
          lfs.mkdir(testing_paths.testing_lrprefix .. "/etc/")
          lfs.mkdir(scdir)
 
-         if test_env.TEST_TARGET_OS == "windows" then
-            local output = run.luarocks("config --system-config")
-            assert.are.same(output, configfile)
-         else
-            local sysconfig = io.open(configfile, "w+")
-            sysconfig:write(" ")
-            sysconfig:close()
-            
-            local output = run.luarocks("config --system-config")
-            assert.are.same(output, configfile)
+         local sysconfig = io.open(configfile, "w+")
+         sysconfig:write(" ")
+         sysconfig:close()
+         finally(function()
             os.remove(configfile)
-         end
+         end)
+         
+         local output = run.luarocks("config --system-config")
+         assert.are.same(configfile, output)
       end)
       
       it("LuaRocks fail system config invalid", function()
@@ -96,20 +87,13 @@ describe("LuaRocks config tests #integration", function()
          lfs.mkdir(testing_paths.testing_lrprefix .. "/etc/")
          lfs.mkdir(scdir)
 
-         if test_env.TEST_TARGET_OS == "windows" then
-            test_env.copy(configfile, "configfile_temp")
-            local sysconfig = io.open(configfile, "w+")
-            sysconfig:write("if if if")
-            sysconfig:close()
-            assert.is_false(run.luarocks_bool("config --system-config"))
-            test_env.copy("configfile_temp", configfile)
-         else
-            local sysconfig = io.open(configfile, "w+")
-            sysconfig:write("if if if")
-            sysconfig:close()
-            assert.is_false(run.luarocks_bool("config --system-config"))
+         local sysconfig = io.open(configfile, "w+")
+         sysconfig:write("if if if")
+         sysconfig:close()
+         finally(function()
             os.remove(configfile)
-         end
+         end)
+         assert.is_false(run.luarocks_bool("config --system-config"))
       end)
    end)
 end)
