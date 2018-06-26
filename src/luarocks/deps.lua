@@ -6,6 +6,7 @@ local cfg = require("luarocks.core.cfg")
 local manif = require("luarocks.manif")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
+local fun = require("luarocks.fun")
 local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
 local queries = require("luarocks.queries")
@@ -370,6 +371,11 @@ local function check_external_dependency(name, ext_files, vars, mode)
    local err_testfile
    for _, extdir in ipairs(cfg.external_deps_dirs) do
       local dirs = get_external_deps_dirs(mode)
+      if cfg.is_platform("mingw32") and name == "LUA" then
+         dirs.LIBDIR.pattern = fun.filter(util.deep_copy(dirs.LIBDIR.pattern), function(s)
+            return not s:match("%.a$")
+         end)
+      end
       local ok
       ok, err_dirname, err_testfile = check_external_dependency_at(extdir, name, ext_files, vars, dirs, err_files)
       if ok then

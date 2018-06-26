@@ -31,6 +31,17 @@ function fun.map(xs, f)
    return rs
 end
 
+function fun.filter(xs, f)
+   local rs = {}
+   for i = 1, #xs do
+      local v = xs[i]
+      if f(v) then
+         rs[#rs+1] = v
+      end
+   end
+   return rs
+end
+
 function fun.traverse(t, f)
    return fun.map(t, function(x)
       return type(x) == "table" and fun.traverse(x, f) or f(x)
