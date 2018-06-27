@@ -108,28 +108,6 @@ do
       end
    end
 
-   local function find_lua_incdir(prefix, luaver, luajitver)
-      luajitver = luajitver and luajitver:gsub("%-.*", "")
-      local incdirs = {
-         prefix .. "/include/lua/" .. luaver,
-         prefix .. "/include/lua" .. luaver,
-         prefix .. "/include",
-         prefix,
-         luajitver and prefix .. "/include/luajit-" .. luajitver,
-      }
-
-      for _, d in ipairs(incdirs) do
-         local lua_h = dir.path(d, "lua.h")
-         -- TODO check that LUA_VERSION_MAJOR and LUA_VERSION_MINOR match luaver
-         if exists(lua_h) then
-            return d
-         end
-      end
-
-      -- fallback to a default, as it is not necessarily needed.
-      return incdirs[1]
-   end
-
    function cmd.find_lua(prefix, luaver)
       local lua_interpreter, bindir, luajitver
       lua_interpreter, bindir, luaver, luajitver = find_lua_bindir(prefix, luaver)
@@ -143,8 +121,6 @@ do
          lua_interpreter = lua_interpreter,
          lua_dir = prefix,
          lua_bindir = bindir,
-         lua_incdir = find_lua_incdir(prefix, luaver, luajitver),
-         lua_libdir = prefix .. "/lib",
       }
    end
 end

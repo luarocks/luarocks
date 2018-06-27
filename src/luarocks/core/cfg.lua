@@ -260,11 +260,6 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.variables.CFLAGS = "/nologo /MD /O2"
       defaults.variables.LIBFLAG = "/nologo /dll"
 
-      defaults.variables.LUA_DIR = "c:/lua"
-      defaults.variables.LUA_BINDIR = "c:/lua/bin"
-      defaults.variables.LUA_LIBDIR = "c:/lua/lib"
-      defaults.variables.LUA_INCDIR = "c:/lua/include"
-
       defaults.external_deps_patterns = {
          bin = { "?.exe", "?.bat" },
          lib = { "?.lib", "?.dll", "lib?.dll" },
@@ -332,11 +327,6 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.variables.LD = "gcc"
       defaults.gcc_rpath = true
       defaults.variables.LIBFLAG = "-shared"
-
-      defaults.variables.LUA_DIR = "/usr/local"
-      defaults.variables.LUA_BINDIR = "/usr/local/bin"
-      defaults.variables.LUA_LIBDIR = "/usr/local/lib"
-      defaults.variables.LUA_INCDIR = "/usr/local/include"
 
       defaults.external_deps_patterns = {
          bin = { "?" },

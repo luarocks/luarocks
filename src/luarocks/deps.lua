@@ -303,7 +303,8 @@ local function check_external_dependency_at(extdir, name, ext_files, vars, dirs,
       local file = ext_files[dirdata.testfile]
       if file then
          local files = {}
-         if not file:match("%.") then
+         -- If it doesn't look like it contains a filename extension
+         if not (file:match("%.[a-z]+$") or file:match("%.[a-z]+%.")) then
             add_all_patterns(file, dirdata.pattern, files)
          else
             for _, pattern in ipairs(dirdata.pattern) do
@@ -474,16 +475,48 @@ function deps.scan_deps(results, manifest, name, version, deps_mode)
    end
 end
 
-function deps.check_lua_library(rockspec)
+local function find_lua_incdir(prefix, luaver, luajitver)
+   luajitver = luajitver and luajitver:gsub("%-.*", "")
+   local incdirs = {
+      prefix .. "/include/lua/" .. luaver,
+      prefix .. "/include/lua" .. luaver,
+      prefix .. "/include",
+      prefix,
+      luajitver and prefix .. "/include/luajit-" .. luajitver:match("^(%d+%.%d+)"),
+   }
+   for _, d in ipairs(incdirs) do
+      local lua_h = dir.path(d, "lua.h")
+      local fd = io.open(lua_h)
+      if fd then
+         -- TODO check that LUA_VERSION_MAJOR and LUA_VERSION_MINOR match luaver
+         fd:close()
+         return d
+      end
+   end
+
+   -- not found, will fallback to a default
+   return nil
+end
+
+function deps.check_lua(vars)
+   if (not vars.LUA_INCDIR) and vars.LUA_DIR then
+      vars.LUA_INCDIR = find_lua_incdir(vars.LUA_DIR, cfg.lua_version, cfg.luajit_version)
+   end
+   local shortv = cfg.lua_version:gsub("%.", "")
    local libnames = {
       "lua" .. cfg.lua_version,
-      "lua" .. cfg.lua_version:gsub("%.", ""),
+      "lua" .. shortv,
+      "lua-" .. cfg.lua_version,
+      "lua-" .. shortv,
       "lua",
    }
+   if cfg.luajit_version then
+      table.insert(libnames, 1, "luajit-" .. cfg.lua_version)
+   end
    for _, libname in ipairs(libnames) do
-      local ok = check_external_dependency("LUA", { library = libname }, rockspec.variables, "build")
+      local ok = check_external_dependency("LUA", { library = libname }, vars, "build")
       if ok then
-         rockspec.variables.LUALIB = rockspec.variables.LUA_LIBDIR_FILE
+         vars.LUALIB = vars.LUA_LIBDIR_FILE
          return true
       end
    end

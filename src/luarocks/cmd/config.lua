@@ -4,6 +4,7 @@ local config_cmd = {}
 
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
+local deps = require("luarocks.deps")
 local dir = require("luarocks.dir")
 local fun = require("luarocks.fun")
 
@@ -119,6 +120,7 @@ end
 --- Driver function for "config" command.
 -- @return boolean: True if succeeded, nil on errors.
 function config_cmd.command(flags)
+   deps.check_lua(cfg.variables)
    if flags["lua-incdir"] then
       print(cfg.variables.LUA_INCDIR)
       return true

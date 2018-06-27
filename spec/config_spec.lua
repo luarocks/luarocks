@@ -20,14 +20,14 @@ describe("LuaRocks config tests #integration", function()
          assert.match("rocks_servers", run.luarocks("config"))
       end)
       
-      it("LuaRocks config include dir", function()
+      it("LuaRocks config include dir returns a subdir of LUA_DIR", function()
          local output = run.luarocks("config --lua-incdir")
-         assert.are.same(hardcoded.LUA_INCDIR, output)
+         assert.match(hardcoded.LUA_DIR, output, 1, true)
       end)
       
-      it("LuaRocks config library dir", function()
+      it("LuaRocks config library dir returns a subdir of LUA_DIR", function()
          local output = run.luarocks("config --lua-libdir")
-         assert.are.same(hardcoded.LUA_LIBDIR, output)
+         assert.match(hardcoded.LUA_DIR, output, 1, true)
       end)
       
       it("LuaRocks config lua version", function()

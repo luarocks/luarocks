@@ -119,11 +119,9 @@ local function process_dependencies(rockspec, opts)
       end
    end
 
-   if cfg.link_lua_explicitly then
-      local ok, err, errcode = deps.check_lua_library(rockspec)
-      if not ok then
-         return nil, err, errcode
-      end
+   local ok, err, errcode = deps.check_lua(rockspec.variables)
+   if not ok then
+      return nil, err, errcode
    end
 
    if opts.deps_mode == "none" then
@@ -138,7 +136,7 @@ local function process_dependencies(rockspec, opts)
          end
       end
    end
-   ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode)
+   local ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode)
    if err then
       return nil, err, errcode
    end

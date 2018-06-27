@@ -547,14 +547,6 @@ local function create_paths(luaversion_full)
    end
    assert(testing_paths.lua, "Lua interpreter not found! Run `busted -Xhelper help` for options")
 
-   local incfile = test_env.file_if_exists(testing_paths.luadir .. "/include/lua/" .. test_env.lua_version .. "/lua.h")
-                or test_env.file_if_exists(testing_paths.luadir .. "/include/lua" .. test_env.lua_version .. "/lua.h")
-                or test_env.file_if_exists(testing_paths.luadir .. "/include/lua.h")
-   testing_paths.lua_incdir = assert(incfile, "Lua header lua.h not found!"):gsub("/lua.h$", "")
-
-   testing_paths.lua_libdir = test_env.file_if_exists(testing_paths.luadir .. "/lib")
-                           or test_env.file_if_exists(testing_paths.luadir)
-
    local base_dir = lfs.currentdir()
 
    if test_env.TEST_TARGET_OS == "windows" then
@@ -770,8 +762,6 @@ local function setup_luarocks()
       "return {",
       ("SYSCONFDIR = %q,"):format(testing_paths.testing_lrprefix .. "/etc/luarocks"),
       ("LUA_DIR = %q,"):format(testing_paths.luadir),
-      ("LUA_INCDIR = %q,"):format(testing_paths.lua_incdir),
-      ("LUA_LIBDIR = %q,"):format(testing_paths.lua_libdir),
       ("LUA_BINDIR = %q,"):format(testing_paths.lua_bindir),
       ("LUA_INTERPRETER = %q,"):format(testing_paths.lua_interpreter),
    }
