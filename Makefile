@@ -142,7 +142,7 @@ write_sysconfig:
 	   echo '}' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
 	fi
 
-install: install_bins install_luas install_site_config write_sysconfig
+install: build install_bins install_luas install_site_config write_sysconfig
 
 bootstrap: $(SITE_CONFIG) run_luarocks install_site_config write_sysconfig cleanup_bins
 
