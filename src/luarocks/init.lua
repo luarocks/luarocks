@@ -421,4 +421,42 @@ function luarocks.remove(name, version, force)
    return true
 end
 
+function luarocks.lint(input, tree)
+
+   -- Even though this function doesn't necessarily require a tree argument, it needs to calll this function to not break - fetch.load_local_rockspec()
+   set_rock_tree(tree)
+
+   if not input then
+      return nil, "Argument missing. "
+   end
+   
+   local filename = input
+   if not input:match(".rockspec$") then
+      local err
+      filename, err = download.download("rockspec", input:lower())
+      if not filename then
+         return nil, err
+      end
+   end
+
+   local rs, err = fetch.load_local_rockspec(filename)
+   if not rs then
+      return nil, "Failed loading rockspec: "..err
+   end
+
+   local ok = true
+   
+   -- This should have been done in the type checker, 
+   -- but it would break compatibility of other commands.
+   -- Making 'lint' alone be stricter shouldn't be a problem,
+   -- because extra-strict checks is what lint-type commands
+   -- are all about.
+   if not rs.description.license then
+      util.printerr("Rockspec has no license field.")
+      ok = false
+   end
+
+   return ok, ok or filename.." failed consistency checks."
+end
+
 return luarocks
