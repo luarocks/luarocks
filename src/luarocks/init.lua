@@ -642,7 +642,7 @@ local function rockspec_cleanup(rockspec)
 end
 
 
-function luarocks.write_rockspec(flags, name, version, url_or_dir)
+function luarocks.write_rockspec(values, name, version, url_or_dir)
 
    -- Even though this function doesn't necessarily require a tree argument, it needs to calll this function to not break - fetch.load_local_rockspec()
    set_rock_tree(tree)
@@ -658,9 +658,9 @@ function luarocks.write_rockspec(flags, name, version, url_or_dir)
       version = nil
    end
 
-   if flags["tag"] then
+   if values["tag"] then
       if not version then
-         version = flags["tag"]:gsub("^v", "")
+         version = values["tag"]:gsub("^v", "")
       end
    end
 
@@ -685,22 +685,22 @@ function luarocks.write_rockspec(flags, name, version, url_or_dir)
    end
    version = version or "dev"
 
-   local filename = flags["output"] or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
+   local filename = values["output"] or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
 
    local rockspec = {
-      rockspec_format = flags["rockspec-format"],
+      rockspec_format = values["rockspec-format"],
       package = name,
       name = name:lower(),
       version = version.."-1",
       source = {
          url = "*** please add URL for source tarball, zip or repository here ***",
-         tag = flags["tag"],
+         tag = values["tag"],
       },
       description = {
-         summary = flags["summary"] or "*** please specify description summary ***",
-         detailed = flags["detailed"] or "*** please enter a detailed description ***",
-         homepage = flags["homepage"] or "*** please enter a project homepage ***",
-         license = flags["license"] or "*** please specify a license ***",
+         summary = values["summary"] or "*** please specify description summary ***",
+         detailed = values["detailed"] or "*** please enter a detailed description ***",
+         homepage = values["homepage"] or "*** please enter a project homepage ***",
+         license = values["license"] or "*** please specify a license ***",
       },
       dependencies = {},
       build = {},
@@ -709,7 +709,7 @@ function luarocks.write_rockspec(flags, name, version, url_or_dir)
    rockspec.source.protocol = protocol
    rockspec.format_is_at_least = vers.format_is_at_least
    
-   configure_lua_version(rockspec, flags["lua-version"])
+   configure_lua_version(rockspec, values["lua-version"])
    
    local local_dir = url_or_dir
 
@@ -719,7 +719,7 @@ function luarocks.write_rockspec(flags, name, version, url_or_dir)
       rockspec.source.dir = "dummy"
       if not fetch.is_basic_protocol(rockspec.source.protocol) then
          if version ~= "dev" then
-            rockspec.source.tag = flags["tag"] or "v" .. version
+            rockspec.source.tag = values["tag"] or "v" .. version
          end
       end
       rockspec.source.dir = nil
@@ -745,7 +745,7 @@ function luarocks.write_rockspec(flags, name, version, url_or_dir)
       local_dir = "."
    end
 
-   if not flags["homepage"] then
+   if not values["homepage"] then
       local url_protocol, url_path = dir.split_url(rockspec.source.url)
 
       if simple_scm_protocols[url_protocol] then
@@ -759,10 +759,10 @@ function luarocks.write_rockspec(flags, name, version, url_or_dir)
    end
    
    local libs = nil
-   if flags["lib"] then
+   if values["lib"] then
       libs = {}
       rockspec.external_dependencies = {}
-      for lib in flags["lib"]:gmatch("([^,]+)") do
+      for lib in values["lib"]:gmatch("([^,]+)") do
          table.insert(libs, lib)
          rockspec.external_dependencies[lib:upper()] = {
             library = lib
@@ -773,15 +773,15 @@ function luarocks.write_rockspec(flags, name, version, url_or_dir)
    local ok, err = fs.change_dir(local_dir)
    if not ok then return nil, "Failed reaching files from project - error entering directory "..local_dir end
 
-   if (not flags["summary"]) or (not flags["detailed"]) then
+   if (not values["summary"]) or (not values["detailed"]) then
       local summary, detailed = detect_description()
-      rockspec.description.summary = flags["summary"] or summary
-      rockspec.description.detailed = flags["detailed"] or detailed
+      rockspec.description.summary = values["summary"] or summary
+      rockspec.description.detailed = values["detailed"] or detailed
    end
 
    local is_mit = open_license(rockspec)
    
-   if is_mit and not flags["license"] then
+   if is_mit and not values["license"] then
       rockspec.description.license = "MIT"
    end
    
