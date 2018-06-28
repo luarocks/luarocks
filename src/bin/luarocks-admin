@@ -13,4 +13,4 @@ local commands = {
    refresh_cache = "luarocks.admin.cmd.refresh_cache",
 }
 
-cmd.run_command(description, commands, ...)
+cmd.run_command(description, commands, "luarocks.admin.cmd.external", ...)

@@ -254,12 +254,11 @@ end
 -- Parses input arguments and calls the appropriate driver function
 -- to execute the action requested on the command-line, forwarding
 -- to it any additional arguments passed by the user.
--- Uses the global table "commands", which contains
--- the loaded modules representing commands.
--- @param program_version string: The program version number as a string.
 -- @param description string: Short summary description of the program.
+-- @param commands table: contains the loaded modules representing commands.
+-- @param external_namespace string: where to look for external commands.
 -- @param ... string: Arguments given on the command-line.
-function cmd.run_command(description, commands, ...)
+function cmd.run_command(description, commands, external_namespace, ...)
 
    check_popen()
 
@@ -364,6 +363,12 @@ function cmd.run_command(description, commands, ...)
       os.exit(cmd.errorcodes.OK)
    end
 
+   for _, module_name in ipairs(fs.modules(external_namespace)) do
+      if not commands[module_name] then
+         commands[module_name] = external_namespace.."."..module_name
+      end
+   end
+
    if flags["verbose"] then
       cfg.verbose = true
       fs.verbose()
@@ -373,7 +378,6 @@ function cmd.run_command(description, commands, ...)
       die("Current directory does not exist. Please run LuaRocks from an existing directory.")
    end
 
-   local ok, err
    ok, err = process_tree_flags(flags)
    if not ok then
       die(err)

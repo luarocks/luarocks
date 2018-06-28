@@ -1,8 +1,5 @@
 #!/usr/bin/env lua
 
--- this should be loaded first.
-local cfg = require("luarocks.core.cfg")
-
 local loader = require("luarocks.loader")
 local cmd = require("luarocks.cmd")
 
@@ -33,4 +30,4 @@ local commands = {
    test = "luarocks.cmd.test",
 }
 
-cmd.run_command(description, commands, ...)
+cmd.run_command(description, commands, "luarocks.cmd.external", ...)
