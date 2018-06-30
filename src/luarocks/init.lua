@@ -979,17 +979,7 @@ function luarocks.current_config()
    config_table["system-config"] = config_file(conf.system)
    config_table["user-config"] = config_file(conf.user)
    
-   local rock_trees = {}
-   config_table["rock-trees"] = {}
-   for _, tree in ipairs(cfg.rocks_trees) do
-      if type(tree) == "string" then
-         table.insert(rock_trees, dir.normalize(tree))
-      else
-         local name = tree.name and "\t"..tree.name or ""
-         table.insert(rock_trees, dir.normalize(tree.root)..name)
-      end
-   end
-   config_table["rock-trees"] = rock_trees
+   config_table["rock-trees"] = cfg.rocks_trees
    
    return config_table
 end
