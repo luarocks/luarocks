@@ -959,4 +959,39 @@ function luarocks.new_version(input, version, url, tag)
    return true, "Wrote "..out_filename, md5_changed
 end
 
+local function config_file(conf)
+   if conf.ok then
+      return dir.normalize(conf.file)
+   else
+      return "file not found"
+   end
+end
+
+function luarocks.current_config()
+
+   local config_table = {}
+
+   config_table["lua-incdir"] = cfg.variables.LUA_INCDIR
+   config_table["lua-libdir"] = cfg.variables.LUA_LIBDIR
+   config_table["lua-ver"] = cfg.lua_version
+      
+   local conf = cfg.which_config()
+   config_table["system-config"] = config_file(conf.system)
+   config_table["user-config"] = config_file(conf.user)
+   
+   local rock_trees = {}
+   config_table["rock-trees"] = {}
+   for _, tree in ipairs(cfg.rocks_trees) do
+      if type(tree) == "string" then
+         table.insert(rock_trees, dir.normalize(tree))
+      else
+         local name = tree.name and "\t"..tree.name or ""
+         table.insert(rock_trees, dir.normalize(tree.root)..name)
+      end
+   end
+   config_table["rock-trees"] = rock_trees
+   
+   return config_table
+end
+
 return luarocks
