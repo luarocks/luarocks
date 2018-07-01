@@ -185,7 +185,7 @@ local function fill_as_builtin(rockspec, libs)
       end
    end
    
-   rockspec.build.modules, rockspec.build.copy_directories = builtin.autodetect_modules(libs, incdirs, libdirs)
+   rockspec.build.modules, rockspec.build.install, rockspec.build.copy_directories = builtin.autodetect_modules(libs, incdirs, libdirs)
 end
 
 local function rockspec_cleanup(rockspec)

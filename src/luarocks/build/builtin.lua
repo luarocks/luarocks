@@ -75,6 +75,7 @@ do
 
    function builtin.autodetect_modules(libs, incdirs, libdirs)
       local modules = {}
+      local install
       local copy_directories
 
       local prefix = ""
@@ -104,6 +105,19 @@ do
          end
       end
 
+      if prefix ~= "" then
+         fs.pop_dir()
+      end
+
+      local bindir = (fs.is_dir("src/bin") and "src/bin")
+                  or (fs.is_dir("bin") and "bin")
+      if bindir then
+         install = { bin = {} }
+         for _, file in ipairs(fs.list_dir(bindir)) do
+            table.insert(install.bin, dir.path(bindir, file))
+         end
+      end
+
       for _, directory in ipairs({ "doc", "docs", "samples", "tests" }) do
          if fs.is_dir(directory) then
             if not copy_directories then
@@ -113,11 +127,7 @@ do
          end
       end
 
-      if prefix ~= "" then
-         fs.pop_dir()
-      end
-
-      return modules, copy_directories
+      return modules, install, copy_directories
    end
 end
 
@@ -254,7 +264,10 @@ function builtin.run(rockspec)
    if not build.modules then
       if rockspec:format_is_at_least("3.0") then
          local libs, incdirs, libdirs = autoextract_libs(rockspec.external_dependencies, rockspec.variables)
-         build.modules = builtin.autodetect_modules(libs, incdirs, libdirs)
+         local install, copy_directories
+         build.modules, install, copy_directories = builtin.autodetect_modules(libs, incdirs, libdirs)
+         build.install = build.install or install
+         build.copy_directories = build.copy_directories or copy_directories
       else
          return nil, "Missing build.modules table"
       end
