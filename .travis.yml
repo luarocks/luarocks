@@ -18,8 +18,9 @@ unit_script: &unit_script
   
 integration_script: &integration_script
   - lua -v
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then shellcheck ./configure; fi
   - ./configure --with-lua=lua_install
-  - ./makedist scm
+  - ./makedist dev
   - busted -o gtest --exclude-tags=git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
   - busted -o gtest --exclude-tags=git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
           

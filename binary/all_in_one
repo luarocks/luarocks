@@ -1,0 +1,442 @@
+#!/usr/bin/env lua
+--[[
+
+All-in-one packager for LuaRocks
+   * by Hisham Muhammad <hisham@gobolinux.org>
+   * licensed under the same terms as Lua (MIT license).
+
+Based on:
+
+* srlua.c - Lua interpreter for self-running programs
+   * by Luiz Henrique de Figueiredo <lhf@tecgraf.puc-rio.br>
+   * 03 Nov 2014 15:31:43
+   * srlua.c is placed in the public domain.
+* bin2c.lua - converts a binary to a C string that can be embedded
+   * by Mark Edgar
+   * http://lua-users.org/wiki/BinTwoCee
+   * bin2c.lua is licensed under the same terms as Lua (MIT license).
+* lua.c - Lua stand-alone interpreter
+   * by Luiz Henrique de Figueiredo, Waldemar Celes, Roberto Ierusalimschy
+   * lua.c is licensed under the same terms as Lua (MIT license).
+* luastatic - builds a standalone executable from a Lua program
+   * by Eric R. Schulz
+   * https://github.com/ers35/luastatic
+   * luastatic is licensed under the CC0 1.0 Universal license
+
+]]
+
+local MAIN_PROGRAM = arg[1] or "src/bin/luarocks"
+local LUA_DIR = arg[2] or "/usr"
+local EXCLUDE = arg[3] or "^src/luarocks/admin/"
+local SYSCONFDIR = arg[4] or "/etc/luarocks"
+local TARGET = arg[5] or "binary-build"
+
+local LUA_MODULES = TARGET .. "/lua_modules"
+local CONFIG_DIR = TARGET .. "/.luarocks"
+
+package.path = "./src/?.lua;" .. package.path
+
+local fs = require("luarocks.fs")
+local cfg = require("luarocks.core.cfg")
+local cmd = require("luarocks.cmd")
+local deps = require("luarocks.deps")
+local util = require("luarocks.util")
+local path = require("luarocks.path")
+local manif = require("luarocks.manif")
+local queries = require("luarocks.queries")
+local persist = require("luarocks.persist")
+
+--------------------------------------------------------------------------------
+
+local function reindent_c(input)
+   local out = {}
+   local indent = 0
+   local previous_is_blank = true
+   for line in input:gmatch("([^\n]*)") do
+      line = line:match("^[ \t]*(.-)[ \t]*$")
+
+      local is_blank = (#line == 0)
+      local do_print =
+         (not is_blank) or
+         (not previous_is_blank and indent == 0)
+
+      if line:match("^[})]") then
+         indent = indent - 1
+         if indent < 0 then indent = 0 end
+      end
+      if do_print then
+         table.insert(out, string.rep("   ", indent))
+         table.insert(out, line)
+         table.insert(out, "\n")
+      end
+      if line:match("[{(]$") then
+         indent = indent + 1
+      end
+
+      previous_is_blank = is_blank
+   end
+   return table.concat(out)
+end
+
+local hexdump
+do
+   local numtab = {}
+   for i = 0, 255 do
+     numtab[string.char(i)] = ("%-3d,"):format(i)
+   end
+   function hexdump(str)
+      return (str:gsub(".", numtab):gsub(("."):rep(80), "%0\n"))
+   end
+end
+
+local c_preamble = [[
+
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+/* portable alerts, from srlua */
+#ifdef _WIN32
+#include <windows.h>
+#define alert(message)  MessageBox(NULL, message, progname, MB_ICONERROR | MB_OK)
+#define getprogname()   char name[MAX_PATH]; argv[0]= GetModuleFileName(NULL,name,sizeof(name)) ? name : NULL;
+#else
+#define alert(message)  fprintf(stderr,"%s: %s\n", progname, message)
+#define getprogname()
+#endif
+
+static int registry_key;
+
+]]
+
+local function bin2c_file(out, filename)
+   local content = string.dump(assert(loadfile(filename)))
+   table.insert(out, ("static const unsigned char code[] = {"))
+   table.insert(out, hexdump(content))
+   table.insert(out, ("};"))
+end
+
+local function write_hardcoded_module(dir)
+
+   local system = util.popen_read("uname -s")
+   local processor = util.popen_read("uname -m")
+
+   if processor:match("i[%d]86") then
+      processor = "x86"
+   elseif processor:match("amd64") or processor:match("x86_64") then
+      processor = "x86_64"
+   elseif processor:match("Power Macintosh") then
+      processor = "powerpc"
+   end
+
+   local hardcoded = {
+      SYSTEM = system,
+      PROCESSOR = processor,
+      SYSCONFDIR = SYSCONFDIR,
+      LUA_DIR = cfg.variables.LUA_DIR,
+      LUA_BINDIR = cfg.variables.LUA_BINDIR,
+      LUA_INTERPRETER = cfg.lua_interpreter,
+   }
+   
+   local name = dir .. "/luarocks/core/hardcoded.lua"
+   persist.save_as_module(name, hardcoded)
+   return name
+end
+
+local function declare_modules(out, dirs, skip)
+   skip = skip or {}
+   table.insert(out, [[
+   static void declare_modules(lua_State* L) {
+      lua_settop(L, 0);                                /* */
+      lua_newtable(L);                                 /* modules */
+      lua_pushlightuserdata(L, (void*) &registry_key); /* modules registry_key */
+      lua_pushvalue(L, 1);                             /* modules registry_key modules */
+      lua_rawset(L, LUA_REGISTRYINDEX);                /* modules */
+   ]])
+   for _, dir in ipairs(dirs) do
+      for _, name in ipairs(fs.find(dir)) do
+         local run = true
+         for _, pat in ipairs(skip) do
+            if name:match(pat) then
+               run = false
+               break
+            end
+         end
+         if run then
+            local filename = dir .. "/" .. name
+            if fs.is_file(filename) then
+               print(name)
+               local modname = name:gsub("%.lua$", ""):gsub("/", ".")
+               table.insert(out, ("/* %s */"):format(modname))
+               table.insert(out, ("{"))
+               bin2c_file(out, filename)
+               table.insert(out, ("luaL_loadbuffer(L, code, sizeof(code), %q);"):format(filename))
+               table.insert(out, ("lua_setfield(L, 1, %q);"):format(modname))
+               table.insert(out, ("}"))
+            end
+         end
+      end
+   end
+   table.insert(out, [[
+      lua_settop(L, 0);                                /* */
+   }
+   ]])
+end
+
+local function nm(filename)
+   local pd = io.popen("nm " .. filename)
+   local out = pd:read("*a")
+   pd:close()
+   return out
+end
+
+local function declare_libraries(out, dir)
+   local a_files = {}
+   local externs = {}
+   local fn = {}
+   table.insert(fn, [[
+   static void declare_libraries(lua_State* L) {
+      lua_getglobal(L, "package");                     /* package */
+      lua_getfield(L, -1, "preload");                  /* package package.preload */
+   ]])
+   for _, name in ipairs(fs.find(dir)) do
+      local filename = dir .. "/" .. name
+      if name:match("%.a$") then
+         table.insert(a_files, filename)
+         local nmout = nm(filename)
+         for luaopen in nmout:gmatch("[^dD] _?(luaopen_[%a%p%d]+)") do
+
+            -- FIXME what about module names with underscores?
+            local modname = luaopen:gsub("^_?luaopen_", ""):gsub("_", ".")
+
+            table.insert(externs, "extern int " .. luaopen .. "(lua_State* L);")
+            table.insert(fn, "lua_pushcfunction(L, " .. luaopen .. ");")
+            table.insert(fn, "lua_setfield(L, -2, \"" .. modname .. "\");")
+         end
+      end
+   end
+   local pd = io.popen("find " .. dir .. " -name '*.a'", "r")
+   for line in pd:lines() do
+      table.insert(a_files, line)
+   end
+   pd:close()
+   table.insert(fn, [[
+      lua_settop(L, 0);                                /* */
+   }
+   ]])
+
+   table.insert(out, "\n")
+   for _, line in ipairs(externs) do
+      table.insert(out, line)
+   end
+   table.insert(out, "\n")
+   for _, line in ipairs(fn) do
+      table.insert(out, line)
+   end
+   table.insert(out, "\n")
+
+   return a_files
+end
+
+local function load_main(out, main_program, program_name)
+   table.insert(out, [[static void load_main(lua_State* L) {]])
+   bin2c_file(out, main_program)
+   table.insert(out, ("luaL_loadbuffer(L, code, sizeof(code), %q);"):format(program_name))
+   table.insert(out, [[}]])
+   table.insert(out, [[]])
+end
+
+local c_main = [[
+
+/* custom package loader */
+static int pkg_loader(lua_State* L) {
+   lua_pushlightuserdata(L, (void*) &registry_key); /* modname ? registry_key */
+   lua_rawget(L, LUA_REGISTRYINDEX);                /* modname ? modules */
+   lua_pushvalue(L, -1);                            /* modname ? modules modules */
+   lua_pushvalue(L, 1);                             /* modname ? modules modules modname */
+   lua_gettable(L, -2);                             /* modname ? modules mod */
+   if (lua_type(L, -1) == LUA_TNIL) {
+      lua_pop(L, 1);                                /* modname ? modules */
+      lua_pushvalue(L, 1);                          /* modname ? modules modname */
+      lua_pushliteral(L, ".init");                  /* modname ? modules modname ".init" */
+      lua_concat(L, 2);                             /* modname ? modules modname .. ".init" */
+      lua_gettable(L, -2);                          /* modname ? mod */
+   }
+   return 1;
+}
+
+static void install_pkg_loader(lua_State* L) {
+   lua_settop(L, 0);                                /* */
+   lua_getglobal(L, "table");                       /* table */
+   lua_getfield(L, -1, "insert");                   /* table table.insert */
+   lua_getglobal(L, "package");                     /* table table.insert package */
+   lua_getfield(L, -1, "searchers");                /* table table.insert package package.searchers */
+   if (lua_type(L, -1) == LUA_TNIL) {
+      lua_pop(L, 1);
+      lua_getfield(L, -1, "loaders");               /* table table.insert package package.loaders */
+   }
+   lua_copy(L, 4, 3);                               /* table table.insert package.searchers */
+   lua_settop(L, 3);                                /* table table.insert package.searchers */
+   lua_pushnumber(L, 1);                            /* table table.insert package.searchers 1 */
+   lua_pushcfunction(L, pkg_loader);                /* table table.insert package.searchers 1 pkg_loader */
+   lua_call(L, 3, 0);                               /* table */
+   lua_settop(L, 0);                                /* */
+}
+
+/* main script launcher, from srlua */
+static int pmain(lua_State *L) {
+   int argc = lua_tointeger(L, 1);
+   char** argv = lua_touserdata(L, 2);
+   int i;
+   load_main(L);
+   lua_createtable(L, argc, 0);
+   for (i = 0; i < argc; i++) {
+      lua_pushstring(L, argv[i]);
+      lua_rawseti(L, -2, i);
+   }
+   lua_setglobal(L, "arg");
+   luaL_checkstack(L, argc - 1, "too many arguments to script");
+   for (i = 1; i < argc; i++) {
+      lua_pushstring(L, argv[i]);
+   }
+   lua_call(L, argc - 1, 0);
+   return 0;
+}
+
+/* fatal error, from srlua */
+static void fatal(const char* message) {
+   alert(message);
+   exit(EXIT_FAILURE);
+}
+
+/* error handler, from luac */
+static int msghandler (lua_State *L) {
+   /* is error object not a string? */
+   const char *msg = lua_tostring(L, 1);            
+   if (msg == NULL) {
+      /* does it have a metamethod that produces a string */
+      if (luaL_callmeta(L, 1, "__tostring") && lua_type(L, -1) == LUA_TSTRING) {
+         /* then that is the message */
+         return 1;
+      } else {
+         msg = lua_pushfstring(L, "(error object is a %s value)", luaL_typename(L, 1));
+      }
+   }
+   /* append a standard traceback */
+   luaL_traceback(L, L, msg, 1);
+   return 1;
+}
+
+/* main function, from srlua */
+int main(int argc, char** argv) {
+   lua_State* L;
+   getprogname();
+   if (argv[0] == NULL) {
+      fatal("cannot locate this executable");
+   }
+   L = luaL_newstate();
+   if (L == NULL) {
+      fatal("not enough memory for state");
+   }
+   luaL_openlibs(L);
+   install_pkg_loader(L);
+   declare_libraries(L);
+   declare_modules(L);
+   lua_pushcfunction(L, &msghandler);
+   lua_pushcfunction(L, &pmain);
+   lua_pushinteger(L, argc);
+   lua_pushlightuserdata(L, argv);
+   if (lua_pcall(L, 2, 0, -4) != 0) {
+      fatal(lua_tostring(L, -1));
+   }
+   lua_close(L);
+   return EXIT_SUCCESS;
+}
+
+]]
+
+local function generate(main_program, dir, skip)
+   local program_name = main_program:gsub(".*/", "")
+
+   local hardcoded = write_hardcoded_module(dir)
+   
+   local out = {}
+   table.insert(out, c_preamble)
+   table.insert(out, ([[static const char* progname = %q;]]):format(program_name))
+   load_main(out, main_program, program_name)
+   local lua_modules = LUA_MODULES .. "/share/lua/" .. cfg.lua_version
+   declare_modules(out, { dir, lua_modules }, skip)
+   local a_files = declare_libraries(out, LUA_MODULES .. "/lib/lua/" .. cfg.lua_version)
+   table.insert(out, c_main)
+
+   os.remove(hardcoded)
+   
+   local c_filename = TARGET .. "/" .. program_name .. ".exe.c"
+   local fd = io.open(c_filename, "w")
+   fd:write(reindent_c(table.concat(out, "\n")))
+   fd:close()
+   
+   cmd = table.concat({
+      "gcc", "-o", TARGET .. "/" .. program_name .. ".exe",
+      "-I", cfg.variables.LUA_INCDIR,
+      "-rdynamic",
+      "-Os",
+      c_filename,
+      "-L", cfg.variables.LUA_LIBDIR,
+      table.concat(a_files, " "),
+      cfg.variables.LUA_LIBDIR .. "/" .. cfg.variables.LUALIB:gsub("%.so.*$", ".a"),
+      "-ldl", "-lm"}, " ")
+   print(cmd)
+   os.execute(cmd)
+end
+
+--------------------------------------------------------------------------------
+
+local function main()
+
+   cfg.init(cmd.find_lua(LUA_DIR))
+   fs.init()
+   deps.check_lua(cfg.variables)
+   path.use_tree("./" .. LUA_MODULES)
+   
+   local CONFIG_FILE = CONFIG_DIR .. "/config-" .. cfg.lua_version .. ".lua"
+   
+   fs.make_dir(CONFIG_DIR)
+   local fd = io.open(CONFIG_FILE, "w")
+   fd:write([[
+   lib_extension = "a"
+   external_lib_extension = "a"
+   variables = {
+      CC = "]] .. fs.current_dir() .. [[/static-gcc",
+      LD = "]] .. fs.current_dir() .. [[/static-gcc",
+      LIB_EXTENSION = "a",
+      LIBFLAG = "-static",
+   }
+   ]])
+   fd:close()
+   
+   local dependencies = {
+      md5 = "md5",
+      luazip = "luazip",
+      luasec = "./luasec-0.7alpha-2.rockspec",
+      luaposix = "./luaposix-34.0.4-1.rockspec",
+      luasocket = "luasocket",
+      ["lua-zlib"] = "lua-zlib",
+      luafilesystem = "luafilesystem",
+   }
+   
+   fs.make_dir(LUA_MODULES)
+   for name, arg in pairs(dependencies) do
+      local vers = manif.get_versions(queries.from_dep_string(name), "one")
+      if not next(vers) then
+         os.execute("LUAROCKS_CONFIG='" .. CONFIG_FILE .. "' ./luarocks install '--tree=" .. LUA_MODULES .. "' " .. arg)
+      end
+   end
+   
+   generate(MAIN_PROGRAM, "src", { EXCLUDE, "^bin/?" })
+end
+
+main()

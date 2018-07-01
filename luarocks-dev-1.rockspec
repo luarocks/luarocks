@@ -1,13 +1,11 @@
-package = "LuaRocks"
-local VER = "scm"
-version = VER .. "-1"
-
+rockspec_format = "3.0"
+package = "luarocks"
+version = "dev-1"
 source = {
-   url = "--this rockspec is used by `make bootstrap` only--",
+   url = "git+https://github.com/luarocks/luarocks"
 }
-
 description = {
-   summary = "A deployment and management system for Lua modules.",
+   summary = "A package manager for Lua modules.",
    detailed = [[
       LuaRocks allows you to install Lua modules as self-contained
       packages called "rocks", which also contain version dependency
@@ -17,22 +15,22 @@ description = {
       required, the correct version is loaded. LuaRocks supports both
       local and remote repositories, and multiple local rocks trees. 
    ]],
-   license = "MIT/X11",
    homepage = "http://www.luarocks.org",
-   maintainer = "Hisham Muhammad"
+   issues_url = "https://github.com/luarocks/luarocks/issues",
+   maintainer = "Hisham Muhammad",
+   license = "MIT",
 }
-
-dependencies = {
-   "lua >= 5.1"
+test_dependencies = {
+   "luacov",
 }
-
-build = {
-   type = "make",
-   install_target = "install_rock",
-   build_pass=false,
-   install_variables = {
-      BINDIR="$(BINDIR)",
-      LUADIR="$(LUADIR)",
-      LUA="$(LUA)",
+test = {
+   type = "busted",
+   platforms = {
+      windows = {
+         flags = { "--exclude-tags=ssh,git,unix" }
+      },
+      unix = {
+         flags = { "--exclude-tags=ssh,git" }
+      }
    }
 }
