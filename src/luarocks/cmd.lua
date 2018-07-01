@@ -327,12 +327,7 @@ function cmd.run_command(description, commands, ...)
    end
 
    local command
-   if flags["version"] then
-      util.printout(program.." "..cfg.program_version)
-      util.printout(description)
-      util.printout()
-      os.exit(cmd.errorcodes.OK)
-   elseif flags["help"] or #nonflags == 0 then
+   if flags["help"] or #nonflags == 0 then
       command = "help"
    else
       command = table.remove(nonflags, 1)
@@ -361,6 +356,13 @@ function cmd.run_command(description, commands, ...)
    -----------------------------------------------------------------------------
 
    fs.init()
+
+   if flags["version"] then
+      util.printout(program.." "..cfg.program_version)
+      util.printout(description)
+      util.printout()
+      os.exit(cmd.errorcodes.OK)
+   end
 
    if flags["verbose"] then
       cfg.verbose = true
