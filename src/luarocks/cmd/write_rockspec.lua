@@ -192,9 +192,19 @@ local function rockspec_cleanup(rockspec)
    rockspec.source.file = nil
    rockspec.source.protocol = nil
    rockspec.source.identifier = nil
+   rockspec.source.dir = nil
+   rockspec.source.dir_set = nil
+   rockspec.source.pathname = nil
    rockspec.variables = nil
    rockspec.name = nil
    rockspec.format_is_at_least = nil
+   rockspec.local_abs_filename = nil
+   rockspec.rocks_provided = nil
+   for _, list in ipairs({"dependencies", "build_dependencies", "test_dependencies"}) do
+      if rockspec[list] and not next(rockspec[list]) then
+         rockspec[list] = nil
+      end
+   end
 end
 
 function write_rockspec.command(flags, name, version, url_or_dir)
