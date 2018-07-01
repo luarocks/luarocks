@@ -159,6 +159,22 @@ local function call_other_loaders(module, name, version, module_name)
    return "Failed loading module "..module.." in LuaRocks rock "..name.." "..version
 end
 
+local function add_providers(providers, entries, tree, module, filter_file_name)
+   for i, entry in ipairs(entries) do
+      local name, version = entry:match("^([^/]*)/(.*)$")
+      local file_name = tree.manifest.repository[name][version][1].modules[module]
+      if type(file_name) ~= "string" then
+         error("Invalid data in manifest file for module "..tostring(module).." (invalid data for "..tostring(name).." "..tostring(version)..")")
+      end
+      file_name = filter_file_name(file_name, name, version, tree.tree, i)
+      if loader.context[name] == version then
+         return name, version, file_name
+      end
+      version = vers.parse_version(version)
+      table.insert(providers, {name = name, version = version, module_name = file_name, tree = tree})
+   end
+end
+
 --- Search for a module in the rocks trees
 -- @param module string: module name (eg. "socket.core")
 -- @param filter_file_name function(string, string, string, string, number):
@@ -180,21 +196,16 @@ local function select_module(module, filter_file_name)
    end
 
    local providers = {}
+   local initmodule
    for _, tree in ipairs(loader.rocks_trees) do
       local entries = tree.manifest.modules[module]
       if entries then
-         for i, entry in ipairs(entries) do
-            local name, version = entry:match("^([^/]*)/(.*)$")
-            local file_name = tree.manifest.repository[name][version][1].modules[module]
-            if type(file_name) ~= "string" then
-               error("Invalid data in manifest file for module "..tostring(module).." (invalid data for "..tostring(name).." "..tostring(version)..")")
-            end
-            file_name = filter_file_name(file_name, name, version, tree.tree, i)
-            if loader.context[name] == version then
-               return name, version, file_name
-            end
-            version = vers.parse_version(version)
-            table.insert(providers, {name = name, version = version, module_name = file_name, tree = tree})
+         add_providers(providers, entries, tree, module, filter_file_name)
+      else
+         initmodule = initmodule or module .. ".init"
+         entries = tree.manifest.modules[initmodule]
+         if entries then
+            add_providers(providers, entries, tree, initmodule, filter_file_name)
          end
       end
    end

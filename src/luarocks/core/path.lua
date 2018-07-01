@@ -36,7 +36,7 @@ end
 
 --- Convert a pathname to a module identifier.
 -- In Unix, for example, a path "foo/bar/baz.lua" is converted to
--- "foo.bar.baz"; "bla/init.lua" returns "bla"; "foo.so" returns "foo".
+-- "foo.bar.baz"; "bla/init.lua" returns "bla.init"; "foo.so" returns "foo".
 -- @param file string: Pathname of module
 -- @return string: The module identifier, or nil if given path is
 -- not a conformant module path (the function does not check if the
@@ -47,10 +47,6 @@ function path.path_to_module(file)
    local name = file:match("(.*)%."..cfg.lua_extension.."$")
    if name then
       name = name:gsub("/", ".")
-      local init = name:match("(.*)%.init$")
-      if init then
-         name = init
-      end
    else
       name = file:match("(.*)%."..cfg.lib_extension.."$")
       if name then
