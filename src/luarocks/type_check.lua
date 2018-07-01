@@ -2,11 +2,14 @@
 local type_check = {}
 
 local cfg = require("luarocks.core.cfg")
-local vers = require("luarocks.core.vers")
+local fun = require("luarocks.fun")
 local util = require("luarocks.util")
+local vers = require("luarocks.core.vers")
 --------------------------------------------------------------------------------
 
-type_check.MAGIC_PLATFORMS = {}
+-- A magic constant that is not used anywhere in a schema definition
+-- and retains equality when the table is deep-copied.
+type_check.MAGIC_PLATFORMS = 0xEBABEFAC
 
 do
    local function fill_in_version(tbl, version)
@@ -26,7 +29,7 @@ do
             tbl[k] = {
                _any = util.deep_copy(tbl)
             }
-            tbl[k]._any[v] = nil
+            tbl[k]._any[k] = nil
          elseif type(v) == "table" then
             expand_magic_platforms(v)
          end
@@ -38,34 +41,26 @@ do
    -- and the value is a schema specification. Schema versions are considered
    -- incremental: version "2.0" only needs to specify what's new/changed from
    -- version "1.0".
-   function type_check.declare_schemas(versions)
+   function type_check.declare_schemas(inputs)
       local schemas = {}
       local parent_version
    
-      local version_list = {}
-      -- FIXME sorting lexicographically! "1.9" > "1.10"
-      for version, schema in util.sortedpairs(versions) do
-         table.insert(version_list, version)
+      local versions = fun.reverse_in(fun.sort_in(util.keys(inputs), vers.compare_versions))
+
+      for _, version in ipairs(versions) do
+         local schema = inputs[version]
          if parent_version ~= nil then
             local copy = util.deep_copy(schemas[parent_version])
             util.deep_merge(copy, schema)
-            schemas[version] = copy
-         else
-            schemas[version] = schema
+            schema = copy
          end
-         fill_in_version(schemas[version], version)
-         expand_magic_platforms(schemas[version])
+         fill_in_version(schema, version)
+         expand_magic_platforms(schema)
          parent_version = version
-      end
-      
-      -- Merge future versions as fallbacks under the old versions,
-      -- so that error messages can inform users when they try
-      -- to use new features without bumping rockspec_format in their rockspecs.
-      for i = #version_list, 2, -1 do
-         util.deep_merge_under(schemas[version_list[i - 1]], schemas[version_list[i]])
+         schemas[version] = schema
       end
 
-      return schemas
+      return schemas, versions
    end
 end
 

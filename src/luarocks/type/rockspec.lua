@@ -17,7 +17,7 @@ type_rockspec.rockspec_format = "3.0"
 --    _more (boolean) indicates that the table accepts unspecified keys and does not type-check them.
 --    Any other string keys that don't start with an underscore represent known keys and are type-checking tables, recursively checked.
 
-local rockspec_formats = type_check.declare_schemas({
+local rockspec_formats, versions = type_check.declare_schemas({
    ["1.0"] = {
       rockspec_format = { _type = "string" },
       package = { _type = "string", _mandatory = true },
@@ -143,15 +143,7 @@ type_rockspec.order = {"rockspec_format", "package", "version",
    "test_dependencies", { "test", {"type"} },
    "hooks"}
 
---- Type check a rockspec table.
--- Verify the correctness of elements from a 
--- rockspec table, reporting on unknown fields and type
--- mismatches.
--- @return boolean or (nil, string): true if type checking
--- succeeded, or nil and an error message if it failed.
-function type_rockspec.check(rockspec, globals)
-   assert(type(rockspec) == "table")
-   local version = rockspec.rockspec_format or "1.0"
+local function check_rockspec_using_version(rockspec, globals, version)
    local schema = rockspec_formats[version]
    if not schema then
       return nil, "unknown rockspec format " .. version
@@ -162,8 +154,46 @@ function type_rockspec.check(rockspec, globals)
    end
    if ok then
       return true
+   else
+      return nil, err
    end
-   return nil, err .. " (rockspec format " .. version .. ")"
+end
+
+--- Type check a rockspec table.
+-- Verify the correctness of elements from a 
+-- rockspec table, reporting on unknown fields and type
+-- mismatches.
+-- @return boolean or (nil, string): true if type checking
+-- succeeded, or nil and an error message if it failed.
+function type_rockspec.check(rockspec, globals)
+   assert(type(rockspec) == "table")
+
+   local version = rockspec.rockspec_format or "1.0"
+   local ok, err = check_rockspec_using_version(rockspec, globals, version)
+   if ok then
+      return true
+   end
+
+   -- Rockspec parsing failed.
+   -- Let's see if it would pass using a later version.
+
+   local found = false
+   for _, v in ipairs(versions) do
+      if not found then
+         if v == version then
+            found = true
+         end
+      else
+         local v_ok, v_err = check_rockspec_using_version(rockspec, globals, v)
+         if v_ok then
+            return nil, err .. " (using rockspec format " .. version .. " -- " ..
+               [[adding 'rockspec_format = "]] .. v .. [["' to the rockspec ]] ..
+               [[will fix this)]]
+         end
+      end
+   end
+
+   return nil, err .. " (using rockspec format " .. version .. ")"
 end
 
 return type_rockspec
