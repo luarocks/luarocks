@@ -591,6 +591,7 @@ function cfg.init(lua_data, project_dir, warning)
       end
       sys_config_file = sdir .. "/" .. name
       home_config_file = hdir .. "/" .. name
+      cfg.sysconfdir = sdir
 
       sys_config_file = sys_config_file:gsub("\\", "/")
       home_config_file = home_config_file:gsub("\\", "/")

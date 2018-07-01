@@ -7,6 +7,7 @@ local fs = require("luarocks.fs")
 
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
+local path = require("luarocks.path")
 local util = require("luarocks.util")
 
 -- Monkey patch io.popen and os.execute to make sure quoting
@@ -131,23 +132,21 @@ end
 -- @param version string: rock version to be used in loader context.
 -- @return boolean or (nil, string): True if succeeded, or nil and
 -- an error message.
-function win32.wrap_script(file, dest, name, version, ...)
+function win32.wrap_script(file, dest, deps_mode, name, version, ...)
    assert(type(file) == "string" or not file)
    assert(type(dest) == "string")
+   assert(type(deps_mode) == "string")
    assert(type(name) == "string" or not name)
    assert(type(version) == "string" or not version)
 
    local wrapname = fs.is_dir(dest) and dest.."/"..dir.base_name(file) or dest
-   wrapname = wrapname..".bat"
+   wrapname = wrapname .. ".bat"
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
       return nil, "Could not open "..wrapname.." for writing."
    end
 
-   local lpath, lcpath = cfg.package_paths(cfg.root_dir)
-   lpath = util.cleanup_path(lpath, ";", cfg.lua_version)
-   lcpath = util.cleanup_path(lcpath, ";", cfg.lua_version)
-
+   local lpath, lcpath = path.package_paths(deps_mode)
    local lpath_var, lcpath_var = util.lua_path_variables()
 
    local addctx
@@ -163,6 +162,7 @@ function win32.wrap_script(file, dest, name, version, ...)
    }
 
    wrapper:write("@echo off\r\n")
+   wrapper:write("set "..fs.Qb("LUAROCKS_SYSCONFIG="..cfg.sysconfdir) .. "\r\n")
    if dest == "luarocks" then
       wrapper:write("set "..fs.Qb(lpath_var.."="..package.path) .. "\r\n")
       wrapper:write("set "..fs.Qb(lcpath_var.."="..package.cpath) .. "\r\n")

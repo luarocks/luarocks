@@ -275,4 +275,16 @@ function path.read_namespace(name, version, tree)
    return namespace
 end
 
+function path.package_paths(deps_mode)
+   local lpaths = {}
+   local lcpaths = {}
+   path.map_trees(deps_mode, function(tree)
+      local root = path.root_dir(tree)
+      table.insert(lpaths, dir.path(root, cfg.lua_modules_path, "?.lua"))
+      table.insert(lpaths, dir.path(root, cfg.lua_modules_path, "?/init.lua"))
+      table.insert(lcpaths, dir.path(root, cfg.lib_modules_path, "?." .. cfg.lib_extension))
+   end)
+   return table.concat(lpaths, ";"), table.concat(lcpaths, ";")
+end
+
 return path

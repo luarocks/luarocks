@@ -92,14 +92,14 @@ function init.command(flags, name, version)
    local luarocks_wrapper = "./luarocks" .. ext
    if not fs.exists(luarocks_wrapper) then
       util.printout("Preparing " .. luarocks_wrapper .. " ...")
-      fs.wrap_script(arg[0], "luarocks", nil, nil, "--project-tree", tree)
+      fs.wrap_script(arg[0], "luarocks", "none", nil, nil, "--project-tree", tree)
    end
 
    local lua_wrapper = "./lua" .. ext
    if not fs.exists(lua_wrapper) then
       util.printout("Preparing " .. lua_wrapper .. " ...")
       path.use_tree(tree)
-      fs.wrap_script(nil, "lua")
+      fs.wrap_script(nil, "lua", "all")
    end
 
    return true

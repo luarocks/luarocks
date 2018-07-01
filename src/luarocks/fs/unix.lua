@@ -6,6 +6,7 @@ local fs = require("luarocks.fs")
 
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
+local path = require("luarocks.path")
 local util = require("luarocks.util")
 
 --- Annotate command string for quiet execution.
@@ -64,27 +65,27 @@ end
 -- @param version string: rock version to be used in loader context.
 -- @return boolean or (nil, string): True if succeeded, or nil and
 -- an error message.
-function unix.wrap_script(file, dest, name, version, ...)
+function unix.wrap_script(file, dest, deps_mode, name, version, ...)
    assert(type(file) == "string" or not file)
    assert(type(dest) == "string")
+   assert(type(deps_mode) == "string")
    assert(type(name) == "string" or not name)
    assert(type(version) == "string" or not version)
    
    local wrapname = fs.is_dir(dest) and dest.."/"..dir.base_name(file) or dest
+
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
       return nil, "Could not open "..wrapname.." for writing."
    end
 
-   local lpath, lcpath = cfg.package_paths(cfg.root_dir)
-   lpath = util.cleanup_path(lpath, ";", cfg.lua_version)
-   lcpath = util.cleanup_path(lcpath, ";", cfg.lua_version)
+   local lpath, lcpath = path.package_paths(deps_mode)
 
    local luainit = {
       "package.path="..util.LQ(lpath..";").."..package.path",
       "package.cpath="..util.LQ(lcpath..";").."..package.cpath",
    }
-   if dest == "luarocks" then
+   if dest == "luarocks" or dest == "luarocks-admin" then
       luainit = {
          "package.path="..util.LQ(package.path),
          "package.cpath="..util.LQ(package.cpath),
@@ -103,7 +104,9 @@ function unix.wrap_script(file, dest, name, version, ...)
    }
 
    wrapper:write("#!/bin/sh\n\n")
-   wrapper:write("LUA_INIT="..fs.Q(table.concat(luainit, ";")).." exec "..table.concat(argv, " ")..' "$@"\n')
+   wrapper:write("LUAROCKS_SYSCONFDIR="..fs.Q(cfg.sysconfdir) .. " ")
+   wrapper:write("LUA_INIT="..fs.Q(table.concat(luainit, ";")).." ")
+   wrapper:write("exec "..table.concat(argv, " ")..' "$@"\n')
    wrapper:close()
 
    if fs.set_permissions(wrapname, "exec", "user") then

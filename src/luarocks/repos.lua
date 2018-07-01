@@ -315,9 +315,13 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
 
    local function install_binary(source, target)
       if wrap_bin_scripts and fs.is_lua(source) then
-         return target .. (cfg.wrapper_suffix or ""), function() return fs.wrap_script(source, target, name, version) end
+         return target .. (cfg.wrapper_suffix or ""), function()
+            return fs.wrap_script(source, target, deps_mode, name, version)
+         end
       else
-         return target, function() return fs.copy_binary(source, target) end
+         return target, function()
+            return fs.copy_binary(source, target)
+         end
       end
    end
 
