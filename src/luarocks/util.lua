@@ -123,6 +123,7 @@ local supported_flags = {
    ["modules"] = true,
    ["mversion"] = true,
    ["namespace"] = "<namespace>",
+   ["no-bin"] = true,
    ["no-refresh"] = true,
    ["nodeps"] = true,
    ["old-versions"] = true,

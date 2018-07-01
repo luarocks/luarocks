@@ -13,7 +13,7 @@ path_cmd.help = [[
 Returns the package path currently configured for this installation
 of LuaRocks, formatted as shell commands to update LUA_PATH and LUA_CPATH. 
 
---bin          Adds the system path to the output
+--no-bin       Do not export the PATH variable
 
 --append       Appends the paths to the existing paths. Default is to prefix
                the LR paths to the existing paths.
@@ -62,7 +62,7 @@ function path_cmd.command(flags)
 
    util.printout(fs.export_cmd(lpath_var, util.cleanup_path(lr_path, ';', cfg.lua_version)))
    util.printout(fs.export_cmd(lcpath_var, util.cleanup_path(lr_cpath, ';', cfg.lua_version)))
-   if flags["bin"] then
+   if not flags["no-bin"] then
       util.printout(fs.export_cmd("PATH", util.cleanup_path(lr_bin, path_sep)))
    end
    return true
