@@ -30,6 +30,10 @@ local LUA_DIR = arg[2] or "/usr"
 local EXCLUDE = arg[3] or "^src/luarocks/admin/"
 local SYSCONFDIR = arg[4] or "/etc/luarocks"
 local TARGET = arg[5] or "binary-build"
+local MY_PLATFORM = arg[6] or "unix"
+local CC = arg[7] or "gcc"
+local NM = arg[8] or "nm"
+local CROSSCOMPILER_SYSROOT = arg[9] or "/usr/lib/mingw-w64-sysroot/i686-w64-mingw32"
 
 local LUA_MODULES = TARGET .. "/lua_modules"
 local CONFIG_DIR = TARGET .. "/.luarocks"
@@ -47,6 +51,12 @@ local queries = require("luarocks.queries")
 local persist = require("luarocks.persist")
 
 --------------------------------------------------------------------------------
+
+local function if_platform(plat, val)
+   if MY_PLATFORM == plat then
+      return val
+   end
+end
 
 local function reindent_c(input)
    local out = {}
@@ -110,10 +120,18 @@ local c_preamble = [[
 
 static int registry_key;
 
+/* fatal error, from srlua */
+static void fatal(const char* message) {
+   alert(message);
+   exit(EXIT_FAILURE);
+}
+
 ]]
 
 local function bin2c_file(out, filename)
-   local content = string.dump(assert(loadfile(filename)))
+   local fd = io.open(filename, "rb")
+   local content = fd:read("*a"):gsub("^#![^\n]+\n", "")
+   fd:close()
    table.insert(out, ("static const unsigned char code[] = {"))
    table.insert(out, hexdump(content))
    table.insert(out, ("};"))
@@ -121,24 +139,32 @@ end
 
 local function write_hardcoded_module(dir)
 
-   local system = util.popen_read("uname -s")
-   local processor = util.popen_read("uname -m")
+   local system = if_platform("windows", "MINGW")
+   local processor = if_platform("windows", "x86")
 
-   if processor:match("i[%d]86") then
-      processor = "x86"
-   elseif processor:match("amd64") or processor:match("x86_64") then
-      processor = "x86_64"
-   elseif processor:match("Power Macintosh") then
-      processor = "powerpc"
+   if not system then
+      system = util.popen_read("uname -s")
+      processor = util.popen_read("uname -m")
+
+      if processor:match("i[%d]86") then
+         processor = "x86"
+      elseif processor:match("amd64") or processor:match("x86_64") then
+         processor = "x86_64"
+      elseif processor:match("Power Macintosh") then
+         processor = "powerpc"
+      end
    end
 
    local hardcoded = {
       SYSTEM = system,
       PROCESSOR = processor,
-      SYSCONFDIR = SYSCONFDIR,
-      LUA_DIR = cfg.variables.LUA_DIR,
-      LUA_BINDIR = cfg.variables.LUA_BINDIR,
-      LUA_INTERPRETER = cfg.lua_interpreter,
+
+      SYSCONFDIR = if_platform("unix", SYSCONFDIR),
+
+      LUA_DIR = if_platform("unix", cfg.variables.LUA_DIR),
+      LUA_BINDIR = if_platform("unix", cfg.variables.LUA_BINDIR)
+                or if_platform("windows", "."),
+      LUA_INTERPRETER = if_platform("unix", cfg.lua_interpreter),
    }
    
    local name = dir .. "/luarocks/core/hardcoded.lua"
@@ -187,7 +213,7 @@ local function declare_modules(out, dirs, skip)
 end
 
 local function nm(filename)
-   local pd = io.popen("nm " .. filename)
+   local pd = io.popen(NM .. " " .. filename)
    local out = pd:read("*a")
    pd:close()
    return out
@@ -244,7 +270,9 @@ end
 local function load_main(out, main_program, program_name)
    table.insert(out, [[static void load_main(lua_State* L) {]])
    bin2c_file(out, main_program)
-   table.insert(out, ("luaL_loadbuffer(L, code, sizeof(code), %q);"):format(program_name))
+   table.insert(out, ("if(luaL_loadbuffer(L, code, sizeof(code), %q) != LUA_OK) {"):format(program_name))
+   table.insert(out, ("   fatal(lua_tostring(L, -1));"))
+   table.insert(out, ("}"))
    table.insert(out, [[}]])
    table.insert(out, [[]])
 end
@@ -262,7 +290,7 @@ static int pkg_loader(lua_State* L) {
       lua_pop(L, 1);                                /* modname ? modules */
       lua_pushvalue(L, 1);                          /* modname ? modules modname */
       lua_pushliteral(L, ".init");                  /* modname ? modules modname ".init" */
-      lua_concat(L, 2);                             /* modname ? modules modname .. ".init" */
+      lua_concat(L, 2);                             /* modname ? modules modname..".init" */
       lua_gettable(L, -2);                          /* modname ? mod */
    }
    return 1;
@@ -304,12 +332,6 @@ static int pmain(lua_State *L) {
    }
    lua_call(L, argc - 1, 0);
    return 0;
-}
-
-/* fatal error, from srlua */
-static void fatal(const char* message) {
-   alert(message);
-   exit(EXIT_FAILURE);
 }
 
 /* error handler, from luac */
@@ -358,14 +380,25 @@ int main(int argc, char** argv) {
 
 ]]
 
+local function filter_in(f, xs)
+   for i = #xs, 1, -1 do
+      if not f(xs[i]) then
+         table.remove(xs, i)
+      end
+   end
+   return xs
+end
+
+local function nonnull(x) return x ~= nil end
+
 local function generate(main_program, dir, skip)
    local program_name = main_program:gsub(".*/", "")
 
    local hardcoded = write_hardcoded_module(dir)
    
    local out = {}
-   table.insert(out, c_preamble)
    table.insert(out, ([[static const char* progname = %q;]]):format(program_name))
+   table.insert(out, c_preamble)
    load_main(out, main_program, program_name)
    local lua_modules = LUA_MODULES .. "/share/lua/" .. cfg.lua_version
    declare_modules(out, { dir, lua_modules }, skip)
@@ -378,17 +411,23 @@ local function generate(main_program, dir, skip)
    local fd = io.open(c_filename, "w")
    fd:write(reindent_c(table.concat(out, "\n")))
    fd:close()
+
+   deps.check_lua(cfg.variables)
    
-   cmd = table.concat({
-      "gcc", "-o", TARGET .. "/" .. program_name .. ".exe",
+   cmd = table.concat(filter_in(nonnull, {
+      CC, "-o", TARGET .. "/" .. program_name .. ".exe",
       "-I", cfg.variables.LUA_INCDIR,
-      "-rdynamic",
+      if_platform("unix", "-rdynamic"),
       "-Os",
       c_filename,
       "-L", cfg.variables.LUA_LIBDIR,
       table.concat(a_files, " "),
+      --if_platform("unix", cfg.variables.LUA_LIBDIR .. "/" .. cfg.variables.LUALIB:gsub("%.so.*$", ".a")),
+      --if_platform("windows", "mingw/liblua.a"), -- FIXME
       cfg.variables.LUA_LIBDIR .. "/" .. cfg.variables.LUALIB:gsub("%.so.*$", ".a"),
-      "-ldl", "-lm"}, " ")
+      if_platform("unix", "-ldl"),
+      "-lm"
+   }), " ")
    print(cmd)
    os.execute(cmd)
 end
@@ -397,46 +436,56 @@ end
 
 local function main()
 
-   cfg.init(cmd.find_lua(LUA_DIR))
+   os.remove("src/luarocks/core/hardcoded.lua")
+   cfg.init()
+   cfg.variables.LUA_DIR = LUA_DIR
+   cfg.variables.LUA_INCDIR = nil -- let it autodetect later
+   cfg.variables.LUA_LIBDIR = nil -- let it autodetect later
    fs.init()
-   deps.check_lua(cfg.variables)
    path.use_tree("./" .. LUA_MODULES)
-   
+
    local CONFIG_FILE = CONFIG_DIR .. "/config-" .. cfg.lua_version .. ".lua"
    
    fs.make_dir(CONFIG_DIR)
-   local fd = io.open(CONFIG_FILE, "w")
-   fd:write([[
-   lib_extension = "a"
-   external_lib_extension = "a"
-   variables = {
-      CC = "]] .. fs.current_dir() .. [[/static-gcc",
-      LD = "]] .. fs.current_dir() .. [[/static-gcc",
-      LIB_EXTENSION = "a",
-      LIBFLAG = "-static",
-   }
-   ]])
-   fd:close()
+
+   persist.save_from_table(CONFIG_FILE, {
+      lib_extension = "a",
+      external_lib_extension = "a",
+      variables = {
+         CC = fs.current_dir() .. "/binary/static-gcc",
+         LD = fs.current_dir() .. "/binary/static-gcc",
+         LIB_EXTENSION = "a",
+         LIBFLAG = "-static",
+      },
+      platforms = if_platform("windows", { "windows", "win32", "mingw32" }),
+      external_deps_dirs = if_platform("windows", { CROSSCOMPILER_SYSROOT, fs.current_dir().."/windows-deps" }),
+   })
    
    local dependencies = {
       md5 = "md5",
-      luazip = "luazip",
-      luasec = "./luasec-0.7alpha-2.rockspec",
-      luaposix = "./luaposix-34.0.4-1.rockspec",
+      luazip = if_platform("unix", "luazip"),
+      luasec = "./binary/luasec-0.7alpha-2.rockspec",
+      luaposix = if_platform("unix", "./binary/luaposix-34.0.4-1.rockspec"),
       luasocket = "luasocket",
-      ["lua-zlib"] = "lua-zlib",
+      ["lua-zlib"] = "./binary/lua-zlib-1.2-0.rockspec",
       luafilesystem = "luafilesystem",
    }
    
    fs.make_dir(LUA_MODULES)
    for name, arg in pairs(dependencies) do
+      print("----------------------------------------------------------------")
+      print(name)
+      print("----------------------------------------------------------------")
       local vers = manif.get_versions(queries.from_dep_string(name), "one")
       if not next(vers) then
-         os.execute("LUAROCKS_CONFIG='" .. CONFIG_FILE .. "' ./luarocks install '--tree=" .. LUA_MODULES .. "' " .. arg)
+         local ok = os.execute("LUAROCKS_CONFIG='" .. CONFIG_FILE .. "' ./luarocks install '--tree=" .. LUA_MODULES .. "' " .. arg)
+         if ok ~= 0 and ok ~= true then
+            error("Failed building dependency: " .. name)
+         end
       end
    end
    
-   generate(MAIN_PROGRAM, "src", { EXCLUDE, "^bin/?" })
+   generate(MAIN_PROGRAM, "src", { EXCLUDE, "core/site_config", "^bin/?" })
 end
 
 main()

@@ -98,6 +98,17 @@ describe("luarocks install #integration", function()
          assert(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/2.0-1/rock_namespace"))
       end)
 
+      it("installs a namespaced package given an URL and any string in --namespace", function()
+         -- This is not a "valid" namespace (as per luarocks.org rules)
+         -- but we're not doing any format checking in the luarocks codebase
+         -- so this keeps our options open.
+         assert(run.luarocks_bool("install --namespace=x.y@z file://" .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.src.rock" ))
+         assert.truthy(run.luarocks_bool("show a_rock 1.0"))
+         local fd = assert(io.open(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/rock_namespace", "r"))
+         finally(function() fd:close() end)
+         assert.same("x.y@z", fd:read("*l"))
+      end)
+
       it("installs a package with a namespaced dependency", function()
          assert(run.luarocks_bool("install has_namespaced_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
          assert(run.luarocks_bool("show has_namespaced_dep"))

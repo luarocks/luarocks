@@ -64,13 +64,15 @@ $(SYSCONFDIR)/config-$(LUA_VERSION).lua: config-$(LUA_VERSION).lua.in
 # Binary build
 # ----------------------------------------
 
-binary: build-binary/luarocks.exe build-binary/luarocks-admin.exe
+BINARY_TARGET=build-binary
 
-build-binary/luarocks.exe: ./luarocks
-	LUA_PATH="$(PWD)/src/?.lua;;" "$(LUA_BINDIR)/$(LUA_INTERPRETER)" ./all_in_one "src/bin/luarocks" "$(LUA_DIR)" "^src/luarocks/admin/" "$(SYSCONFDIR)" "build-binary"
+binary: $(BINARY_TARGET)/luarocks.exe $(BINARY_TARGET)/luarocks-admin.exe
 
-build-binary/luarocks-admin.exe: ./luarocks
-	LUA_PATH="$(PWD)/src/?.lua;;" "$(LUA_BINDIR)/$(LUA_INTERPRETER)" ./all_in_one "src/bin/luarocks-admin" "$(LUA_DIR)" "^src/luarocks/cmd/" "$(SYSCONFDIR)" "build-binary"
+$(BINARY_TARGET)/luarocks.exe: ./luarocks
+	LUA_PATH="$(PWD)/src/?.lua;;" "$(LUA_BINDIR)/$(LUA_INTERPRETER)" binary/all_in_one "src/bin/luarocks" "$(LUA_DIR)" "^src/luarocks/admin/" "$(SYSCONFDIR)" $(BINARY_TARGET) $(BINARY_PLATFORM) $(BINARY_CC) $(BINARY_NM) $(BINARY_SYSROOT)
+
+$(BINARY_TARGET)/luarocks-admin.exe: ./luarocks
+	LUA_PATH="$(PWD)/src/?.lua;;" "$(LUA_BINDIR)/$(LUA_INTERPRETER)" binary/all_in_one "src/bin/luarocks-admin" "$(LUA_DIR)" "^src/luarocks/cmd/" "$(SYSCONFDIR)" $(BINARY_TARGET) $(BINARY_PLATFORM) $(BINARY_CC) $(BINARY_NM) $(BINARY_SYSROOT)
 
 # ----------------------------------------
 # Binary install
@@ -94,6 +96,16 @@ bootstrap: ./luarocks $(SYSCONFDIR)/config-$(LUA_VERSION).lua
 	./luarocks make --tree="$(ROCKS_TREE)"
 
 # ----------------------------------------
+# Windows binary build
+# ----------------------------------------
+
+windows-binary: ./luarocks
+	make -f binary/Makefile.windows windows-binary
+
+windows-clean:
+	make -f binary/Makefile.windows windows-clean
+
+# ----------------------------------------
 # Clean
 # ----------------------------------------
 
@@ -105,4 +117,4 @@ clean:
 	rm -rf ./.luarocks
 	rm -rf ./lua_modules
 
-.PHONY: all build install binary install-binary bootstrap clean
+.PHONY: all build install binary install-binary bootstrap clean windows-binary windows-clean

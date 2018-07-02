@@ -348,6 +348,19 @@ function cmd.run_command(description, commands, ...)
       project_dir = flags["project-tree"]:gsub("[/\\][^/\\]+$", "")
    end
 
+   -- FIXME A quick hack for the experimental Windows build
+   if os.getenv("LUAROCKS_CROSS_COMPILING") then
+      cfg.each_platform = function()
+         local i = 0
+         local plats = { "unix", "linux" }
+         return function()
+            i = i + 1
+            return plats[i]
+         end
+      end
+      fs.init()
+   end
+
    -----------------------------------------------------------------------------
    local ok, err = cfg.init(lua_data, project_dir, util.warning)
    if not ok then

@@ -276,7 +276,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       local localappdata = os.getenv("LOCALAPPDATA")
       if not localappdata then
          -- for Windows versions below Vista
-         localappdata = os.getenv("USERPROFILE").."/Local Settings/Application Data"
+         localappdata = (os.getenv("USERPROFILE") or "c:/Users/All Users").."/Local Settings/Application Data"
       end
       defaults.local_cache = localappdata.."/LuaRocks/Cache"
       defaults.web_browser = "start"

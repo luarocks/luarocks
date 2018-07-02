@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+STATIC_GCC_AR=${STATIC_GCC_AR:-ar}
+STATIC_GCC_RANLIB=${STATIC_GCC_RANLIB:-ranlib}
+STATIC_GCC_CC=${STATIC_GCC_CC:-gcc}
+STATIC_GCC_LIBDIR=${STATIC_GCC_LIBDIR:-/usr/lib}
+
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 
 function log() { echo -- "$@" >> $DIR/log.txt; }
@@ -13,7 +18,7 @@ allargs=()
 sources=()
 objects=()
 etc=()
-libdirs=("/usr/lib")
+libdirs=("$STATIC_GCC_LIBDIR")
 incdirs=()
 
 linking=0
@@ -94,15 +99,22 @@ done
 staticlibs=()
 for lib in "${libs[@]}"
 do
+   found=0
    for libdir in "${libdirs[@]}"
    do
       staticlib="$libdir/lib$lib.a"
       if [ -e "$staticlib" ]
       then
          staticlibs+=("$staticlib")
+         found=1
          break
       fi
    done
+   if [ "$found" = 0 ]
+   then
+      log "STATICLIB not found for $lib"
+      runlog exit 1
+   fi
 done
 
 oflag=()
@@ -119,7 +131,7 @@ then
       for source in "${sources[@]}"
       do
          object="${source%.c}.o"
-         runlog gcc "${incdirs[@]}" "${etc[@]}" -c -o "$object" "$source"
+         runlog $STATIC_GCC_CC "${incdirs[@]}" "${etc[@]}" -c -o "$object" "$source"
          [ "$?" = 0 ] || runlog exit $?
          objects+=("$object")
       done
@@ -137,22 +149,23 @@ then
    done
    echo "SAVE" >> ar.script
    echo "END" >> ar.script
-   cat ar.script | ar -M
+   cat ar.script >> "$DIR/log.txt"
+   cat ar.script | $STATIC_GCC_AR -M
    [ "$?" = 0 ] || runlog exit $?
 
    [ -e "$output" ] || {
       exit 1
    }
 
-   runlog ranlib "$output"
+   runlog $STATIC_GCC_RANLIB "$output"
    runlog exit $?
 elif [ "$object" = 1 ]
 then
    log OBJECT
-   runlog gcc "${oflag[@]}" "${incdirs[@]}" "${etc[@]}" "${sources[@]}"
+   runlog $STATIC_GCC_CC "${oflag[@]}" "${incdirs[@]}" "${etc[@]}" "${sources[@]}"
    runlog exit $?
 else
    log EXECUTABLE
-   runlog gcc "${allargs[@]}"
+   runlog $STATIC_GCC_CC "${allargs[@]}"
    runlog exit $?
 fi

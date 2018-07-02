@@ -26,6 +26,11 @@ external_dependencies = {
             header = "openssl/ssl.h",
          }
       },
+      mingw32 = {
+         OPENSSL = {
+            library = "ssl",
+         }
+      },
    }
 }
 build = {
@@ -60,11 +65,11 @@ build = {
             }
          }
       },
-      mingw = {
+      mingw32 = {
          modules = {
             ssl = {
                libraries = {
-                  "ssl", "crypto",
+                  "ssl", "crypto", "ws2_32", "gdi32"
                }
             }
          }
