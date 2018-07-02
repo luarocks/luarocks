@@ -46,8 +46,9 @@ function busted.run_tests(test, args)
          table.insert(args, i, test.flags[i])
       end
    end
-   
-   local ok, err = fs.execute(busted_exe, unpack(args))
+
+   local err
+   ok, err = fs.execute(busted_exe, unpack(args))
    if ok then
       return true
    else
