@@ -25,14 +25,6 @@ test suite arguments.
 
 ]]..util.deps_mode_help()
 
---- Driver function for "build" command.
--- @param name string: A local or remote rockspec or rock file.
--- If a package name is given, forwards the request to "search" and,
--- if returned a result, installs the matching rock.
--- @param version string: When passing a package name, a version number may
--- also be given.
--- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
--- error message otherwise. exitcode is optionally returned.
 function cmd_test.command(flags, arg, ...)
    assert(type(arg) == "string" or not arg)
 
