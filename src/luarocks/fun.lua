@@ -48,4 +48,19 @@ function fun.traverse(t, f)
    end)
 end
 
+function fun.reverse_in(t)
+   for i = 1, math.floor(#t/2) do
+      local m, n = i, #t - i + 1
+      local a, b = t[m], t[n]
+      t[m] = b
+      t[n] = a
+   end
+   return t
+end
+
+function fun.sort_in(t, f)
+   table.sort(t, f)
+   return t
+end
+
 return fun
