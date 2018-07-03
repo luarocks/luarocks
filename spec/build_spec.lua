@@ -161,7 +161,8 @@ describe("LuaRocks build tests #integration", function()
       end)
       
       it("LuaRocks build luasec with skipping dependency checks", function()
-         assert.is_true(run.luarocks_bool("build luasec 0.6-1 " .. test_env.OPENSSL_DIRS .. " --nodeps"))
+         local openssl_dirs = "OPENSSL_INCDIR=" .. test_env.OPENSSL_INCDIR .. " OPENSSL_LIBDIR=" .. test_env.OPENSSL_LIBDIR
+         assert.is_true(run.luarocks_bool("build luasec 0.6-1 " .. openssl_dirs .. " --nodeps"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasec/0.6-1/luasec-0.6-1.rockspec"))
       end)
       
@@ -221,7 +222,8 @@ describe("LuaRocks build tests #integration", function()
       end
 
       it("LuaRocks build luasec only deps", function()
-         assert.is_true(run.luarocks_bool("build luasec " .. test_env.OPENSSL_DIRS .. " --only-deps"))
+         local openssl_dirs = "OPENSSL_INCDIR=" .. test_env.OPENSSL_INCDIR .. " OPENSSL_LIBDIR=" .. test_env.OPENSSL_LIBDIR
+         assert.is_true(run.luarocks_bool("build luasec " .. openssl_dirs .. " --only-deps"))
          assert.is_false(run.luarocks_bool("show luasec"))
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasec/0.6-1/luasec-0.6-1.rockspec"))
       end)
@@ -255,8 +257,9 @@ describe("LuaRocks build tests #integration", function()
       end)
       
       it("LuaRocks build with https", function()
+         local openssl_dirs = "OPENSSL_INCDIR=" .. test_env.OPENSSL_INCDIR .. " OPENSSL_LIBDIR=" .. test_env.OPENSSL_LIBDIR
          assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
-         assert.is_true(run.luarocks_bool("install luasec " .. test_env.OPENSSL_DIRS))
+         assert.is_true(run.luarocks_bool("install luasec " .. openssl_dirs))
          
          assert.is_true(run.luarocks_bool("build validate-args-1.5.4-1.rockspec"))
          assert.is.truthy(run.luarocks("show validate-args"))
