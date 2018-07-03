@@ -85,7 +85,8 @@ describe("luarocks install #integration", function()
       end)
 
       it("installs a package with a dependency", function()
-         assert.is_true(run.luarocks_bool("install luasec " .. test_env.OPENSSL_DIRS))
+         local openssl_dirs = "OPENSSL_INCDIR=" .. test_env.OPENSSL_INCDIR .. " OPENSSL_LIBDIR=" .. test_env.OPENSSL_LIBDIR
+         assert.is_true(run.luarocks_bool("install luasec " .. openssl_dirs))
          assert.is_true(run.luarocks_bool("show luasocket"))
       end)
    end)
@@ -138,7 +139,8 @@ describe("luarocks install #integration", function()
 
    describe("more complex tests", function()
       it('luasec with skipping dependency checks', function()
-         assert.is_true(run.luarocks_bool("install luasec " .. test_env.OPENSSL_DIRS .. " --nodeps"))
+         local openssl_dirs = "OPENSSL_INCDIR=" .. test_env.OPENSSL_INCDIR .. " OPENSSL_LIBDIR=" .. test_env.OPENSSL_LIBDIR
+         assert.is_true(run.luarocks_bool("install luasec " .. openssl_dirs .. " --nodeps"))
          assert.is_true(run.luarocks_bool("show luasec"))
          if env_variables.TYPE_TEST_ENV == "minimal" then
             assert.is_false(run.luarocks_bool(test_env.quiet("show luasocket")))

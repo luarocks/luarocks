@@ -208,7 +208,8 @@ end
 function test_env.set_args()
    -- if at least Lua/LuaJIT version argument was found on input start to parse other arguments to env. variables
    test_env.TYPE_TEST_ENV = "minimal"
-   test_env.OPENSSL_DIRS = ""
+   test_env.OPENSSL_INCDIR = ""
+   test_env.OPENSSL_LIBDIR = ""
    test_env.RESET_ENV = true
 
    for _, argument in ipairs(arg) do
@@ -224,7 +225,6 @@ function test_env.set_args()
          test_env.TRAVIS = true
       elseif argument == "appveyor" then
          test_env.APPVEYOR = true
-         test_env.OPENSSL_DIRS = "OPENSSL_LIBDIR=C:\\OpenSSL-Win32\\lib OPENSSL_INCDIR=C:\\OpenSSL-Win32\\include"
       elseif argument:find("^os=") then
          test_env.TEST_TARGET_OS = argument:match("^os=(.*)$")
       elseif argument == "mingw" then
@@ -245,14 +245,26 @@ function test_env.set_args()
 
       if package.config:sub(1,1) == "\\" then
          test_env.TEST_TARGET_OS = "windows"
+         if test_env.APPVEYOR then
+            test_env.OPENSSL_INCDIR = "C:\\OpenSSL-Win32\\include"
+            test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-Win32\\lib"
+            if test_env.MINGW then
+               test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-Win32\\bin"
+            end
+         end
       else
          local system = execute_output("uname -s")
          if system == "Linux" then
             test_env.TEST_TARGET_OS = "linux"
+            if test_env.TRAVIS then
+               test_env.OPENSSL_INCDIR = "/usr/include"
+               test_env.OPENSSL_LIBDIR = "/usr/lib/x86_64-linux-gnu"
+            end
          elseif system == "Darwin" then
             test_env.TEST_TARGET_OS = "osx"
             if test_env.TRAVIS then
-               test_env.OPENSSL_DIRS = "OPENSSL_LIBDIR=/usr/local/opt/openssl/lib OPENSSL_INCDIR=/usr/local/opt/openssl/include"
+               test_env.OPENSSL_INCDIR = "/usr/local/opt/openssl/include"
+               test_env.OPENSSL_LIBDIR = "/usr/local/opt/openssl/lib"
             end
          end
       end
