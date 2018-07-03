@@ -250,7 +250,7 @@ function fs_lua.make_dir(directory)
          if not ok then
             return false, err
          end
-         ok, err = fs.set_permissions(path, "exec", "user")
+         ok, err = fs.set_permissions(path, "exec", "all")
          if not ok then
             return false, err
          end

@@ -109,7 +109,7 @@ function unix.wrap_script(file, dest, deps_mode, name, version, ...)
    wrapper:write("exec "..table.concat(argv, " ")..' "$@"\n')
    wrapper:close()
 
-   if fs.set_permissions(wrapname, "exec", "user") then
+   if fs.set_permissions(wrapname, "exec", "all") then
       return true
    else
       return nil, "Could not make "..wrapname.." executable."
