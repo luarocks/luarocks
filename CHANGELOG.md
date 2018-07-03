@@ -6,12 +6,12 @@
 - [New flags](#new-flags), including `--lua-dir` and `--lua-version` for using multiple Lua installs with a single LuaRocks
 - [New build system](#new-build-system)
 - [General improvements](#general-improvements), including [namespaces](https://github.com/luarocks/luarocks/wiki/Namespaces)
-- [User-visible changes](#user-visible-changes), including some *breaking changes*
+- [User-visible changes](#user-visible-changes), including some **breaking changes**
 - [Internal changes](#internal-changes)
 
 ### New rockspec format
 
-*New rockspec format:* if you add `rockspec_format = "3.0"` to your rockspec,
+**New rockspec format:** if you add `rockspec_format = "3.0"` to your rockspec,
 you can use a number of new features. Note that these rockspecs will only work
 with LuaRocks 3.0 and above, but older versions will detect that directive and
 fail gracefully, giving the user a message telling them to upgrade. Rockspecs
@@ -53,7 +53,7 @@ the rockspec:
 
 ### New commands
 
-* *New command:* `luarocks init`. This command performs the setup for using
+* **New command:** `luarocks init`. This command performs the setup for using
   LuaRocks in a "project directory":
   * it creates a `lua_modules` directory in the current directory for
     storing rocks
@@ -63,10 +63,10 @@ the rockspec:
     `.luarocks/config-5.x.lua`
   * if there are no rockspecs in the current directory, it creates one
     based on the directory name and contents.
-* *New command:* `luarocks test`. It runs a rock's test suite, as specified
+* **New command:** `luarocks test`. It runs a rock's test suite, as specified
   in the new `test` section of the rockspec file. It also does some
   autodetection, so it already works with many existing rocks as well.
-* *New command:* `luarocks which`. Given the name of an installed, it tells
+* **New command:** `luarocks which`. Given the name of an installed, it tells
   you which rock it is a part of. For example, `luarocks which lfs`
   will tell you it is a part of `luafilesystem` (and give the full
   path name to the module). In this sense, `luarocks which` is the
@@ -74,19 +74,19 @@ the rockspec:
 
 ### New flags
 
-* *New flags* `--lua-dir` and `--lua-version` which can be used with
+* **New flags** `--lua-dir` and `--lua-version` which can be used with
   all commands. This allows you to specify a Lua version and installation
   prefix at runtime, so a single LuaRocks installation can be used
   to manage packages for any Lua version. It is no longer necessary to
   install separate copies of LuaRocks to manage packages for Lua 5.x
   and 5.y.
-* *New flags* added to `luarocks show`: `--porcelain`, giving a stable
+* **New flags** added to `luarocks show`: `--porcelain`, giving a stable
   script-friendly output (named after the Git `--porcelain` flag that
   serves the same purpose) and `--rock-license`.
-* *New flag* `--temp-key` for `luarocks upload`, allowing you to easily
+* **New flag** `--temp-key` for `luarocks upload`, allowing you to easily
   upload rocks into an alternate account without disrupting the
   stored configuration of your main account.
-* *New flag* `--dev`, for enabling development-branch sub-repositories.
+* **New flag** `--dev`, for enabling development-branch sub-repositories.
   This adds support for easily requesting `dev` modules from LuaRocks.org, as in:
   `luarocks install --dev luafilesystem`. The list of URLs configured
   in `rocks_servers` is prepended with a list containing "/dev" in their paths.
@@ -98,7 +98,7 @@ the rockspec:
 
 ### New build system
 
-*New build system*: the `configure` and `Makefile` scripts were completely
+**New build system**: the `configure` and `Makefile` scripts were completely
 overhauled, making use of LuaRocks 3 features to greatly simplify them:
 
 * Much of the detection and configuration work they performed were moved
@@ -123,7 +123,7 @@ overhauled, making use of LuaRocks 3 features to greatly simplify them:
 
 ### General improvements
 
-* *New feature:* [namespaces](https://github.com/luarocks/luarocks/wiki/Namespaces):
+* **New feature:** [namespaces](https://github.com/luarocks/luarocks/wiki/Namespaces):
   you can use `luarocks install user/package` to install a package from a
   specific user of the repository.
 * Improved defaults for finding external libraries on Linux and Windows.
@@ -142,12 +142,12 @@ overhauled, making use of LuaRocks 3 features to greatly simplify them:
 
 ### User-visible changes
 
-* *Breaking change:* The support for deprecated unversioned paths
+* **Breaking change:** The support for deprecated unversioned paths
   (e.g. `/usr/local/lib/luarocks/rocks/` and `/etc/luarocks/config.lua`)
   was removed, LuaRocks will now only create and use paths versioned
   to the specific Lua version in use
   (e.g. `/usr/local/lib/luarocks/rocks-5.3/` and `/etc/luarocks/config-5.3.lua`).
-* *Breaking changes:* `luarocks path` now exports versioned variables
+* **Breaking changes:** `luarocks path` now exports versioned variables
   `LUA_PATH_5_x` and `LUA_CPATH_5_x` instead of `LUA_PATH` and `LUA_CPATH`
   when those are in use in your system.
 * Package paths are sanitized to only reference the current Lua version.
