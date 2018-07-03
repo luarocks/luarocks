@@ -17,10 +17,8 @@ local extra_rocks = {
    "/lpeg-1.0.0-1.rockspec",
    "/lpeg-1.0.0-1.src.rock",
    "/lpty-1.0.1-1.src.rock",
-   "/luadoc-3.0.1-1.src.rock",
    "/luafilesystem-1.6.3-1.src.rock",
    "/lualogging-1.3.0-1.src.rock",
-   "/luarepl-0.4-1.src.rock",
    "/luasec-0.6-1.rockspec",
    "/luasocket-3.0rc1-2.src.rock",
    "/luasocket-3.0rc1-2.rockspec",
@@ -130,10 +128,6 @@ describe("LuaRocks build tests #integration", function()
    end)
 
    describe("LuaRocks build - basic builds", function()
-      it("LuaRocks build luadoc", function()
-         assert.is_true(run.luarocks_bool("build luadoc"))
-      end)
-      
       it("LuaRocks build luacov diff version", function()
          assert.is_true(run.luarocks_bool("build luacov 0.11.0-1"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luacov/0.11.0-1/luacov-0.11.0-1.rockspec"))
@@ -142,11 +136,6 @@ describe("LuaRocks build tests #integration", function()
       it("LuaRocks build command stdlib", function()
          assert.is_true(run.luarocks_bool("build stdlib"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/stdlib/41.0.0-1/stdlib-41.0.0-1.rockspec"))
-      end)
-      
-      it("LuaRocks build install bin luarepl", function()
-         assert.is_true(run.luarocks_bool("build luarepl"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luarepl/0.4-1/luarepl-0.4-1.rockspec"))
       end)
       
       it("LuaRocks build supported platforms lpty", function()
@@ -244,16 +233,6 @@ describe("LuaRocks build tests #integration", function()
          assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
       end)
 
-      it("LuaRocks build no https", function()
-         assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
-         assert.is_true(run.luarocks_bool("build validate-args-1.5.4-1.rockspec"))
-
-         assert.is.truthy(run.luarocks("show validate-args"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/validate-args/1.5.4-1/validate-args-1.5.4-1.rockspec"))
-
-         assert.is_true(os.remove("validate-args-1.5.4-1.rockspec"))
-      end)
-      
       it("LuaRocks build with https", function()
          local openssl_dirs = "OPENSSL_INCDIR=" .. test_env.OPENSSL_INCDIR .. " OPENSSL_LIBDIR=" .. test_env.OPENSSL_LIBDIR
          assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
@@ -318,28 +297,6 @@ describe("LuaRocks build tests #integration", function()
          ]], finally)
          assert.truthy(run.luarocks_bool("build " .. rockspec))
          assert.is.truthy(run.luarocks("show a_rock"))
-      end)
-
-      it("'builtin' detects lua files if modules are not given", function()
-         local rockspec = "autodetect-1.0-1.rockspec"
-         test_env.write_file(rockspec, [[
-            rockspec_format = "3.0"
-            package = "autodetect"
-            version = "1.0-1"
-            source = {
-               url = "file://autodetect/bla.lua"
-            }
-            description = {
-               summary = "An example rockspec",
-            }
-            dependencies = {
-               "lua >= 5.1"
-            }
-            build = {
-            }
-         ]], finally)
-         assert.truthy(run.luarocks_bool("build " .. rockspec))
-         assert.match("bla.lua", run.luarocks("show autodetect"))
       end)
 
       it("'builtin' detects lua files if build is not given", function()
