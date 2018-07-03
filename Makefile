@@ -20,7 +20,7 @@ config-$(LUA_VERSION).lua.in: config.unix
 	rm -f src/luarocks/core/hardcoded.lua
 	echo "#!/bin/sh" > luarocks
 	echo "unset LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4" >> luarocks
-	echo 'LUAROCKS_SYSCONFDIR="$(SYSCONFDIR)" LUA_PATH="$(PWD)/src/?.lua;;" exec "$(LUA_BINDIR)/$(LUA_INTERPRETER)" "src/bin/luarocks" --project-tree="$(PWD)/lua_modules" "$$@"' >> luarocks
+	echo 'LUAROCKS_SYSCONFDIR="$(SYSCONFDIR)" LUA_PATH="$(PWD)/src/?.lua;;" exec "$(LUA_BINDIR)/$(LUA_INTERPRETER)" "$(PWD)/src/bin/luarocks" --project-tree="$(PWD)/lua_modules" "$$@"' >> luarocks
 	chmod +rx ./luarocks
 	./luarocks init
 	cp config-$(LUA_VERSION).lua.in .luarocks/config-$(LUA_VERSION).lua
@@ -29,7 +29,7 @@ luarocks-admin: config.unix
 	rm -f src/luarocks/core/hardcoded.lua
 	echo "#!/bin/sh" > luarocks-admin
 	echo "unset LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4" >> luarocks-admin
-	echo 'LUAROCKS_SYSCONFDIR="$(SYSCONFDIR)" LUA_PATH="$(PWD)/src/?.lua;;" exec "$(LUA_BINDIR)/$(LUA_INTERPRETER)" "src/bin/luarocks-admin" --project-tree="$(PWD)/lua_modules" "$$@"' >> luarocks-admin
+	echo 'LUAROCKS_SYSCONFDIR="$(SYSCONFDIR)" LUA_PATH="$(PWD)/src/?.lua;;" exec "$(LUA_BINDIR)/$(LUA_INTERPRETER)" "$(PWD)/src/bin/luarocks-admin" --project-tree="$(PWD)/lua_modules" "$$@"' >> luarocks-admin
 	chmod +rx ./luarocks-admin
 
 # ----------------------------------------
