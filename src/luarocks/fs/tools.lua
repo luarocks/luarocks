@@ -20,8 +20,8 @@ do
       },
       md5checker = {
          { var = "MD5SUM", name = "md5sum" },
-         { var = "OPENSSL", name = "openssl", cmdarg = "md5" },
-         { var = "MD5", name = "md5", checkarg = "-v" },
+         { var = "OPENSSL", name = "openssl", cmdarg = "md5", checkarg = "version" },
+         { var = "MD5", name = "md5", checkarg = "-shello" },
       },
    }
 
