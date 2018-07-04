@@ -657,9 +657,10 @@ function cfg.init(lua_data, project_dir, warning)
    cfg.lua_version = lua_data.lua_version or cfg.lua_version
    cfg.luajit_version = lua_data.luajit_version or cfg.luajit_version
    cfg.lua_interpreter = lua_data.lua_interpreter or cfg.lua_interpreter
-   cfg.variables.LUA_BINDIR = lua_data.lua_bindir or cfg.variables.LUA_BINDIR
-   cfg.variables.LUA_INCDIR = lua_data.lua_incdir or cfg.variables.LUA_INCDIR
-   cfg.variables.LUA_LIBDIR = lua_data.lua_libdir or cfg.variables.LUA_LIBDIR
+   cfg.variables.LUA_BINDIR = lua_data.lua_bindir or cfg.variables.LUA_BINDIR or lua_bindir
+   cfg.variables.LUA_INCDIR = lua_data.lua_incdir or cfg.variables.LUA_INCDIR or lua_incdir
+   cfg.variables.LUA_LIBDIR = lua_data.lua_libdir or cfg.variables.LUA_LIBDIR or lua_libdir
+   cfg.variables.LUA_DIR = lua_data.lua_dir or cfg.variables.LUA_DIR or lua_dir
 
    -- Build a default list of rocks trees if not given
    if not next(cfg.rocks_trees) then

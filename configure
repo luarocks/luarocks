@@ -485,10 +485,12 @@ EOF
    echo '   { name = "system", root = "'"$ROCKS_TREE"'" },'
    echo '}'
    if [ -n "$LUA_INTERPRETER" ]; then echo 'lua_interpreter = "'"$LUA_INTERPRETER"'"' ; fi
-   if [ -n "$LUA_DIR" ]; then echo 'variables.LUA_DIR = "'"$LUA_DIR"'"' ; fi
-   if [ -n "$LUA_INCDIR" ]; then echo 'variables.LUA_INCDIR = "'"$LUA_INCDIR"'"' ; fi
-   if [ -n "$LUA_BINDIR" ]; then echo 'variables.LUA_BINDIR = "'"$LUA_BINDIR"'"' ; fi
-   if [ -n "$LUA_LIBDIR" ]; then echo 'variables.LUA_LIBDIR = "'"$LUA_LIBDIR"'"' ; fi
+   echo 'variables = {'
+   if [ -n "$LUA_DIR" ]; then echo '   LUA_DIR = "'"$LUA_DIR"'",' ; fi
+   if [ -n "$LUA_INCDIR" ]; then echo '   LUA_INCDIR = "'"$LUA_INCDIR"'",' ; fi
+   if [ -n "$LUA_BINDIR" ]; then echo '   LUA_BINDIR = "'"$LUA_BINDIR"'",' ; fi
+   if [ -n "$LUA_LIBDIR" ]; then echo '   LUA_LIBDIR = "'"$LUA_LIBDIR"'",' ; fi
+   echo '}'
 } > "config-$LUA_VERSION.lua.in"
 
 echo
