@@ -87,14 +87,14 @@ mkdir "release-windows"
 mv "$out" "release-windows/$out-win32"
 
 cd "release-unix/$out"
-rm -rf makedist install.bat win32 .travis.yml .gitignore appveyor* .appveyor
+rm -rf makedist smoke_test.sh install.bat win32 .travis.yml .gitignore appveyor* .appveyor
 cd ..
 tar czvpf ../"$out.tar.gz" "$out"
 cd ..
 rm -rf "release-unix"
 
 cd "release-windows/$out-win32"
-rm -rf makedist Makefile configure .travis.yml .gitignore test appveyor* .appveyor
+rm -rf makedist smoke_test.sh Makefile configure .travis.yml .gitignore test appveyor* .appveyor
 cd ..
 zip -r ../"$out-win32.zip" "$out-win32"
 cd ..
