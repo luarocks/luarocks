@@ -6,6 +6,8 @@ local testing_paths = test_env.testing_paths
 local write_file = test_env.write_file
 
 test_env.unload_luarocks()
+local cfg = require("luarocks.core.cfg")
+local fs = require("luarocks.fs")
 
 local extra_rocks = {
    "/lmathx-20120430.51-1.src.rock",
@@ -16,7 +18,6 @@ local extra_rocks = {
    "/lmathx-20150505-1.rockspec",
    "/lpeg-1.0.0-1.rockspec",
    "/lpeg-1.0.0-1.src.rock",
-   "/lpty-1.0.1-1.src.rock",
    "/luafilesystem-1.6.3-1.src.rock",
    "/lualogging-1.3.0-1.src.rock",
    "/luasec-0.6-1.rockspec",
@@ -41,6 +42,10 @@ local c_module_source = [[
 ]]
 
 describe("LuaRocks build tests #integration", function()
+   setup(function()
+      cfg.init()
+      fs.init()
+   end)
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
@@ -80,21 +85,43 @@ describe("LuaRocks build tests #integration", function()
       end)
    end)
 
-   describe("LuaRocks build - building lpeg with flags", function()
-      it("LuaRocks build fail build permissions", function()
-         if test_env.TEST_TARGET_OS == "osx" or test_env.TEST_TARGET_OS == "linux" then
-            assert.is_false(run.luarocks_bool("build --tree=/usr lpeg"))
-         end
+   describe("LuaRocks build - building with flags", function()
+      it("LuaRocks build fails if it doesn't have the permissions to access the specified tree #unix", function()
+         assert.is_false(run.luarocks_bool("build --tree=/usr " .. testing_paths.fixtures_dir .. "/a_rock-1.0.1-rockspec"))
+         assert.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
       end)
       
-      it("LuaRocks build fail build permissions parent", function()
-         if test_env.TEST_TARGET_OS == "osx" or test_env.TEST_TARGET_OS == "linux" then
-            assert.is_false(run.luarocks_bool("build --tree=/usr/invalid lpeg"))
-         end
+      it("LuaRocks build fails if it doesn't have the permissions to access the specified tree's parent #unix", function()
+         assert.is_false(run.luarocks_bool("build --tree=/usr/invalid " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec"))
+         assert.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
       end)
       
-      it("LuaRocks build lpeg verbose", function()
-         assert.is_true(run.luarocks_bool("build --verbose lpeg"))
+      it("LuaRocks build verbose", function() 
+         local olddir = lfs.currentdir()
+         local tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+
+         write_file("test-1.0-1.rockspec", [[
+            package = "test"
+            version = "1.0-1"
+            source = {
+               url = "file://]] .. tmpdir:gsub("\\", "/") .. [[/test.lua"
+            }
+            build = {
+               type = "builtin", 
+               modules = {
+                  test = "test.lua"
+               }
+            }
+         ]], finally)
+         write_file("test.lua", "return {}", finally)
+
+         assert.is_true(run.luarocks_bool("build --verbose test-1.0-1.rockspec"))
+         assert.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/test/1.0-1/test-1.0-1.rockspec"))
+
+         lfs.chdir(olddir)
+         lfs.rmdir(tmpdir)
       end)
       
       it("LuaRocks build lpeg branch=master", function()
@@ -103,9 +130,9 @@ describe("LuaRocks build tests #integration", function()
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
       end)
       
-      it("LuaRocks build lpeg deps-mode=123", function()
-         assert.is_false(run.luarocks_bool("build --deps-mode=123 lpeg --verbose"))
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      it("LuaRocks build fails if the deps-mode argument is invalid", function()
+         assert.is_false(run.luarocks_bool("build --deps-mode=123 " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec"))
+         assert.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
       end)
       
       it("LuaRocks build lpeg only-sources example", function()
@@ -121,9 +148,9 @@ describe("LuaRocks build tests #integration", function()
          assert.is_true(os.remove("lpeg-1.0.0-1.src.rock"))
       end)
       
-      it("LuaRocks build lpeg with empty tree", function()
-         assert.is_false(run.luarocks_bool("build --tree=\"\" lpeg"))
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      it("LuaRocks build fails if an empty tree is given", function()
+         assert.is_false(run.luarocks_bool("build --tree=\"\" " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec"))
+         assert.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
       end)
    end)
 
@@ -138,13 +165,40 @@ describe("LuaRocks build tests #integration", function()
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/stdlib/41.0.0-1/stdlib-41.0.0-1.rockspec"))
       end)
       
-      it("LuaRocks build supported platforms lpty", function()
+      it("LuaRocks build fails if the current platform is not supported", function()
+         local olddir = lfs.currentdir()
+         local tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+
+         write_file("test-1.0-1.rockspec", [[
+            package = "test"
+            version = "1.0-1"
+            source = {
+               url = "file://]] .. tmpdir:gsub("\\", "/") .. [[/test.lua"
+            }
+            supported_platforms = {
+               "unix", "macosx"
+            }
+            build = {
+               type = "builtin", 
+               modules = {
+                  test = "test.lua"
+               }
+            }
+         ]], finally)
+         write_file("test.lua", "return {}", finally)
+
          if test_env.TEST_TARGET_OS == "windows" then
-            assert.is_false(run.luarocks_bool("build lpty")) --Error: This rockspec for lpty does not support win32, windows platforms
+            assert.is_false(run.luarocks_bool("build test-1.0-1.rockspec")) -- Error: This rockspec does not support windows platforms
+            assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/test/1.0-1/test-1.0-1.rockspec"))
          else
-            assert.is_true(run.luarocks_bool("build lpty"))
-            assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lpty/1.0.1-1/lpty-1.0.1-1.rockspec"))
+            assert.is_true(run.luarocks_bool("build test-1.0-1.rockspec"))
+            assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/test/1.0-1/test-1.0-1.rockspec"))
          end
+
+         lfs.chdir(olddir)
+         lfs.rmdir(tmpdir)
       end)
       
       it("LuaRocks build luasec with skipping dependency checks", function()
@@ -244,7 +298,7 @@ describe("LuaRocks build tests #integration", function()
          assert.is_true(os.remove("validate-args-1.5.4-1.rockspec"))
       end)
 
-      it("LuaRocks build invalid patch", function()
+      it("LuaRocks build fails if given an argument with an invalid patch", function()
          assert.is_false(run.luarocks_bool("build " .. testing_paths.fixtures_dir .. "/invalid_patch-0.1-1.rockspec"))
       end)
    end)
@@ -351,7 +405,7 @@ describe("LuaRocks build tests #integration", function()
       setup(function()
          test_env.mock_server_init()
       end)
-      
+
       teardown(function()
          test_env.mock_server_done()
       end)
@@ -566,6 +620,7 @@ describe("LuaRocks build tests #unit", function()
          after_each(function()
             if olddir then
                lfs.chdir(olddir)
+               fs.change_dir(olddir)
                if tmpdir then
                   lfs.rmdir(tmpdir)
                end
@@ -678,6 +733,7 @@ describe("LuaRocks build tests #unit", function()
          after_each(function()
             if olddir then
                lfs.chdir(olddir)
+               fs.change_dir(olddir)
                if tmpdir then
                   lfs.rmdir(tmpdir)
                end
