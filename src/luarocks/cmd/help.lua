@@ -83,6 +83,9 @@ function help.command(description, commands, command)
       end
       print_section("CONFIGURATION")
       util.printout("\tLua version: " .. cfg.lua_version)
+      if cfg.luajit_version then
+         util.printout("\tLuaJIT version: " .. cfg.luajit_version)
+      end
       util.printout()
       util.printout("\tConfiguration files:")
       util.printout("\t\tSystem  : ".. dir.normalize(conf.system.file) .. " (" .. get_status(conf.system.ok) ..")")
