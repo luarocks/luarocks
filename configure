@@ -114,30 +114,34 @@ Where to install files provided by rocks:
 Where is your Lua interpreter:
 ------------------------------
 
---lua-version=VERSION)          Use specific Lua version: 5.1, 5.2, 5.3, or 5.4
+--lua-version=VERSION          Use specific Lua version: 5.1, 5.2, 5.3, or 5.4
                                - Default is auto-detected.
---with-lua=LUA_DIR)             Use Lua from given directory.
+--with-lua=LUA_DIR             Use Lua from given directory.
                                - Default is auto-detected from your \$PATH
                                  (or the parent directory of LUA_BINDIR
                                  if --with-lua-bin is used).
---with-lua-bin=LUA_BINDIR)      You can also specify Lua's bin dir.
+--with-lua-bin=LUA_BINDIR      You can also specify Lua's bin dir.
                                - Default is the directory of the
                                  auto-detected Lua interpreter,
                                  (or LUA_DIR/bin if --with-lua is used)
---with-lua-include=LUA_INCDIR)  Lua's includes dir.
+--with-lua-include=LUA_INCDIR  Lua's includes dir.
                                - Default is LUA_DIR/include
---with-lua-lib=LUA_LIBDIR)      Lua's libraries dir.
+--with-lua-lib=LUA_LIBDIR      Lua's libraries dir.
                                - Default is LUA_DIR/lib
 
 For specialized uses of LuaRocks:
 ---------------------------------
 
---force-config)                 Force using a single config location.
+--force-config                 Force using a single config location.
                                Do not honor the \$LUAROCKS_CONFIG_5_x
                                or \$LUAROCKS_CONFIG environment
                                variable or the user's local config.
                                Useful to avoid conflicts when LuaRocks
                                is embedded within an application.
+--disable-incdir-check         If you do not wish to use "luarocks build",
+                               (e.g. when only deploying binary packages)
+                               you do not need lua.h installed. This flag
+                               skips the check for lua.h in "configure".
 
 EOF
 }
@@ -273,17 +277,22 @@ do
       [ -n "$value" ] || die "Missing value in flag $key."
       LUA_INCDIR="$(canonicalpath "$value")"
       [ -d "$LUA_INCDIR" ] || die "Bad value for --with-lua-include: $LUA_INCDIR is not a valid directory."
+      LUA_INCDIR_SET=yes
       ;;
    --with-lua-lib)
       [ -n "$value" ] || die "Missing value in flag $key."
       LUA_LIBDIR="$(canonicalpath "$value")"
       [ -d "$LUA_LIBDIR" ] || die "Bad value for --with-lua-lib: $LUA_LIBDIR is not a valid directory."
+      LUA_LIBDIR_SET=yes
       ;;
 
    # For specialized uses of LuaRocks:
    # ---------------------------------
    --force-config)
       FORCE_CONFIG=yes
+      ;;
+   --disable-incdir-check)
+      DISABLE_INCDIR_CHECK=yes
       ;;
 
    # Old options that no longer apply
@@ -389,16 +398,65 @@ then
    fi
 fi
 
+# ----------------------------------------
+# Additional checks
+# ----------------------------------------
+
+check_incdir() {
+   if [ "$LUA_INCDIR_SET" = "yes" ]
+   then
+      incdir="$LUA_INCDIR"
+   else
+      incdir="$LUA_DIR/include"
+   fi
+
+   tried=""
+   # Verification of the Lua include path happens at LuaRocks runtime,
+   # but we also perform it here just so that the user gets an early failure
+   # if they try to install LuaRocks with the Lua interpreter package
+   # but not the "development files" that many Linux distros ship separately.
+   for lua_h in \
+      "$incdir/lua/$LUA_VERSION/lua.h" \
+      "$incdir/lua$LUA_VERSION/lua.h" \
+      "$incdir/lua.h" \
+      "$incdir/lua$LUA_VERSION/lua.h" \
+      $("$LUA_BINDIR/$LUA_INTERPRETER" -e 'print(jit and [['"$incdir"'/luajit-]]..jit.version:match("(%d+%.%d+)")..[[/lua.h]] or "")')
+   do
+      [ -f "$lua_h" ] && return
+      tried="$tried $lua_h"
+   done
+
+   echo "$(RED "lua.h not found") (tried$tried)"
+   echo
+   echo "If the development files for Lua (headers and libraries)"
+   echo "are installed in your system, you may need to use the"
+   echo "$(BOLD --with-lua) or $(BOLD --with-include) flags to specify their location."
+   echo
+   echo "If those files are not yet installed, you need to install"
+   echo "them using the appropriate method for your operating system."
+   echo
+   die "Run $(BOLD ./configure --help) for details on flags."
+}
+
+if [ "$DISABLE_INCDIR_CHECK" != "yes" ]
+then
+   check_incdir
+   echo "lua.h found: $(GREEN "$lua_h")"
+fi
+
 unzip_found=$(find_program "unzip")
 if [ -n "$unzip_found" ]
 then
    echo "unzip found in PATH: $(GREEN "$unzip_found")"
 else
    RED "Could not find 'unzip'."
+   echo
    die "Make sure it is installed and available in your PATH."
 fi
 
+# ----------------------------------------
 # Write config
+# ----------------------------------------
 
 make clean > /dev/null 2> /dev/null
 
@@ -441,6 +499,9 @@ echo "LuaRocks will be installed at......: $(GREEN "$PREFIX")"
 echo "LuaRocks will install rocks at.....: $(GREEN "$ROCKS_TREE")"
 echo "LuaRocks configuration directory...: $(GREEN "$SYSCONFDIR")"
 echo "Using Lua from.....................: $(GREEN "$LUA_DIR")"
+if [ "$LUA_BINDIR_SET" = "yes" ]; then echo "Lua bin directory..................: $(GREEN "$LUA_BINDIR")" ; fi
+if [ "$LUA_INCDIR_SET" = "yes" ]; then echo "Lua include directory..............: $(GREEN "$LUA_INCDIR")" ; fi
+if [ "$LUA_LIBDIR_SET" = "yes" ]; then echo "Lua lib directory..................: $(GREEN "$LUA_LIBDIR")" ; fi
 echo
 echo "* Type $(BOLD make build) and $(BOLD make install):"
 echo "  to install to $PREFIX as usual."
