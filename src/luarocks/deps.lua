@@ -499,8 +499,10 @@ local function find_lua_incdir(prefix, luaver, luajitver)
 end
 
 function deps.check_lua(vars)
+   local incdir_found = true
    if (not vars.LUA_INCDIR) and vars.LUA_DIR then
       vars.LUA_INCDIR = find_lua_incdir(vars.LUA_DIR, cfg.lua_version, cfg.luajit_version)
+      incdir_found = (vars.LUA_INCDIR ~= nil)
    end
    local shortv = cfg.lua_version:gsub("%.", "")
    local libnames = {
@@ -519,6 +521,9 @@ function deps.check_lua(vars)
          vars.LUALIB = vars.LUA_LIBDIR_FILE
          return true
       end
+   end
+   if not incdir_found then
+      return nil, "Failed finding Lua header files. You may need to install them or configure LUA_INCDIR.", "dependency"
    end
    return nil, "Failed finding Lua library. You may need to configure LUA_LIBDIR.", "dependency"
 end
