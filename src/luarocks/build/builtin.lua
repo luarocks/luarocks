@@ -79,7 +79,7 @@ do
       local copy_directories
 
       local prefix = ""
-      for _, parent in ipairs({"src", "lua"}) do
+      for _, parent in ipairs({"src", "lua", "lib"}) do
          if fs.is_dir(parent) then
             fs.change_dir(parent)
             prefix = parent.."/"
