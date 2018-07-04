@@ -3,7 +3,6 @@
 STATIC_GCC_AR=${STATIC_GCC_AR:-ar}
 STATIC_GCC_RANLIB=${STATIC_GCC_RANLIB:-ranlib}
 STATIC_GCC_CC=${STATIC_GCC_CC:-gcc}
-STATIC_GCC_LIBDIR=${STATIC_GCC_LIBDIR:-/usr/lib}
 
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 
@@ -18,7 +17,7 @@ allargs=()
 sources=()
 objects=()
 etc=()
-libdirs=("$STATIC_GCC_LIBDIR")
+libdirs=($("$STATIC_GCC_CC" -print-search-dirs | grep libraries | cut -d= -f2 | tr ':' '\n'))
 incdirs=()
 
 linking=0

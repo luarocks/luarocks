@@ -14,7 +14,6 @@ windows-binary: windows-deps/lib/liblua.a windows-deps/lib/libssl.a windows-deps
 	STATIC_GCC_AR=$(MINGW_PREFIX)-ar \
 	STATIC_GCC_RANLIB=$(MINGW_PREFIX)-ranlib \
 	STATIC_GCC_CC=$(MINGW_PREFIX)-gcc \
-	STATIC_GCC_LIBDIR=$(MINGW_SYSROOT)/lib \
 	LUAROCKS_CROSS_COMPILING=1 \
 	make binary LUA_DIR=$(PWD)/windows-deps BINARY_CC=$(MINGW_PREFIX)-gcc BINARY_NM=$(MINGW_PREFIX)-nm BINARY_PLATFORM=windows BINARY_TARGET=build-windows-binary BINARY_SYSROOT=$(MINGW_SYSROOT)
 
@@ -37,6 +36,7 @@ build-windows-deps/openssl-$(OPENSSL_VERSION): build-windows-deps/openssl-$(OPEN
 	cd build-windows-deps && tar zxvpf openssl-$(OPENSSL_VERSION).tar.gz
 windows-deps/lib/libssl.a: build-windows-deps/openssl-$(OPENSSL_VERSION)
 	cd build-windows-deps/openssl-$(OPENSSL_VERSION) && ./Configure --prefix=$(PWD)/windows-deps --cross-compile-prefix=$(MINGW_PREFIX)- $(OPENSSL_PLATFORM)
+	cd build-windows-deps/openssl-$(OPENSSL_VERSION) && make
 	cd build-windows-deps/openssl-$(OPENSSL_VERSION) && make install_sw
 
 build-windows-deps/zlib-$(ZLIB_VERSION).tar.gz:
