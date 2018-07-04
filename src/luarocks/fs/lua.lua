@@ -166,6 +166,52 @@ function fs_lua.dir(at)
    return coroutine.wrap(function() fs.dir_iterator(at) end)
 end
 
+--- List the Lua modules at a specific require path.
+-- eg. `modules("luarocks.cmd")` would return a list of all LuaRocks command
+-- modules, in the current Lua path.
+function fs_lua.modules(at)
+   at = at or ""
+   if #at > 0 then
+      -- turn require path into file path
+      at = at:gsub("%.", package.config:sub(1,1)) .. package.config:sub(1,1)
+   end
+
+   local path = package.path:sub(-1, -1) == ";" and package.path or package.path .. ";"
+   local paths = {}
+   for location in path:gmatch("(.-);") do
+      if location:lower() == "?.lua" then
+         location = "./?.lua"
+      end
+      local _, q_count = location:gsub("%?", "") -- only use the ones with a single '?'
+      if location:match("%?%.[lL][uU][aA]$") and q_count == 1 then  -- only use when ending with "?.lua"
+         location = location:gsub("%?%.[lL][uU][aA]$", at)
+         table.insert(paths, location)
+      end
+   end
+
+   if #paths == 0 then
+      return {}
+   end
+
+   local modules = {}
+   local is_duplicate = {}
+   for _, path in ipairs(paths) do
+      local files = fs.list_dir(path)
+      for _, filename in ipairs(files or {}) do
+         if filename:match("%.[lL][uU][aA]$") then
+           filename = filename:sub(1,-5) -- drop the extension
+           if not is_duplicate[filename] then
+              is_duplicate[filename] = true
+              table.insert(modules, filename)
+           end
+         end
+      end
+   end
+
+   return modules
+end
+
+
 ---------------------------------------------------------------------
 -- LuaFileSystem functions
 ---------------------------------------------------------------------
