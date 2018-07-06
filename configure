@@ -128,6 +128,8 @@ Where is your Lua interpreter:
                                - Default is LUA_DIR/include
 --with-lua-lib=LUA_LIBDIR      Lua's libraries dir.
                                - Default is LUA_DIR/lib
+--with-lua-interpreter=NAME    Lua interpreter name
+                               - Default is to auto-detected
 
 For specialized uses of LuaRocks:
 ---------------------------------
@@ -167,7 +169,7 @@ detect_lua_version() {
 }
 
 search_interpreter() {
-   suffix="$1"
+   name="$1"
    lua_at=""
    if [ "$LUA_BINDIR_SET" = "yes" ]
    then
@@ -175,18 +177,18 @@ search_interpreter() {
    elif [ "$LUA_DIR_SET" = "yes" ]
    then
       LUA_BINDIR="$LUA_DIR/bin"
-      if [ -f "$LUA_BINDIR/lua$suffix" ]
+      if [ -f "$LUA_BINDIR/$name" ]
       then
          lua_at="$LUA_BINDIR"
       fi
    else
-      lua_at=$(find_program "lua$suffix")
+      lua_at=$(find_program "$name")
    fi
-   if [ -n "$lua_at" ] && [ -x "$lua_at/lua$suffix" ]
+   if [ -n "$lua_at" ] && [ -x "$lua_at/$name" ]
    then
-      if detect_lua_version "$lua_at/lua$suffix"
+      if detect_lua_version "$lua_at/$name"
       then
-         echo "Lua interpreter found: $(GREEN "$lua_at/lua$suffix")"
+         echo "Lua interpreter found: $(GREEN "$lua_at/$name")"
          if [ "$LUA_BINDIR_SET" != "yes" ]
          then
             LUA_BINDIR="$lua_at"
@@ -195,7 +197,7 @@ search_interpreter() {
          then
             LUA_DIR=$(dirname "$lua_at")
          fi
-         LUA_INTERPRETER="lua$suffix"
+         LUA_INTERPRETER="$name"
          return 0
       fi
    fi
@@ -285,6 +287,11 @@ do
       [ -d "$LUA_LIBDIR" ] || die "Bad value for --with-lua-lib: $LUA_LIBDIR is not a valid directory."
       LUA_LIBDIR_SET=yes
       ;;
+   --with-lua-interpreter)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      LUA_INTERPRETER="$value"
+      LUA_INTERPRETER_SET=yes
+      ;;
 
    # For specialized uses of LuaRocks:
    # ---------------------------------
@@ -343,25 +350,30 @@ lua_interp_found=no
 
 case "$LUA_VERSION" in
 5.1)
-   suffixes="5.1 51 -5.1 -51 jit"
+   names="lua5.1 lua51 lua-5.1 lua-51 luajit lua"
    ;;
 5.2)
-   suffixes="5.2 52 -5.2 -52"
+   names="lua5.2 lua52 lua-5.2 lua-52 lua"
    ;;
 5.3)
-   suffixes="5.3 53 -5.3 -53"
+   names="lua5.3 lua53 lua-5.3 lua-53 lua"
    ;;
 5.4)
-   suffixes="5.4 54 -5.4 -54"
+   names="lua5.4 lua54 lua-5.4 lua-54 lua"
    ;;
 *)
-   suffixes="5.4 54 -5.4 -54 5.3 53 -5.3 -53 5.2 52 -5.2 -52 5.1 51 -5.1 -51 jit"
+   names="lua5.4 lua54 lua-5.4 lua-54 lua5.3 lua53 lua-5.3 lua-53 lua5.2 lua52 lua-5.2 lua-52 lua5.1 lua51 lua-5.1 lua-51 luajit lua"
    ;;
 esac
 
-for suffix in $suffixes ""
+if [ "$LUA_INTERPRETER_SET" = "yes" ]
+then
+   names="$LUA_INTERPRETER"
+fi
+
+for name in $names
 do
-   search_interpreter "$suffix" && {
+   search_interpreter "$name" && {
       lua_interp_found=yes
       break
    }
