@@ -13,10 +13,15 @@ local vars = setmetatable({}, { __index = function(_,k) return cfg.variables[k] 
 --- Adds prefix to command to make it run from a directory.
 -- @param directory string: Path to a directory.
 -- @param cmd string: A command-line string.
+-- @param exit_on_error bool: Exits immediately if entering the directory failed.
 -- @return string: The command-line with prefix.
-function tools.command_at(directory, cmd)
+function tools.command_at(directory, cmd, exit_on_error)
    local drive = directory:match("^([A-Za-z]:)")
-   cmd = "cd " .. fs.Q(directory) .. " & " .. cmd
+   local op = " & "
+   if exit_on_error then
+      op = " && "
+   end
+   local cmd = "cd " .. fs.Q(directory) .. op .. cmd
    if drive then
       cmd = drive .. " & " .. cmd
    end
@@ -113,7 +118,7 @@ function tools.find(at)
       return {}
    end
    local result = {}
-   local pipe = io.popen(fs.command_at(at, fs.quiet_stderr(fs.Q(vars.FIND))))
+   local pipe = io.popen(fs.command_at(at, fs.quiet_stderr(fs.Q(vars.FIND)), true))
    for file in pipe:lines() do
       -- Windows find is a bit different
       local first_two = file:sub(1,2)

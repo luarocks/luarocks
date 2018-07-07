@@ -7,9 +7,9 @@ test_env.unload_luarocks()
 
 local extra_rocks = {
    "/abelhas-1.1-1.rockspec",
-   "/lualogging-1.3.0-1.src.rock",
-   "/luasocket-3.0rc1-2.src.rock",
-   "/luasocket-3.0rc1-2.rockspec"
+   "/copas-2.0.1-1.src.rock",
+   "/coxpcall-1.16.0-1.src.rock",
+   "/coxpcall-1.16.0-1.rockspec"
 }
 
 describe("LuaRocks remove tests #integration", function()
@@ -52,38 +52,38 @@ describe("LuaRocks remove tests #integration", function()
 
    describe("LuaRocks remove more complex tests", function()
       before_each(function()
-         assert.is.truthy(test_env.need_rock("luasocket"))
+         assert.is.truthy(test_env.need_rock("coxpcall"))
       end)
 
       it("LuaRocks remove fail, break dependencies", function()
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket"))
-         assert.is_true(run.luarocks_bool("build lualogging"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/coxpcall"))
+         assert.is_true(run.luarocks_bool("build copas"))
 
-         assert.is_false(run.luarocks_bool("remove luasocket"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket"))
+         assert.is_false(run.luarocks_bool("remove coxpcall"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/coxpcall"))
       end)
       
       it("LuaRocks remove force", function()
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket"))
-         assert.is_true(run.luarocks_bool("build lualogging"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/coxpcall"))
+         assert.is_true(run.luarocks_bool("build copas"))
 
-         local output = run.luarocks("remove --force luasocket")
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket"))
+         local output = run.luarocks("remove --force coxpcall")
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/coxpcall"))
          assert.is.truthy(output:find("Checking stability of dependencies"))
       end)
       
       it("LuaRocks remove force fast", function()
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket"))
-         assert.is_true(run.luarocks_bool("build lualogging"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/coxpcall"))
+         assert.is_true(run.luarocks_bool("build copas"))
 
-         local output = run.luarocks("remove --force-fast luasocket")
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket"))
+         local output = run.luarocks("remove --force-fast coxpcall")
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/coxpcall"))
          assert.is.falsy(output:find("Checking stability of dependencies"))
       end)
    end)
 
    it("#admin remove #ssh", function()
-      assert.is_true(run.luarocks_admin_bool("--server=testing remove luasocket-3.0rc1-2.src.rock"))
+      assert.is_true(run.luarocks_admin_bool("--server=testing remove coxpcall-1.16.0-1.src.rock"))
    end)
    
    it("#admin remove missing", function()

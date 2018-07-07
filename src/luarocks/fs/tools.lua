@@ -82,7 +82,12 @@ end
 -- Allows leaving a directory (e.g. for deleting it) in
 -- a crossplatform way.
 function tools.change_dir_to_root()
+   local curr_dir = fs.current_dir()
+   if not curr_dir or not fs.is_dir(curr_dir) then
+      return false
+   end
    table.insert(dir_stack, "/")
+   return true
 end
 
 --- Change working directory to the previous in the directory stack.
@@ -113,7 +118,7 @@ end
 -- @param at string: directory to list
 -- @return nil
 function tools.dir_iterator(at)
-   local pipe = io.popen(fs.command_at(at, fs.Q(vars.LS)))
+   local pipe = io.popen(fs.command_at(at, fs.Q(vars.LS), true))
    for file in pipe:lines() do
       if file ~= "." and file ~= ".." then
          coroutine.yield(file)

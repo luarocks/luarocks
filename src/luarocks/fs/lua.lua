@@ -464,9 +464,13 @@ end
 --- Internal implementation function for fs.dir.
 -- Yields a filename on each iteration.
 -- @param at string: directory to list
--- @return nil
+-- @return nil or (nil and string): an error message on failure 
 function fs_lua.dir_iterator(at)
-   for file in lfs.dir(at) do
+   local pok, iter, arg = pcall(lfs.dir, at)
+   if not pok then
+      return nil, iter
+   end
+   for file in iter, arg do
       if file ~= "." and file ~= ".." then
          coroutine.yield(file)
       end
@@ -479,7 +483,11 @@ end
 -- @param prefix string: Auxiliary prefix string to form pathname.
 -- @param result table: Array of strings where results are collected.
 local function recursive_find(cwd, prefix, result)
-   for file in lfs.dir(cwd) do
+   local pok, iter, arg = pcall(lfs.dir, cwd)
+   if not pok then
+      return nil
+   end
+   for file in iter, arg do
       if file ~= "." and file ~= ".." then
          local item = prefix .. file
          table.insert(result, item)
@@ -502,9 +510,6 @@ function fs_lua.find(at)
       at = fs.current_dir()
    end
    at = dir.normalize(at)
-   if not fs.is_dir(at) then
-      return {}
-   end
    local result = {}
    recursive_find(at, "", result)
    return result
