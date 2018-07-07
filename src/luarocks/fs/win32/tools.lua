@@ -182,33 +182,58 @@ end
 function tools.set_permissions(filename, mode, scope)
    assert(filename and mode and scope)
 
-   local who, what
    if scope == "user" then
-      who = os.getenv("USERNAME")
-   elseif scope == "all" then
-      who = "Everyone"
-   end
-   if mode == "read" then
-      what = "(RD)"
-   elseif mode == "exec" then
-      what = "(X)"
-   end
-   if not who or not what then
-      return false, "Invalid permission " .. mode .. " for " .. scope
-   end
+      local perms
+      if mode == "read" then
+         perms = "(R,W,M)"
+      elseif mode == "exec" then
+         perms = "(F)"
+      end
 
-   if scope == "user" then
+      local ok
+      -- Take ownership of the given file
+      ok = fs.execute_quiet("takeown /f " .. fs.Q(filename))
+      if not ok then
+         return false, "Could not take ownership of the given file"
+      end
+      -- Grant the current user the proper rights
+      ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r %USERNAME%:" .. perms)
+      if not ok then
+         return false, "Failed setting permission " .. mode .. " for " .. scope
+      end
+      -- Finally, remove all the other users from the ACL in order to deny them access to the file
       for _, user in pairs(get_system_users()) do
          if user ~= who then
-            local ok = fs.execute(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /deny " .. fs.Q(user) .. ":" .. fs.Q(what))
+            local ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /remove " .. fs.Q(user))
             if not ok then
                return false, "Failed setting permission " .. mode .. " for " .. scope
             end
          end
       end
+   elseif scope == "all" then
+      local my_perms, others_perms
+      if mode == "read" then
+         my_perms = "(R,W,M)"
+         others_perms = "(R)"
+      elseif mode == "exec" then
+         my_perms = "(F)"
+         others_perms = "(RX)"
+      end
+
+      local ok
+      -- Grant permissions available to all users
+      ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r Everyone:" .. others_perms)
+      if not ok then
+         return false, "Failed setting permission " .. mode .. " for " .. scope
+      end
+      -- Grant permissions available only to the current user
+      ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /inheritance:d /grant %USERNAME%:" .. my_perms)
+      if not ok then
+         return false, "Failed setting permission " .. mode .. " for " .. scope
+      end
    end
 
-   return fs.execute(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /grant " .. fs.Q(who) .. ":" .. fs.Q(what))
+   return true
 end
 
 
