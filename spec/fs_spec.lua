@@ -161,11 +161,19 @@ describe("Luarocks fs test #unit", function()
       it("does nothing if the argument is a file", function()
          tmpfile1 = get_tmp_path()
          create_file(tmpfile1)
-         assert.falsy(pcall(fs.dir_iterator, tmpfile1))
+         local crt = coroutine.create(fs.dir_iterator)
+         while coroutine.status(crt) ~= "dead" do
+            local ok, val = coroutine.resume(crt, tmpfile1)
+            assert.falsy(ok and res)
+         end
       end)
 
       it("does nothing if the argument is invalid", function()
-         assert.falsy(pcall(fs.dir_iterator, "/nonexistent"))
+         local crt = coroutine.create(fs.dir_iterator)
+         while coroutine.status(crt) ~= "dead" do
+            local ok, val = coroutine.resume(crt, "/nonexistent")
+            assert.falsy(ok and res)
+         end
       end)
    end)
    
@@ -530,11 +538,13 @@ describe("Luarocks fs test #unit", function()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
          assert.truthy(fs.change_dir(tmpdir))
-         local success = fs.change_dir_to_root()
-         if not is_win then
-            assert.truthy(success)
+         assert.truthy(fs.change_dir_to_root())
+         if is_win then
+            local curr_dir = fs.current_dir()
+            assert.truthy(curr_dir == "C:\\" or curr_dir == "/")
+         else
+            assert.same("/", fs.current_dir())
          end
-         assert.same("/", fs.current_dir())
       end)
 
       it("returns false and does nothing if the current directory is not valid #unix", function()
@@ -749,18 +759,14 @@ describe("Luarocks fs test #unit", function()
       end)
       
       it("does nothing if the argument is nonexistent", function()
-         assert.falsy(pcall(fs.list_dir("/nonexistent")))
+         assert.same(fs.list_dir("/nonexistent"), {})
       end)
       
       it("does nothing if the argument doesn't have the proper permissions", function()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
          make_unreadable(tmpdir)
-         if is_win then
-            assert.same(fs.list_dir(tmpdir), {})
-         else
-            assert.falsy(pcall(fs.list_dir, tmpdir))
-         end
+         assert.same(fs.list_dir(tmpdir), {})
       end)
    end)
 
@@ -1024,11 +1030,7 @@ describe("Luarocks fs test #unit", function()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
          make_unreadable(tmpdir)
-         if is_win then
-            assert.same(fs.find(tmpdir), {})
-         else
-            assert.falsy(pcall(fs.find, tmpdir))
-         end
+         assert.same(fs.find(tmpdir), {})
       end)
    end)
    
