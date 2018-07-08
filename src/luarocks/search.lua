@@ -241,7 +241,7 @@ function search.find_suitable_rock(query)
    if query.url then -- Copied from core/dir TODO: Could be merged
       local protocol, path = dir.split_url( query.url )
 
-      if protocol == "http" or protocol == "https" then
+      if protocol == "http" or protocol == "https" or protocol == "file" then
          local extension = path:match("%.([^.]+)$")
          if extension == "rock" or extension == "rockspec" then
             return query.url
