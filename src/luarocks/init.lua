@@ -1053,6 +1053,138 @@ function luarocks.build(name, version, only_deps, keep, pack_binary_rock, branch
    end
 end
 
+function luarocks.install_binary_rock(rock_file, deps_mode)
+   assert(type(rock_file) == "string")
+
+   local name, version, arch = path.parse_name(rock_file)
+   if not name then
+      return nil, "Filename "..rock_file.." does not match format 'name-version-revision.arch.rock'."
+   end
+   
+   if arch ~= "all" and arch ~= cfg.arch then
+      return nil, "Incompatible architecture "..arch, "arch"
+   end
+   if repos.is_installed(name, version) then
+      repos.delete_version(name, version, deps_mode)
+   end
+   
+   local rollback = util.schedule_function(function()
+      fs.delete(path.install_dir(name, version))
+      fs.remove_dir_if_empty(path.versions_dir(name))
+   end)
+   
+   local ok, err, errcode = fetch.fetch_and_unpack_rock(rock_file, path.install_dir(name, version))
+   if not ok then return nil, err, errcode end
+   
+   local rockspec, err, errcode = fetch.load_rockspec(path.rockspec_file(name, version))
+   if err then
+      return nil, "Failed loading rockspec for installed package: "..err, errcode
+   end
+
+   if deps_mode == "none" then
+      util.warning("skipping dependency checks.")
+   else
+      ok, err, errcode = deps.check_external_deps(rockspec, "install")
+      if err then return nil, err, errcode end
+   end
+
+   -- For compatibility with .rock files built with LuaRocks 1
+   if not fs.exists(path.rock_manifest_file(name, version)) then
+      ok, err = writer.make_rock_manifest(name, version)
+      if err then return nil, err end
+   end
+
+   if deps_mode ~= "none" then
+      ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+      if err then return nil, err, errcode end
+   end
+
+   ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), deps_mode)
+   if err then return nil, err end
+
+   util.remove_scheduled_function(rollback)
+   rollback = util.schedule_function(function()
+      repos.delete_version(name, version, deps_mode)
+   end)
+
+   ok, err = repos.run_hook(rockspec, "post_install")
+   if err then return nil, err end
+
+   util.announce_install(rockspec)
+   util.remove_scheduled_function(rollback)
+   return name, version
+end
+
+
+function luarocks.install_binary_rock_deps(rock_file, deps_mode)
+   assert(type(rock_file) == "string")
+
+   local name, version, arch = path.parse_name(rock_file)
+   if not name then
+      return nil, "Filename "..rock_file.." does not match format 'name-version-revision.arch.rock'."
+   end
+   
+   if arch ~= "all" and arch ~= cfg.arch then
+      return nil, "Incompatible architecture "..arch, "arch"
+   end
+
+   local ok, err, errcode = fetch.fetch_and_unpack_rock(rock_file, path.install_dir(name, version))
+   if not ok then return nil, err, errcode end
+   
+   local rockspec, err, errcode = fetch.load_rockspec(path.rockspec_file(name, version))
+   if err then
+      return nil, "Failed loading rockspec for installed package: "..err, errcode
+   end
+
+   ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+   if err then return nil, err, errcode end
+
+   util.printout()
+   util.printout("Successfully installed dependencies for " ..name.." "..version)
+
+   return name, version
+end
+
+function luarocks.install(name, version, only_deps, keep)
+   if type(name) ~= "string" then
+      return nil, "Argument missing. "
+   end
+
+   --local ok, err = fs.check_command_permissions(flags)
+   local ok, err = fs.check_command_permissions_no_flags()
+   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
+
+   if name:match("%.rockspec$") or name:match("%.src%.rock$") then
+      return luarocks.build(name, version, only_deps, keep, pack_binary_rock, branch)
+   elseif name:match("%.rock$") then
+      if only_deps then
+         --ok, err = install.install_binary_rock_deps(name, deps.get_deps_mode(flags))
+         ok, err = luarocks.install_binary_rock_deps(name, cfg.deps_mode)
+      else
+         --ok, err = install.install_binary_rock(name, deps.get_deps_mode(flags))
+         ok, err = luarocks.install_binary_rock(name, cfg.deps_mode)
+      end
+      if not ok then return nil, err end
+      name, version = ok, err
+
+      --[[
+      if (not only_deps) and (not keep) and not cfg.keep_other_versions then
+         local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
+         if not ok then util.printerr(err) end
+      end
+      --]]
+
+      --writer.check_dependencies(nil, deps.get_deps_mode(flags))
+      return name, version
+   else
+      local url, err = search.find_suitable_rock(search.make_query(name:lower(), version))
+      if not url then
+         return nil, err
+      end
+      --util.printout("Installing "..url)
+      return luarocks.install(url, version, only_deps, keep)
+   end
+end
 
 
 return luarocks
