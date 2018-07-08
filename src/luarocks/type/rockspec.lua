@@ -12,10 +12,16 @@ type_rockspec.rockspec_format = "3.0"
 -- _mandatory (boolean) indicates if the value is a mandatory key in its container table. Default is false.
 -- For "string" types only:
 --    _pattern (string) is the string-matching pattern, valid for string types only. Default is ".*".
+--             (table) may be a list of string-matching patterns. If any string matches, the pattern matches.
 -- For "table" types only:
 --    _any (table) is the type-checking table for unspecified keys, recursively checked.
 --    _more (boolean) indicates that the table accepts unspecified keys and does not type-check them.
 --    Any other string keys that don't start with an underscore represent known keys and are type-checking tables, recursively checked.
+
+local dependency_pattern_3_0 = {
+   "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)", -- namespace/package
+   "%s*([^:]*://%S*)%s*(.*)"                                           -- direct URL
+}
 
 local rockspec_formats, versions = type_check.declare_schemas({
    ["1.0"] = {
@@ -105,7 +111,7 @@ local rockspec_formats, versions = type_check.declare_schemas({
       },
       dependencies = {
          _any = {
-            _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
+            _pattern = dependency_pattern_3_0,
          },
       },
       build_dependencies = {
@@ -113,7 +119,7 @@ local rockspec_formats, versions = type_check.declare_schemas({
          _any = {
             _type = "string",
             _name = "a valid dependency string",
-            _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
+            _pattern = dependency_pattern_3_0,
          },
       },
       test_dependencies = {
@@ -121,7 +127,7 @@ local rockspec_formats, versions = type_check.declare_schemas({
          _any = {
             _type = "string",
             _name = "a valid dependency string",
-            _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
+            _pattern = dependency_pattern_3_0,
          },
       },
       build = {

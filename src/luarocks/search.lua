@@ -236,43 +236,62 @@ end
 -- of the rock if it was found, or nil followed by an error message.
 function search.find_suitable_rock(query)
    assert(query:type() == "query")
-   
-   local result_tree = search.search_repos(query)
-   local first_rock = next(result_tree)
-   if not first_rock then
-      if cfg.rocks_provided[query.name] == nil then
-         -- Check if constraints are satisfiable with other Lua versions.
-         local lua_versions = supported_lua_versions(query)
 
-         if #lua_versions ~= 0 then
-            -- Build a nice message in "only Lua 5.x and 5.y but not 5.z." format
-            for i, lua_version in ipairs(lua_versions) do
-               lua_versions[i] = "Lua "..lua_version
-            end
+   -- This is a URL to a rock or rockspec, download it directly
+   if query.url then -- Copied from core/dir TODO: Could be merged
+      local protocol, path = dir.split_url( query.url )
 
-            local versions_message = "only "..table.concat(lua_versions, " and ")..
-               " but not Lua "..cfg.lua_version.."."
+      if protocol == "http" or protocol == "https" then
+         local extension = path:match("%.([^.]+)$")
+         if extension == "rock" or extension == "rockspec" then
+            return query.url
+         else
+            -- This path should be impossible as we check for this earlier
+            return nil, "Rock specified as url points to unsupported file format" .. (extension and (" \"" .. extension .. "\".") or ".")
+         end
+      -- TODO: file://, git://
+      else
+         return nil,"Rock specified as url has unsupported protocol \"" .. protocol .."\"."
+      end
+   -- This is a normal rock name
+   else
+      local result_tree = search.search_repos(query)
+      local first_rock = next(result_tree)
+      if not first_rock then
+         if cfg.rocks_provided[query.name] == nil then
+            -- Check if constraints are satisfiable with other Lua versions.
+            local lua_versions = supported_lua_versions(query)
 
-            if #query.constraints == 0 then
-               return nil, query.name.." supports "..versions_message
-            elseif #query.constraints == 1 and query.constraints[1].op == "==" then
-               return nil, query.name.." "..query.constraints[1].version.string.." supports "..versions_message
-            else
-               return nil, "Matching "..query.name.." versions support "..versions_message
+            if #lua_versions ~= 0 then
+               -- Build a nice message in "only Lua 5.x and 5.y but not 5.z." format
+               for i, lua_version in ipairs(lua_versions) do
+                  lua_versions[i] = "Lua "..lua_version
+               end
+
+               local versions_message = "only "..table.concat(lua_versions, " and ")..
+                  " but not Lua "..cfg.lua_version.."."
+
+               if #query.constraints == 0 then
+                  return nil, query.name.." supports "..versions_message
+               elseif #query.constraints == 1 and query.constraints[1].op == "==" then
+                  return nil, query.name.." "..query.constraints[1].version.string.." supports "..versions_message
+               else
+                  return nil, "Matching "..query.name.." versions support "..versions_message
+               end
             end
          end
-      end
 
-      return nil, "No results matching query were found."
-   elseif next(result_tree, first_rock) then
-      -- Shouldn't happen as query must match only one package.
-      return nil, "Several rocks matched query."
-   elseif cfg.rocks_provided[query.name] ~= nil then
-      -- Do not install versions listed in cfg.rocks_provided.
-      return nil, "Rock "..query.name.." "..cfg.rocks_provided[query.name]..
-         " was found but it is provided by VM or 'rocks_provided' in the config file."
-   else
-      return pick_latest_version(query.name, result_tree[first_rock])
+         return nil, "No results matching query were found."
+      elseif next(result_tree, first_rock) then
+         -- Shouldn't happen as query must match only one package.
+         return nil, "Several rocks matched query."
+      elseif cfg.rocks_provided[query.name] ~= nil then
+         -- Do not install versions listed in cfg.rocks_provided.
+         return nil, "Rock "..query.name.." "..cfg.rocks_provided[query.name]..
+            " was found but it is provided by VM or 'rocks_provided' in the config file."
+      else
+         return pick_latest_version(query.name, result_tree[first_rock])
+      end
    end
 end
 
