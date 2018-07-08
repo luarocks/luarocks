@@ -1,41 +1,33 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 local env_variables = test_env.env_variables
-local site_config
+local hardcoded
 
 test_env.unload_luarocks()
 
-describe("LuaRocks config tests #blackbox #b_config", function()
+describe("LuaRocks config tests #integration", function()
    
    before_each(function()
       test_env.setup_specs()
-      test_env.unload_luarocks() -- need to be required here, because site_config is created after first loading of specs
-      site_config = require("luarocks.core.site_config_" .. test_env.lua_version:gsub("%.", "_"))
+      test_env.unload_luarocks() -- need to be required here, because hardcoded is created after first loading of specs
+      hardcoded = require("luarocks.core.hardcoded")
    end)
 
    describe("LuaRocks config - basic tests", function()
       it("LuaRocks config with no flags/arguments", function()
-         assert.is_false(run.luarocks_bool("config"))
+         assert.match("rocks_servers", run.luarocks("config"))
       end)
       
-      it("LuaRocks config include dir", function()
+      it("LuaRocks config include dir returns a subdir of LUA_DIR", function()
          local output = run.luarocks("config --lua-incdir")
-         if test_env.TEST_TARGET_OS == "windows" then
-            assert.are.same(output, site_config.LUA_INCDIR:gsub("\\","/"))
-         else
-            assert.are.same(output, site_config.LUA_INCDIR)
-         end
+         assert.match(hardcoded.LUA_DIR, output, 1, true)
       end)
       
-      it("LuaRocks config library dir", function()
+      it("LuaRocks config library dir returns a subdir of LUA_DIR", function()
          local output = run.luarocks("config --lua-libdir")
-         if test_env.TEST_TARGET_OS == "windows" then
-            assert.are.same(output, site_config.LUA_LIBDIR:gsub("\\","/"))
-         else
-            assert.are.same(output, site_config.LUA_LIBDIR)
-         end
+         assert.match(hardcoded.LUA_DIR, output, 1, true)
       end)
       
       it("LuaRocks config lua version", function()
@@ -44,7 +36,7 @@ describe("LuaRocks config tests #blackbox #b_config", function()
          if test_env.LUAJIT_V then
             lua_version = "5.1"
          end
-         assert.are.same(output, lua_version)
+         assert.are.same(lua_version, output)
       end)
       
       it("LuaRocks config rock trees", function()
@@ -68,8 +60,10 @@ describe("LuaRocks config tests #blackbox #b_config", function()
 
       it("LuaRocks fail system config", function()
          os.rename(configfile, configfile .. ".bak")
+         finally(function()
+            os.rename(configfile .. ".bak", configfile)
+         end)
          assert.is_false(run.luarocks_bool("config --system-config"))
-         os.rename(configfile .. ".bak", configfile)
       end)
       
       it("LuaRocks system config", function()
@@ -77,18 +71,15 @@ describe("LuaRocks config tests #blackbox #b_config", function()
          lfs.mkdir(testing_paths.testing_lrprefix .. "/etc/")
          lfs.mkdir(scdir)
 
-         if test_env.TEST_TARGET_OS == "windows" then
-            local output = run.luarocks("config --system-config")
-            assert.are.same(output, configfile)
-         else
-            local sysconfig = io.open(configfile, "w+")
-            sysconfig:write(" ")
-            sysconfig:close()
-            
-            local output = run.luarocks("config --system-config")
-            assert.are.same(output, configfile)
+         local sysconfig = io.open(configfile, "w+")
+         sysconfig:write(" ")
+         sysconfig:close()
+         finally(function()
             os.remove(configfile)
-         end
+         end)
+         
+         local output = run.luarocks("config --system-config")
+         assert.are.same(configfile, output)
       end)
       
       it("LuaRocks fail system config invalid", function()
@@ -96,20 +87,13 @@ describe("LuaRocks config tests #blackbox #b_config", function()
          lfs.mkdir(testing_paths.testing_lrprefix .. "/etc/")
          lfs.mkdir(scdir)
 
-         if test_env.TEST_TARGET_OS == "windows" then
-            test_env.copy(configfile, "configfile_temp")
-            local sysconfig = io.open(configfile, "w+")
-            sysconfig:write("if if if")
-            sysconfig:close()
-            assert.is_false(run.luarocks_bool("config --system-config"))
-            test_env.copy("configfile_temp", configfile)
-         else
-            local sysconfig = io.open(configfile, "w+")
-            sysconfig:write("if if if")
-            sysconfig:close()
-            assert.is_false(run.luarocks_bool("config --system-config"))
+         local sysconfig = io.open(configfile, "w+")
+         sysconfig:write("if if if")
+         sysconfig:close()
+         finally(function()
             os.remove(configfile)
-         end
+         end)
+         assert.is_false(run.luarocks_bool("config --system-config"))
       end)
    end)
 end)

@@ -8,12 +8,16 @@ local util = {}
 
 local core = require("luarocks.core.util")
 
-util.popen_read = core.popen_read
 util.cleanup_path = core.cleanup_path
 util.split_string = core.split_string
-util.keys = core.keys
-util.printerr = core.printerr
 util.sortedpairs = core.sortedpairs
+util.deep_merge = core.deep_merge
+util.deep_merge_under = core.deep_merge_under
+util.popen_read = core.popen_read
+util.show_table = core.show_table
+util.printerr = core.printerr
+util.warning = core.warning
+util.keys = core.keys
 
 local unpack = unpack or table.unpack
 
@@ -55,7 +59,9 @@ end
 -- Functions are executed in the inverse order they were scheduled.
 function util.run_scheduled_functions()
    local fs = require("luarocks.fs")
-   fs.change_dir_to_root()
+   if fs.change_dir_to_root then
+      fs.change_dir_to_root()
+   end
    for i = #scheduled_functions, 1, -1 do
       local item = scheduled_functions[i]
       item.fn(unpack(item.args))
@@ -85,6 +91,7 @@ local supported_flags = {
    ["bin"] = true,
    ["binary"] = true,
    ["branch"] = "<branch-name>",
+   ["build-deps"] = true,
    ["debug"] = true,
    ["deps"] = true,
    ["deps-mode"] = "<mode>",
@@ -96,6 +103,7 @@ local supported_flags = {
    ["help"] = true,
    ["home"] = true,
    ["homepage"] = "\"<url>\"",
+   ["index"] = true,
    ["issues"] = true,
    ["keep"] = true,
    ["labels"] = true,
@@ -107,12 +115,15 @@ local supported_flags = {
    ["lr-bin"] = true,
    ["lr-cpath"] = true,
    ["lr-path"] = true,
+   ["lua-dir"] = "<path>",
    ["lua-version"] = "<vers>",
    ["lua-ver"] = true,
    ["lua-incdir"] = true,
    ["lua-libdir"] = true,
    ["modules"] = true,
    ["mversion"] = true,
+   ["namespace"] = "<namespace>",
+   ["no-bin"] = true,
    ["no-refresh"] = true,
    ["nodeps"] = true,
    ["old-versions"] = true,
@@ -125,8 +136,11 @@ local supported_flags = {
    ["output"] = "<file>",
    ["pack-binary-rock"] = true,
    ["porcelain"] = true,
+   ["project-tree"] = "<tree>",
    ["quick"] = true,
    ["rock-dir"] = true,
+   ["rock-license"] = true,
+   ["rock-namespace"] = true,
    ["rock-tree"] = true,
    ["rock-trees"] = true,
    ["rockspec"] = true,
@@ -137,6 +151,8 @@ local supported_flags = {
    ["summary"] = "\"<text>\"",
    ["system-config"] = true,
    ["tag"] = "<tag>",
+   ["test-type"] = "<type>",
+   ["temp-key"] = "<key>",
    ["timeout"] = "<seconds>",
    ["to"] = "<path>",
    ["tree"] = "<path>",
@@ -155,13 +171,12 @@ function util.parse_flags(...)
    local flags = {}
    local i = 1
    local out = {}
-   local ignore_flags = false
+   local state = "initial"
    while i <= #args do
       local flag = args[i]:match("^%-%-(.*)")
-      if flag == "--" then
-         ignore_flags = true
-      end
-      if flag and not ignore_flags then
+      if state == "initial" and flag == "" then
+         state = "ignore_flags"
+      elseif state == "initial" and flag then
          local var,val = flag:match("([a-z_%-]*)=(.*)")
          if val then
             local vartype = supported_flags[var]
@@ -200,43 +215,12 @@ function util.parse_flags(...)
                return { ERROR = "Invalid argument: unknown flag --"..var.."." }
             end
          end
-      else
+      elseif state == "ignore_flags" or (state == "initial" and not flag) then
          table.insert(out, args[i])
       end
       i = i + 1
    end
    return flags, unpack(out)
-end
-
---- Perform platform-specific overrides on a table.
--- Overrides values of table with the contents of the appropriate
--- subset of its "platforms" field. The "platforms" field should
--- be a table containing subtables keyed with strings representing
--- platform names. Names that match the contents of the global
--- cfg.platforms setting are used. For example, if
--- cfg.platforms= {"foo"}, then the fields of
--- tbl.platforms.foo will overwrite those of tbl with the same
--- names. For table values, the operation is performed recursively
--- (tbl.platforms.foo.x.y.z overrides tbl.x.y.z; other contents of
--- tbl.x are preserved).
--- @param tbl table or nil: Table which may contain a "platforms" field;
--- if it doesn't (or if nil is passed), this function does nothing.
-function util.platform_overrides(tbl)
-   assert(type(tbl) == "table" or not tbl)
-   
-   local cfg = require("luarocks.core.cfg")
-   
-   if not tbl then return end
-   
-   if tbl.platforms then
-      for _, platform in ipairs(cfg.platforms) do
-         local platform_tbl = tbl.platforms[platform]
-         if platform_tbl then
-            core.deep_merge(tbl, platform_tbl)
-         end
-      end
-   end
-   tbl.platforms = nil
 end
 
 local var_format_pattern = "%$%((%a[%a%d_]+)%)"
@@ -303,13 +287,38 @@ function util.variable_substitutions(tbl, vars)
    end
 end
 
-function util.lua_versions()
-   local versions = { "5.1", "5.2", "5.3" }
+function util.lua_versions(sort)
+   local versions = { "5.1", "5.2", "5.3", "5.4" }
    local i = 0
-   return function()
-      i = i + 1
-      return versions[i]
+   if sort == "descending" then
+      i = #versions + 1
+      return function()
+         i = i - 1
+         return versions[i]
+      end
+   else
+      return function()
+         i = i + 1
+         return versions[i]
+      end
    end
+end
+
+function util.lua_path_variables()
+   local cfg = require("luarocks.core.cfg")
+   local lpath_var = "LUA_PATH"
+   local lcpath_var = "LUA_CPATH"
+
+   local lv = cfg.lua_version:gsub("%.", "_")
+   if lv ~= "5_1" then
+      if os.getenv("LUA_PATH_" .. lv) then
+         lpath_var = "LUA_PATH_" .. lv
+      end
+      if os.getenv("LUA_CPATH_" .. lv) then
+         lcpath_var = "LUA_CPATH_" .. lv
+      end
+   end
+   return lpath_var, lcpath_var
 end
 
 function util.starts_with(s, prefix)
@@ -320,12 +329,6 @@ end
 function util.printout(...)
    io.stdout:write(table.concat({...},"\t"))
    io.stdout:write("\n")
-end
-
---- Display a warning message.
--- @param msg string: the warning message
-function util.warning(msg)
-   util.printerr("Warning: "..msg)
 end
 
 function util.title(msg, porcelain, underline)
@@ -381,8 +384,7 @@ function util.announce_install(rockspec)
       suffix = " (license: "..rockspec.description.license..")"
    end
 
-   local root_dir = path.root_dir(cfg.rocks_dir)
-   util.printout(rockspec.name.." "..rockspec.version.." is now installed in "..root_dir..suffix)
+   util.printout(rockspec.name.." "..rockspec.version.." is now installed in "..path.root_dir(cfg.root_dir)..suffix)
    util.printout()
 end
 
@@ -396,7 +398,7 @@ local function collect_rockspecs(versions, paths, unnamed_paths, subdir)
    local fs = require("luarocks.fs")
    local dir = require("luarocks.dir")
    local path = require("luarocks.path")
-   local vers = require("luarocks.vers")
+   local vers = require("luarocks.core.vers")
 
    if fs.is_dir(subdir) then
       for file in fs.dir(subdir) do
@@ -456,6 +458,53 @@ end
 -- @return string: A quoted string, such as '"hello"'
 function util.LQ(s)
    return ("%q"):format(s)
+end
+
+--- Normalize the --namespace flag and the user/rock syntax for namespaces.
+-- If a namespace is given in user/rock syntax, update the --namespace flag;
+-- If a namespace is given in --namespace flag, update the user/rock syntax.
+-- In case of conflicts, the user/rock syntax takes precedence.
+function util.adjust_name_and_namespace(ns_name, flags)
+   assert(type(ns_name) == "string" or not ns_name)
+   assert(type(flags) == "table")
+
+   if not ns_name then
+      return
+   elseif ns_name:match("%.rockspec$") or ns_name:match("%.rock$") then
+      return ns_name
+   end
+
+   local name, namespace = util.split_namespace(ns_name)
+   if namespace then
+      flags["namespace"] = namespace
+   end
+   if flags["namespace"] then
+      name = flags["namespace"] .. "/" .. name
+   end
+   return name:lower()
+end
+
+-- Split name and namespace of a package name.
+-- @param ns_name a name that may be in "namespace/name" format
+-- @return string, string? - name and optionally a namespace
+function util.split_namespace(ns_name)
+   local p1, p2 = ns_name:match("^([^/]+)/([^/]+)$")
+   if p1 then
+      return p2, p1
+   end
+   return ns_name
+end
+
+function util.deep_copy(tbl)
+   local copy = {}
+   for k, v in pairs(tbl) do
+      if type(v) == "table" then
+         copy[k] = util.deep_copy(v)
+      else
+         copy[k] = v
+      end
+   end
+   return copy
 end
 
 return util

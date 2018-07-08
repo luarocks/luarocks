@@ -8,7 +8,7 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.core.cfg")
 
-local vars = cfg.variables
+local vars = setmetatable({}, { __index = function(_,k) return cfg.variables[k] end })
 
 --- Adds prefix to command to make it run from a directory.
 -- @param directory string: Path to a directory.
@@ -79,7 +79,10 @@ end
 -- plus an error message.
 function tools.copy_contents(src, dest)
    assert(src and dest)
-   if fs.execute_quiet(fs.Q(vars.CP), "-dR", src.."\\*.*", dest) then
+   if not fs.is_dir(src) then
+      return false, src .. " is not a directory"
+   end
+   if fs.make_dir(dest) and fs.execute_quiet(fs.Q(vars.CP), "-dR", src.."\\*.*", dest) then
       return true
    else
       return false, "Failed copying "..src.." to "..dest
@@ -155,6 +158,59 @@ function tools.is_file(file)
    assert(file)
    return fs.execute(fs.Q(vars.TEST).." -f", file)
 end
+
+--- Helper function for fs.set_permissions
+-- @return table: an array of all system users
+local function get_system_users()
+   result = {}
+   local fd = assert(io.popen("wmic UserAccount get name"))
+   for user in fd:lines() do
+      user = user:gsub("%s+$", "")
+      if user ~= "" and user ~= "Name" and user ~= "Administrator" then
+         table.insert(result, user)
+      end
+   end
+   return result
+end
+
+--- Set permissions for file or directory
+-- @param filename string: filename whose permissions are to be modified
+-- @param mode string ("read" or "exec"): permission to set
+-- @param scope string ("user" or "all"): the user(s) to whom the permission applies
+-- @return boolean or (boolean, string): true on success, false on failure,
+-- plus an error message
+function tools.set_permissions(filename, mode, scope)
+   assert(filename and mode and scope)
+
+   local who, what
+   if scope == "user" then
+      who = os.getenv("USERNAME")
+   elseif scope == "all" then
+      who = "Everyone"
+   end
+   if mode == "read" then
+      what = "(RD)"
+   elseif mode == "exec" then
+      what = "(X)"
+   end
+   if not who or not what then
+      return false, "Invalid permission " .. mode .. " for " .. scope
+   end
+
+   if scope == "user" then
+      for _, user in pairs(get_system_users()) do
+         if user ~= who then
+            local ok = fs.execute(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /deny " .. fs.Q(user) .. ":" .. fs.Q(what))
+            if not ok then
+               return false, "Failed setting permission " .. mode .. " for " .. scope
+            end
+         end
+      end
+   end
+
+   return fs.execute(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /grant " .. fs.Q(who) .. ":" .. fs.Q(what))
+end
+
 
 --- Strip the last extension of a filename.
 -- Example: "foo.tar.gz" becomes "foo.tar".

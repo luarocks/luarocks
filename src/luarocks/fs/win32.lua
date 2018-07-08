@@ -7,9 +7,8 @@ local fs = require("luarocks.fs")
 
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
+local path = require("luarocks.path")
 local util = require("luarocks.util")
-
-math.randomseed(os.time())
 
 -- Monkey patch io.popen and os.execute to make sure quoting
 -- works as expected.
@@ -133,26 +132,49 @@ end
 -- @param version string: rock version to be used in loader context.
 -- @return boolean or (nil, string): True if succeeded, or nil and
 -- an error message.
-function win32.wrap_script(file, dest, name, version)
-   assert(type(file) == "string")
+function win32.wrap_script(file, dest, deps_mode, name, version, ...)
+   assert(type(file) == "string" or not file)
    assert(type(dest) == "string")
+   assert(type(deps_mode) == "string")
+   assert(type(name) == "string" or not name)
+   assert(type(version) == "string" or not version)
 
-   local base = dir.base_name(file)
-   local wrapname = fs.is_dir(dest) and dest.."/"..base or dest
-   wrapname = wrapname..".bat"
-   local lpath, lcpath = cfg.package_paths()
-   lpath = util.cleanup_path(lpath, ";", cfg.lua_version)
-   lcpath = util.cleanup_path(lcpath, ";", cfg.lua_version)
+   local wrapname = fs.is_dir(dest) and dest.."/"..dir.base_name(file) or dest
+   wrapname = wrapname .. ".bat"
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
       return nil, "Could not open "..wrapname.." for writing."
    end
-   wrapper:write("@echo off\n")
-   local lua = dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)
-   local ppaths = "package.path="..util.LQ(lpath..";").."..package.path; package.cpath="..util.LQ(lcpath..";").."..package.cpath"
-   local addctx = "local k,l,_=pcall(require,"..util.LQ("luarocks.loader")..") _=k and l.add_context("..util.LQ(name)..","..util.LQ(version)..")"
-   wrapper:write(fs.Qb(lua)..' -e '..fs.Qb(ppaths)..' -e '..fs.Qb(addctx)..' '..fs.Qb(file)..' %*\n')
-   wrapper:write("exit /b %ERRORLEVEL%\n")
+
+   local lpath, lcpath = path.package_paths(deps_mode)
+   local lpath_var, lcpath_var = util.lua_path_variables()
+
+   local addctx
+   if name and version then
+      addctx = "local k,l,_=pcall(require,'luarocks.loader') _=k " ..
+                     "and l.add_context('"..name.."','"..version.."')"
+   end
+
+   local argv = {
+      fs.Qb(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)),
+      file and fs.Qb(file) or "",
+      ...
+   }
+
+   wrapper:write("@echo off\r\n")
+   wrapper:write("set "..fs.Qb("LUAROCKS_SYSCONFIG="..cfg.sysconfdir) .. "\r\n")
+   if dest == "luarocks" then
+      wrapper:write("set "..fs.Qb(lpath_var.."="..package.path) .. "\r\n")
+      wrapper:write("set "..fs.Qb(lcpath_var.."="..package.cpath) .. "\r\n")
+   else
+      wrapper:write("set "..fs.Qb(lpath_var.."="..lpath..";%"..lpath_var.."%") .. "\r\n")
+      wrapper:write("set "..fs.Qb(lcpath_var.."="..lcpath..";%"..lcpath_var.."%") .. "\r\n")
+   end
+   if addctx then
+      wrapper:write("set "..fs.Qb("LUA_INIT=" .. addctx) .. "\r\n")
+   end
+   wrapper:write(table.concat(argv, " ") .. " %*\r\n")
+   wrapper:write("exit /b %ERRORLEVEL%\r\n")
    wrapper:close()
    return true
 end
@@ -184,10 +206,6 @@ function win32.copy_binary(filename, dest)
       helper:write('package.cpath=\"'..package.path:gsub("\\","\\\\")..';\"..package.cpath\n')
       helper:close()
    end
-   return true
-end
-
-function win32.chmod(filename, mode)
    return true
 end
 
@@ -248,14 +266,14 @@ function win32.is_writable(file)
 end
 
 --- Create a temporary directory.
--- @param name string: name pattern to use for avoiding conflicts
+-- @param name_pattern string: name pattern to use for avoiding conflicts
 -- when creating temporary directory.
 -- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
-function win32.make_temp_dir(name)
-   assert(type(name) == "string")
-   name = dir.normalize(name)
+function win32.make_temp_dir(name_pattern)
+   assert(type(name_pattern) == "string")
+   name_pattern = dir.normalize(name_pattern)
 
-   local temp_dir = os.getenv("TMP") .. "/luarocks_" .. name:gsub("/", "_") .. "-" .. tostring(math.floor(math.random() * 10000))
+   local temp_dir = os.getenv("TMP") .. "/luarocks_" .. name_pattern:gsub("/", "_") .. "-" .. tostring(math.floor(math.random() * 10000))
    local ok, err = fs.make_dir(temp_dir)
    if ok then
       return temp_dir
@@ -270,6 +288,10 @@ end
 
 function win32.current_user()
    return os.getenv("USERNAME")
+end
+
+function win32.export_cmd(var, val)
+   return ("SET %s=%s"):format(var, val)
 end
 
 return win32

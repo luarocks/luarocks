@@ -8,16 +8,23 @@ fi
 
 if ! [ -d ".git" ]
 then
-   echo "Should be run inside a git repo dir."
+   echo "Should be run from the LuaRocks git repo dir."
    exit 1
 fi
 
 make clean || exit 1
 
-if [ "$1" != "scm" ]
+if [ "$1" != "dev" ]
 then
 
-grep -q "\"$1\"" rockspec || {
+ROCKSPEC="luarocks-$1-1.rockspec"
+
+[ -e "$ROCKSPEC" ] || {
+   echo
+   echo "$ROCKSPEC is missing. Please check rockspec version is correct."
+}
+
+grep -q "\"$1-1\"" "$ROCKSPEC" || {
    echo
    echo "version in rockspec is incorrect. Please fix it."
    exit 1
@@ -61,7 +68,7 @@ fi
 out="luarocks-$1"
 rm -rf "$out"
 mkdir "$out"
-rm -f "missing_ref"
+
 git ls-files | while read i
 do
    if [ -f "$i" ]
@@ -69,36 +76,8 @@ do
       dir=`dirname $i`
       mkdir -p "$out/$dir"
       cp "$i" "$out/$dir"
-      if echo "$i" | grep -v "/bin/" | grep -q "^src/"
-      then
-         grep -qw `basename "$i"` Makefile.setup.inc || {
-            echo "Missing ref in Makefile.setup.inc: $i"
-            touch "missing_ref"
-            exit 1
-         }
-      fi
    fi
 done
-if [ -e "missing_ref" ]
-then
-   rm -f "missing_ref"
-   exit 1
-fi
-
-cat Makefile.setup.inc | tr ' \\' '\n\n' | grep 'lua$' | while read i
-do
-   if [ ! -e src/luarocks/$i ]
-   then
-      echo "Ref in Makefile.setup.inc for file that no longer exists: $i"
-      touch "outdated_ref"
-      exit 1
-   fi
-done
-if [ -e "outdated_ref" ]
-then
-   rm -f "outdated_ref"
-   exit 1
-fi
 
 rm -rf "release-unix" "release-windows" "$out.tar.gz" "$out-win32.zip"
 
@@ -108,14 +87,14 @@ mkdir "release-windows"
 mv "$out" "release-windows/$out-win32"
 
 cd "release-unix/$out"
-rm -rf makedist install.bat COPYING_lua COPYING_7z COPYING_win win32 lfw .travis.yml .gitignore appveyor* .appveyor
+rm -rf makedist install.bat win32 .travis.yml .gitignore appveyor* .appveyor
 cd ..
 tar czvpf ../"$out.tar.gz" "$out"
 cd ..
 rm -rf "release-unix"
 
 cd "release-windows/$out-win32"
-rm -rf makedist Makefile* configure lfw .travis.yml .gitignore test appveyor* .appveyor
+rm -rf makedist Makefile configure .travis.yml .gitignore test appveyor* .appveyor
 cd ..
 zip -r ../"$out-win32.zip" "$out-win32"
 cd ..

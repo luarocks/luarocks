@@ -133,6 +133,7 @@ function tar.untar(filename, destdir)
          file_handle:write(file_data)
          file_handle:close()
          fs.set_time(pathname, header.mtime)
+         -- TODO Use fs.set_permissions
          if fs.chmod then
             fs.chmod(pathname, header.mode)
          end

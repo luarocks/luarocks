@@ -32,9 +32,11 @@ function cache.get_server_urls(server, upload_server)
    return download_url, login_url
 end
 
-function cache.split_server_url(server, url, user, password)
+function cache.split_server_url(url, user, password)
    local protocol, server_path = dir.split_url(url)
-   if server_path:match("@") then
+   if protocol == "file" then
+      server_path = fs.absolute_name(server_path)
+   elseif server_path:match("@") then
       local credentials
       credentials, server_path = server_path:match("([^@]*)@(.*)")
       if credentials:match(":") then
@@ -43,34 +45,43 @@ function cache.split_server_url(server, url, user, password)
          user = credentials
       end
    end
-   local local_cache = cfg.local_cache .. "/" .. server
+   local local_cache = cfg.local_cache .. "/" .. server_path:gsub("[\\/]", "_")
    return local_cache, protocol, server_path, user, password
 end
 
-function cache.refresh_local_cache(server, url, user, password)
-   local local_cache, protocol, server_path, user, password = cache.split_server_url(server, url, user, password)
-   local ok, err = fs.make_dir(local_cache)
-   if not ok then
-      return nil, "Failed creating local cache dir: "..err
-   end
-   fs.change_dir(local_cache)
-   if not ok then return nil, err end
-   util.printout("Refreshing cache "..local_cache.."...")
-
+local function download_cache(protocol, server_path, user, password)
+   os.remove("index.html")
    -- TODO abstract away explicit 'wget' call
-   local ok = false
    if protocol == "rsync" then
       local srv, path = server_path:match("([^/]+)(/.+)")
-      ok = fs.execute(cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..user.."@"..srv..":"..path.."/ "..local_cache.."/")
+      return fs.execute(cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..user.."@"..srv..":"..path.."/ ./")
+   elseif protocol == "file" then
+      return fs.copy_contents(server_path, ".")
    else 
       local login_info = ""
       if user then login_info = " --user="..user end
       if password then login_info = login_info .. " --password="..password end
-      ok = fs.execute(cfg.variables.WGET.." --no-cache -q -m -np -nd "..protocol.."://"..server_path..login_info)
+      return fs.execute(cfg.variables.WGET.." --no-cache -q -m -np -nd "..protocol.."://"..server_path..login_info)
    end
+end
+
+function cache.refresh_local_cache(url, given_user, given_password)
+   local local_cache, protocol, server_path, user, password = cache.split_server_url(url, given_user, given_password)
+
+   local ok, err = fs.make_dir(local_cache)
+   if not ok then
+      return nil, "Failed creating local cache dir: "..err
+   end
+
+   fs.change_dir(local_cache)
+   
+   util.printout("Refreshing cache "..local_cache.."...")
+
+   ok = download_cache(protocol, server_path, user, password)
    if not ok then
       return nil, "Failed downloading cache."
    end
+
    return local_cache, protocol, server_path, user, password
 end
 

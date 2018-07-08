@@ -40,12 +40,15 @@ end
 -- given, help summaries for all commands are shown.
 -- @return boolean or (nil, string): true if there were no errors
 -- or nil and an error message if an invalid command was requested.
-function help.command(flags, command)
+function help.command(description, commands, command)
+   assert(type(description) == "string")
+   assert(type(commands) == "table")
+
    if not command then
       local conf = cfg.which_config()
       print_banner()
       print_section("NAME")
-      util.printout("\t"..program..[[ - ]]..program_description)
+      util.printout("\t"..program..[[ - ]]..description)
       print_section("SYNOPSIS")
       util.printout("\t"..program..[[ [<flags...>] [VAR=VALUE]... <command> [<argument>] ]])
       print_section("GENERAL OPTIONS")
@@ -60,6 +63,7 @@ function help.command(flags, command)
 	                       (overrides any entries in the config file)
 	--only-sources=<url>   Restrict downloads to paths matching the
 	                       given URL.
+        --lua-dir=<prefix>     Which Lua installation to use.
 	--tree=<tree>          Which tree to operate on.
 	--local                Use the tree in the user's home directory.
 	                       To enable it, see ']]..program..[[ help path'.
@@ -72,29 +76,38 @@ function help.command(flags, command)
 	Variables from the "variables" table of the configuration file
 	can be overriden with VAR=VALUE assignments.]])
       print_section("COMMANDS")
-      for name, command in util.sortedpairs(commands) do
-         local cmd = require(command)
+      for name, modname in util.sortedpairs(commands) do
+         local cmd = require(modname)
          util.printout("", name)
          util.printout("\t", cmd.help_summary)
       end
       print_section("CONFIGURATION")
       util.printout("\tLua version: " .. cfg.lua_version)
-      util.printout("\tConfiguration files:")
-      util.printout("\t\tSystem: ".. dir.normalize(conf.system.file) .. " (" .. get_status(conf.system.ok) ..")")
-      if conf.user.file then
-         util.printout("\t\tUser  : ".. dir.normalize(conf.user.file) .. " (" .. get_status(conf.user.ok) ..")\n")
-      else
-         util.printout("\t\tUser  : disabled in this LuaRocks installation.\n")
+      if cfg.luajit_version then
+         util.printout("\tLuaJIT version: " .. cfg.luajit_version)
       end
+      util.printout()
+      util.printout("\tConfiguration files:")
+      util.printout("\t\tSystem  : ".. dir.normalize(conf.system.file) .. " (" .. get_status(conf.system.ok) ..")")
+      if conf.user.file then
+         util.printout("\t\tUser    : ".. dir.normalize(conf.user.file) .. " (" .. get_status(conf.user.ok) ..")")
+      else
+         util.printout("\t\tUser    : disabled in this LuaRocks installation.")
+      end
+      if conf.project then
+         util.printout("\t\tProject : ".. dir.normalize(conf.project.file) .. " (" .. get_status(conf.project.ok) ..")")
+      end
+      util.printout()
       util.printout("\tRocks trees in use: ")
       for _, tree in ipairs(cfg.rocks_trees) do
-      	if type(tree) == "string" then
-      	   util.printout("\t\t"..dir.normalize(tree))
-      	else
-      	   local name = tree.name and " (\""..tree.name.."\")" or ""
-      	   util.printout("\t\t"..dir.normalize(tree.root)..name)
-      	end
+         if type(tree) == "string" then
+            util.printout("\t\t"..dir.normalize(tree))
+         else
+            local name = tree.name and " (\""..tree.name.."\")" or ""
+            util.printout("\t\t"..dir.normalize(tree.root)..name)
+         end
       end
+      util.printout()
    else
       command = command:gsub("-", "_")
       local cmd = commands[command] and require(commands[command])
@@ -108,6 +121,9 @@ function help.command(flags, command)
          print_section("DESCRIPTION")
          util.printout("",(cmd.help:gsub("\n","\n\t"):gsub("\n\t$","")))
          print_section("SEE ALSO")
+         if cmd.help_see_also then
+            util.printout(cmd.help_see_also)
+         end
          util.printout("","'"..program.." help' for general options and configuration.\n")
       else
          return nil, "Unknown command: "..command

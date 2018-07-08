@@ -3,76 +3,135 @@ language: python
 cache:
   directories:
   - lua_install
-  - test/testing_cache-5.1
-  - test/testing_cache-5.2
-  - test/testing_cache-5.3
-  - test/testing_cache-2.0
-  - test/testing_cache-2.1
-  - test/testing_server-5.1
-  - test/testing_server-5.2
-  - test/testing_server-5.3
-  - test/testing_server-2.0
-  - test/testing_server-2.1
-
-matrix:
+  - testrun/testing_cache-5.1
+  - testrun/testing_cache-5.2
+  - testrun/testing_cache-5.3
+  - testrun/testing_cache-2.1
+  - testrun/testing_server-5.1
+  - testrun/testing_server-5.2
+  - testrun/testing_server-5.3
+  - testrun/testing_server-2.1
+  
+unit_script: &unit_script
+  - busted -o gtest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
+  - busted -o gtest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
+  
+integration_script: &integration_script
+  - lua -v
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then shellcheck ./configure; fi
+  - ./configure --with-lua=lua_install
+  - ./makedist dev
+  - busted -o gtest --exclude-tags=git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
+  - busted -o gtest --exclude-tags=git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
+          
+jobs:
   include:
-    - os: linux
+    # Unit tests for linux
+    - stage: unit
+      script: *unit_script
+      os: linux
       env:
         - LUA="lua=5.1"
-    - os: linux
+    - stage: unit
+      script: *unit_script
+      os: linux
       env:
         - LUA="lua=5.2"
-    - os: linux
+    - stage: unit
+      script: *unit_script
+      os: linux
       env:
         - LUA="lua=5.3"
-    - os: linux
-      env:
-        - LUA="luajit=2.0"
-    - os: linux
+    - stage: unit
+      script: *unit_script
+      os: linux
       env:
         - LUA="luajit=2.1"
-    - os: osx
-      language: generic
+    # Unit tests for osx
+    - stage: unit
+      script: *unit_script
+      os: osx
       env:
         - LUA="lua=5.1"
-    - os: osx
       language: generic
+    - stage: unit
+      script: *unit_script
+      os: osx
       env:
         - LUA="lua=5.2"
-    - os: osx
       language: generic
+    - stage: unit
+      script: *unit_script
+      os: osx
       env:
         - LUA="lua=5.3"
-    - os: osx
       language: generic
-      env:
-        - LUA="luajit=2.0"
-    - os: osx
-      language: generic
+    - stage: unit
+      script: *unit_script
+      os: osx
       env:
         - LUA="luajit=2.1"
-
-
+      language: generic
+    # Integration tests for linux
+    - stage: integration
+      script: *integration_script
+      os: linux
+      env:
+        - LUA="lua=5.1"
+    - stage: integration
+      script: *integration_script
+      os: linux
+      env:
+        - LUA="lua=5.2"
+    - stage: integration
+      script: *integration_script
+      os: linux
+      env:
+        - LUA="lua=5.3"
+    - stage: integration
+      script: *integration_script
+      os: linux
+      env:
+        - LUA="luajit=2.1"
+    # Integration tests for osx
+    - stage: integration
+      script: *integration_script
+      os: osx
+      env:
+        - LUA="lua=5.1"
+      language: generic
+    - stage: integration
+      script: *integration_script
+      os: osx
+      env:
+        - LUA="lua=5.2"
+      language: generic
+    - stage: integration
+      script: *integration_script
+      os: osx
+      env:
+        - LUA="lua=5.3"
+      language: generic
+    - stage: integration
+      script: *integration_script
+      os: osx
+      env:
+        - LUA="luajit=2.1"
+      language: generic
+              
 before_install:
-  - if [ ! -f lua_install/bin/luarocks ]; then pip install hererocks; fi
+  - if [ ! -f lua_install/bin/luarocks ]; then pip2 install hererocks; fi
   - if [ ! -f lua_install/bin/luarocks ]; then hererocks lua_install -r^ --$LUA; fi
   - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
 
 install:
   - if [ ! -f lua_install/bin/busted ]; then luarocks install busted; fi
-  - if [ ! -f lua_install/bin/luacov ]; then luarocks install luacov; luarocks install luacov-coveralls; fi
-
-script:
-  - lua -v
-  - ./configure --with-lua=lua_install
-  - ./makedist scm
-  - busted -o gtest --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
-  - busted -o gtest --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
+  - if [ ! -f lua_install/bin/luacov ]; then luarocks install cluacov; fi
 
 after_success:
-  - luacov -c $TRAVIS_BUILD_DIR/test/luacov.config
-  - cd $TRAVIS_BUILD_DIR/test/ && bash <(curl -s https://codecov.io/bash)
-  - grep "Summary" -B1 -A1000 $TRAVIS_BUILD_DIR/test/luacov.report.out
+  - luacov -c $TRAVIS_BUILD_DIR/testrun/luacov.config
+  - cd $TRAVIS_BUILD_DIR/testrun/ && bash <(curl -s https://codecov.io/bash)
+  - grep "Summary" -B1 -A1000 $TRAVIS_BUILD_DIR/testrun/luacov.report.out
 
 notifications:
   email:

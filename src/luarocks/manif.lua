@@ -12,6 +12,7 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
+local queries = require("luarocks.queries")
 local type_manifest = require("luarocks.type.manifest")
 
 manif.cache_manifest = core.cache_manifest
@@ -27,19 +28,28 @@ local function check_manifest(repo_url, manifest, globals)
    return manifest
 end
 
-function manif.load_local_manifest(repo_url)
-   local manifest, err, errcode = core.load_local_manifest(repo_url)
-   if not manifest then
-      return nil, err, errcode
+local postprocess_dependencies
+do
+   local postprocess_check = setmetatable({}, { __mode = "k" })
+   postprocess_dependencies = function(manifest)
+      if postprocess_check[manifest] then
+         return
+      end
+      if manifest.dependencies then
+         for name, versions in pairs(manifest.dependencies) do
+            for version, entries in pairs(versions) do
+               for k, v in pairs(entries) do
+                  entries[k] = queries.from_persisted_table(v)
+               end
+            end
+         end
+      end
+      postprocess_check[manifest] = true
    end
-   if err then
-      return check_manifest(repo_url, manifest, err)
-   end
-   return manifest
 end
 
 function manif.load_rock_manifest(name, version, root)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local name_version = name.."/"..version
@@ -73,7 +83,7 @@ end
 
 --- Load a local or remote manifest describing a repository.
 -- All functions that use manifest tables assume they were obtained
--- through either this function or load_local_manifest.
+-- through this function.
 -- @param repo_url string: URL or pathname for the repository.
 -- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
 -- @return table or (nil, string, [string]): A table representing the manifest,
@@ -85,6 +95,7 @@ function manif.load_manifest(repo_url, lua_version)
 
    local cached_manifest = core.get_cached_manifest(repo_url, lua_version)
    if cached_manifest then
+      postprocess_dependencies(cached_manifest)
       return cached_manifest
    end
 
@@ -134,6 +145,8 @@ function manif.load_manifest(repo_url, lua_version)
    if not manifest then
       return nil, err, errcode
    end
+
+   postprocess_dependencies(manifest)
    return check_manifest(repo_url, manifest, err)
 end
 
@@ -153,7 +166,7 @@ local function get_providers(item_type, item_name, repo)
    assert(type(item_type) == "string")
    assert(type(item_name) == "string")
    local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
-   local manifest = manif.load_local_manifest(rocks_dir)
+   local manifest = manif.load_manifest(rocks_dir)
    return manifest and manifest[item_type .. "s"][item_name]
 end
 
@@ -189,7 +202,7 @@ end
 -- and path to the providing file relatively to that subtree.
 function manif.get_providing_file(name, version, item_type, item_name, repo)
    local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
-   local manifest = manif.load_local_manifest(rocks_dir)
+   local manifest = manif.load_manifest(rocks_dir)
 
    local entry_table = manifest.repository[name][version][1]
    local file_path = entry_table[item_type .. "s"][item_name]
@@ -207,7 +220,7 @@ function manif.get_providing_file(name, version, item_type, item_name, repo)
    end
 
    -- Fallback to rock manifest scanning.
-   local rock_manifest = manif.load_rock_manifest(name, version)
+   local rock_manifest = manif.load_rock_manifest(name, version, repo and repo.root)
    local subtree = rock_manifest.lib
 
    for path_part in file_path:gmatch("[^/]+") do
@@ -229,23 +242,38 @@ end
 -- (use the current tree and all trees below it on the list)
 -- or "all", to use all trees.
 -- @return table: An array of strings listing installed
--- versions of a package.
-function manif.get_versions(name, deps_mode)
-   assert(type(name) == "string")
+-- versions of a package, and a table indicating where they are found.
+function manif.get_versions(dep, deps_mode)
+   assert(type(dep) == "table")
    assert(type(deps_mode) == "string")
+   
+   local name = dep.name
+   local namespace = dep.namespace
 
    local version_set = {}
    path.map_trees(deps_mode, function(tree)
-      local manifest = manif.load_local_manifest(path.rocks_dir(tree))
+      local manifest = manif.load_manifest(path.rocks_dir(tree))
 
       if manifest and manifest.repository[name] then
          for version in pairs(manifest.repository[name]) do
-            version_set[version] = true
+            if dep.namespace then
+               local ns_file = path.rock_namespace_file(name, version, tree)
+               local fd = io.open(ns_file, "r")
+               if fd then
+                  local ns = fd:read("*a")
+                  fd:close()
+                  if ns == namespace then
+                     version_set[version] = tree
+                  end
+               end
+            else
+               version_set[version] = tree
+            end
          end
       end
    end)
 
-   return util.keys(version_set)
+   return util.keys(version_set), version_set
 end
 
 return manif

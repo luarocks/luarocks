@@ -15,15 +15,18 @@ information can be used both during installation, so that when one rock is
 requested all rocks it depends on are installed as well, and also optionally
 at run time, so that when a module is required, the correct version is loaded.
 LuaRocks supports both local and [remote][3] repositories, and multiple local
-rocks trees. You can [download][4] and install LuaRocks on [Unix][5] and
-[Windows][6].
+rocks trees.
 
-LuaRocks is free software and uses the same [license][7] as Lua 5.x.
+## Installing
+
+* [Installation instructions for Unix](http://luarocks.org/en/Installation_instructions_for_Unix) (Linux, BSDs, etc.)
+* [Installation instructions for macOS](http://luarocks.org/en/Installation_instructions_for_macOS)
+* [Installation instructions for Windows](http://luarocks.org/en/Installation_instructions_for_Windows)
+
+## License
+
+LuaRocks is free software and uses the [MIT license](http://luarocks.org/en/License), the same as Lua 5.x.
 
 [1]: http://luarocks.org/en/Types_of_rocks
 [2]: http://luarocks.org/en/Dependencies
 [3]: http://luarocks.org/en/Rocks_repositories
-[4]: http://luarocks.org/en/Download
-[5]: http://luarocks.org/en/Installation_instructions_for_Unix
-[6]: http://luarocks.org/en/Installation_instructions_for_Windows
-[7]: http://luarocks.org/en/License

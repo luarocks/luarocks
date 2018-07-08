@@ -5,6 +5,7 @@ local cmd_pack = {}
 
 local util = require("luarocks.util")
 local pack = require("luarocks.pack")
+local queries = require("luarocks.queries")
 
 cmd_pack.help_summary = "Create a rock, packing sources or binaries."
 cmd_pack.help_arguments = "{<rockspec>|<name> [<version>]}"
@@ -32,7 +33,9 @@ function cmd_pack.command(flags, arg, version)
    if arg:match(".*%.rockspec") then
       file, err = pack.pack_source_rock(arg)
    else
-      file, err = pack.pack_installed_rock(arg:lower(), version, flags["tree"])
+      local name = util.adjust_name_and_namespace(arg, flags)
+      local query = queries.new(name, version)
+      file, err = pack.pack_installed_rock(query, flags["tree"])
    end
    if err then
       return nil, err

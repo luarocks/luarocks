@@ -7,11 +7,13 @@ local util = require("luarocks.util")
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local search = require("luarocks.search")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 local repos = require("luarocks.repos")
 local writer = require("luarocks.manif.writer")
 local cfg = require("luarocks.core.cfg")
 local remove = require("luarocks.remove")
+local queries = require("luarocks.queries")
+local cmd = require("luarocks.cmd")
 
 purge.help_summary = "Remove all installed rocks from a tree."
 purge.help_arguments = "--tree=<tree> [--old-versions]"
@@ -37,16 +39,14 @@ function purge.command(flags)
    end
    
    local results = {}
-   local query = search.make_query("")
-   query.exact_name = false
    if not fs.is_dir(tree) then
       return nil, "Directory not found: "..tree
    end
 
    local ok, err = fs.check_command_permissions(flags)
-   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
+   if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
 
-   search.manifest_search(results, path.rocks_dir(tree), query)
+   search.local_manifest_search(results, path.rocks_dir(tree), queries.all())
 
    local sort = function(a,b) return vers.compare_versions(b,a) end
    if flags["old-versions"] then

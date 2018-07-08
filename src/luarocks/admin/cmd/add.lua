@@ -18,8 +18,12 @@ Arguments are local files, which may be rockspecs or rocks.
 The flag --server indicates which server to use.
 If not given, the default server set in the upload_server variable
 from the configuration file is used instead.
-The flag --no-refresh indicates the local cache should not be refreshed
-prior to generation of the updated manifest.
+
+--no-refresh  The local cache should not be refreshed
+              prior to generation of the updated manifest.
+--index       Produce an index.html file for the manifest.
+              This flag is automatically set if an index.html
+              file already exists.
 ]]
 
 local function zip_manifests()
@@ -31,7 +35,7 @@ local function zip_manifests()
    end
 end
 
-local function add_files_to_server(refresh, rockfiles, server, upload_server)
+local function add_files_to_server(refresh, rockfiles, server, upload_server, do_index)
    assert(type(refresh) == "boolean" or not refresh)
    assert(type(rockfiles) == "table")
    assert(type(server) == "string")
@@ -41,12 +45,9 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    local at = fs.current_dir()
    local refresh_fn = refresh and cache.refresh_local_cache or cache.split_server_url
    
-   local local_cache, protocol, server_path, user, password = refresh_fn(server, download_url, cfg.upload_user, cfg.upload_password)
+   local local_cache, protocol, server_path, user, password = refresh_fn(download_url, cfg.upload_user, cfg.upload_password)
    if not local_cache then
       return nil, protocol
-   end
-   if protocol == "file" then
-      return nil, "Server "..server.." is not recognized, check your configuration."
    end
    
    if not login_url then
@@ -61,7 +62,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
       if fs.exists(rockfile) then
          util.printout("Copying file "..rockfile.." to "..local_cache.."...")
          local absolute = fs.absolute_name(rockfile)
-         fs.copy(absolute, local_cache, cfg.perm_read)
+         fs.copy(absolute, local_cache, "read")
          table.insert(files, dir.base_name(absolute))
       else
          util.printerr("File "..rockfile.." not found")
@@ -79,8 +80,14 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    
    zip_manifests()
    
-   util.printout("Updating index.html...")
-   index.make_index(local_cache)
+   if fs.exists("index.html") then
+      do_index = true
+   end
+
+   if do_index then
+      util.printout("Updating index.html...")
+      index.make_index(local_cache)
+   end
 
    local login_info = ""
    if user then login_info = " -u "..user end
@@ -89,7 +96,9 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
       login_url = login_url .. "/"
    end
 
-   table.insert(files, "index.html")
+   if do_index then
+      table.insert(files, "index.html")
+   end
    table.insert(files, "manifest")
    for ver in util.lua_versions() do
       table.insert(files, "manifest-"..ver)
@@ -102,6 +111,8 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    if protocol == "rsync" then
       local srv, path = server_path:match("([^/]+)(/.+)")
       cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
+   elseif protocol == "file" then
+      return fs.copy_contents(local_cache, server_path)
    elseif upload_server and upload_server.sftp then
       local part1, part2 = upload_server.sftp:match("^([^/]*)/(.*)$")
       cmd = cfg.variables.SCP.." "..table.concat(files, " ").." "..user.."@"..part1..":/"..part2
@@ -110,9 +121,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server)
    end
 
    util.printout(cmd)
-   fs.execute(cmd)
-
-   return true
+   return fs.execute(cmd)
 end
 
 function add.command(flags, ...)
@@ -122,7 +131,7 @@ function add.command(flags, ...)
    end
    local server, server_table = cache.get_upload_server(flags["server"])
    if not server then return nil, server_table end
-   return add_files_to_server(not flags["no-refresh"], files, server, server_table)
+   return add_files_to_server(not flags["no-refresh"], files, server, server_table, flags["index"])
 end
 
 

@@ -2,13 +2,69 @@
 local type_check = {}
 
 local cfg = require("luarocks.core.cfg")
+local fun = require("luarocks.fun")
+local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
-local require = nil
 --------------------------------------------------------------------------------
 
-type_check.string_1 = { _type = "string" }
-type_check.number_1 = { _type = "number" }
-type_check.mandatory_string_1 = { _type = "string", _mandatory = true }
+-- A magic constant that is not used anywhere in a schema definition
+-- and retains equality when the table is deep-copied.
+type_check.MAGIC_PLATFORMS = 0xEBABEFAC
+
+do
+   local function fill_in_version(tbl, version)
+      for _, v in pairs(tbl) do
+         if type(v) == "table" then
+            if v._version == nil then
+               v._version = version
+            end
+            fill_in_version(v)
+         end
+      end
+   end
+   
+   local function expand_magic_platforms(tbl)
+      for k,v in pairs(tbl) do
+         if v == type_check.MAGIC_PLATFORMS then
+            tbl[k] = {
+               _any = util.deep_copy(tbl)
+            }
+            tbl[k]._any[k] = nil
+         elseif type(v) == "table" then
+            expand_magic_platforms(v)
+         end
+      end
+   end
+   
+   -- Build a table of schemas.
+   -- @param versions a table where each key is a version number as a string,
+   -- and the value is a schema specification. Schema versions are considered
+   -- incremental: version "2.0" only needs to specify what's new/changed from
+   -- version "1.0".
+   function type_check.declare_schemas(inputs)
+      local schemas = {}
+      local parent_version
+   
+      local versions = fun.reverse_in(fun.sort_in(util.keys(inputs), vers.compare_versions))
+
+      for _, version in ipairs(versions) do
+         local schema = inputs[version]
+         if parent_version ~= nil then
+            local copy = util.deep_copy(schemas[parent_version])
+            util.deep_merge(copy, schema)
+            schema = copy
+         end
+         fill_in_version(schema, version)
+         expand_magic_platforms(schema)
+         parent_version = version
+         schemas[version] = schema
+      end
+
+      return schemas, versions
+   end
+end
+
+--------------------------------------------------------------------------------
 
 local function check_version(version, typetbl, context)
    local typetbl_version = typetbl._version or "1.0"
@@ -55,9 +111,11 @@ local function type_check_item(version, item, typetbl, context)
       if item_type ~= "string" then
          return nil, "Type mismatch on field "..context..": expected a string, got "..item_type
       end
-      if typetbl._pattern then
-         if not item:match("^"..typetbl._pattern.."$") then
-            return nil, "Type mismatch on field "..context..": invalid value "..item.." does not match '"..typetbl._pattern.."'"
+      local pattern = typetbl._pattern
+      if pattern then
+         if not item:match("^"..pattern.."$") then
+            local what = typetbl._name or ("'"..pattern.."'")
+            return nil, "Type mismatch on field "..context..": invalid value '"..item.."' does not match " .. what
          end
       end
    elseif expected_type == "table" then
@@ -108,12 +166,12 @@ function type_check.type_check_table(version, tbl, typetbl, context)
    assert(type(version) == "string")
    assert(type(tbl) == "table")
    assert(type(typetbl) == "table")
-   
+
    local ok, err = check_version(version, typetbl, context)
    if not ok then
       return nil, err
    end
-   
+
    for k, v in pairs(tbl) do
       local t = typetbl[k] or typetbl._any
       if t then 

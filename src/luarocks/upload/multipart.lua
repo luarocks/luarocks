@@ -5,8 +5,6 @@ local File = {}
 
 local unpack = unpack or table.unpack
 
-math.randomseed(os.time())
-
 -- socket.url.escape(s) from LuaSocket 3.0rc1
 function multipart.url_escape(s)
    return (string.gsub(s, "([^A-Za-z0-9_])", function(c)

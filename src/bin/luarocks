@@ -1,23 +1,14 @@
 #!/usr/bin/env lua
 
--- this should be loaded first.
-local cfg = require("luarocks.core.cfg")
-
 local loader = require("luarocks.loader")
-local command_line = require("luarocks.command_line")
+local cmd = require("luarocks.cmd")
 
-program_description = "LuaRocks main command-line interface"
+local description = "LuaRocks main command-line interface"
 
-local function only_if_available(command_name)
-   local ok = pcall(require, command_name)
-   if not ok then
-      return nil
-   end
-   return command_name
-end
 
-commands = {
+local commands = {
    help = "luarocks.cmd.help",
+   init = "luarocks.cmd.init",
    pack = "luarocks.cmd.pack",
    unpack = "luarocks.cmd.unpack",
    build = "luarocks.cmd.build",
@@ -37,9 +28,7 @@ commands = {
    upload = "luarocks.cmd.upload",
    config = "luarocks.cmd.config",
    which = "luarocks.cmd.which",
-   -- add some potential commands
-   -- gui = only_if_available("luarocks.cmd.gui"),
-   gui1 = only_if_available("luarocks_gui.gui1"),
+   test = "luarocks.cmd.test",
 }
 
-command_line.run_command(...)
+cmd.run_command(description, commands, "luarocks.cmd.external", ...)

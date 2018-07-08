@@ -3,7 +3,7 @@
 /test/testing_*
 /test/luacov.*
 # Stuff that pops up during development but shouldn't be in the repo (helps clean up `git status`)
-/*.rockspec
+/build-binary
 /*.rock
 /*.tar.gz
 /*.zip
@@ -12,3 +12,5 @@
 /dev_*
 /gh-pages
 /wiki
+/lua
+/lua_modules

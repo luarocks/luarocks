@@ -13,7 +13,7 @@ local dir = require("luarocks.dir")
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
 function sscm.get_sources(rockspec, extract, dest_dir)
-   assert(type(rockspec) == "table")
+   assert(rockspec:type() == "rockspec")
    assert(type(dest_dir) == "string" or not dest_dir)
 
    local sscm_cmd = rockspec.variables.SSCM

@@ -6,7 +6,7 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local cfg = require("luarocks.core.cfg")
 
-local vars = cfg.variables
+local vars = setmetatable({}, { __index = function(_,k) return cfg.variables[k] end })
 
 --- Adds prefix to command to make it run from a directory.
 -- @param directory string: Path to a directory.
@@ -51,7 +51,8 @@ end
 --- Copy a file.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
--- @param perm string or nil: Permissions for destination file,
+-- @param perm string ("read" or "exec") or nil: Permissions for destination 
+-- file or nil to use the source permissions
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
 function tools.copy(src, dest, perm)
@@ -61,7 +62,7 @@ function tools.copy(src, dest, perm)
          if fs.is_dir(dest) then
             dest = dir.path(dest, dir.base_name(src))
          end
-         if fs.chmod(dest, perm) then
+         if fs.set_permissions(dest, perm, "all") then
             return true
          else
             return false, "Failed setting permissions of "..dest
@@ -159,12 +160,42 @@ function tools.is_file(file)
    return fs.execute(vars.TEST, "-f", file)
 end
 
-function tools.chmod(pathname, mode)
-   if mode then 
-      return fs.execute(vars.CHMOD, mode, pathname)
-   else
-      return false
+do
+   local umask_cache
+   function tools._unix_umask()
+      if umask_cache then
+         return umask_cache
+      end
+      local fd = assert(io.popen("umask"))
+      local umask = assert(fd:read("*a"))
+      umask = umask:gsub("\n", "")
+      umask_cache = umask:sub(2, 4)
+      return umask_cache
    end
+end
+
+--- Set permissions for file or directory
+-- @param filename string: filename whose permissions are to be modified
+-- @param mode string ("read" or "exec"): permissions to set
+-- @param scope string ("user" or "all"): the user(s) to whom the permission applies
+-- @return boolean or (boolean, string): true on success, false on failure,
+-- plus an error message
+function tools.set_permissions(filename, mode, scope)
+   assert(filename and mode and scope)
+
+   local perms
+   if mode == "read" and scope == "user" then
+      perms = fs._unix_moderate_permissions("600")
+   elseif mode == "exec" and scope == "user" then
+      perms = fs._unix_moderate_permissions("700")
+   elseif mode == "read" and scope == "all" then
+      perms = fs._unix_moderate_permissions("644")
+   elseif mode == "exec" and scope == "all" then
+      perms = fs._unix_moderate_permissions("755")
+   else
+      return false, "Invalid permission " .. mode .. " for " .. scope
+   end
+   return fs.execute(vars.CHMOD, perms, filename)
 end
 
 --- Unpack an archive.
@@ -223,14 +254,14 @@ function tools.set_time(file, time)
 end
 
 --- Create a temporary directory.
--- @param name string: name pattern to use for avoiding conflicts
+-- @param name_pattern string: name pattern to use for avoiding conflicts
 -- when creating temporary directory.
 -- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
-function tools.make_temp_dir(name)
-   assert(type(name) == "string")
-   name = dir.normalize(name)
+function tools.make_temp_dir(name_pattern)
+   assert(type(name_pattern) == "string")
+   name_pattern = dir.normalize(name_pattern)
 
-   local template = (os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name:gsub("/", "_") .. "-XXXXXX"
+   local template = (os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name_pattern:gsub("/", "_") .. "-XXXXXX"
    local pipe = io.popen(vars.MKTEMP.." -d "..fs.Q(template))
    local dirname = pipe:read("*l")
    pipe:close()

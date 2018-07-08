@@ -55,35 +55,6 @@ local function exists(filename)
 end
 local function isfile() return true end --FIX?
 
-local function read_file(filename)
-  local fh, data, err, oserr
-  fh, err, oserr = io.open(filename, 'rb')
-  if not fh then return fh, err, oserr end
-  data, err, oserr = fh:read'*a'
-  fh:close()
-  if not data then return nil, err, oserr end
-  return data
-end
-
-local function write_file(filename, data)
-  local fh, status, err, oserr
-  fh, err, oserr = io.open(filename 'wb')
-  if not fh then return fh, err, oserr end
-  status, err, oserr = fh:write(data)
-  fh:close()
-  if not status then return nil, err, oserr end
-  return true
-end
-
-local function file_copy(src, dest)
-  local data, status, err, oserr
-  data, err, oserr = read_file(src)
-  if not data then return data, err, oserr end
-  status, err, oserr = write_file(dest)
-  if not status then return status, err, oserr end
-  return true
-end
-
 local function string_as_file(s)
    return {
       at = 0,
@@ -720,17 +691,7 @@ local function patch_file(source, target, epoch, hunks, strip, create_delete)
     warning(format("failed backing up %s when patching", source))
     return false
   end
-  ok = patch_hunks(backupname, source, hunks)
-  if not ok then
-    warning(format("error patching file %s", source))
-    if file_copy(source, source .. ".invalid") then
-      warning(format("invalid version is saved to %s",
-                     source .. ".invalid"))
-      -- todo: proper rejects
-      os.rename(backupname, source)
-    end
-    return false
-  end
+  patch_hunks(backupname, source, hunks)
   info(format("successfully patched %s", source))
   os.remove(backupname)
   return true

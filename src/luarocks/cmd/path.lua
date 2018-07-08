@@ -5,6 +5,7 @@ local path_cmd = {}
 
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
+local fs = require("luarocks.fs")
 
 path_cmd.help_summary = "Return the currently configured package path."
 path_cmd.help_arguments = ""
@@ -12,7 +13,7 @@ path_cmd.help = [[
 Returns the package path currently configured for this installation
 of LuaRocks, formatted as shell commands to update LUA_PATH and LUA_CPATH. 
 
---bin          Adds the system path to the output
+--no-bin       Do not export the PATH variable
 
 --append       Appends the paths to the existing paths. Default is to prefix
                the LR paths to the existing paths.
@@ -56,11 +57,13 @@ function path_cmd.command(flags)
       lr_cpath = lr_cpath .. ";" .. package.cpath
       lr_bin = lr_bin .. path_sep .. os.getenv("PATH")
    end
+   
+   local lpath_var, lcpath_var = util.lua_path_variables()
 
-   util.printout(cfg.export_lua_path:format(util.cleanup_path(lr_path, ';', cfg.lua_version)))
-   util.printout(cfg.export_lua_cpath:format(util.cleanup_path(lr_cpath, ';', cfg.lua_version)))
-   if flags["bin"] then
-      util.printout(cfg.export_path:format(util.cleanup_path(lr_bin, path_sep)))
+   util.printout(fs.export_cmd(lpath_var, util.cleanup_path(lr_path, ';', cfg.lua_version)))
+   util.printout(fs.export_cmd(lcpath_var, util.cleanup_path(lr_cpath, ';', cfg.lua_version)))
+   if not flags["no-bin"] then
+      util.printout(fs.export_cmd("PATH", util.cleanup_path(lr_bin, path_sep)))
    end
    return true
 end

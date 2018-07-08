@@ -5,7 +5,7 @@ local cfg = require("luarocks.core.cfg")
 local search = require("luarocks.search")
 local repos = require("luarocks.repos")
 local deps = require("luarocks.deps")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
@@ -13,6 +13,7 @@ local fetch = require("luarocks.fetch")
 local path = require("luarocks.path")
 local persist = require("luarocks.persist")
 local manif = require("luarocks.manif")
+local queries = require("luarocks.queries")
 
 --- Update storage table to account for items provided by a package.
 -- @param storage table: a table storing items in the following format:
@@ -24,7 +25,7 @@ local manif = require("luarocks.manif")
 local function store_package_items(storage, name, version, items)
    assert(type(storage) == "table")
    assert(type(items) == "table")
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local package_identifier = name.."/"..version
@@ -48,7 +49,7 @@ end
 local function remove_package_items(storage, name, version, items)
    assert(type(storage) == "table")
    assert(type(items) == "table")
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local package_identifier = name.."/"..version
@@ -234,7 +235,7 @@ end
 -- message in case of errors.
 local function save_table(where, name, tbl)
    assert(type(where) == "string")
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(tbl) == "table")
 
    local filename = dir.path(where, name)
@@ -274,6 +275,34 @@ function writer.make_rock_manifest(name, version)
    local rock_manifest = { rock_manifest=tree }
    manif.rock_manifest_cache[name.."/"..version] = rock_manifest
    save_table(install_dir, "rock_manifest", rock_manifest )
+   return true
+end
+
+-- Writes a 'rock_namespace' file in a locally installed rock directory.
+-- @param name string: the rock name (may be in user/rock format)
+-- @param version string: the rock version
+-- @param namespace string?: the namespace
+-- @return true if successful (or unnecessary, if there is no namespace),
+-- or nil and an error message.
+function writer.make_namespace_file(name, version, namespace)
+   assert(type(name) == "string" and not name:match("/"))
+   assert(type(version) == "string")
+   assert(type(namespace) == "string" or not namespace)
+   name = util.adjust_name_and_namespace(name, { namespace = namespace })
+   name, namespace = util.split_namespace(name)
+   if not namespace then
+      return true
+   end
+   local fd, err = io.open(path.rock_namespace_file(name, version), "w")
+   if not fd then
+      return nil, err
+   end
+   local ok, err = fd:write(namespace)
+   if not ok then
+      return nil, err
+   end
+   fd:close()
+   return true
 end
 
 --- Scan a LuaRocks repository and output a manifest file.
@@ -296,9 +325,7 @@ function writer.make_manifest(repo, deps_mode, remote)
       return nil, "Cannot access repository at "..repo
    end
 
-   local query = search.make_query("")
-   query.exact_name = false
-   query.arch = "any"
+   local query = queries.all("any")
    local results = search.disk_search(repo, query)
    local manifest = { repository = {}, modules = {}, commands = {} }
 
@@ -334,14 +361,14 @@ end
 -- @return boolean or (nil, string): True if manifest was updated successfully,
 -- or nil and an error message.
 function writer.add_to_manifest(name, version, repo, deps_mode)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
    assert(type(deps_mode) == "string")
 
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
-   local manifest, err = manif.load_local_manifest(rocks_dir)
+   local manifest, err = manif.load_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
       -- Manifest built by `writer.make_manifest` should already
@@ -371,14 +398,14 @@ end
 -- @return boolean or (nil, string): True if manifest was updated successfully,
 -- or nil and an error message.
 function writer.remove_from_manifest(name, version, repo, deps_mode)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
    assert(type(deps_mode) == "string")
 
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
-   local manifest, err = manif.load_local_manifest(rocks_dir)
+   local manifest, err = manif.load_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
       -- Manifest built by `writer.make_manifest` should already
@@ -416,7 +443,7 @@ function writer.check_dependencies(repo, deps_mode)
    assert(type(deps_mode) == "string")
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
-   local manifest = manif.load_local_manifest(rocks_dir)
+   local manifest = manif.load_manifest(rocks_dir)
    if not manifest then
       return
    end

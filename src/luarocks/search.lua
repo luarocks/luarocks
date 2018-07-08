@@ -3,189 +3,145 @@ local search = {}
 local dir = require("luarocks.dir")
 local path = require("luarocks.path")
 local manif = require("luarocks.manif")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
+local queries = require("luarocks.queries")
+local results = require("luarocks.results")
 
---- Convert the arch field of a query table to table format.
--- @param query table: A query table.
-local function query_arch_as_table(query)
-   local format = type(query.arch)
-   if format == "table" then
-      return
-   elseif format == "nil" then
-      local accept = {}
-      accept["src"] = true
-      accept["all"] = true
-      accept["rockspec"] = true
-      accept["installed"] = true
-      accept[cfg.arch] = true
-      query.arch = accept
-   elseif format == "string" then
-      local accept = {}
-      for a in query.arch:gmatch("[%w_-]+") do
-         accept[a] = true
-      end
-      query.arch = accept
-   end
-end
-
---- Store a search result (a rock or rockspec) in the results table.
--- @param results table: The results table, where keys are package names and
+--- Store a search result (a rock or rockspec) in the result tree.
+-- @param result_tree table: The result tree, where keys are package names and
 -- values are tables matching version strings to arrays of
 -- tables with fields "arch" and "repo".
--- @param name string: Package name.
--- @param version string: Package version.
--- @param arch string: Architecture of rock ("all", "src" or platform
--- identifier), "rockspec" or "installed"
--- @param repo string: Pathname of a local repository of URL of
--- rocks server.
-function search.store_result(results, name, version, arch, repo)
-   assert(type(results) == "table")
-   assert(type(name) == "string")
-   assert(type(version) == "string")
-   assert(type(arch) == "string")
-   assert(type(repo) == "string")
-   
-   if not results[name] then results[name] = {} end
-   if not results[name][version] then results[name][version] = {} end
-   table.insert(results[name][version], {
-      arch = arch,
-      repo = repo
+-- @param result table: A result.
+function search.store_result(result_tree, result)
+   assert(type(result_tree) == "table")
+   assert(result:type() == "result")
+
+   local name = result.name
+   local version = result.version
+
+   if not result_tree[name] then result_tree[name] = {} end
+   if not result_tree[name][version] then result_tree[name][version] = {} end
+   table.insert(result_tree[name][version], {
+      arch = result.arch,
+      repo = result.repo,
+      namespace = result.namespace,
    })
 end
 
---- Test the name field of a query.
--- If query has a boolean field exact_name set to false,
--- then substring match is performed; otherwise, exact string
--- comparison is done.
--- @param query table: A query in dependency table format.
--- @param name string: A package name.
--- @return boolean: True if names match, false otherwise.
-local function match_name(query, name)
-   assert(type(query) == "table")
-   assert(type(name) == "string")
-   if query.exact_name == false then
-      return name:find(query.name, 0, true) and true or false
-   else
-      return name == query.name
-   end
-end
-
---- Store a match in a results table if version matches query.
+--- Store a match in a result tree if version matches query.
 -- Name, version, arch and repository path are stored in a given
 -- table, optionally checking if version and arch (if given) match
 -- a query.
--- @param results table: The results table, where keys are package names and
+-- @param result_tree table: The result tree, where keys are package names and
 -- values are tables matching version strings to arrays of
 -- tables with fields "arch" and "repo".
--- @param repo string: URL or pathname of the repository.
--- @param name string: The name of the package being tested.
--- @param version string: The version of the package being tested.
--- @param arch string: The arch of the package being tested.
--- @param query table: A table describing the query in dependency
--- format (for example, {name = "filesystem", exact_name = false,
--- constraints = {op = "~>", version = {1,0}}}, arch = "rockspec").
--- If the arch field is omitted, the local architecture (cfg.arch)
--- is used. The special value "any" is also recognized, returning all
--- matches regardless of architecture.
-local function store_if_match(results, repo, name, version, arch, query)
-   if match_name(query, name) then
-      if query.arch[arch] or query.arch["any"] then
-         if vers.match_constraints(vers.parse_version(version), query.constraints) then
-            search.store_result(results, name, version, arch, repo)
-         end
-      end
+-- @param result table: a result object.
+-- @param query table: a query object.
+local function store_if_match(result_tree, result, query)
+   assert(result:type() == "result")
+   assert(query:type() == "query")
+
+   if result:satisfies(query) then
+      search.store_result(result_tree, result)
    end
 end
 
 --- Perform search on a local repository.
 -- @param repo string: The pathname of the local repository.
--- @param query table: A table describing the query in dependency
--- format (for example, {name = "filesystem", exact_name = false,
--- constraints = {op = "~>", version = {1,0}}}, arch = "rockspec").
--- If the arch field is omitted, the local architecture (cfg.arch)
--- is used. The special value "any" is also recognized, returning all
--- matches regardless of architecture.
--- @param results table or nil: If given, this table will store the
--- results; if not given, a new table will be created.
--- @return table: The results table, where keys are package names and
+-- @param query table: a query object.
+-- @param result_tree table or nil: If given, this table will store the
+-- result tree; if not given, a new table will be created.
+-- @return table: The result tree, where keys are package names and
 -- values are tables matching version strings to arrays of
 -- tables with fields "arch" and "repo".
--- If a table was given in the "results" parameter, that is the result value.
-function search.disk_search(repo, query, results)
+-- If a table was given in the "result_tree" parameter, that is the result value.
+function search.disk_search(repo, query, result_tree)
    assert(type(repo) == "string")
-   assert(type(query) == "table")
-   assert(type(results) == "table" or not results)
+   assert(query:type() == "query")
+   assert(type(result_tree) == "table" or not result_tree)
    
    local fs = require("luarocks.fs")
      
-   if not results then
-      results = {}
+   if not result_tree then
+      result_tree = {}
    end
-   query_arch_as_table(query)
    
    for name in fs.dir(repo) do
       local pathname = dir.path(repo, name)
       local rname, rversion, rarch = path.parse_name(name)
 
       if rname and (pathname:match(".rockspec$") or pathname:match(".rock$")) then
-         store_if_match(results, repo, rname, rversion, rarch, query)
+         local result = results.new(rname, rversion, repo, rarch)
+         store_if_match(result_tree, result, query)
       elseif fs.is_dir(pathname) then
          for version in fs.dir(pathname) do
             if version:match("-%d+$") then
-               store_if_match(results, repo, name, version, "installed", query)
+               local namespace = path.read_namespace(name, version, repo)
+               local result = results.new(name, version, repo, "installed", namespace)
+               store_if_match(result_tree, result, query)
             end
          end
       end
    end
-   return results
+   return result_tree
 end
 
 --- Perform search on a rocks server or tree.
--- @param results table: The results table, where keys are package names and
+-- @param result_tree table: The result tree, where keys are package names and
 -- values are tables matching version strings to arrays of
 -- tables with fields "arch" and "repo".
 -- @param repo string: The URL of a rocks server or
 -- the pathname of a rocks tree (as returned by path.rocks_dir()).
--- @param query table: A table describing the query in dependency
--- format (for example, {name = "filesystem", exact_name = false,
--- constraints = {op = "~>", version = {1,0}}}, arch = "rockspec").
--- If the arch field is omitted, the local architecture (cfg.arch)
--- is used. The special value "any" is also recognized, returning all
--- matches regardless of architecture.
+-- @param query table: a query object.
 -- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
+-- @param is_local boolean
 -- @return true or, in case of errors, nil, an error message and an optional error code.
-function search.manifest_search(results, repo, query, lua_version)
-   assert(type(results) == "table")
+local function manifest_search(result_tree, repo, query, lua_version, is_local)
+   assert(type(result_tree) == "table")
    assert(type(repo) == "string")
-   assert(type(query) == "table")
-   
-   query_arch_as_table(query)
+   assert(query:type() == "query")
+
+   -- FIXME do not add this in local repos
+   if (not is_local) and query.namespace then
+      repo = repo .. "/manifests/" .. query.namespace
+   end
+
    local manifest, err, errcode = manif.load_manifest(repo, lua_version)
    if not manifest then
       return nil, err, errcode
    end
    for name, versions in pairs(manifest.repository) do
       for version, items in pairs(versions) do
+         local namespace = is_local and path.read_namespace(name, version, repo) or query.namespace
          for _, item in ipairs(items) do
-            store_if_match(results, repo, name, version, item.arch, query)
+            local result = results.new(name, version, repo, item.arch, namespace)
+            store_if_match(result_tree, result, query)
          end
       end
    end
    return true
 end
 
+local function remote_manifest_search(result_tree, repo, query, lua_version)
+   return manifest_search(result_tree, repo, query, lua_version, false)
+end
+
+function search.local_manifest_search(result_tree, repo, query, lua_version)
+   return manifest_search(result_tree, repo, query, lua_version, true)
+end
+
 --- Search on all configured rocks servers.
--- @param query table: A dependency query.
+-- @param query table: a query object.
 -- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
 -- @return table: A table where keys are package names
 -- and values are tables matching version strings to arrays of
 -- tables with fields "arch" and "repo".
 function search.search_repos(query, lua_version)
-   assert(type(query) == "table")
+   assert(query:type() == "query")
 
-   local results = {}
+   local result_tree = {}
    for _, repo in ipairs(cfg.rocks_servers) do
       if not cfg.disabled_servers[repo] then
          if type(repo) == "string" then
@@ -196,7 +152,7 @@ function search.search_repos(query, lua_version)
             if protocol == "file" then
                mirror = pathname
             end
-            local ok, err, errcode = search.manifest_search(results, mirror, query, lua_version)
+            local ok, err, errcode = remote_manifest_search(result_tree, mirror, query, lua_version)
             if errcode == "network" then
                cfg.disabled_servers[repo] = true
             end
@@ -210,38 +166,21 @@ function search.search_repos(query, lua_version)
    end
    -- search through rocks in cfg.rocks_provided
    local provided_repo = "provided by VM or rocks_provided"
-   for name, versions in pairs(cfg.rocks_provided) do
-      store_if_match(results, provided_repo, name, versions, "installed", query)
+   for name, version in pairs(cfg.rocks_provided) do
+      local result = results.new(name, version, provided_repo, "installed")
+      store_if_match(result_tree, result, query)
    end
-   return results
-end
-
---- Prepare a query in dependency table format.
--- @param name string: The query name.
--- @param version string or nil: 
--- @return table: A query in table format
-function search.make_query(name, version)
-   assert(type(name) == "string")
-   assert(type(version) == "string" or not version)
-   
-   local query = {
-      name = name,
-      constraints = {}
-   }
-   if version then
-      table.insert(query.constraints, { op = "==", version = vers.parse_version(version)})
-   end
-   return query
+   return result_tree
 end
 
 --- Get the URL for the latest in a set of versions.
 -- @param name string: The package name to be used in the URL.
 -- @param versions table: An array of version informations, as stored
--- in search results tables.
+-- in search result trees.
 -- @return string or nil: the URL for the latest version if one could
 -- be picked, or nil.
 local function pick_latest_version(name, versions)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(versions) == "table")
 
    local vtables = {}
@@ -265,31 +204,41 @@ local function pick_latest_version(name, versions)
 end
 
 -- Find out which other Lua versions provide rock versions matching a query,
--- @param query table: A dependency query matching a single rock.
+-- @param query table: a query object.
 -- @return table: array of Lua versions supported, in "5.x" format.
 local function supported_lua_versions(query)
-   local results = {}
+   assert(query:type() == "query")
+   local result_tree = {}
 
    for lua_version in util.lua_versions() do
       if lua_version ~= cfg.lua_version then
          if search.search_repos(query, lua_version)[query.name] then
-            table.insert(results, lua_version)
+            table.insert(result_tree, lua_version)
          end
       end
    end
 
-   return results
+   return result_tree
+end
+
+function search.find_src_or_rockspec(ns_name, version)
+   local query = queries.new(ns_name, version, false, "src|rockspec")
+   local url, err = search.find_suitable_rock(query)
+   if not url then
+      return nil, "Could not find a result named "..tostring(query)..": "..err
+   end
+   return url
 end
 
 --- Attempt to get a single URL for a given search for a rock.
--- @param query table: A dependency query matching a single rock.
+-- @param query table: a query object.
 -- @return string or (nil, string): URL for latest matching version
 -- of the rock if it was found, or nil followed by an error message.
 function search.find_suitable_rock(query)
-   assert(type(query) == "table")
+   assert(query:type() == "query")
    
-   local results = search.search_repos(query)
-   local first_rock = next(results)
+   local result_tree = search.search_repos(query)
+   local first_rock = next(result_tree)
    if not first_rock then
       if cfg.rocks_provided[query.name] == nil then
          -- Check if constraints are satisfiable with other Lua versions.
@@ -315,7 +264,7 @@ function search.find_suitable_rock(query)
       end
 
       return nil, "No results matching query were found."
-   elseif next(results, first_rock) then
+   elseif next(result_tree, first_rock) then
       -- Shouldn't happen as query must match only one package.
       return nil, "Several rocks matched query."
    elseif cfg.rocks_provided[query.name] ~= nil then
@@ -323,7 +272,7 @@ function search.find_suitable_rock(query)
       return nil, "Rock "..query.name.." "..cfg.rocks_provided[query.name]..
          " was found but it is provided by VM or 'rocks_provided' in the config file."
    else
-      return pick_latest_version(query.name, results[first_rock])
+      return pick_latest_version(query.name, result_tree[first_rock])
    end
 end
 
@@ -346,60 +295,50 @@ function search.return_results(results, porcelain)
 end
 
 --- Print a list of rocks/rockspecs on standard output.
--- @param results table: A table where keys are package names and versions
--- are tables matching version strings to an array of rocks servers.
+-- @param result_tree table: A result tree.
 -- @param porcelain boolean or nil: A flag to force machine-friendly output.
-function search.print_results(results, porcelain)
-   assert(type(results) == "table")
+function search.print_result_tree(result_tree, porcelain)
+   assert(type(result_tree) == "table")
    assert(type(porcelain) == "boolean" or not porcelain)
    
-   for package, versions in util.sortedpairs(results) do
-      if not porcelain then
-         util.printout(package)
-      end
-      for version, repos in util.sortedpairs(versions, vers.compare_versions) do
-         for _, repo in ipairs(repos) do
-            repo.repo = dir.normalize(repo.repo)
-            if porcelain then
-               util.printout(package, version, repo.arch, repo.repo)
-            else
-               util.printout("   "..version.." ("..repo.arch..") - "..repo.repo)
+   if porcelain then
+      for package, versions in util.sortedpairs(result_tree) do
+         for version, repos in util.sortedpairs(versions, vers.compare_versions) do
+            for _, repo in ipairs(repos) do
+               local nrepo = dir.normalize(repo.repo)
+               util.printout(package, version, repo.arch, nrepo, repo.namespace)
             end
          end
       end
-      if not porcelain then
+      return
+   end
+   
+   for package, versions in util.sortedpairs(result_tree) do
+      local namespaces = {}
+      for version, repos in util.sortedpairs(versions, vers.compare_versions) do
+         for _, repo in ipairs(repos) do
+            local key = repo.namespace or ""
+            local list = namespaces[key] or {}
+            namespaces[key] = list
+
+            repo.repo = dir.normalize(repo.repo)
+            table.insert(list, "   "..version.." ("..repo.arch..") - "..path.root_dir(repo.repo))
+         end
+      end
+      for key, list in util.sortedpairs(namespaces) do
+         util.printout(key == "" and package or key .. "/" .. package)
+         for _, line in ipairs(list) do
+            util.printout(line)
+         end
          util.printout()
       end
    end
 end
 
---- Given a name and optionally a version, try to find in the rocks
--- servers a single .src.rock or .rockspec file that satisfies
--- the request, and run the given function on it; or display to the
--- user possibilities if it couldn't narrow down a single match.
--- @param action function: A function that takes a .src.rock or
--- .rockspec URL as a parameter.
--- @param name string: A rock name
--- @param version string or nil: A version number may also be given.
--- @return The result of the action function, or nil and an error message. 
-function search.act_on_src_or_rockspec(action, name, version, ...)
-   assert(type(action) == "function")
-   assert(type(name) == "string")
-   assert(type(version) == "string" or not version)
+function search.pick_installed_rock(query, given_tree)
+   assert(query:type() == "query")
 
-   local query = search.make_query(name, version)
-   query.arch = "src|rockspec"
-   local url, err = search.find_suitable_rock(query)
-   if not url then
-      return nil, "Could not find a result named "..name..(version and " "..version or "")..": "..err
-   end
-   return action(url, ...)
-end
-
-function search.pick_installed_rock(name, version, given_tree)
-   local results = {}
-   local query = search.make_query(name, version)
-   query.exact_name = true
+   local result_tree = {}
    local tree_map = {}
    local trees = cfg.rocks_trees
    if given_tree then
@@ -408,16 +347,15 @@ function search.pick_installed_rock(name, version, given_tree)
    for _, tree in ipairs(trees) do
       local rocks_dir = path.rocks_dir(tree)
       tree_map[rocks_dir] = tree
-      search.manifest_search(results, rocks_dir, query)
+      search.local_manifest_search(result_tree, rocks_dir, query)
+   end
+   if not next(result_tree) then
+      return nil, "cannot find package "..tostring(query).."\nUse 'list' to find installed rocks."
    end
 
-   if not next(results) then --
-      return nil,"cannot find package "..name.." "..(version or "").."\nUse 'list' to find installed rocks."
-   end
-
-   version = nil
+   local version = nil
    local repo_url
-   local package, versions = util.sortedpairs(results)()
+   local _, versions = util.sortedpairs(result_tree)()
    --question: what do we do about multiple versions? This should
    --give us the latest version on the last repo (which is usually the global one)
    for vs, repositories in util.sortedpairs(versions, vers.compare_versions) do
@@ -426,7 +364,7 @@ function search.pick_installed_rock(name, version, given_tree)
    end
 
    local repo = tree_map[repo_url]
-   return name, version, repo, repo_url
+   return query.name, version, repo, repo_url
 end
 
 return search

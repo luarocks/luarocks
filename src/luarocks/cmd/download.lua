@@ -26,6 +26,9 @@ function cmd_download.command(flags, name, version)
    if type(name) ~= "string" and not flags["all"] then
       return nil, "Argument missing. "..util.see_help("download")
    end
+
+   name = util.adjust_name_and_namespace(name, flags)
+
    if not name then name, version = "", "" end
 
    local arch

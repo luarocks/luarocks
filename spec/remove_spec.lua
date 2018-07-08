@@ -1,4 +1,4 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
@@ -6,13 +6,13 @@ local testing_paths = test_env.testing_paths
 test_env.unload_luarocks()
 
 local extra_rocks = {
-   "/abelhas-1.0-1.rockspec",
+   "/abelhas-1.1-1.rockspec",
    "/lualogging-1.3.0-1.src.rock",
    "/luasocket-3.0rc1-2.src.rock",
    "/luasocket-3.0rc1-2.rockspec"
 }
 
-describe("LuaRocks remove tests #blackbox #b_remove", function()
+describe("LuaRocks remove tests #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
@@ -36,16 +36,16 @@ describe("LuaRocks remove tests #blackbox #b_remove", function()
       end)
 
       it("LuaRocks remove built abelhas", function()
-         assert.is_true(run.luarocks_bool("build abelhas 1.0"))
+         assert.is_true(run.luarocks_bool("build abelhas 1.1"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/abelhas"))
-         assert.is_true(run.luarocks_bool("remove abelhas 1.0"))
+         assert.is_true(run.luarocks_bool("remove abelhas 1.1"))
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/abelhas"))
       end)
 
       it("LuaRocks remove built abelhas with uppercase name", function()
-         assert.is_true(run.luarocks_bool("build abelhas 1.0"))
+         assert.is_true(run.luarocks_bool("build abelhas 1.1"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/abelhas"))
-         assert.is_true(run.luarocks_bool("remove Abelhas 1.0"))
+         assert.is_true(run.luarocks_bool("remove Abelhas 1.1"))
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/abelhas"))
       end)
    end)
@@ -82,11 +82,11 @@ describe("LuaRocks remove tests #blackbox #b_remove", function()
       end)
    end)
 
-   it("LuaRocks-admin remove #ssh", function()
+   it("#admin remove #ssh", function()
       assert.is_true(run.luarocks_admin_bool("--server=testing remove luasocket-3.0rc1-2.src.rock"))
    end)
    
-   it("LuaRocks-admin remove missing", function()
+   it("#admin remove missing", function()
       assert.is_false(run.luarocks_admin_bool("--server=testing remove"))
    end)
 end)

@@ -4,6 +4,7 @@ local pack = {}
 
 local unpack = unpack or table.unpack
 
+local queries = require("luarocks.queries")
 local path = require("luarocks.path")
 local repos = require("luarocks.repos")
 local fetch = require("luarocks.fetch")
@@ -28,7 +29,7 @@ function pack.pack_source_rock(rockspec_file)
    if err then
       return nil, "Error loading rockspec: "..err
    end
-   rockspec_file = rockspec.local_filename
+   rockspec_file = rockspec.local_abs_filename
 
    local name_version = rockspec.name .. "-" .. rockspec.version
    local rock_file = fs.absolute_name(name_version .. ".src.rock")
@@ -41,7 +42,7 @@ function pack.pack_source_rock(rockspec_file)
    if not ok then return nil, err end
 
    fs.delete(rock_file)
-   fs.copy(rockspec_file, source_dir, cfg.perm_read)
+   fs.copy(rockspec_file, source_dir, "read")
    if not fs.zip(rock_file, dir.base_name(rockspec_file), dir.base_name(source_file)) then
       return nil, "Failed packing "..rock_file
    end
@@ -76,17 +77,14 @@ end
 -- @param tree string or nil: An optional tree to pick the package from.
 -- @return string or (nil, string): The filename of the resulting
 -- .src.rock file; or nil and an error message.
-function pack.pack_installed_rock(name, version, tree)
-   assert(type(name) == "string")
-   assert(type(version) == "string" or not version)
+function pack.pack_installed_rock(query, tree)
 
-   local repo, repo_url
-   name, version, repo, repo_url = search.pick_installed_rock(name, version, tree)
+   local name, version, repo, repo_url = search.pick_installed_rock(query, tree)
    if not name then
       return nil, version
    end
 
-   local root = path.root_dir(repo_url)
+   local root = path.root_from_rocks_dir(repo_url)
    local prefix = path.install_dir(name, version, root)
    if not fs.exists(prefix) then
       return nil, "'"..name.." "..version.."' does not seem to be an installed rock."
@@ -103,12 +101,12 @@ function pack.pack_installed_rock(name, version, tree)
 
    local is_binary = false
    if rock_manifest.lib then
-      local ok, err = copy_back_files(name, version, rock_manifest.lib, path.deploy_lib_dir(root), dir.path(temp_dir, "lib"), cfg.perm_exec)
+      local ok, err = copy_back_files(name, version, rock_manifest.lib, path.deploy_lib_dir(root), dir.path(temp_dir, "lib"), "exec")
       if not ok then return nil, "Failed copying back files: " .. err end
       is_binary = true
    end
    if rock_manifest.lua then
-      local ok, err = copy_back_files(name, version, rock_manifest.lua, path.deploy_lua_dir(root), dir.path(temp_dir, "lua"), cfg.perm_read)
+      local ok, err = copy_back_files(name, version, rock_manifest.lua, path.deploy_lua_dir(root), dir.path(temp_dir, "lua"), "read")
       if not ok then return nil, "Failed copying back files: " .. err end
    end
    
@@ -126,7 +124,7 @@ function pack.pack_installed_rock(name, version, tree)
    return rock_file
 end
 
-function pack.pack_binary_rock(name, version, cmd, ...)
+function pack.pack_binary_rock(name, version, cmd)
 
    -- The --pack-binary-rock option for "luarocks build" basically performs
    -- "luarocks build" on a temporary tree and then "luarocks pack". The
@@ -142,7 +140,7 @@ function pack.pack_binary_rock(name, version, cmd, ...)
    util.schedule_function(fs.delete, temp_dir)
 
    path.use_tree(temp_dir)
-   local ok, err = cmd(...)
+   local ok, err = cmd()
    if not ok then
       return nil, err
    end
@@ -150,7 +148,8 @@ function pack.pack_binary_rock(name, version, cmd, ...)
    if not rname then
       rname, rversion = name, version
    end
-   return pack.pack_installed_rock(rname, rversion, temp_dir)
+   local query = queries.new(rname, rversion)
+   return pack.pack_installed_rock(query, temp_dir)
 end
 
 return pack

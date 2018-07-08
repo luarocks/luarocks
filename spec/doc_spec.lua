@@ -1,4 +1,4 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 
@@ -9,7 +9,7 @@ local extra_rocks = {
   "/c3-1.0-1.src.rock"
 }
 
-describe("LuaRocks doc tests #blackbox #b_doc", function()
+describe("LuaRocks doc tests #integration", function()
    
    before_each(function()
       test_env.setup_specs(extra_rocks)
@@ -36,6 +36,14 @@ describe("LuaRocks doc tests #blackbox #b_doc", function()
          test_env.remove_dir(testing_paths.testing_sys_rocks .. "/luarepl/0.4-1/doc")
          local output = run.luarocks("doc luarepl")
          assert.is.truthy(output:find("Local documentation directory not found"))
+      end)
+   end)
+
+   describe("#namespaces", function()
+      it("retrieves docs for a namespaced package from the command-line", function()
+         assert(run.luarocks_bool("build a_user/a_rock --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+         assert(run.luarocks_bool("build a_rock --keep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+         assert.match("a_rock 2.0", run.luarocks("doc a_user/a_rock"))
       end)
    end)
    
@@ -67,5 +75,3 @@ describe("LuaRocks doc tests #blackbox #b_doc", function()
       end)
    end)
 end)
-
-

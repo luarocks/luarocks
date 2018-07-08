@@ -6,14 +6,14 @@ local unpack = unpack or table.unpack
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
 
 local cached_git_version
 
 --- Get git version.
 -- @param git_cmd string: name of git command.
--- @return table: git version as returned by luarocks.vers.parse_version.
+-- @return table: git version as returned by luarocks.core.vers.parse_version.
 local function git_version(git_cmd)
    if not cached_git_version then
       local version_line = io.popen(fs.Q(git_cmd)..' --version'):read()
@@ -50,6 +50,25 @@ local function git_supports_shallow_submodules(git_cmd)
    return git_is_at_least(git_cmd, "1.8.4")
 end
 
+local function git_identifier(git_cmd, ver)
+   if not (ver:match("^dev%-%d+$") or ver:match("^scm%-%d+$")) then
+      return nil
+   end
+   local pd = io.popen(fs.command_at(fs.current_dir(), fs.Q(git_cmd).." log --pretty=format:%ai_%h -n 1"))
+   if not pd then
+      return nil
+   end
+   local date_hash = pd:read("*l")
+   pd:close()
+   if not date_hash then
+      return nil
+   end
+   local date, time, tz, hash = date_hash:match("([^%s]+) ([^%s]+) ([^%s]+)_([^%s]+)")
+   date = date:gsub("%-", "")
+   time = time:gsub(":", "")
+   return date .. "." .. time .. "." .. hash
+end
+
 --- Download sources for building a rock, using git.
 -- @param rockspec table: The rockspec table
 -- @param extract boolean: Unused in this module (required for API purposes.)
@@ -58,7 +77,7 @@ end
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
 function git.get_sources(rockspec, extract, dest_dir, depth)
-   assert(type(rockspec) == "table")
+   assert(rockspec:type() == "rockspec")
    assert(type(dest_dir) == "string" or not dest_dir)
 
    local git_cmd = rockspec.variables.GIT
@@ -121,6 +140,10 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
       if not fs.execute(unpack(command)) then
          return nil, 'Failed to fetch submodules.'
       end
+   end
+   
+   if not rockspec.source.tag then
+      rockspec.source.identifier = git_identifier(git_cmd, rockspec.version)
    end
 
    fs.delete(dir.path(store_dir, module, ".git"))

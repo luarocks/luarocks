@@ -8,7 +8,7 @@ local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local build = require("luarocks.build")
 local dir = require("luarocks.dir")
-local cfg = require("luarocks.core.cfg")
+local search = require("luarocks.search")
 
 unpack.help_summary = "Unpack the contents of a rock."
 unpack.help_arguments = "[--force] {<rock>|<name> [<version>]}"
@@ -126,7 +126,7 @@ local function run_unpacker(file, force)
    end
    if kind == "src" or kind == "rockspec" then
       if rockspec.source.dir ~= "." then
-         local ok = fs.copy(rockspec.local_filename, rockspec.source.dir, cfg.perm_read)
+         local ok = fs.copy(rockspec.local_abs_filename, rockspec.source.dir, "read")
          if not ok then
             return nil, "Failed copying unpacked rockspec into unpacked source directory."
          end
@@ -141,24 +141,31 @@ local function run_unpacker(file, force)
 end
 
 --- Driver function for the "unpack" command.
--- @param name string: may be a rock filename, for unpacking a 
+-- @param ns_name string: may be a rock filename, for unpacking a 
 -- rock file or the name of a rock to be fetched and unpacked.
 -- @param version string or nil: if the name of a package is given, a
 -- version may also be passed.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-function unpack.command(flags, name, version)
+function unpack.command(flags, ns_name, version)
    assert(type(version) == "string" or not version)
-   if type(name) ~= "string" then
+   if type(ns_name) ~= "string" then
       return nil, "Argument missing. "..util.see_help("unpack")
    end
 
-   if name:match(".*%.rock") or name:match(".*%.rockspec") then
-      return run_unpacker(name, flags["force"])
+   ns_name = util.adjust_name_and_namespace(ns_name, flags)
+
+   local url, err
+   if ns_name:match(".*%.rock") or ns_name:match(".*%.rockspec") then
+      url = ns_name
    else
-      local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(run_unpacker, name:lower(), version)
+      url, err = search.find_src_or_rockspec(ns_name, version)
+      if not url then
+         return nil, err
+      end
    end
+
+   return run_unpacker(url, flags["force"])
 end
 
 return unpack

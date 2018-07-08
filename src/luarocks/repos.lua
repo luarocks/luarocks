@@ -8,7 +8,7 @@ local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 
 -- Tree of files installed by a package are stored
 -- in its rock manifest. Some of these files have to
@@ -32,7 +32,7 @@ local vers = require("luarocks.vers")
 -- @return table or nil: An array of strings listing installed
 -- versions of a package, or nil if none is available.
 local function get_installed_versions(name)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    
    local dirs = fs.list_dir(path.versions_dir(name))
    return (dirs and #dirs > 0) and dirs or nil
@@ -45,7 +45,7 @@ end
 -- @return boolean: true if a package is installed,
 -- false otherwise.
 function repos.is_installed(name, version)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
       
    return fs.is_dir(path.install_dir(name, version))
@@ -93,7 +93,7 @@ end
 -- If no modules are found or if package name or version
 -- are invalid, an empty table is returned.
 function repos.package_modules(name, version)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local result = {}
@@ -114,7 +114,7 @@ end
 -- If no commands are found or if package name or version
 -- are invalid, an empty table is returned.
 function repos.package_commands(name, version)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local result = {}
@@ -131,14 +131,14 @@ end
 -- @return boolean: returns true if rock contains platform-specific
 -- binary executables, or false if it is a pure-Lua rock.
 function repos.has_binaries(name, version)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
    local rock_manifest = manif.load_rock_manifest(name, version)
    if rock_manifest and rock_manifest.bin then
-      for name, md5 in pairs(rock_manifest.bin) do
+      for bin_name, md5 in pairs(rock_manifest.bin) do
          -- TODO verify that it is the same file. If it isn't, find the actual command.
-         if fs.is_actual_binary(dir.path(cfg.deploy_bin_dir, name)) then
+         if fs.is_actual_binary(dir.path(cfg.deploy_bin_dir, bin_name)) then
             return true
          end
       end
@@ -147,7 +147,7 @@ function repos.has_binaries(name, version)
 end
 
 function repos.run_hook(rockspec, hook_name)
-   assert(type(rockspec) == "table")
+   assert(rockspec:type() == "rockspec")
    assert(type(hook_name) == "string")
 
    local hooks = rockspec.hooks
@@ -174,7 +174,7 @@ function repos.run_hook(rockspec, hook_name)
 end
 
 function repos.should_wrap_bin_scripts(rockspec)
-   assert(type(rockspec) == "table")
+   assert(rockspec:type() == "rockspec")
 
    if cfg.wrap_bin_scripts ~= nil then
       return cfg.wrap_bin_scripts
@@ -272,7 +272,7 @@ end
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
 function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    assert(type(wrap_bin_scripts) == "boolean")
 
@@ -315,9 +315,13 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
 
    local function install_binary(source, target)
       if wrap_bin_scripts and fs.is_lua(source) then
-         return target .. (cfg.wrapper_suffix or ""), function() return fs.wrap_script(source, target, name, version) end
+         return target .. (cfg.wrapper_suffix or ""), function()
+            return fs.wrap_script(source, target, deps_mode, name, version)
+         end
       else
-         return target, function() return fs.copy_binary(source, target) end
+         return target, function()
+            return fs.copy_binary(source, target)
+         end
       end
    end
 
@@ -330,10 +334,10 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    local ok, err = deploy_file_tree("bin", path.bin_dir(name, version), install_binary, cfg.wrapper_suffix)
    if not ok then return nil, err end
 
-   ok, err = deploy_file_tree("lua", path.lua_dir(name, version), make_mover(cfg.perm_read))
+   ok, err = deploy_file_tree("lua", path.lua_dir(name, version), make_mover("read"))
    if not ok then return nil, err end
 
-   ok, err = deploy_file_tree("lib", path.lib_dir(name, version), make_mover(cfg.perm_exec))
+   ok, err = deploy_file_tree("lib", path.lib_dir(name, version), make_mover("exec"))
    if not ok then return nil, err end
 
    local writer = require("luarocks.manif.writer")
@@ -351,7 +355,7 @@ end
 -- was deleted. This is used during 'purge', as every module
 -- will be eventually deleted.
 function repos.delete_version(name, version, deps_mode, quick)
-   assert(type(name) == "string")
+   assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    assert(type(deps_mode) == "string")
 

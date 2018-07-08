@@ -1,150 +1,120 @@
 
-include config.unix
+-include config.unix
 
-.PHONY: all build dev build_bins luadoc check_makefile cleanup_bins clean \
- install_site_config write_sysconfig install bootstrap install_rock \
- run_luarocks
+all: ./luarocks ./luarocks-admin
 
-ROCKS_TREE ?= $(PREFIX)
-SYSCONFDIR ?= $(PREFIX)/etc/luarocks
-LUA_DIR ?= /usr/local
-LUA_BINDIR ?= $(LUA_DIR)/bin
+# ----------------------------------------
+# Base build
+# ----------------------------------------
 
-CONFIG_FILE = $(SYSCONFDIR)/config-$(LUA_VERSION).lua
+build: all
 
-SAFEPWD=`echo "$$PWD" | sed -e 's/\([][]\)\1/]]..'\''\1\1'\''..[[/g'`
-
-all: 
-	@echo "- Type 'make build' and 'make install':"
-	@echo "  to install to $(PREFIX) as usual."
-	@echo "- Type 'make bootstrap':"
-	@echo "  to install LuaRocks in $(PREFIX) as a rock."
+config.unix:
+	@echo Please run the "./configure" script before building.
 	@echo
+	@exit 1
 
-include Makefile.setup.inc
-include Makefile.install.inc
+config-$(LUA_VERSION).lua.in: config.unix
 
-build: $(SITE_CONFIG) build_bins
-	@echo
-	@echo "Done. Type 'make install' to install into $(PREFIX)."
-	@echo
+./luarocks: config.unix config-$(LUA_VERSION).lua.in
+	rm -f src/luarocks/core/hardcoded.lua
+	echo "#!/bin/sh" > luarocks
+	echo "unset LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4" >> luarocks
+	echo 'LUAROCKS_SYSCONFDIR="$(SYSCONFDIR)" LUA_PATH="$(PWD)/src/?.lua;;" exec "$(LUA_BINDIR)/$(LUA_INTERPRETER)" "$(PWD)/src/bin/luarocks" --project-tree="$(PWD)/lua_modules" "$$@"' >> luarocks
+	chmod +rx ./luarocks
+	./luarocks init
+	cp config-$(LUA_VERSION).lua.in .luarocks/config-$(LUA_VERSION).lua
 
-$(SITE_CONFIG): config.unix
-	rm -f $(SITE_CONFIG)
-	echo 'local site_config = {}' >> $(SITE_CONFIG)
-	if [ -n "$(PREFIX)" ] ;\
-	then \
-	   echo "site_config.LUAROCKS_PREFIX=[[$(PREFIX)]]" >> $(SITE_CONFIG) ;\
-	fi
-	if [ -n "$(LUA_INCDIR)" ] ;\
-	then \
-	   echo "site_config.LUA_INCDIR=[[$(LUA_INCDIR)]]" >> $(SITE_CONFIG) ;\
-	fi
-	if [ -n "$(LUA_LIBDIR)" ] ;\
-	then \
-	   echo "site_config.LUA_LIBDIR=[[$(LUA_LIBDIR)]]" >> $(SITE_CONFIG) ;\
-	fi
-	if [ -n "$(LUA_BINDIR)" ] ;\
-	then \
-	   echo "site_config.LUA_BINDIR=[[$(LUA_BINDIR)]]" >> $(SITE_CONFIG) ;\
-	fi
-	if [ -n "$(LUA_SUFFIX)" ] ;\
-	then \
-	   echo "site_config.LUA_INTERPRETER=[[lua$(LUA_SUFFIX)]]" >> $(SITE_CONFIG) ;\
-	fi
-	if [ -n "$(SYSCONFDIR)" ] ;\
-	then \
-	   echo "site_config.LUAROCKS_SYSCONFDIR=[[$(SYSCONFDIR)]]" >> $(SITE_CONFIG) ;\
-	fi
-	if [ -n "$(ROCKS_TREE)" ] ;\
-	then \
-	   echo "site_config.LUAROCKS_ROCKS_TREE=[[$(ROCKS_TREE)]]" >> $(SITE_CONFIG) ;\
-	fi
-	if [ -n "$(FORCE_CONFIG)" ] ;\
-	then \
-	   echo "site_config.LUAROCKS_FORCE_CONFIG=true" >> $(SITE_CONFIG) ;\
-	fi
-	if [ "$(LUA_DIR_SET)" = "yes" ] ;\
-	then \
-	   echo "site_config.LUA_DIR_SET=true" >> $(SITE_CONFIG) ;\
-	fi
-	echo "site_config.LUAROCKS_UNAME_S=[[$(LUAROCKS_UNAME_S)]]" >> $(SITE_CONFIG)
-	echo "site_config.LUAROCKS_UNAME_M=[[$(LUAROCKS_UNAME_M)]]" >> $(SITE_CONFIG)
-	echo "site_config.LUAROCKS_DOWNLOADER=[[$(LUAROCKS_DOWNLOADER)]]" >> $(SITE_CONFIG)
-	echo "site_config.LUAROCKS_MD5CHECKER=[[$(LUAROCKS_MD5CHECKER)]]" >> $(SITE_CONFIG)
-	if [ -n "$(MULTIARCH_SUBDIR)" ] ;\
-	then \
-	   echo 'site_config.LUAROCKS_EXTERNAL_DEPS_SUBDIRS={ bin="bin", lib={ "lib", [[$(MULTIARCH_SUBDIR)]] }, include="include" }' >> $(SITE_CONFIG) ;\
-	   echo 'site_config.LUAROCKS_RUNTIME_EXTERNAL_DEPS_SUBDIRS={ bin="bin", lib={ "lib", [[$(MULTIARCH_SUBDIR)]] }, include="include" }' >> $(SITE_CONFIG) ;\
-	fi
-	echo "return site_config" >> $(SITE_CONFIG)
+luarocks-admin: config.unix
+	rm -f src/luarocks/core/hardcoded.lua
+	echo "#!/bin/sh" > luarocks-admin
+	echo "unset LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4" >> luarocks-admin
+	echo 'LUAROCKS_SYSCONFDIR="$(SYSCONFDIR)" LUA_PATH="$(PWD)/src/?.lua;;" exec "$(LUA_BINDIR)/$(LUA_INTERPRETER)" "$(PWD)/src/bin/luarocks-admin" --project-tree="$(PWD)/lua_modules" "$$@"' >> luarocks-admin
+	chmod +rx ./luarocks-admin
 
-dev:
-	$(MAKE) build_bins LUADIR=$(PWD)/src
+# ----------------------------------------
+# Regular install
+# ----------------------------------------
 
-build_bins: cleanup_bins
-	for f in $(BIN_FILES) ;\
-	do \
-	   sed "1d" src/bin/$$f > src/bin/$$f.bak ;\
-	   echo "#!$(LUA_BINDIR)/lua$(LUA_SUFFIX)" > src/bin/$$f ;\
-	   echo "package.path = [[$(LUADIR)/?.lua;]]..package.path" | sed "s,//,/,g" >> src/bin/$$f ;\
-	   cat src/bin/$$f.bak >> src/bin/$$f ;\
-	   chmod +rx src/bin/$$f ;\
-	   rm -f src/bin/$$f.bak ;\
-	done
+install: all $(PREFIX)/bin/luarocks $(PREFIX)/bin/luarocks-admin $(SYSCONFDIR)/config-$(LUA_VERSION).lua
+	mkdir -p "$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks"
+	cp -a src/luarocks/* "$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks"
 
-luadoc:
-	rm -rf doc/luadoc
-	mkdir -p doc/luadoc
-	cd src && luadoc -d ../doc/luadoc --nofiles luarocks/*.lua
+$(PREFIX)/bin/luarocks: src/bin/luarocks config.unix
+	mkdir -p "$(PREFIX)/bin"
+	echo "#!$(LUA_BINDIR)/$(LUA_INTERPRETER)" > $@
+	echo "package.loaded['luarocks.core.hardcoded'] = { SYSCONFDIR = [[$(SYSCONFDIR)]] }" >> $@
+	echo "package.path=[[$(PREFIX)/share/lua/$(LUA_VERSION)/?.lua;]] .. package.path" >> $@
+	tail -n +2 src/bin/luarocks >> $@
+	chmod +rx $@
 
-check_makefile: clean
-	echo $(BIN_FILES) | tr " " "\n" | sort > makefile_list.txt
-	( cd src/bin && ls -d * ) | sort > luarocks_dir.txt
-	echo $(LUAROCKS_FILES) | tr " " "\n" | sort >> makefile_list.txt
-	( cd src/luarocks && find * -name "*.lua" ) | sort >> luarocks_dir.txt
-	diff makefile_list.txt luarocks_dir.txt
-	rm -f makefile_list.txt luarocks_dir.txt
-	@echo
-	@echo "Makefile is sane."
-	@echo
+$(PREFIX)/bin/luarocks-admin: src/bin/luarocks-admin config.unix
+	mkdir -p "$(PREFIX)/bin"
+	echo "#!$(LUA_BINDIR)/$(LUA_INTERPRETER)" > $@
+	echo "package.loaded['luarocks.core.hardcoded'] = { SYSCONFDIR = [[$(SYSCONFDIR)]] }" >> $@
+	echo "package.path=[[$(PREFIX)/share/lua/$(LUA_VERSION)/?.lua;]] .. package.path" >> $@
+	tail -n +2 src/bin/luarocks-admin >> $@
+	chmod +rx $@
 
-cleanup_bins:
-	for f in $(BIN_FILES) ;\
-	do \
-	   mv src/bin/$$f src/bin/$$f.bak ;\
-	   sed "s,^#!.*lua.*,#!/usr/bin/env lua,;/^package.path/d" < src/bin/$$f.bak > src/bin/$$f ;\
-	   chmod +rx src/bin/$$f ;\
-	   rm -f src/bin/$$f.bak ;\
-	done
+$(SYSCONFDIR)/config-$(LUA_VERSION).lua: config-$(LUA_VERSION).lua.in
+	mkdir -p "$(SYSCONFDIR)"
+	cp config-$(LUA_VERSION).lua.in "$(SYSCONFDIR)/config-$(LUA_VERSION).lua"
 
-clean: cleanup_bins
-	rm -f $(SITE_CONFIG)
+# ----------------------------------------
+# Binary build
+# ----------------------------------------
 
-run_luarocks:
-	'$(LUA_BINDIR)/lua$(LUA_SUFFIX)' -e "package.path=[[$(SAFEPWD)/src/?.lua;]]..package.path" src/bin/luarocks make rockspec --tree="$(PREFIX)"
+BINARY_TARGET=build-binary
 
-install_site_config: $(SITE_CONFIG)
-	mkdir -p "$(DESTDIR)$(LUADIR)/luarocks/core"
-	cp $(SITE_CONFIG) "$(DESTDIR)$(LUADIR)/luarocks/core"
+binary: $(BINARY_TARGET)/luarocks.exe $(BINARY_TARGET)/luarocks-admin.exe
 
-write_sysconfig:
-	mkdir -p "$(DESTDIR)$(ROCKS_TREE)"
-	if [ ! -f "$(DESTDIR)$(CONFIG_FILE)" ] ;\
-	then \
-	   mkdir -p `dirname "$(DESTDIR)$(CONFIG_FILE)"` ;\
-	   echo 'rocks_trees = {' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
-	   if  [ ! -n "$(FORCE_CONFIG)" ] ;\
-	   then \
-	      echo '   { name = [[user]], root = home..[[/.luarocks]] },' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
-	   fi ;\
-	   echo '   { name = [[system]], root = [[$(ROCKS_TREE)]] }' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
-	   echo '}' >> "$(DESTDIR)$(CONFIG_FILE)" ;\
-	fi
+$(BINARY_TARGET)/luarocks.exe: ./luarocks
+	LUA_PATH="$(PWD)/src/?.lua;;" "$(LUA_BINDIR)/$(LUA_INTERPRETER)" binary/all_in_one "src/bin/luarocks" "$(LUA_DIR)" "^src/luarocks/admin/" "$(SYSCONFDIR)" $(BINARY_TARGET) $(BINARY_PLATFORM) $(BINARY_CC) $(BINARY_NM) $(BINARY_SYSROOT)
 
-install: install_bins install_luas install_site_config write_sysconfig
+$(BINARY_TARGET)/luarocks-admin.exe: ./luarocks
+	LUA_PATH="$(PWD)/src/?.lua;;" "$(LUA_BINDIR)/$(LUA_INTERPRETER)" binary/all_in_one "src/bin/luarocks-admin" "$(LUA_DIR)" "^src/luarocks/cmd/" "$(SYSCONFDIR)" $(BINARY_TARGET) $(BINARY_PLATFORM) $(BINARY_CC) $(BINARY_NM) $(BINARY_SYSROOT)
 
-bootstrap: $(SITE_CONFIG) run_luarocks install_site_config write_sysconfig cleanup_bins
+# ----------------------------------------
+# Binary install
+# ----------------------------------------
 
-install_rock: install_bins install_luas
+install-binary: build-binary/luarocks.exe build-binary/luarocks-admin.exe
+	mkdir -p "$(PREFIX)/bin"
+	cp build-binary/luarocks.exe "$(PREFIX)/bin/luarocks"
+	chmod +rx "$(PREFIX)/bin/luarocks"
+	cp build-binary/luarocks-admin.exe "$(PREFIX)/bin/luarocks-admin"
+	chmod +rx "$(PREFIX)/bin/luarocks-admin"
+	mkdir -p "$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks/core"
+	cp -a src/luarocks/core/* "$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks/core"
+	cp -a src/luarocks/loader.lua "$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks/"
 
+# ----------------------------------------
+# Bootstrap install
+# ----------------------------------------
+
+bootstrap: ./luarocks $(SYSCONFDIR)/config-$(LUA_VERSION).lua
+	./luarocks make --tree="$(ROCKS_TREE)"
+
+# ----------------------------------------
+# Windows binary build
+# ----------------------------------------
+
+windows-binary: ./luarocks
+	make -f binary/Makefile.windows windows-binary
+
+windows-clean:
+	make -f binary/Makefile.windows windows-clean
+
+# ----------------------------------------
+# Clean
+# ----------------------------------------
+
+clean:
+	rm -f ./config.unix
+	rm -f ./luarocks
+	rm -f ./luarocks-admin
+	rm -rf build-binary
+	rm -rf ./.luarocks
+	rm -rf ./lua_modules
+
+.PHONY: all build install binary install-binary bootstrap clean windows-binary windows-clean

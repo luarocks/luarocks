@@ -1,4 +1,4 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
@@ -14,19 +14,30 @@ local extra_rocks = {
    "/lxsh-0.8.6-2.rockspec"
 }
 
-describe("LuaRocks make tests #blackbox #b_make", function()
+describe("LuaRocks make tests #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
    end)
 
    it("LuaRocks make with no flags/arguments", function()
-      lfs.chdir("test")
+      finally(function()
+         lfs.chdir(testing_paths.testrun_dir)
+         test_env.remove_dir("empty")
+      end)
+      assert(lfs.mkdir("empty"))
+      assert(lfs.chdir("empty"))
       assert.is_false(run.luarocks_bool("make"))
-      lfs.chdir(testing_paths.luarocks_dir)
    end)
 
    it("LuaRocks make with rockspec", function()
+      finally(function()
+         -- delete downloaded and unpacked files
+         lfs.chdir(testing_paths.testrun_dir)
+         test_env.remove_dir("luasocket-3.0rc1-2")
+         os.remove("luasocket-3.0rc1-2.src.rock")
+      end)
+   
       -- make luasocket
       assert.is_true(run.luarocks_bool("download --source luasocket 3.0rc1-2"))
       assert.is_true(run.luarocks_bool("unpack luasocket-3.0rc1-2.src.rock"))
@@ -36,11 +47,6 @@ describe("LuaRocks make tests #blackbox #b_make", function()
       -- test it
       assert.is_true(run.luarocks_bool("show luasocket"))
       assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket/3.0rc1-2/luasocket-3.0rc1-2.rockspec"))
-
-      -- delete downloaded and unpacked files
-      lfs.chdir(testing_paths.luarocks_dir)
-      test_env.remove_dir("luasocket-3.0rc1-2")
-      assert.is_true(os.remove("luasocket-3.0rc1-2.src.rock"))
    end)
 
    describe("LuaRocks making rockspecs (using lxsh)", function()
@@ -53,7 +59,7 @@ describe("LuaRocks make tests #blackbox #b_make", function()
    
       -- delete downloaded and unpacked files
       after_each(function()
-         assert.is_true(lfs.chdir(testing_paths.luarocks_dir))
+         assert(lfs.chdir(testing_paths.testrun_dir))
          test_env.remove_dir("lxsh-0.8.6-2")
          assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
       end)         
@@ -67,12 +73,15 @@ describe("LuaRocks make tests #blackbox #b_make", function()
       end)
 
       it("LuaRocks make unnamed rockspec", function()
+         finally(function()
+            os.remove("rockspec")
+         end)
+      
          test_env.copy("lxsh-0.8.6-2.rockspec", "rockspec")
          assert.is_true(run.luarocks_bool("make"))
 
          assert.is_true(run.luarocks_bool("show lxsh"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
-         os.remove("rockspec")
       end)
       
       it("LuaRocks make ambiguous rockspec", function()
@@ -102,7 +111,7 @@ describe("LuaRocks make tests #blackbox #b_make", function()
 
    describe("LuaRocks make upgrading rockspecs with mixed deploy types", function()
       before_each(function()
-         test_env.copy_dir(testing_paths.testing_dir .. "/testfiles/mixed_deploy_type", "mdt")
+         test_env.copy_dir(testing_paths.fixtures_dir .. "/mixed_deploy_type", "mdt")
       end)
 
       after_each(function()

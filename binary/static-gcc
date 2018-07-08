@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+
+STATIC_GCC_AR=${STATIC_GCC_AR:-ar}
+STATIC_GCC_RANLIB=${STATIC_GCC_RANLIB:-ranlib}
+STATIC_GCC_CC=${STATIC_GCC_CC:-gcc}
+
+DIR="$( cd "$( dirname "$0" )" && pwd )"
+
+function log() { echo -- "$@" >> $DIR/log.txt; }
+
+function runlog() { log "$@"; "$@"; }
+
+log "---------------------------"
+log INP "$@"
+
+allargs=()
+sources=()
+objects=()
+etc=()
+libdirs=($("$STATIC_GCC_CC" -print-search-dirs | grep libraries | cut -d= -f2 | tr ':' '\n'))
+incdirs=()
+
+linking=0
+
+while [ "$1" ]
+do
+   allargs+=("$1")
+   if [ "$next_libdir" = "1" ]
+   then
+      libdirs+=("$1")
+      next_libdir=0
+   elif [ "$next_incdir" = "1" ]
+   then
+      incdirs+=("-I$1")
+      next_incdir=0
+   elif [ "$next_lib" = "1" ]
+   then
+      libs+=("$1")
+      next_lib=0
+   elif [ "$next_output" = "1" ]
+   then
+      output="$1"
+      next_output=0
+   else
+      case "$1" in
+      -*)
+         case "$1" in
+         -shared)
+            linking=1
+         ;;
+         -static)
+            linking=1
+         ;;
+         -o)
+            next_output=1
+         ;;
+         -c)
+            object=1
+            etc+=("$1")
+         ;;
+         -L)
+            next_libdir=1
+         ;;
+         -L*)
+            libdirs+=("${1:2}")
+         ;;
+         -I)
+            next_incdir=1
+         ;;
+         -I*)
+            incdirs+=("$1")
+         ;;
+         -l)
+            next_lib=1
+         ;;
+         -l*)
+            libs+=("${1:2}")
+         ;;
+         *)
+            etc+=("$1")
+         ;;
+         esac
+      ;;
+      *.c)
+         sources+=("$1")
+      ;;
+      *.o)
+         objects+=("$1")
+      ;;
+      *)
+         etc+=("$1")
+      ;;
+      esac
+   fi
+   shift
+done
+
+staticlibs=()
+for lib in "${libs[@]}"
+do
+   found=0
+   for libdir in "${libdirs[@]}"
+   do
+      staticlib="$libdir/lib$lib.a"
+      if [ -e "$staticlib" ]
+      then
+         staticlibs+=("$staticlib")
+         found=1
+         break
+      fi
+   done
+   if [ "$found" = 0 ]
+   then
+      log "STATICLIB not found for $lib"
+      runlog exit 1
+   fi
+done
+
+oflag=()
+if [ "$output" != "" ]
+then
+   oflag=("-o" "$output")
+fi
+
+if [ "$linking" = "1" ]
+then
+   log LINK
+   if [ "${#sources[@]}" -gt 0 ]
+   then
+      for source in "${sources[@]}"
+      do
+         object="${source%.c}.o"
+         runlog $STATIC_GCC_CC "${incdirs[@]}" "${etc[@]}" -c -o "$object" "$source"
+         [ "$?" = 0 ] || runlog exit $?
+         objects+=("$object")
+      done
+   fi
+
+   # runlog ar rcu "${oflag[@]}" "${objects[@]}" "${staticlibs[@]}"
+   echo "CREATE $output" > ar.script
+   for o in "${objects[@]}"
+   do
+      echo "ADDMOD $o" >> ar.script
+   done
+   for o in "${staticlibs[@]}"
+   do
+      echo "ADDLIB $o" >> ar.script
+   done
+   echo "SAVE" >> ar.script
+   echo "END" >> ar.script
+   cat ar.script >> "$DIR/log.txt"
+   cat ar.script | $STATIC_GCC_AR -M
+   [ "$?" = 0 ] || runlog exit $?
+
+   [ -e "$output" ] || {
+      exit 1
+   }
+
+   runlog $STATIC_GCC_RANLIB "$output"
+   runlog exit $?
+elif [ "$object" = 1 ]
+then
+   log OBJECT
+   runlog $STATIC_GCC_CC "${oflag[@]}" "${incdirs[@]}" "${etc[@]}" "${sources[@]}"
+   runlog exit $?
+else
+   log EXECUTABLE
+   runlog $STATIC_GCC_CC "${allargs[@]}"
+   runlog exit $?
+fi

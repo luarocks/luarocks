@@ -14,6 +14,7 @@ local pack = require("luarocks.pack")
 local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
 local writer = require("luarocks.manif.writer")
+local cmd = require("luarocks.cmd")
 
 make.help_summary = "Compile package in current directory using a rockspec."
 make.help_arguments = "[--pack-binary-rock] [<rockspec>]"
@@ -53,30 +54,44 @@ only dependencies of the rockspec (see `luarocks help install`).
 -- @param name string: A local rockspec.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
-function make.command(flags, rockspec)
-   assert(type(rockspec) == "string" or not rockspec)
+function make.command(flags, rockspec_filename)
+   assert(type(rockspec_filename) == "string" or not rockspec_filename)
    
-   if not rockspec then
+   if not rockspec_filename then
       local err
-      rockspec, err = util.get_default_rockspec()
-      if not rockspec then
+      rockspec_filename, err = util.get_default_rockspec()
+      if not rockspec_filename then
          return nil, err
       end
    end
-   if not rockspec:match("rockspec$") then
+   if not rockspec_filename:match("rockspec$") then
       return nil, "Invalid argument: 'make' takes a rockspec as a parameter. "..util.see_help("make")
    end
+   
+   local rockspec, err, errcode = fetch.load_rockspec(rockspec_filename)
+   if not rockspec then
+      return nil, err
+   end
+
+   local name = util.adjust_name_and_namespace(rockspec.name, flags)
+
+   local opts = build.opts({
+      need_to_fetch = false,
+      minimal_mode = true,
+      deps_mode = deps.get_deps_mode(flags),
+      build_only_deps = false,
+      namespace = flags["namespace"],
+      branch = not not flags["branch"],
+   })
 
    if flags["pack-binary-rock"] then
-      local rspec, err, errcode = fetch.load_rockspec(rockspec)
-      if not rspec then
-         return nil, err
-      end
-      return pack.pack_binary_rock(rspec.name, rspec.version, build.build_rockspec, rockspec, false, true, deps.get_deps_mode(flags))
+      return pack.pack_binary_rock(name, rockspec.version, function()
+         return build.build_rockspec(rockspec, opts)
+      end)
    else
       local ok, err = fs.check_command_permissions(flags)
-      if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
-      ok, err = build.build_rockspec(rockspec, false, true, deps.get_deps_mode(flags))
+      if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
+      ok, err = build.build_rockspec(rockspec, opts)
       if not ok then return nil, err end
       local name, version = ok, err
 

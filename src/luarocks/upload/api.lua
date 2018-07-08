@@ -21,8 +21,8 @@ end
 function Api:load_config()
    local upload_conf = upload_config_file()
    if not upload_conf then return nil end
-   local cfg, err = persist.load_into_table(upload_conf)
-   return cfg
+   local config, err = persist.load_into_table(upload_conf)
+   return config
 end
 
 function Api:save_config()
@@ -42,7 +42,7 @@ function Api:save_config()
       return nil, err
    end
    persist.save_from_table(upload_conf, self.config)
-   fs.chmod(upload_conf, "0600")
+   fs.set_permissions(upload_conf, "read", "user")
 end
 
 function Api:check_version()
@@ -143,7 +143,7 @@ function Api:request(url, params, post_params)
    local json_ok, json = require_json()
    if not json_ok then return nil, "A JSON library is required for this command. "..json end
    
-   if cfg.downloader == "wget" then
+   if fs.which_tool("downloader") == "wget" then
       local curl_ok, err = fs.is_tool_available(vars.CURL, "curl")
       if not curl_ok then
          return nil, err
@@ -272,7 +272,7 @@ function api.new(flags)
    self.config = self:load_config() or {}
    self.config.server = flags["server"] or self.config.server or cfg.upload.server
    self.config.version = self.config.version or cfg.upload.version
-   self.config.key = flags["api-key"] or self.config.key
+   self.config.key = flags["temp-key"] or flags["api-key"] or self.config.key
    self.debug = flags["debug"]
    if not self.config.key then
       return nil, "You need an API key to upload rocks.\n" ..
@@ -286,4 +286,3 @@ function api.new(flags)
 end
 
 return api
-

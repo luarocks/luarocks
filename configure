@@ -1,74 +1,44 @@
 #!/bin/sh
 
-# A basic configure script for LuaRocks.
-# Not doing any fancy shell stuff here to keep good compatibility.
-
 # Defaults
 
 PREFIX="/usr/local"
 SYSCONFDIR="$PREFIX/etc/luarocks"
 ROCKS_TREE="$PREFIX"
-LUA_SUFFIX=""
-LUA_DIR="/usr"
-LUA_BINDIR="/usr/bin"
-LUA_INCDIR="/usr/include"
-LUA_LIBDIR="/usr/lib"
-LUA_VERSION="5.1"
-MULTIARCH_SUBDIR=""
 
 # ----------------------------------------------------------------------------
 # FUNCTION DEFINITIONS
 # ----------------------------------------------------------------------------
 
-# Help
+# Utility functions
+# -----------------
 
-show_help() {
-cat <<EOF
-Configure LuaRocks.
-
---help                      This help.
---prefix=DIR                Prefix where LuaRocks should be installed.
-                            Default is $PREFIX
---sysconfdir=DIR            Location where the config file should be installed.
-                            Default is \$PREFIX/etc/luarocks
-
-Where to install files installed by rocks, to make the accessible to Lua and
-your \$PATH. Beware of clashes between files installed by LuaRocks and by your
-system's package manager.
-
---rocks-tree=DIR            Root of the local tree of installed rocks.
-                            Default is \$PREFIX
-
---lua-version=VERSION       Use specific Lua version: 5.1, 5.2, or 5.3
-                            Default is auto-detected.
---lua-suffix=SUFFIX         Versioning suffix to use in Lua filenames.
-                            Default is "$LUA_SUFFIX" (lua$LUA_SUFFIX...)
---with-lua=PREFIX           Use Lua from given prefix.
-                            Default is auto-detected (the parent directory of \$LUA_BINDIR).
---with-lua-bin=DIR          You can also specify Lua's bin dir.
-                            Default is the directory of the auto-detected Lua interpreter,
-                            or \$LUA_DIR/bin if --with-lua is used.
---with-lua-include=DIR      You can also specify Lua's includes dir.
-                            Default is \$LUA_DIR/include
---with-lua-lib=DIR          You can also specify Lua's libraries dir.
-                            Default is \$LUA_DIR/lib
---with-downloader=TOOL      Which tool to use as a downloader.
-                            Valid options are: curl, wget.
-                            Default is to auto-detect.
---with-md5-checker=TOOL     Which tool to use as a downloader.
-                            Valid options are: md5sum, openssl
-                            Default is to auto-detect.
---force-config              Use a single config location. Do not use the
-                            \$LUAROCKS_CONFIG variable or the user's home
-                            directory. Useful to avoid conflicts when LuaRocks
-                            is embedded within an application.
-EOF
+# Resolves a full path
+# - alternative to "readlink -f", which is not available on solaris
+# based on https://stackoverflow.com/a/6554854/1793220
+canonicalpath() {
+   oldpwd="$PWD"
+   if [ -d "$1" ]
+   then
+      if cd "$1" >/dev/null 2>&1
+      then
+         echo "$PWD"
+      else
+         echo "$1"
+      fi
+   else
+      if cd "$(dirname "$1")" >/dev/null 2>&1
+      then
+         echo "$PWD/$(basename "$1")"
+      else
+         echo "$1"
+      fi
+   fi
+   cd "$oldpwd" >/dev/null 2>&1 || return
 }
 
-# Helper functions
-
 find_program() {
-   prog=`command -v "$1" 2>/dev/null`
+   prog=$(command -v "$1" 2>/dev/null)
    if [ -n "$prog" ]
    then
       dirname "$prog"
@@ -78,158 +48,114 @@ find_program() {
 die() {
    echo "$*"
    echo
-   echo "configure failed."
+   RED "configure failed."
+   echo
    echo
    exit 1
 }
 
-find_helper() {
-   explanation="$1"
-   shift
-   tried="$*"
-   while [ -n "$1" ]
-   do
-      found=`find_program "$1"`
-      if [ -n "$found" ]
-      then
-         echo "$1 found at $found"
-         HELPER=$1
-         return
-      fi
-      shift
-   done
-   echo "Could not find $explanation. Tried: $tried."
-   die "Make sure one of them is installed and available in your PATH."
-}
-
-case `echo -n x` in
--n*) echo_n_flag='';;
-*)   echo_n_flag='-n';;
-esac
-
 echo_n() {
-   echo $echo_n_flag "$*"
+   printf "%s" "$*"
 }
 
-# ----------------------------------------------------------------------------
-# MAIN PROGRAM
-# ----------------------------------------------------------------------------
+bold='\033[1m'
+red='\033[1;31m'
+green='\033[1;32m'
+blue='\033[1;36m'
+reset='\033[0m'
 
-# Parse options
+BOLD() {
+   printf "$bold%s$reset" "$*"
+}
 
-while [ -n "$1" ]
-do
-   value="`echo $1 | sed 's/[^=]*.\(.*\)/\1/'`"
-   key="`echo $1 | sed 's/=.*//'`"
-   if `echo "$value" | grep "~" >/dev/null 2>/dev/null`
-   then
-      echo
-      echo '*WARNING*: the "~" sign is not expanded in flags.'
-      echo 'If you mean the home directory, use $HOME instead.'
-      echo
-   fi
-   case "$key" in
-   --help)
-      show_help
-      exit 0
-      ;;
-   --prefix)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      PREFIX="$value"
-      PREFIX_SET=yes
-      ;;
-   --sysconfdir)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      SYSCONFDIR="$value"
-      SYSCONFDIR_SET=yes
-      ;;
-   --rocks-tree)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      ROCKS_TREE="$value"
-      ROCKS_TREE_SET=yes
-      ;;
-   --force-config)
-      FORCE_CONFIG=yes
-      ;;
-   --versioned-rocks-dir)
-      echo "--versioned-rocks-dir is no longer necessary."
-      echo "The rocks tree in LuaRocks 3.0 is always versioned."
-      ;;
-   --lua-suffix)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      LUA_SUFFIX="$value"
-      LUA_SUFFIX_SET=yes
-      ;;
-   --lua-version|--with-lua-version)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      LUA_VERSION="$value"
-      [ "$LUA_VERSION" = "5.1" -o "$LUA_VERSION" = "5.2" -o "$LUA_VERSION" = "5.3" ] || die "Invalid Lua version in flag $key."
-      LUA_VERSION_SET=yes
-      ;;
-   --with-lua)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      LUA_DIR="$value"
-      LUA_DIR_SET=yes
-      ;;
-   --with-lua-bin)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      LUA_BINDIR="$value"
-      LUA_BINDIR_SET=yes
-      ;;
-   --with-lua-include)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      LUA_INCDIR="$value"
-      LUA_INCDIR_SET=yes
-      ;;
-   --with-lua-lib)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      LUA_LIBDIR="$value"
-      LUA_LIBDIR_SET=yes
-      ;;
-   --with-downloader)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      case "$value" in
-      wget|curl) LUAROCKS_DOWNLOADER="$value" ;;
-      *) die "Invalid option: $value. See --help." ;;
-      esac
-      LUAROCKS_DOWNLOADER_SET=yes
-      ;;
-   --with-md5-checker)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      case "$value" in
-      md5sum|openssl|md5) LUAROCKS_MD5CHECKER="$value" ;;
-      *) die "Invalid option: $value. See --help." ;;
-      esac
-      LUAROCKS_MD5CHECKER_SET=yes
-      ;;
-   *)
-      die "Error: Unknown flag: $1"
-      ;;
-   esac
-   shift
-done
+RED() {
+   printf "$red%s$reset" "$*"
+}
 
-if [ "$PREFIX_SET" = "yes" -a ! "$SYSCONFDIR_SET" = "yes" ]
-then
-   if [ "$PREFIX" = "/usr" ]
-   then SYSCONFDIR=/etc/luarocks
-   else SYSCONFDIR=$PREFIX/etc/luarocks
-   fi
-fi
+GREEN() {
+   printf "$green%s$reset" "$*"
+}
 
+BLUE() {
+   printf "$blue%s$reset" "$*"
+}
 
-if [ "$PREFIX_SET" = "yes" -a ! "$ROCKS_TREE_SET" = "yes" ]
-then
-   ROCKS_TREE=$PREFIX
-fi
+# Help
+# ----
+
+show_help() {
+cat <<EOF
+
+Configure the build process of LuaRocks.
+
+--help                         This help.
+
+Where to install LuaRocks:
+--------------------------
+
+--prefix=PREFIX                Directory where LuaRocks should be installed.
+                               - Default is $PREFIX
+--sysconfdir=SYSCONFDIR        Where the config file should be installed.
+                               - Default is $SYSCONFDIR
+                                 (PREFIX/etc/luarocks)
+
+Where to install files provided by rocks:
+-----------------------------------------
+
+--rocks-tree=ROCKS_DIR         Root of the local tree of installed rocks.
+                               To make files installed in this location
+                               accessible to Lua and your \$PATH, see
+                               "luarocks path --help" after installation.
+                               Avoid using paths controlled by your
+                               system's package manager, such as /usr.
+                               - Default is $PREFIX
+                                 (PREFIX)
+
+Where is your Lua interpreter:
+------------------------------
+
+--lua-version=VERSION          Use specific Lua version: 5.1, 5.2, 5.3, or 5.4
+                               - Default is auto-detected.
+--with-lua=LUA_DIR             Use Lua from given directory.
+                               - Default is auto-detected from your \$PATH
+                                 (or the parent directory of LUA_BINDIR
+                                 if --with-lua-bin is used).
+--with-lua-bin=LUA_BINDIR      You can also specify Lua's bin dir.
+                               - Default is the directory of the
+                                 auto-detected Lua interpreter,
+                                 (or LUA_DIR/bin if --with-lua is used)
+--with-lua-include=LUA_INCDIR  Lua's includes dir.
+                               - Default is LUA_DIR/include
+--with-lua-lib=LUA_LIBDIR      Lua's libraries dir.
+                               - Default is LUA_DIR/lib
+
+For specialized uses of LuaRocks:
+---------------------------------
+
+--force-config                 Force using a single config location.
+                               Do not honor the \$LUAROCKS_CONFIG_5_x
+                               or \$LUAROCKS_CONFIG environment
+                               variable or the user's local config.
+                               Useful to avoid conflicts when LuaRocks
+                               is embedded within an application.
+--disable-incdir-check         If you do not wish to use "luarocks build",
+                               (e.g. when only deploying binary packages)
+                               you do not need lua.h installed. This flag
+                               skips the check for lua.h in "configure".
+
+EOF
+}
+
+# Lua detection
+# -------------
 
 detect_lua_version() {
-   detected_lua=`$1 -e 'print(_VERSION:match(" (5%.[123])$"))' 2> /dev/null`
+   detected_lua=$($1 -e 'print(_VERSION:match(" (5%.[1234])$"))' 2> /dev/null)
    if [ "$detected_lua" != "nil" ]
    then
       if [ "$LUA_VERSION_SET" != "yes" ]
       then
-         echo "Lua version detected: $detected_lua"
+         echo "Lua version detected: $(GREEN "$detected_lua")"
          LUA_VERSION=$detected_lua
          return 0
       elif [ "$LUA_VERSION" = "$detected_lua" ]
@@ -242,232 +168,345 @@ detect_lua_version() {
 
 search_interpreter() {
    suffix="$1"
+   lua_at=""
    if [ "$LUA_BINDIR_SET" = "yes" ]
    then
-      find_lua="$LUA_BINDIR"
+      lua_at="$LUA_BINDIR"
    elif [ "$LUA_DIR_SET" = "yes" ]
    then
       LUA_BINDIR="$LUA_DIR/bin"
       if [ -f "$LUA_BINDIR/lua$suffix" ]
       then
-         find_lua="$LUA_BINDIR"
+         lua_at="$LUA_BINDIR"
       fi
    else
-      find_lua=`find_program lua$suffix`
+      lua_at=$(find_program "lua$suffix")
    fi
-   if [ -n "$find_lua" -a -x "$find_lua/lua$suffix" ]
+   if [ -n "$lua_at" ] && [ -x "$lua_at/lua$suffix" ]
    then
-      if detect_lua_version "$find_lua/lua$suffix"
+      if detect_lua_version "$lua_at/lua$suffix"
       then
-         echo "Lua interpreter found: $find_lua/lua$suffix..."
+         echo "Lua interpreter found: $(GREEN "$lua_at/lua$suffix")"
          if [ "$LUA_BINDIR_SET" != "yes" ]
          then
-            LUA_BINDIR="$find_lua"
+            LUA_BINDIR="$lua_at"
          fi
          if [ "$LUA_DIR_SET" != "yes" ]
          then
-            LUA_DIR=`dirname "$find_lua"`
+            LUA_DIR=$(dirname "$lua_at")
          fi
-         LUA_SUFFIX="$suffix"
+         LUA_INTERPRETER="lua$suffix"
          return 0
       fi
    fi
    return 1
 }
 
-lua_interp_found=no
-if [ "$LUA_SUFFIX_SET" != "yes" ]
-then
-   if [ "$LUA_VERSION_SET" = "yes" -a "$LUA_VERSION" = "5.1" ]
+# ----------------------------------------------------------------------------
+# MAIN PROGRAM
+# ----------------------------------------------------------------------------
+
+# Parse options
+
+while [ -n "$1" ]
+do
+   value="$(echo "$1" | sed 's/[^=]*.\(.*\)/\1/')"
+   key="$(echo "$1" | sed 's/=.*//')"
+   if echo "$value" | grep "~" >/dev/null 2>/dev/null
    then
-      suffixes="5.1 51 -5.1 -51"
-   elif [ "$LUA_VERSION_SET" = "yes" -a "$LUA_VERSION" = "5.2" ]
-   then
-      suffixes="5.2 52 -5.2 -52"
-   elif [ "$LUA_VERSION_SET" = "yes" -a "$LUA_VERSION" = "5.3" ]
-   then
-      suffixes="5.3 53 -5.3 -53"
-   else
-      suffixes="5.3 53 -5.3 -53 5.2 52 -5.2 -52 5.1 51 -5.1 -51"
+      echo
+      echo "$(RED WARNING:) the '~' sign is not expanded in flags."
+      echo "If you mean the home directory, use \$HOME instead."
+      echo
    fi
-   for suffix in `echo $suffixes` ""
-   do
-      search_interpreter "$suffix" && {
-         lua_interp_found=yes
-         break
-      }
-   done
-else
-   search_interpreter "$LUA_SUFFIX" && {
-      lua_interp_found=yes
-   }
+   case "$key" in
+
+   # Help
+   # ----
+   --help)
+      show_help
+      exit 0
+      ;;
+
+   # Where to install LuaRocks:
+   # --------------------------
+   --prefix)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      PREFIX="$(canonicalpath "$value")"
+      PREFIX_SET=yes
+      ;;
+   --sysconfdir)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      SYSCONFDIR="$(canonicalpath "$value")"
+      SYSCONFDIR_SET=yes
+      ;;
+
+
+   # Where to install files provided by rocks:
+   # -----------------------------------------
+   --rocks-tree)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      ROCKS_TREE="$(canonicalpath "$value")"
+      ROCKS_TREE_SET=yes
+      ;;
+
+   # Where is your Lua interpreter:
+   # ------------------------------
+   --lua-version|--with-lua-version)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      LUA_VERSION="$value"
+      case "$LUA_VERSION" in
+      5.1|5.2|5.3|5.4) ;;
+      *) die "Invalid Lua version in flag $key."
+      esac
+      LUA_VERSION_SET=yes
+      ;;
+   --with-lua)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      LUA_DIR="$(canonicalpath "$value")"
+      [ -d "$LUA_DIR" ] || die "Bad value for --with-lua: $LUA_DIR is not a valid directory."
+      LUA_DIR_SET=yes
+      ;;
+   --with-lua-bin)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      LUA_BINDIR="$(canonicalpath "$value")"
+      [ -d "$LUA_BINDIR" ] || die "Bad value for --with-lua-bin: $LUA_BINDIR is not a valid directory."
+      LUA_BINDIR_SET=yes
+      ;;
+   --with-lua-include)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      LUA_INCDIR="$(canonicalpath "$value")"
+      [ -d "$LUA_INCDIR" ] || die "Bad value for --with-lua-include: $LUA_INCDIR is not a valid directory."
+      LUA_INCDIR_SET=yes
+      ;;
+   --with-lua-lib)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      LUA_LIBDIR="$(canonicalpath "$value")"
+      [ -d "$LUA_LIBDIR" ] || die "Bad value for --with-lua-lib: $LUA_LIBDIR is not a valid directory."
+      LUA_LIBDIR_SET=yes
+      ;;
+
+   # For specialized uses of LuaRocks:
+   # ---------------------------------
+   --force-config)
+      FORCE_CONFIG=yes
+      ;;
+   --disable-incdir-check)
+      DISABLE_INCDIR_CHECK=yes
+      ;;
+
+   # Old options that no longer apply
+   # --------------------------------
+   --versioned-rocks-dir)
+      echo "--versioned-rocks-dir is no longer necessary."
+      echo "The rocks tree in LuaRocks 3.0 is always versioned."
+      ;;
+   --lua-suffix)
+      echo "--lua-suffix is no longer necessary."
+      echo "The suffix is automatically detected."
+      ;;
+
+   *)
+      die "Error: Unknown flag: $1"
+      ;;
+   esac
+   shift
+done
+
+echo
+BLUE "Configuring LuaRocks..."
+echo
+echo
+
+# ----------------------------------------
+# Derive options from the ones given
+# ----------------------------------------
+
+if [ "$PREFIX_SET" = "yes" ] && [ ! "$SYSCONFDIR_SET" = "yes" ]
+then
+   if [ "$PREFIX" = "/usr" ]
+   then SYSCONFDIR=/etc/luarocks
+   else SYSCONFDIR=$PREFIX/etc/luarocks
+   fi
 fi
+
+if [ "$PREFIX_SET" = "yes" ] && [ ! "$ROCKS_TREE_SET" = "yes" ]
+then
+   ROCKS_TREE=$PREFIX
+fi
+
+# ----------------------------------------
+# Search for Lua
+# ----------------------------------------
+
+lua_interp_found=no
+
+case "$LUA_VERSION" in
+5.1)
+   suffixes="5.1 51 -5.1 -51 jit"
+   ;;
+5.2)
+   suffixes="5.2 52 -5.2 -52"
+   ;;
+5.3)
+   suffixes="5.3 53 -5.3 -53"
+   ;;
+5.4)
+   suffixes="5.4 54 -5.4 -54"
+   ;;
+*)
+   suffixes="5.4 54 -5.4 -54 5.3 53 -5.3 -53 5.2 52 -5.2 -52 5.1 51 -5.1 -51 jit"
+   ;;
+esac
+
+for suffix in $suffixes ""
+do
+   search_interpreter "$suffix" && {
+      lua_interp_found=yes
+      break
+   }
+done
 
 if [ "$lua_interp_found" != "yes" ]
 then
-   [ "$LUA_VERSION_SET" ] && { interp="Lua $LUA_VERSION" ;} || { interp="Lua" ;}
-   [ "$LUA_DIR_SET" -o "$LUA_BINDIR_SET" ] && { where="$LUA_BINDIR" ;} || { where="\$PATH" ;}
-   echo "$interp interpreter not found in $where"
-   die "You may want to use the flags --with-lua, --with-lua-bin and/or --lua-suffix. See --help."
+   if [ "$LUA_VERSION_SET" ]
+   then
+      interp="Lua $LUA_VERSION"
+   else
+      interp="Lua"
+   fi
+   if [ "$LUA_DIR_SET" ] || [ "$LUA_BINDIR_SET" ]
+   then
+      where="$LUA_BINDIR"
+   else
+      where="\$PATH"
+   fi
+   echo "$(RED $interp interpreter not found) in $where"
+   echo "You may want to use the flags $(BOLD --with-lua), $(BOLD --with-lua-bin) and/or $(BOLD --lua-version)"
+   die "Run $(BOLD ./configure --help) for details."
 fi
 
 if [ "$LUA_VERSION_SET" = "yes" ]
 then
-   echo_n "Checking if $LUA_BINDIR/lua$LUA_SUFFIX is Lua version $LUA_VERSION... "
-   if detect_lua_version "$LUA_BINDIR/lua$LUA_SUFFIX"
+   echo_n "Checking if $LUA_BINDIR/$LUA_INTERPRETER is Lua version $LUA_VERSION... "
+   if detect_lua_version "$LUA_BINDIR/$LUA_INTERPRETER"
    then
       echo "yes"
    else
       echo "no"
-      die "You may want to use the flags --with-lua, --with-lua-bin and/or --lua-suffix. See --help."
+      die "You may want to use the flags --with-lua, --with-lua-bin and/or --lua-version. See --help."
    fi
 fi
 
-if [ "$LUA_INCDIR_SET" != "yes" ]
-then
-   LUA_INCDIR="$LUA_DIR/include"
-fi
+# ----------------------------------------
+# Additional checks
+# ----------------------------------------
 
-if [ "$LUA_LIBDIR_SET" != "yes" ]
-then
-   LUA_LIBDIR="$LUA_DIR/lib"
-fi
-
-echo_n "Checking Lua includes... "
-lua_h="$LUA_INCDIR/lua.h"
-if [ -f "$lua_h" ]
-then
-   echo "lua.h found in $lua_h"
-else
-   v_dir="$LUA_INCDIR/lua/$LUA_VERSION"
-   lua_h="$v_dir/lua.h"
-   if [ -f "$lua_h" ]
+check_incdir() {
+   if [ "$LUA_INCDIR_SET" = "yes" ]
    then
-      echo "lua.h found in $lua_h"
-      LUA_INCDIR="$v_dir"
+      incdir="$LUA_INCDIR"
    else
-      d_dir="$LUA_INCDIR/lua$LUA_VERSION"
-      lua_h="$d_dir/lua.h"
-      if [ -f "$lua_h" ]
-      then
-         echo "lua.h found in $lua_h (Debian/Ubuntu)"
-         LUA_INCDIR="$d_dir"
-      else
-         echo "lua.h not found (looked in $LUA_INCDIR, $v_dir, $d_dir)"
-         die "You may want to use the flag --with-lua or --with-lua-include. See --help."
-      fi
+      incdir="$LUA_DIR/include"
    fi
+
+   tried=""
+   # Verification of the Lua include path happens at LuaRocks runtime,
+   # but we also perform it here just so that the user gets an early failure
+   # if they try to install LuaRocks with the Lua interpreter package
+   # but not the "development files" that many Linux distros ship separately.
+   for lua_h in \
+      "$incdir/lua/$LUA_VERSION/lua.h" \
+      "$incdir/lua$LUA_VERSION/lua.h" \
+      "$incdir/lua.h" \
+      "$incdir/lua$LUA_VERSION/lua.h" \
+      $("$LUA_BINDIR/$LUA_INTERPRETER" -e 'print(jit and [['"$incdir"'/luajit-]]..jit.version:match("(%d+%.%d+)")..[[/lua.h]] or "")')
+   do
+      [ -f "$lua_h" ] && return
+      tried="$tried $lua_h"
+   done
+
+   echo "$(RED "lua.h not found") (tried$tried)"
+   echo
+   echo "If the development files for Lua (headers and libraries)"
+   echo "are installed in your system, you may need to use the"
+   echo "$(BOLD --with-lua) or $(BOLD --with-include) flags to specify their location."
+   echo
+   echo "If those files are not yet installed, you need to install"
+   echo "them using the appropriate method for your operating system."
+   echo
+   die "Run $(BOLD ./configure --help) for details on flags."
+}
+
+if [ "$DISABLE_INCDIR_CHECK" != "yes" ]
+then
+   check_incdir
+   echo "lua.h found: $(GREEN "$lua_h")"
 fi
 
-echo_n "Checking if Lua header version matches that of the interpreter... "
-header_version=$(sed -n 's/.*LUA_VERSION_NUM.*5.\(.\).*/5.\1/p' "$lua_h")
-if [ "$header_version" = "$LUA_VERSION" ]
+unzip_found=$(find_program "unzip")
+if [ -n "$unzip_found" ]
 then
-   echo "yes"
+   echo "unzip found in PATH: $(GREEN "$unzip_found")"
 else
-   echo "no"
-   echo "lua.h version mismatch (interpreter: $LUA_VERSION; lua.h: $header_version)."
-   die "You may want to use the flag --with-lua or --with-lua-include. See --help."
+   RED "Could not find 'unzip'."
+   echo
+   die "Make sure it is installed and available in your PATH."
 fi
 
-
-if [ "$LUAROCKS_DOWNLOADER_SET" != "yes" ]
-then
-   find_helper "a downloader helper program" curl wget fetch
-   LUAROCKS_DOWNLOADER=$HELPER
-fi
-
-if [ "$LUAROCKS_MD5CHECKER_SET" != "yes" ]
-then
-   find_helper "a MD5 checksum calculator" md5sum openssl md5
-   LUAROCKS_MD5CHECKER=$HELPER
-fi
-
-find_helper "an 'unzip' program" unzip
-
-echo_n "Configuring for system... "
-if uname -s
-then
-   LUAROCKS_UNAME_S=`uname -s`
-else
-   die "Could not determine operating system. 'uname -s' failed."
-fi
-echo_n "Configuring for architecture... "
-if uname -m
-then
-   LUAROCKS_UNAME_M=`uname -m`
-else
-   die "Could not determine processor architecture. 'uname -m' failed."
-fi
-
-for v in 5.1 5.2 5.3; do
-  if [ "$v" != "$LUA_VERSION" ]; then
-    if [ -e "$PREFIX/share/lua/$v/luarocks/site_config.lua" ]; then
-      LUA_OTHER_VERSION="$v"
-      break
-    fi
-  fi
-done
-
-if [ "$LUAROCKS_UNAME_S" = Linux ]
-then
-   GCC_ARCH=`gcc -print-multiarch 2>/dev/null`
-   if [ -n "$GCC_ARCH" -a -d "/usr/lib/$GCC_ARCH" ]
-   then
-      MULTIARCH_SUBDIR="lib/$GCC_ARCH"
-   elif [ -d "/usr/lib64" ]
-   then
-      # Useful for Fedora systems
-      MULTIARCH_SUBDIR="lib64"
-   fi
-fi
-
-if [ -f config.unix ]; then
-   rm -f config.unix
-fi
-
-SITE_CONFIG=src/luarocks/core/site_config_$(echo "$LUA_VERSION" | sed 's,\.,_,').lua
-
+# ----------------------------------------
 # Write config
+# ----------------------------------------
 
-echo "Writing configuration..."
-echo
+make clean > /dev/null 2> /dev/null
 
 rm -f built
 cat <<EOF > config.unix
 # This file was automatically generated by the configure script.
 # Run "./configure --help" for details.
 
-LUA_VERSION=$LUA_VERSION
-SITE_CONFIG=$SITE_CONFIG
 PREFIX=$PREFIX
 SYSCONFDIR=$SYSCONFDIR
 ROCKS_TREE=$ROCKS_TREE
-LUA_SUFFIX=$LUA_SUFFIX
+LUA_VERSION=$LUA_VERSION
+LUA_INTERPRETER=$LUA_INTERPRETER
 LUA_DIR=$LUA_DIR
-LUA_DIR_SET=$LUA_DIR_SET
+LUA_BINDIR=$LUA_BINDIR
 LUA_INCDIR=$LUA_INCDIR
 LUA_LIBDIR=$LUA_LIBDIR
-LUA_BINDIR=$LUA_BINDIR
 FORCE_CONFIG=$FORCE_CONFIG
-LUAROCKS_UNAME_M=$LUAROCKS_UNAME_M
-LUAROCKS_UNAME_S=$LUAROCKS_UNAME_S
-LUAROCKS_DOWNLOADER=$LUAROCKS_DOWNLOADER
-LUAROCKS_MD5CHECKER=$LUAROCKS_MD5CHECKER
-MULTIARCH_SUBDIR=$MULTIARCH_SUBDIR
-
 EOF
 
-echo "Installation prefix: $PREFIX"
-echo "LuaRocks configuration directory: $SYSCONFDIR"
-echo "Using Lua from: $LUA_DIR"
-
-make clean > /dev/null 2> /dev/null
+{
+   echo '-- LuaRocks configuration'
+   echo
+   echo 'rocks_trees = {'
+   echo '   { name = "user", root = home .. "/.luarocks" },'
+   echo '   { name = "system", root = "'"$ROCKS_TREE"'" },'
+   echo '}'
+   if [ -n "$LUA_INTERPRETER" ]; then echo 'lua_interpreter = "'"$LUA_INTERPRETER"'"' ; fi
+   echo 'variables = {'
+   if [ -n "$LUA_DIR" ]; then echo '   LUA_DIR = "'"$LUA_DIR"'",' ; fi
+   if [ -n "$LUA_INCDIR" ]; then echo '   LUA_INCDIR = "'"$LUA_INCDIR"'",' ; fi
+   if [ -n "$LUA_BINDIR" ]; then echo '   LUA_BINDIR = "'"$LUA_BINDIR"'",' ; fi
+   if [ -n "$LUA_LIBDIR" ]; then echo '   LUA_LIBDIR = "'"$LUA_LIBDIR"'",' ; fi
+   echo '}'
+} > "config-$LUA_VERSION.lua.in"
 
 echo
-echo "Done configuring."
-echo "- Type 'make build' and 'make install':"
+BLUE "Done configuring."
+echo
+echo
+echo "LuaRocks will be installed at......: $(GREEN "$PREFIX")"
+echo "LuaRocks will install rocks at.....: $(GREEN "$ROCKS_TREE")"
+echo "LuaRocks configuration directory...: $(GREEN "$SYSCONFDIR")"
+echo "Using Lua from.....................: $(GREEN "$LUA_DIR")"
+if [ "$LUA_BINDIR_SET" = "yes" ]; then echo "Lua bin directory..................: $(GREEN "$LUA_BINDIR")" ; fi
+if [ "$LUA_INCDIR_SET" = "yes" ]; then echo "Lua include directory..............: $(GREEN "$LUA_INCDIR")" ; fi
+if [ "$LUA_LIBDIR_SET" = "yes" ]; then echo "Lua lib directory..................: $(GREEN "$LUA_LIBDIR")" ; fi
+echo
+echo "* Type $(BOLD make build) and $(BOLD make install):"
 echo "  to install to $PREFIX as usual."
-echo "- Type 'make bootstrap':"
-echo "  to install LuaRocks in $PREFIX as a rock."
+echo "* Type $(BOLD make bootstrap):"
+echo "  to install LuaRocks into $ROCKS_TREE as a rock."
 echo

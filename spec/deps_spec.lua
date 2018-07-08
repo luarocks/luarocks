@@ -1,4 +1,4 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
@@ -13,7 +13,7 @@ local extra_rocks = {
    "/lpeg-1.0.0-1.src.rock",
 }
 
-describe("LuaRocks deps tests #blackbox #b_deps", function()
+describe("LuaRocks deps tests #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
@@ -85,7 +85,7 @@ describe("LuaRocks deps tests #blackbox #b_deps", function()
       lfs.chdir("lxsh-0.8.6-2/lxsh-0.8.6-1/")
       assert.is_true(run.luarocks_bool("make --tree=" .. testing_paths.testing_tree .. " --deps-mode=order"))
 
-      lfs.chdir(testing_paths.luarocks_dir)
+      lfs.chdir(testing_paths.testrun_dir)
       test_env.remove_dir("lxsh-0.8.6-2")
       assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
 
@@ -102,7 +102,7 @@ describe("LuaRocks deps tests #blackbox #b_deps", function()
       lfs.chdir("lxsh-0.8.6-2/lxsh-0.8.6-1/")
       assert.is_true(run.luarocks_bool("make --tree=" .. testing_paths.testing_sys_tree .. " --deps-mode=order"))
 
-      lfs.chdir(testing_paths.luarocks_dir)
+      lfs.chdir(testing_paths.testrun_dir)
       test_env.remove_dir("lxsh-0.8.6-2")
       assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
 

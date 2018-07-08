@@ -1,9 +1,9 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local run = test_env.run
 
 test_env.unload_luarocks()
 
-describe("LuaRocks make_manifest tests #blackbox #b_make_manifest", function()
+describe("LuaRocks make_manifest tests #integration", function()
 
    before_each(function()
       test_env.setup_specs()

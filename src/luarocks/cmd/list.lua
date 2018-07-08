@@ -4,7 +4,8 @@
 local list = {}
 
 local search = require("luarocks.search")
-local vers = require("luarocks.vers")
+local queries = require("luarocks.queries")
+local vers = require("luarocks.core.vers")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
@@ -23,7 +24,7 @@ list.help = [[
 local function check_outdated(trees, query)
    local results_installed = {}
    for _, tree in ipairs(trees) do
-      search.manifest_search(results_installed, path.rocks_dir(tree), query)
+      search.local_manifest_search(results_installed, path.rocks_dir(tree), query)
    end
    local outdated = {}
    for name, versions in util.sortedpairs(results_installed) do
@@ -31,8 +32,7 @@ local function check_outdated(trees, query)
       table.sort(versions, vers.compare_versions)
       local latest_installed = versions[1]
 
-      local query_available = search.make_query(name:lower())
-      query.exact_name = true
+      local query_available = queries.new(name:lower())
       local results_available, err = search.search_repos(query_available)
       
       if results_available[name] then
@@ -69,11 +69,12 @@ end
 -- @param version string or nil: a version may also be passed.
 -- @return boolean: True if succeeded, nil on errors.
 function list.command(flags, filter, version)
-   local query = search.make_query(filter and filter:lower() or "", version)
-   query.exact_name = false
+   local query = queries.new(filter and filter:lower() or "", version, true)
    local trees = cfg.rocks_trees
+   local title = "Rocks installed for Lua "..cfg.lua_version
    if flags["tree"] then
       trees = { flags["tree"] }
+      title = title .. " in " .. flags["tree"]
    end
    
    if flags["outdated"] then
@@ -82,13 +83,13 @@ function list.command(flags, filter, version)
    
    local results = {}
    for _, tree in ipairs(trees) do
-      local ok, err, errcode = search.manifest_search(results, path.rocks_dir(tree), query)
+      local ok, err, errcode = search.local_manifest_search(results, path.rocks_dir(tree), query)
       if not ok and errcode ~= "open" then
          util.warning(err)
       end
    end
-   util.title("Installed rocks:", flags["porcelain"])
-   search.print_results(results, flags["porcelain"])
+   util.title(title, flags["porcelain"])
+   search.print_result_tree(results, flags["porcelain"])
    return true
 end
 

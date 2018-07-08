@@ -40,4 +40,20 @@ function dir.normalize(name)
    return pathname
 end
 
+--- Returns true if protocol does not require additional tools.
+-- @param protocol The protocol name
+function dir.is_basic_protocol(protocol)
+   return protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file"
+end
+
+function dir.deduce_base_dir(url)
+   -- for extensions like foo.tar.gz, "gz" is stripped first
+   local known_exts = {}
+   for _, ext in ipairs{"zip", "git", "tgz", "tar", "gz", "bz2"} do
+      known_exts[ext] = ""
+   end
+   local base = dir.base_name(url)
+   return (base:gsub("%.([^.]*)$", known_exts):gsub("%.tar", ""))
+end
+
 return dir

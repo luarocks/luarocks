@@ -1,15 +1,13 @@
-local test_env = require("test/test_environment")
+local test_env = require("spec.util.test_env")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
-local extra_rocks = test_env.mock_server_extra_rocks()
-
-describe("LuaRocks upload tests #blackbox #b_upload", function()
+describe("LuaRocks upload tests #integration", function()
 
    before_each(function()
-      test_env.setup_specs(extra_rocks)
+      test_env.setup_specs()
    end)
 
    it("LuaRocks upload with no flags/arguments", function()
@@ -39,11 +37,13 @@ describe("LuaRocks upload tests #blackbox #b_upload", function()
       after_each(test_env.mock_server_done)
 
       it("LuaRocks upload rockspec with api-key", function()
-         assert.is_true(run.luarocks_bool("upload " .. testing_paths.testing_dir .. "/testfiles/a_rock-1.0-1.rockspec " .. test_env.OPENSSL_DIRS .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/luarocks_site.lua"}))
+         local openssl_dirs = "OPENSSL_INCDIR=" .. test_env.OPENSSL_INCDIR .. " OPENSSL_LIBDIR=" .. test_env.OPENSSL_LIBDIR
+         assert.is_true(run.luarocks_bool("upload " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec " .. openssl_dirs .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/luarocks_site.lua"}))
       end)
+
       it("LuaRocks upload rockspec with api-key and skip-pack", function()
-         assert.is_true(run.luarocks_bool("upload --skip-pack " .. testing_paths.testing_dir .. "/testfiles/a_rock-1.0-1.rockspec " .. test_env.OPENSSL_DIRS .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testing_dir .. "/luarocks_site.lua"}))
+         local openssl_dirs = "OPENSSL_INCDIR=" .. test_env.OPENSSL_INCDIR .. " OPENSSL_LIBDIR=" .. test_env.OPENSSL_LIBDIR
+         assert.is_true(run.luarocks_bool("upload --skip-pack " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec " .. openssl_dirs .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/luarocks_site.lua"}))
       end)
    end)
 end)
-
