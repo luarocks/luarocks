@@ -984,4 +984,75 @@ function luarocks.current_config()
    return config_table
 end
 
+local function build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
+   assert(type(rock_file) == "string")
+   assert(type(need_to_fetch) == "boolean")
+
+   local ok, err, errcode
+   local unpack_dir
+   unpack_dir, err, errcode = fetch.fetch_and_unpack_rock(rock_file)
+   if not unpack_dir then
+      return nil, err, errcode
+   end
+   local rockspec_file = path.rockspec_name_from_rock(rock_file)
+   ok, err = fs.change_dir(unpack_dir)
+   if not ok then return nil, err end
+   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps)
+   fs.pop_dir()
+   return ok, err, errcode
+end
+ 
+local function do_build(name, version, deps_mode, build_only_deps)
+   if name:match("%.rockspec$") then
+      return build.build_rockspec(name, true, false, deps_mode, build_only_deps)
+   elseif name:match("%.src%.rock$") then
+      return build_rock(name, false, deps_mode, build_only_deps)
+   elseif name:match("%.all%.rock$") then
+      return build_rock(name, true, deps_mode, build_only_deps)
+   elseif name:match("%.rock$") then
+      return build_rock(name, true, deps_mode, build_only_deps)
+   elseif not name:match("/") then
+      local search = require("luarocks.search")
+      return search.act_on_src_or_rockspec(do_build, name:lower(), version, nil, deps_mode, build_only_deps)
+   end
+   return nil, "Don't know what to do with "..name
+end
+
+function luarocks.build(name, version, only_deps, keep, pack_binary_rock, branch)
+
+   -- Even though this function doesn't necessarily require a tree argument, it needs to call this function to not break - fetch.load_local_rockspec()
+   set_rock_tree(tree)
+
+   if type(name) ~= "string" then
+      return nil, "Argument missing. "
+   end
+   assert(type(version) == "string" or not version)
+
+   if pack_binary_rock then
+      --return pack.pack_binary_rock(name, version, do_build, name, version, deps.get_deps_mode(flags))
+      return pack.pack_binary_rock(name, version, do_build, name, version, cfg.deps_mode)
+   else
+      --local ok, err = fs.check_command_permissions(flags)
+      local ok, err = fs.check_command_permissions_no_flags()
+      if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
+
+      --ok, err = do_build(name, version, deps.get_deps_mode(flags), flags["only-deps"])
+      ok, err = do_build(name, version, cfg.deps_mode, only_deps)
+      if not ok then return nil, err end
+      name, version = ok, err
+      
+      --[[
+      if (not only_deps) and (not keep) and not cfg.keep_other_versions then
+         local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
+         if not ok then util.printerr(err) end
+      end
+      --]]
+
+      --writer.check_dependencies(nil, deps.get_deps_mode(flags))
+      return name, version
+   end
+end
+
+
+
 return luarocks
