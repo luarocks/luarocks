@@ -177,6 +177,7 @@ do
             return nil, "failed to extract package name from url '"..ns_name.."'; does the URL point to a rock or rockspec file?" 
          end
          url = ns_name
+         namespace = ns_name:match("^(%S*)/[^/]*$")
       else
          name, namespace = util.split_namespace(ns_name)
       end
