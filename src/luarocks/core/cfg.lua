@@ -46,6 +46,42 @@ local platform_order = {
    "mingw32",
 }
 
+local function detect_sysconfdir(lua_version)
+   local src = debug.getinfo(1, "S").source:gsub("\\", "/"):gsub("/+", "/")
+   local basedir = src:match("^(.*)/luarocks/core/cfg.lua$")
+   if not basedir then
+      return
+   end
+   -- If installed in a Unix-like tree, use a Unix-like sysconfdir
+   local installdir = basedir:match("^(.*)/share/lua/" .. lua_version .. "$")
+   if installdir then
+      if installdir == "/usr" then
+         return "/etc/luarocks"
+      end
+      return installdir .. "/etc/luarocks"
+   end
+   -- Otherwise, use base directory of sources
+   return basedir
+end
+
+local function set_confdirs(cfg, platforms, hardcoded_sysconfdir)
+   local sysconfdir = os.getenv("LUAROCKS_SYSCONFDIR") or hardcoded_sysconfdir
+   if not sysconfdir then
+      sysconfdir = detect_sysconfdir(cfg.lua_version)
+   end
+   if platforms.windows then
+      cfg.home = os.getenv("APPDATA") or "c:"
+      cfg.home_tree = cfg.home.."/luarocks"
+      cfg.homeconfdir = cfg.home_tree
+      cfg.sysconfdir = sysconfdir or ((os.getenv("PROGRAMFILES") or "c:") .. "/luarocks")
+   else
+      cfg.home = os.getenv("HOME") or ""
+      cfg.home_tree = (os.getenv("USER") ~= "root") and cfg.home.."/.luarocks"
+      cfg.homeconfdir = cfg.home.."/.luarocks"
+      cfg.sysconfdir = sysconfdir or "/etc/luarocks"
+   end
+end
+
 local load_config_file
 do
    -- Create global environment for the config files;
@@ -575,27 +611,10 @@ function cfg.init(lua_data, project_dir, warning)
    local home_config_file
    local project_config_file
    do
-      local sysconfdir = os.getenv("LUAROCKS_SYSCONFDIR") or hardcoded.SYSCONFDIR
-      local sdir, hdir
+      set_confdirs(cfg, platforms, hardcoded.SYSCONFDIR)
       local name = "config-"..cfg.lua_version..".lua"
-      if platforms.windows then
-         cfg.home = os.getenv("APPDATA") or "c:"
-         sdir = sysconfdir or (os.getenv("PROGRAMFILES") or "c:") .. "/luarocks"
-         hdir = cfg.home.."/luarocks"
-         cfg.home_tree = cfg.home.."/luarocks"
-      else
-         cfg.home = os.getenv("HOME") or ""
-         sdir = sysconfdir or "/etc/luarocks"
-         hdir = cfg.home.."/.luarocks"
-         cfg.home_tree = (os.getenv("USER") ~= "root") and cfg.home.."/.luarocks/"
-      end
-      sys_config_file = sdir .. "/" .. name
-      home_config_file = hdir .. "/" .. name
-      cfg.sysconfdir = sdir
-
-      sys_config_file = sys_config_file:gsub("\\", "/")
-      home_config_file = home_config_file:gsub("\\", "/")
-
+      sys_config_file = (cfg.sysconfdir .. "/" .. name):gsub("\\", "/")
+      home_config_file = (cfg.homeconfdir .. "/" .. name):gsub("\\", "/")
       if project_dir then
          project_config_file = project_dir .. "/.luarocks/" .. name
       end
