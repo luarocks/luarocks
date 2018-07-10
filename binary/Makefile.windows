@@ -15,7 +15,7 @@ windows-binary: windows-deps/lib/liblua.a windows-deps/lib/libssl.a windows-deps
 	STATIC_GCC_RANLIB=$(MINGW_PREFIX)-ranlib \
 	STATIC_GCC_CC=$(MINGW_PREFIX)-gcc \
 	LUAROCKS_CROSS_COMPILING=1 \
-	make binary LUA_DIR=$(PWD)/windows-deps BINARY_CC=$(MINGW_PREFIX)-gcc BINARY_NM=$(MINGW_PREFIX)-nm BINARY_PLATFORM=windows BINARY_TARGET=build-windows-binary BINARY_SYSROOT=$(MINGW_SYSROOT)
+	make binary LUA_DIR=$(CURDIR)/windows-deps BINARY_CC=$(MINGW_PREFIX)-gcc BINARY_NM=$(MINGW_PREFIX)-nm BINARY_PLATFORM=windows BINARY_TARGET=build-windows-binary BINARY_SYSROOT=$(MINGW_SYSROOT)
 
 build-windows-deps/lua-$(LIBLUA_VERSION).tar.gz:
 	mkdir -p build-windows-deps
@@ -35,7 +35,7 @@ build-windows-deps/openssl-$(OPENSSL_VERSION).tar.gz:
 build-windows-deps/openssl-$(OPENSSL_VERSION): build-windows-deps/openssl-$(OPENSSL_VERSION).tar.gz
 	cd build-windows-deps && tar zxvpf openssl-$(OPENSSL_VERSION).tar.gz
 windows-deps/lib/libssl.a: build-windows-deps/openssl-$(OPENSSL_VERSION)
-	cd build-windows-deps/openssl-$(OPENSSL_VERSION) && ./Configure --prefix=$(PWD)/windows-deps --cross-compile-prefix=$(MINGW_PREFIX)- $(OPENSSL_PLATFORM)
+	cd build-windows-deps/openssl-$(OPENSSL_VERSION) && ./Configure --prefix=$(CURDIR)/windows-deps --cross-compile-prefix=$(MINGW_PREFIX)- $(OPENSSL_PLATFORM)
 	cd build-windows-deps/openssl-$(OPENSSL_VERSION) && make
 	cd build-windows-deps/openssl-$(OPENSSL_VERSION) && make install_sw
 
@@ -46,7 +46,7 @@ build-windows-deps/zlib-$(ZLIB_VERSION): build-windows-deps/zlib-$(ZLIB_VERSION)
 	cd build-windows-deps && tar zxvpf zlib-$(ZLIB_VERSION).tar.gz
 windows-deps/lib/libz.a: build-windows-deps/zlib-$(ZLIB_VERSION)
 	cd build-windows-deps/zlib-$(ZLIB_VERSION) && sed -ie "s,dllwrap,$(MINGW_PREFIX)-dllwrap," win32/Makefile.gcc
-	cd build-windows-deps/zlib-$(ZLIB_VERSION) && ./configure --prefix=$(PWD)/windows-deps --static
+	cd build-windows-deps/zlib-$(ZLIB_VERSION) && ./configure --prefix=$(CURDIR)/windows-deps --static
 	cd build-windows-deps/zlib-$(ZLIB_VERSION) && make -f win32/Makefile.gcc CC=$(MINGW_PREFIX)-gcc AR=$(MINGW_PREFIX)-ar RC=$(MINGW_PREFIX)-windres STRIP=$(MINGW_PREFIX)-strip IMPLIB=libz.dll.a
 	mkdir -p windows-deps/include
 	cd build-windows-deps/zlib-$(ZLIB_VERSION) && cp zlib.h zconf.h ../../windows-deps/include
