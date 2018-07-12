@@ -1388,4 +1388,61 @@ describe("Luarocks fs test #unit", function()
          assert.falsy(fs.copy_binary("invalid.exe", "copy.exe"))
       end)
    end)
+   
+   describe("fs.modules", function()
+      local tmpdir
+      local olddir
+      local oldpath
+      
+      before_each(function()
+         olddir = lfs.currentdir()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+         lfs.mkdir("lib")
+         write_file("lib/module1.lua", "", finally)
+         write_file("lib/module2.lua", "", finally)
+         write_file("lib/module1.LuA", "", finally)
+         write_file("lib/non_lua", "", finally)
+         lfs.mkdir("lib/internal")
+         write_file("lib/internal/module11.lua", "",  finally)
+         write_file("lib/internal/module22.lua", "", finally)
+
+         oldpath = package.path
+         package.path = package.path .. tmpdir .. "/?.lua;"
+      end)
+      
+      after_each(function()
+         if olddir then
+            lfs.chdir(olddir)
+            if tmpdir then
+               lfs.rmdir(tmpdir .. "/lib/internal")
+               lfs.rmdir(tmpdir .. "/lib")
+               lfs.rmdir(tmpdir)
+            end
+         end
+         if oldpath then
+            package.path = oldpath
+         end
+      end)
+
+      it("returns a table of the lua modules at a specific require path", function()
+         local result
+
+         result = fs.modules("lib")
+         assert.same(#result, 2)
+         assert.truthy(result[1] == "module1" or result[2] == "module1")
+         assert.truthy(result[1] == "module2" or result[2] == "module2")
+
+         result = fs.modules("lib.internal")
+         assert.same(#result, 2)
+         assert.truthy(result[1] == "module11" or result[2] == "module11")
+         assert.truthy(result[1] == "module22" or result[2] == "module22")
+      end)
+
+      it("returns an empty table if the modules couldn't be found in package.path", function()
+         package.path = ""
+         assert.same(fs.modules("lib"), {})
+      end)
+   end)
 end)
