@@ -1018,8 +1018,8 @@ local function do_build(name, version, deps_mode, build_only_deps)
    return nil, "Don't know what to do with "..name
 end
 
-function luarocks.build(name, version, only_deps, keep, pack_binary_rock, branch)
-
+function luarocks.build(name, version, tree, only_deps, keep, pack_binary_rock, branch)
+   
    -- Even though this function doesn't necessarily require a tree argument, it needs to call this function to not break - fetch.load_local_rockspec()
    set_rock_tree(tree)
 
@@ -1145,7 +1145,7 @@ function luarocks.install_binary_rock_deps(rock_file, deps_mode)
    return name, version
 end
 
-function luarocks.install(name, version, only_deps, keep)
+function luarocks.install(name, version, tree, only_deps, keep)
    if type(name) ~= "string" then
       return nil, "Argument missing. "
    end
@@ -1155,7 +1155,7 @@ function luarocks.install(name, version, only_deps, keep)
    if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
-      return luarocks.build(name, version, only_deps, keep, pack_binary_rock, branch)
+      return luarocks.build(name, version, tree, only_deps, keep, pack_binary_rock, branch)
    elseif name:match("%.rock$") then
       if only_deps then
          --ok, err = install.install_binary_rock_deps(name, deps.get_deps_mode(flags))
@@ -1182,7 +1182,7 @@ function luarocks.install(name, version, only_deps, keep)
          return nil, err
       end
       --util.printout("Installing "..url)
-      return luarocks.install(url, version, only_deps, keep)
+      return luarocks.install(url, version, tree, only_deps, keep)
    end
 end
 
