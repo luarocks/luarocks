@@ -29,7 +29,7 @@ local function set_rock_tree(tree_arg)
    if tree_arg then
       local named = false
       for _, tree in ipairs(cfg.rocks_trees) do
-         if type(tree) == "table" then
+         if type(tree) == "table" and tree_arg == tree.name then
             if not tree.root then
                die("Configuration error: tree '"..tree.name.."' has no 'root' field.")
             end
@@ -39,6 +39,7 @@ local function set_rock_tree(tree_arg)
          end
       end
       if not named then
+         fs.init()
          local root_dir = fs.absolute_name(tree_arg)
          replace_tree(flags, root_dir)
       end
@@ -53,7 +54,6 @@ local function set_rock_tree(tree_arg)
       cfg.root_dir.root = cfg.root_dir.root:gsub("/+$", "")
    end
 end
-
 
 --- Obtain version of LuaRocks and its API.
 -- @return (string, string) Full version of this LuaRocks instance
