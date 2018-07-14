@@ -89,6 +89,9 @@ end
 -- @return table or (nil, string, [string]): A table representing the manifest,
 -- or nil followed by an error message and an optional error code.
 function manif.load_manifest(repo_url, lua_version)
+
+   fs.init()
+   
    assert(type(repo_url) == "string")
    assert(type(lua_version) == "string" or not lua_version)
    lua_version = lua_version or cfg.lua_version
