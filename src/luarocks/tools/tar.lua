@@ -28,12 +28,14 @@ end
 local function octal_to_number(octal)
    local exp = 0
    local number = 0
+   octal = octal:gsub("%s", "")
    for i = #octal,1,-1 do
       local digit = tonumber(octal:sub(i,i)) 
-      if digit then
-         number = number + (digit * 8^exp)
-         exp = exp + 1
+      if not digit then
+         break
       end
+      number = number + (digit * 8^exp)
+      exp = exp + 1
    end
    return number
 end
@@ -41,10 +43,12 @@ end
 local function checksum_header(block)
    local sum = 256
    for i = 1,148 do
-      sum = sum + block:byte(i)
+      local b = block:byte(i) or 0
+      sum = sum + b
    end
    for i = 157,500 do
-      sum = sum + block:byte(i)
+      local b = block:byte(i) or 0
+      sum = sum + b
    end
    return sum
 end
@@ -71,12 +75,12 @@ local function read_header_block(block)
    header.devmajor = octal_to_number(nullterm(block:sub(330,337)))
    header.devminor = octal_to_number(nullterm(block:sub(338,345)))
    header.prefix = block:sub(346,500)
-   if header.magic ~= "ustar " and header.magic ~= "ustar\0" then
-      return false, "Invalid header magic "..header.magic
-   end
-   if header.version ~= "00" and header.version ~= " \0" then
-      return false, "Unknown version "..header.version
-   end
+   -- if header.magic ~= "ustar " and header.magic ~= "ustar\0" then
+   --    return false, ("Invalid header magic %6x"):format(bestring_to_number(header.magic))
+   -- end
+   -- if header.version ~= "00" and header.version ~= " \0" then
+   --    return false, "Unknown version "..header.version
+   -- end
    if not checksum_header(block) == header.chksum then
       return false, "Failed header checksum"
    end
@@ -87,20 +91,26 @@ function tar.untar(filename, destdir)
    assert(type(filename) == "string")
    assert(type(destdir) == "string")
 
-   local tar_handle = io.open(filename, "r")
+   local tar_handle = io.open(filename, "rb")
    if not tar_handle then return nil, "Error opening file "..filename end
    
    local long_name, long_link_name
+   local ok, err
    while true do
       local block
       repeat
          block = tar_handle:read(blocksize)
       until (not block) or checksum_header(block) > 256
       if not block then break end
-      local header, err = read_header_block(block)
+      if #block < blocksize then
+         ok, err = nil, "Invalid block size -- corrupted file?"
+         break
+      end
+      local header
+      header, err = read_header_block(block)
       if not header then
-         util.printerr(err)
-         return nil, err
+         ok = false
+         break
       end
 
       local file_data = tar_handle:read(math.ceil(header.size / blocksize) * blocksize):sub(1,header.size)
@@ -120,22 +130,33 @@ function tar.untar(filename, destdir)
          end
       end
       local pathname = dir.path(destdir, header.name)
+      pathname = fs.absolute_name(pathname)
       if header.typeflag == "directory" then
-         local ok, err = fs.make_dir(pathname)
-         if not ok then return nil, err end
+         ok, err = fs.make_dir(pathname)
+         if not ok then
+            break
+         end
       elseif header.typeflag == "file" then
          local dirname = dir.dir_name(pathname)
          if dirname ~= "" then
-            local ok, err = fs.make_dir(dirname)
-            if not ok then return nil, err end
+            ok, err = fs.make_dir(dirname)
+            if not ok then
+               break
+            end
          end
-         local file_handle = io.open(pathname, "wb")
+         local file_handle
+         file_handle, err = io.open(pathname, "wb")
+         if not file_handle then
+            ok = nil
+            break
+         end
          file_handle:write(file_data)
          file_handle:close()
          fs.set_time(pathname, header.mtime)
-         -- TODO Use fs.set_permissions
-         if fs.chmod then
-            fs.chmod(pathname, header.mode)
+         if header.mode:match("[75]") then
+            fs.set_permissions(pathname, "exec", "all")
+         else
+            fs.set_permissions(pathname, "read", "all")
          end
       end
       --[[
@@ -146,7 +167,7 @@ function tar.untar(filename, destdir)
       --]]
    end
    tar_handle:close()
-   return true
+   return ok, err
 end
 
 return tar
