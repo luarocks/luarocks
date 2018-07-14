@@ -276,14 +276,12 @@ function search.find_suitable_rock(query)
    end
 end
 
---- Return a list of rocks/rockspecs  as a table.
--- @param results table: A table where keys are package names and versions
--- are tables matching version strings to an array of rocks servers.
--- @param porcelain boolean or nil: A flag to force machine-friendly output.
-function search.return_results(results, porcelain)
-   assert(type(results) == "table")
-   assert(type(porcelain) == "boolean" or not porcelain)
-   for package, versions in util.sortedpairs(results) do
+--- Return a list of rocks/rockspecs as a table.
+-- @param result_tree table: A result tree.
+function search.return_results(result_tree)
+   assert(type(result_tree) == "table")
+   local results = {}
+   for package, versions in util.sortedpairs(result_tree) do
       for version, repos in util.sortedpairs(versions, vers.compare_versions) do
          for _, repo in ipairs(repos) do
             repo.repo = dir.normalize(repo.repo)
