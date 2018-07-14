@@ -172,6 +172,9 @@ end
 -- or nil followed by an error message.
 function fetch.load_local_rockspec(rel_filename, quick)
    assert(type(rel_filename) == "string")
+
+   fs.init()
+   
    local abs_filename = fs.absolute_name(rel_filename)
 
    local basename = dir.base_name(abs_filename)
