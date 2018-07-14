@@ -13,7 +13,7 @@ local fs = require("luarocks.fs")
 local download = require("luarocks.download")
 local manif = require("luarocks.manif")
 local repos = require("luarocks.repos")
-
+local results = require("luarocks.results")
 local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
 local writer = require("luarocks.manif.writer")
@@ -319,19 +319,20 @@ end
 --- Splits a list of search results into two lists, one for "source" results
 -- to be used with the "build" command, and one for "binary" results to be
 -- used with the "install" command.
--- @param results table: A search results table.
+-- @param result_tree table: A search results table.
 -- @return (table, table): Two tables, one for source and one for binary
 -- results.
-local function split_source_and_binary_results(results)
+local function split_source_and_binary_results(result_tree)
    local sources, binaries = {}, {}
-   for name, versions in pairs(results) do
+   for name, versions in pairs(result_tree) do
       for version, repositories in pairs(versions) do
          for _, repo in ipairs(repositories) do
             local where = sources
             if repo.arch == "all" or repo.arch == cfg.arch then
                where = binaries
             end
-            search.store_result(where, name, version, repo.arch, repo.repo)
+            local entry = results.new(name, version, repo.repo, repo.arch)
+            search.store_result(where, entry)
          end
       end
    end
@@ -346,13 +347,12 @@ function luarocks.search(name, version, binary_or_source)
       name, version = "", nil
    end
 
-   local query = search.make_query(name:lower(), version)
-   query.exact_name = false
-   local results, err = search.search_repos(query)
-   local sources, binaries = split_source_and_binary_results(results)
+   local query = queries.new(name:lower(), version, true)
+   local result_tree, err = search.search_repos(query)
+   local sources, binaries = split_source_and_binary_results(result_tree)
    if binary_or_source == nil then
-   	  search_table["sources"] = sources
-   	  search_table["binary"] =  binary
+        search_table["sources"] = sources
+        search_table["binary"] =  binary
    elseif next(sources) and (binary_or_source == "source") then
       search_table["sources"] = sources
    elseif next(binaries) and (binary_or_source == "binary") then
