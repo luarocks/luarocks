@@ -1087,8 +1087,10 @@ function luarocks.build(name, version, tree, only_deps, keep, pack_binary_rock, 
    return name, version
 end
 
-function luarocks.install_binary_rock(rock_file, deps_mode)
+function luarocks.install_binary_rock(rock_file, deps_mode, namespace)
    assert(type(rock_file) == "string")
+   assert(type(deps_mode) == "string")
+   --assert(type(namespace) == "string" or namespace == nil)
 
    local name, version, arch = path.parse_name(rock_file)
    if not name then
@@ -1128,8 +1130,15 @@ function luarocks.install_binary_rock(rock_file, deps_mode)
       if err then return nil, err end
    end
 
+   --[[
+   if namespace then
+      ok, err = writer.make_namespace_file(name, version, namespace)
+      if err then return nil, err end
+   end
+   --]]
+
    if deps_mode ~= "none" then
-      ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+      ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", deps_mode)
       if err then return nil, err, errcode end
    end
 
@@ -1170,7 +1179,7 @@ function luarocks.install_binary_rock_deps(rock_file, deps_mode)
       return nil, "Failed loading rockspec for installed package: "..err, errcode
    end
 
-   ok, err, errcode = deps.fulfill_dependencies(rockspec, deps_mode)
+   ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", deps_mode)
    if err then return nil, err, errcode end
 
    util.printout()
@@ -1179,39 +1188,58 @@ function luarocks.install_binary_rock_deps(rock_file, deps_mode)
    return name, version
 end
 
+local function install_rock_file_deps(filename, deps_mode)
+   local name, version = luarocks.install_binary_rock_deps(filename, deps_mode)
+   if not name then return nil, version end
+
+   writer.check_dependencies(nil, deps_mode)
+   return name, version
+end
+
+local function install_rock_file(filename, namespace, deps_mode, keep, force, force_fast)
+   assert(type(filename) == "string")
+   assert(type(namespace) == "string" or namespace == nil)
+   assert(type(deps_mode) == "string")
+   assert(type(keep) == "boolean" or keep == nil)
+   assert(type(force) == "boolean" or force == nil)
+   assert(type(force_fast) == "boolean" or force_fast == nil)
+
+   local name, version = luarocks.install_binary_rock(filename, deps_mode, namespace)
+   if not name then return nil, version end
+
+   if (not keep) and not cfg.keep_other_versions then
+      local ok, err = remove.remove_other_versions(name, version, force, force_fast)
+      if not ok then util.printerr(err) end
+   end
+
+   writer.check_dependencies(nil, deps_mode)
+   return name, version
+end
+
 function luarocks.install(name, version, tree, only_deps, keep)
+
+   fs.init()
+   
    if type(name) ~= "string" then
       return nil, "Argument missing. "
    end
 
-   --local ok, err = fs.check_command_permissions(flags)
+   --name = util.adjust_name_and_namespace(name, flags)
+
    local ok, err = fs.check_command_permissions_no_flags()
-   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
+   if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       return luarocks.build(name, version, tree, only_deps, keep, pack_binary_rock, branch)
-   elseif name:match("%.rock$") then
-      if only_deps then
-         --ok, err = install.install_binary_rock_deps(name, deps.get_deps_mode(flags))
-         ok, err = luarocks.install_binary_rock_deps(name, cfg.deps_mode)
+   --[[elseif name:match("%.rock$") then
+      local deps_mode = deps.get_deps_mode(flags)
+      if flags["only-deps"] then
+         return install_rock_file_deps(name, deps_mode)
       else
-         --ok, err = install.install_binary_rock(name, deps.get_deps_mode(flags))
-         ok, err = luarocks.install_binary_rock(name, cfg.deps_mode)
-      end
-      if not ok then return nil, err end
-      name, version = ok, err
-
-      --[[
-      if (not only_deps) and (not keep) and not cfg.keep_other_versions then
-         local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
-         if not ok then util.printerr(err) end
-      end
-      --]]
-
-      --writer.check_dependencies(nil, deps.get_deps_mode(flags))
-      return name, version
+         return install_rock_file(name, flags["namespace"], deps_mode, flags["keep"], flags["force"], flags["force-fast"])
+      end--]]
    else
-      local url, err = search.find_suitable_rock(search.make_query(name:lower(), version))
+      local url, err = search.find_suitable_rock(queries.new(name:lower(), version))
       if not url then
          return nil, err
       end
@@ -1219,6 +1247,5 @@ function luarocks.install(name, version, tree, only_deps, keep)
       return luarocks.install(url, version, tree, only_deps, keep)
    end
 end
-
 
 return luarocks
