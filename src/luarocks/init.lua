@@ -242,25 +242,24 @@ function luarocks.show(name, version, tree)
       return nil, "Argument missing. "..util.see_help("show")
    end
    
+   --name = util.adjust_name_and_namespace(name, flags)
+   local query = queries.new(name, version)
+   
    local repo, repo_url
-
-   name, version, repo, repo_url = search.pick_installed_rock(name:lower(), version, tree)
+   name, version, repo, repo_url = search.pick_installed_rock(query, tree)
    if not name then
       return nil, version
    end
-
-   local directory = path.install_dir(name,version,repo)
+   local tree = path.rocks_tree_to_string(repo)
+   local directory = path.install_dir(name, version, repo)
+   local namespace = path.read_namespace(name, version, tree)
    local rockspec_file = path.rockspec_file(name, version, repo)
    local rockspec, err = fetch.load_local_rockspec(rockspec_file)
-   if not rockspec then
-      return nil,err
-   end
+   if not rockspec then return nil,err end
 
    local descript = rockspec.description or {}
    local manifest, err = manif.load_manifest(repo_url)
-   if not manifest then
-      return nil,err
-   end
+   if not manifest then return nil,err end
    local minfo = manifest.repository[name][version][1]
 
    local show_table = {}
@@ -283,6 +282,9 @@ function luarocks.show(name, version, tree)
    if descript.labels then
       show_table["labels"] = descript.labels
    end
+   if descript.issues_url then
+      show_table["issues"] = descript.issues_url
+   end
    show_table["install_loc"] = path.rocks_tree_to_string(repo)
 
    if next(minfo.commands) then
@@ -292,25 +294,23 @@ function luarocks.show(name, version, tree)
    if next(minfo.modules) then
       show_table["modules"] = return_items_table(name, version, minfo.modules, "module", repo)
    end
-   
+
    show_table["deps"] = {}
-   local direct_deps = {}
-   if #rockspec.dependencies > 0 then
+   if rockspec.dependencies then
       for _, dep in ipairs(rockspec.dependencies) do
-         direct_deps[dep.name] = true
-         table.insert(show_table["deps"], {vers.show_dep(dep), installed_rock_label(dep.name, tree)})
+         table.insert(show_table["deps"], tostring(dep))
       end
    end
-   show_table["in_deps"] = {}
-   local has_indirect_deps
-   for dep_name in util.sortedpairs(minfo.dependencies or {}) do
-      if not direct_deps[dep_name] then
-         if not has_indirect_deps then
-            util.printout()
-            util.printout("Indirectly pulling:")
-            has_indirect_deps = true
-         end
-         table.insert(show_table["in_deps"], {dep_name, installed_rock_label(dep_name, tree)})
+   show_table["test-deps"] = {}
+   if rockspec.build_dependencies then
+      for _, dep in ipairs(rockspec.build_dependencies) do
+         table.insert(show_table["test-deps"], tostring(dep))
+      end
+   end
+   show_table["build-deps"] = {}
+   if rockspec.test_dependencies then
+      for _, dep in ipairs(rockspec.test_dependencies) do
+         table.insert(show_table["build-deps"], tostring(dep))
       end
    end
    return show_table
