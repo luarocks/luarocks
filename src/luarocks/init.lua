@@ -864,6 +864,8 @@ end
  
 function luarocks.new_version(input, version, url, tag)
 
+   fs.init()
+
    -- Even though this function doesn't necessarily require a tree argument, it needs to calll this function to not break - fetch.load_local_rockspec()
    set_rock_tree(tree)
 
