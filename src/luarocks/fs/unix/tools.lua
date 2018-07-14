@@ -136,6 +136,33 @@ function tools.unzip(zipfile)
    return fs.execute_quiet(vars.UNZIP, zipfile)
 end
 
+local function uncompress(default_ext, program, infile, outfile)
+   assert(type(infile) == "string")
+   assert(outfile == nil or type(outfile) == "string")
+   if not outfile then
+      outfile = infile:gsub("%."..default_ext.."$", "")
+   end
+   return fs.execute(fs.Q(program).." -c "..fs.Q(infile).." > "..fs.Q(outfile))
+end
+
+--- Uncompresses a .gz file.
+-- @param infile string: pathname of .gz file to be extracted.
+-- @param outfile string or nil: pathname of output file to be produced.
+-- If not given, name is derived from input file.
+-- @return boolean: true on success; nil and error message on failure.
+function tools.gunzip(infile, outfile)
+   return uncompress("gz", "gunzip", infile, outfile)
+end
+
+--- Uncompresses a .bz2 file.
+-- @param infile string: pathname of .bz2 file to be extracted.
+-- @param outfile string or nil: pathname of output file to be produced.
+-- If not given, name is derived from input file.
+-- @return boolean: true on success; nil and error message on failure.
+function tools.bunzip2(infile, outfile)
+   return uncompress("bz2", "bunzip2", infile, outfile)
+end
+
 --- Test is file/directory exists
 -- @param file string: filename to test
 -- @return boolean: true if file exists, false otherwise.
@@ -196,39 +223,6 @@ function tools.set_permissions(filename, mode, scope)
       return false, "Invalid permission " .. mode .. " for " .. scope
    end
    return fs.execute(vars.CHMOD, perms, filename)
-end
-
---- Unpack an archive.
--- Extract the contents of an archive, detecting its format by
--- filename extension.
--- @param archive string: Filename of archive.
--- @return boolean or (boolean, string): true on success, false and an error message on failure.
-function tools.unpack_archive(archive)
-   assert(type(archive) == "string")
-
-   local pipe_to_tar = " | "..vars.TAR.." -xf -"
-
-   if not cfg.verbose then
-      pipe_to_tar = " 2> /dev/null"..fs.quiet(pipe_to_tar)
-   end
-
-   local ok
-   if archive:match("%.tar%.gz$") or archive:match("%.tgz$") then
-      ok = fs.execute_string(vars.GUNZIP.." -c "..fs.Q(archive)..pipe_to_tar)
-   elseif archive:match("%.tar%.bz2$") then
-      ok = fs.execute_string(vars.BUNZIP2.." -c "..fs.Q(archive)..pipe_to_tar)
-   elseif archive:match("%.zip$") then
-      ok = fs.execute_quiet(vars.UNZIP, archive)
-   elseif archive:match("%.lua$") or archive:match("%.c$") then
-      -- Ignore .lua and .c files; they don't need to be extracted.
-      return true
-   else
-      return false, "Couldn't extract archive "..archive..": unrecognized filename extension"
-   end
-   if not ok then
-      return false, "Failed extracting "..archive
-   end
-   return true
 end
 
 function tools.attributes(filename, attrtype)

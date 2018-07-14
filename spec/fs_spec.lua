@@ -1293,6 +1293,22 @@ describe("Luarocks fs test #unit", function()
          assert.falsy(exists_file("nonexistent"))
       end)
    end)
+
+   describe("fs.bunzip2", function()
+      
+      it("uncompresses a .bz2 file", function()
+         local input = testing_paths.fixtures_dir .. "/abc.bz2"
+         local output = os.tmpname()
+         assert.truthy(fs.bunzip2(input, output))
+         local fd = io.open(output, "r")
+         local content = fd:read("*a")
+         fd:close()
+         assert.same(300000, #content)
+         local abc = ("a"):rep(100000)..("b"):rep(100000)..("c"):rep(100000)
+         assert.same(abc, content)
+      end)
+      
+   end)
    
    describe("fs.unzip", function()
       local tmpdir

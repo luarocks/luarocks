@@ -463,7 +463,6 @@ local function main()
    
    local dependencies = {
       md5 = "md5",
-      luazip = if_platform("unix", "luazip"),
       luasec = "./binary/luasec-0.7alpha-2.rockspec",
       luaposix = if_platform("unix", "./binary/luaposix-34.0.4-1.rockspec"),
       luasocket = "luasocket",

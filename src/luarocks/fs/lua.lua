@@ -1,6 +1,6 @@
 
 --- Native Lua implementation of filesystem and platform abstractions,
--- using LuaFileSystem, LZLib, MD5 and LuaCurl.
+-- using LuaFileSystem, LuaSocket, LuaSec, lua-zlib, LuaPosix, MD5.
 -- module("luarocks.fs.lua")
 local fs_lua = {}
 
@@ -10,20 +10,21 @@ local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 
-local socket_ok, zip_ok, unzip_ok, lfs_ok, md5_ok, posix_ok, _
-local http, ftp, lrzip, luazip, lfs, md5, posix
+local socket_ok, zip_ok, lfs_ok, md5_ok, posix_ok, bz2_ok, _
+local http, ftp, zip, lfs, md5, posix, bz2
 
 if cfg.fs_use_modules then
    socket_ok, http = pcall(require, "socket.http")
    _, ftp = pcall(require, "socket.ftp")
-   zip_ok, lrzip = pcall(require, "luarocks.tools.zip")
-   unzip_ok, luazip = pcall(require, "zip"); _G.zip = nil
+   zip_ok, zip = pcall(require, "luarocks.tools.zip")
+   bz2_ok, bz2 = pcall(require, "luarocks.tools.bzip2")
    lfs_ok, lfs = pcall(require, "lfs")
    md5_ok, md5 = pcall(require, "md5")
    posix_ok, posix = pcall(require, "posix")
 end
 
 local patch = require("luarocks.tools.patch")
+local tar = require("luarocks.tools.tar")
 
 local dir_stack = {}
 
@@ -589,52 +590,54 @@ end
 end
 
 ---------------------------------------------------------------------
--- LuaZip functions
+-- lua-bz2 functions
+---------------------------------------------------------------------
+
+if bz2_ok then
+
+local function bunzip2_string(data)
+   local decompressor = bz2.initDecompress()
+   local output, err = decompressor:update(data)
+   if not output then
+      return nil, err
+   end
+   decompressor:close()
+   return output
+end
+
+--- Uncompresses a .bz2 file.
+-- @param infile string: pathname of .bz2 file to be extracted.
+-- @param outfile string or nil: pathname of output file to be produced.
+-- If not given, name is derived from input file.
+-- @return boolean: true on success; nil and error message on failure.
+function fs_lua.bunzip2(infile, outfile)
+   assert(type(infile) == "string")
+   assert(outfile == nil or type(outfile) == "string")
+   if not outfile then
+      outfile = infile:gsub("%.bz2$", "")
+   end
+
+   return fs.filter_file(bunzip2_string, infile, outfile)
+end
+
+end
+
+---------------------------------------------------------------------
+-- luarocks.tools.zip functions
 ---------------------------------------------------------------------
 
 if zip_ok then
 
 function fs_lua.zip(zipfile, ...)
-   return lrzip.zip(zipfile, ...)
+   return zip.zip(zipfile, ...)
 end
 
+function fs_lua.unzip(zipfile)
+   return zip.unzip(zipfile)
 end
 
-if unzip_ok then
---- Uncompress files from a .zip archive.
--- @param filename string: pathname of .zip archive to be extracted.
--- @return boolean: true on success, false on failure.
-function fs_lua.unzip(filename)
-   local zipfile, err = luazip.open(filename)
-   if not zipfile then return nil, err end
-   local files = zipfile:files()
-   local file = files()
-   repeat
-      if file.filename:sub(#file.filename) == "/" then
-         local ok, err = fs.make_dir(dir.path(fs.current_dir(), file.filename))
-         if not ok then return nil, err end
-      else
-         local base = dir.dir_name(file.filename)
-         if base ~= "" then
-            base = dir.path(fs.current_dir(), base)
-            if not fs.is_dir(base) then
-               local ok, err = fs.make_dir(base)
-               if not ok then return nil, err end
-            end
-         end
-         local rf, err = zipfile:open(file.filename)
-         if not rf then zipfile:close(); return nil, err end
-         local contents = rf:read("*a")
-         rf:close()
-         local wf, err = io.open(dir.path(fs.current_dir(), file.filename), "wb")
-         if not wf then zipfile:close(); return nil, err end
-         wf:write(contents)
-         wf:close()
-      end
-      file = files()
-   until not file
-   zipfile:close()
-   return true
+function fs_lua.gunzip(infile, outfile)
+   return zip.gunzip(infile, outfile)
 end
 
 end
@@ -878,6 +881,16 @@ local octal_to_rwx = {
    ["7"] = "rwx",
 }
 
+function fs_lua._unix_rwx_to_number(rwx)
+   local num = 0
+   for i = 1, 9 do
+      if rwx:sub(10 - i, 10 - i) == "-" then
+         num = num + 2^i
+      end
+   end
+   return num
+end
+
 do
    local umask_cache
    function fs_lua._unix_umask()
@@ -886,13 +899,8 @@ do
       end
       -- LuaPosix (as of 34.0.4) only returns the umask as rwx
       local rwx = posix.umask()
-      local oct = 0
-      for i = 1, 9 do
-         if rwx:sub(10 - i, 10 - i) == "-" then
-            oct = oct + 2^i
-         end
-      end
-      umask_cache = ("%03o"):format(oct)
+      local num = fs_lua._unix_rwx_to_number(rwx)
+      umask_cache = ("%03o"):format(num)
       return umask_cache
    end
 end
@@ -1068,6 +1076,48 @@ function fs_lua.is_lua(filename)
   -- execute on configured interpreter, might not be the same as the interpreter LR is run on
   local result = fs.execute_string(lua..[[ -e "if loadfile(']]..filename..[[') then os.exit(0) else os.exit(1) end"]])
   return (result == true)
+end
+
+--- Unpack an archive.
+-- Extract the contents of an archive, detecting its format by
+-- filename extension.
+-- @param archive string: Filename of archive.
+-- @return boolean or (boolean, string): true on success, false and an error message on failure.
+function fs_lua.unpack_archive(archive)
+   assert(type(archive) == "string")
+
+   local ok, err
+   archive = fs.absolute_name(archive)
+   if archive:match("%.tar%.gz$") then
+      local tar_filename = archive:gsub("%.gz$", "")
+      ok, err = fs.gunzip(archive, tar_filename)
+      if ok then
+         ok, err = tar.untar(tar_filename, ".")
+      end
+   elseif archive:match("%.tgz$") then
+      local tar_filename = archive:gsub("%.tgz$", ".tar")
+      ok, err = fs.gunzip(archive, tar_filename)
+      if ok then
+         ok, err = tar.untar(tar_filename, ".")
+      end
+   elseif archive:match("%.tar%.bz2$") then
+      local tar_filename = archive:gsub("%.bz2$", "")
+      ok, err = fs.bunzip2(archive, tar_filename)
+      if ok then
+         ok, err = tar.untar(tar_filename, ".")
+      end
+   elseif archive:match("%.zip$") then
+      ok, err = fs.unzip(archive)
+   elseif archive:match("%.lua$") or archive:match("%.c$") then
+      -- Ignore .lua and .c files; they don't need to be extracted.
+      return true
+   else
+      return false, "Couldn't extract archive "..archive..": unrecognized filename extension"
+   end
+   if not ok then
+      return false, "Failed extracting "..archive..": "..err
+   end
+   return true
 end
 
 return fs_lua

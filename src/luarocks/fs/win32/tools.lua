@@ -148,6 +148,51 @@ function tools.unzip(zipfile)
    return fs.execute_quiet(fs.Q(vars.SEVENZ).." -aoa x", zipfile)
 end
 
+local function sevenz(default_ext, infile, outfile)
+   assert(type(infile) == "string")
+   assert(outfile == nil or type(outfile) == "string")
+
+   local dropext = infile:gsub("%."..default_ext.."$", "")
+   local outdir = dir.dir_name(dropext)
+
+   infile = fs.absolute_name(infile)
+
+   local cmdline = fs.Q(vars.SEVENZ).." -aoa -t* -o"..fs.Q(outdir).." x "..fs.Q(infile)
+   local ok, err = fs.execute_quiet(cmdline)
+   if not ok then
+      return nil, err
+   end
+
+   if outfile then
+      outfile = fs.absolute_name(outfile)
+      dropext = fs.absolute_name(dropext)
+      ok, err = os.rename(dropext, outfile)
+      if not ok then
+         return nil, err
+      end
+   end
+
+   return true
+end
+
+--- Uncompresses a .gz file.
+-- @param infile string: pathname of .gz file to be extracted.
+-- @param outfile string or nil: pathname of output file to be produced.
+-- If not given, name is derived from input file.
+-- @return boolean: true on success; nil and error message on failure.
+function tools.gunzip(infile, outfile)
+   return sevenz("gz", infile, outfile)
+end
+
+--- Uncompresses a .bz2 file.
+-- @param infile string: pathname of .bz2 file to be extracted.
+-- @param outfile string or nil: pathname of output file to be produced.
+-- If not given, name is derived from input file.
+-- @return boolean: true on success; nil and error message on failure.
+function tools.bunzip2(infile, outfile)
+   return sevenz("bz2", infile, outfile)
+end
+
 --- Test is pathname is a directory.
 -- @param file string: pathname to test
 -- @return boolean: true if it is a directory, false otherwise.
@@ -238,63 +283,6 @@ function tools.set_permissions(filename, mode, scope)
       end
    end
 
-   return true
-end
-
-
---- Strip the last extension of a filename.
--- Example: "foo.tar.gz" becomes "foo.tar".
--- If filename has no dots, returns it unchanged.
--- @param filename string: The file name to strip.
--- @return string: The stripped name.
-local function strip_extension(filename)
-   assert(type(filename) == "string")
-   return (filename:gsub("%.[^.]+$", "")) or filename
-end
-
---- Uncompress gzip file.
--- @param archive string: Filename of archive.
--- @return boolean : success status
-local function gunzip(archive)
-  return fs.execute_quiet(fs.Q(vars.SEVENZ).." -aoa x", archive)
-end
-
---- Unpack an archive.
--- Extract the contents of an archive, detecting its format by
--- filename extension.
--- @param archive string: Filename of archive.
--- @return boolean or (boolean, string): true on success, false and an error message on failure.
-function tools.unpack_archive(archive)
-   assert(type(archive) == "string")
-
-   local ok
-   local sevenzx = fs.Q(vars.SEVENZ).." -aoa x"
-   if archive:match("%.tar%.gz$") then
-      ok = gunzip(archive)
-      if ok then
-         ok = fs.execute_quiet(sevenzx, strip_extension(archive))
-      end
-   elseif archive:match("%.tgz$") then
-      ok = gunzip(archive)
-      if ok then
-         ok = fs.execute_quiet(sevenzx, strip_extension(archive)..".tar")
-      end
-   elseif archive:match("%.tar%.bz2$") then
-      ok = fs.execute_quiet(sevenzx, archive)
-      if ok then
-         ok = fs.execute_quiet(sevenzx, strip_extension(archive))
-      end
-   elseif archive:match("%.zip$") then
-      ok = fs.execute_quiet(sevenzx, archive)
-   elseif archive:match("%.lua$") or archive:match("%.c$") then
-      -- Ignore .lua and .c files; they don't need to be extracted.
-      return true
-   else
-      return false, "Couldn't extract archive "..archive..": unrecognized filename extension"
-   end
-   if not ok then
-      return false, "Failed extracting "..archive
-   end
    return true
 end
 
