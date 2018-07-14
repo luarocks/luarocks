@@ -17,6 +17,7 @@ local results = require("luarocks.results")
 local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
 local writer = require("luarocks.manif.writer")
+local cmd = require("luarocks.cmd")
 
 cfg.init()
 
@@ -368,6 +369,8 @@ function luarocks.remove(name, version, force)
 
    set_rock_tree(tree)
 
+   fs.init()
+
    cfg.rocks_dir = cfg.rocks_dir:gsub("/+$", "")
    cfg.deploy_bin_dir = cfg.deploy_bin_dir:gsub("/+$", "")
    cfg.deploy_lua_dir = cfg.deploy_lua_dir:gsub("/+$", "")
@@ -388,7 +391,7 @@ function luarocks.remove(name, version, force)
    --local ok, err = fs.check_command_permissions_no_flags(flags)
    local ok, err = fs.check_command_permissions_no_flags()
    --
-   if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
+   if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
    
    local rock_type = name:match("%.(rock)$") or name:match("%.(rockspec)$")
    local filename = name
@@ -399,7 +402,7 @@ function luarocks.remove(name, version, force)
 
    local results = {}
    name = name:lower()
-   search.manifest_search(results, cfg.rocks_dir, search.make_query(name, version))
+   search.local_manifest_search(results, cfg.rocks_dir, queries.new(name, version))
    if not results[name] then
       return nil, "Could not find rock '"..name..(version and " "..version or "").."' in "..path.rocks_tree_to_string(cfg.root_dir)
    end
@@ -407,11 +410,11 @@ function luarocks.remove(name, version, force)
    --local ok, err = remove.remove_search_results(results, name, deps_mode, flags["force"], flags["force-fast"])
    local ok, err = nil, nil
    if force == "force" then
-   	  ok, err = remove.remove_search_results(results, name, deps_mode, true, false)
+        ok, err = remove.remove_search_results(results, name, deps_mode, true, false)
    elseif force == "force-fast" then
-   	  ok, err = remove.remove_search_results(results, name, deps_mode, false, true)
+        ok, err = remove.remove_search_results(results, name, deps_mode, false, true)
    else
-   	  ok, err = remove.remove_search_results(results, name, deps_mode, false, false)
+        ok, err = remove.remove_search_results(results, name, deps_mode, false, false)
    end
    --
 
