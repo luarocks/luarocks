@@ -2,8 +2,9 @@
 local luarocks = {}
 
 local cfg = require("luarocks.core.cfg")
+local queries = require("luarocks.queries")
 local search = require("luarocks.search")
-local vers = require("luarocks.vers")
+local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
@@ -16,6 +17,8 @@ local repos = require("luarocks.repos")
 local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
 local writer = require("luarocks.manif.writer")
+
+cfg.init()
 
 local function replace_tree(flags, tree)
    tree = dir.normalize(tree)
@@ -75,7 +78,7 @@ end
 local function check_outdated(trees, query)
    local results_installed = {}
    for _, tree in ipairs(trees) do
-      search.manifest_search(results_installed, path.rocks_dir(tree), query)
+      search.local_manifest_search(results_installed, path.rocks_dir(tree), query)
    end
    local outdated = {}
    for name, versions in util.sortedpairs(results_installed) do
@@ -83,8 +86,7 @@ local function check_outdated(trees, query)
       table.sort(versions, vers.compare_versions)
       local latest_installed = versions[1]
 
-      local query_available = search.make_query(name:lower())
-      query.exact_name = true
+      local query_available = queries.new(name:lower())
       local results_available, err = search.search_repos(query_available)
       
       if results_available[name] then
@@ -103,8 +105,10 @@ end
 
 --- Return a table of installed rocks
 function luarocks.list(filter, outdated, version, tree)
-   local query = search.make_query(filter and filter:lower() or "", version)
-   query.exact_name = false
+
+   set_rock_tree(tree)
+
+   local query = queries.new(filter and filter:lower() or "", version, true)
    local trees = cfg.rocks_trees
    if tree then
      trees = { tree }
@@ -116,7 +120,7 @@ function luarocks.list(filter, outdated, version, tree)
    
    local results = {}
    for _, tree in ipairs(trees) do
-     local ok, err, errcode = search.manifest_search(results, path.rocks_dir(tree), query)
+     local ok, err, errcode = search.local_manifest_search(results, path.rocks_dir(tree), query)
      if not ok and errcode ~= "open" then
         return {err, errcode}
      end
