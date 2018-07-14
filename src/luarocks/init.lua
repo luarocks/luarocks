@@ -22,7 +22,7 @@ local rockspecs = require("luarocks.rockspecs")
 local builtin = require("luarocks.build.builtin")
 local persist = require("luarocks.persist")
 local type_rockspec = require("luarocks.type.rockspec")
-
+local build = require("luarocks.build")
 
 cfg.init()
 
@@ -969,73 +969,122 @@ function luarocks.current_config()
    return config_table
 end
 
-local function build_rock(rock_file, need_to_fetch, deps_mode, build_only_deps)
-   assert(type(rock_file) == "string")
-   assert(type(need_to_fetch) == "boolean")
+local function build_rock(rock_filename, opts)
+   assert(type(rock_filename) == "string")
+   assert(opts:type() == "build.opts")
 
    local ok, err, errcode
+
    local unpack_dir
-   unpack_dir, err, errcode = fetch.fetch_and_unpack_rock(rock_file)
+   unpack_dir, err, errcode = fetch.fetch_and_unpack_rock(rock_filename)
    if not unpack_dir then
       return nil, err, errcode
    end
-   local rockspec_file = path.rockspec_name_from_rock(rock_file)
+
+   local rockspec_filename = path.rockspec_name_from_rock(rock_filename)
+
    ok, err = fs.change_dir(unpack_dir)
    if not ok then return nil, err end
-   ok, err, errcode = build.build_rockspec(rockspec_file, need_to_fetch, false, deps_mode, build_only_deps)
+
+   local rockspec
+   rockspec, err, errcode = fetch.load_rockspec(rockspec_filename)
+   if not rockspec then
+      return nil, err, errcode
+   end
+
+   ok, err, errcode = build.build_rockspec(rockspec, opts)
+
    fs.pop_dir()
    return ok, err, errcode
 end
- 
-local function do_build(name, version, deps_mode, build_only_deps)
-   if name:match("%.rockspec$") then
-      return build.build_rockspec(name, true, false, deps_mode, build_only_deps)
-   elseif name:match("%.src%.rock$") then
-      return build_rock(name, false, deps_mode, build_only_deps)
-   elseif name:match("%.all%.rock$") then
-      return build_rock(name, true, deps_mode, build_only_deps)
-   elseif name:match("%.rock$") then
-      return build_rock(name, true, deps_mode, build_only_deps)
-   elseif not name:match("/") then
-      local search = require("luarocks.search")
-      return search.act_on_src_or_rockspec(do_build, name:lower(), version, nil, deps_mode, build_only_deps)
+
+local function do_build(ns_name, version, opts)
+   assert(type(ns_name) == "string")
+   assert(version == nil or type(version) == "string")
+   assert(opts:type() == "build.opts")
+
+   local url, err
+   if ns_name:match("%.rockspec$") or ns_name:match("%.rock$") then
+      url = ns_name
+   else
+      url, err = search.find_src_or_rockspec(ns_name, version)
+      if not url then
+         return nil, err
+      end
+      local _, namespace = util.split_namespace(ns_name)
+      opts.namespace = namespace
    end
-   return nil, "Don't know what to do with "..name
+
+   if url:match("%.rockspec$") then
+      local rockspec, err, errcode = fetch.load_rockspec(url)
+      if not rockspec then
+         return nil, err, errcode
+      end
+      return build.build_rockspec(rockspec, opts)
+   end
+
+   if url:match("%.src%.rock$") then
+      opts.need_to_fetch = false
+   end
+
+   return build_rock(url, opts)
 end
 
 function luarocks.build(name, version, tree, only_deps, keep, pack_binary_rock, branch)
    
+   fs.init()
+
    -- Even though this function doesn't necessarily require a tree argument, it needs to call this function to not break - fetch.load_local_rockspec()
    set_rock_tree(tree)
 
-   if type(name) ~= "string" then
-      return nil, "Argument missing. "
-   end
+   assert(type(name) == "string" or not name)
    assert(type(version) == "string" or not version)
+   
+   if not name then
+      return make.command(flags)
+   end
+
+   --name = util.adjust_name_and_namespace(name, flags)
+
+   local opts = build.opts({
+      need_to_fetch = true,
+      minimal_mode = false,
+      --deps_mode = deps.get_deps_mode(flags),
+      deps_mode = cfg.deps_mode,
+      build_only_deps = not not only_deps,
+      --namespace = flags["namespace"],
+      branch = not not branch,
+   })
 
    if pack_binary_rock then
-      --return pack.pack_binary_rock(name, version, do_build, name, version, deps.get_deps_mode(flags))
-      return pack.pack_binary_rock(name, version, do_build, name, version, cfg.deps_mode)
-   else
-      --local ok, err = fs.check_command_permissions(flags)
-      local ok, err = fs.check_command_permissions_no_flags()
-      if not ok then return nil, err, cfg.errorcodes.PERMISSIONDENIED end
-
-      --ok, err = do_build(name, version, deps.get_deps_mode(flags), flags["only-deps"])
-      ok, err = do_build(name, version, cfg.deps_mode, only_deps)
-      if not ok then return nil, err end
-      name, version = ok, err
-      
-      --[[
-      if (not only_deps) and (not keep) and not cfg.keep_other_versions then
-         local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
-         if not ok then util.printerr(err) end
-      end
-      --]]
-
-      --writer.check_dependencies(nil, deps.get_deps_mode(flags))
-      return name, version
+      return pack.pack_binary_rock(name, version, function()
+         opts.build_only_deps = false
+         return do_build(name, version, opts)
+      end)
    end
+   
+   local ok, err = fs.check_command_permissions_no_flags()
+   if not ok then
+      return nil, err, cmd.errorcodes.PERMISSIONDENIED
+   end
+
+   ok, err = do_build(name, version, opts)
+   if not ok then return nil, err end
+   name, version = ok, err
+
+   --[[
+   if not opts.build_only_deps then
+      if (not flags["keep"]) and not cfg.keep_other_versions then
+         local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
+         if not ok then
+            util.printerr(err)
+         end
+      end
+   end
+   --]]
+
+   --writer.check_dependencies(nil, deps.get_deps_mode(flags))
+   return name, version
 end
 
 function luarocks.install_binary_rock(rock_file, deps_mode)
