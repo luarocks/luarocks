@@ -157,9 +157,9 @@ function luarocks.doc(name, version, tree)
       return nil, "Argument missing. "
    end
 
-   name = name:lower()
-
-   local iname, iversion, repo = search.pick_installed_rock(name, version, tree)
+   --name = util.adjust_name_and_namespace(name, flags)
+   local query = queries.new(name, version)
+   local iname, iversion, repo = search.pick_installed_rock(query, tree)
    if not iname then
       return try_to_get_homepage(name, version)
    end
@@ -170,7 +170,7 @@ function luarocks.doc(name, version, tree)
    if not rockspec then return nil,err end
    local descript = rockspec.description or {}
 
-   local directory = path.install_dir(name,version,repo)
+   local directory = path.install_dir(name, version, repo)
    
    local docdir
    local directories = { "doc", "docs" }
