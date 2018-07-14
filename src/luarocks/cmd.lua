@@ -339,7 +339,15 @@ function cmd.run_command(description, commands, external_namespace, ...)
 
    local lua_data
    if flags["lua-dir"] then
-      lua_data = cmd.find_lua(flags["lua-dir"], flags["lua-version"])
+      local err
+      lua_data, err = cmd.find_lua(flags["lua-dir"], flags["lua-version"])
+      if not lua_data then
+         die(err)
+      end
+   elseif flags["lua-version"] then
+      lua_data = {
+         lua_version = flags["lua-version"]
+      }
    end
 
    local project_dir
