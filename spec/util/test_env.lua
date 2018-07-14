@@ -208,8 +208,6 @@ end
 function test_env.set_args()
    -- if at least Lua/LuaJIT version argument was found on input start to parse other arguments to env. variables
    test_env.TYPE_TEST_ENV = "minimal"
-   test_env.OPENSSL_INCDIR = ""
-   test_env.OPENSSL_LIBDIR = ""
    test_env.RESET_ENV = true
 
    for _, argument in ipairs(arg) do
@@ -275,6 +273,11 @@ function test_env.set_args()
       test_env.lib_extension = "dll"
    else
       test_env.lib_extension = "so"
+   end
+
+   test_env.openssl_dirs = ""
+   if test_env.OPENSSL_INCDIR then
+      test_env.openssl_dirs = "OPENSSL_INCDIR=" .. test_env.OPENSSL_INCDIR .. " OPENSSL_LIBDIR=" .. test_env.OPENSSL_LIBDIR
    end
 
    return true
