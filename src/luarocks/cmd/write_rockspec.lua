@@ -158,8 +158,13 @@ local function detect_description()
    return summary, detailed
 end
 
-local function detect_mit_license(data)
-   local strip_copyright = (data:gsub("Copyright [^\n]*\n", ""))
+local licenses = {
+   [78656] = "MIT",
+   [49311] = "ISC",
+}
+
+local function detect_license(data)
+   local strip_copyright = (data:gsub("^Copyright [^\n]*\n", ""))
    local sum = 0
    for i = 1, #strip_copyright do
       local num = string.byte(strip_copyright:sub(i,i))
@@ -167,7 +172,7 @@ local function detect_mit_license(data)
          sum = sum + num
       end
    end
-   return sum == 78656
+   return licenses[sum]
 end
 
 local function check_license()
@@ -175,8 +180,9 @@ local function check_license()
    if not fd then return nil end
    local data = fd:read("*a")
    fd:close()
-   if detect_mit_license(data) then
-      return "MIT", data
+   local license = detect_license(data)
+   if license then
+      return license, data
    end
    return nil, data
 end
