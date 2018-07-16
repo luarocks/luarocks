@@ -76,8 +76,14 @@ local lua_version_dep = {
 }
 
 local simple_scm_protocols = {
-   git = true, ["git+http"] = true, ["git+https"] = true,
-   hg = true, ["hg+http"] = true, ["hg+https"] = true
+   git = true,
+   ["git+http"] = true,
+   ["git+https"] = true,
+   ["git+ssh"] = true,
+   hg = true,
+   ["hg+http"] = true,
+   ["hg+https"] = true,
+   ["hg+ssh"] = true,
 }
 
 local detect_url
@@ -89,10 +95,13 @@ do
       local url = pipe:read("*a"):match("^([^\r\n]+)")
       pipe:close()
       if not url then return nil end
-      if not util.starts_with(url, program.."://") then
+      if url:match("^[^@:/]+@[^@:/]+:.*$") then
+         local u, h, p = url:match("^([^@]+)@([^:]+):(.*)$")
+         url = program.."+ssh://"..u.."@"..h.."/"..p
+      elseif not util.starts_with(url, program.."://") then
          url = program.."+"..url
       end
-   
+
       if simple_scm_protocols[dir.split_url(url)] then
          return url
       end
