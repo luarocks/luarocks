@@ -43,18 +43,25 @@ do
       end
       return false
    end
+   
+   local function Q(pathname)
+      if pathname:match("^.:") then
+         return pathname:sub(1, 2) .. '"' .. pathname:sub(3) .. '"'
+      end
+      return '"' .. pathname .. '"'
+   end
 
    local function check_lua_version(lua_exe, luaver)
       if not exists(lua_exe) then
          return nil
       end
-      local lv = util.popen_read(lua_exe .. ' -e "io.write(_VERSION:sub(5))"')
+      local lv, err = util.popen_read(Q(lua_exe) .. ' -e "io.write(_VERSION:sub(5))"')
       if luaver and luaver ~= lv then
          return nil
       end
       local ljv
       if lv == "5.1" then
-         ljv = util.popen_read(lua_exe .. ' -e "io.write(tostring(jit and jit.version:sub(8)))"')
+         ljv = util.popen_read(Q(lua_exe) .. ' -e "io.write(tostring(jit and jit.version:sub(8)))"')
          if ljv == "nil" then
             ljv = nil
          end
@@ -88,8 +95,10 @@ do
                insert_lua_versions(names, v)
             end
          end
+         if luaver == "5.1" or not luaver then
+            table.insert(names, "luajit" .. exe_suffix)
+         end
          table.insert(names, "lua" .. exe_suffix)
-         table.insert(names, "luajit" .. exe_suffix)
 
          local bindirs = { prefix .. "/bin", prefix }
          local tried = {}
