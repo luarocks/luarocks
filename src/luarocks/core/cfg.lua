@@ -583,7 +583,14 @@ function cfg.init(lua_data, project_dir, warning)
    local system = hardcoded.SYSTEM
    local processor = hardcoded.PROCESSOR
    if is_windows then
-      system = system or "Windows"
+      if not system then
+         if os.getenv("VCINSTALLDIR") then
+            -- running from the Development Command prompt for VS 2017
+            system = "Windows"
+         else
+            system = "MINGW"
+         end
+      end
       if not processor then
          local pe_parser = require("luarocks.fs.win32.pe-parser")
          local err
