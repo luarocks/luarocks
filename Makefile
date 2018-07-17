@@ -1,7 +1,7 @@
 
 -include config.unix
 
-all: ./luarocks ./luarocks-admin
+all: luarocks luarocks-admin
 
 # ----------------------------------------
 # Base build
@@ -16,7 +16,7 @@ config.unix:
 
 config-$(LUA_VERSION).lua.in: config.unix
 
-./luarocks: config.unix config-$(LUA_VERSION).lua.in
+luarocks: config.unix config-$(LUA_VERSION).lua.in
 	rm -f src/luarocks/core/hardcoded.lua
 	echo "#!/bin/sh" > luarocks
 	echo "unset LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4" >> luarocks
@@ -68,10 +68,10 @@ BINARY_TARGET=build-binary
 
 binary: $(BINARY_TARGET)/luarocks.exe $(BINARY_TARGET)/luarocks-admin.exe
 
-$(BINARY_TARGET)/luarocks.exe: ./luarocks
+$(BINARY_TARGET)/luarocks.exe: luarocks
 	LUA_PATH="$(CURDIR)/src/?.lua;;" "$(LUA_BINDIR)/$(LUA_INTERPRETER)" binary/all_in_one "src/bin/luarocks" "$(LUA_DIR)" "^src/luarocks/admin/" "$(SYSCONFDIR)" $(BINARY_TARGET) $(BINARY_PLATFORM) $(BINARY_CC) $(BINARY_NM) $(BINARY_SYSROOT)
 
-$(BINARY_TARGET)/luarocks-admin.exe: ./luarocks
+$(BINARY_TARGET)/luarocks-admin.exe: luarocks
 	LUA_PATH="$(CURDIR)/src/?.lua;;" "$(LUA_BINDIR)/$(LUA_INTERPRETER)" binary/all_in_one "src/bin/luarocks-admin" "$(LUA_DIR)" "^src/luarocks/cmd/" "$(SYSCONFDIR)" $(BINARY_TARGET) $(BINARY_PLATFORM) $(BINARY_CC) $(BINARY_NM) $(BINARY_SYSROOT)
 
 # ----------------------------------------
@@ -92,14 +92,14 @@ install-binary: build-binary/luarocks.exe build-binary/luarocks-admin.exe
 # Bootstrap install
 # ----------------------------------------
 
-bootstrap: ./luarocks $(SYSCONFDIR)/config-$(LUA_VERSION).lua
+bootstrap: luarocks $(SYSCONFDIR)/config-$(LUA_VERSION).lua
 	./luarocks make --tree="$(ROCKS_TREE)"
 
 # ----------------------------------------
 # Windows binary build
 # ----------------------------------------
 
-windows-binary: ./luarocks
+windows-binary: luarocks
 	make -f binary/Makefile.windows windows-binary
 
 windows-clean:
