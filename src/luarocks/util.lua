@@ -349,7 +349,7 @@ function util.this_program(default)
       cur = dbg.source
       i=i+1
    end
-   return last:sub(2)
+   return last:sub(1,1) == "@" and last:sub(2) or last
 end
 
 function util.deps_mode_help(program)
