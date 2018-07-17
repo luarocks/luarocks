@@ -132,12 +132,12 @@ function manif.load_manifest(repo_url, lua_version)
       fs.change_dir(dirname)
       local nozip = pathname:match("(.*)%.zip$")
       fs.delete(nozip)
-      local ok = fs.unzip(pathname)
+      local ok, err = fs.unzip(pathname)
       fs.pop_dir()
       if not ok then
          fs.delete(pathname)
          fs.delete(pathname..".timestamp")
-         return nil, "Failed extracting manifest file"
+         return nil, "Failed extracting manifest file: " .. err
       end
       pathname = nozip
    end

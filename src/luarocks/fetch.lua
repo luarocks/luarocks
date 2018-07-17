@@ -155,9 +155,9 @@ function fetch.fetch_and_unpack_rock(rock_file, dest)
    end
    local ok, err = fs.change_dir(unpack_dir)
    if not ok then return nil, err end
-   ok = fs.unzip(rock_file)
+   ok, err = fs.unzip(rock_file)
    if not ok then
-      return nil, "Failed unpacking rock file: " .. rock_file
+      return nil, "Failed unpacking rock file: " .. rock_file .. ": " .. err
    end
    fs.pop_dir()
    return unpack_dir
