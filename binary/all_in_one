@@ -468,6 +468,7 @@ local function main()
       luaposix = if_platform("unix", "./binary/luaposix-34.0.4-1.rockspec"),
       luasocket = "luasocket",
       ["lua-zlib"] = "./binary/lua-zlib-1.2-0.rockspec",
+      ["lua-bz2"] = "./binary/lua-bz2-0.1.0-1.rockspec",
       luafilesystem = "luafilesystem",
    }
    
