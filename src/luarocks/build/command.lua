@@ -19,8 +19,8 @@ function command.run(rockspec)
 
    local env = {
       CC = cfg.variables.CC,
-      LD = cfg.variables.LD,
-      CFLAGS = cfg.variables.CFLAGS,
+      --LD = cfg.variables.LD,
+      --CFLAGS = cfg.variables.CFLAGS,
    }
 
    if build.build_command then
