@@ -211,6 +211,36 @@ function fs_lua.modules(at)
    return modules
 end
 
+function fs_lua.filter_file(fn, input_filename, output_filename)
+   local fd, err = io.open(input_filename, "rb")
+   if not fd then
+      return nil, err
+   end
+
+   local input, err = fd:read("*a")
+   fd:close()
+   if not input then
+      return nil, err
+   end
+
+   local output, err = fn(input)
+   if not output then
+      return nil, err
+   end
+
+   fd, err = io.open(output_filename, "wb")
+   if not fd then
+      return nil, err
+   end
+
+   local ok, err = fd:write(output)
+   fd:close()
+   if not ok then
+      return nil, err
+   end
+
+   return true
+end
 
 ---------------------------------------------------------------------
 -- LuaFileSystem functions
