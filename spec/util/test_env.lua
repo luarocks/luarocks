@@ -885,26 +885,25 @@ function test_env.main()
    -- Preparation of rocks for building environment
    local rocks = {} -- names of rocks, required for building environment
    local urls = {}  -- names of rock and rockspec files to be downloaded
-   table.insert(urls, "/luacov-0.11.0-1.rockspec")
-   table.insert(urls, "/luacov-0.11.0-1.src.rock")
 
    if test_env.TYPE_TEST_ENV == "full" then
       table.insert(urls, "/luafilesystem-1.6.3-1.src.rock")
       table.insert(urls, "/luasocket-3.0rc1-1.src.rock")
       table.insert(urls, "/luasocket-3.0rc1-1.rockspec")
-      table.insert(urls, "/luaposix-33.2.1-1.src.rock")
       table.insert(urls, "/md5-1.2-1.src.rock")
-      table.insert(urls, "/lzlib-0.4.1.53-1.src.rock")
-      rocks = {"luafilesystem", "luasocket", "luaposix", "md5", "lzlib"}
-
-      if test_env.LUA_V ~= "5.1" then
-         table.insert(urls, "/luabitop-1.0.2-1.rockspec")
-         table.insert(urls, "/luabitop-1.0.2-1.src.rock")
-         table.insert(rocks, "luabitop")
+      --table.insert(urls, "/lzlib-0.4.1.53-1.src.rock")
+      table.insert(urls, "/lua-zlib-1.2-0.src.rock")
+      rocks = {"luafilesystem", "luasocket", "md5", "lua-zlib"}
+      if test_env.TEST_TARGET_OS ~= "windows" then
+         table.insert(urls, "/luaposix-33.2.1-1.src.rock")
+         table.insert(rocks, "luaposix")
       end
    end
 
-   table.insert(rocks, "luacov")   -- luacov is needed for minimal or full environment
+   -- luacov is needed for both minimal or full environment
+   table.insert(urls, "/luacov-0.11.0-1.rockspec")
+   table.insert(urls, "/luacov-0.11.0-1.src.rock")
+   table.insert(rocks, "luacov")
 
    -- Download rocks needed for LuaRocks testing environment
    lfs.mkdir(testing_paths.testing_server)
