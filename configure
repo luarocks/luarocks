@@ -517,7 +517,7 @@ if [ "$LUA_BINDIR_SET" = "yes" ]; then echo "Lua bin directory..................
 if [ "$LUA_INCDIR_SET" = "yes" ]; then echo "Lua include directory..............: $(GREEN "$LUA_INCDIR")" ; fi
 if [ "$LUA_LIBDIR_SET" = "yes" ]; then echo "Lua lib directory..................: $(GREEN "$LUA_LIBDIR")" ; fi
 echo
-echo "* Type $(BOLD make build) and $(BOLD make install):"
+echo "* Type $(BOLD make) and $(BOLD make install):"
 echo "  to install to $PREFIX as usual."
 echo "* Type $(BOLD make bootstrap):"
 echo "  to install LuaRocks into $ROCKS_TREE as a rock."
