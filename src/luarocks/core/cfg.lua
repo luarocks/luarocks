@@ -66,15 +66,15 @@ end
 
 local function set_confdirs(cfg, platforms, hardcoded_sysconfdir)
    local sysconfdir = os.getenv("LUAROCKS_SYSCONFDIR") or hardcoded_sysconfdir
-   if not sysconfdir then
-      sysconfdir = detect_sysconfdir(cfg.lua_version)
-   end
    if platforms.windows then
       cfg.home = os.getenv("APPDATA") or "c:"
       cfg.home_tree = cfg.home.."/luarocks"
       cfg.homeconfdir = cfg.home_tree
       cfg.sysconfdir = sysconfdir or ((os.getenv("PROGRAMFILES") or "c:") .. "/luarocks")
    else
+      if not sysconfdir then
+         sysconfdir = detect_sysconfdir(cfg.lua_version)
+      end
       cfg.home = os.getenv("HOME") or ""
       cfg.home_tree = (os.getenv("USER") ~= "root") and cfg.home.."/.luarocks"
       cfg.homeconfdir = cfg.home.."/.luarocks"
