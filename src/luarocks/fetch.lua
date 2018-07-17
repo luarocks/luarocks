@@ -134,7 +134,8 @@ function fetch.fetch_and_unpack_rock(rock_file, dest)
 
    local name = dir.base_name(rock_file):match("(.*)%.[^.]*%.rock")
    
-   local rock_file, err, errcode = fetch.fetch_url_at_temp_dir(rock_file,"luarocks-rock-"..name)
+   local err, errcode
+   rock_file, err, errcode = fetch.fetch_url_at_temp_dir(rock_file,"luarocks-rock-"..name)
    if not rock_file then
       return nil, "Could not fetch rock file: " .. err, errcode
    end

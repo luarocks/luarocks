@@ -212,7 +212,7 @@ end
 --- Helper function for fs.set_permissions
 -- @return table: an array of all system users
 local function get_system_users()
-   result = {}
+   local result = {}
    local fd = assert(io.popen("wmic UserAccount get name"))
    for user in fd:lines() do
       user = user:gsub("%s+$", "")
