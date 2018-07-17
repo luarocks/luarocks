@@ -572,8 +572,17 @@ function fs_lua.is_file(file)
    return lfs.attributes(file, "mode") == "file"
 end
 
+-- Set access and modification times for a file.
+-- @param filename File to set access and modification times for.
+-- @param time may be a number containing the format returned
+-- by os.time, or a table ready to be processed via os.time; if
+-- nil, current time is assumed.
 function fs_lua.set_time(file, time)
+   assert(time == nil or type(time) == "table" or type(time) == "number")
    file = dir.normalize(file)
+   if type(time) == "table" then
+      time = os.time(time)
+   end
    return lfs.touch(file, time)
 end
 

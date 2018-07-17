@@ -248,9 +248,22 @@ function tools.browser(url)
    return fs.execute(cfg.web_browser, url)
 end
 
+-- Set access and modification times for a file.
+-- @param filename File to set access and modification times for.
+-- @param time may be a string or number containing the format returned
+-- by os.time, or a table ready to be processed via os.time; if
+-- nil, current time is assumed.
 function tools.set_time(file, time)
+   assert(time == nil or type(time) == "table" or type(time) == "number")
    file = dir.normalize(file)
-   return fs.execute(vars.TOUCH, "-d", "@"..tostring(time), file)
+   local flag = ""
+   if type(time) == "number" then
+      time = os.date("*t", time)
+   end
+   if type(time) == "table" then
+      flag = ("-t %04d%02d%02d%02d%02d%02d"):format(time.year, time.month, time.day, time.hour, time.min, time.sec)
+   end
+   return fs.execute(vars.TOUCH .. " " .. flag, file)
 end
 
 --- Create a temporary directory.
