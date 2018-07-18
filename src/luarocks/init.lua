@@ -377,7 +377,7 @@ end
 --- force = nil for not forcing
 -- "force" for force
 -- "force-fast" for fast-force
-function luarocks.remove(name, version, force)
+function luarocks.remove(name, version, tree, force)
 
    set_rock_tree(tree)
 
