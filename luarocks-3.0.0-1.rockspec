@@ -1,6 +1,6 @@
 rockspec_format = "3.0"
 package = "luarocks"
-version = "dev-1"
+version = "3.0.0-1"
 source = {
    url = "git+https://github.com/luarocks/luarocks"
 }

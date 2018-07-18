@@ -18,7 +18,7 @@ local persist = require("luarocks.core.persist")
 
 --------------------------------------------------------------------------------
 
-local program_version = "dev"
+local program_version = "3.0.0"
 local program_series = "3.0"
 local major_version = (program_version:match("([^.]%.[^.])")) or program_series
 
