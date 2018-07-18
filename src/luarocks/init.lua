@@ -187,6 +187,13 @@ function luarocks.doc(name, version, tree)
          break
       end
    end
+   if not docdir then
+      if descript.homepage then
+         return descript.homepage, "Documentation directory not found for "..name.." "..version
+      end
+      return nil, "Documentation directory not found for "..name.." "..version
+   end
+
 
    docdir = dir.normalize(docdir):gsub("/+", "/")
    local files = fs.find(docdir)
