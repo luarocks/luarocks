@@ -1,4 +1,4 @@
-rem=rem --[[
+rem=rem --[[--lua
 @setlocal&  set luafile="%~f0" & if exist "%~f0.bat" set luafile="%~f0.bat"
 @win32\lua5.1\bin\lua5.1.exe %luafile% %*&  exit /b ]]
 
@@ -601,7 +601,7 @@ local function look_for_lua_install ()
 	return false
 end
 
--- backup config[x.x].lua[.bak] and site_config[_x_x].lua
+-- backup config[x.x].lua[.bak]
 local function backup_config_files()
   local temppath
   while not temppath do
@@ -611,14 +611,12 @@ local function backup_config_files()
   vars.CONFBACKUPDIR = temppath
   mkdir(vars.CONFBACKUPDIR)
   exec(S[[COPY "$PREFIX\config*.*" "$CONFBACKUPDIR" >NUL]])
-  exec(S[[COPY "$PREFIX\lua\luarocks\core\site_config*.*" "$CONFBACKUPDIR" >NUL]])
 end
 
 -- restore previously backed up config files
 local function restore_config_files()
   if not vars.CONFBACKUPDIR then return end -- there is no backup to restore
   exec(S[[COPY "$CONFBACKUPDIR\config*.*" "$PREFIX" >NUL]])
-  exec(S[[COPY "$CONFBACKUPDIR\site_config*.*" "$PREFIX\lua\luarocks\core" >NUL]])
   -- cleanup
   exec(S[[RD /S /Q "$CONFBACKUPDIR"]])
   vars.CONFBACKUPDIR = nil
@@ -1011,44 +1009,35 @@ restore_config_files()
 print()
 print("Configuring LuaRocks...")
 
--- Create a site-config file
-local site_config = S("site_config_$LUA_VERSION"):gsub("%.","_")
+-- Create hardcoded.lua
 
-if exists(S([[$LUADIR\luarocks\core\]]..site_config..[[.lua]])) then
-	local nname = backup(S([[$LUADIR\luarocks\core\]]..site_config..[[.lua]]), site_config..".lua.bak")
-	print("***************")
-	print("*** WARNING *** LuaRocks site_config file already exists: '"..site_config..".lua'. The old file has been renamed to '"..nname.."'")
-	print("***************")
-end
-local f = io.open(vars.LUADIR.."\\luarocks\\core\\"..site_config..".lua", "w")
+local hardcoded_lua = S[[$LUADIR\luarocks\core\hardcoded.lua]]
+
+os.remove(hardcoded_lua)
+
+vars.SYSTEM = USE_MINGW and "MINGW" or "WindowsNT"
+
+local f = io.open(hardcoded_lua, "w")
 f:write(S[=[
-local site_config = {}
-site_config.LUA_INCDIR=[[$LUA_INCDIR]]
-site_config.LUA_LIBDIR=[[$LUA_LIBDIR]]
-site_config.LUA_BINDIR=[[$LUA_BINDIR]]
-site_config.LUA_INTERPRETER=[[$LUA_INTERPRETER]]
-]=])
-if USE_MINGW then
-	f:write("site_config.LUAROCKS_UNAME_S=[[MINGW]]\n")
-else
-	f:write("site_config.LUAROCKS_UNAME_S=[[WindowsNT]]\n")
-end
-f:write(S[=[
-site_config.LUAROCKS_UNAME_M=[[$UNAME_M]]
-site_config.LUAROCKS_ROCKS_TREE=[[$TREE_ROOT]]
-site_config.LUAROCKS_PREFIX=[[$PREFIX]]
-site_config.LUAROCKS_DOWNLOADER=[[wget]]
-site_config.LUAROCKS_MD5CHECKER=[[md5sum]]
+return {
+   LUA_INCDIR=[[$LUA_INCDIR]],
+   LUA_LIBDIR=[[$LUA_LIBDIR]],
+   LUA_BINDIR=[[$LUA_BINDIR]],
+   LUA_INTERPRETER=[[$LUA_INTERPRETER]],
+   SYSTEM = [[$SYSTEM]],
+   PROCESSOR = [[$UNAME_M]],
+   PREFIX = [[$PREFIX]],
+   WIN_TOOLS = [[$PREFIX/tools]],
 ]=])
 if FORCE_CONFIG then
-	f:write("site_config.LUAROCKS_FORCE_CONFIG=true\n")
+	f:write("   FORCE_CONFIG = true,\n")
 end
 if vars.SYSCONFFORCE then  -- only write this value when explcitly given, otherwise rely on defaults
-	f:write(S("site_config.LUAROCKS_SYSCONFDIR=[[$SYSCONFDIR]]\n"))
+	f:write(S("   SYSCONFDIR = [[$SYSCONFDIR]],\n"))
 end
-f:write("return site_config\n")
+f:write("}\n")
 f:close()
-print(S([[Created LuaRocks site-config file: $LUADIR\luarocks\core\]]..site_config..[[.lua]]))
+print(S([[Created LuaRocks hardcoded settings file: $LUADIR\luarocks\core\hardcoded.lua]]))
 
 -- create config file
 if not exists(vars.SYSCONFDIR) then
