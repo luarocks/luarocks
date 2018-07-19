@@ -19,12 +19,9 @@ local extra_rocks = {
    "/lpeg-1.0.0-1.rockspec",
    "/lpeg-1.0.0-1.src.rock",
    "/luafilesystem-1.6.3-1.src.rock",
-   "/lualogging-1.3.0-1.src.rock",
    "/luasec-0.6-1.rockspec",
    "/luasocket-3.0rc1-2.src.rock",
    "/luasocket-3.0rc1-2.rockspec",
-   "/lxsh-0.8.6-2.src.rock",
-   "/lxsh-0.8.6-2.rockspec",
    "/stdlib-41.0.0-1.src.rock",
    "/validate-args-1.5.4-1.rockspec"
 }
@@ -135,17 +132,17 @@ describe("LuaRocks build tests #integration", function()
          assert.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
       end)
       
-      it("LuaRocks build lpeg only-sources example", function()
-         assert.is_true(run.luarocks_bool("download --rockspec lpeg"))
-         assert.is_false(run.luarocks_bool("build --only-sources=\"http://example.com\" lpeg-1.0.0-1.rockspec"))
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+      it("LuaRocks build with --only-sources", function()
+         assert.is_true(run.luarocks_bool("download --server=" .. testing_paths.fixtures_dir .. "/a_repo --rockspec a_rock")) 
+         assert.is_false(run.luarocks_bool("build --only-sources=\"http://example.com\" a_rock-1.0-1.rockspec"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
 
-         assert.is_true(run.luarocks_bool("download --source lpeg"))
-         assert.is_true(run.luarocks_bool("build --only-sources=\"http://example.com\" lpeg-1.0.0-1.src.rock"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
+         assert.is_true(run.luarocks_bool("download --server=" .. testing_paths.fixtures_dir .. "/a_repo --source a_rock"))
+         assert.is_true(run.luarocks_bool("build --only-sources=\"http://example.com\" a_rock-1.0-1.src.rock"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
 
-         assert.is_true(os.remove("lpeg-1.0.0-1.rockspec"))
-         assert.is_true(os.remove("lpeg-1.0.0-1.src.rock"))
+         assert.is_true(os.remove("a_rock-1.0-1.rockspec"))
+         assert.is_true(os.remove("a_rock-1.0-1.src.rock"))
       end)
       
       it("LuaRocks build fails if an empty tree is given", function()
@@ -201,9 +198,35 @@ describe("LuaRocks build tests #integration", function()
          lfs.rmdir(tmpdir)
       end)
       
-      it("LuaRocks build luasec with skipping dependency checks", function()
-         assert.is_true(run.luarocks_bool("build luasec 0.6-1 " .. test_env.openssl_dirs .. " --nodeps"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasec/0.6-1/luasec-0.6-1.rockspec"))
+      it("LuaRocks build with skipping dependency checks", function()
+         local olddir = lfs.currentdir()
+         local tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+
+         write_file("test-1.0-1.rockspec", [[
+            package = "test"
+            version = "1.0-1"
+            source = {
+               url = "file://]] .. tmpdir:gsub("\\", "/") .. [[/test.lua"
+            }
+            dependencies = {
+               "a_rock 1.0"
+            }
+            build = {
+               type = "builtin", 
+               modules = {
+                  test = "test.lua"
+               }
+            }
+         ]], finally)
+         write_file("test.lua", "return {}", finally)
+
+         assert.is_true(run.luarocks_bool("build test-1.0-1.rockspec --deps-mode=none"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/test/1.0-1/test-1.0-1.rockspec"))
+
+         lfs.chdir(olddir)
+         lfs.rmdir(tmpdir)
       end)
       
       it("LuaRocks build lmathx deps partial match", function()
@@ -267,22 +290,71 @@ describe("LuaRocks build tests #integration", function()
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasec/0.6-1/luasec-0.6-1.rockspec"))
       end)
       
-      it("LuaRocks build only deps of downloaded rockspec of lxsh", function()
-         assert.is_true(run.luarocks_bool("download --rockspec lxsh 0.8.6-2"))
-         assert.is.truthy(run.luarocks("build lxsh-0.8.6-2.rockspec --only-deps"))
-         assert.is_false(run.luarocks_bool("show lxsh"))
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
-         assert.is_true(os.remove("lxsh-0.8.6-2.rockspec"))
+      it("LuaRocks build only deps of a given rockspec", function()
+         local olddir = lfs.currentdir()
+         local tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+
+         write_file("test-1.0-1.rockspec", [[
+            package = "test"
+            version = "1.0-1"
+            source = {
+               url = "file://]] .. tmpdir:gsub("\\", "/") .. [[/test.lua"
+            }
+            dependencies = {
+               "a_rock 1.0"
+            }
+            build = {
+               type = "builtin", 
+               modules = {
+                  test = "test.lua"
+               }
+            }
+         ]], finally)
+         write_file("test.lua", "return {}", finally)
+
+         assert.is.truthy(run.luarocks_bool("build --server=" .. testing_paths.fixtures_dir .. "/a_repo test-1.0-1.rockspec --only-deps"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/test/1.0-1/test-1.0-1.rockspec"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
+
+         lfs.chdir(olddir)
+         lfs.rmdir(tmpdir)
       end)
 
-      it("LuaRocks build only deps of downloaded rock of lxsh", function()
-         assert.is_true(run.luarocks_bool("download --source lxsh 0.8.6-2"))
-         assert.is.truthy(run.luarocks("build lxsh-0.8.6-2.src.rock --only-deps"))
-         assert.is_false(run.luarocks_bool("show lxsh"))
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
-         assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
+      pending("LuaRocks build only deps of a given rock", function()
+         local olddir = lfs.currentdir()
+         local tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         lfs.chdir(tmpdir)
+
+         write_file("test-1.0-1.rockspec", [[
+            package = "test"
+            version = "1.0-1"
+            source = {
+               url = "file://]] .. tmpdir:gsub("\\", "/") .. [[/test.lua"
+            }
+            dependencies = {
+               "a_rock 1.0"
+            }
+            build = {
+               type = "builtin", 
+               modules = {
+                  test = "test.lua"
+               }
+            }
+         ]], finally)
+         write_file("test.lua", "return {}", finally)
+
+         assert.is.truthy(run.luarocks_bool("pack test-1.0-1.rockspec"))
+         assert.is.truthy(lfs.attributes("test-1.0-1.src.rock"))
+
+         assert.is.truthy(run.luarocks_bool("build --server=" .. testing_paths.fixtures_dir .. "/a_repo test-1.0-1.src.rock --only-deps"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/test/1.0-1/test-1.0-1.rockspec"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
+
+         lfs.chdir(olddir)
+         lfs.rmdir(tmpdir)
       end)
 
       it("LuaRocks build with https", function()
