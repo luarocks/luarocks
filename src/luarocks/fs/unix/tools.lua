@@ -255,7 +255,7 @@ function tools.set_time(file, time)
       time = os.date("*t", time)
    end
    if type(time) == "table" then
-      flag = ("-t %04d%02d%02d%02d%02d%02d"):format(time.year, time.month, time.day, time.hour, time.min, time.sec)
+      flag = ("-t %04d%02d%02d%02d%02d.%02d"):format(time.year, time.month, time.day, time.hour, time.min, time.sec)
    end
    return fs.execute(vars.TOUCH .. " " .. flag, file)
 end
