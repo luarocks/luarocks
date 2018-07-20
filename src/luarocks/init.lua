@@ -1254,4 +1254,45 @@ function luarocks.install(name, version, tree, only_deps, keep)
    end
 end
 
+function luarocks.check_missing_dependencies(name, version, tree)
+
+   set_rock_tree(tree)
+
+   local url, err = search.find_src_or_rockspec(name, version)
+   if not url then
+      return nil, err
+   end
+
+   --"%.src%.rock$"
+   if url:match("%.rock$") then
+      local ok, err, errcode
+
+      local unpack_dir
+      unpack_dir, err, errcode = fetch.fetch_and_unpack_rock(url)
+      if not unpack_dir then
+         return nil, err, errcode
+      end
+
+      url = path.rockspec_name_from_rock(url)
+
+      ok, err = fs.change_dir(unpack_dir)
+      if not ok then return nil, err end
+   end
+
+   if url:match("%.rockspec$") then
+      local rockspec, err, errcode = fetch.load_rockspec(url)
+      if not rockspec then
+         return nil, err, errcode
+      end
+
+      local deps_mode = cfg.deps_mode
+
+      local missing_deps = deps.return_missing_dependencies(rockspec.name, rockspec.version, rockspec.dependencies, deps_mode, rockspec.rocks_provided)
+
+      return missing_deps, nil
+   end
+
+   return nil, "No .rockspec or .rock can be found."
+end
+
 return luarocks
