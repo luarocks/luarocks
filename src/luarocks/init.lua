@@ -1180,8 +1180,8 @@ function luarocks.install_binary_rock_deps(rock_file, deps_mode)
    ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", deps_mode)
    if err then return nil, err, errcode end
 
-   util.printout()
-   util.printout("Successfully installed dependencies for " ..name.." "..version)
+   --util.printout()
+   --util.printout("Successfully installed dependencies for " ..name.." "..version)
 
    return name, version
 end
@@ -1205,16 +1205,23 @@ local function install_rock_file(filename, namespace, deps_mode, keep, force, fo
    local name, version = luarocks.install_binary_rock(filename, deps_mode, namespace)
    if not name then return nil, version end
 
+   --- always use keep=true for now
+   --[[
    if (not keep) and not cfg.keep_other_versions then
       local ok, err = remove.remove_other_versions(name, version, force, force_fast)
-      if not ok then util.printerr(err) end
+      if not ok then
+         return ok, err
+      end
    end
+   --]]
 
-   writer.check_dependencies(nil, deps_mode)
+   --writer.check_dependencies(nil, deps_mode)
    return name, version
 end
 
 function luarocks.install(name, version, tree, only_deps, keep)
+
+   set_rock_tree(tree)
 
    fs.init()
    
@@ -1229,13 +1236,14 @@ function luarocks.install(name, version, tree, only_deps, keep)
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       return luarocks.build(name, version, tree, only_deps, keep, pack_binary_rock, branch)
-   --[[elseif name:match("%.rock$") then
-      local deps_mode = deps.get_deps_mode(flags)
-      if flags["only-deps"] then
+   elseif name:match("%.rock$") then
+      --local deps_mode = deps.get_deps_mode(flags)
+      local deps_mode = cfg.deps_mode
+      if only_deps then
          return install_rock_file_deps(name, deps_mode)
       else
-         return install_rock_file(name, flags["namespace"], deps_mode, flags["keep"], flags["force"], flags["force-fast"])
-      end--]]
+         return install_rock_file(name, nil, deps_mode, keep, force, force_fast)
+      end
    else
       local url, err = search.find_suitable_rock(queries.new(name:lower(), version))
       if not url then
