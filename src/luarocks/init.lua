@@ -383,15 +383,6 @@ function luarocks.remove(name, version, tree, force)
 
    fs.init()
 
-   cfg.rocks_dir = cfg.rocks_dir:gsub("/+$", "")
-   cfg.deploy_bin_dir = cfg.deploy_bin_dir:gsub("/+$", "")
-   cfg.deploy_lua_dir = cfg.deploy_lua_dir:gsub("/+$", "")
-   cfg.deploy_lib_dir = cfg.deploy_lib_dir:gsub("/+$", "")
-   
-   cfg.variables.ROCKS_TREE = cfg.rocks_dir
-   cfg.variables.SCRIPTS_DIR = cfg.deploy_bin_dir
-
-
    if type(name) ~= "string" then
       return nil, "Argument missing. "
    end
@@ -422,22 +413,22 @@ function luarocks.remove(name, version, tree, force)
    --local ok, err = remove.remove_search_results(results, name, deps_mode, flags["force"], flags["force-fast"])
    local ok, err = nil, nil
    if force == "force" then
-        ok, err = remove.remove_search_results(results, name, deps_mode, true, false)
+      ok, err = remove.remove_search_results_return(results, name, deps_mode, true, false)
    elseif force == "force-fast" then
-        ok, err = remove.remove_search_results(results, name, deps_mode, false, true)
+      ok, err = remove.remove_search_results_return(results, name, deps_mode, false, true)
    else
-        ok, err = remove.remove_search_results(results, name, deps_mode, false, false)
+      ok, err = remove.remove_search_results_return(results, name, deps_mode, false, false)
    end
    --
 
    if not ok then
-      return nil, err
+      return ok, err
    end
 
    --writer.check_dependencies(nil, deps.get_deps_mode(flags))
    --
 
-   return true
+   return true, err
 end
 
 function luarocks.lint(input, tree)
