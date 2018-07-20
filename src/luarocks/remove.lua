@@ -58,6 +58,31 @@ local function delete_versions(name, versions, deps_mode)
    return true
 end
 
+function remove.remove_search_results_return(results, name, deps_mode, force, fast)
+   local versions = results[name]
+
+   local version = next(versions)
+   local second = next(versions, version)
+   
+   local dependents = {}
+   if not fast then
+      dependents = check_dependents(name, versions, deps_mode)
+   end
+   
+   if #dependents > 0 then
+      if not (force or fast) then
+         return nil, dependents
+      end
+   end
+   
+   local ok, err = delete_versions(name, versions, deps_mode)
+   if not ok then
+      return nil, err
+   end
+
+   return true, dependents
+end
+
 function remove.remove_search_results(results, name, deps_mode, force, fast)
    local versions = results[name]
 
