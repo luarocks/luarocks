@@ -1,5 +1,19 @@
 [
 {
+"3.0.0": {
+"date": "2018-07-20", 
+"files": ["luarocks-3.0.0.tar.gz", "luarocks-3.0.0.tar.gz.asc", "luarocks-3.0.0-win32.zip", "luarocks-3.0.0-win32.zip.asc", "luarocks-3.0.0-windows-32.zip", "luarocks-3.0.0-windows-32.zip.asc"], 
+"about": [
+"New rockspec format",
+"New commands, including luarocks init for per-project workflows",
+"New flags, including --lua-dir and --lua-version for using multiple Lua installs with a single LuaRocks",
+"New build system",
+"General improvements, including namespaces",
+"User-visible changes, including some breaking changes",
+"Various internal changes",
+]
+}},
+{
 "2.4.4": {
 "date": "2018-03-12", 
 "files": ["luarocks-2.4.4.tar.gz", "luarocks-2.4.4.tar.gz.asc", "luarocks-2.4.4-win32.zip", "luarocks-2.4.4-win32.zip.asc"], 
