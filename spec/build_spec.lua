@@ -322,7 +322,7 @@ describe("LuaRocks build tests #integration", function()
          lfs.rmdir(tmpdir)
       end)
 
-      pending("LuaRocks build only deps of a given rock", function()
+      it("LuaRocks build only deps of a given rock", function()
          local olddir = lfs.currentdir()
          local tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)

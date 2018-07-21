@@ -376,6 +376,9 @@ function fs_lua.copy(src, dest, perms)
    if destmode == "directory" then
       dest = dir.path(dest, dir.base_name(src))
    end
+   if src == dest or (cfg.is_platform("unix") and lfs.attributes(src, "ino") == lfs.attributes(dest, "ino")) then
+      return nil, "The source and destination are the same files"
+   end
    local src_h, err = io.open(src, "rb")
    if not src_h then return nil, err end
    local dest_h, err = io.open(dest, "w+b")
