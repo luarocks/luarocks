@@ -1027,6 +1027,40 @@ end
 -- @param flags table: the flags table passed to run() drivers.
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
+function fs_lua.check_command_permissions_no_flags()
+   local ok = true
+   local err = ""
+   for _, directory in ipairs { cfg.rocks_dir, cfg.deploy_lua_dir, cfg.deploy_bin_dir, cfg.deploy_lua_dir } do
+      if fs.exists(directory) then
+         if not fs.is_writable(directory) then
+            ok = false
+            err = "Your user does not have write permissions in " .. directory
+            break
+         end
+      else
+         local root = fs.root_of(directory)
+         local parent = directory
+         repeat
+            parent = dir.dir_name(parent)
+            if parent == "" then
+               parent = root
+            end
+         until parent == root or fs.exists(parent)
+         if not fs.is_writable(parent) then
+            ok = false
+            err = directory.." does not exist and your user does not have write permissions in " .. parent
+            break
+         end
+      end
+   end
+   if ok then
+      return true
+   else
+      err = err .. " \n-- you may want to run as a privileged user or use your local tree with --local."
+      return nil, err
+   end
+end
+
 function fs_lua.check_command_permissions(flags)
    local ok = true
    local err = ""
