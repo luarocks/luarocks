@@ -705,6 +705,8 @@ function cfg.init(lua_data, project_dir, warning)
       for _, tool in ipairs(tools) do
          defaults.variables[tool] = hardcoded.WIN_TOOLS .. "/" .. defaults.variables[tool] .. ".exe"
       end
+   else
+      defaults.fs_use_modules = true
    end
 
    defaults.rocks_provided, defaults.rocks_provided_3_0 = make_rocks_provided(lua_version, luajit_version)
