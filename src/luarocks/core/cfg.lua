@@ -538,8 +538,8 @@ function cfg.init(lua_data, project_dir, warning)
 
    local lua_version = lua_data.lua_version or hardcoded.LUA_VERSION or _VERSION:sub(5)
    local luajit_version = lua_data.luajit_version or hardcoded.LUAJIT_VERSION or (jit and jit.version:sub(8))
-   local lua_interpreter = lua_data.lua_interpreter or hardcoded.LUA_INTERPRETER or (arg[-1] and arg[-1]:gsub(".*[\\/]", "")) or (is_windows and "lua.exe" or "lua")
-   local lua_bindir = lua_data.lua_bindir or hardcoded.LUA_BINDIR or (arg[-1] and arg[-1]:gsub("[\\/][^\\/]+$", ""))
+   local lua_interpreter = lua_data.lua_interpreter or hardcoded.LUA_INTERPRETER or (arg and arg[-1] and arg[-1]:gsub(".*[\\/]", "")) or (is_windows and "lua.exe" or "lua")
+   local lua_bindir = lua_data.lua_bindir or hardcoded.LUA_BINDIR or (arg and arg[-1] and arg[-1]:gsub("[\\/][^\\/]+$", ""))
    local lua_incdir = lua_data.lua_incdir or hardcoded.LUA_INCDIR
    local lua_libdir = lua_data.lua_libdir or hardcoded.LUA_LIBDIR
    local lua_dir = lua_data.lua_dir or hardcoded.LUA_DIR
@@ -710,7 +710,7 @@ function cfg.init(lua_data, project_dir, warning)
    defaults.rocks_provided, defaults.rocks_provided_3_0 = make_rocks_provided(lua_version, luajit_version)
    use_defaults(cfg, defaults)
 
-   cfg.variables.LUA = cfg.variables.LUA or cfg.variables.LUA_BINDIR .. "/" .. cfg.lua_interpreter
+   cfg.variables.LUA = cfg.variables.LUA or (cfg.variables.LUA_BINDIR and cfg.variables.LUA_BINDIR .. "/" .. cfg.lua_interpreter)
    cfg.user_agent = "LuaRocks/"..cfg.program_version.." "..cfg.arch
 
    ----------------------------------------
