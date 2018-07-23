@@ -123,17 +123,25 @@ end
 -- @param zipfile string: pathname of .zip archive to be created.
 -- @param ... Filenames to be stored in the archive are given as
 -- additional arguments.
--- @return boolean: true on success, false on failure.
+-- @return boolean: true on success, nil and error message on failure.
 function tools.zip(zipfile, ...)
-   return fs.execute(vars.ZIP.." -r", zipfile, ...)
+   if fs.execute_quiet(vars.ZIP.." -r", zipfile, ...) then
+      return true
+   else
+      return nil, "failed compressing " .. zipfile
+   end
 end
 
 --- Uncompress files from a .zip archive.
 -- @param zipfile string: pathname of .zip archive to be extracted.
--- @return boolean: true on success, false on failure.
+-- @return boolean: true on success, nil and error message on failure.
 function tools.unzip(zipfile)
    assert(zipfile)
-   return fs.execute_quiet(vars.UNZIP, zipfile)
+   if fs.execute_quiet(vars.UNZIP, zipfile) then
+      return true
+   else
+      return nil, "failed extracting " .. zipfile
+   end
 end
 
 local function uncompress(default_ext, program, infile, outfile)
@@ -142,7 +150,11 @@ local function uncompress(default_ext, program, infile, outfile)
    if not outfile then
       outfile = infile:gsub("%."..default_ext.."$", "")
    end
-   return fs.execute(fs.Q(program).." -c "..fs.Q(infile).." > "..fs.Q(outfile))
+   if fs.execute(fs.Q(program).." -c "..fs.Q(infile).." > "..fs.Q(outfile)) then
+      return true
+   else
+      return nil, "failed extracting " .. infile
+   end
 end
 
 --- Uncompresses a .gz file.

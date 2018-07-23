@@ -135,17 +135,25 @@ end
 -- @param zipfile string: pathname of .zip archive to be created.
 -- @param ... Filenames to be stored in the archive are given as
 -- additional arguments.
--- @return boolean: true on success, false on failure.
+-- @return boolean: true on success, nil and error message on failure.
 function tools.zip(zipfile, ...)
-   return fs.execute_quiet(fs.Q(vars.SEVENZ).." -aoa a -tzip", zipfile, ...)
+   if fs.execute_quiet(fs.Q(vars.SEVENZ).." -aoa a -tzip", zipfile, ...) then
+      return true
+   else
+      return nil, "failed compressing " .. zipfile
+   end
 end
 
 --- Uncompress files from a .zip archive.
 -- @param zipfile string: pathname of .zip archive to be extracted.
--- @return boolean: true on success, false on failure.
+-- @return boolean: true on success, nil and error message on failure.
 function tools.unzip(zipfile)
    assert(zipfile)
-   return fs.execute_quiet(fs.Q(vars.SEVENZ).." -aoa x", zipfile)
+   if fs.execute_quiet(fs.Q(vars.SEVENZ).." -aoa x", zipfile) then
+      return true
+   else
+      return nil, "failed extracting " .. zipfile
+   end
 end
 
 local function sevenz(default_ext, infile, outfile)
@@ -160,7 +168,7 @@ local function sevenz(default_ext, infile, outfile)
    local cmdline = fs.Q(vars.SEVENZ).." -aoa -t* -o"..fs.Q(outdir).." x "..fs.Q(infile)
    local ok, err = fs.execute_quiet(cmdline)
    if not ok then
-      return nil, err
+      return nil, "failed extracting " .. infile
    end
 
    if outfile then
@@ -168,7 +176,7 @@ local function sevenz(default_ext, infile, outfile)
       dropext = fs.absolute_name(dropext)
       ok, err = os.rename(dropext, outfile)
       if not ok then
-         return nil, err
+         return nil, "failed creating new file " .. outfile
       end
    end
 
