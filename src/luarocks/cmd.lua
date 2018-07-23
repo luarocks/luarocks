@@ -272,8 +272,15 @@ function cmd.run_command(description, commands, external_namespace, ...)
    check_popen()
 
    local function error_handler(err)
+      local mode = "Arch.: " .. (cfg and cfg.arch or "unknown")
+      if package.config:sub(1, 1) == "\\" then
+         if cfg and cfg.fs_use_modules then
+            mode = mode .. " (fs_use_modules = true)"
+         end
+      end
       return debug.traceback("LuaRocks "..cfg.program_version..
-         " bug (please report at https://github.com/luarocks/luarocks/issues).\n"..err, 2)
+         " bug (please report at https://github.com/luarocks/luarocks/issues).\n"..
+         mode.."\n"..err, 2)
    end
 
    --- Display an error message and exit.
