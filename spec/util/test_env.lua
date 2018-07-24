@@ -101,6 +101,25 @@ function test_env.get_tmp_path()
    return path
 end
 
+--- Helper function that runs the given function inside
+-- a temporary directory, isolating it
+-- @param f function: the function to be run
+function test_env.run_in_tmp(f, finally)
+   local olddir = lfs.currentdir()
+   local tmpdir = test_env.get_tmp_path()
+   lfs.mkdir(tmpdir)
+   lfs.chdir(tmpdir)
+
+   if finally then
+      finally(function()
+         lfs.chdir(olddir)
+         lfs.rmdir(tmpdir)
+      end)
+   end
+
+   f(tmpdir)
+end
+
 --- Helper function for execute_bool and execute_output
 -- @param command string: command to execute
 -- @param print_command boolean: print command if 'true'

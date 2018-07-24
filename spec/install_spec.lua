@@ -57,18 +57,12 @@ describe("luarocks install #integration", function()
       end)
 
       it("fails not a zip file", function()
-         local olddir = lfs.currentdir()
-         local tmpdir = get_tmp_path()
-         lfs.mkdir(tmpdir)
-         lfs.chdir(tmpdir)
-         
-         write_file("not_a_zipfile-1.0-1.src.rock", [[
-            I am not a .zip file!
-         ]], finally)
-         assert.is_false(run.luarocks_bool("install not_a_zipfile-1.0-1.src.rock"))
-         
-         lfs.chdir(olddir)
-         lfs.rmdir(tmpdir)
+         test_env.run_in_tmp(function(tmpdir)
+            write_file("not_a_zipfile-1.0-1.src.rock", [[
+               I am not a .zip file!
+            ]], finally)
+            assert.is_false(run.luarocks_bool("install not_a_zipfile-1.0-1.src.rock"))
+         end, finally)
       end)
 
       it("only-deps of lxsh show there is no lxsh", function()
