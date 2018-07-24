@@ -95,7 +95,8 @@ function fun.partial(f, ...)
          for i = 1, m do
             args[i+n] = fargs[i]
          end
-         return f(table.unpack(args, 1, n+m))
+         local unpack = unpack or table.unpack
+         return f(unpack(args, 1, n+m))
       end
    end
 end
