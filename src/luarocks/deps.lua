@@ -99,7 +99,35 @@ local function rock_status(name, deps_mode, rocks_provided)
    return installed and installed.." "..installation_type or "not installed"
 end
 
---- Check depenendencies of a package and report any missing ones.
+--- Check dependencies of a package and return any missing ones.
+-- @param name string: package name.
+-- @param version string: package version.
+-- @param dependencies table: array of dependencies.
+-- @param deps_mode string: Which trees to check dependencies for:
+-- @param rocks_provided table: A table of auto-dependencies provided 
+-- returns a table of missing dependencies
+function deps.return_missing_dependencies(name, version, dependencies, deps_mode, rocks_provided)
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+   assert(type(dependencies) == "table")
+   assert(type(deps_mode) == "string")
+   assert(type(rocks_provided) == "table")
+
+   local missing_deps = {}
+
+   for _, dep in ipairs(dependencies) do
+      if not match_dep(dep, nil, deps_mode, rocks_provided) then
+         dep_table = {}
+         dep_table["name"] = tostring(dep)
+         dep_table["status"] = rock_status(dep.name, deps_mode, rocks_provided)
+         --util.printout(("   %s (%s)"):format(tostring(dep), rock_status(dep.name, deps_mode, rocks_provided)))
+         table.insert(missing_deps, dep_table)
+      end
+   end
+   return missing_deps
+end
+
+--- Check dependencies of a package and report any missing ones.
 -- @param name string: package name.
 -- @param version string: package version.
 -- @param dependencies table: array of dependencies.
