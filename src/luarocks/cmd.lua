@@ -302,7 +302,14 @@ function cmd.run_command(description, commands, external_namespace, ...)
    local function process_arguments(...)
       local args = {...}
       local cmdline_vars = {}
-      for i = #args, 1, -1 do
+      local last = #args
+      for i = 1, #args do
+         if args[i] == "--" then
+            last = i - 1
+            break
+         end
+      end
+      for i = last, 1, -1 do
          local arg = args[i]
          if arg:match("^[^-][^=]*=") then
             local var, val = arg:match("^([A-Z_][A-Z0-9_]*)=(.*)")
