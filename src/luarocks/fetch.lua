@@ -149,7 +149,10 @@ function fetch.fetch_and_unpack_rock(rock_file, dest)
          return nil, "Failed unpacking rock file: " .. err
       end
    else
-      unpack_dir = fs.make_temp_dir(name)
+      unpack_dir, err = fs.make_temp_dir(name)
+      if not unpack_dir then
+         return nil, "Failed creating temporary dir: " .. err
+      end
    end
    if not dest then
       util.schedule_function(fs.delete, unpack_dir)
