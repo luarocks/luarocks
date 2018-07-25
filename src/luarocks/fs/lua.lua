@@ -871,6 +871,18 @@ end
 -- POSIX functions
 ---------------------------------------------------------------------
 
+function fs_lua._unix_rwx_to_number(rwx, neg)
+   local num = 0
+   neg = neg or false
+   for i = 1, 9 do
+      local c = rwx:sub(10 - i, 10 - i) == "-"
+      if neg == c then
+         num = num + 2^(i-1)
+      end
+   end
+   return math.floor(num)
+end
+
 if posix_ok then
 
 local octal_to_rwx = {
@@ -884,16 +896,6 @@ local octal_to_rwx = {
    ["7"] = "rwx",
 }
 
-function fs_lua._unix_rwx_to_number(rwx)
-   local num = 0
-   for i = 1, 9 do
-      if rwx:sub(10 - i, 10 - i) == "-" then
-         num = num + 2^i
-      end
-   end
-   return num
-end
-
 do
    local umask_cache
    function fs_lua._unix_umask()
@@ -902,7 +904,7 @@ do
       end
       -- LuaPosix (as of 34.0.4) only returns the umask as rwx
       local rwx = posix.umask()
-      local num = fs_lua._unix_rwx_to_number(rwx)
+      local num = fs_lua._unix_rwx_to_number(rwx, true)
       umask_cache = ("%03o"):format(num)
       return umask_cache
    end
