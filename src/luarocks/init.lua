@@ -1,6 +1,10 @@
 --- LuaRocks public programmatic API, version 3.0
 local luarocks = {}
 
+local doc = require("luarocks.doc") 
+luarocks.doc = doc.doc
+luarocks.homepage = doc.homepage
+
 local cfg = require("luarocks.core.cfg")
 local queries = require("luarocks.queries")
 local search = require("luarocks.search")
@@ -31,7 +35,7 @@ local function replace_tree(flags, tree)
    path.use_tree(tree)
 end
 
-local function set_rock_tree(tree_arg)
+function luarocks.set_rock_tree(tree_arg)
    if tree_arg then
       local named = false
       for _, tree in ipairs(cfg.rocks_trees) do
@@ -133,75 +137,6 @@ function luarocks.list(filter, outdated, version, tree)
    end
    results = search.return_results(results)
    return results
-end
-
-
-local function try_to_get_homepage(name, version)
-   local temp_dir, err = fs.make_temp_dir("doc-"..name.."-"..(version or ""))
-   if not temp_dir then
-      return nil, "Failed creating temporary directory: "..err
-   end
-   util.schedule_function(fs.delete, temp_dir)
-   local ok, err = fs.change_dir(temp_dir)
-   if not ok then return nil, err end
-   local filename, err = download.download("rockspec", name, version)
-   if not filename then return nil, err end
-   local rockspec, err = fetch.load_local_rockspec(filename)
-   if not rockspec then return nil, err end
-   fs.pop_dir()
-   local descript = rockspec.description or {}
-   if not descript.homepage then return nil, "No homepage defined for "..name end
-   return descript.homepage, nil, nil
-end
-
---- Return homepage and doc file names of an installed rock
-function luarocks.doc(name, version, tree)
-
-   set_rock_tree(tree)
-
-   if not name then
-      return nil, "Argument missing. "
-   end
-
-   --name = util.adjust_name_and_namespace(name, flags)
-   local query = queries.new(name, version)
-   local iname, iversion, repo = search.pick_installed_rock(query, tree)
-   if not iname then
-      return try_to_get_homepage(name, version)
-   end
-
-   name, version = iname, iversion
-   
-   local rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version, repo))
-   if not rockspec then return nil,err end
-   local descript = rockspec.description or {}
-
-   local directory = path.install_dir(name, version, repo)
-   
-   local docdir
-   local directories = { "doc", "docs" }
-   for _, d in ipairs(directories) do
-      local dirname = dir.path(directory, d)
-      if fs.is_dir(dirname) then
-         docdir = dirname
-         break
-      end
-   end
-   if not docdir then
-      if descript.homepage then
-         return descript.homepage, "Documentation directory not found for "..name.." "..version
-      end
-      return nil, "Documentation directory not found for "..name.." "..version
-   end
-
-
-   docdir = dir.normalize(docdir):gsub("/+", "/")
-   local files = fs.find(docdir)
-   local htmlpatt = "%.html?$"
-   local extensions = { htmlpatt, "%.md$", "%.txt$",  "%.textile$", "" }
-   local basenames = { "index", "readme", "manual" }
-   
-   return descript.homepage, docdir, files
 end
 
 local function word_wrap(line) 
@@ -1296,3 +1231,4 @@ function luarocks.check_missing_dependencies(name, version, tree)
 end
 
 return luarocks
+
