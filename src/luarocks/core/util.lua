@@ -166,7 +166,11 @@ function util.cleanup_path(list, sep, lua_version)
    for _, part in ipairs(parts) do
       part = part:gsub("//", "/")
       if lua_version then
-         part = part:gsub("/lua/[%d.]+/", "/lua/"..lua_version.."/")
+         part = part:gsub("/lua/([%d.]+)/", function(part_version)
+            if part_version:sub(1, #lua_version) ~= lua_version then            
+               return "/lua/"..lua_version.."/"
+            end
+         end)
       end
       if not entries[part] then
          table.insert(final, part)
