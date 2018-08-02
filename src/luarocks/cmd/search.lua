@@ -3,7 +3,7 @@
 local cmd_search = {}
 
 local cfg = require("luarocks.core.cfg")
-local luarocks = require("luarocks.init")
+local luarocks = require("luarocks")
 local search = require("luarocks.search")
 local util = require("luarocks.util")
 

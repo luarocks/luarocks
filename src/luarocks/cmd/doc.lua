@@ -3,7 +3,7 @@
 
 local doc = {}
 
-local luarocks = require("luarocks.init")
+local luarocks = require("luarocks")
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 

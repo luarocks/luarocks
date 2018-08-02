@@ -3,7 +3,7 @@
 
 local list = {}
 
-local luarocks = require("luarocks.init")
+local luarocks = require("luarocks")
 local cfg = require("luarocks.core.cfg")
 local search = require("luarocks.search")
 local util = require("luarocks.util")
