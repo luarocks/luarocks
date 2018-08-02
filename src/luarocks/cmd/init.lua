@@ -4,6 +4,7 @@ local init = {}
 local cfg = require("luarocks.core.cfg")
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
+local deps = require("luarocks.deps")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local write_rockspec = require("luarocks.cmd.write_rockspec")
@@ -69,6 +70,12 @@ function init.command(flags, name, version)
          util.printerr(err)
       end
    end
+
+   util.printout("Checking your Lua installation ...")
+   local ok, err = deps.check_lua(cfg.variables)
+   if not ok then
+      util.warning(err)
+   end
    
    util.printout("Adding entries to .gitignore ...")
    write_gitignore()
@@ -78,8 +85,24 @@ function init.command(flags, name, version)
    local config_file = ".luarocks/config-" .. cfg.lua_version .. ".lua"
    if not fs.exists(config_file) then
       local fd = io.open(config_file, "w")
-      fd:write("-- add your configuration here\n")
+      fd:write("-- LuaRocks configuration for use with Lua " .. cfg.lua_version .. "\n")
+      fd:write("variables = {\n")
+      local varnames = {
+         "LUA_DIR",
+         "LUA_INCDIR",
+         "LUA_LIBDIR",
+         "LUA_BINDIR",
+         "LUA_INTERPRETER",
+      }
+      for _, varname in ipairs(varnames) do
+         if cfg.variables[varname] then
+            fd:write(("   %s = %q,\n"):format(varname, cfg.variables[varname]))
+         end
+      end
+      fd:write("}\n")
       fd:close()
+   else
+      util.printout(config_file .. " already exists. Not overwriting it!")
    end
 
    util.printout("Preparing ./lua_modules/ ...")
@@ -93,6 +116,8 @@ function init.command(flags, name, version)
    if not fs.exists(luarocks_wrapper) then
       util.printout("Preparing " .. luarocks_wrapper .. " ...")
       fs.wrap_script(arg[0], "luarocks", "none", nil, nil, "--project-tree", tree)
+   else
+      util.printout(luarocks_wrapper .. " already exists. Not overwriting it!")
    end
 
    local lua_wrapper = "./lua" .. ext
@@ -100,6 +125,8 @@ function init.command(flags, name, version)
       util.printout("Preparing " .. lua_wrapper .. " ...")
       path.use_tree(tree)
       fs.wrap_script(nil, "lua", "all")
+   else
+      util.printout(lua_wrapper .. " already exists. Not overwriting it!")
    end
 
    return true
