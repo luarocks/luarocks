@@ -120,7 +120,7 @@ function deps.return_missing_dependencies(name, version, dependencies, deps_mode
          dep_table = {}
          dep_table["name"] = tostring(dep)
          dep_table["status"] = rock_status(dep.name, deps_mode, rocks_provided)
-         --util.printout(("   %s (%s)"):format(tostring(dep), rock_status(dep.name, deps_mode, rocks_provided)))
+         --cmd.printout(("   %s (%s)"):format(tostring(dep), rock_status(dep.name, deps_mode, rocks_provided)))
          table.insert(missing_deps, dep_table)
       end
    end
@@ -145,14 +145,16 @@ function deps.report_missing_dependencies(name, version, dependencies, deps_mode
 
    local first_missing_dep = true
 
+   local cmd = require("luarocks.cmd")
+
    for _, dep in ipairs(dependencies) do
       if not match_dep(dep, nil, deps_mode, rocks_provided) then
          if first_missing_dep then
-            util.printout(("Missing dependencies for %s %s:"):format(name, version))
+            cmd.printout(("Missing dependencies for %s %s:"):format(name, version))
             first_missing_dep = false
          end
 
-         util.printout(("   %s (%s)"):format(tostring(dep), rock_status(dep.name, deps_mode, rocks_provided)))
+         cmd.printout(("   %s (%s)"):format(tostring(dep), rock_status(dep.name, deps_mode, rocks_provided)))
       end
    end
 end
@@ -173,22 +175,23 @@ function deps.fulfill_dependency(dep, deps_mode, name, version, rocks_provided)
 
    local search = require("luarocks.search")
    local install = require("luarocks.cmd.install")
+   local cmd = require("luarocks.cmd")
 
    if name and version then
-      util.printout(("%s %s depends on %s (%s)"):format(
+      cmd.printout(("%s %s depends on %s (%s)"):format(
          name, version, tostring(dep), rock_status(dep.name, deps_mode, rocks_provided)))
    else
-      util.printout(("Fulfilling dependency on %s (%s)"):format(
+      cmd.printout(("Fulfilling dependency on %s (%s)"):format(
          tostring(dep), rock_status(dep.name, deps_mode, rocks_provided)))
    end
    
    if dep.constraints[1] and dep.constraints[1].no_upgrade then
-      util.printerr("This version of "..name.." is designed for use with")
-      util.printerr(tostring(dep)..", but is configured to avoid upgrading it")
-      util.printerr("automatically. Please upgrade "..dep.name.." with")
-      util.printerr("   luarocks install "..dep.name)
-      util.printerr("or choose an older version of "..name.." with")
-      util.printerr("   luarocks search "..name)
+      cmd.printerr("This version of "..name.." is designed for use with")
+      cmd.printerr(tostring(dep)..", but is configured to avoid upgrading it")
+      cmd.printerr("automatically. Please upgrade "..dep.name.." with")
+      cmd.printerr("   luarocks install "..dep.name)
+      cmd.printerr("or choose an older version of "..name.." with")
+      cmd.printerr("   luarocks search "..name)
       return nil, "Failed matching dependencies"
    end
 
@@ -196,7 +199,7 @@ function deps.fulfill_dependency(dep, deps_mode, name, version, rocks_provided)
    if not url then
       return nil, "Could not satisfy dependency "..tostring(dep)..": "..search_err
    end
-   util.printout("Installing "..url)
+   cmd.printout("Installing "..url)
    local ok, install_err, errcode = install.command({deps_mode = deps_mode, namespace = dep.namespace}, url)
    if not ok then
       return nil, "Failed installing dependency: "..url.." - "..install_err, errcode
@@ -240,7 +243,6 @@ function deps.fulfill_dependencies(rockspec, depskey, deps_mode)
 
    deps.report_missing_dependencies(rockspec.name, rockspec.version, rockspec[depskey], deps_mode, rockspec.rocks_provided)
 
-   util.printout()
    for _, dep in ipairs(rockspec[depskey]) do
       local ok, err = deps.fulfill_dependency(dep, deps_mode, rockspec.name, rockspec.version, rockspec.rocks_provided)
       if not ok then
@@ -474,6 +476,7 @@ function deps.scan_deps(results, manifest, name, version, deps_mode)
    assert(type(version) == "string")
 
    local fetch = require("luarocks.fetch")
+   local cmd = require("luarocks.cmd")
 
    if results[name] then
       return
@@ -487,7 +490,7 @@ function deps.scan_deps(results, manifest, name, version, deps_mode)
    if not dependencies then
       local rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version), false)
       if not rockspec then
-         util.printerr("Couldn't load rockspec for "..name.." "..version..": "..err)
+         cmd.printerr("Couldn't load rockspec for "..name.." "..version..": "..err)
          return
       end
       dependencies = rockspec.dependencies

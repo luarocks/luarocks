@@ -6,6 +6,7 @@ local doc = {}
 local luarocks = require("luarocks")
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
+local cmd = require("luarocks.cmd")
 
 doc.help_summary = "Show documentation for an installed rock."
 
@@ -22,7 +23,7 @@ For more information about a rock, see the 'show' command.
 ]]
 
 local function show_homepage(homepage)
-   util.printout("Opening " .. homepage .. "...")
+   cmd.printout("Opening " .. homepage .. "...")
    fs.browser(homepage)
    return true
 end
@@ -33,7 +34,7 @@ end
 -- @return boolean: True if succeeded, nil on errors.
 function doc.command(flags, name, version)
    if not name then
-      return nil, "Argument missing. " .. util.see_help("doc")
+      return nil, "Argument missing. " .. cmd.see_help("doc")
    end
 
    name = util.adjust_name_and_namespace(name, flags)
@@ -44,8 +45,8 @@ function doc.command(flags, name, version)
 
    if not docdir then
       if doc_err:match("not installed") then
-         util.printout(doc_err)
-         util.printout("Looking for it in the rocks servers...")
+         cmd.printout(doc_err)
+         cmd.printout("Looking for it in the rocks servers...")
          if not homepage then return nil, homepage_err end
          return show_homepage(homepage)
       end
@@ -59,7 +60,7 @@ function doc.command(flags, name, version)
 
    if not docdir then
       if homepage and not flags["list"] then
-         util.printout(doc_err)
+         cmd.printout(doc_err)
          return show_homepage(homepage)
       end
       return nil, doc_err 
@@ -67,15 +68,15 @@ function doc.command(flags, name, version)
    
    local porcelain = flags["porcelain"]
    if #files > 0 then
-      util.title("Documentation files for " .. name, porcelain)
+      cmd.title("Documentation files for " .. name, porcelain)
       if porcelain then
          for _, file in ipairs(files) do
-            util.printout(docdir .. "/" .. file)
+            cmd.printout(docdir .. "/" .. file)
          end
       else
-         util.printout(docdir .. "/")
+         cmd.printout(docdir .. "/")
          for _, file in ipairs(files) do
-            util.printout("\t" .. file)
+            cmd.printout("\t" .. file)
          end
       end
    end
@@ -87,7 +88,7 @@ function doc.command(flags, name, version)
    local ok = fs.browser(docfile)
    if not ok and not docfile:match("%.html?$") then
       local fd = io.open(docfile, "r")
-      util.printout(fd:read("*a"))
+      cmd.printout(fd:read("*a"))
       fd:close()
    end
 

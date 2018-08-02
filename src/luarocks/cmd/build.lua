@@ -39,7 +39,7 @@ or the name of a rock to be fetched from a repository.
 
 --only-deps         Installs only the dependencies of the rock.
 
-]]..util.deps_mode_help()
+]]..cmd.deps_mode_help()
 
 --- Build and install a rock.
 -- @param rock_filename string: local or remote filename of a rock.
@@ -75,7 +75,13 @@ local function build_rock(rock_filename, opts)
       return nil, err, errcode
    end
 
+   if opts.deps_mode == "none" then
+      cmd.warning("Skipping dependency checks")
+   end
    ok, err, errcode = build.build_rockspec(rockspec, opts)
+   if ok then
+      cmd.announce_install(rockspec)
+   end
 
    fs.pop_dir()
    return ok, err, errcode
@@ -103,7 +109,16 @@ local function do_build(ns_name, version, opts)
       if not rockspec then
          return nil, err, errcode
       end
-      return build.build_rockspec(rockspec, opts)
+      if opts.deps_mode == "none" then
+         cmd.warning("Skipping dependency checks")
+      end
+      local name, version = build.build_rockspec(rockspec, opts)
+      if not name then
+         local build_err = version
+         return nil, build_err
+      end
+      cmd.announce_install(rockspec)
+      return name, version
    end
 
    if url:match("%.src%.rock$") then
@@ -157,13 +172,13 @@ function cmd_build.command(flags, name, version)
    name, version = ok, err
 
    if opts.build_only_deps then
-      util.printout("Stopping after installing dependencies for " ..name.." "..version)
-      util.printout()
+      cmd.printout("Stopping after installing dependencies for " ..name.." "..version)
+      cmd.printout()
    else
       if (not flags["keep"]) and not cfg.keep_other_versions then
          local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
          if not ok then
-            util.printerr(err)
+            cmd.printerr(err)
          end
       end
    end

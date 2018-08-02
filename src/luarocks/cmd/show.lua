@@ -10,6 +10,7 @@ local path = require("luarocks.path")
 local fetch = require("luarocks.fetch")
 local manif = require("luarocks.manif")
 local repos = require("luarocks.repos")
+local cmd = require("luarocks.cmd")
 
 show.help_summary = "Show information about an installed rock."
 
@@ -194,7 +195,7 @@ local function show_rock(template, namespace, name, version, rockspec, repo, min
       deps = deps_to_list(rockspec.dependencies, tree),
       ideps = indirect_deps(minfo.dependencies, rockspec.dependencies, tree),
    }
-   util.printout(render(template, data))
+   cmd.printout(render(template, data))
 end
 
 --- Driver function for "show" command.
@@ -203,7 +204,7 @@ end
 -- @return boolean: True if succeeded, nil on errors.
 function show.command(flags, name, version)
    if not name then
-      return nil, "Argument missing. "..util.see_help("show")
+      return nil, "Argument missing. "..cmd.see_help("show")
    end
 
    name = util.adjust_name_and_namespace(name, flags)
@@ -226,28 +227,28 @@ function show.command(flags, name, version)
    if not manifest then return nil,err end
    local minfo = manifest.repository[name][version][1]
 
-   if flags["rock-tree"] then util.printout(tree)
-   elseif flags["rock-namespace"] then util.printout(namespace)
-   elseif flags["rock-dir"] then util.printout(directory)
-   elseif flags["home"] then util.printout(descript.homepage)
-   elseif flags["rock-license"] then util.printout(descript.license)
-   elseif flags["issues"] then util.printout(descript.issues_url)
-   elseif flags["labels"] then util.printout(descript.labels and table.concat(descript.labels, "\n"))
-   elseif flags["modules"] then util.printout(keys_as_string(minfo.modules, "\n"))
+   if flags["rock-tree"] then cmd.printout(tree)
+   elseif flags["rock-namespace"] then cmd.printout(namespace)
+   elseif flags["rock-dir"] then cmd.printout(directory)
+   elseif flags["home"] then cmd.printout(descript.homepage)
+   elseif flags["rock-license"] then cmd.printout(descript.license)
+   elseif flags["issues"] then cmd.printout(descript.issues_url)
+   elseif flags["labels"] then cmd.printout(descript.labels and table.concat(descript.labels, "\n"))
+   elseif flags["modules"] then cmd.printout(keys_as_string(minfo.modules, "\n"))
    elseif flags["deps"] then
       for _, dep in ipairs(rockspec.dependencies) do
-         util.printout(tostring(dep))
+         cmd.printout(tostring(dep))
       end
    elseif flags["build-deps"] then
       for _, dep in ipairs(rockspec.build_dependencies) do
-         util.printout(tostring(dep))
+         cmd.printout(tostring(dep))
       end
    elseif flags["test-deps"] then
       for _, dep in ipairs(rockspec.test_dependencies) do
-         util.printout(tostring(dep))
+         cmd.printout(tostring(dep))
       end
-   elseif flags["rockspec"] then util.printout(rockspec_file)
-   elseif flags["mversion"] then util.printout(version)
+   elseif flags["rockspec"] then cmd.printout(rockspec_file)
+   elseif flags["mversion"] then cmd.printout(version)
    elseif flags["porcelain"] then
       show_rock(porcelain_template, namespace, name, version, rockspec, repo, minfo, flags["tree"])
    else

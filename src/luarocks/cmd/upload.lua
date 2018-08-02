@@ -6,6 +6,7 @@ local fetch = require("luarocks.fetch")
 local pack = require("luarocks.pack")
 local cfg = require("luarocks.core.cfg")
 local Api = require("luarocks.upload.api")
+local cmd = require("luarocks.cmd")
 
 upload.help_summary = "Upload a rockspec to the public rocks repository."
 upload.help_arguments = "[--skip-pack] [--api-key=<key>] [--force] <rockspec>"
@@ -28,7 +29,7 @@ end
 
 function upload.command(flags, fname)
    if not fname then
-      return nil, "Missing rockspec. "..util.see_help("upload")
+      return nil, "Missing rockspec. "..cmd.see_help("upload")
    end
 
    local api, err = Api.new(flags)
@@ -44,7 +45,7 @@ function upload.command(flags, fname)
       return nil, err, errcode
    end
 
-   util.printout("Sending " .. tostring(fname) .. " ...")
+   cmd.printout("Sending " .. tostring(fname) .. " ...")
    local res, err = api:method("check_rockspec", {
       package = rockspec.package,
       version = rockspec.version
@@ -52,15 +53,15 @@ function upload.command(flags, fname)
    if not res then return nil, err end
    
    if not res.module then
-      util.printout("Will create new module (" .. tostring(rockspec.package) .. ")")
+      cmd.printout("Will create new module (" .. tostring(rockspec.package) .. ")")
    end
    if res.version and not flags["force"] then
-      return nil, "Revision "..rockspec.version.." already exists on the server. "..util.see_help("upload")
+      return nil, "Revision "..rockspec.version.." already exists on the server. "..cmd.see_help("upload")
    end
 
    local rock_fname
    if not flags["skip-pack"] and not is_dev_version(rockspec.version) then
-      util.printout("Packing " .. tostring(rockspec.package))
+      cmd.printout("Packing " .. tostring(rockspec.package))
       rock_fname, err = pack.pack_source_rock(fname)
       if not rock_fname then
          return nil, err
@@ -75,7 +76,7 @@ function upload.command(flags, fname)
    if not res then return nil, err end
    
    if res.is_new and #res.manifests == 0 then
-      util.printerr("Warning: module not added to root manifest due to name taken.")
+      cmd.printerr("Warning: module not added to root manifest due to name taken.")
    end
    
    local module_url = res.module_url
@@ -84,16 +85,16 @@ function upload.command(flags, fname)
       if (not res.version) or (not res.version.id) then
          return nil, "Invalid response from server."
       end
-      util.printout(("Sending " .. tostring(rock_fname) .. " ..."))
+      cmd.printout(("Sending " .. tostring(rock_fname) .. " ..."))
       res, err = api:method("upload_rock/" .. ("%d"):format(res.version.id), nil, {
          rock_file = multipart.new_file(rock_fname)
       })
       if not res then return nil, err end
    end
    
-   util.printout()
-   util.printout("Done: " .. tostring(module_url))
-   util.printout()
+   cmd.printout()
+   cmd.printout("Done: " .. tostring(module_url))
+   cmd.printout()
    return true
 end
 

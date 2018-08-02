@@ -74,7 +74,8 @@ do
       if rockspec.build.patches then
          extract_from_rockspec(rockspec.build.patches)
          for patch, patchdata in util.sortedpairs(rockspec.build.patches) do
-            util.printout("Applying patch "..patch.."...")
+            local cmd = require("luarocks.cmd")
+            cmd.printout("Applying patch "..patch.."...")
             local create_delete = rockspec:format_is_at_least("3.0")
             local ok, err = fs.apply_patch(tostring(patch), patchdata, create_delete)
             if not ok then
@@ -125,7 +126,6 @@ local function process_dependencies(rockspec, opts)
    end
 
    if opts.deps_mode == "none" then
-      util.warning("skipping dependency checks.")
       return true
    end
    if not opts.build_only_deps then
@@ -195,7 +195,8 @@ local function run_build_driver(rockspec)
    end
    -- Temporary compatibility
    if btype == "module" then
-      util.printout("Do not use 'module' as a build type. Use 'builtin' instead.")
+      local cmd = require("luarocks.cmd")
+      cmd.printout("Do not use 'module' as a build type. Use 'builtin' instead.")
       btype = "builtin"
       rockspec.build.type = btype
    end
@@ -436,7 +437,6 @@ function build.build_rockspec(rockspec, opts)
    ok, err = repos.run_hook(rockspec, "post_install")
    if not ok then return nil, err end
 
-   util.announce_install(rockspec)
    util.remove_scheduled_function(rollback)
    return name, version
 end

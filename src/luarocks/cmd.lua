@@ -5,6 +5,7 @@ local cmd = {}
 local unpack = unpack or table.unpack
 
 local cfg = require("luarocks.core.cfg")
+local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 local deps = require("luarocks.deps")
@@ -21,6 +22,105 @@ cmd.errorcodes = {
    CONFIGFILE = 3,
    CRASH = 99
 }
+
+function cmd.announce_install(rockspec)
+   local suffix = ""
+   if rockspec.description and rockspec.description.license then
+      suffix = " (license: "..rockspec.description.license..")"
+   end
+
+   cmd.printout(rockspec.name.." "..rockspec.version.." is now installed in "..path.root_dir(cfg.root_dir)..suffix)
+   cmd.printout()
+end
+
+function cmd.see_help(command, program)
+   return "See '"..util.this_program(program or "luarocks")..' help'..(command and " "..command or "").."'."
+end
+
+function cmd.deps_mode_help(program)
+   return [[
+--deps-mode=<mode>  How to handle dependencies. Four modes are supported:
+                    * all - use all trees from the rocks_trees list
+                      for finding dependencies
+                    * one - use only the current tree (possibly set
+                      with --tree)
+                    * order - use trees based on order (use the current
+                      tree and all trees below it on the rocks_trees list)
+                    * none - ignore dependencies altogether.
+                    The default mode may be set with the deps_mode entry
+                    in the configuration file.
+                    The current default is "]]..cfg.deps_mode..[[".
+                    Type ']]..util.this_program(program or "luarocks")..[[' with no arguments to see
+                    your list of rocks trees.
+]]
+end
+
+function cmd.title(msg, porcelain, underline)
+   if porcelain then return end
+   cmd.printout()
+   cmd.printout(msg)
+   cmd.printout((underline or "-"):rep(#msg))
+   cmd.printout()
+end
+
+--- Print a line to standard output
+function cmd.printout(...)
+   io.stdout:write(table.concat({...},"\t"))
+   io.stdout:write("\n")
+end
+
+--- Print a line to standard error
+function cmd.printerr(...)
+   io.stderr:write(table.concat({...},"\t"))
+   io.stderr:write("\n")
+end
+
+--- Display a warning message.
+-- @param msg string: the warning message
+function cmd.warning(msg)
+   cmd.printerr("Warning: "..msg)
+end
+
+--- Print a list of rocks/rockspecs on standard output.
+-- @param result_tree table: A result tree.
+-- @param porcelain boolean or nil: A flag to force machine-friendly output.
+function cmd.print_result_tree(result_tree, porcelain)
+   assert(type(result_tree) == "table")
+   assert(type(porcelain) == "boolean" or not porcelain)
+   
+   if porcelain then
+      for package, versions in util.sortedpairs(result_tree) do
+         for version, repos in util.sortedpairs(versions, vers.compare_versions) do
+            for _, repo in ipairs(repos) do
+               local nrepo = dir.normalize(repo.repo)
+               cmd.printout(package, version, repo.arch, nrepo, repo.namespace)
+            end
+         end
+      end
+      return
+   end
+   
+   for package, versions in util.sortedpairs(result_tree) do
+      local namespaces = {}
+      for version, repos in util.sortedpairs(versions, vers.compare_versions) do
+         for _, repo in ipairs(repos) do
+            local key = repo.namespace or ""
+            local list = namespaces[key] or {}
+            namespaces[key] = list
+
+            repo.repo = dir.normalize(repo.repo)
+            table.insert(list, "   "..version.." ("..repo.arch..") - "..path.root_dir(repo.repo))
+         end
+      end
+      for key, list in util.sortedpairs(namespaces) do
+         cmd.printout(key == "" and package or key .. "/" .. package)
+         for _, line in ipairs(list) do
+            cmd.printout(line)
+         end
+         cmd.printout()
+      end
+   end
+end
 
 local function is_ownership_ok(directory)
    local me = fs.current_user()
@@ -288,11 +388,11 @@ function cmd.run_command(description, commands, external_namespace, ...)
    -- @param exitcode number: the exitcode to use
    local function die(message, exitcode)
       assert(type(message) == "string", "bad error, expected string, got: " .. type(message))
-      util.printerr("\nError: "..message)
+      cmd.printerr("\nError: "..message)
 
       local ok, err = xpcall(util.run_scheduled_functions, error_handler)
       if not ok then
-         util.printerr("\nError: "..err)
+         cmd.printerr("\nError: "..err)
          exitcode = cmd.errorcodes.CRASH
       end
 
@@ -385,7 +485,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
    end
 
    -----------------------------------------------------------------------------
-   local ok, err = cfg.init(lua_data, project_dir, util.warning)
+   local ok, err = cfg.init(lua_data, project_dir, cmd.warning)
    if not ok then
       die(err)
    end
@@ -394,9 +494,9 @@ function cmd.run_command(description, commands, external_namespace, ...)
    fs.init()
 
    if flags["version"] then
-      util.printout(program.." "..cfg.program_version)
-      util.printout(description)
-      util.printout()
+      cmd.printout(program.." "..cfg.program_version)
+      cmd.printout(description)
+      cmd.printout()
       os.exit(cmd.errorcodes.OK)
    end
 
@@ -436,7 +536,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
    end
 
    if not is_ownership_ok(cfg.local_cache) then
-      util.warning("The directory '" .. cfg.local_cache .. "' or its parent directory "..
+      cmd.warning("The directory '" .. cfg.local_cache .. "' or its parent directory "..
                    "is not owned by the current user and the cache has been disabled. "..
                    "Please check the permissions and owner of that directory. "..
                    (cfg.is_platform("unix")

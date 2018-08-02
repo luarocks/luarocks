@@ -5,6 +5,7 @@ local cmd_download = {}
 
 local util = require("luarocks.util")
 local download = require("luarocks.download")
+local cmd = require("luarocks.cmd")
 
 cmd_download.help_summary = "Download a specific rock file from a rocks server."
 cmd_download.help_arguments = "[--all] [--arch=<arch> | --source | --rockspec] [<name> [<version>]]"
@@ -24,7 +25,7 @@ cmd_download.help = [[
 function cmd_download.command(flags, name, version)
    assert(type(version) == "string" or not version)
    if type(name) ~= "string" and not flags["all"] then
-      return nil, "Argument missing. "..util.see_help("download")
+      return nil, "Argument missing. "..cmd.see_help("download")
    end
 
    name = util.adjust_name_and_namespace(name, flags)

@@ -141,12 +141,13 @@ function config_cmd.command(flags)
       return config_file(conf.user)
    end
    if flags["rock-trees"] then
+      local cmd = require("luarocks.cmd")
       for _, tree in ipairs(cfg.rocks_trees) do
       	if type(tree) == "string" then
-      	   util.printout(dir.normalize(tree))
+      	   cmd.printout(dir.normalize(tree))
       	else
       	   local name = tree.name and "\t"..tree.name or ""
-      	   util.printout(dir.normalize(tree.root)..name)
+      	   cmd.printout(dir.normalize(tree.root)..name)
       	end
       end
       return true

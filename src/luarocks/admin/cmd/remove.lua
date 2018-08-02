@@ -10,6 +10,7 @@ local writer = require("luarocks.manif.writer")
 local fs = require("luarocks.fs")
 local cache = require("luarocks.admin.cache")
 local index = require("luarocks.admin.index")
+local cmd = require("luarocks.cmd")
 
 admin_remove.help_summary = "Remove a rock or rockspec from a rocks server."
 admin_remove.help_arguments = "[--server=<server>] [--no-refresh] {<rockspec>|<rock>...}"
@@ -47,12 +48,12 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    for _, rockfile in ipairs(rockfiles) do
       local basename = dir.base_name(rockfile)
       local file = dir.path(local_cache, basename)
-      util.printout("Removing file "..file.."...")
+      cmd.printout("Removing file "..file.."...")
       fs.delete(file)
       if not fs.exists(file) then
          nr_files = nr_files + 1
       else
-         util.printerr("Failed removing "..file)
+         cmd.printerr("Failed removing "..file)
       end
    end
    if nr_files == 0 then
@@ -62,16 +63,16 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    local ok, err = fs.change_dir(local_cache)
    if not ok then return nil, err end
 
-   util.printout("Updating manifest...")
+   cmd.printout("Updating manifest...")
    writer.make_manifest(local_cache, "one", true)
-   util.printout("Updating index.html...")
+   cmd.printout("Updating index.html...")
    index.make_index(local_cache)
 
    local srv, path = server_path:match("([^/]+)(/.+)")
-   local cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." --delete -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
+   local my_cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." --delete -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
 
-   util.printout(cmd)
-   fs.execute(cmd)
+   cmd.printout(my_cmd)
+   fs.execute(my_cmd)
 
    return true
 end
@@ -79,7 +80,7 @@ end
 function admin_remove.command(flags, ...)
    local files = {...}
    if #files < 1 then
-      return nil, "Argument missing. "..util.see_help("remove", "luarocks-admin")
+      return nil, "Argument missing. "..cmd.see_help("remove", "luarocks-admin")
    end
    local server, server_table = cache.get_upload_server(flags["server"])
    if not server then return nil, server_table end

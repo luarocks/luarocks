@@ -8,6 +8,7 @@ local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local queries = require("luarocks.queries")
 local results = require("luarocks.results")
+local cmd = require("luarocks.cmd")
 
 --- Store a search result (a rock or rockspec) in the result tree.
 -- @param result_tree table: The result tree, where keys are package names and
@@ -159,7 +160,7 @@ function search.search_repos(query, lua_version)
             if ok then
                break
             else
-               util.warning("Failed searching manifest: "..err)
+               cmd.warning("Failed searching manifest: "..err)
             end
          end
       end
@@ -290,47 +291,6 @@ function search.return_results(result_tree)
       end
    end
    return results
-end
-
---- Print a list of rocks/rockspecs on standard output.
--- @param result_tree table: A result tree.
--- @param porcelain boolean or nil: A flag to force machine-friendly output.
-function search.print_result_tree(result_tree, porcelain)
-   assert(type(result_tree) == "table")
-   assert(type(porcelain) == "boolean" or not porcelain)
-   
-   if porcelain then
-      for package, versions in util.sortedpairs(result_tree) do
-         for version, repos in util.sortedpairs(versions, vers.compare_versions) do
-            for _, repo in ipairs(repos) do
-               local nrepo = dir.normalize(repo.repo)
-               util.printout(package, version, repo.arch, nrepo, repo.namespace)
-            end
-         end
-      end
-      return
-   end
-   
-   for package, versions in util.sortedpairs(result_tree) do
-      local namespaces = {}
-      for version, repos in util.sortedpairs(versions, vers.compare_versions) do
-         for _, repo in ipairs(repos) do
-            local key = repo.namespace or ""
-            local list = namespaces[key] or {}
-            namespaces[key] = list
-
-            repo.repo = dir.normalize(repo.repo)
-            table.insert(list, "   "..version.." ("..repo.arch..") - "..path.root_dir(repo.repo))
-         end
-      end
-      for key, list in util.sortedpairs(namespaces) do
-         util.printout(key == "" and package or key .. "/" .. package)
-         for _, line in ipairs(list) do
-            util.printout(line)
-         end
-         util.printout()
-      end
-   end
 end
 
 function search.pick_installed_rock(query, given_tree)

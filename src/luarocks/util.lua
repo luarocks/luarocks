@@ -15,8 +15,6 @@ util.deep_merge = core.deep_merge
 util.deep_merge_under = core.deep_merge_under
 util.popen_read = core.popen_read
 util.show_table = core.show_table
-util.printerr = core.printerr
-util.warning = core.warning
 util.keys = core.keys
 
 local unpack = unpack or table.unpack
@@ -242,8 +240,9 @@ function util.warn_if_not_used(var_defs, needed_set, msg)
          needed_set[used] = nil
       end
    end
+   local cmd = require("luarocks.cmd")
    for var, _ in pairs(needed_set) do
-      util.warning(msg:format(var))
+      cmd.warning(msg:format(var))
    end
 end
 
@@ -253,8 +252,9 @@ end
 local function warn_failed_matches(line)
    local any_failed = false
    if line:match(var_format_pattern) then
+      local cmd = require("luarocks.cmd")
       for unmatched in line:gmatch(var_format_pattern) do
-         util.warning("unmatched variable " .. unmatched)
+         cmd.warning("unmatched variable " .. unmatched)
          any_failed = true
       end
    end
@@ -325,20 +325,6 @@ function util.starts_with(s, prefix)
    return s:sub(1,#prefix) == prefix
 end
 
---- Print a line to standard output
-function util.printout(...)
-   io.stdout:write(table.concat({...},"\t"))
-   io.stdout:write("\n")
-end
-
-function util.title(msg, porcelain, underline)
-   if porcelain then return end
-   util.printout()
-   util.printout(msg)
-   util.printout((underline or "-"):rep(#msg))
-   util.printout()
-end
-
 function util.this_program(default)
    local i = 1
    local last, cur = default, default
@@ -350,42 +336,6 @@ function util.this_program(default)
       i=i+1
    end
    return last:sub(1,1) == "@" and last:sub(2) or last
-end
-
-function util.deps_mode_help(program)
-   local cfg = require("luarocks.core.cfg")
-   return [[
---deps-mode=<mode>  How to handle dependencies. Four modes are supported:
-                    * all - use all trees from the rocks_trees list
-                      for finding dependencies
-                    * one - use only the current tree (possibly set
-                      with --tree)
-                    * order - use trees based on order (use the current
-                      tree and all trees below it on the rocks_trees list)
-                    * none - ignore dependencies altogether.
-                    The default mode may be set with the deps_mode entry
-                    in the configuration file.
-                    The current default is "]]..cfg.deps_mode..[[".
-                    Type ']]..util.this_program(program or "luarocks")..[[' with no arguments to see
-                    your list of rocks trees.
-]]
-end
-
-function util.see_help(command, program)
-   return "See '"..util.this_program(program or "luarocks")..' help'..(command and " "..command or "").."'."
-end
-
-function util.announce_install(rockspec)
-   local cfg = require("luarocks.core.cfg")
-   local path = require("luarocks.path")
-
-   local suffix = ""
-   if rockspec.description and rockspec.description.license then
-      suffix = " (license: "..rockspec.description.license..")"
-   end
-
-   util.printout(rockspec.name.." "..rockspec.version.." is now installed in "..path.root_dir(cfg.root_dir)..suffix)
-   util.printout()
 end
 
 --- Collect rockspecs located in a subdirectory.

@@ -5,8 +5,8 @@ local list = {}
 
 local luarocks = require("luarocks")
 local cfg = require("luarocks.core.cfg")
-local search = require("luarocks.search")
 local util = require("luarocks.util")
+local cmd = require("luarocks.cmd")
 
 list.help_summary = "List currently installed rocks."
 list.help_arguments = "[--porcelain] <filter>"
@@ -20,14 +20,14 @@ list.help = [[
 ]]
 
 local function list_outdated(outdated, porcelain)
-   util.title("Outdated rocks:", porcelain)
+   cmd.title("Outdated rocks:", porcelain)
    for _, item in ipairs(outdated) do
       if porcelain then
-         util.printout(item.name, item.installed, item.available, item.repo)
+         cmd.printout(item.name, item.installed, item.available, item.repo)
       else
-         util.printout(item.name)
-         util.printout("   " .. item.installed .. " < " .. item.available .. " at " .. item.repo)
-         util.printout()
+         cmd.printout(item.name)
+         cmd.printout("   " .. item.installed .. " < " .. item.available .. " at " .. item.repo)
+         cmd.printout()
       end
    end
    return true
@@ -51,8 +51,8 @@ function list.command(flags, filter, version)
       return list_outdated(results, flags["porcelain"])
    end
    
-   util.title(title, flags["porcelain"])
-   search.print_result_tree(results, flags["porcelain"])
+   cmd.title(title, flags["porcelain"])
+   cmd.print_result_tree(results, flags["porcelain"])
 
    return true
 end

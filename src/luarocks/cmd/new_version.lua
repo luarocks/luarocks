@@ -8,6 +8,7 @@ local download = require("luarocks.download")
 local fetch = require("luarocks.fetch")
 local persist = require("luarocks.persist")
 local fs = require("luarocks.fs")
+local cmd = require("luarocks.cmd")
 local type_rockspec = require("luarocks.type.rockspec")
 
 new_version.help_summary = "Auto-write a rockspec for a new version of a rock."
@@ -45,7 +46,7 @@ local function try_replace(tbl, field, old, new)
    local old_field = tbl[field]
    local new_field = tbl[field]:gsub(old, new)
    if new_field ~= old_field then
-      util.printout("Guessing new '"..field.."' field as "..new_field)
+      cmd.printout("Guessing new '"..field.."' field as "..new_field)
       tbl[field] = new_field
       return true      
    end
@@ -59,7 +60,7 @@ end
 local function check_url_and_update_md5(out_rs)
    local file, temp_dir = fetch.fetch_url_at_temp_dir(out_rs.source.url, "luarocks-new-version-"..out_rs.package)
    if not file then
-      util.warning("invalid URL - "..temp_dir)
+      cmd.warning("invalid URL - "..temp_dir)
       return true, false
    end
 
@@ -74,7 +75,7 @@ local function check_url_and_update_md5(out_rs)
 
    if file then
       if out_rs.source.md5 then
-         util.printout("File successfully downloaded. Updating MD5 checksum...")
+         cmd.printout("File successfully downloaded. Updating MD5 checksum...")
          local new_md5, err = fs.get_md5(file)
          if not new_md5 then
             return nil, err
@@ -83,7 +84,7 @@ local function check_url_and_update_md5(out_rs)
          out_rs.source.md5 = new_md5
          return true, new_md5 ~= old_md5
       else
-         util.printout("File successfully downloaded.")
+         cmd.printout("File successfully downloaded.")
          return true, false
       end
    end
@@ -118,7 +119,7 @@ local function update_source_section(out_rs, url, tag, old_ver, new_ver)
       return nil, md5_changed
    end
    if md5_changed then
-      util.warning("URL is the same, but MD5 has changed. Old rockspec is broken.")
+      cmd.warning("URL is the same, but MD5 has changed. Old rockspec is broken.")
    end
    return true
 end
@@ -186,7 +187,7 @@ function new_version.command(flags, input, version, url)
    
    persist.save_from_table(out_filename, out_rs, type_rockspec.order)
    
-   util.printout("Wrote "..out_filename)
+   cmd.printout("Wrote "..out_filename)
 
    local valid_out_rs, err = fetch.load_local_rockspec(out_filename)
    if not valid_out_rs then

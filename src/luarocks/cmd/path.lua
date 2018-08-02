@@ -6,6 +6,7 @@ local path_cmd = {}
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 local fs = require("luarocks.fs")
+local cmd = require("luarocks.cmd")
 
 path_cmd.help_summary = "Return the currently configured package path."
 path_cmd.help_arguments = ""
@@ -38,13 +39,13 @@ function path_cmd.command(flags)
    local path_sep = cfg.export_path_separator
 
    if flags["lr-path"] then
-      util.printout(util.cleanup_path(lr_path, ';', cfg.lua_version))
+      cmd.printout(util.cleanup_path(lr_path, ';', cfg.lua_version))
       return true
    elseif flags["lr-cpath"] then
-      util.printout(util.cleanup_path(lr_cpath, ';', cfg.lua_version))
+      cmd.printout(util.cleanup_path(lr_cpath, ';', cfg.lua_version))
       return true
    elseif flags["lr-bin"] then
-      util.printout(util.cleanup_path(lr_bin, path_sep))
+      cmd.printout(util.cleanup_path(lr_bin, path_sep))
       return true
    end
    
@@ -60,10 +61,10 @@ function path_cmd.command(flags)
    
    local lpath_var, lcpath_var = util.lua_path_variables()
 
-   util.printout(fs.export_cmd(lpath_var, util.cleanup_path(lr_path, ';', cfg.lua_version)))
-   util.printout(fs.export_cmd(lcpath_var, util.cleanup_path(lr_cpath, ';', cfg.lua_version)))
+   cmd.printout(fs.export_cmd(lpath_var, util.cleanup_path(lr_path, ';', cfg.lua_version)))
+   cmd.printout(fs.export_cmd(lcpath_var, util.cleanup_path(lr_cpath, ';', cfg.lua_version)))
    if not flags["no-bin"] then
-      util.printout(fs.export_cmd("PATH", util.cleanup_path(lr_bin, path_sep)))
+      cmd.printout(fs.export_cmd("PATH", util.cleanup_path(lr_bin, path_sep)))
    end
    return true
 end

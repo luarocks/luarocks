@@ -4,8 +4,8 @@ local cmd_search = {}
 
 local cfg = require("luarocks.core.cfg")
 local luarocks = require("luarocks")
-local search = require("luarocks.search")
 local util = require("luarocks.util")
+local cmd = require("luarocks.cmd")
 
 cmd_search.help_summary = "Query the LuaRocks servers."
 cmd_search.help_arguments = "[--source] [--binary] { <name> [<version>] | --all }"
@@ -32,12 +32,12 @@ function cmd_search.command(flags, name, version)
    end
 
    if type(name) ~= "string" and not flags["all"] then
-      return nil, "Enter name and version or use --all. " .. util.see_help("search")
+      return nil, "Enter name and version or use --all. " .. cmd.see_help("search")
    end
    
    local porcelain = flags["porcelain"]
    local full_name = (name or "") .. (version and " " .. version or "")
-   util.title(full_name .. " - Search results for Lua " .. cfg.lua_version .. ":", porcelain, "=")
+   cmd.title(full_name .. " - Search results for Lua " .. cfg.lua_version .. ":", porcelain, "=")
 
    local search_table, err = luarocks.search(name, version, (flags["source"] and "source") or (flags["binary"] and "binary")) 
    if not search_table then
@@ -45,12 +45,12 @@ function cmd_search.command(flags, name, version)
    end
 
    if search_table["sources"] and not flags["binary"] then
-      util.title("Rockspecs and source rocks:", porcelain)
-      search.print_result_tree(search_table["sources"], porcelain)
+      cmd.title("Rockspecs and source rocks:", porcelain)
+      cmd.print_result_tree(search_table["sources"], porcelain)
    end
    if search_table["binary"] and not flags["source"] then    
-      util.title("Binary and pure-Lua rocks:", porcelain)
-      search.print_result_tree(search_table["binary"], porcelain)
+      cmd.title("Binary and pure-Lua rocks:", porcelain)
+      cmd.print_result_tree(search_table["binary"], porcelain)
    end
 
    return true
