@@ -89,7 +89,9 @@ do
 
       for _, file in ipairs(fs.find()) do
          local luamod = file:match("(.*)%.lua$")
-         if luamod and not luamod_blacklist[luamod] then
+         if file:match("^.luarocks") or file:match("^lua_modules") then
+            -- skip
+         elseif luamod and not luamod_blacklist[luamod] then
             modules[path.path_to_module(file)] = prefix..file
          else
             local cmod = file:match("(.*)%.c$")

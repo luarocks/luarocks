@@ -1,9 +1,10 @@
 local test_env = require("spec.util.test_env")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
-local get_tmp_path = test_env.get_tmp_path
 local copy_dir = test_env.copy_dir
 local is_win = test_env.TEST_TARGET_OS == "windows"
+local write_file = test_env.write_file
+local lfs = require("lfs")
 
 test_env.unload_luarocks()
 
@@ -59,6 +60,55 @@ describe("Luarocks init test #integration", function()
          assert.truthy(content:find("/foo"))
          assert.truthy(content:find("/lua"))
          assert.truthy(content:find("/lua_modules"))
+      end, finally)
+   end)
+
+   it("LuaRocks init does not autodetect config or dependencies as modules of the package", function()
+      test_env.run_in_tmp(function(tmpdir)
+         local myproject = tmpdir .. "/myproject"
+         lfs.mkdir(myproject)
+         lfs.chdir(myproject)
+
+         assert(run.luarocks("init"))
+         assert.truthy(lfs.attributes(myproject .. "/.luarocks/config-" .. test_env.lua_version .. ".lua"))
+         local rockspec_filename = myproject .. "/myproject-dev-1.rockspec"
+         assert.truthy(lfs.attributes(rockspec_filename))
+
+         -- install a package locally
+         write_file("my_dependency-1.0-1.rockspec", [[
+            package = "my_dependency"
+            version = "1.0-1"
+            source = {
+               url = "file://]] .. tmpdir:gsub("\\", "/") .. [[/my_dependency.lua"
+            }
+            build = {
+               type = "builtin",
+               modules = {
+                  my_dependency = "my_dependency.lua"
+               }
+            }
+         ]], finally)
+         write_file(tmpdir .. "/my_dependency.lua", "return {}", finally)
+
+         assert.is_true(run.luarocks_bool("build --verbose my_dependency-1.0-1.rockspec"))
+         assert.truthy(lfs.attributes(myproject .. "/lua_modules/share/lua/" .. test_env.lua_version .."/my_dependency.lua"))
+
+         os.remove(rockspec_filename)
+         os.remove("my_dependency-1.0-1.rockspec")
+         
+         -- re-run init
+         assert(run.luarocks("init"))
+
+         -- file is recreated
+         assert.truthy(lfs.attributes(rockspec_filename))
+         
+         local fd = assert(io.open(rockspec_filename, "rb"))
+         local rockspec = assert(fd:read("*a"))
+         fd:close()
+         
+         assert.no.match("my_dependency", rockspec, 1, true)
+         assert.no.match("config", rockspec, 1, true)
+
       end, finally)
    end)
 end)
