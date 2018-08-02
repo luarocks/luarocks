@@ -139,10 +139,10 @@ end
 
 local function write_hardcoded_module(dir)
 
-   local system = if_platform("windows", "MINGW")
+   local system
    local processor = if_platform("windows", "x86")
 
-   if not system then
+   if if_platform("unix", true) then
       system = util.popen_read("uname -s")
       processor = util.popen_read("uname -m")
 
