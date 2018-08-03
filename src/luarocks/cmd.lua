@@ -11,6 +11,7 @@ local deps = require("luarocks.deps")
 local dir = require("luarocks.dir")
 local fun = require("luarocks.fun")
 local fs = require("luarocks.fs")
+local luarocks = require("luarocks")
 
 local program = util.this_program("luarocks")
 
@@ -347,14 +348,11 @@ end
 
 local function process_server_flags(flags)
    if flags["server"] then
-      local protocol, pathname = dir.split_url(flags["server"])
-      table.insert(cfg.rocks_servers, 1, protocol.."://"..pathname)
+      luarocks.set_rocks_servers(flags["server"])
    end
 
    if flags["dev"] then
-      local append_dev = function(s) return dir.path(s, "dev") end
-      local dev_servers = fun.traverse(cfg.rocks_servers, append_dev)
-      cfg.rocks_servers = fun.concat(dev_servers, cfg.rocks_servers)
+      luarocks.set_rocks_servers(nil, "dev")
    end
 
    if flags["only-server"] then
@@ -364,7 +362,7 @@ local function process_server_flags(flags)
       if flags["server"] then
          return nil, "--only-server cannot be used with --server"
       end
-      cfg.rocks_servers = { flags["only-server"] }
+      luarocks.set_rocks_servers(flags["only-server"], "only")
    end
 
    return true
