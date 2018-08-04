@@ -8,6 +8,7 @@ local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
+local cmd = require("luarocks.cmd")
 
 --- Annotate command string for quiet execution.
 -- @param cmd string: A command-line string.
@@ -132,7 +133,7 @@ function unix.is_actual_binary(filename)
    local first = file:read(2)
    file:close()
    if not first then
-      util.warning("could not read "..filename)
+      cmd.warning("could not read "..filename)
       return true
    end
    return first ~= "#!"

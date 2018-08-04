@@ -8,6 +8,7 @@ local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local build = require("luarocks.build")
 local dir = require("luarocks.dir")
+local cmd = require("luarocks.cmd")
 local search = require("luarocks.search")
 
 unpack.help_summary = "Unpack the contents of a rock."
@@ -131,10 +132,10 @@ local function run_unpacker(file, force)
             return nil, "Failed copying unpacked rockspec into unpacked source directory."
          end
       end
-      util.printout()   
-      util.printout("Done. You may now enter directory ")
-      util.printout(dir.path(dir_name, rockspec.source.dir))
-      util.printout("and type 'luarocks make' to build.")
+      cmd.printout()   
+      cmd.printout("Done. You may now enter directory ")
+      cmd.printout(dir.path(dir_name, rockspec.source.dir))
+      cmd.printout("and type 'luarocks make' to build.")
    end
    util.remove_scheduled_function(rollback)
    return true
@@ -150,7 +151,7 @@ end
 function unpack.command(flags, ns_name, version)
    assert(type(version) == "string" or not version)
    if type(ns_name) ~= "string" then
-      return nil, "Argument missing. "..util.see_help("unpack")
+      return nil, "Argument missing. "..cmd.see_help("unpack")
    end
 
    ns_name = util.adjust_name_and_namespace(ns_name, flags)

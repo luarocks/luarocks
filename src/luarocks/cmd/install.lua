@@ -29,7 +29,7 @@ or a filename of a locally available rock.
                     in the configuration file.
 
 --only-deps         Installs only the dependencies of the rock.
-]]..util.deps_mode_help()
+]]..cmd.deps_mode_help()
 
 
 --- Install a binary rock.
@@ -71,7 +71,7 @@ function install.install_binary_rock(rock_file, deps_mode, namespace)
    end
 
    if deps_mode == "none" then
-      util.warning("skipping dependency checks.")
+      cmd.warning("skipping dependency checks.")
    else
       ok, err, errcode = deps.check_external_deps(rockspec, "install")
       if err then return nil, err, errcode end
@@ -104,7 +104,7 @@ function install.install_binary_rock(rock_file, deps_mode, namespace)
    ok, err = repos.run_hook(rockspec, "post_install")
    if err then return nil, err end
 
-   util.announce_install(rockspec)
+   cmd.announce_install(rockspec)
    util.remove_scheduled_function(rollback)
    return name, version
 end
@@ -140,8 +140,8 @@ function install.install_binary_rock_deps(rock_file, deps_mode)
    ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", deps_mode)
    if err then return nil, err, errcode end
 
-   util.printout()
-   util.printout("Successfully installed dependencies for " ..name.." "..version)
+   cmd.printout()
+   cmd.printout("Successfully installed dependencies for " ..name.." "..version)
 
    return name, version
 end
@@ -167,7 +167,7 @@ local function install_rock_file(filename, namespace, deps_mode, keep, force, fo
 
    if (not keep) and not cfg.keep_other_versions then
       local ok, err = remove.remove_other_versions(name, version, force, force_fast)
-      if not ok then util.printerr(err) end
+      if not ok then cmd.printerr(err) end
    end
 
    writer.check_dependencies(nil, deps_mode)
@@ -186,7 +186,7 @@ end
 -- successful, nil and an error message otherwise. exitcode is optionally returned.
 function install.command(flags, name, version)
    if type(name) ~= "string" then
-      return nil, "Argument missing. "..util.see_help("install")
+      return nil, "Argument missing. "..cmd.see_help("install")
    end
 
    name = util.adjust_name_and_namespace(name, flags)
@@ -209,7 +209,7 @@ function install.command(flags, name, version)
       if not url then
          return nil, err
       end
-      util.printout("Installing "..url)
+      cmd.printout("Installing "..url)
       return install.command(flags, url)
    end
 end

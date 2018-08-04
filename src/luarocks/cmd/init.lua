@@ -6,6 +6,7 @@ local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
+local cmd = require("luarocks.cmd")
 local write_rockspec = require("luarocks.cmd.write_rockspec")
 
 init.help_summary = "Initialize a directory for a Lua project using LuaRocks."
@@ -53,7 +54,7 @@ function init.command(flags, name, version)
       name = dir.base_name(pwd)
    end
 
-   util.printout("Initializing project " .. name .. " ...")
+   cmd.printout("Initializing project " .. name .. " ...")
    
    local has_rockspec = false
    for file in fs.dir() do
@@ -66,14 +67,14 @@ function init.command(flags, name, version)
    if not has_rockspec then
       local ok, err = write_rockspec.command(flags, name, version or "dev", pwd)
       if not ok then
-         util.printerr(err)
+         cmd.printerr(err)
       end
    end
    
-   util.printout("Adding entries to .gitignore ...")
+   cmd.printout("Adding entries to .gitignore ...")
    write_gitignore()
 
-   util.printout("Preparing ./.luarocks/ ...")
+   cmd.printout("Preparing ./.luarocks/ ...")
    fs.make_dir(".luarocks")
    local config_file = ".luarocks/config-" .. cfg.lua_version .. ".lua"
    if not fs.exists(config_file) then
@@ -82,7 +83,7 @@ function init.command(flags, name, version)
       fd:close()
    end
 
-   util.printout("Preparing ./lua_modules/ ...")
+   cmd.printout("Preparing ./lua_modules/ ...")
 
    fs.make_dir("lua_modules/lib/luarocks/rocks-" .. cfg.lua_version)
    local tree = dir.path(pwd, "lua_modules")
@@ -91,13 +92,13 @@ function init.command(flags, name, version)
 
    local luarocks_wrapper = "./luarocks" .. ext
    if not fs.exists(luarocks_wrapper) then
-      util.printout("Preparing " .. luarocks_wrapper .. " ...")
+      cmd.printout("Preparing " .. luarocks_wrapper .. " ...")
       fs.wrap_script(arg[0], "luarocks", "none", nil, nil, "--project-tree", tree)
    end
 
    local lua_wrapper = "./lua" .. ext
    if not fs.exists(lua_wrapper) then
-      util.printout("Preparing " .. lua_wrapper .. " ...")
+      cmd.printout("Preparing " .. lua_wrapper .. " ...")
       path.use_tree(tree)
       fs.wrap_script(nil, "lua", "all")
    end

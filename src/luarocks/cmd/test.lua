@@ -5,6 +5,7 @@ local cmd_test = {}
 
 local util = require("luarocks.util")
 local test = require("luarocks.test")
+local cmd = require("luarocks.cmd")
 
 cmd_test.help_summary = "Run the test suite in the current directory."
 cmd_test.help_arguments = "[--test-type=<type>] [<rockspec>] [-- <args>]"
@@ -23,7 +24,7 @@ test suite arguments.
                     specified in the rockspec and it could not be
                     auto-detected.
 
-]]..util.deps_mode_help()
+]]..cmd.deps_mode_help()
 
 function cmd_test.command(flags, arg, ...)
    assert(type(arg) == "string" or not arg)

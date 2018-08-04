@@ -10,6 +10,7 @@ local persist = require("luarocks.persist")
 local rockspecs = require("luarocks.rockspecs")
 local type_rockspec = require("luarocks.type.rockspec")
 local util = require("luarocks.util")
+local cmd = require("luarocks.cmd")
 
 write_rockspec.help_summary = "Write a template for a rockspec file."
 write_rockspec.help_arguments = "[--output=<file> ...] [<name>] [<version>] [<url>|<path>]"
@@ -51,10 +52,10 @@ local function fetch_url(rockspec)
    if err_code == "source.dir" then
       file, temp_dir = err_file, err_temp_dir
    elseif not file then
-      util.warning("Could not fetch sources - "..temp_dir)
+      cmd.warning("Could not fetch sources - "..temp_dir)
       return false
    end
-   util.printout("File successfully downloaded. Making checksum and checking base dir...")
+   cmd.printout("File successfully downloaded. Making checksum and checking base dir...")
    if dir.is_basic_protocol(rockspec.source.protocol) then
       rockspec.source.md5 = fs.get_md5(file)
    end
@@ -259,7 +260,7 @@ function write_rockspec.command(flags, name, version, url_or_dir)
    end
 
    if not name then
-      return nil, "Could not infer rock name. "..util.see_help("write_rockspec")
+      return nil, "Could not infer rock name. "..cmd.see_help("write_rockspec")
    end
    version = version or "dev"
 
@@ -291,7 +292,7 @@ function write_rockspec.command(flags, name, version, url_or_dir)
    rockspec.source.protocol = protocol
    
    if not next(rockspec.dependencies) then
-      util.warning("Please specify supported Lua version with --lua-version=<ver>. "..util.see_help("write_rockspec"))
+      cmd.warning("Please specify supported Lua version with --lua-version=<ver>. "..cmd.see_help("write_rockspec"))
    end
    
    local local_dir = url_or_dir
@@ -347,10 +348,10 @@ function write_rockspec.command(flags, name, version, url_or_dir)
       if license then
          rockspec.description.license = license
       elseif license then
-         util.title("Could not auto-detect type for project license:")
-         util.printout(fulltext)
-         util.printout()
-         util.title("Please fill in the source.license field manually or use --license.")
+         cmd.title("Could not auto-detect type for project license:")
+         cmd.printout(fulltext)
+         cmd.printout()
+         cmd.title("Please fill in the source.license field manually or use --license.")
       end
    end
    
@@ -360,9 +361,9 @@ function write_rockspec.command(flags, name, version, url_or_dir)
    
    persist.save_from_table(filename, rockspec, type_rockspec.order)
 
-   util.printout()   
-   util.printout("Wrote template at "..filename.." -- you should now edit and finish it.")
-   util.printout()   
+   cmd.printout()   
+   cmd.printout("Wrote template at "..filename.." -- you should now edit and finish it.")
+   cmd.printout()   
 
    return true
 end

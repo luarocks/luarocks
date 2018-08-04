@@ -6,6 +6,7 @@ local cmd_pack = {}
 local util = require("luarocks.util")
 local pack = require("luarocks.pack")
 local queries = require("luarocks.queries")
+local cmd = require("luarocks.cmd")
 
 cmd_pack.help_summary = "Create a rock, packing sources or binaries."
 cmd_pack.help_arguments = "{<rockspec>|<name> [<version>]}"
@@ -26,7 +27,7 @@ argument.
 function cmd_pack.command(flags, arg, version)
    assert(type(version) == "string" or not version)
    if type(arg) ~= "string" then
-      return nil, "Argument missing. "..util.see_help("pack")
+      return nil, "Argument missing. "..cmd.see_help("pack")
    end
 
    local file, err
@@ -40,7 +41,7 @@ function cmd_pack.command(flags, arg, version)
    if err then
       return nil, err
    else
-      util.printout("Packed: "..file)
+      cmd.printout("Packed: "..file)
       return true
    end
 end

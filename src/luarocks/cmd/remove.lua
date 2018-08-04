@@ -24,7 +24,7 @@ To override this check and force the removal, use --force.
 To perform a forced removal without reporting dependency issues,
 use --force-fast.
 
-]]..util.deps_mode_help()
+]]..cmd.deps_mode_help()
 
 --- Driver function for the "remove" command.
 -- @param name string: name of a rock. If a version is given, refer to
@@ -35,7 +35,7 @@ use --force-fast.
 -- successful, nil and an error message otherwise. exitcode is optionally returned.
 function cmd_remove.command(flags, name, version)
    if type(name) ~= "string" then
-      return nil, "Argument missing. "..util.see_help("remove")
+      return nil, "Argument missing. "..cmd.see_help("remove")
    end
 
    name = util.adjust_name_and_namespace(name, flags)

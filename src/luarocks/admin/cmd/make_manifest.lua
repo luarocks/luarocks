@@ -10,6 +10,7 @@ local util = require("luarocks.util")
 local deps = require("luarocks.deps")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
+local cmd = require("luarocks.cmd")
 
 make_manifest.help_summary = "Compile a manifest file for a repository."
 
@@ -29,15 +30,15 @@ function make_manifest.command(flags, repo)
    assert(type(repo) == "string" or not repo)
    repo = repo or cfg.rocks_dir
   
-   util.printout("Making manifest for "..repo)
+   cmd.printout("Making manifest for "..repo)
    
    if repo:match("/lib/luarocks") and not flags["local-tree"] then
-      util.warning("This looks like a local rocks tree, but you did not pass --local-tree.")
+      cmd.warning("This looks like a local rocks tree, but you did not pass --local-tree.")
    end
    
    local ok, err = writer.make_manifest(repo, deps.get_deps_mode(flags), not flags["local-tree"])
    if ok and not flags["local-tree"] then
-      util.printout("Generating index.html for "..repo)
+      cmd.printout("Generating index.html for "..repo)
       index.make_index(repo)
    end
    if flags["local-tree"] then

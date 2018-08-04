@@ -6,6 +6,7 @@ local lint = {}
 local util = require("luarocks.util")
 local download = require("luarocks.download")
 local fetch = require("luarocks.fetch")
+local cmd = require("luarocks.cmd")
 
 lint.help_summary = "Check syntax of a rockspec."
 lint.help_arguments = "<rockspec>"
@@ -18,7 +19,7 @@ syntactically correct.
 
 function lint.command(flags, input)
    if not input then
-      return nil, "Argument missing. "..util.see_help("lint")
+      return nil, "Argument missing. "..cmd.see_help("lint")
    end
    
    local filename = input
@@ -43,7 +44,7 @@ function lint.command(flags, input)
    -- because extra-strict checks is what lint-type commands
    -- are all about.
    if not rs.description.license then
-      util.printerr("Rockspec has no license field.")
+      cmd.printerr("Rockspec has no license field.")
       ok = false
    end
 

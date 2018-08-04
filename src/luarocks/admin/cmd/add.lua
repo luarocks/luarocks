@@ -8,6 +8,7 @@ local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local writer = require("luarocks.manif.writer")
 local fs = require("luarocks.fs")
+local cmd = require("luarocks.cmd")
 local cache = require("luarocks.admin.cache")
 local index = require("luarocks.admin.index")
 
@@ -60,12 +61,12 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
    local files = {}
    for _, rockfile in ipairs(rockfiles) do
       if fs.exists(rockfile) then
-         util.printout("Copying file "..rockfile.." to "..local_cache.."...")
+         cmd.printout("Copying file "..rockfile.." to "..local_cache.."...")
          local absolute = fs.absolute_name(rockfile)
          fs.copy(absolute, local_cache, "read")
          table.insert(files, dir.base_name(absolute))
       else
-         util.printerr("File "..rockfile.." not found")
+         cmd.printerr("File "..rockfile.." not found")
       end
    end
    if #files == 0 then
@@ -75,7 +76,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
    local ok, err = fs.change_dir(local_cache)
    if not ok then return nil, err end
 
-   util.printout("Updating manifest...")
+   cmd.printout("Updating manifest...")
    writer.make_manifest(local_cache, "one", true)
    
    zip_manifests()
@@ -85,7 +86,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
    end
 
    if do_index then
-      util.printout("Updating index.html...")
+      cmd.printout("Updating index.html...")
       index.make_index(local_cache)
    end
 
@@ -107,27 +108,27 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
 
    -- TODO abstract away explicit 'curl' call
 
-   local cmd
+   local my_cmd
    if protocol == "rsync" then
       local srv, path = server_path:match("([^/]+)(/.+)")
-      cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
+      my_cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
    elseif protocol == "file" then
       return fs.copy_contents(local_cache, server_path)
    elseif upload_server and upload_server.sftp then
       local part1, part2 = upload_server.sftp:match("^([^/]*)/(.*)$")
-      cmd = cfg.variables.SCP.." "..table.concat(files, " ").." "..user.."@"..part1..":/"..part2
+      my_cmd = cfg.variables.SCP.." "..table.concat(files, " ").." "..user.."@"..part1..":/"..part2
    else
-      cmd = cfg.variables.CURL.." "..login_info.." -T '{"..table.concat(files, ",").."}' "..login_url
+      my_cmd = cfg.variables.CURL.." "..login_info.." -T '{"..table.concat(files, ",").."}' "..login_url
    end
 
-   util.printout(cmd)
-   return fs.execute(cmd)
+   cmd.printout(my_cmd)
+   return fs.execute(my_cmd)
 end
 
 function add.command(flags, ...)
    local files = {...}
    if #files < 1 then
-      return nil, "Argument missing. "..util.see_help("add", "luarocks-admin")
+      return nil, "Argument missing. "..cmd.see_help("add", "luarocks-admin")
    end
    local server, server_table = cache.get_upload_server(flags["server"])
    if not server then return nil, server_table end

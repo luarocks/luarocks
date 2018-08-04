@@ -65,7 +65,7 @@ function make.command(flags, rockspec_filename)
       end
    end
    if not rockspec_filename:match("rockspec$") then
-      return nil, "Invalid argument: 'make' takes a rockspec as a parameter. "..util.see_help("make")
+      return nil, "Invalid argument: 'make' takes a rockspec as a parameter. "..cmd.see_help("make")
    end
    
    local rockspec, err, errcode = fetch.load_rockspec(rockspec_filename)
@@ -86,18 +86,31 @@ function make.command(flags, rockspec_filename)
 
    if flags["pack-binary-rock"] then
       return pack.pack_binary_rock(name, rockspec.version, function()
-         return build.build_rockspec(rockspec, opts)
+         if opts.deps_mode == "none" then
+            cmd.warning("Skipping dependency checks")
+         end
+         local name, version = build.build_rockspec(rockspec, opts)
+         if not name then
+            local build_err = version
+            return nil, build_err
+         end
+         cmd.announce_install(rockspec)
+         return name, version
       end)
    else
       local ok, err = fs.check_command_permissions(flags)
       if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
+      if opts.deps_mode == "none" then
+         cmd.warning("Skipping dependency checks")
+      end
       ok, err = build.build_rockspec(rockspec, opts)
       if not ok then return nil, err end
+      cmd.announce_install(rockspec)
       local name, version = ok, err
 
       if (not flags["keep"]) and not cfg.keep_other_versions then
          local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
-         if not ok then util.printerr(err) end
+         if not ok then cmd.printerr(err) end
       end
 
       writer.check_dependencies(nil, deps.get_deps_mode(flags))

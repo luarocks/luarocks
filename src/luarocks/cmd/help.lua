@@ -9,6 +9,7 @@ local help = {}
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
+local cmd = require("luarocks.cmd")
 
 local program = util.this_program("luarocks")
 
@@ -20,11 +21,11 @@ help.help = [[
 ]]
 
 local function print_banner()
-   util.printout("\nLuaRocks "..cfg.program_version..", the Lua package manager")
+   cmd.printout("\nLuaRocks "..cfg.program_version..", the Lua package manager")
 end
 
 local function print_section(section)
-   util.printout("\n"..section)
+   cmd.printout("\n"..section)
 end
 
 local function get_status(status)
@@ -48,11 +49,11 @@ function help.command(description, commands, command)
       local conf = cfg.which_config()
       print_banner()
       print_section("NAME")
-      util.printout("\t"..program..[[ - ]]..description)
+      cmd.printout("\t"..program..[[ - ]]..description)
       print_section("SYNOPSIS")
-      util.printout("\t"..program..[[ [<flags...>] [VAR=VALUE]... <command> [<argument>] ]])
+      cmd.printout("\t"..program..[[ [<flags...>] [VAR=VALUE]... <command> [<argument>] ]])
       print_section("GENERAL OPTIONS")
-      util.printout([[
+      cmd.printout([[
 	These apply to all commands, as appropriate:
 
 	--dev                  Enable the sub-repositories in rocks servers
@@ -72,59 +73,58 @@ function help.command(description, commands, command)
 	                       0 means no timeout (wait forever).
 	                       Default is ]]..tostring(cfg.connection_timeout)..[[.]])
       print_section("VARIABLES")
-      util.printout([[
+      cmd.printout([[
 	Variables from the "variables" table of the configuration file
 	can be overriden with VAR=VALUE assignments.]])
       print_section("COMMANDS")
       for name, modname in util.sortedpairs(commands) do
-         local cmd = require(modname)
-         util.printout("", name)
-         util.printout("\t", cmd.help_summary)
+         cmd.printout("", name)
+         cmd.printout("\t", cmd.help_summary)
       end
       print_section("CONFIGURATION")
-      util.printout("\tLua version: " .. cfg.lua_version)
+      cmd.printout("\tLua version: " .. cfg.lua_version)
       if cfg.luajit_version then
-         util.printout("\tLuaJIT version: " .. cfg.luajit_version)
+         cmd.printout("\tLuaJIT version: " .. cfg.luajit_version)
       end
-      util.printout()
-      util.printout("\tConfiguration files:")
-      util.printout("\t\tSystem  : ".. dir.normalize(conf.system.file) .. " (" .. get_status(conf.system.ok) ..")")
+      cmd.printout()
+      cmd.printout("\tConfiguration files:")
+      cmd.printout("\t\tSystem  : ".. dir.normalize(conf.system.file) .. " (" .. get_status(conf.system.ok) ..")")
       if conf.user.file then
-         util.printout("\t\tUser    : ".. dir.normalize(conf.user.file) .. " (" .. get_status(conf.user.ok) ..")")
+         cmd.printout("\t\tUser    : ".. dir.normalize(conf.user.file) .. " (" .. get_status(conf.user.ok) ..")")
       else
-         util.printout("\t\tUser    : disabled in this LuaRocks installation.")
+         cmd.printout("\t\tUser    : disabled in this LuaRocks installation.")
       end
       if conf.project then
-         util.printout("\t\tProject : ".. dir.normalize(conf.project.file) .. " (" .. get_status(conf.project.ok) ..")")
+         cmd.printout("\t\tProject : ".. dir.normalize(conf.project.file) .. " (" .. get_status(conf.project.ok) ..")")
       end
-      util.printout()
-      util.printout("\tRocks trees in use: ")
+      cmd.printout()
+      cmd.printout("\tRocks trees in use: ")
       for _, tree in ipairs(cfg.rocks_trees) do
          if type(tree) == "string" then
-            util.printout("\t\t"..dir.normalize(tree))
+            cmd.printout("\t\t"..dir.normalize(tree))
          else
             local name = tree.name and " (\""..tree.name.."\")" or ""
-            util.printout("\t\t"..dir.normalize(tree.root)..name)
+            cmd.printout("\t\t"..dir.normalize(tree.root)..name)
          end
       end
-      util.printout()
+      cmd.printout()
    else
       command = command:gsub("-", "_")
-      local cmd = commands[command] and require(commands[command])
-      if cmd then
-         local arguments = cmd.help_arguments or "<argument>"
+      local my_cmd = commands[command] and require(commands[command])
+      if my_cmd then
+         local arguments = my_cmd.help_arguments or "<argument>"
          print_banner()
          print_section("NAME")
-         util.printout("\t"..program.." "..command.." - "..cmd.help_summary)
+         cmd.printout("\t"..program.." "..command.." - "..my_cmd.help_summary)
          print_section("SYNOPSIS")
-         util.printout("\t"..program.." "..command.." "..arguments)
+         cmd.printout("\t"..program.." "..command.." "..arguments)
          print_section("DESCRIPTION")
-         util.printout("",(cmd.help:gsub("\n","\n\t"):gsub("\n\t$","")))
+         cmd.printout("",(my_cmd.help:gsub("\n","\n\t"):gsub("\n\t$","")))
          print_section("SEE ALSO")
-         if cmd.help_see_also then
-            util.printout(cmd.help_see_also)
+         if my_cmd.help_see_also then
+            cmd.printout(my_cmd.help_see_also)
          end
-         util.printout("","'"..program.." help' for general options and configuration.\n")
+         cmd.printout("","'"..program.." help' for general options and configuration.\n")
       else
          return nil, "Unknown command: "..command
       end

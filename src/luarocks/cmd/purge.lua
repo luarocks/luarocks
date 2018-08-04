@@ -35,7 +35,7 @@ function purge.command(flags)
    local tree = flags["tree"]
 
    if type(tree) ~= "string" then
-      return nil, "The --tree argument is mandatory. "..util.see_help("purge")
+      return nil, "The --tree argument is mandatory. "..cmd.see_help("purge")
    end
    
    local results = {}
@@ -56,17 +56,17 @@ function purge.command(flags)
    for package, versions in util.sortedpairs(results) do
       for version, _ in util.sortedpairs(versions, sort) do
          if flags["old-versions"] then
-            util.printout("Keeping "..package.." "..version.."...")
+            cmd.printout("Keeping "..package.." "..version.."...")
             local ok, err = remove.remove_other_versions(package, version, flags["force"], flags["force-fast"])
             if not ok then
-               util.printerr(err)
+               cmd.printerr(err)
             end
             break
          else
-            util.printout("Removing "..package.." "..version.."...")
+            cmd.printout("Removing "..package.." "..version.."...")
             local ok, err = repos.delete_version(package, version, "none", true)
             if not ok then
-               util.printerr(err)
+               cmd.printerr(err)
             end
          end
       end
