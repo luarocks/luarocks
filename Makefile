@@ -10,7 +10,7 @@ all: build
 # Base build
 # ----------------------------------------
 
-build: luarocks luarocks-admin
+build: luarocks luarocks-admin ./build/luarocks ./build/luarocks-admin
 
 config.unix:
 	@echo Please run the "./configure" script before building.
@@ -35,14 +35,6 @@ luarocks-admin: config.unix
 	echo 'LUAROCKS_SYSCONFDIR="$(luarocksconfdir)" LUA_PATH="$(CURDIR)/src/?.lua;;" exec "$(LUA_BINDIR)/$(LUA_INTERPRETER)" "$(CURDIR)/src/bin/luarocks-admin" --project-tree="$(CURDIR)/lua_modules" "$$@"' >> luarocks-admin
 	chmod +rx ./luarocks-admin
 
-# ----------------------------------------
-# Regular install
-# ----------------------------------------
-
-install: all $(DESTDIR)$(prefix)/bin/luarocks $(DESTDIR)$(prefix)/bin/luarocks-admin $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua
-	mkdir -p "$(DESTDIR)$(prefix)/share/lua/$(LUA_VERSION)/luarocks"
-	cp -a src/luarocks/* "$(DESTDIR)$(prefix)/share/lua/$(LUA_VERSION)/luarocks"
-
 ./build/luarocks: src/bin/luarocks config.unix
 	mkdir -p "$(@D)"
 	(printf '#!$(LUA_BINDIR)/$(LUA_INTERPRETER)\n'\
@@ -58,6 +50,14 @@ install: all $(DESTDIR)$(prefix)/bin/luarocks $(DESTDIR)$(prefix)/bin/luarocks-a
 	'package.path=[[$(prefix)/share/lua/$(LUA_VERSION)/?.lua;]] .. package.path\n'; \
 	tail -n +2 src/bin/luarocks-admin \
 	)> "$@"
+
+# ----------------------------------------
+# Regular install
+# ----------------------------------------
+
+install: all $(DESTDIR)$(prefix)/bin/luarocks $(DESTDIR)$(prefix)/bin/luarocks-admin $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua
+	mkdir -p "$(DESTDIR)$(prefix)/share/lua/$(LUA_VERSION)/luarocks"
+	cp -a src/luarocks/* "$(DESTDIR)$(prefix)/share/lua/$(LUA_VERSION)/luarocks"
 
 $(DESTDIR)$(prefix)/bin/luarocks: ./build/luarocks
 	$(INSTALL) -D "$<" "$@"
