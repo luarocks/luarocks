@@ -39,6 +39,19 @@ config.unix:
 	@exit 1
 
 config-$(LUA_VERSION).lua.in: config.unix
+	@printf -- '-- LuaRocks configuration\n\n'\
+	'rocks_trees = {\n'\
+	'   { name = "user", root = home .. "/.luarocks" };\n'\
+	'   { name = "system", root = "'"$(rocks_tree)"'" };\n'\
+	'}\n'\
+	"$$([ -n "$(LUA_INTERPRETER)" ] && printf 'lua_interpreter = "%s";\\n' "$(LUA_INTERPRETER)")"\
+	'variables = {\n'\
+	"$$([ -n "$(LUA_DIR)" ] && printf '   LUA_DIR = "%s";\\n' "$(LUA_DIR)")"\
+	"$$([ -n "$(LUA_INCDIR)" ] && printf '   LUA_INCDIR = "%s";\\n' "$(LUA_INCDIR)")"\
+	"$$([ -n "$(LUA_BINDIR)" ] && printf '   LUA_BINDIR = "%s";\\n' "$(LUA_BINDIR)")"\
+	"$$([ -n "$(LUA_LIBDIR)" ] && printf '   LUA_LIBDIR = "%s";\\n' "$(LUA_LIBDIR)")"\
+	'}\n'\
+	> $@
 
 luarocks: config.unix config-$(LUA_VERSION).lua.in
 	rm -f src/luarocks/core/hardcoded.lua

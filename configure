@@ -499,22 +499,6 @@ LUA_LIBDIR=$LUA_LIBDIR
 FORCE_CONFIG=$FORCE_CONFIG
 EOF
 
-{
-   echo '-- LuaRocks configuration'
-   echo
-   echo 'rocks_trees = {'
-   echo '   { name = "user", root = home .. "/.luarocks" },'
-   echo '   { name = "system", root = "'"$ROCKS_TREE"'" },'
-   echo '}'
-   if [ -n "$LUA_INTERPRETER" ]; then echo 'lua_interpreter = "'"$LUA_INTERPRETER"'"' ; fi
-   echo 'variables = {'
-   if [ -n "$LUA_DIR" ]; then echo '   LUA_DIR = "'"$LUA_DIR"'",' ; fi
-   if [ -n "$LUA_INCDIR" ]; then echo '   LUA_INCDIR = "'"$LUA_INCDIR"'",' ; fi
-   if [ -n "$LUA_BINDIR" ]; then echo '   LUA_BINDIR = "'"$LUA_BINDIR"'",' ; fi
-   if [ -n "$LUA_LIBDIR" ]; then echo '   LUA_LIBDIR = "'"$LUA_LIBDIR"'",' ; fi
-   echo '}'
-} > "config-$LUA_VERSION.lua.in"
-
 echo
 BLUE "Done configuring."
 echo
