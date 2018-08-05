@@ -36,29 +36,29 @@ luarocks-admin: config.unix
 # Regular install
 # ----------------------------------------
 
-install: all $(PREFIX)/bin/luarocks $(PREFIX)/bin/luarocks-admin $(SYSCONFDIR)/config-$(LUA_VERSION).lua
-	mkdir -p "$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks"
-	cp -a src/luarocks/* "$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks"
+install: all $(DESTDIR)$(PREFIX)/bin/luarocks $(DESTDIR)$(PREFIX)/bin/luarocks-admin $(DESTDIR)$(SYSCONFDIR)/config-$(LUA_VERSION).lua
+	mkdir -p "$(DESTDIR)$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks"
+	cp -a src/luarocks/* "$(DESTDIR)$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks"
 
-$(PREFIX)/bin/luarocks: src/bin/luarocks config.unix
-	mkdir -p "$(PREFIX)/bin"
+$(DESTDIR)$(PREFIX)/bin/luarocks: src/bin/luarocks config.unix
+	mkdir -p "$(DESTDIR)$(PREFIX)/bin"
 	echo "#!$(LUA_BINDIR)/$(LUA_INTERPRETER)" > $@
 	echo "package.loaded['luarocks.core.hardcoded'] = { SYSCONFDIR = [[$(SYSCONFDIR)]] }" >> $@
 	echo "package.path=[[$(PREFIX)/share/lua/$(LUA_VERSION)/?.lua;]] .. package.path" >> $@
 	tail -n +2 src/bin/luarocks >> $@
 	chmod +rx $@
 
-$(PREFIX)/bin/luarocks-admin: src/bin/luarocks-admin config.unix
-	mkdir -p "$(PREFIX)/bin"
+$(DESTDIR)$(PREFIX)/bin/luarocks-admin: src/bin/luarocks-admin config.unix
+	mkdir -p "$(DESTDIR)$(PREFIX)/bin"
 	echo "#!$(LUA_BINDIR)/$(LUA_INTERPRETER)" > $@
 	echo "package.loaded['luarocks.core.hardcoded'] = { SYSCONFDIR = [[$(SYSCONFDIR)]] }" >> $@
 	echo "package.path=[[$(PREFIX)/share/lua/$(LUA_VERSION)/?.lua;]] .. package.path" >> $@
 	tail -n +2 src/bin/luarocks-admin >> $@
 	chmod +rx $@
 
-$(SYSCONFDIR)/config-$(LUA_VERSION).lua: config-$(LUA_VERSION).lua.in
-	mkdir -p "$(SYSCONFDIR)"
-	cp config-$(LUA_VERSION).lua.in "$(SYSCONFDIR)/config-$(LUA_VERSION).lua"
+$(DESTDIR)$(SYSCONFDIR)/config-$(LUA_VERSION).lua: config-$(LUA_VERSION).lua.in
+	mkdir -p "$(DESTDIR)$(SYSCONFDIR)"
+	cp config-$(LUA_VERSION).lua.in "$(DESTDIR)$(SYSCONFDIR)/config-$(LUA_VERSION).lua"
 
 # ----------------------------------------
 # Binary build
@@ -79,21 +79,21 @@ $(BINARY_TARGET)/luarocks-admin.exe: luarocks
 # ----------------------------------------
 
 install-binary: build-binary/luarocks.exe build-binary/luarocks-admin.exe
-	mkdir -p "$(PREFIX)/bin"
-	cp build-binary/luarocks.exe "$(PREFIX)/bin/luarocks"
-	chmod +rx "$(PREFIX)/bin/luarocks"
-	cp build-binary/luarocks-admin.exe "$(PREFIX)/bin/luarocks-admin"
-	chmod +rx "$(PREFIX)/bin/luarocks-admin"
-	mkdir -p "$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks/core"
-	cp -a src/luarocks/core/* "$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks/core"
-	cp -a src/luarocks/loader.lua "$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks/"
+	mkdir -p "$(DESTDIR)$(PREFIX)/bin"
+	cp build-binary/luarocks.exe "$(DESTDIR)$(PREFIX)/bin/luarocks"
+	chmod +rx "$(DESTDIR)$(PREFIX)/bin/luarocks"
+	cp build-binary/luarocks-admin.exe "$(DESTDIR)$(PREFIX)/bin/luarocks-admin"
+	chmod +rx "$(DESTDIR)$(PREFIX)/bin/luarocks-admin"
+	mkdir -p "$(DESTDIR)$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks/core"
+	cp -a src/luarocks/core/* "$(DESTDIR)$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks/core"
+	cp -a src/luarocks/loader.lua "$(DESTDIR)$(PREFIX)/share/lua/$(LUA_VERSION)/luarocks/"
 
 # ----------------------------------------
 # Bootstrap install
 # ----------------------------------------
 
-bootstrap: luarocks $(SYSCONFDIR)/config-$(LUA_VERSION).lua
-	./luarocks make --tree="$(ROCKS_TREE)"
+bootstrap: luarocks $(DESTDIR)$(SYSCONFDIR)/config-$(LUA_VERSION).lua
+	./luarocks make --tree="$(DESTDIR)$(ROCKS_TREE)"
 
 # ----------------------------------------
 # Windows binary build
