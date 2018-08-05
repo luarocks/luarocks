@@ -118,10 +118,14 @@ uninstall:
 binary: build-binary/luarocks.exe build-binary/luarocks-admin.exe
 
 build-binary/luarocks.exe: luarocks
-	LUA_PATH="$(CURDIR)/src/?.lua;;" "$(LUA_BINDIR)/$(LUA_INTERPRETER)" binary/all_in_one "src/bin/luarocks" "$(LUA_DIR)" "^src/luarocks/admin/" "$(luarocksconfdir)" build-binary $(BINARY_PLATFORM) $(BINARY_CC) $(BINARY_NM) $(BINARY_SYSROOT)
+	(unset $(LUA_ENV_VARS); \
+	LUA_PATH="./src/?.lua;;" \
+	"$(LUA)" binary/all_in_one "src/bin/luarocks" "$(LUA_DIR)" "^src/luarocks/admin/" "$(luarocksconfdir)" "$(@D)" $(BINARY_PLATFORM) $(BINARY_CC) $(BINARY_NM) $(BINARY_SYSROOT))
 
 build-binary/luarocks-admin.exe: luarocks
-	LUA_PATH="$(CURDIR)/src/?.lua;;" "$(LUA_BINDIR)/$(LUA_INTERPRETER)" binary/all_in_one "src/bin/luarocks-admin" "$(LUA_DIR)" "^src/luarocks/cmd/" "$(luarocksconfdir)" build-binary $(BINARY_PLATFORM) $(BINARY_CC) $(BINARY_NM) $(BINARY_SYSROOT)
+	(unset $(LUA_ENV_VARS); \
+	LUA_PATH="./src/?.lua;;" \
+	"$(LUA)" binary/all_in_one "src/bin/luarocks-admin" "$(LUA_DIR)" "^src/luarocks/cmd/" "$(luarocksconfdir)" "$(@D)" $(BINARY_PLATFORM) $(BINARY_CC) $(BINARY_NM) $(BINARY_SYSROOT))
 
 # ----------------------------------------
 # Binary install
