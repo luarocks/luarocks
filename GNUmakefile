@@ -134,7 +134,7 @@ bootstrap: $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua
 # Windows binary build
 # ----------------------------------------
 
-windows-binary: luarocks
+windows-binary:
 	$(MAKE) -f binary/Makefile.windows windows-binary
 
 windows-clean:
