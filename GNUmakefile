@@ -1,6 +1,8 @@
 
 -include config.unix
 
+LUA_ENV_VARS = LUA_INIT LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4 LUA_CPATH LUA_CPATH_5_2 LUA_CPATH_5_3 LUA_CPATH_5_4
+
 # See https://www.gnu.org/software/make/manual/html_node/Makefile-Conventions.html
 prefix ?= /usr/local
 datarootdir ?= $(prefix)/share
@@ -17,7 +19,7 @@ else
 LUA = $(LUA_INTERPRETER)
 SHEBANG = \#!/usr/bin/env $(LUA_INTERPRETER)
 endif
-LUA_VERSION ?= $(shell $(LUA) -e 'print(_VERSION:match(" (5%.[1234])$$"))')
+LUA_VERSION ?= $(shell unset $(LUA_ENV_VARS); $(LUA) -e 'print(_VERSION:match(" (5%.[1234])$$"))')
 rocks_tree ?= $(prefix)
 luarocksconfdir ?= $(sysconfdir)/luarocks
 luadir ?= $(datarootdir)/lua/$(LUA_VERSION)
@@ -121,7 +123,7 @@ install-binary: build-binary/luarocks.exe build-binary/luarocks-admin.exe
 # ----------------------------------------
 
 bootstrap: $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua
-	(unset LUA_INIT LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4 LUA_CPATH LUA_CPATH_5_2 LUA_CPATH_5_3 LUA_CPATH_5_4; \
+	(unset $(LUA_ENV_VARS); \
 	LUA_PATH="./src/?.lua;;" \
 	LUAROCKS_SYSCONFDIR="$(DESTDIR)$(luarocksconfdir)" \
 	"$(LUA)" ./src/bin/luarocks make --tree="$(DESTDIR)$(rocks_tree)")
