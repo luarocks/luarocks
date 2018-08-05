@@ -94,7 +94,7 @@ cd ..
 rm -rf "release-unix"
 
 cd "release-windows/$out-win32"
-rm -rf makedist Makefile configure .travis.yml .gitignore test appveyor* .appveyor
+rm -rf makedist Makefile GNUmakefile configure .travis.yml .gitignore test appveyor* .appveyor
 cd ..
 zip -r ../"$out-win32.zip" "$out-win32"
 cd ..
