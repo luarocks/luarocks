@@ -31,7 +31,7 @@ all: build
 # Base build
 # ----------------------------------------
 
-build: luarocks luarocks-admin ./build/luarocks ./build/luarocks-admin
+build: ./build/luarocks ./build/luarocks-admin
 
 config-$(LUA_VERSION).lua.in:
 	@printf -- '-- LuaRocks configuration\n\n'\
@@ -47,22 +47,6 @@ config-$(LUA_VERSION).lua.in:
 	"$$([ -n "$(LUA_LIBDIR)" ] && printf '   LUA_LIBDIR = "%s";\\n' "$(LUA_LIBDIR)")"\
 	'}\n'\
 	> $@
-
-luarocks: config-$(LUA_VERSION).lua.in
-	rm -f src/luarocks/core/hardcoded.lua
-	echo "#!/bin/sh" > luarocks
-	echo "unset LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4" >> luarocks
-	echo 'LUAROCKS_SYSCONFDIR="$(luarocksconfdir)" LUA_PATH="$(CURDIR)/src/?.lua;;" exec "$(LUA)" "$(CURDIR)/src/bin/luarocks" --project-tree="$(CURDIR)/lua_modules" "$$@"' >> luarocks
-	chmod +rx ./luarocks
-	./luarocks init
-	cp config-$(LUA_VERSION).lua.in .luarocks/config-$(LUA_VERSION).lua
-
-luarocks-admin:
-	rm -f src/luarocks/core/hardcoded.lua
-	echo "#!/bin/sh" > luarocks-admin
-	echo "unset LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4" >> luarocks-admin
-	echo 'LUAROCKS_SYSCONFDIR="$(luarocksconfdir)" LUA_PATH="$(CURDIR)/src/?.lua;;" exec "$(LUA)" "$(CURDIR)/src/bin/luarocks-admin" --project-tree="$(CURDIR)/lua_modules" "$$@"' >> luarocks-admin
-	chmod +rx ./luarocks-admin
 
 ./build/luarocks: src/bin/luarocks
 	mkdir -p "$(@D)"
@@ -158,8 +142,6 @@ windows-clean:
 
 clean: windows-clean
 	rm -rf ./config.unix \
-		./luarocks \
-		./luarocks-admin \
 		./build/ \
 		build-binary \
 		./.luarocks \
