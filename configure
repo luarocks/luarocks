@@ -5,7 +5,7 @@
 prefix="/usr/local"
 sysconfdir="$prefix/etc"
 luarocksconfdir="$sysconfdir/luarocks"
-ROCKS_TREE="$prefix"
+rocks_tree="$prefix"
 
 # ----------------------------------------------------------------------------
 # FUNCTION DEFINITIONS
@@ -252,8 +252,8 @@ do
    # -----------------------------------------
    --rocks-tree)
       [ -n "$value" ] || die "Missing value in flag $key."
-      ROCKS_TREE="$(canonicalpath "$value")"
-      ROCKS_TREE_SET=yes
+      rocks_tree="$(canonicalpath "$value")"
+      rocks_tree_SET=yes
       ;;
 
    # Where is your Lua interpreter:
@@ -347,9 +347,9 @@ then
    luarocksconfdir=$sysconfdir/luarocks
 fi
 
-if [ "$prefix_SET" = "yes" ] && [ ! "$ROCKS_TREE_SET" = "yes" ]
+if [ "$prefix_SET" = "yes" ] && [ ! "$rocks_tree_SET" = "yes" ]
 then
-   ROCKS_TREE=$prefix
+   rocks_tree=$prefix
 fi
 
 # ----------------------------------------
@@ -489,7 +489,7 @@ cat <<EOF > config.unix
 
 prefix=$prefix
 luarocksconfdir=$luarocksconfdir
-ROCKS_TREE=$ROCKS_TREE
+rocks_tree=$rocks_tree
 LUA_VERSION=$LUA_VERSION
 LUA_INTERPRETER=$LUA_INTERPRETER
 LUA_DIR=$LUA_DIR
@@ -520,7 +520,7 @@ BLUE "Done configuring."
 echo
 echo
 echo "LuaRocks will be installed at......: $(GREEN "$prefix")"
-echo "LuaRocks will install rocks at.....: $(GREEN "$ROCKS_TREE")"
+echo "LuaRocks will install rocks at.....: $(GREEN "$rocks_tree")"
 echo "LuaRocks configuration directory...: $(GREEN "$luarocksconfdir")"
 echo "Using Lua from.....................: $(GREEN "$LUA_DIR")"
 if [ "$LUA_BINDIR_SET" = "yes" ]; then echo "Lua bin directory..................: $(GREEN "$LUA_BINDIR")" ; fi
@@ -530,5 +530,5 @@ echo
 echo "* Type $(BOLD make) and $(BOLD make install):"
 echo "  to install to $prefix as usual."
 echo "* Type $(BOLD make bootstrap):"
-echo "  to install LuaRocks into $ROCKS_TREE as a rock."
+echo "  to install LuaRocks into $rocks_tree as a rock."
 echo

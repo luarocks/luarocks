@@ -109,7 +109,7 @@ install-binary: build-binary/luarocks.exe build-binary/luarocks-admin.exe
 # ----------------------------------------
 
 bootstrap: luarocks $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua
-	./luarocks make --tree="$(DESTDIR)$(ROCKS_TREE)"
+	./luarocks make --tree="$(DESTDIR)$(rocks_tree)"
 
 # ----------------------------------------
 # Windows binary build
