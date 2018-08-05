@@ -11,6 +11,8 @@ luadir ?= $(datarootdir)/lua/$(LUA_VERSION)
 INSTALL ?= install
 INSTALL_DATA ?= $(INSTALL) -m 644
 
+SHEBANG = '\#!$(LUA_BINDIR)/$(LUA_INTERPRETER)'
+
 LUAROCKS_FILES = $(shell find src/luarocks/ -type f -name '*.lua')
 
 all: build
@@ -46,7 +48,7 @@ luarocks-admin: config.unix
 
 ./build/luarocks: src/bin/luarocks config.unix
 	mkdir -p "$(@D)"
-	(printf '#!$(LUA_BINDIR)/$(LUA_INTERPRETER)\n'\
+	(printf '$(SHEBANG)\n'\
 	'package.loaded["luarocks.core.hardcoded"] = { SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
 	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'; \
 	tail -n +2 src/bin/luarocks \
@@ -54,7 +56,7 @@ luarocks-admin: config.unix
 
 ./build/luarocks-admin: src/bin/luarocks-admin config.unix
 	mkdir -p "$(@D)"
-	(printf '#!$(LUA_BINDIR)/$(LUA_INTERPRETER)\n'\
+	(printf '$(SHEBANG)\n'\
 	'package.loaded["luarocks.core.hardcoded"] = { SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
 	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'; \
 	tail -n +2 src/bin/luarocks-admin \
