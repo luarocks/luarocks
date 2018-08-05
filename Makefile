@@ -33,12 +33,7 @@ all: build
 
 build: luarocks luarocks-admin ./build/luarocks ./build/luarocks-admin
 
-config.unix:
-	@echo Please run the "./configure" script before building.
-	@echo
-	@exit 1
-
-config-$(LUA_VERSION).lua.in: config.unix
+config-$(LUA_VERSION).lua.in:
 	@printf -- '-- LuaRocks configuration\n\n'\
 	'rocks_trees = {\n'\
 	'   { name = "user", root = home .. "/.luarocks" };\n'\
@@ -53,7 +48,7 @@ config-$(LUA_VERSION).lua.in: config.unix
 	'}\n'\
 	> $@
 
-luarocks: config.unix config-$(LUA_VERSION).lua.in
+luarocks: config-$(LUA_VERSION).lua.in
 	rm -f src/luarocks/core/hardcoded.lua
 	echo "#!/bin/sh" > luarocks
 	echo "unset LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4" >> luarocks
@@ -62,14 +57,14 @@ luarocks: config.unix config-$(LUA_VERSION).lua.in
 	./luarocks init
 	cp config-$(LUA_VERSION).lua.in .luarocks/config-$(LUA_VERSION).lua
 
-luarocks-admin: config.unix
+luarocks-admin:
 	rm -f src/luarocks/core/hardcoded.lua
 	echo "#!/bin/sh" > luarocks-admin
 	echo "unset LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4" >> luarocks-admin
 	echo 'LUAROCKS_SYSCONFDIR="$(luarocksconfdir)" LUA_PATH="$(CURDIR)/src/?.lua;;" exec "$(LUA_BINDIR)/$(LUA_INTERPRETER)" "$(CURDIR)/src/bin/luarocks-admin" --project-tree="$(CURDIR)/lua_modules" "$$@"' >> luarocks-admin
 	chmod +rx ./luarocks-admin
 
-./build/luarocks: src/bin/luarocks config.unix
+./build/luarocks: src/bin/luarocks
 	mkdir -p "$(@D)"
 	(printf '$(SHEBANG)\n'\
 	'package.loaded["luarocks.core.hardcoded"] = { SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
@@ -77,7 +72,7 @@ luarocks-admin: config.unix
 	tail -n +2 src/bin/luarocks \
 	)> "$@"
 
-./build/luarocks-admin: src/bin/luarocks-admin config.unix
+./build/luarocks-admin: src/bin/luarocks-admin
 	mkdir -p "$(@D)"
 	(printf '$(SHEBANG)\n'\
 	'package.loaded["luarocks.core.hardcoded"] = { SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
