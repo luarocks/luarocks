@@ -2,16 +2,26 @@
 -include config.unix
 
 # See https://www.gnu.org/software/make/manual/html_node/Makefile-Conventions.html
+prefix ?= /usr/local
 datarootdir ?= $(prefix)/share
 bindir ?= $(prefix)/bin
-
-luadir ?= $(datarootdir)/lua/$(LUA_VERSION)
-
-
+sysconfdir ?= $(prefix)/etc
 INSTALL ?= install
 INSTALL_DATA ?= $(INSTALL) -m 644
 
-SHEBANG = '\#!$(LUA_BINDIR)/$(LUA_INTERPRETER)'
+LUA_INTERPRETER ?= lua
+ifdef LUA_BINDIR
+LUA = $(LUA_BINDIR)/$(LUA_INTERPRETER)
+SHEBANG = \#!$(LUA_BINDIR)/$(LUA_INTERPRETER)
+else
+LUA = $(LUA_INTERPRETER)
+SHEBANG = \#!/usr/bin/env $(LUA_INTERPRETER)
+endif
+LUA_VERSION ?= $(shell $(LUA) -e 'print(_VERSION:match(" (5%.[1234])$$"))')
+rocks_tree ?= $(prefix)
+luarocksconfdir ?= $(sysconfdir)/luarocks
+luadir ?= $(datarootdir)/lua/$(LUA_VERSION)
+
 
 LUAROCKS_FILES = $(shell find src/luarocks/ -type f -name '*.lua')
 
