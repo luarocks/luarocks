@@ -51,6 +51,8 @@ build: ./build/luarocks ./build/luarocks-admin
 	'}\n'\
 	> $@
 
+ifneq ($(BUILD_TYPE),binary)
+
 ./build/luarocks: src/bin/luarocks
 	mkdir -p "$(@D)"
 	(printf '$(SHEBANG)\n'\
@@ -66,6 +68,18 @@ build: ./build/luarocks ./build/luarocks-admin
 	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'; \
 	tail -n +2 src/bin/luarocks-admin \
 	)> "$@"
+
+else
+
+./build/luarocks: src/bin/luarocks $(LUAROCKS_FILES)
+	(unset $(LUA_ENV_VARS); \
+	"$(LUA)" binary/all_in_one "$<" "$(LUA_DIR)" "^src/luarocks/admin/" "$(luarocksconfdir)" "$(@D)" $(BINARY_PLATFORM) $(CC) $(NM) $(SYSROOT))
+
+./build/luarocks-admin: src/bin/luarocks-admin $(LUAROCKS_FILES)
+	(unset $(LUA_ENV_VARS); \
+	"$(LUA)" binary/all_in_one "$<" "$(LUA_DIR)" "^src/luarocks/cmd/" "$(luarocksconfdir)" "$(@D)" $(BINARY_PLATFORM) $(CC) $(NM) $(SYSROOT))
+
+endif
 
 # ----------------------------------------
 # Regular install
@@ -96,29 +110,15 @@ uninstall:
 	rm -rf $(INSTALL_FILES)
 
 # ----------------------------------------
-# Binary build
-# ----------------------------------------
-
-binary: build-binary/luarocks.exe build-binary/luarocks-admin.exe
-
-build-binary/luarocks.exe: src/bin/luarocks $(LUAROCKS_FILES)
-	(unset $(LUA_ENV_VARS); \
-	"$(LUA)" binary/all_in_one "$<" "$(LUA_DIR)" "^src/luarocks/admin/" "$(luarocksconfdir)" "$(@D)" $(BINARY_PLATFORM) $(CC) $(NM) $(SYSROOT))
-
-build-binary/luarocks-admin.exe: src/bin/luarocks-admin $(LUAROCKS_FILES)
-	(unset $(LUA_ENV_VARS); \
-	"$(LUA)" binary/all_in_one "$<" "$(LUA_DIR)" "^src/luarocks/cmd/" "$(luarocksconfdir)" "$(@D)" $(BINARY_PLATFORM) $(CC) $(NM) $(SYSROOT))
-
-# ----------------------------------------
 # Binary install
 # ----------------------------------------
 
 LUAROCKS_CORE_FILES = $(wildcard src/luarocks/core/* src/luarocks/loader.lua)
-INSTALL_BINARY_FILES = $(patsubst src/%, $(DESTDIR)$(luadir)/%, $(LUAROCKS_CORE_FILES))
+INSTALL_BINARY_FILES =  $(DESTDIR)$(bindir)/luarocks \
+	$(DESTDIR)$(bindir)/luarocks-admin \
+	$(patsubst src/%, $(DESTDIR)$(luadir)/%, $(LUAROCKS_CORE_FILES))
 
-install-binary: $(INSTALL_BINARY_FILES) build-binary/luarocks.exe build-binary/luarocks-admin.exe
-	$(INSTALL) -D build-binary/luarocks.exe "$(DESTDIR)$(bindir)/luarocks"
-	$(INSTALL) -D build-binary/luarocks-admin.exe "$(DESTDIR)$(bindir)/luarocks-admin"
+install-binary: $(INSTALL_BINARY_FILES)
 
 # ----------------------------------------
 # Bootstrap install
@@ -146,7 +146,6 @@ windows-clean:
 
 clean: windows-clean
 	rm -rf ./config.unix \
-		build-binary \
 		./build/
 
 .PHONY: all build install install-config binary install-binary bootstrap clean windows-binary windows-clean

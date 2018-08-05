@@ -407,16 +407,16 @@ local function generate(main_program, dir, skip)
    table.insert(out, c_main)
 
    os.remove(hardcoded)
-   
-   local c_filename = TARGET .. "/" .. program_name .. ".exe.c"
+
+   local c_filename = TARGET .. "/" .. program_name .. ".c"
    local fd = io.open(c_filename, "w")
    fd:write(reindent_c(table.concat(out, "\n")))
    fd:close()
 
    deps.check_lua(cfg.variables)
-   
+
    cmd = table.concat(filter_in(nonnull, {
-      CC, "-o", TARGET .. "/" .. program_name .. ".exe",
+      CC, "-o", TARGET .. "/" .. program_name,
       "-I", cfg.variables.LUA_INCDIR,
       if_platform("unix", "-rdynamic"),
       "-Os",

@@ -16,7 +16,7 @@ windows-binary: windows-deps/lib/liblua.a windows-deps/lib/libssl.a windows-deps
 	STATIC_GCC_RANLIB=$(MINGW_PREFIX)-ranlib \
 	STATIC_GCC_CC=$(MINGW_PREFIX)-gcc \
 	LUAROCKS_CROSS_COMPILING=1 \
-	$(MAKE) binary LUA_DIR=$(CURDIR)/windows-deps CC=$(MINGW_PREFIX)-gcc NM=$(MINGW_PREFIX)-nm BINARY_PLATFORM=windows BINARY_TARGET=build-windows-binary BINARY_SYSROOT=$(MINGW_SYSROOT)
+	$(MAKE) BUILD_TYPE=BINARY LUA_DIR=$(CURDIR)/windows-deps CC=$(MINGW_PREFIX)-gcc NM=$(MINGW_PREFIX)-nm BINARY_PLATFORM=windows BINARY_TARGET=build-windows-binary BINARY_SYSROOT=$(MINGW_SYSROOT)
 
 build-windows-deps/lua-$(LIBLUA_VERSION).tar.gz:
 	mkdir -p $(@D)
