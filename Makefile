@@ -1,6 +1,13 @@
 
 -include config.unix
 
+# See https://www.gnu.org/software/make/manual/html_node/Makefile-Conventions.html
+datarootdir ?= $(prefix)/share
+bindir ?= $(prefix)/bin
+
+luadir ?= $(datarootdir)/lua/$(LUA_VERSION)
+
+
 INSTALL ?= install
 INSTALL_DATA ?= $(INSTALL) -m 644
 
@@ -41,7 +48,7 @@ luarocks-admin: config.unix
 	mkdir -p "$(@D)"
 	(printf '#!$(LUA_BINDIR)/$(LUA_INTERPRETER)\n'\
 	'package.loaded["luarocks.core.hardcoded"] = { SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
-	'package.path=[[$(prefix)/share/lua/$(LUA_VERSION)/?.lua;]] .. package.path\n'; \
+	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'; \
 	tail -n +2 src/bin/luarocks \
 	)> "$@"
 
@@ -49,7 +56,7 @@ luarocks-admin: config.unix
 	mkdir -p "$(@D)"
 	(printf '#!$(LUA_BINDIR)/$(LUA_INTERPRETER)\n'\
 	'package.loaded["luarocks.core.hardcoded"] = { SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
-	'package.path=[[$(prefix)/share/lua/$(LUA_VERSION)/?.lua;]] .. package.path\n'; \
+	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'; \
 	tail -n +2 src/bin/luarocks-admin \
 	)> "$@"
 
@@ -57,15 +64,15 @@ luarocks-admin: config.unix
 # Regular install
 # ----------------------------------------
 
-install: $(DESTDIR)$(prefix)/bin/luarocks $(DESTDIR)$(prefix)/bin/luarocks-admin $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua $(patsubst src/%, $(DESTDIR)$(prefix)/share/lua/$(LUA_VERSION)/%, $(LUAROCKS_FILES))
+install: $(DESTDIR)$(bindir)/luarocks $(DESTDIR)$(bindir)/luarocks-admin $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua $(patsubst src/%, $(DESTDIR)$(luadir)/%, $(LUAROCKS_FILES))
 
-$(DESTDIR)$(prefix)/bin/luarocks: ./build/luarocks
+$(DESTDIR)$(bindir)/luarocks: ./build/luarocks
 	$(INSTALL) -D "$<" "$@"
 
-$(DESTDIR)$(prefix)/bin/luarocks-admin: ./build/luarocks-admin
+$(DESTDIR)$(bindir)/luarocks-admin: ./build/luarocks-admin
 	$(INSTALL) -D "$<" "$@"
 
-$(DESTDIR)$(prefix)/share/lua/$(LUA_VERSION)/luarocks/%.lua: src/luarocks/%.lua
+$(DESTDIR)$(luadir)/luarocks/%.lua: src/luarocks/%.lua
 	$(INSTALL_DATA) -D "$<" "$@"
 
 $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua: config-$(LUA_VERSION).lua.in
@@ -90,14 +97,14 @@ $(BINARY_TARGET)/luarocks-admin.exe: luarocks
 # ----------------------------------------
 
 install-binary: build-binary/luarocks.exe build-binary/luarocks-admin.exe
-	mkdir -p "$(DESTDIR)$(prefix)/bin"
-	cp build-binary/luarocks.exe "$(DESTDIR)$(prefix)/bin/luarocks"
-	chmod +rx "$(DESTDIR)$(prefix)/bin/luarocks"
-	cp build-binary/luarocks-admin.exe "$(DESTDIR)$(prefix)/bin/luarocks-admin"
-	chmod +rx "$(DESTDIR)$(prefix)/bin/luarocks-admin"
-	mkdir -p "$(DESTDIR)$(prefix)/share/lua/$(LUA_VERSION)/luarocks/core"
-	cp -a src/luarocks/core/* "$(DESTDIR)$(prefix)/share/lua/$(LUA_VERSION)/luarocks/core"
-	cp -a src/luarocks/loader.lua "$(DESTDIR)$(prefix)/share/lua/$(LUA_VERSION)/luarocks/"
+	mkdir -p "$(DESTDIR)$(bindir)"
+	cp build-binary/luarocks.exe "$(DESTDIR)$(bindir)/luarocks"
+	chmod +rx "$(DESTDIR)$(bindir)/luarocks"
+	cp build-binary/luarocks-admin.exe "$(DESTDIR)$(bindir)/luarocks-admin"
+	chmod +rx "$(DESTDIR)$(bindir)/luarocks-admin"
+	mkdir -p "$(DESTDIR)$(luadir)/luarocks/core"
+	cp -a src/luarocks/core/* "$(DESTDIR)$(luadir)/luarocks/core"
+	cp -a src/luarocks/loader.lua "$(DESTDIR)$(luadir)/luarocks/"
 
 # ----------------------------------------
 # Bootstrap install
