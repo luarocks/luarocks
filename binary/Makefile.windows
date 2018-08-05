@@ -16,52 +16,52 @@ windows-binary: windows-deps/lib/liblua.a windows-deps/lib/libssl.a windows-deps
 	STATIC_GCC_RANLIB=$(MINGW_PREFIX)-ranlib \
 	STATIC_GCC_CC=$(MINGW_PREFIX)-gcc \
 	LUAROCKS_CROSS_COMPILING=1 \
-	make binary LUA_DIR=$(CURDIR)/windows-deps CC=$(MINGW_PREFIX)-gcc NM=$(MINGW_PREFIX)-nm BINARY_PLATFORM=windows BINARY_TARGET=build-windows-binary BINARY_SYSROOT=$(MINGW_SYSROOT)
+	$(MAKE) binary LUA_DIR=$(CURDIR)/windows-deps CC=$(MINGW_PREFIX)-gcc NM=$(MINGW_PREFIX)-nm BINARY_PLATFORM=windows BINARY_TARGET=build-windows-binary BINARY_SYSROOT=$(MINGW_SYSROOT)
 
 build-windows-deps/lua-$(LIBLUA_VERSION).tar.gz:
-	mkdir -p build-windows-deps
+	mkdir -p $(@D)
 	cd build-windows-deps && curl -OL https://www.lua.org/ftp/lua-$(LIBLUA_VERSION).tar.gz
 build-windows-deps/lua-$(LIBLUA_VERSION): build-windows-deps/lua-$(LIBLUA_VERSION).tar.gz
 	cd build-windows-deps && tar zxvpf lua-$(LIBLUA_VERSION).tar.gz
 windows-deps/lib/liblua.a: build-windows-deps/lua-$(LIBLUA_VERSION)
-	cd build-windows-deps/lua-$(LIBLUA_VERSION)/src && make LUA_A=liblua.a CC=$(MINGW_PREFIX)-gcc AR="$(MINGW_PREFIX)-ar rcu" RANLIB=$(MINGW_PREFIX)-ranlib SYSCFLAGS= SYSLIBS= SYSLDFLAGS= liblua.a
+	$(MAKE) -C "build-windows-deps/lua-$(LIBLUA_VERSION)/src" LUA_A=liblua.a CC=$(MINGW_PREFIX)-gcc AR="$(MINGW_PREFIX)-ar rcu" RANLIB=$(MINGW_PREFIX)-ranlib SYSCFLAGS= SYSLIBS= SYSLDFLAGS= liblua.a
 	mkdir -p windows-deps/include
 	cd build-windows-deps/lua-$(LIBLUA_VERSION)/src && cp lauxlib.h lua.h lua.hpp luaconf.h lualib.h ../../../windows-deps/include
 	mkdir -p windows-deps/lib
 	cd build-windows-deps/lua-$(LIBLUA_VERSION)/src && cp liblua.a ../../../windows-deps/lib
 
 build-windows-deps/openssl-$(OPENSSL_VERSION).tar.gz:
-	mkdir -p build-windows-deps
+	mkdir -p $(@D)
 	cd build-windows-deps && curl -OL https://www.openssl.org/source/openssl-$(OPENSSL_VERSION).tar.gz
 build-windows-deps/openssl-$(OPENSSL_VERSION): build-windows-deps/openssl-$(OPENSSL_VERSION).tar.gz
 	cd build-windows-deps && tar zxvpf openssl-$(OPENSSL_VERSION).tar.gz
 windows-deps/lib/libssl.a: build-windows-deps/openssl-$(OPENSSL_VERSION)
 	cd build-windows-deps/openssl-$(OPENSSL_VERSION) && ./Configure --prefix=$(CURDIR)/windows-deps --cross-compile-prefix=$(MINGW_PREFIX)- $(OPENSSL_PLATFORM)
-	cd build-windows-deps/openssl-$(OPENSSL_VERSION) && make
-	cd build-windows-deps/openssl-$(OPENSSL_VERSION) && make install_sw
+	$(MAKE) -C "build-windows-deps/openssl-$(OPENSSL_VERSION)"
+	$(MAKE) -C "build-windows-deps/openssl-$(OPENSSL_VERSION)" install_sw
 
 build-windows-deps/zlib-$(ZLIB_VERSION).tar.gz:
-	mkdir -p build-windows-deps
+	mkdir -p $(@D)
 	cd build-windows-deps && curl -OL https://www.zlib.net/zlib-$(ZLIB_VERSION).tar.gz
 build-windows-deps/zlib-$(ZLIB_VERSION): build-windows-deps/zlib-$(ZLIB_VERSION).tar.gz
 	cd build-windows-deps && tar zxvpf zlib-$(ZLIB_VERSION).tar.gz
 windows-deps/lib/libz.a: build-windows-deps/zlib-$(ZLIB_VERSION)
 	cd build-windows-deps/zlib-$(ZLIB_VERSION) && sed -ie "s,dllwrap,$(MINGW_PREFIX)-dllwrap," win32/Makefile.gcc
 	cd build-windows-deps/zlib-$(ZLIB_VERSION) && ./configure --prefix=$(CURDIR)/windows-deps --static
-	cd build-windows-deps/zlib-$(ZLIB_VERSION) && make -f win32/Makefile.gcc CC=$(MINGW_PREFIX)-gcc AR=$(MINGW_PREFIX)-ar RC=$(MINGW_PREFIX)-windres STRIP=$(MINGW_PREFIX)-strip IMPLIB=libz.dll.a
+	cd build-windows-deps/zlib-$(ZLIB_VERSION) && $(MAKE) -f win32/Makefile.gcc CC=$(MINGW_PREFIX)-gcc AR=$(MINGW_PREFIX)-ar RC=$(MINGW_PREFIX)-windres STRIP=$(MINGW_PREFIX)-strip IMPLIB=libz.dll.a
 	mkdir -p windows-deps/include
 	cd build-windows-deps/zlib-$(ZLIB_VERSION) && cp zlib.h zconf.h ../../windows-deps/include
 	cd build-windows-deps/zlib-$(ZLIB_VERSION) && $(MINGW_PREFIX)-strip -g libz.a
-	mkdir -p windows-deps/lib
+	mkdir -p $(@D)
 	cd build-windows-deps/zlib-$(ZLIB_VERSION) && cp libz.a ../../windows-deps/lib
 
 build-windows-deps/bzip2-$(BZIP2_VERSION).tar.gz:
-	mkdir -p build-windows-deps
+	mkdir -p $(@D)
 	cd build-windows-deps && curl -OL http://www.bzip.org/$(BZIP2_VERSION)/bzip2-$(BZIP2_VERSION).tar.gz
 build-windows-deps/bzip2-$(BZIP2_VERSION): build-windows-deps/bzip2-$(BZIP2_VERSION).tar.gz
 	cd build-windows-deps && tar zxvpf bzip2-$(BZIP2_VERSION).tar.gz
 windows-deps/lib/libbz2.a: build-windows-deps/bzip2-$(BZIP2_VERSION)
-	cd build-windows-deps/bzip2-$(BZIP2_VERSION) && make libbz2.a CC=$(MINGW_PREFIX)-gcc AR=$(MINGW_PREFIX)-ar RANLIB=$(MINGW_PREFIX)-ranlib
+	$(MAKE) -C "build-windows-deps/bzip2-$(BZIP2_VERSION)" libbz2.a CC=$(MINGW_PREFIX)-gcc AR=$(MINGW_PREFIX)-ar RANLIB=$(MINGW_PREFIX)-ranlib
 	mkdir -p windows-deps/include
 	cd build-windows-deps/bzip2-$(BZIP2_VERSION) && cp bzlib.h ../../windows-deps/include
 	cd build-windows-deps/bzip2-$(BZIP2_VERSION) && $(MINGW_PREFIX)-strip -g libbz2.a
@@ -69,5 +69,4 @@ windows-deps/lib/libbz2.a: build-windows-deps/bzip2-$(BZIP2_VERSION)
 	cd build-windows-deps/bzip2-$(BZIP2_VERSION) && cp libbz2.a ../../windows-deps/lib
 
 windows-clean:
-	rm -rf windows-deps
-	rm -rf build-windows-binary
+	rm -rf windows-deps build-windows-binary
