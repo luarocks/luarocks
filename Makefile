@@ -2,6 +2,7 @@
 -include config.unix
 
 INSTALL ?= install
+INSTALL_DATA ?= $(INSTALL) -m 644
 
 
 all: build
@@ -66,8 +67,7 @@ $(DESTDIR)$(prefix)/bin/luarocks-admin: ./build/luarocks-admin
 	$(INSTALL) -D "$<" "$@"
 
 $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua: config-$(LUA_VERSION).lua.in
-	mkdir -p "$(DESTDIR)$(luarocksconfdir)"
-	cp config-$(LUA_VERSION).lua.in "$(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua"
+	$(INSTALL_DATA) -D "$<" "$@"
 
 # ----------------------------------------
 # Binary build
