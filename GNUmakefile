@@ -146,9 +146,7 @@ windows-clean:
 
 clean: windows-clean
 	rm -rf ./config.unix \
-		./build/ \
 		build-binary \
-		./.luarocks \
-		./lua_modules
+		./build/
 
 .PHONY: all build install install-config binary install-binary bootstrap clean windows-binary windows-clean
