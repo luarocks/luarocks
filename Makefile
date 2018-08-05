@@ -119,12 +119,12 @@ windows-clean:
 # ----------------------------------------
 
 clean:
-	rm -f ./config.unix
-	rm -f ./luarocks
-	rm -f ./luarocks-admin
-	rm -rf ./build/
-	rm -rf build-binary
-	rm -rf ./.luarocks
-	rm -rf ./lua_modules
+	rm -rf ./config.unix \
+		./luarocks \
+		./luarocks-admin \
+		./build/ \
+		build-binary \
+		./.luarocks \
+		./lua_modules
 
 .PHONY: all build install binary install-binary bootstrap clean windows-binary windows-clean
