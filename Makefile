@@ -4,13 +4,13 @@
 INSTALL ?= install
 
 
-all: luarocks luarocks-admin
+all: build
 
 # ----------------------------------------
 # Base build
 # ----------------------------------------
 
-build: all
+build: luarocks luarocks-admin
 
 config.unix:
 	@echo Please run the "./configure" script before building.
