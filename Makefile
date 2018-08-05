@@ -4,6 +4,7 @@
 INSTALL ?= install
 INSTALL_DATA ?= $(INSTALL) -m 644
 
+LUAROCKS_FILES = $(shell find src/luarocks/ -type f -name '*.lua')
 
 all: build
 
@@ -56,15 +57,16 @@ luarocks-admin: config.unix
 # Regular install
 # ----------------------------------------
 
-install: all $(DESTDIR)$(prefix)/bin/luarocks $(DESTDIR)$(prefix)/bin/luarocks-admin $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua
-	mkdir -p "$(DESTDIR)$(prefix)/share/lua/$(LUA_VERSION)/luarocks"
-	cp -a src/luarocks/* "$(DESTDIR)$(prefix)/share/lua/$(LUA_VERSION)/luarocks"
+install: $(DESTDIR)$(prefix)/bin/luarocks $(DESTDIR)$(prefix)/bin/luarocks-admin $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua $(patsubst src/%, $(DESTDIR)$(prefix)/share/lua/$(LUA_VERSION)/%, $(LUAROCKS_FILES))
 
 $(DESTDIR)$(prefix)/bin/luarocks: ./build/luarocks
 	$(INSTALL) -D "$<" "$@"
 
 $(DESTDIR)$(prefix)/bin/luarocks-admin: ./build/luarocks-admin
 	$(INSTALL) -D "$<" "$@"
+
+$(DESTDIR)$(prefix)/share/lua/$(LUA_VERSION)/luarocks/%.lua: src/luarocks/%.lua
+	$(INSTALL_DATA) -D "$<" "$@"
 
 $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua: config-$(LUA_VERSION).lua.in
 	$(INSTALL_DATA) -D "$<" "$@"
