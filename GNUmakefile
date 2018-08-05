@@ -78,6 +78,8 @@ INSTALL_FILES = $(DESTDIR)$(bindir)/luarocks \
 
 install: $(INSTALL_FILES)
 
+install-config: $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua
+
 $(DESTDIR)$(bindir)/luarocks: ./build/luarocks
 	$(INSTALL) -D "$<" "$@"
 
@@ -154,4 +156,4 @@ clean: windows-clean
 		./.luarocks \
 		./lua_modules
 
-.PHONY: all build install binary install-binary bootstrap clean windows-binary windows-clean
+.PHONY: all build install install-config binary install-binary bootstrap clean windows-binary windows-clean
