@@ -38,7 +38,8 @@ config.unix:
 	@echo
 	@exit 1
 
-config-$(LUA_VERSION).lua.in: config.unix
+$(builddir)/config-$(LUA_VERSION).lua: config.unix
+	mkdir -p "$(@D)"
 	@printf -- '-- LuaRocks configuration\n\n'\
 	'rocks_trees = {\n'\
 	'   { name = "user", root = home .. "/.luarocks" };\n'\
@@ -53,14 +54,14 @@ config-$(LUA_VERSION).lua.in: config.unix
 	'}\n'\
 	> $@
 
-luarocks: config.unix config-$(LUA_VERSION).lua.in
+luarocks: config.unix $(builddir)/config-$(LUA_VERSION).lua
 	rm -f src/luarocks/core/hardcoded.lua
 	echo "#!/bin/sh" > luarocks
 	echo "unset LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4" >> luarocks
 	echo 'LUAROCKS_SYSCONFDIR="$(luarocksconfdir)" LUA_PATH="$(CURDIR)/src/?.lua;;" exec "$(LUA)" "$(CURDIR)/src/bin/luarocks" --project-tree="$(CURDIR)/lua_modules" "$$@"' >> luarocks
 	chmod +rx ./luarocks
 	./luarocks init
-	cp config-$(LUA_VERSION).lua.in .luarocks/config-$(LUA_VERSION).lua
+	cp $(builddir)/config-$(LUA_VERSION).lua .luarocks/config-$(LUA_VERSION).lua
 
 luarocks-admin: config.unix
 	rm -f src/luarocks/core/hardcoded.lua
@@ -105,7 +106,7 @@ $(DESTDIR)$(bindir)/luarocks-admin: ./build/luarocks-admin
 $(DESTDIR)$(luadir)/luarocks/%.lua: src/luarocks/%.lua
 	$(INSTALL_DATA) -D "$<" "$@"
 
-$(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua: config-$(LUA_VERSION).lua.in
+$(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua: ./build/config-$(LUA_VERSION).lua
 	$(INSTALL_DATA) -D "$<" "$@"
 
 uninstall:
