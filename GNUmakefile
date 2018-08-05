@@ -35,7 +35,8 @@ all: build
 
 build: ./build/luarocks ./build/luarocks-admin
 
-config-$(LUA_VERSION).lua.in:
+./build/config-$(LUA_VERSION).lua:
+	mkdir -p "$(@D)"
 	@printf -- '-- LuaRocks configuration\n\n'\
 	'rocks_trees = {\n'\
 	'   { name = "user", root = home .. "/.luarocks" };\n'\
@@ -86,7 +87,7 @@ $(DESTDIR)$(bindir)/luarocks-admin: ./build/luarocks-admin
 $(DESTDIR)$(luadir)/luarocks/%.lua: src/luarocks/%.lua
 	$(INSTALL_DATA) -D "$<" "$@"
 
-$(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua: config-$(LUA_VERSION).lua.in
+$(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua: ./build/config-$(LUA_VERSION).lua
 	$(INSTALL_DATA) -D "$<" "$@"
 
 uninstall:
