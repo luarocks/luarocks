@@ -86,65 +86,60 @@ BLUE() {
 
 show_help() {
 cat <<EOF
+Usage: ./configure [OPTION]... [VAR=VALUE]...
 
-Configure the build process of LuaRocks.
+To assign environment variables (e.g., CC, CFLAGS...), specify them as
+VAR=VALUE.  See below for descriptions of some of the useful variables.
 
---help                         This help.
+Defaults for the options are specified in brackets.
 
-Where to install LuaRocks:
---------------------------
+Configuration:
+  -h, --help                   display this help and exit
 
---prefix=PREFIX                Directory where LuaRocks should be installed.
-                               - Default is $prefix
---sysconfdir=SYSCONFDIR        Where system config files should be installed.
-                               - Default is $sysconfdir
-                                 (PREFIX/etc)
---luarocksconfdir=DIR          Where the luarocks config file should be installed.
-                               - Default is $luarocksconfdir
-                                 (SYSCONFDIR/luarocks)
+Installation directories:
+  --prefix=PREFIX              Directory where LuaRocks should be installed
+                               [/usr/local]
+
+By default, \`make install' will install all the files in \`/usr/local',
+\`/usr/local/lib' etc.  You can specify an installation prefix other than
+\`/usr/local/' using \`--prefix', for instance \`--prefix=\$HOME'.
+
+For better control, use the options below.
+
+Fine tuning of the installation directories:
+  --sysconfdir=SYSCONFDIR      Directory for single-machine config [PREFIX/etc]
+  --luarocksconfdir=DIR        Directory for luarocks config [SYSCONFDIR/luarocks]
 
 Where to install files provided by rocks:
------------------------------------------
-
---rocks-tree=ROCKS_DIR         Root of the local tree of installed rocks.
+  --rocks-tree=DIR             Root of the local tree of installed rocks.
                                To make files installed in this location
                                accessible to Lua and your \$PATH, see
                                "luarocks path --help" after installation.
                                Avoid using paths controlled by your
                                system's package manager, such as /usr.
-                               - Default is $prefix
-                                 (PREFIX)
+                               - Default is [PREFIX]
 
 Where is your Lua interpreter:
-------------------------------
-
---lua-version=VERSION          Use specific Lua version: 5.1, 5.2, 5.3, or 5.4
+  --lua-version=VERSION        Use specific Lua version: 5.1, 5.2, 5.3, or 5.4
                                - Default is auto-detected.
---with-lua=LUA_DIR             Use Lua from given directory.
-                               - Default is auto-detected from your \$PATH
-                                 (or the parent directory of LUA_BINDIR
-                                 if --with-lua-bin is used).
---with-lua-bin=LUA_BINDIR      You can also specify Lua's bin dir.
+  --with-lua-bin=LUA_BINDIR    Location of your Lua binar(y/ies).
                                - Default is the directory of the
-                                 auto-detected Lua interpreter,
-                                 (or LUA_DIR/bin if --with-lua is used)
---with-lua-include=LUA_INCDIR  Lua's includes dir.
-                               - Default is LUA_DIR/include
---with-lua-lib=LUA_LIBDIR      Lua's libraries dir.
-                               - Default is LUA_DIR/lib
---with-lua-interpreter=NAME    Lua interpreter name
+                               auto-detected Lua interpreter,
+                               (or DIR/bin if --with-lua is used)
+  --with-lua=LUA_DIR           Use Lua from given directory. [LUA_BINDIR/..]
+  --with-lua-include=DIR       Lua's includes dir. [LUA_DIR/include]
+  --with-lua-lib=DIR           Lua's libraries dir. [LUA_DIR/lib]
+  --with-lua-interpreter=NAME  Lua interpreter name.
                                - Default is to auto-detected
 
 For specialized uses of LuaRocks:
----------------------------------
-
---force-config                 Force using a single config location.
+  --force-config               Force using a single config location.
                                Do not honor the \$LUAROCKS_CONFIG_5_x
                                or \$LUAROCKS_CONFIG environment
                                variable or the user's local config.
                                Useful to avoid conflicts when LuaRocks
                                is embedded within an application.
---disable-incdir-check         If you do not wish to use "luarocks build",
+  --disable-incdir-check       If you do not wish to use "luarocks build",
                                (e.g. when only deploying binary packages)
                                you do not need lua.h installed. This flag
                                skips the check for lua.h in "configure".
@@ -229,7 +224,7 @@ do
 
    # Help
    # ----
-   --help)
+   -h|--help)
       show_help
       exit 0
       ;;
