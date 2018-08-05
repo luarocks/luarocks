@@ -42,18 +42,20 @@ install: all $(DESTDIR)$(prefix)/bin/luarocks $(DESTDIR)$(prefix)/bin/luarocks-a
 
 $(DESTDIR)$(prefix)/bin/luarocks: src/bin/luarocks config.unix
 	mkdir -p "$(@D)"
-	echo "#!$(LUA_BINDIR)/$(LUA_INTERPRETER)" > $@
-	echo "package.loaded['luarocks.core.hardcoded'] = { SYSCONFDIR = [[$(luarocksconfdir)]] }" >> $@
-	echo "package.path=[[$(prefix)/share/lua/$(LUA_VERSION)/?.lua;]] .. package.path" >> $@
-	tail -n +2 src/bin/luarocks >> $@
+	(printf '#!$(LUA_BINDIR)/$(LUA_INTERPRETER)\n'\
+	'package.loaded["luarocks.core.hardcoded"] = { SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
+	'package.path=[[$(prefix)/share/lua/$(LUA_VERSION)/?.lua;]] .. package.path\n'; \
+	tail -n +2 src/bin/luarocks \
+	)> "$@"
 	chmod +rx $@
 
 $(DESTDIR)$(prefix)/bin/luarocks-admin: src/bin/luarocks-admin config.unix
 	mkdir -p "$(@D)"
-	echo "#!$(LUA_BINDIR)/$(LUA_INTERPRETER)" > $@
-	echo "package.loaded['luarocks.core.hardcoded'] = { SYSCONFDIR = [[$(luarocksconfdir)]] }" >> $@
-	echo "package.path=[[$(prefix)/share/lua/$(LUA_VERSION)/?.lua;]] .. package.path" >> $@
-	tail -n +2 src/bin/luarocks-admin >> $@
+	(printf '#!$(LUA_BINDIR)/$(LUA_INTERPRETER)\n'\
+	'package.loaded["luarocks.core.hardcoded"] = { SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
+	'package.path=[[$(prefix)/share/lua/$(LUA_VERSION)/?.lua;]] .. package.path\n'; \
+	tail -n +2 src/bin/luarocks-admin \
+	)> "$@"
 	chmod +rx $@
 
 $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua: config-$(LUA_VERSION).lua.in
