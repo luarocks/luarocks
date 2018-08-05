@@ -115,15 +115,12 @@ build-binary/luarocks-admin.exe: luarocks
 # Binary install
 # ----------------------------------------
 
-install-binary: build-binary/luarocks.exe build-binary/luarocks-admin.exe
-	mkdir -p "$(DESTDIR)$(bindir)"
-	cp build-binary/luarocks.exe "$(DESTDIR)$(bindir)/luarocks"
-	chmod +rx "$(DESTDIR)$(bindir)/luarocks"
-	cp build-binary/luarocks-admin.exe "$(DESTDIR)$(bindir)/luarocks-admin"
-	chmod +rx "$(DESTDIR)$(bindir)/luarocks-admin"
-	mkdir -p "$(DESTDIR)$(luadir)/luarocks/core"
-	cp -a src/luarocks/core/* "$(DESTDIR)$(luadir)/luarocks/core"
-	cp -a src/luarocks/loader.lua "$(DESTDIR)$(luadir)/luarocks/"
+LUAROCKS_CORE_FILES = $(wildcard src/luarocks/core/* src/luarocks/loader.lua)
+INSTALL_BINARY_FILES = $(patsubst src/%, $(DESTDIR)$(luadir)/%, $(LUAROCKS_CORE_FILES))
+
+install-binary: $(INSTALL_BINARY_FILES) build-binary/luarocks.exe build-binary/luarocks-admin.exe
+	$(INSTALL) -D build-binary/luarocks.exe "$(DESTDIR)$(bindir)/luarocks"
+	$(INSTALL) -D build-binary/luarocks-admin.exe "$(DESTDIR)$(bindir)/luarocks-admin"
 
 # ----------------------------------------
 # Bootstrap install
