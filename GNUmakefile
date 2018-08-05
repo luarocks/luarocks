@@ -144,16 +144,16 @@ bootstrap: luarocks $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua
 # ----------------------------------------
 
 windows-binary: luarocks
-	make -f binary/Makefile.windows windows-binary
+	$(MAKE) -f binary/Makefile.windows windows-binary
 
 windows-clean:
-	make -f binary/Makefile.windows windows-clean
+	$(MAKE) -f binary/Makefile.windows windows-clean
 
 # ----------------------------------------
 # Clean
 # ----------------------------------------
 
-clean:
+clean: windows-clean
 	rm -rf ./config.unix \
 		./luarocks \
 		./luarocks-admin \
