@@ -120,12 +120,12 @@ binary: build-binary/luarocks.exe build-binary/luarocks-admin.exe
 build-binary/luarocks.exe: luarocks
 	(unset $(LUA_ENV_VARS); \
 	LUA_PATH="./src/?.lua;;" \
-	"$(LUA)" binary/all_in_one "src/bin/luarocks" "$(LUA_DIR)" "^src/luarocks/admin/" "$(luarocksconfdir)" "$(@D)" $(BINARY_PLATFORM) $(BINARY_CC) $(BINARY_NM) $(BINARY_SYSROOT))
+	"$(LUA)" binary/all_in_one "src/bin/luarocks" "$(LUA_DIR)" "^src/luarocks/admin/" "$(luarocksconfdir)" "$(@D)" $(BINARY_PLATFORM) $(CC) $(NM) $(SYSROOT))
 
 build-binary/luarocks-admin.exe: luarocks
 	(unset $(LUA_ENV_VARS); \
 	LUA_PATH="./src/?.lua;;" \
-	"$(LUA)" binary/all_in_one "src/bin/luarocks-admin" "$(LUA_DIR)" "^src/luarocks/cmd/" "$(luarocksconfdir)" "$(@D)" $(BINARY_PLATFORM) $(BINARY_CC) $(BINARY_NM) $(BINARY_SYSROOT))
+	"$(LUA)" binary/all_in_one "src/bin/luarocks-admin" "$(LUA_DIR)" "^src/luarocks/cmd/" "$(luarocksconfdir)" "$(@D)" $(BINARY_PLATFORM) $(CC) $(NM) $(SYSROOT))
 
 # ----------------------------------------
 # Binary install
