@@ -484,8 +484,8 @@ local function main()
          end
       end
    end
-   
-   generate(MAIN_PROGRAM, "src", { EXCLUDE, "core/site_config", "^bin/?" })
+
+   generate(MAIN_PROGRAM, "src", { EXCLUDE, "^bin/?" })
 end
 
 main()
