@@ -89,7 +89,12 @@ luarocks-admin: config.unix
 # Regular install
 # ----------------------------------------
 
-install: $(DESTDIR)$(bindir)/luarocks $(DESTDIR)$(bindir)/luarocks-admin $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua $(patsubst src/%, $(DESTDIR)$(luadir)/%, $(LUAROCKS_FILES))
+INSTALL_FILES = $(DESTDIR)$(bindir)/luarocks \
+	$(DESTDIR)$(bindir)/luarocks-admin \
+	$(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua \
+	$(patsubst src/%, $(DESTDIR)$(luadir)/%, $(LUAROCKS_FILES))
+
+install: $(INSTALL_FILES)
 
 $(DESTDIR)$(bindir)/luarocks: ./build/luarocks
 	$(INSTALL) -D "$<" "$@"
@@ -102,6 +107,9 @@ $(DESTDIR)$(luadir)/luarocks/%.lua: src/luarocks/%.lua
 
 $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua: config-$(LUA_VERSION).lua.in
 	$(INSTALL_DATA) -D "$<" "$@"
+
+uninstall:
+	rm -rf $(INSTALL_FILES)
 
 # ----------------------------------------
 # Binary build
