@@ -442,7 +442,7 @@ local function main()
    cfg.variables.LUA_INCDIR = nil -- let it autodetect later
    cfg.variables.LUA_LIBDIR = nil -- let it autodetect later
    fs.init()
-   path.use_tree("./" .. LUA_MODULES)
+   path.use_tree(LUA_MODULES)
 
    local CONFIG_FILE = CONFIG_DIR .. "/config-" .. cfg.lua_version .. ".lua"
    
