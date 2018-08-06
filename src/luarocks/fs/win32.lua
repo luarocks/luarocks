@@ -162,7 +162,7 @@ function win32.wrap_script(file, dest, deps_mode, name, version, ...)
    }
 
    wrapper:write("@echo off\r\n")
-   wrapper:write("set "..fs.Qb("LUAROCKS_SYSCONFIG="..cfg.sysconfdir) .. "\r\n")
+   wrapper:write("set "..fs.Qb("LUAROCKS_SYSCONFDIR="..cfg.sysconfdir) .. "\r\n")
    if dest == "luarocks" then
       wrapper:write("set "..fs.Qb(lpath_var.."="..package.path) .. "\r\n")
       wrapper:write("set "..fs.Qb(lcpath_var.."="..package.cpath) .. "\r\n")
