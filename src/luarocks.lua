@@ -27,7 +27,6 @@ local results = require("luarocks.results")
 local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
 local writer = require("luarocks.manif.writer")
-local cmd = require("luarocks.cmd")
 local rockspecs = require("luarocks.rockspecs")
 local builtin = require("luarocks.build.builtin")
 local persist = require("luarocks.persist")
@@ -126,7 +125,6 @@ end
 local function return_items_table(name, version, item_set, item_type, repo)
    local return_table = {}
    for item_name in util.sortedpairs(item_set) do
-      --cmd.printout("\t"..item_name.." ("..repos.which(name, version, item_type, item_name, repo)..")")
       table.insert(return_table, {item_name, repos.which(name, version, item_type, item_name, repo)})
    end
    return return_table
@@ -137,7 +135,7 @@ function luarocks.show(name, version, tree)
    set_rock_tree(tree)
    
    if not name then
-      return nil, "Argument missing. "..cmd.see_help("show")
+      return nil, "Argument missing. "
    end
    
    --name = util.adjust_name_and_namespace(name, flags)
@@ -234,7 +232,7 @@ function luarocks.remove(name, version, tree, force)
    --local ok, err = fs.check_command_permissions_no_flags(flags)
    local ok, err = fs.check_command_permissions_no_flags()
    --
-   if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
+   if not ok then return nil, err end
    
    local rock_type = name:match("%.(rock)$") or name:match("%.(rockspec)$")
    local filename = name
@@ -302,7 +300,6 @@ function luarocks.lint(input, tree)
    -- because extra-strict checks is what lint-type commands
    -- are all about.
    if not rs.description.license then
-      cmd.printerr("Rockspec has no license field.")
       ok = false
    end
 
@@ -545,7 +542,6 @@ function luarocks.write_rockspec(values, name, version, url_or_dir)
    
    local warnings = {}
    if not next(rockspec.dependencies) then
-      --cmd.warning("Please specify supported Lua version with --lua-version=<ver>. "..cmd.see_help("write_rockspec"))
       table.insert(warnings, "Please specify supported Lua version with --lua-version=<ver>. ")
    end
    
@@ -622,7 +618,6 @@ local function try_replace(tbl, field, old, new)
    local old_field = tbl[field]
    local new_field = tbl[field]:gsub(old, new)
    if new_field ~= old_field then
-      --cmd.printout("Guessing new '"..field.."' field as "..new_field)
       tbl[field] = new_field
       return true      
    end
@@ -636,7 +631,6 @@ end
 local function check_url_and_update_md5(out_rs)
    local file, temp_dir = fetch.fetch_url_at_temp_dir(out_rs.source.url, "luarocks-new-version-"..out_rs.package)
    if not file then
-      --cmd.warning("invalid URL - "..temp_dir)
       return true, false
    end
 
@@ -651,7 +645,6 @@ local function check_url_and_update_md5(out_rs)
 
    if file then
       if out_rs.source.md5 then
-         --cmd.printout("File successfully downloaded. Updating MD5 checksum...")
          local new_md5, err = fs.get_md5(file)
          if not new_md5 then
             return nil, err
@@ -660,7 +653,6 @@ local function check_url_and_update_md5(out_rs)
          out_rs.source.md5 = new_md5
          return true, new_md5 ~= old_md5
       else
-         --cmd.printout("File successfully downloaded.")
          return true, false
       end
    end
@@ -772,8 +764,6 @@ function luarocks.new_version(input, version, url, tag)
    
    persist.save_from_table(out_filename, out_rs, type_rockspec.order)
    
-   --cmd.printout("Wrote "..out_filename)
-
    local valid_out_rs, err = fetch.load_local_rockspec(out_filename)
    if not valid_out_rs then
       return nil, "Failed loading generated rockspec: "..err
@@ -903,7 +893,7 @@ function luarocks.build(name, version, tree, only_deps, keep, pack_binary_rock, 
    
    local ok, err = fs.check_command_permissions_no_flags()
    if not ok then
-      return nil, err, cmd.errorcodes.PERMISSIONDENIED
+      return nil, err
    end
 
    ok, err = do_build(name, version, opts)
@@ -955,9 +945,7 @@ function luarocks.install_binary_rock(rock_file, deps_mode, namespace)
       return nil, "Failed loading rockspec for installed package: "..err, errcode
    end
 
-   if deps_mode == "none" then
-      cmd.warning("skipping dependency checks.")
-   else
+   if deps_mode ~= "none" then
       ok, err, errcode = deps.check_external_deps(rockspec, "install")
       if err then return nil, err, errcode end
    end
@@ -1019,9 +1007,6 @@ function luarocks.install_binary_rock_deps(rock_file, deps_mode)
    ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", deps_mode)
    if err then return nil, err, errcode end
 
-   --cmd.printout()
-   --cmd.printout("Successfully installed dependencies for " ..name.." "..version)
-
    return name, version
 end
 
@@ -1071,7 +1056,7 @@ function luarocks.install(name, version, tree, only_deps, keep)
    --name = util.adjust_name_and_namespace(name, flags)
 
    local ok, err = fs.check_command_permissions_no_flags()
-   if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
+   if not ok then return nil, err end
 
    if name:match("%.rockspec$") or name:match("%.src%.rock$") then
       return luarocks.build(name, version, tree, only_deps, keep, pack_binary_rock, branch)
@@ -1088,7 +1073,6 @@ function luarocks.install(name, version, tree, only_deps, keep)
       if not url then
          return nil, err
       end
-      --cmd.printout("Installing "..url)
       return luarocks.install(url, version, tree, only_deps, keep)
    end
 end

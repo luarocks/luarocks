@@ -1,4 +1,3 @@
-
 local build = {}
 
 local path = require("luarocks.path")
@@ -74,8 +73,7 @@ do
       if rockspec.build.patches then
          extract_from_rockspec(rockspec.build.patches)
          for patch, patchdata in util.sortedpairs(rockspec.build.patches) do
-            local cmd = require("luarocks.cmd")
-            cmd.printout("Applying patch "..patch.."...")
+            cfg.log("info", "Applying patch "..patch.."...")
             local create_delete = rockspec:format_is_at_least("3.0")
             local ok, err = fs.apply_patch(tostring(patch), patchdata, create_delete)
             if not ok then
@@ -195,8 +193,7 @@ local function run_build_driver(rockspec)
    end
    -- Temporary compatibility
    if btype == "module" then
-      local cmd = require("luarocks.cmd")
-      cmd.printout("Do not use 'module' as a build type. Use 'builtin' instead.")
+      cfg.log("info", "Do not use 'module' as a build type. Use 'builtin' instead.")
       btype = "builtin"
       rockspec.build.type = btype
    end

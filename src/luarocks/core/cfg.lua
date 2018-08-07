@@ -1,4 +1,3 @@
-
 --- Configuration for LuaRocks.
 -- Tries to load the user's configuration file and
 -- defines defaults for unset values. See the
@@ -211,6 +210,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
 
       lua_extension = "lua",
       connection_timeout = 30,  -- 0 = no timeout
+      log = function(level, message) end,
 
       variables = {
          MAKE = "make",

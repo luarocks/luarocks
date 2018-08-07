@@ -1,4 +1,3 @@
-
 --- Functions related to fetching and loading local and remote files.
 local fetch = {}
 
@@ -103,14 +102,13 @@ function fetch.find_base_dir(file, temp_dir, src_url, src_dir)
    if fs.exists(inferred_dir) then
       found_dir = inferred_dir
    else
-      local cmd = require("luarocks.cmd")
-      cmd.printerr("Directory "..inferred_dir.." not found")
+      cfg.log("error", "Directory "..inferred_dir.." not found")
       local files = fs.list_dir()
       if files then
          table.sort(files)
          for i,filename in ipairs(files) do
             if fs.is_dir(filename) then
-               cmd.printerr("Found "..filename)
+               cfg.log("error", "Found "..filename)
                found_dir = filename
                break
             end

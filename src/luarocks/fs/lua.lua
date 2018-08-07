@@ -1,4 +1,3 @@
-
 --- Native Lua implementation of filesystem and platform abstractions,
 -- using LuaFileSystem, LuaSocket, LuaSec, lua-zlib, LuaPosix, MD5.
 -- module("luarocks.fs.lua")
@@ -9,7 +8,6 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
-local cmd = require("luarocks.cmd")
 
 local socket_ok, zip_ok, lfs_ok, md5_ok, posix_ok, bz2_ok, _
 local http, ftp, zip, lfs, md5, posix, bz2
@@ -819,7 +817,7 @@ function fs_lua.download(url, filename, cache)
    if https_err then
       if not downloader_warning then
          local downloader = fs.which_tool("downloader")
-         cmd.warning("falling back to "..downloader.." - install luasec to get native HTTPS support")
+         cfg.log("warning", "falling back to "..downloader.." - install luasec to get native HTTPS support")
          downloader_warning = true
       end
       return fs.use_downloader(url, filename, cache)

@@ -1,4 +1,3 @@
-
 --- Module handling the LuaRocks local cache.
 -- Adds a rock or rockspec to a rocks server.
 local cache = {}
@@ -7,7 +6,6 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
-local cmd = require("luarocks.cmd")
 
 function cache.get_upload_server(server)
    if not server then server = cfg.upload_server end
@@ -76,7 +74,7 @@ function cache.refresh_local_cache(url, given_user, given_password)
 
    fs.change_dir(local_cache)
    
-   cmd.printout("Refreshing cache "..local_cache.."...")
+   cfg.log("info", "Refreshing cache "..local_cache.."...")
 
    ok = download_cache(protocol, server_path, user, password)
    if not ok then

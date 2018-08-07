@@ -1,4 +1,3 @@
-
 --- Assorted utilities for managing tables, plus a scheduler for rollback functions.
 -- Does not requires modules directly (only as locals
 -- inside specific functions) to avoid interdependencies,
@@ -240,9 +239,8 @@ function util.warn_if_not_used(var_defs, needed_set, msg)
          needed_set[used] = nil
       end
    end
-   local cmd = require("luarocks.cmd")
    for var, _ in pairs(needed_set) do
-      cmd.warning(msg:format(var))
+      cfg.log("warning", msg:format(var))
    end
 end
 
@@ -252,9 +250,8 @@ end
 local function warn_failed_matches(line)
    local any_failed = false
    if line:match(var_format_pattern) then
-      local cmd = require("luarocks.cmd")
       for unmatched in line:gmatch(var_format_pattern) do
-         cmd.warning("unmatched variable " .. unmatched)
+         cfg.log("warning", "unmatched variable " .. unmatched)
          any_failed = true
       end
    end
