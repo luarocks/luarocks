@@ -506,15 +506,13 @@ function deps.check_lua(vars)
    end
    local shortv = cfg.lua_version:gsub("%.", "")
    local libnames = {
+      "luajit-" .. cfg.lua_version,
       "lua" .. cfg.lua_version,
       "lua" .. shortv,
       "lua-" .. cfg.lua_version,
       "lua-" .. shortv,
       "lua",
    }
-   if cfg.luajit_version then
-      table.insert(libnames, 1, "luajit-" .. cfg.lua_version)
-   end
    for _, libname in ipairs(libnames) do
       local ok = check_external_dependency("LUA", { library = libname }, vars, "build")
       if ok then
