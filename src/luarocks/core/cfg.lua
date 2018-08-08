@@ -528,6 +528,21 @@ end
 
 local cfg = {}
 
+--- Initializes the LuaRocks configuration for variables, paths
+-- and OS detection.
+-- @param lua_data table containing information pertaining the location
+-- of Lua in the environment. All fields below are optional:
+-- * lua_version (in x.y format, e.g. "5.3")
+-- * luajit_version (complete, e.g. "2.1.0-beta3")
+-- * lua_bindir (e.g. "/usr/local/bin")
+-- * lua_incdir (e.g. "/usr/local/include/lua5.3/")
+-- * lua_libdir(e.g. "/usr/local/lib")
+-- * lua_dir (e.g. "/usr/local")
+-- * lua_interpreter (e.g. "lua-5.3")
+-- @param project_dir a string with the path of the project directory
+-- when using per-project environments, as created with `luarocks init`
+-- @param warning a logging function for warnings that takes a string
+-- @return true on success; nil and an error message on failure.
 function cfg.init(lua_data, project_dir, warning)
    lua_data = lua_data or {}
 
