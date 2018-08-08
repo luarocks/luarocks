@@ -43,7 +43,6 @@ function list.command(flags, filter, version)
       title = title .. " in " .. flags["tree"]
    end
 
-   luarocks.set_rock_tree(flags["tree"])
    local results, err = luarocks.list(filter, flags["outdated"], version, flags["tree"])
    if not results then return nil, err end
    
