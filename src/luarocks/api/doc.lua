@@ -1,5 +1,6 @@
 local doc = {}
 
+local config_api = require("luarocks.api.config")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local download = require("luarocks.download")
@@ -36,7 +37,9 @@ local function try_to_get_homepage(name, version)
    return description.homepage
 end
 
-function doc.homepage(name, version, tree)   
+function doc.homepage(name, version, tree)
+   config_api.set_rock_tree(tree)
+
    local query = queries.new(name, version)
    local iname, iversion = search.pick_installed_rock(query, tree)
    if not iname then
@@ -56,6 +59,8 @@ function doc.homepage(name, version, tree)
 end
 
 function doc.doc(name, version, tree)
+   config_api.set_rock_tree(tree)
+
    local query = queries.new(name, version)
    local iname, iversion, repo = search.pick_installed_rock(query, tree)
    if not iname then

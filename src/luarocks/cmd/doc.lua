@@ -38,7 +38,6 @@ function doc.command(flags, name, version)
    end
 
    name = util.adjust_name_and_namespace(name, flags)
-   luarocks.set_rock_tree(flags["tree"])
    local homepage, homepage_err = luarocks.homepage(name, version, flags["tree"])
    local docdir, docfile, files = luarocks.doc(name, version, flags["tree"])
    local doc_err = docfile

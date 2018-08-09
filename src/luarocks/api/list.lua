@@ -1,5 +1,6 @@
 local list_api = {}
 
+local config_api = require("luarocks.api.config")
 local cfg = require("luarocks.core.cfg")
 local path = require("luarocks.path")
 local queries = require("luarocks.queries")
@@ -44,6 +45,8 @@ local function check_outdated(trees, query)
 end
 
 function list_api.list(filter, outdated, version, tree)
+   config_api.set_rock_tree(tree)
+
    local query = queries.new(filter and filter:lower() or "", version, true)
 
    local trees = cfg.rocks_trees

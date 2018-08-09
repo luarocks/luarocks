@@ -1,6 +1,9 @@
 --- LuaRocks public programmatic API, version 3.0
 local luarocks = {}
 
+local config_api = require("luarocks.api.config")
+luarocks.set_rock_tree = config_api.set_rock_tree
+
 local doc_api = require("luarocks.api.doc") 
 luarocks.doc = doc_api.doc
 luarocks.homepage = doc_api.homepage
@@ -34,41 +37,6 @@ local type_rockspec = require("luarocks.type.rockspec")
 local build = require("luarocks.build")
 
 cfg.init()
-
-local function replace_tree(flags, tree)
-   tree = dir.normalize(tree)
-   path.use_tree(tree)
-end
-
-function luarocks.set_rock_tree(tree_arg)
-   if tree_arg then
-      local named = false
-      for _, tree in ipairs(cfg.rocks_trees) do
-         if type(tree) == "table" and tree_arg == tree.name then
-            if not tree.root then
-               die("Configuration error: tree '"..tree.name.."' has no 'root' field.")
-            end
-            replace_tree(flags, tree.root)
-            named = true
-            break
-         end
-      end
-      if not named then
-         fs.init()
-         local root_dir = fs.absolute_name(tree_arg)
-         replace_tree(flags, root_dir)
-      end
-   else
-      local trees = cfg.rocks_trees
-      path.use_tree(trees[#trees])
-   end
-   
-   if type(cfg.root_dir) == "string" then
-      cfg.root_dir = cfg.root_dir:gsub("/+$", "")
-   else
-      cfg.root_dir.root = cfg.root_dir.root:gsub("/+$", "")
-   end
-end
 
 --- Obtain version of LuaRocks and its API.
 -- @return (string, string) Full version of this LuaRocks instance
@@ -132,7 +100,7 @@ end
 
 function luarocks.show(name, version, tree)
 
-   set_rock_tree(tree)
+   luarocks.set_rock_tree(tree)
    
    if not name then
       return nil, "Argument missing. "
@@ -217,7 +185,7 @@ end
 -- "force-fast" for fast-force
 function luarocks.remove(name, version, tree, force)
 
-   set_rock_tree(tree)
+   luarocks.set_rock_tree(tree)
 
    fs.init()
 
@@ -272,7 +240,7 @@ end
 function luarocks.lint(input, tree)
 
    -- Even though this function doesn't necessarily require a tree argument, it needs to calll this function to not break - fetch.load_local_rockspec()
-   set_rock_tree(tree)
+   luarocks.set_rock_tree(tree)
 
    if not input then
       return nil, "Argument missing. "
@@ -474,7 +442,7 @@ function luarocks.write_rockspec(values, name, version, url_or_dir)
    --name = util.adjust_name_and_namespace(name, values)
    fs.init()
 
-   set_rock_tree(tree)
+   luarocks.set_rock_tree(tree)
 
    if not name then
       url_or_dir = "."
@@ -697,7 +665,7 @@ function luarocks.new_version(input, version, url, tag)
    fs.init()
 
    -- Even though this function doesn't necessarily require a tree argument, it needs to calll this function to not break - fetch.load_local_rockspec()
-   set_rock_tree(tree)
+   luarocks.set_rock_tree(tree)
 
    if not input then
       local err
@@ -863,7 +831,7 @@ function luarocks.build(name, version, tree, only_deps, keep, pack_binary_rock, 
    fs.init()
 
    -- Even though this function doesn't necessarily require a tree argument, it needs to call this function to not break - fetch.load_local_rockspec()
-   set_rock_tree(tree)
+   luarocks.set_rock_tree(tree)
 
    assert(type(name) == "string" or not name)
    assert(type(version) == "string" or not version)
@@ -1045,7 +1013,7 @@ end
 
 function luarocks.install(name, version, tree, only_deps, keep)
 
-   set_rock_tree(tree)
+   luarocks.set_rock_tree(tree)
 
    fs.init()
    
@@ -1079,7 +1047,7 @@ end
 
 function luarocks.check_missing_dependencies(name, version, tree)
 
-   set_rock_tree(tree)
+   luarocks.set_rock_tree(tree)
 
    local url, err = search.find_src_or_rockspec(name, version)
    if not url then
