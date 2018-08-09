@@ -8,7 +8,6 @@ local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local queries = require("luarocks.queries")
 local results = require("luarocks.results")
-local cmd = require("luarocks.cmd")
 
 --- Store a search result (a rock or rockspec) in the result tree.
 -- @param result_tree table: The result tree, where keys are package names and
@@ -160,7 +159,7 @@ function search.search_repos(query, lua_version)
             if ok then
                break
             else
-               cmd.warning("Failed searching manifest: "..err)
+               cfg.log("warning", "Failed searching manifest: "..err)
             end
          end
       end

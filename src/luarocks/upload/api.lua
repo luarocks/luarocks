@@ -1,4 +1,3 @@
-
 local api = {}
 
 local cfg = require("luarocks.core.cfg")
@@ -7,7 +6,6 @@ local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local persist = require("luarocks.persist")
 local multipart = require("luarocks.upload.multipart")
-local cmd = require("luarocks.cmd")
 
 local Api = {}
 
@@ -33,7 +31,7 @@ function Api:save_config()
       return nil, err
    end
    if res.errors then
-      cmd.printerr("Server says: " .. tostring(res.errors[1]))
+      cfg.log("error", "Server says: " .. tostring(res.errors[1]))
       return
    end
    local upload_conf = upload_config_file()
@@ -63,7 +61,7 @@ function Api:check_version()
          return nil, "Your upload client is too out of date to continue, please upgrade LuaRocks."
       end
       if res.version ~= tool_version then
-         cmd.warning("your LuaRocks is out of date, consider upgrading.")
+         cfg.log("warning", "your LuaRocks is out of date, consider upgrading.")
       end
    end
    return true
@@ -194,7 +192,7 @@ function Api:request(url, params, post_params)
    os.remove(tmpfile)
 
    if self.debug then
-      cmd.printout("[" .. tostring(method) .. " via curl] " .. redact_api_url(url) .. " ... ")
+      cfg.log("info", "[" .. tostring(method) .. " via curl] " .. redact_api_url(url) .. " ... ")
    end
 
    return json.decode(out)
@@ -216,7 +214,7 @@ function Api:request(url, params, post_params)
          via = "luasec"
       else
          if not warned_luasec then
-            cmd.printerr("LuaSec is not available; using plain HTTP. Install 'luasec' to enable HTTPS.")
+            cfg.log("error", "LuaSec is not available; using plain HTTP. Install 'luasec' to enable HTTPS.")
             warned_luasec = true
          end
          http_ok, http = pcall(require, "socket.http")
@@ -246,7 +244,7 @@ function Api:request(url, params, post_params)
    end
    local method = post_params and "POST" or "GET"
    if self.debug then
-      cmd.printout("[" .. tostring(method) .. " via "..via.."] " .. redact_api_url(url) .. " ... ")
+      cfg.log("info", "[" .. tostring(method) .. " via "..via.."] " .. redact_api_url(url) .. " ... ")
    end
    local out = {}
    local _, status = http.request({
@@ -257,7 +255,7 @@ function Api:request(url, params, post_params)
       source = body and ltn12.source.string(body)
    })
    if self.debug then
-      cmd.printout(tostring(status))
+      cfg.log("info", tostring(status))
    end
    if status ~= 200 then
       return nil, "API returned " .. tostring(status) .. " - " .. redact_api_url(url)

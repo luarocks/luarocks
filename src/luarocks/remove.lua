@@ -48,10 +48,8 @@ end
 -- "order" for all trees with priority >= the current default, "none" for no trees.
 -- @return boolean or (nil, string): true on success or nil and an error message.
 local function delete_versions(name, versions, deps_mode) 
-   local cmd = require("luarocks.cmd")
-
    for version, _ in pairs(versions) do
-      cmd.printout("Removing "..name.." "..version.."...")
+      cfg.log("info", "Removing "..name.." "..version.."...")
       local ok, err = repos.delete_version(name, version, deps_mode)
       if not ok then return nil, err end
    end
@@ -90,36 +88,31 @@ function remove.remove_search_results(results, name, deps_mode, force, fast)
    local version = next(versions)
    local second = next(versions, version)
 
-   local cmd = require("luarocks.cmd")
-   
    local dependents = {}
    if not fast then
-      cmd.printout("Checking stability of dependencies in the absence of")
-      cmd.printout(name.." "..table.concat(util.keys(versions), ", ").."...")
-      cmd.printout()
+      cfg.log("info", "Checking stability of dependencies in the absence of")
+      cfg.log("info", name.." "..table.concat(util.keys(versions), ", ").."...")
       dependents = check_dependents(name, versions, deps_mode)
    end
    
    if #dependents > 0 then
       if force or fast then
-         cmd.printerr("The following packages may be broken by this forced removal:")
+         cfg.log("error", "The following packages may be broken by this forced removal:")
          for _, dependent in ipairs(dependents) do
-            cmd.printerr(dependent.name.." "..dependent.version)
+            cfg.log(dependent.name.." "..dependent.version, true)
          end
-         cmd.printerr()
       else
          if not second then
-            cmd.printerr("Will not remove "..name.." "..version..".")
-            cmd.printerr("Removing it would break dependencies for: ")
+            cfg.log("error", "Will not remove "..name.." "..version..".")
+            cfg.log("error", "Removing it would break dependencies for: ")
          else
-            cmd.printerr("Will not remove installed versions of "..name..".")
-            cmd.printerr("Removing them would break dependencies for: ")
+            cfg.log("error", "Will not remove installed versions of "..name..".")
+            cfg.log("error", "Removing them would break dependencies for: ")
          end
          for _, dependent in ipairs(dependents) do
-            cmd.printerr(dependent.name.." "..dependent.version)
+            cfg.log("error", dependent.name.." "..dependent.version)
          end
-         cmd.printerr()
-         cmd.printerr("Use --force to force removal (warning: this may break modules).")
+         cfg.log("error", "You may want to force removal (warning: this may break modules).")
          return nil, "Failed removing."
       end
    end
@@ -127,7 +120,8 @@ function remove.remove_search_results(results, name, deps_mode, force, fast)
    local ok, err = delete_versions(name, versions, deps_mode)
    if not ok then return nil, err end
 
-   cmd.printout("Removal successful.")
+   cfg.log("info", "Removal successful.")
+
    return true
 end
 

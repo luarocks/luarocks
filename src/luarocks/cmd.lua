@@ -1,4 +1,3 @@
-
 --- Functions for command-line scripts.
 local cmd = {}
 
@@ -247,6 +246,18 @@ local function check_popen()
    end
 end
 
+local function init_log()
+   cfg.log = function(level, message)
+      if level == "info" then
+         cmd.printout(message)
+      elseif level == "warning" then
+         cmd.warning(message)
+      elseif level == "error" then
+         cmd.printerr(message)
+      end
+   end
+end
+
 local process_tree_flags
 do
    local function replace_tree(flags, tree)
@@ -492,6 +503,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
    -----------------------------------------------------------------------------
 
    fs.init()
+   init_log()
 
    if flags["version"] then
       cmd.printout(program.." "..cfg.program_version)
