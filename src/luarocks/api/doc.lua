@@ -109,4 +109,24 @@ function doc.doc(name, version, tree)
    return docdir, nil, files 
 end
 
+function doc.open_doc(docdir, docfile)
+   if not docdir then
+      return nil, "No doc directory given as argument."
+   end
+   
+   if not docfile then
+      return nil, "No doc files given as argument."
+   end
+
+   local pathname = dir.path(docdir, docfile)
+   local ok = fs.browser(pathname)
+   if not ok and not docfile:match("%.html?$") then
+      local fd = io.open(docfile, "r")
+      cmd.printout(fd:read("*a"))
+      fd:close()
+   end
+   
+   return true
+end
+
 return doc
