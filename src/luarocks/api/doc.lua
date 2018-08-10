@@ -119,6 +119,9 @@ function doc.open_doc(docdir, docfile)
    end
 
    local pathname = dir.path(docdir, docfile)
+   if not fs.browser then
+      fs.init()
+   end
    local ok = fs.browser(pathname)
    if not ok and not docfile:match("%.html?$") then
       local fd = io.open(docfile, "r")
