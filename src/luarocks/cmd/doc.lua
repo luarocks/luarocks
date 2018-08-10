@@ -84,11 +84,9 @@ function doc.command(flags, name, version)
       return true
    end
    
-   local ok = fs.browser(docfile)
-   if not ok and not docfile:match("%.html?$") then
-      local fd = io.open(docfile, "r")
-      cmd.printout(fd:read("*a"))
-      fd:close()
+   local open_ok, open_err = luarocks.open_doc(docdir, docfile)
+   if not open_ok then
+      return open_ok, open_err
    end
 
    return true
