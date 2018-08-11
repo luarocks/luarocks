@@ -4,7 +4,6 @@
 
 prefix="/usr/local"
 sysconfdir="$prefix/etc"
-luarocksconfdir="$sysconfdir/luarocks"
 rocks_tree="$prefix"
 
 # ----------------------------------------------------------------------------
@@ -108,7 +107,6 @@ For better control, use the options below.
 
 Fine tuning of the installation directories:
   --sysconfdir=SYSCONFDIR      Directory for single-machine config [PREFIX/etc]
-  --luarocksconfdir=DIR        Directory for luarocks config [SYSCONFDIR/luarocks]
 
 Where to install files provided by rocks:
   --rocks-tree=DIR             Root of the local tree of installed rocks.
@@ -241,11 +239,6 @@ do
       sysconfdir="$(canonicalpath "$value")"
       sysconfdir_SET=yes
       ;;
-   --luarocksconfdir)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      luarocksconfdir="$(canonicalpath "$value")"
-      luarocksconfdir_SET=yes
-      ;;
 
 
    # Where to install files provided by rocks:
@@ -340,11 +333,6 @@ then
    else sysconfdir=$prefix/etc
    fi
    sysconfdir_SET=yes
-fi
-
-if [ "$sysconfdir_SET" = "yes" ] && [ ! "$luarocksconfdir_SET" = "yes" ]
-then
-   luarocksconfdir=$sysconfdir/luarocks
 fi
 
 if [ "$prefix_SET" = "yes" ] && [ ! "$rocks_tree_SET" = "yes" ]
@@ -488,7 +476,7 @@ cat <<EOF > config.unix
 # Run "./configure --help" for details.
 
 prefix=$prefix
-luarocksconfdir=$luarocksconfdir
+sysconfdir=$sysconfdir
 rocks_tree=$rocks_tree
 LUA_VERSION=$LUA_VERSION
 LUA_INTERPRETER=$LUA_INTERPRETER
@@ -505,7 +493,7 @@ echo
 echo
 echo "LuaRocks will be installed at......: $(GREEN "$prefix")"
 echo "LuaRocks will install rocks at.....: $(GREEN "$rocks_tree")"
-echo "LuaRocks configuration directory...: $(GREEN "$luarocksconfdir")"
+echo "LuaRocks configuration directory...: $(GREEN "$sysconfdir/luarocks")"
 echo "Using Lua from.....................: $(GREEN "$LUA_DIR")"
 if [ "$LUA_BINDIR_SET" = "yes" ]; then echo "Lua bin directory..................: $(GREEN "$LUA_BINDIR")" ; fi
 if [ "$LUA_INCDIR_SET" = "yes" ]; then echo "Lua include directory..............: $(GREEN "$LUA_INCDIR")" ; fi
