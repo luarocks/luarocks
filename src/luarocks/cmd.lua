@@ -4,10 +4,11 @@ local cmd = {}
 
 local unpack = unpack or table.unpack
 
-local cfg = require("luarocks.core.cfg")
+local loader = require("luarocks.loader")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 local deps = require("luarocks.deps")
+local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local fun = require("luarocks.fun")
 local fs = require("luarocks.fs")
@@ -206,6 +207,7 @@ do
       elseif flags["project-tree"] then
          local tree = flags["project-tree"]
          table.insert(cfg.rocks_trees, 1, { name = "project", root = tree } )
+         loader.load_rocks_trees()
          path.use_tree(tree)
       elseif flags["local"] then
          if not cfg.home_tree then
@@ -218,6 +220,7 @@ do
          local project_dir, rocks_tree = find_project_dir()
          if project_dir then
             table.insert(cfg.rocks_trees, 1, { name = "project", root = rocks_tree } )
+            loader.load_rocks_trees()
             path.use_tree(rocks_tree)
          else
             local trees = cfg.rocks_trees

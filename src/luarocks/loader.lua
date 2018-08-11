@@ -57,7 +57,7 @@ loader.context = {}
 -- 'nil' indicates rocks trees were not attempted to be loaded yet.
 loader.rocks_trees = nil
 
-local function load_rocks_trees() 
+function loader.load_rocks_trees()
    local any_ok = false
    local trees = {}
    for _, tree in ipairs(cfg.rocks_trees) do
@@ -95,7 +95,7 @@ function loader.add_context(name, version)
    end
    loader.context[name] = version
 
-   if not loader.rocks_trees and not load_rocks_trees() then
+   if not loader.rocks_trees and not loader.load_rocks_trees() then
       return nil
    end
 
@@ -191,7 +191,7 @@ local function select_module(module, filter_file_name)
    --assert(type(module) == "string")
    --assert(type(filter_module_name) == "function")
 
-   if not loader.rocks_trees and not load_rocks_trees() then
+   if not loader.rocks_trees and not loader.load_rocks_trees() then
       return nil
    end
 
