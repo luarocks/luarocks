@@ -7,6 +7,7 @@ luarocks.set_rock_tree = config_api.set_rock_tree
 local doc_api = require("luarocks.api.doc") 
 luarocks.doc = doc_api.doc
 luarocks.homepage = doc_api.homepage
+luarocks.open_doc = doc_api.open_doc
 
 local search_api = require("luarocks.api.search")
 luarocks.search = search_api.search
