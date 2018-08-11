@@ -108,6 +108,8 @@ INSTALL_FILES = $(DESTDIR)$(bindir)/luarocks \
 
 install: $(INSTALL_FILES)
 
+install-config: $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua
+
 $(DESTDIR)$(bindir)/luarocks: $(builddir)/luarocks
 	mkdir -p "$(@D)"
 	$(INSTALL) "$<" "$@"
