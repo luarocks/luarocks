@@ -716,7 +716,7 @@ function cfg.init(lua_data, project_dir, warning)
    local defaults = make_defaults(lua_version, processor, platforms, cfg.home)
 
    if platforms.windows and hardcoded.WIN_TOOLS then
-      local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "PWD", "RMDIR", "TEST", "WGET" }
+      local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "PWD", "RMDIR", "TEST", "WGET", "MKDIR" }
       for _, tool in ipairs(tools) do
          defaults.variables[tool] = hardcoded.WIN_TOOLS .. "/" .. defaults.variables[tool] .. ".exe"
       end
