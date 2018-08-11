@@ -30,10 +30,11 @@ local LUA_DIR = arg[2] or "/usr"
 local EXCLUDE = arg[3] or "^src/luarocks/admin/"
 local SYSCONFDIR = arg[4] or "/etc/luarocks"
 local TARGET = arg[5] or "build-binary"
-local MY_PLATFORM = arg[6] or "unix"
-local CC = arg[7] or "gcc"
-local NM = arg[8] or "nm"
-local CROSSCOMPILER_SYSROOT = arg[9] or "/usr/lib/mingw-w64-sysroot/i686-w64-mingw32"
+local FORCE_CONFIG = (arg[6] == "yes")
+local MY_PLATFORM = arg[7] or "unix"
+local CC = arg[8] or "gcc"
+local NM = arg[9] or "nm"
+local CROSSCOMPILER_SYSROOT = arg[10] or "/usr/lib/mingw-w64-sysroot/i686-w64-mingw32"
 
 local LUA_MODULES = TARGET .. "/lua_modules"
 local CONFIG_DIR = TARGET .. "/.luarocks"
@@ -158,6 +159,7 @@ local function write_hardcoded_module(dir)
    local hardcoded = {
       SYSTEM = system,
       PROCESSOR = processor,
+      FORCE_CONFIG = FORCE_CONFIG,
 
       SYSCONFDIR = if_platform("unix", SYSCONFDIR),
 

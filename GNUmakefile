@@ -76,7 +76,9 @@ luarocks-admin: config.unix
 $(builddir)/luarocks: src/bin/luarocks config.unix
 	mkdir -p "$(@D)"
 	(printf '$(SHEBANG)\n'\
-	'package.loaded["luarocks.core.hardcoded"] = { SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
+	'package.loaded["luarocks.core.hardcoded"] = { '\
+	"$$([ -n "$(FORCE_CONFIG)" ] && printf 'FORCE_CONFIG = true, ')"\
+	'SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
 	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'; \
 	tail -n +2 src/bin/luarocks \
 	)> "$@"
@@ -84,7 +86,9 @@ $(builddir)/luarocks: src/bin/luarocks config.unix
 $(builddir)/luarocks-admin: src/bin/luarocks-admin config.unix
 	mkdir -p "$(@D)"
 	(printf '$(SHEBANG)\n'\
-	'package.loaded["luarocks.core.hardcoded"] = { SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
+	'package.loaded["luarocks.core.hardcoded"] = { '\
+	"$$([ -n "$(FORCE_CONFIG)" ] && printf 'FORCE_CONFIG = true, ')"\
+	'SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
 	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'; \
 	tail -n +2 src/bin/luarocks-admin \
 	)> "$@"
@@ -97,11 +101,11 @@ binary: luarocks $(buildbinarydir)/luarocks.exe $(buildbinarydir)/luarocks-admin
 
 $(buildbinarydir)/luarocks.exe: src/bin/luarocks $(LUAROCKS_FILES)
 	(unset $(LUA_ENV_VARS); \
-	"$(LUA)" binary/all_in_one "$<" "$(LUA_DIR)" "^src/luarocks/admin/" "$(luarocksconfdir)" "$(@D)" $(BINARY_PLATFORM) $(CC) $(NM) $(SYSROOT))
+	"$(LUA)" binary/all_in_one "$<" "$(LUA_DIR)" "^src/luarocks/admin/" "$(luarocksconfdir)" "$(@D)" "$(FORCE_CONFIG)" $(BINARY_PLATFORM) $(CC) $(NM) $(SYSROOT))
 
 $(buildbinarydir)/luarocks-admin.exe: src/bin/luarocks-admin $(LUAROCKS_FILES)
 	(unset $(LUA_ENV_VARS); \
-	"$(LUA)" binary/all_in_one "$<" "$(LUA_DIR)" "^src/luarocks/cmd/" "$(luarocksconfdir)" "$(@D)" $(BINARY_PLATFORM) $(CC) $(NM) $(SYSROOT))
+	"$(LUA)" binary/all_in_one "$<" "$(LUA_DIR)" "^src/luarocks/cmd/" "$(luarocksconfdir)" "$(@D)" "$(FORCE_CONFIG)" $(BINARY_PLATFORM) $(CC) $(NM) $(SYSROOT))
 
 # ----------------------------------------
 # Regular install
