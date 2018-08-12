@@ -119,14 +119,16 @@ function doc.open_doc(docdir, docfile)
    end
 
    local pathname = dir.path(docdir, docfile)
+   if not pathname then
+      return nil, "Cannot find path to doc file."
+   end
+   
    if not fs.browser then
       fs.init()
    end
    local ok = fs.browser(pathname)
    if not ok and not docfile:match("%.html?$") then
-      local fd = io.open(docfile, "r")
-      cmd.printout(fd:read("*a"))
-      fd:close()
+      return true, pathname
    end
    
    return true
