@@ -85,7 +85,11 @@ function doc.command(flags, name, version)
    end
    
    local open_ok, open_err = luarocks.open_doc(docdir, docfile)
-   if not open_ok then
+   if open_ok and open_err then
+      local fd = io.open(open_err, "r")
+      cmd.printout(fd:read("*a"))
+      fd:close()
+   elseif not open_ok then
       return open_ok, open_err
    end
 
