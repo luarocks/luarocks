@@ -3,7 +3,6 @@
 
 datarootdir = $(prefix)/share
 bindir = $(prefix)/bin
-sysconfdir = $(prefix)/etc
 INSTALL = install
 INSTALL_DATA = $(INSTALL) -m 644
 BINARY_PLATFORM = unix
