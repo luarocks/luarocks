@@ -214,6 +214,9 @@ do
       local umask = assert(fd:read("*a"))
       fd:close()
       local u, g, o = umask:match("u=([rwx]*),g=([rwx]*),o=([rwx]*)")
+      if not u then
+         error("invalid umask result")
+      end
       umask_cache = string.format("%d%d%d",
          7 - rwx_to_octal(u),
          7 - rwx_to_octal(g),
