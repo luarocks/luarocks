@@ -206,9 +206,9 @@ do
          return umask_cache
       end
       local fd = assert(io.popen("umask"))
-      local umask = assert(fd:read("*a"))
+      local umask = assert(fd:read("*l"))
       umask = umask:gsub("\n", "")
-      umask_cache = umask:sub(2, 4)
+      umask_cache = umask:sub(-3, -1)
       return umask_cache
    end
 end
