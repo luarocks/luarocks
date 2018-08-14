@@ -870,4 +870,16 @@ function fs_lua.is_lua(name)
   return (result == true) 
 end
 
+local function load_fns(fs_table)
+   for name, fn in pairs(fs_table) do
+      if not fs[name] then
+         fs[name] = fn
+      end
+   end
+end
+
+-- Load platform-independent pure-Lua functionality
+load_fns(fs_lua)
+
+
 return fs_lua

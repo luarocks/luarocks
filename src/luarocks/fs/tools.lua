@@ -153,4 +153,14 @@ function tools.get_md5(file)
    return nil, "Failed to compute MD5 hash for file "..tostring(fs.absolute_name(file))
 end
 
+local function load_fns(fs_table)
+   for name, fn in pairs(fs_table) do
+      if not fs[name] then
+         fs[name] = fn
+      end
+   end
+end
+load_fns(tools)
+
+
 return tools

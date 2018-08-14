@@ -5,7 +5,6 @@ local manif_core = {}
 package.loaded["luarocks.manif_core"] = manif_core
 
 local persist = require("luarocks.persist")
-local type_check = require("luarocks.type_check")
 local cfg = require("luarocks.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
@@ -49,6 +48,7 @@ function manif_core.manifest_loader(file, repo_url, lua_version, quick)
    end
    local globals = err
    if not quick then
+      local type_check = require('luarocks.type_check')
       local ok, err = type_check.type_check_manifest(manifest, globals)
       if not ok then
          return nil, "Error checking manifest: "..err, "type"

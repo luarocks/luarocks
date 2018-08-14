@@ -10,6 +10,17 @@ local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
 local fs = require("luarocks.fs")
+--- This is to install platform-specific fs functions.
+-- Since there were cyclic dependencies between fs.* modules
+-- and it was very hard to compile luarocks into Tarantool
+-- with them (an artifact of current preloader implementation),
+-- they were broken down. As a consequence, we have to manually
+-- load the platform-specific fs functions here, or they
+-- just won't work.
+require("luarocks.fs.unix")
+require("luarocks.fs.unix.tools")
+require("luarocks.fs.lua")
+require("luarocks.fs.tools")
 
 local program = util.this_program("luarocks")
 
