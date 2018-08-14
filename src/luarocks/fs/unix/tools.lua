@@ -200,15 +200,24 @@ function tools.is_file(file)
 end
 
 do
+   local function rwx_to_octal(rwx)
+      return (rwx:match "r" and 4 or 0)
+         + (rwx:match "w" and 2 or 0)
+         + (rwx:match "x" and 1 or 0)
+   end
    local umask_cache
    function tools._unix_umask()
       if umask_cache then
          return umask_cache
       end
-      local fd = assert(io.popen("umask"))
+      local fd = assert(io.popen("umask -S"))
       local umask = assert(fd:read("*a"))
-      umask = umask:gsub("\n", "")
-      umask_cache = umask:sub(2, 4)
+      fd:close()
+      local u, g, o = umask:match("u=([rwx]*),g=([rwx]*),o=([rwx]*)")
+      umask_cache = string.format("%d%d%d",
+         7 - rwx_to_octal(u),
+         7 - rwx_to_octal(g),
+         7 - rwx_to_octal(o))
       return umask_cache
    end
 end
