@@ -3,6 +3,7 @@ local luarocks = {}
 
 local config_api = require("luarocks.api.config")
 luarocks.set_rock_tree = config_api.set_rock_tree
+luarocks.list_rock_trees = config_api.list_rock_trees
 
 local doc_api = require("luarocks.api.doc") 
 luarocks.doc = doc_api.doc
@@ -45,16 +46,6 @@ cfg.init()
 -- in-development code), and the API version, in "x.y" format.
 function luarocks.version()
    return cfg.program_version, cfg.program_series
-end
-
---- Return 1
-function luarocks.test_func()
-	return 1
-end
-
---- Return a list of rock-trees
-function luarocks.list_rock_trees()
-	return cfg.rocks_trees
 end
 
 local function word_wrap(line) 

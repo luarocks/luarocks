@@ -4,6 +4,7 @@ local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local path = require("luarocks.path")
 local fs = require("luarocks.fs")
+local util = require("luarocks.util")
 
 local function replace_tree(tree)
    tree = dir.normalize(tree)
@@ -38,6 +39,10 @@ function config.set_rock_tree(tree_arg)
    else
       cfg.root_dir.root = cfg.root_dir.root:gsub("/+$", "")
    end
+end
+
+function config.list_rock_trees()
+	return util.deep_copy(cfg.rocks_trees)
 end
 
 return config

@@ -15,6 +15,7 @@ util.deep_merge_under = core.deep_merge_under
 util.popen_read = core.popen_read
 util.show_table = core.show_table
 util.keys = core.keys
+util.deep_copy = core.deep_copy
 
 local unpack = unpack or table.unpack
 
