@@ -40,4 +40,21 @@ function config.set_rock_tree(tree_arg)
    end
 end
 
+function config.set_rocks_servers(server, mode)
+   if not mode then
+      local protocol, pathname = dir.split_url(server)
+      table.insert(cfg.rocks_servers, 1, protocol .. "://" .. pathname)
+   elseif mode == "dev" then
+      local append_dev = function(s) return dir.path(s, "dev") end
+      local dev_servers = fun.traverse(cfg.rocks_servers, append_dev)
+      cfg.rocks_servers = fun.concat(dev_servers, cfg.rocks_servers)
+   elseif mode == "only" then
+      cfg.rocks_servers = { server }
+   end
+end
+
+function config.get_rocks_servers()
+   return util.deep_copy(cfg.rocks_servers)
+end
+
 return config

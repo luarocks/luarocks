@@ -3,6 +3,8 @@ local luarocks = {}
 
 local config_api = require("luarocks.api.config")
 luarocks.set_rock_tree = config_api.set_rock_tree
+luarocks.set_rocks_servers = config_api.set_rocks_servers
+luarocks.get_rocks_servers = config_api.get_rocks_servers
 
 local doc_api = require("luarocks.api.doc") 
 luarocks.doc = doc_api.doc
@@ -37,7 +39,9 @@ local persist = require("luarocks.persist")
 local type_rockspec = require("luarocks.type.rockspec")
 local build = require("luarocks.build")
 
-cfg.init()
+function luarocks.setup(lua_data, project_dir)
+   cfg.init(lua_data, project_dir)
+end
 
 --- Obtain version of LuaRocks and its API.
 -- @return (string, string) Full version of this LuaRocks instance
@@ -45,11 +49,6 @@ cfg.init()
 -- in-development code), and the API version, in "x.y" format.
 function luarocks.version()
    return cfg.program_version, cfg.program_series
-end
-
---- Return 1
-function luarocks.test_func()
-	return 1
 end
 
 --- Return a list of rock-trees
