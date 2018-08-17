@@ -528,7 +528,7 @@ end
 
 local cfg = {}
 
-function cfg.init(lua_data, project_dir, warning)
+function cfg.init(lua_data, project_dir)
    lua_data = lua_data or {}
 
    local hc_ok, hardcoded = pcall(require, "luarocks.core.hardcoded")
@@ -545,6 +545,7 @@ function cfg.init(lua_data, project_dir, warning)
    local lua_dir = lua_data.lua_dir or hardcoded.LUA_DIR
    
    local init = cfg.init
+   local log = cfg.log
 
    ----------------------------------------
    -- Reset the cfg table.
@@ -572,6 +573,7 @@ function cfg.init(lua_data, project_dir, warning)
    cfg.rocks_trees = {}
 
    cfg.init = init
+   cfg.log = log
 
    ----------------------------------------
    -- System detection.
@@ -648,8 +650,8 @@ function cfg.init(lua_data, project_dir, warning)
          local env_ok, err = load_config_file(cfg, platforms, env_value)
          if err then
             return nil, err, "config"
-         elseif warning and not env_ok then
-            warning("Warning: could not load configuration file `"..env_value.."` given in environment variable "..env_var.."\n")
+         elseif log and not env_ok then
+            log("warning", "Warning: could not load configuration file `"..env_value.."` given in environment variable "..env_var.."\n")
          end
          if env_ok then
             home_config_ok = true

@@ -493,15 +493,16 @@ function cmd.run_command(description, commands, external_namespace, ...)
       fs.init()
    end
 
+   init_log()
+
    -----------------------------------------------------------------------------
-   local ok, err = cfg.init(lua_data, project_dir, cmd.warning)
+   local ok, err = luarocks.setup(lua_data, project_dir)
    if not ok then
       die(err)
    end
    -----------------------------------------------------------------------------
 
    fs.init()
-   init_log()
 
    if flags["version"] then
       cmd.printout(program.." "..cfg.program_version)
