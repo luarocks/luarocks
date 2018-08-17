@@ -40,7 +40,9 @@ local persist = require("luarocks.persist")
 local type_rockspec = require("luarocks.type.rockspec")
 local build = require("luarocks.build")
 
-cfg.init()
+function luarocks.setup(lua_data, project_dir)
+   return cfg.init(lua_data, project_dir)
+end
 
 --- Obtain version of LuaRocks and its API.
 -- @return (string, string) Full version of this LuaRocks instance
