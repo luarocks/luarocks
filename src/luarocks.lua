@@ -4,6 +4,8 @@ local luarocks = {}
 local config_api = require("luarocks.api.config")
 luarocks.set_rock_tree = config_api.set_rock_tree
 luarocks.list_rock_trees = config_api.list_rock_trees
+luarocks.set_rocks_servers = config_api.set_rocks_servers
+luarocks.list_rocks_servers = config_api.list_rocks_servers
 
 local doc_api = require("luarocks.api.doc") 
 luarocks.doc = doc_api.doc
