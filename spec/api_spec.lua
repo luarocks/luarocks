@@ -7,6 +7,18 @@ local luarocks = require("luarocks")
 test_env.setup_specs()
 
 describe("LuaRocks api tests #unit", function()
+   setup(function()
+      if test_env.TRAVIS or test_env.APPVEYOR then
+         luarocks.setup({
+            lua_dir = testing_paths.luadir,
+            lua_incdir = testing_paths.luadir .. "/include",
+            lua_libdir = testing_paths.luadir .. "/lib"
+         })
+      else
+         luarocks.setup()
+      end
+   end)
+
    describe("luarocks.homepage", function()
       it("returns the homepage of an installed package", function()
          luarocks.set_rocks_servers(testing_paths.fixtures_dir .. "/a_repo", "only")
