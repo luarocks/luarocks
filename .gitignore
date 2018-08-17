@@ -1,7 +1,6 @@
 /config.*
-/src/luarocks/site_config.lua
-/test/testing_*
-/test/luacov.*
+/src/luarocks/core/hardcoded.lua
+/testrun/*
 # Stuff that pops up during development but shouldn't be in the repo (helps clean up `git status`)
 /build
 /build-binary
