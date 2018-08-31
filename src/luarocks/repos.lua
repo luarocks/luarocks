@@ -51,31 +51,37 @@ function repos.is_installed(name, version)
    return fs.is_dir(path.install_dir(name, version))
 end
 
-local function recurse_rock_manifest_tree(file_tree, action) 
-   assert(type(file_tree) == "table")
+function repos.recurse_rock_manifest_entry(entry, action)
+   assert(entry == nil or type(entry) == "table")
    assert(type(action) == "function")
 
-   local function do_recurse_rock_manifest_tree(tree, parent_path)
+   if entry == nil then
+      return true
+   end
+
+   local function do_recurse_rock_manifest_tree(tree, parent_path, parent_mod)
       for file, sub in pairs(tree) do
          local sub_path = (parent_path and (parent_path .. "/") or "") .. file
+         local sub_mod = (parent_mod and (parent_mod .. ".") or "") .. file
          local ok, err
 
          if type(sub) == "table" then
-            ok, err = do_recurse_rock_manifest_tree(sub, sub_path)
+            ok, err = do_recurse_rock_manifest_tree(sub, sub_path, sub_mod)
          else
-            ok, err = action(sub_path)
+            local mod_no_ext = sub_mod:gsub("%.[^.]*$", "")
+            ok, err = action(sub_path, mod_no_ext)
          end
 
-         if not ok then return nil, err end
+         if err then return nil, err end
       end
       return true
    end
-   return do_recurse_rock_manifest_tree(file_tree)
+   return do_recurse_rock_manifest_tree(entry)
 end
 
 local function store_package_data(result, rock_manifest, deploy_type)
    if rock_manifest[deploy_type] then
-      recurse_rock_manifest_tree(rock_manifest[deploy_type], function(file_path)
+      repos.recurse_rock_manifest_entry(rock_manifest[deploy_type], function(file_path)
          local _, item_name = manif.get_provided_item(deploy_type, file_path)
          result[item_name] = file_path
          return true
@@ -280,11 +286,7 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    if not rock_manifest then return nil, load_err end
 
    local function deploy_file_tree(deploy_type, source_dir, move_fn, suffix)
-      if not rock_manifest[deploy_type] then
-         return true
-      end
-
-      return recurse_rock_manifest_tree(rock_manifest[deploy_type], function(file_path)
+      return repos.recurse_rock_manifest_entry(rock_manifest[deploy_type], function(file_path)
          local source = dir.path(source_dir, file_path)
 
          local target, prepare_err = prepare_target(name, version, deploy_type, file_path, suffix)
@@ -363,11 +365,7 @@ function repos.delete_version(name, version, deps_mode, quick)
    if not rock_manifest then return nil, load_err end
 
    local function delete_deployed_file_tree(deploy_type, suffix)
-      if not rock_manifest[deploy_type] then
-         return true
-      end
-
-      return recurse_rock_manifest_tree(rock_manifest[deploy_type], function(file_path)
+      return repos.recurse_rock_manifest_entry(rock_manifest[deploy_type], function(file_path)
          local non_versioned, versioned = get_deploy_paths(name, version, deploy_type, file_path)
 
          -- Figure out if the file is deployed using versioned or non-versioned name.
