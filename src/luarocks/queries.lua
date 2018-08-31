@@ -198,10 +198,11 @@ function query_mt:__tostring()
    if #self.constraints > 0 then
       local pretty = {}
       for _, c in ipairs(self.constraints) do
+         local v = c.version.string
          if c.op == "==" then
-            table.insert(pretty, tostring(c.version))
+            table.insert(pretty, v)
          else
-            table.insert(pretty, c.op .. " " .. tostring(c.version))
+            table.insert(pretty, c.op .. " " .. v)
          end
       end
       table.insert(out, " ")

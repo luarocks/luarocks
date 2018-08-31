@@ -4,6 +4,7 @@ local show = {}
 
 local queries = require("luarocks.queries")
 local search = require("luarocks.search")
+local dir = require("luarocks.core.dir")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
@@ -44,10 +45,10 @@ local friendly_template = [[
 ?location :Installed in: \t${location}
 ?commands :
 ?commands :Commands:
-*commands :\t${name} (${repo})
+*commands :\t${name} (${file})
 ?modules  :
 ?modules  :Modules:
-*modules  :\t${name} (${repo})
+*modules  :\t${name} (${file})
 ?bdeps    :
 ?bdeps    :Has build dependency on:
 *bdeps    :\t${name} (${label})
@@ -74,8 +75,8 @@ local porcelain_template = [[
 ?issues   :issues\t${issues}
 ?labels   :labels\t${labels}
 ?location :location\t${location}
-*commands :command\t${name}\t${repo}
-*modules  :module\t${name}\t${repo}
+*commands :command\t${name}\t${file}
+*modules  :module\t${name}\t${file}
 *bdeps    :build_dependency\t${name}\t${label}
 *tdeps    :test_dependency\t${name}\t${label}
 *deps     :dependency\t${name}\t${label}
@@ -147,8 +148,29 @@ end
 local function files_to_list(name, version, item_set, item_type, repo)
    local ret = {}
    for item_name in util.sortedpairs(item_set) do
-      table.insert(ret, { name = item_name, repo = repos.which(name, version, item_type, item_name, repo) })
+      table.insert(ret, { name = item_name, file = repos.which(name, version, item_type, item_name, repo) })
    end
+   return ret
+end
+
+local function modules_to_list(name, version, repo)
+   local ret = {}
+   local rock_manifest = manif.load_rock_manifest(name, version, repo)
+
+   local lua_dir = path.lua_dir(name, version, repo)
+   local lib_dir = path.lib_dir(name, version, repo)
+   repos.recurse_rock_manifest_entry(rock_manifest.lua, function(pathname, modname)
+      table.insert(ret, { name = modname, file = dir.path(lua_dir, pathname) })
+   end)
+   repos.recurse_rock_manifest_entry(rock_manifest.lib, function(pathname, modname)
+      table.insert(ret, { name = modname, file = dir.path(lib_dir, pathname) })
+   end)
+   table.sort(ret, function(a, b)
+      if a.name == b.name then
+         return a.file < b.file
+      end
+      return a.name < b.name
+   end)
    return ret
 end
 
@@ -188,7 +210,7 @@ local function show_rock(template, namespace, name, version, rockspec, repo, min
       labels = desc.labels and table.concat(desc.labels, ", "),
       location = path.rocks_tree_to_string(repo),
       commands = files_to_list(name, version, minfo.commands, "command", repo),
-      modules = files_to_list(name, version, minfo.modules, "module", repo),
+      modules = modules_to_list(name, version, repo),
       bdeps = deps_to_list(rockspec.build_dependencies, tree),
       tdeps = deps_to_list(rockspec.test_dependencies, tree),
       deps = deps_to_list(rockspec.dependencies, tree),
