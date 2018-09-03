@@ -6,7 +6,7 @@ local testing_paths = test_env.testing_paths
 test_env.unload_luarocks()
 
 local extra_rocks = {
-   "/abelhas-1.1-1.rockspec",
+   "/abelhas-1.1-1.src.rock",
    "/copas-2.0.1-1.src.rock",
    "/coxpcall-1.16.0-1.src.rock",
    "/coxpcall-1.16.0-1.rockspec"
