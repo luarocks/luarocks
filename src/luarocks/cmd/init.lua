@@ -86,6 +86,12 @@ function init.command(flags, name, version)
    if not fs.exists(config_file) then
       local fd = io.open(config_file, "w")
       fd:write("-- LuaRocks configuration for use with Lua " .. cfg.lua_version .. "\n")
+      if cfg.lua_interpreter then
+         fd:write(("lua_interpreter = %q\n"):format(cfg.lua_interpreter))
+      end
+      if cfg.luajit_version then
+         fd:write(("luajit_version = %q\n"):format(cfg.luajit_version))
+      end
       fd:write("variables = {\n")
       local varnames = {
          "LUA_DIR",
