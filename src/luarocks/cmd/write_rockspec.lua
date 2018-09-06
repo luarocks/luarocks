@@ -33,7 +33,7 @@ rockspec, and is not guaranteed to be complete or correct.
 --summary="<txt>"        A short one-line description summary.
 --detailed="<txt>"       A longer description string.
 --homepage=<url>         Project homepage.
---lua-version=<ver>      Supported Lua versions.  Accepted values are: "5.1", "5.2",
+--lua-versions=<ver>     Supported Lua versions.  Accepted values are: "5.1", "5.2",
                          "5.3", "5.4", "5.1,5.2", "5.2,5.3", "5.3,5.4", "5.1,5.2,5.3",
                          "5.2,5.3,5.4", or "5.1,5.2,5.3,5.4"
 --rockspec-format=<ver>  Rockspec format version, such as "1.0" or "1.1".
@@ -283,7 +283,7 @@ function write_rockspec.command(flags, name, version, url_or_dir)
          license = flags["license"] or "*** please specify a license ***",
       },
       dependencies = {
-         lua_version_dep[flags["lua-version"]],
+         lua_version_dep[flags["lua-versions"]],
       },
       build = {},
    })
@@ -291,7 +291,7 @@ function write_rockspec.command(flags, name, version, url_or_dir)
    rockspec.source.protocol = protocol
    
    if not next(rockspec.dependencies) then
-      util.warning("Please specify supported Lua version with --lua-version=<ver>. "..util.see_help("write_rockspec"))
+      util.warning("Please specify supported Lua versions with --lua-versions=<ver>. "..util.see_help("write_rockspec"))
    end
    
    local local_dir = url_or_dir

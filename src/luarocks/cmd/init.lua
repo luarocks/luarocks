@@ -19,7 +19,7 @@ init.help = [[
 --summary="<txt>"        A short one-line description summary.
 --detailed="<txt>"       A longer description string.
 --homepage=<url>         Project homepage.
---lua-version=<ver>      Supported Lua versions. Accepted values are "5.1", "5.2",
+--lua-versions=<ver>     Supported Lua versions. Accepted values are "5.1", "5.2",
                          "5.3", "5.1,5.2", "5.2,5.3", or "5.1,5.2,5.3".
 --rockspec-format=<ver>  Rockspec format version, such as "1.0" or "1.1".
 --lib=<lib>[,<lib>]      A comma-separated list of libraries that C files need to
