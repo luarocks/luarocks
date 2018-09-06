@@ -139,6 +139,7 @@ local supported_flags = {
    ["porcelain"] = true,
    ["project-tree"] = "<tree>",
    ["quick"] = true,
+   ["reset"] = true,
    ["rock-dir"] = true,
    ["rock-license"] = true,
    ["rock-namespace"] = true,

@@ -15,6 +15,11 @@ init.help = [[
 <name> is the project name.
 <version> is an optional project version.
 
+--reset                  Regenerate .luarocks/config-5.x.lua and ./lua wrapper
+                         if those already exist.
+
+Options for specifying rockspec data:
+
 --license="<string>"     A license string, such as "MIT/X11" or "GNU GPL v3".
 --summary="<txt>"        A short one-line description summary.
 --detailed="<txt>"       A longer description string.
@@ -127,8 +132,19 @@ function init.command(flags, name, version)
    end
 
    local lua_wrapper = "./lua" .. ext
+
+   if flags["reset"] then
+      fs.delete(lua_wrapper)
+      for v in util.lua_versions() do
+         if v ~= cfg.lua_version then
+            local config_file = dir.path(".luarocks", "config-"..v..".lua")
+            fs.move(config_file, config_file .. "~")
+         end
+      end
+   end
+
    if not fs.exists(lua_wrapper) then
-      util.printout("Preparing " .. lua_wrapper .. " ...")
+      util.printout("Preparing " .. lua_wrapper .. " for version " .. cfg.lua_version .. "...")
       path.use_tree(tree)
       fs.wrap_script(nil, "lua", "all")
    else
