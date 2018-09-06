@@ -25,7 +25,7 @@ function builtin.autodetect_external_dependencies(build)
          local incdirs = {}
          local libdirs = {}
          for _, lib in ipairs(libraries) do
-            local upper = lib:upper()
+            local upper = lib:upper():gsub("%+", "P"):gsub("[^%w]", "_")
             any = true
             extdeps[upper] = { library = lib }
             table.insert(incdirs, "$(" .. upper .. "_INCDIR)")
