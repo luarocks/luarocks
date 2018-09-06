@@ -726,7 +726,7 @@ function cfg.init(lua_data, project_dir, warning)
    defaults.rocks_provided, defaults.rocks_provided_3_0 = make_rocks_provided(lua_version, luajit_version)
    use_defaults(cfg, defaults)
 
-   cfg.variables.LUA = cfg.variables.LUA or (cfg.variables.LUA_BINDIR and cfg.variables.LUA_BINDIR .. "/" .. cfg.lua_interpreter)
+   cfg.variables.LUA = cfg.variables.LUA or (cfg.variables.LUA_BINDIR and cfg.variables.LUA_BINDIR .. "/" .. cfg.lua_interpreter):gsub("//", "/")
    cfg.user_agent = "LuaRocks/"..cfg.program_version.." "..cfg.arch
 
    ----------------------------------------
