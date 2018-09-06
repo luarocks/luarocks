@@ -68,9 +68,12 @@ do
       return (data:match("int%s+luaopen_([a-zA-Z0-9_]+)"))
    end
 
-   local luamod_blacklist = {
-      test = true,
-      tests = true,
+   local skiplist = {
+      ["spec"] = true,
+      [".luarocks"] = true,
+      ["lua_modules"] = true,
+      ["test.lua"] = true,
+      ["tests.lua"] = true,
    }
 
    function builtin.autodetect_modules(libs, incdirs, libdirs)
@@ -88,21 +91,22 @@ do
       end
 
       for _, file in ipairs(fs.find()) do
-         local luamod = file:match("(.*)%.lua$")
-         if file:match("^.luarocks") or file:match("^lua_modules") then
-            -- skip
-         elseif luamod and not luamod_blacklist[luamod] then
-            modules[path.path_to_module(file)] = prefix..file
-         else
-            local cmod = file:match("(.*)%.c$")
-            if cmod then
-               local modname = get_cmod_name(file) or path.path_to_module(file:gsub("%.c$", ".lua"))
-               modules[modname] = {
-                  sources = prefix..file,
-                  libraries = libs,
-                  incdirs = incdirs,
-                  libdirs = libdirs,
-               }
+         local base = file:match("^([^\\/]*)")
+         if not skiplist[base] then
+            local luamod = file:match("(.*)%.lua$")
+            if luamod then
+               modules[path.path_to_module(file)] = prefix..file
+            else
+               local cmod = file:match("(.*)%.c$")
+               if cmod then
+                  local modname = get_cmod_name(file) or path.path_to_module(file:gsub("%.c$", ".lua"))
+                  modules[modname] = {
+                     sources = prefix..file,
+                     libraries = libs,
+                     incdirs = incdirs,
+                     libdirs = libdirs,
+                  }
+               end
             end
          end
       end
