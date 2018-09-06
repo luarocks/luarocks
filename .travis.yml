@@ -13,8 +13,8 @@ cache:
   - testrun/testing_server-2.1
 
 smoke_script: &smoke_script
-  - ./makedist 3.0.0
-  - ./smoke_test.sh luarocks-3.0.0.tar.gz
+  - ./makedist 3.0.2
+  - ./smoke_test.sh luarocks-3.0.2.tar.gz
 
 unit_script: &unit_script
   - busted -o gtest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
@@ -24,7 +24,7 @@ integration_script: &integration_script
   - lua -v
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then shellcheck ./configure; fi
   - ./configure --with-lua=lua_install
-  - ./makedist 3.0.0
+  - ./makedist 3.0.2
   - busted -o gtest --exclude-tags=git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
   - busted -o gtest --exclude-tags=git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
 
