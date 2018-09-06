@@ -60,7 +60,7 @@ loader.rocks_trees = nil
 function loader.load_rocks_trees()
    local any_ok = false
    local trees = {}
-   for _, tree in ipairs(cfg.rocks_trees) do
+   for _, tree in ipairs(cfg.rocks_trees or {}) do
       local manifest, err = manif.fast_load_local_manifest(path.rocks_dir(tree))
       if manifest then
          any_ok = true

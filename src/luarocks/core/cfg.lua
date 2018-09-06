@@ -584,8 +584,6 @@ function cfg.init(lua_data, project_dir, warning)
       LUA_LIBDIR = lua_libdir,
    }
 
-   cfg.rocks_trees = {}
-
    cfg.init = init
 
    ----------------------------------------
@@ -704,7 +702,8 @@ function cfg.init(lua_data, project_dir, warning)
    cfg.variables.LUA_DIR = lua_data.lua_dir or cfg.variables.LUA_DIR or lua_dir
 
    -- Build a default list of rocks trees if not given
-   if not next(cfg.rocks_trees) then
+   if cfg.rocks_trees == nil then
+      cfg.rocks_trees = {}
       if cfg.home_tree then
          table.insert(cfg.rocks_trees, { name = "user", root = cfg.home_tree } )
       end
