@@ -35,16 +35,16 @@ local function is_ownership_ok(directory)
    return false
 end
 
-do
-   local function exists(file)
-      local fd = io.open(file, "r")
-      if fd then
-         fd:close()
-         return true
-      end
-      return false
+local function exists(file)
+   local fd = io.open(file, "r")
+   if fd then
+      fd:close()
+      return true
    end
-   
+   return false
+end
+
+do
    local function Q(pathname)
       if pathname:match("^.:") then
          return pathname:sub(1, 2) .. '"' .. pathname:sub(3) .. '"'
@@ -363,6 +363,11 @@ function cmd.run_command(description, commands, external_namespace, ...)
       die("Invalid entry for --deps-mode.")
    end
 
+   local project_dir
+   if flags["project-tree"] then
+      project_dir = flags["project-tree"]:gsub("[/\\][^/\\]+$", "")
+   end
+
    local lua_data
    if flags["lua-dir"] then
       local err
@@ -371,14 +376,32 @@ function cmd.run_command(description, commands, external_namespace, ...)
          die(err)
       end
    elseif flags["lua-version"] then
+      local path_sep = (package.config:sub(1, 1) == "\\" and ";" or ":")
+      for bindir in os.getenv("PATH"):gmatch("[^"..path_sep.."]+") do
+         local parentdir = bindir:gsub("[\\/][^\\/]+[\\/]?$", "")
+         lua_data = cmd.find_lua(dir.path(parentdir), flags["lua-version"])
+         if lua_data then
+            break
+         end
+         lua_data = cmd.find_lua(bindir, flags["lua-version"])
+         if lua_data then
+            break
+         end
+      end
+      if not lua_data then
+         die("Could not find a Lua interpreter for version " .. flags["lua-version"] .. " in your PATH")
+      end
+   elseif project_dir then
+      local lua_version
+      for v in util.lua_versions("descending") do
+         if exists(dir.path(project_dir, ".luarocks", "config-"..v..".lua")) then
+            lua_version = v
+            break
+         end
+      end
       lua_data = {
-         lua_version = flags["lua-version"]
+         lua_version = lua_version
       }
-   end
-
-   local project_dir
-   if flags["project-tree"] then
-      project_dir = flags["project-tree"]:gsub("[/\\][^/\\]+$", "")
    end
 
    -- FIXME A quick hack for the experimental Windows build
