@@ -1,5 +1,17 @@
 [
 {
+"3.0.2": {
+"date": "2018-09-07", 
+"files": ["luarocks-3.0.2.tar.gz", "luarocks-3.0.2.tar.gz.asc", "luarocks-3.0.2-win32.zip", "luarocks-3.0.2-win32.zip.asc", "luarocks-3.0.2-windows-32.zip", "luarocks-3.0.2-windows-32.zip.asc", "luarocks-3.0.2-linux-x86_64.zip", "luarocks-3.0.2-linux-x86_64.zip.asc"], 
+"about": [
+"Improvements in luarocks init",
+"Improved module autodetection",
+"Bugfixes in luarocks show",
+"Fix upgrade/downgrade when a single rock has clashing module filenames",
+"Fix for autodetected external dependencies with non-alphabetic characters"
+]
+}},
+{
 "3.0.0": {
 "date": "2018-07-20", 
 "files": ["luarocks-3.0.0.tar.gz", "luarocks-3.0.0.tar.gz.asc", "luarocks-3.0.0-win32.zip", "luarocks-3.0.0-win32.zip.asc", "luarocks-3.0.0-windows-32.zip", "luarocks-3.0.0-windows-32.zip.asc"], 
@@ -10,7 +22,7 @@
 "New build system",
 "General improvements, including namespaces",
 "User-visible changes, including some breaking changes",
-"Various internal changes",
+"Various internal changes"
 ]
 }},
 {
