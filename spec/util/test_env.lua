@@ -473,7 +473,9 @@ local function make_run_function(cmd_name, exec_function, with_coverage, do_prin
       cmd_prefix = cmd_prefix .. "-e \"require('luacov.runner')('" .. test_env.testing_paths.testrun_dir .. "/luacov.config')\" "
    end
    
-   cmd_prefix = cmd_prefix .. test_env.testing_paths.src_dir .. "/bin/" .. cmd_name .. " "
+   if cmd_name then
+      cmd_prefix = cmd_prefix .. test_env.testing_paths.src_dir .. "/bin/" .. cmd_name .. " "
+   end
 
    return function(cmd, new_vars)
       local temp_vars = {}
@@ -491,6 +493,8 @@ end
 
 local function make_run_functions()
    return {
+      lua = make_run_function(nil, execute_output, true, true),
+      lua_bool = make_run_function(nil, execute_bool, true, true),
       luarocks = make_run_function("luarocks", execute_output, true, true),
       luarocks_bool = make_run_function("luarocks", execute_bool, true, true),
       luarocks_noprint = make_run_function("luarocks", execute_bool, true, false),
