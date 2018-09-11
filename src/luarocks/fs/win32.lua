@@ -139,8 +139,8 @@ function win32.wrap_script(file, dest, deps_mode, name, version, ...)
    assert(type(name) == "string" or not name)
    assert(type(version) == "string" or not version)
 
-   local wrapname = fs.is_dir(dest) and dest.."/"..dir.base_name(file) or dest
-   wrapname = wrapname .. ".bat"
+   local batname = (file or dest) .. ".bat"
+   local wrapname = fs.is_dir(dest) and dest.."/"..batname or batname
    local wrapper = io.open(wrapname, "w")
    if not wrapper then
       return nil, "Could not open "..wrapname.." for writing."
