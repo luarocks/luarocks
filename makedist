@@ -24,6 +24,12 @@ ROCKSPEC="luarocks-$1-1.rockspec"
    echo "$ROCKSPEC is missing. Please check rockspec version is correct."
 }
 
+grep -q "LuaRocks version $1" "configure" || {
+   echo
+   echo "version in configure is incorrect. Please fix it."
+   exit 1
+}
+
 grep -q "\"$1-1\"" "$ROCKSPEC" || {
    echo
    echo "version in rockspec is incorrect. Please fix it."
