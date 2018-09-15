@@ -1,11 +1,20 @@
 [
 {
+"3.0.3": {
+"date": "2018-09-15", 
+"files": ["luarocks-3.0.3.tar.gz", "luarocks-3.0.3.tar.gz.asc", "luarocks-3.0.3-win32.zip", "luarocks-3.0.3-win32.zip.asc", "luarocks-3.0.3-windows-32.zip", "luarocks-3.0.3-windows-32.zip.asc", "luarocks-3.0.3-linux-x86_64.zip", "luarocks-3.0.3-linux-x86_64.zip.asc"], 
+"about": [
+"Minor bugfix release"
+]
+}},
+{
 "3.0.2": {
 "date": "2018-09-07", 
 "files": ["luarocks-3.0.2.tar.gz", "luarocks-3.0.2.tar.gz.asc", "luarocks-3.0.2-win32.zip", "luarocks-3.0.2-win32.zip.asc", "luarocks-3.0.2-windows-32.zip", "luarocks-3.0.2-windows-32.zip.asc", "luarocks-3.0.2-linux-x86_64.zip", "luarocks-3.0.2-linux-x86_64.zip.asc"], 
 "about": [
 "Improvements in luarocks init",
 "Improved module autodetection",
+"write_rockspec: --lua-version renamed to --lua-versions",
 "Bugfixes in luarocks show",
 "Fix upgrade/downgrade when a single rock has clashing module filenames",
 "Fix for autodetected external dependencies with non-alphabetic characters"
