@@ -126,24 +126,23 @@ function win32.root_of(pathname)
 end
 
 --- Create a wrapper to make a script executable from the command-line.
--- @param file string: Pathname of script to be made executable.
--- @param dest string: Directory where to put the wrapper.
+-- @param script string: Pathname of script to be made executable.
+-- @param target string: wrapper target pathname (without wrapper suffix).
 -- @param name string: rock name to be used in loader context.
 -- @param version string: rock version to be used in loader context.
 -- @return boolean or (nil, string): True if succeeded, or nil and
 -- an error message.
-function win32.wrap_script(file, dest, deps_mode, name, version, ...)
-   assert(type(file) == "string" or not file)
-   assert(type(dest) == "string")
+function win32.wrap_script(script, target, deps_mode, name, version, ...)
+   assert(type(script) == "string" or not script)
+   assert(type(target) == "string")
    assert(type(deps_mode) == "string")
    assert(type(name) == "string" or not name)
    assert(type(version) == "string" or not version)
 
-   local batname = (file or dest) .. ".bat"
-   local wrapname = fs.is_dir(dest) and dest.."/"..batname or batname
-   local wrapper = io.open(wrapname, "w")
+   local batname = target .. ".bat"
+   local wrapper = io.open(batname, "wb")
    if not wrapper then
-      return nil, "Could not open "..wrapname.." for writing."
+      return nil, "Could not open "..batname.." for writing."
    end
 
    local lpath, lcpath = path.package_paths(deps_mode)
@@ -157,13 +156,13 @@ function win32.wrap_script(file, dest, deps_mode, name, version, ...)
 
    local argv = {
       fs.Qb(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)),
-      file and fs.Qb(file) or "",
+      script and fs.Qb(script) or "",
       ...
    }
 
    wrapper:write("@echo off\r\n")
    wrapper:write("set "..fs.Qb("LUAROCKS_SYSCONFDIR="..cfg.sysconfdir) .. "\r\n")
-   if dest == "luarocks" then
+   if target == "luarocks" or target == "luarocks-admin" then
       wrapper:write("set "..fs.Qb(lpath_var.."="..package.path) .. "\r\n")
       wrapper:write("set "..fs.Qb(lcpath_var.."="..package.cpath) .. "\r\n")
    else

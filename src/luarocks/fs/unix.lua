@@ -59,24 +59,22 @@ function unix.root_of(_)
 end
 
 --- Create a wrapper to make a script executable from the command-line.
--- @param file string: Pathname of script to be made executable.
--- @param dest string: Directory where to put the wrapper.
+-- @param script string: Pathname of script to be made executable.
+-- @param target string: wrapper target pathname (without wrapper suffix).
 -- @param name string: rock name to be used in loader context.
 -- @param version string: rock version to be used in loader context.
 -- @return boolean or (nil, string): True if succeeded, or nil and
 -- an error message.
-function unix.wrap_script(file, dest, deps_mode, name, version, ...)
-   assert(type(file) == "string" or not file)
-   assert(type(dest) == "string")
+function unix.wrap_script(script, target, deps_mode, name, version, ...)
+   assert(type(script) == "string" or not script)
+   assert(type(target) == "string")
    assert(type(deps_mode) == "string")
    assert(type(name) == "string" or not name)
    assert(type(version) == "string" or not version)
    
-   local wrapname = fs.is_dir(dest) and dest.."/"..dir.base_name(file) or dest
-
-   local wrapper = io.open(wrapname, "w")
+   local wrapper = io.open(target, "w")
    if not wrapper then
-      return nil, "Could not open "..wrapname.." for writing."
+      return nil, "Could not open "..target.." for writing."
    end
 
    local lpath, lcpath = path.package_paths(deps_mode)
@@ -85,7 +83,7 @@ function unix.wrap_script(file, dest, deps_mode, name, version, ...)
       "package.path="..util.LQ(lpath..";").."..package.path",
       "package.cpath="..util.LQ(lcpath..";").."..package.cpath",
    }
-   if dest == "luarocks" or dest == "luarocks-admin" then
+   if target == "luarocks" or target == "luarocks-admin" then
       luainit = {
          "package.path="..util.LQ(package.path),
          "package.cpath="..util.LQ(package.cpath),
@@ -99,7 +97,7 @@ function unix.wrap_script(file, dest, deps_mode, name, version, ...)
 
    local argv = {
       fs.Q(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)),
-      file and fs.Q(file) or "",
+      script and fs.Q(script) or "",
       ...
    }
 
@@ -109,10 +107,10 @@ function unix.wrap_script(file, dest, deps_mode, name, version, ...)
    wrapper:write("exec "..table.concat(argv, " ")..' "$@"\n')
    wrapper:close()
 
-   if fs.set_permissions(wrapname, "exec", "all") then
+   if fs.set_permissions(target, "exec", "all") then
       return true
    else
-      return nil, "Could not make "..wrapname.." executable."
+      return nil, "Could not make "..target.." executable."
    end
 end
 
