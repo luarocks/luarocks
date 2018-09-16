@@ -261,11 +261,9 @@ function tools.set_permissions(filename, mode, scope)
       end
       -- Finally, remove all the other users from the ACL in order to deny them access to the file
       for _, user in pairs(get_system_users()) do
-         if user ~= who then
-            local ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /remove " .. fs.Q(user))
-            if not ok then
-               return false, "Failed setting permission " .. mode .. " for " .. scope
-            end
+         local ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /remove " .. fs.Q(user))
+         if not ok then
+            return false, "Failed setting permission " .. mode .. " for " .. scope
          end
       end
    elseif scope == "all" then
