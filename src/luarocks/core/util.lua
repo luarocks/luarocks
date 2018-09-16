@@ -12,10 +12,17 @@ local require = nil
 -- May be used to read more, passing, for instance, "*a".
 -- @return string: the output of the program.
 function util.popen_read(cmd, spec)
-   local fd = io.popen(cmd)
+   local tmpfile = os.tmpname()
+   os.execute(cmd .. " > " .. tmpfile)
+   local fd = io.open(tmpfile, "rb")
+   if not fd then
+      os.remove(tmpfile)
+      return ""
+   end
    local out = fd:read(spec or "*l")
    fd:close()
-   return out
+   os.remove(tmpfile)
+   return out or ""
 end
 
 --- Create a new shallow copy of a table: a new table with
