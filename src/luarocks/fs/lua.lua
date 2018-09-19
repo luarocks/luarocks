@@ -1045,7 +1045,7 @@ function fs_lua.current_user()
 end
 
 function fs_lua.is_superuser()
-   return false
+   return posix.geteuid() == 0
 end
 
 -- This call is not available on all systems, see #677

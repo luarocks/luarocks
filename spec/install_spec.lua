@@ -54,7 +54,9 @@ describe("luarocks install #integration", function()
       end)
 
       it("fails with local flag as root #unix", function()
-         assert.is_false(run.luarocks_bool("install --local luasocket ", { USER = "root" } ))
+         if test_env.TYPE_TEST_ENV ~= "full" then
+            assert.is_false(run.luarocks_bool("install --local luasocket ", { USER = "root" } ))
+         end
       end)
 
       it("fails with no downloader", function()

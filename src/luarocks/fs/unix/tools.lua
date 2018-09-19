@@ -297,4 +297,22 @@ function tools.is_file(file)
    return fs.execute(vars.TEST, "-f", file)
 end
 
+function tools.current_user()
+   local user = os.getenv("USER")
+   if user then
+      return user
+   end
+   local pd = io.popen("whoami", "r")
+   if not pd then
+      return ""
+   end
+   user = pd:read("*l")
+   pd:close()
+   return user
+end
+
+function tools.is_superuser()
+   return fs.current_user() == "root"
+end
+
 return tools

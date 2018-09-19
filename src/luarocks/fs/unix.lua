@@ -176,14 +176,6 @@ function unix.tmpname()
    return os.tmpname()
 end
 
-function unix.current_user()
-   return os.getenv("USER")
-end
-
-function unix.is_superuser()
-   return os.getenv("USER") == "root"
-end
-
 function unix.export_cmd(var, val)
    return ("export %s='%s'"):format(var, val)
 end
