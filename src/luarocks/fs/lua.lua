@@ -111,7 +111,7 @@ function fs_lua.is_tool_available(tool_cmd, tool_name, arg)
    arg = arg or "--version"
    assert(type(arg) == "string")
 
-   if not fs.execute_quiet(fs.Q(tool_cmd), arg) then
+   if not fs.execute_quiet(tool_cmd, arg) then
       local msg = "'%s' program not found. Make sure %s is installed and is available in your PATH " ..
                   "(or you may want to edit the 'variables.%s' value in file '%s')"
       return nil, msg:format(tool_cmd, tool_name, tool_name:upper(), cfg.which_config().nearest)

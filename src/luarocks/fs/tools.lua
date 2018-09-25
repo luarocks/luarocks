@@ -168,12 +168,14 @@ function tools.use_downloader(url, filename, cache)
         curl_cmd = curl_cmd .. "--connect-timeout "..tostring(cfg.connection_timeout).." "
       end
       ok = fs.execute_string(fs.quiet_stderr(curl_cmd..fs.Q(url).." > "..fs.Q(filename)))
+   else
+      return false, "No downloader tool available -- please install 'wget' or 'curl' in your system"
    end
    if ok then
       return true, filename
    else
       os.remove(filename)
-      return false
+      return false, "Failed downloading " .. url
    end
 end
 
@@ -189,9 +191,14 @@ function tools.get_md5(file)
       if computed then
          computed = computed:match("("..("%x"):rep(32)..")")
       end
-      if computed then return computed end
+      if computed then
+         return computed
+      else
+         return nil, "Failed to compute MD5 hash for file "..tostring(fs.absolute_name(file))
+      end
+   else
+      return false, "No MD5 checking tool available -- please install 'md5', 'md5sum' or 'openssl' in your system"
    end
-   return nil, "Failed to compute MD5 hash for file "..tostring(fs.absolute_name(file))
 end
 
 return tools

@@ -61,7 +61,7 @@ local function unpack_rock(rock_file, dir_name, kind)
 
    local ok, err, errcode = fetch.fetch_and_unpack_rock(rock_file, dir_name)
    if not ok then
-      return nil, "Failed unzipping rock "..rock_file, errcode
+      return nil, err, errcode
    end
    ok, err = fs.change_dir(dir_name)
    if not ok then return nil, err end

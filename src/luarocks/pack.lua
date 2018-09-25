@@ -43,8 +43,9 @@ function pack.pack_source_rock(rockspec_file)
 
    fs.delete(rock_file)
    fs.copy(rockspec_file, source_dir, "read")
-   if not fs.zip(rock_file, dir.base_name(rockspec_file), dir.base_name(source_file)) then
-      return nil, "Failed packing "..rock_file
+   ok, err = fs.zip(rock_file, dir.base_name(rockspec_file), dir.base_name(source_file))
+   if not ok then
+      return nil, "Failed packing "..rock_file.." - "..err
    end
    fs.pop_dir()
 
