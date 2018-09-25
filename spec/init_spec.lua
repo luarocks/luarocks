@@ -9,6 +9,11 @@ local lfs = require("lfs")
 test_env.unload_luarocks()
 
 describe("Luarocks init test #integration", function()
+
+   setup(function()
+      test_env.setup_specs()
+   end)
+
    it("LuaRocks init with no arguments", function()
       test_env.run_in_tmp(function(tmpdir)
          local myproject = tmpdir .. "/myproject"
@@ -42,6 +47,22 @@ describe("Luarocks init test #integration", function()
       end, finally)
    end)
    
+   it("LuaRocks init with --lua-versions", function()
+      test_env.run_in_tmp(function(tmpdir)
+         local myproject = tmpdir .. "/myproject"
+         lfs.mkdir(myproject)
+         lfs.chdir(myproject)
+
+         assert(run.luarocks("init --lua-versions=5.1,5.2,5.3"))
+         local rockspec_name = myproject .. "/myproject-dev-1.rockspec"
+         assert.truthy(lfs.attributes(rockspec_name))
+         local fd = assert(io.open(rockspec_name, "rb"))
+         local data = fd:read("*a")
+         fd:close()
+         assert.truthy(data:find("lua >= 5.1, < 5.4", 1, true))
+      end, finally)
+   end)
+
    it("LuaRocks init in a git repo", function()
       test_env.run_in_tmp(function(tmpdir)
          local myproject = tmpdir .. "/myproject"
