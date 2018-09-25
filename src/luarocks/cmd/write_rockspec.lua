@@ -220,6 +220,13 @@ local function rockspec_cleanup(rockspec)
          rockspec[list] = nil
       end
    end
+   for _, list in ipairs({"dependencies", "build_dependencies", "test_dependencies"}) do
+      if rockspec[list] then
+         for i, entry in ipairs(rockspec[list]) do
+            rockspec[list][i] = tostring(entry)
+         end
+      end
+   end
 end
 
 function write_rockspec.command(flags, name, version, url_or_dir)
