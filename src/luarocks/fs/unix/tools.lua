@@ -125,6 +125,10 @@ end
 -- additional arguments.
 -- @return boolean: true on success, nil and error message on failure.
 function tools.zip(zipfile, ...)
+   local ok, err = fs.is_tool_available(vars.ZIP, "zip")
+   if not ok then
+      return nil, err
+   end
    if fs.execute_quiet(vars.ZIP.." -r", zipfile, ...) then
       return true
    else
@@ -137,6 +141,10 @@ end
 -- @return boolean: true on success, nil and error message on failure.
 function tools.unzip(zipfile)
    assert(zipfile)
+   local ok, err = fs.is_tool_available(vars.UNZIP, "unzip", "-h")
+   if not ok then
+      return nil, err
+   end
    if fs.execute_quiet(vars.UNZIP, zipfile) then
       return true
    else
