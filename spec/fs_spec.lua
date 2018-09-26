@@ -1126,6 +1126,12 @@ describe("Luarocks fs test #unit", function()
          create_file(tmpfile, "print(\"foo\")")
          assert.truthy(fs.is_lua(tmpfile))
       end)
+
+      it("returns true if the argument is a valid lua script with shebang", function()
+         tmpfile = get_tmp_path()
+         create_file(tmpfile, "#!/usr/bin/env lua\n\nprint(\"foo\")")
+         assert.truthy(fs.is_lua(tmpfile))
+      end)
       
       it("returns false if the argument is not a valid lua script", function()
          tmpfile = os.tmpname()
