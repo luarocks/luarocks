@@ -325,7 +325,7 @@ local function check_external_dependency_at(extdir, name, ext_files, vars, dirs,
 
             local pattern
             if f:match("%*") then
-               pattern = f:gsub("%.", "%%."):gsub("%*", ".*")
+               pattern = f:gsub("([-.+])", "%%%1"):gsub("%*", ".*")
                f = "matching "..f
             end
 
