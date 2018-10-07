@@ -18,6 +18,9 @@ luarocks.search = search_api.search
 local list_api = require("luarocks.api.list")
 luarocks.list = list_api.list
 
+local unpack_api = require("luarocks.api.unpack")
+luarocks.unpack = unpack_api.unpack
+
 local cfg = require("luarocks.core.cfg")
 local queries = require("luarocks.queries")
 local search = require("luarocks.search")
