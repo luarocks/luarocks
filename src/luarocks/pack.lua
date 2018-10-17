@@ -102,12 +102,12 @@ function pack.pack_installed_rock(query, tree)
 
    local is_binary = false
    if rock_manifest.lib then
-      local ok, err = copy_back_files(name, version, rock_manifest.lib, path.deploy_lib_dir(root), dir.path(temp_dir, "lib"), "exec")
+      local ok, err = copy_back_files(name, version, rock_manifest.lib, path.deploy_lib_dir(repo), dir.path(temp_dir, "lib"), "exec")
       if not ok then return nil, "Failed copying back files: " .. err end
       is_binary = true
    end
    if rock_manifest.lua then
-      local ok, err = copy_back_files(name, version, rock_manifest.lua, path.deploy_lua_dir(root), dir.path(temp_dir, "lua"), "read")
+      local ok, err = copy_back_files(name, version, rock_manifest.lua, path.deploy_lua_dir(repo), dir.path(temp_dir, "lua"), "read")
       if not ok then return nil, "Failed copying back files: " .. err end
    end
    
