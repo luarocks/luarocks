@@ -15,6 +15,9 @@ luarocks.open_doc = doc_api.open_doc
 local search_api = require("luarocks.api.search")
 luarocks.search = search_api.search
 
+local lint_api = require("luarocks.api.lint")
+luarocks.lint = lint_api.lint
+
 local list_api = require("luarocks.api.list")
 luarocks.list = list_api.list
 
@@ -234,43 +237,6 @@ function luarocks.remove(name, version, tree, force)
    --
 
    return true, err
-end
-
-function luarocks.lint(input, tree)
-
-   -- Even though this function doesn't necessarily require a tree argument, it needs to calll this function to not break - fetch.load_local_rockspec()
-   luarocks.set_rock_tree(tree)
-
-   if not input then
-      return nil, "Argument missing. "
-   end
-   
-   local filename = input
-   if not input:match(".rockspec$") then
-      local err
-      filename, err = download.download("rockspec", input:lower())
-      if not filename then
-         return nil, err
-      end
-   end
-
-   local rs, err = fetch.load_local_rockspec(filename)
-   if not rs then
-      return nil, "Failed loading rockspec: "..err
-   end
-
-   local ok = true
-   
-   -- This should have been done in the type checker, 
-   -- but it would break compatibility of other commands.
-   -- Making 'lint' alone be stricter shouldn't be a problem,
-   -- because extra-strict checks is what lint-type commands
-   -- are all about.
-   if not rs.description.license then
-      ok = false
-   end
-
-   return ok, ok or filename.." failed consistency checks."
 end
 
 local function open_file(name)
