@@ -1,12 +1,9 @@
-
 --- Module implementing the LuaRocks "lint" command.
 -- Utility function that checks syntax of the rockspec.
 local lint = {}
 
-local util = require("luarocks.util")
-local download = require("luarocks.download")
-local fetch = require("luarocks.fetch")
 local cmd = require("luarocks.cmd")
+local luarocks = require("luarocks")
 
 lint.help_summary = "Check syntax of a rockspec."
 lint.help_arguments = "<rockspec>"
@@ -19,36 +16,10 @@ syntactically correct.
 
 function lint.command(flags, input)
    if not input then
-      return nil, "Argument missing. "..cmd.see_help("lint")
-   end
-   
-   local filename = input
-   if not input:match(".rockspec$") then
-      local err
-      filename, err = download.download("rockspec", input:lower())
-      if not filename then
-         return nil, err
-      end
+      return nil, "Argument missing. " .. cmd.see_help("lint")
    end
 
-   local rs, err = fetch.load_local_rockspec(filename)
-   if not rs then
-      return nil, "Failed loading rockspec: "..err
-   end
-
-   local ok = true
-   
-   -- This should have been done in the type checker, 
-   -- but it would break compatibility of other commands.
-   -- Making 'lint' alone be stricter shouldn't be a problem,
-   -- because extra-strict checks is what lint-type commands
-   -- are all about.
-   if not rs.description.license then
-      cmd.printerr("Rockspec has no license field.")
-      ok = false
-   end
-
-   return ok, ok or filename.." failed consistency checks."
+   return luarocks.lint(input, flags["tree"])
 end
 
 return lint
