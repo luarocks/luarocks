@@ -3,6 +3,7 @@ local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 local env_variables = test_env.env_variables
+local write_file = test_env.write_file
 local hardcoded
 
 test_env.unload_luarocks()
@@ -51,6 +52,22 @@ describe("LuaRocks config tests #integration", function()
       it("LuaRocks config missing user config", function()
          local output = run.luarocks("config --user-config", {LUAROCKS_CONFIG = "missing_file.lua"})
          assert.truthy(output:match("Warning"))
+      end)
+
+      it("LuaRocks config with --tree respects custom config", function()
+         write_file("my_config.lua", [[
+            rocks_trees = {
+               {
+                  name = "system",
+                  root = "/example/tree",
+                  lua_dir = "/example/luadir",
+               },
+            }
+         ]], finally)
+         local output = run.luarocks("config", {LUAROCKS_CONFIG = "my_config.lua"})
+         assert.match([[deploy_lua_dir = "/example/luadir"]], output)
+         output = run.luarocks("config --tree=system", {LUAROCKS_CONFIG = "my_config.lua"})
+         assert.match([[deploy_lua_dir = "/example/luadir"]], output)
       end)
    end)
 
