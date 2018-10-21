@@ -150,10 +150,10 @@ end
 
 local process_tree_flags
 do
-   local function replace_tree(flags, tree)
-      tree = dir.normalize(tree)
-      flags["tree"] = tree
-      path.use_tree(tree)
+   local function replace_tree(flags, root, tree)
+      root = dir.normalize(root)
+      flags["tree"] = root
+      path.use_tree(tree or root)
    end
 
    local function find_project_dir()
@@ -195,7 +195,7 @@ do
                if not tree.root then
                   return nil, "Configuration error: tree '"..tree.name.."' has no 'root' field."
                end
-               replace_tree(flags, tree.root)
+               replace_tree(flags, tree.root, tree)
                named = true
                break
             end
