@@ -25,23 +25,23 @@ test suite arguments.
 
 ]]..util.deps_mode_help()
 
-function cmd_test.command(flags, arg, ...)
-   assert(type(arg) == "string" or not arg)
+function cmd_test.command(flags, argument, ...)
+   assert(type(argument) == "string" or not argument)
 
-   local args = { ... }
+   local arguments = { ... }
 
-   if arg and arg:match("rockspec$") then
-      return test.run_test_suite(arg, flags["test-type"], args)
+   if argument and argument:match("rockspec$") then
+      return test.run_test_suite(argument, flags["test-type"], arguments)
    end
    
-   table.insert(args, 1, arg)
+   table.insert(arguments, 1, argument)
    
    local rockspec, err = util.get_default_rockspec()
    if not rockspec then
       return nil, err
    end
 
-   return test.run_test_suite(rockspec, flags["test-type"], args)
+   return test.run_test_suite(rockspec, flags["test-type"], arguments)
 end
 
 return cmd_test
