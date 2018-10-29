@@ -1015,7 +1015,7 @@ local hardcoded_lua = S[[$LUADIR\luarocks\core\hardcoded.lua]]
 
 os.remove(hardcoded_lua)
 
-vars.SYSTEM = USE_MINGW and "MINGW" or "WindowsNT"
+vars.SYSTEM = USE_MINGW and "mingw" or "windows"
 
 local f = io.open(hardcoded_lua, "w")
 f:write(S[=[

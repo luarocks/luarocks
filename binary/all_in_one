@@ -50,6 +50,7 @@ local path = require("luarocks.path")
 local manif = require("luarocks.manif")
 local queries = require("luarocks.queries")
 local persist = require("luarocks.persist")
+local sysdetect = require("luarocks.core.sysdetect")
 
 --------------------------------------------------------------------------------
 
@@ -144,16 +145,7 @@ local function write_hardcoded_module(dir)
    local processor = if_platform("windows", "x86")
 
    if if_platform("unix", true) then
-      system = util.popen_read("uname -s")
-      processor = util.popen_read("uname -m")
-
-      if processor:match("i[%d]86") then
-         processor = "x86"
-      elseif processor:match("amd64") or processor:match("x86_64") then
-         processor = "x86_64"
-      elseif processor:match("Power Macintosh") then
-         processor = "powerpc"
-      end
+      system, processor = sysdetect.detect()
    end
 
    local hardcoded = {
