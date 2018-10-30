@@ -11,6 +11,7 @@ cache:
   - testrun/testing_server-5.2
   - testrun/testing_server-5.3
   - testrun/testing_server-2.1
+  - testrun/binary-samples
   
 unit_script: &unit_script
   - busted -o gtest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
