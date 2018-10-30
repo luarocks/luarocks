@@ -19,7 +19,7 @@ local sysdetect = require("luarocks.core.sysdetect")
 
 --------------------------------------------------------------------------------
 
-local program_version = "dev"
+local program_version = "3.0.4"
 local program_series = "3.0"
 local major_version = (program_version:match("([^.]%.[^.])")) or program_series
 
