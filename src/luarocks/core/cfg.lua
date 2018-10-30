@@ -15,6 +15,7 @@ local next, table, pairs, require, os, pcall, ipairs, package, tonumber, type, a
 
 local util = require("luarocks.core.util")
 local persist = require("luarocks.core.persist")
+local sysdetect = require("luarocks.core.sysdetect")
 
 --------------------------------------------------------------------------------
 
@@ -151,22 +152,23 @@ do
    end
 end
 
+local platform_sets = {
+   freebsd = { unix = true, bsd = true, freebsd = true },
+   openbsd = { unix = true, bsd = true, openbsd = true },
+   solaris = { unix = true, solaris = true },
+   windows = { windows = true, win32 = true },
+   cygwin = { unix = true, cygwin = true },
+   macosx = { unix = true, bsd = true, macosx = true, macos = true },
+   netbsd = { unix = true, bsd = true, netbsd = true },
+   haiku = { unix = true, haiku = true },
+   linux = { unix = true, linux = true },
+   mingw = { windows = true, win32 = true, mingw32 = true, mingw = true },
+   msys = { unix = true, cygwin = true, msys = true },
+}
+
 local function make_platforms(system)
-   if system then
-      if system == "Linux"            then return { unix = true, linux = true }
-      elseif system == "FreeBSD"      then return { unix = true, bsd = true, freebsd = true }
-      elseif system == "OpenBSD"      then return { unix = true, bsd = true, openbsd = true }
-      elseif system == "NetBSD"       then return { unix = true, bsd = true, netbsd = true }
-      elseif system == "Darwin"       then return { unix = true, bsd = true, macosx = true, macos = true }
-      elseif system == "SunOS"        then return { unix = true, solaris = true }
-      elseif system == "Haiku"        then return { unix = true, haiku = true }
-      elseif system:match("^CYGWIN")  then return { unix = true, cygwin = true }
-      elseif system:match("^MSYS")    then return { unix = true, cygwin = true, msys = true }
-      elseif system:match("^Windows") then return { windows = true, win32 = true }
-      elseif system:match("^MINGW")   then return { windows = true, win32 = true, mingw32 = true, mingw = true }
-      end
-   end
-   return { unix = true } -- fallback to Unix in unknown systems
+   -- fallback to Unix in unknown systems
+   return platform_sets[system] or { unix = true }
 end
 
 --------------------------------------------------------------------------------
@@ -593,29 +595,27 @@ function cfg.init(lua_data, project_dir, warning)
    -- A proper build of LuaRocks will hardcode the system
    -- and proc values with hardcoded.SYSTEM and hardcoded.PROCESSOR.
    -- If that is not available, we try to identify the system.
-   local system = hardcoded.SYSTEM
-   local processor = hardcoded.PROCESSOR
-   if is_windows then
-      if not system then
-         if os.getenv("VCINSTALLDIR") then
-            -- running from the Development Command prompt for VS 2017
-            system = "Windows"
+   local system, processor = sysdetect.detect()
+   if hardcoded.SYSTEM then
+      system = hardcoded.SYSTEM
+   end
+   if hardcoded.PROCESSOR then
+      processor = hardcoded.PROCESSOR
+   end
+
+   if system == "windows" then
+      if os.getenv("VCINSTALLDIR") then
+         -- running from the Development Command prompt for VS 2017
+         system = "windows"
+      else
+         local fd = io.open("/bin/sh", "r")
+         if fd then
+            fd:close()
+            system = "msys"
          else
-            system = "MINGW"
+            system = "mingw"
          end
       end
-      if not processor then
-         local pe_parser = require("luarocks.fs.win32.pe-parser")
-         local err
-         local lua_exe = lua_bindir .. "\\" .. lua_interpreter
-         processor, err = pe_parser.get_architecture(lua_exe)
-         if err then
-            processor = "x86"
-         end
-      end
-   else
-      system = system or util.popen_read("uname -s")
-      processor = processor or util.popen_read("uname -m")
    end
 
    cfg.target_cpu = processor

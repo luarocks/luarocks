@@ -807,9 +807,9 @@ local function setup_luarocks()
 
    if test_env.TEST_TARGET_OS == "windows" then
       if test_env.MINGW then
-         table.insert(lines, [[SYSTEM = "MINGW",]])
+         table.insert(lines, [[SYSTEM = "mingw",]])
       else
-         table.insert(lines, [[SYSTEM = "WindowsNT",]])
+         table.insert(lines, [[SYSTEM = "windows",]])
       end
       table.insert(lines, ("WIN_TOOLS = %q,"):format(testing_paths.win_tools))
    end
