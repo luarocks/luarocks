@@ -440,6 +440,14 @@ function util.get_default_rockspec()
          return unnamed_paths[1]
       end
    else
+      local fs = require("luarocks.fs")
+      local dir = require("luarocks.dir")
+      local basename = dir.base_name(fs.current_dir())
+
+      if paths[basename] then
+         return paths[basename]
+      end
+
       local rock = next(versions)
 
       if rock then
