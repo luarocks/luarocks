@@ -75,6 +75,8 @@ out="luarocks-$1"
 rm -rf "$out"
 mkdir "$out"
 
+shift
+
 git ls-files | while read i
 do
    if [ -f "$i" ]
@@ -96,6 +98,7 @@ cd "release-unix/$out"
 rm -rf makedist install.bat win32 .travis.yml .gitignore appveyor* .appveyor
 cd ..
 tar czvpf ../"$out.tar.gz" "$out"
+rm -f ../"$out.tar.gz.asc"
 cd ..
 rm -rf "release-unix"
 
@@ -103,5 +106,46 @@ cd "release-windows/$out-win32"
 rm -rf makedist Makefile GNUmakefile configure .travis.yml .gitignore test appveyor* .appveyor
 cd ..
 zip -r ../"$out-win32.zip" "$out-win32"
+rm -f ../"$out-win32.zip.asc"
 cd ..
 rm -rf "release-windows"
+
+if [ "$1" = "binary" ]
+then
+   shift
+
+   ./configure
+
+   make binary
+   cd build-binary
+   mkdir "$out-linux-x86_64"
+   cp luarocks.exe "$out-linux-x86_64/luarocks"
+   cp luarocks-admin.exe "$out-linux-x86_64/luarocks-admin"
+   zip "../$out-linux-x86_64.zip" "$out-linux-x86_64"/*
+   cd ..
+   rm -f "$out-linux-x86_64.zip.asc"
+
+   make windows-binary
+   cd build-windows-binary
+   mkdir "$out-windows-32"
+   cp luarocks.exe "$out-windows-32/luarocks.exe"
+   cp luarocks-admin.exe "$out-windows-32/luarocks-admin.exe"
+   zip "../$out-windows-32.zip" "$out-windows-32"/*
+   cd ..
+   rm -f "$out-windows-32.zip.asc"
+
+fi
+
+if [ "$1" = "sign" ]
+then
+   shift
+
+   for f in \
+      $out-windows-32.zip \
+      $out-linux-x86_64.zip \
+      $out-win32.zip \
+      $out.tar.gz
+   do
+      [ -e "$f" -a ! -e "$f.asc" ] && gpg --armor --output "$f.asc" --detach-sign "$f"
+   done
+fi
