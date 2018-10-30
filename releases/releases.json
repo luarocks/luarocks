@@ -1,5 +1,15 @@
 [
 {
+"3.0.4": {
+"date": "2018-10-30",
+"files": ["luarocks-3.0.4.tar.gz", "luarocks-3.0.4.tar.gz.asc", "luarocks-3.0.4-win32.zip", "luarocks-3.0.4-win32.zip.asc", "luarocks-3.0.4-windows-32.zip", "luarocks-3.0.4-windows-32.zip.asc", "luarocks-3.0.4-linux-x86_64.zip", "luarocks-3.0.4-linux-x86_64.zip.asc"],
+"about": [
+"Fork-free platform detection at startup",
+"Improved detection of the default rockspec in commands such as `luarocks test`",
+"Various minor bugfixes"
+]
+}},
+{
 "3.0.3": {
 "date": "2018-09-15", 
 "files": ["luarocks-3.0.3.tar.gz", "luarocks-3.0.3.tar.gz.asc", "luarocks-3.0.3-win32.zip", "luarocks-3.0.3-win32.zip.asc", "luarocks-3.0.3-windows-32.zip", "luarocks-3.0.3-windows-32.zip.asc", "luarocks-3.0.3-linux-x86_64.zip", "luarocks-3.0.3-linux-x86_64.zip.asc"], 
