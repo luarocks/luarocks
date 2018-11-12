@@ -25,6 +25,9 @@ cmd.errorcodes = {
 
 local function is_ownership_ok(directory)
    local me = fs.current_user()
+   if not me then
+      return nil, "can't determine current user's name"
+   end
    for _ = 1,3 do -- try up to grandparent
       local owner = fs.attributes(directory, "owner")
       if owner then
@@ -468,7 +471,8 @@ function cmd.run_command(description, commands, external_namespace, ...)
       end
    end
 
-   if not is_ownership_ok(cfg.local_cache) then
+   local user_owns_local_cache = is_ownership_ok(cfg.local_cache)
+   if user_owns_local_cache == false then
       util.warning("The directory '" .. cfg.local_cache .. "' or its parent directory "..
                    "is not owned by the current user and the cache has been disabled. "..
                    "Please check the permissions and owner of that directory. "..
