@@ -278,7 +278,7 @@ function tools.set_permissions(filename, mode, scope)
 
       local ok
       -- Grant permissions available to all users
-      ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r Everyone:" .. others_perms)
+      ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r *S-1-1-0:" .. others_perms)
       if not ok then
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
