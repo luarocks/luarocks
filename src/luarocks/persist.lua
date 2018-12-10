@@ -42,6 +42,51 @@ local function write_value(out, v, level, sub_order)
    end
 end
 
+local is_valid_plain_key
+do
+   local keywords = {
+      ["and"] = true,
+      ["break"] = true,
+      ["do"] = true,
+      ["else"] = true,
+      ["elseif"] = true,
+      ["end"] = true,
+      ["false"] = true,
+      ["for"] = true,
+      ["function"] = true,
+      ["goto"] = true,
+      ["if"] = true,
+      ["in"] = true,
+      ["local"] = true,
+      ["nil"] = true,
+      ["not"] = true,
+      ["or"] = true,
+      ["repeat"] = true,
+      ["return"] = true,
+      ["then"] = true,
+      ["true"] = true,
+      ["until"] = true,
+      ["while"] = true,
+   }
+   function is_valid_plain_key(k)
+      return type(k) == "string"
+             and k:match("^[a-zA-Z_][a-zA-Z0-9_]*$")
+             and not keywords[k]
+   end
+end
+
+local function write_table_key_assignment(out, k, level)
+   if is_valid_plain_key(k) then
+      out:write(k)
+   else
+      out:write("[")
+      write_value(out, k, level)
+      out:write("]")
+   end
+   
+   out:write(" = ")
+end
+
 --- Write a table as Lua code in curly brackets notation to a writer object.
 -- Only numbers, strings and tables (containing numbers, strings
 -- or other recursively processed tables) are supported.
@@ -64,15 +109,7 @@ write_table = function(out, tbl, level, field_order)
       if k == i then
          i = i + 1
       else
-         if type(k) == "string" and k:match("^[a-zA-Z_][a-zA-Z0-9_]*$") then
-            out:write(k)
-         else
-            out:write("[")
-            write_value(out, k, level)
-            out:write("]")
-         end
-
-         out:write(" = ")
+         write_table_key_assignment(out, k, level)
       end
 
       write_value(out, v, level, sub_order)
@@ -95,12 +132,17 @@ end
 -- @param out table or userdata: a writer object supporting :write() method.
 -- @param tbl table: the table to be written.
 -- @param field_order table: optional prioritization table
+-- @return true if successful; nil and error message if failed.
 local function write_table_as_assignments(out, tbl, field_order)
    for k, v, sub_order in util.sortedpairs(tbl, field_order) do
+      if not is_valid_plain_key(k) then
+         return nil, "cannot store '"..tostring(k).."' as a plain key."
+      end
       out:write(k.." = ")
       write_value(out, v, 0, sub_order)
       out:write("\n")
    end
+   return true
 end
 
 --- Write a table as series of assignments to a writer object.
@@ -109,7 +151,8 @@ end
 local function write_table_as_table(out, tbl)
    out:write("return {\n")
    for k, v, sub_order in util.sortedpairs(tbl) do
-      out:write("   " .. k .. " = ")
+      out:write("   ")
+      write_table_key_assignment(out, k, 1)
       write_value(out, v, 1, sub_order)
       out:write(",\n")
    end
@@ -122,11 +165,14 @@ end
 -- or other recursively processed tables) are supported.
 -- @param tbl table: the table containing the data to be written
 -- @param field_order table: an optional array indicating the order of top-level fields.
--- @return string
+-- @return persisted data as string; or nil and an error message
 function persist.save_from_table_to_string(tbl, field_order)
    local out = {buffer = {}}
    function out:write(data) table.insert(self.buffer, data) end
-   write_table_as_assignments(out, tbl, field_order)
+   local ok, err = write_table_as_assignments(out, tbl, field_order)
+   if not ok then
+      return nil, err
+   end
    return table.concat(out.buffer)
 end
 
@@ -144,8 +190,11 @@ function persist.save_from_table(filename, tbl, field_order)
    if not out then
       return nil, "Cannot create file at "..filename
    end
-   write_table_as_assignments(out, tbl, field_order)
+   local ok, err = write_table_as_assignments(out, tbl, field_order)
    out:close()
+   if not ok then
+      return nil, err
+   end
    return true
 end
 

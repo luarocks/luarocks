@@ -36,6 +36,14 @@ foo = {
 ]], persist.save_from_table_to_string({foo = {1, 2, 3, 4}, bar = {baz = "string"}}))
       end)
 
+      it("table with a keyword key (#947)", function()
+         assert.are.same([[
+bar = {
+   ["function"] = "foo"
+}
+]], persist.save_from_table_to_string({bar = {["function"] = "foo"}}))
+      end)
+
       it("strings with quotes", function()
          assert.are.same([[
 bar = "a \\backslash?"
