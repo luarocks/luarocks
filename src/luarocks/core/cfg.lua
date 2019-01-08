@@ -49,6 +49,9 @@ local platform_order = {
 
 local function detect_sysconfdir(lua_version)
    local src = debug.getinfo(1, "S").source:gsub("\\", "/"):gsub("/+", "/")
+   if src:sub(1, 1) == "@" then
+      src = src:sub(2)
+   end
    local basedir = src:match("^(.*)/luarocks/core/cfg.lua$")
    if not basedir then
       return
