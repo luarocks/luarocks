@@ -305,6 +305,17 @@ function cmd.run_command(description, commands, external_namespace, ...)
       os.exit(exitcode or cmd.errorcodes.UNSPECIFIED)
    end
 
+   --- Given a command name, find the corresponding module. This can either be a
+   -- module named in the global commands table, or an addon.
+   local function find_command(name)
+      -- Look for builtin command
+      local cmd = commands[name]
+      if cmd then return require(cmd) end
+      -- Look for addon command
+      local ok, cmd = pcall(require, "luarocks.addon."..name)
+      return ok and cmd or nil
+   end
+
    local function process_arguments(...)
       local args = {...}
       local cmdline_vars = {}
@@ -483,8 +494,8 @@ function cmd.run_command(description, commands, external_namespace, ...)
       util.schedule_function(fs.delete, cfg.local_cache)
    end
 
-   if commands[command] then
-      local cmd_mod = require(commands[command])
+   local cmd_mod = find_command(command)
+   if cmd_mod then
       local call_ok, ok, err, exitcode = xpcall(function()
          if command == "help" then
             return cmd_mod.command(description, commands, unpack(nonflags))
