@@ -137,7 +137,7 @@ do
    end
 
    -- Load config file and merge its contents into the `cfg` module table.
-   -- @return filepath of succesfully loaded file or nil if it failed
+   -- @return filepath of successfully loaded file or nil if it failed
    load_config_file = function(cfg, platforms, filepath)
       local result, err, errcode = persist.load_into_table(filepath, env_for_config_file(cfg, platforms))
       if (not result) and errcode ~= "open" then

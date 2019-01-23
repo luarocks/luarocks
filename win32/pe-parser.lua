@@ -416,7 +416,7 @@ M.parse = function(target)
           name = "Characteristics"},
       }, f)
   end
-  -- we now have section data, so add RVA convertion method
+  -- we now have section data, so add RVA conversion method
   out.get_fileoffset = M.get_fileoffset
   
   -- get the import table

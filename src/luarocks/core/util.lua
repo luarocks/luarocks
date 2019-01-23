@@ -42,7 +42,7 @@ end
 -- Formats tables with cycles recursively to any depth.
 -- References to other tables are shown as values.
 -- Self references are indicated.
--- The string returned is "Lua code", which can be procesed
+-- The string returned is "Lua code", which can be processed
 -- (in the case in which indent is composed by spaces or "--").
 -- Userdata and function keys and values are shown as strings,
 -- which logically are exactly not equivalent to the original code.

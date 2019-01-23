@@ -292,7 +292,7 @@ function tools.set_permissions(filename, mode, scope)
    return true
 end
 
---- Test for existance of a file.
+--- Test for existence of a file.
 -- @param file string: filename to test
 -- @return boolean: true if file exists, false otherwise.
 function tools.exists(file)

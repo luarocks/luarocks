@@ -291,7 +291,7 @@ function fs_lua.change_dir_to_root()
 end
 
 --- Change working directory to the previous in the dir stack.
--- @return true if a pop ocurred, false if the stack was empty.
+-- @return true if a pop occurred, false if the stack was empty.
 function fs_lua.pop_dir()
    local d = table.remove(dir_stack)
    if d then
@@ -549,7 +549,7 @@ function fs_lua.find(at)
    return result
 end
 
---- Test for existance of a file.
+--- Test for existence of a file.
 -- @param file string: filename to test
 -- @return boolean: true if file exists, false otherwise.
 function fs_lua.exists(file)
@@ -1071,7 +1071,7 @@ function fs_lua.check_command_permissions(flags)
 end
 
 --- Check whether a file is a Lua script
--- When the file can be succesfully compiled by the configured
+-- When the file can be successfully compiled by the configured
 -- Lua interpreter, it's considered to be a valid Lua file.
 -- @param filename filename of file to check
 -- @return boolean true, if it is a Lua script, false otherwise

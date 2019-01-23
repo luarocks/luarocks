@@ -64,7 +64,7 @@ do
       end
 
       if not cfg.each_platform then
-         error("cfg is not initalized, please run cfg.init() first")
+         error("cfg is not initialized, please run cfg.init() first")
       end
 
       -- Load platform-specific functions
