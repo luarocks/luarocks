@@ -23,8 +23,6 @@ local extra_rocks = {
    "/wsapi-1.6-1.src.rock",
    "/luafilesystem-1.6.3-2.src.rock",
    "/luafilesystem-1.6.3-1.src.rock",
-   "/luacheck-0.7.3-1.src.rock",
-   "/luacheck-0.8.0-1.src.rock",
    "/sailor-0.5-3.src.rock",
    "/sailor-0.5-4.src.rock",
 }
@@ -81,6 +79,12 @@ describe("luarocks install #integration", function()
       it("installs a package with a dependency", function()
          assert.is_true(run.luarocks_bool("install luasec " .. test_env.openssl_dirs))
          assert.is_true(run.luarocks_bool("show luasocket"))
+      end)
+
+      it("installs a package without its documentation #only", function()
+         assert.is_true(run.luarocks_bool("install wsapi 1.6 --no-doc"))
+         assert.is_true(run.luarocks_bool("show wsapi 1.6"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/wsapi/1.6-1/doc"))
       end)
    end)
    

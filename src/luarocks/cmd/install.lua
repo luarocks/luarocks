@@ -29,6 +29,7 @@ or a filename of a locally available rock.
                     in the configuration file.
 
 --only-deps         Installs only the dependencies of the rock.
+--no-doc            Installs the rock without its documentation.
 ]]..util.deps_mode_help()
 
 
@@ -154,16 +155,29 @@ local function install_rock_file_deps(filename, deps_mode)
    return name, version
 end
 
-local function install_rock_file(filename, namespace, deps_mode, keep, force, force_fast)
+local function install_rock_file(filename, namespace, deps_mode, keep, force, force_fast, no_doc)
    assert(type(filename) == "string")
    assert(type(namespace) == "string" or namespace == nil)
    assert(type(deps_mode) == "string")
    assert(type(keep) == "boolean" or keep == nil)
    assert(type(force) == "boolean" or force == nil)
    assert(type(force_fast) == "boolean" or force_fast == nil)
+   assert(type(no_doc) == "boolean" or no_doc == nil)
 
    local name, version = install.install_binary_rock(filename, deps_mode, namespace)
    if not name then return nil, version end
+
+   if no_doc then
+      local install_dir = path.install_dir(name, version)
+      for _, f in ipairs(fs.list_dir(install_dir)) do
+         local doc_dirs = { "doc", "docs" }
+         for _, d in ipairs(doc_dirs) do
+            if f == d then
+               fs.delete(dir.path(install_dir, f))
+            end
+         end
+      end
+   end
 
    if (not keep) and not cfg.keep_other_versions then
       local ok, err = remove.remove_other_versions(name, version, force, force_fast)
@@ -202,7 +216,7 @@ function install.command(flags, name, version)
       if flags["only-deps"] then
          return install_rock_file_deps(name, deps_mode)
       else
-         return install_rock_file(name, flags["namespace"], deps_mode, flags["keep"], flags["force"], flags["force-fast"])
+         return install_rock_file(name, flags["namespace"], deps_mode, flags["keep"], flags["force"], flags["force-fast"], flags["no-doc"])
       end
    else
       local url, err = search.find_suitable_rock(queries.new(name:lower(), version))
