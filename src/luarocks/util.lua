@@ -125,6 +125,7 @@ local supported_flags = {
    ["mversion"] = true,
    ["namespace"] = "<namespace>",
    ["no-bin"] = true,
+   ["no-doc"] = true,
    ["no-refresh"] = true,
    ["nodeps"] = true,
    ["old-versions"] = true,

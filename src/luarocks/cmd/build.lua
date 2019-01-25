@@ -3,6 +3,7 @@
 -- Builds a rock, compiling its C parts if any.
 local cmd_build = {}
 
+local dir = require("luarocks.dir")
 local pack = require("luarocks.pack")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
@@ -113,6 +114,18 @@ local function do_build(ns_name, version, opts)
    return build_rock(url, opts)
 end
 
+local function remove_doc_dir(name, version)
+   local install_dir = path.install_dir(name, version)
+   for _, f in ipairs(fs.list_dir(install_dir)) do
+      local doc_dirs = { "doc", "docs" }
+      for _, d in ipairs(doc_dirs) do
+         if f == d then
+            fs.delete(dir.path(install_dir, f))
+         end
+      end
+   end
+end
+
 --- Driver function for "build" command.
 -- @param name string: A local or remote rockspec or rock file.
 -- If a package name is given, forwards the request to "search" and,
@@ -143,7 +156,11 @@ function cmd_build.command(flags, name, version)
    if flags["pack-binary-rock"] then
       return pack.pack_binary_rock(name, version, function()
          opts.build_only_deps = false
-         return do_build(name, version, opts)
+         local status, err, errcode = do_build(name, version, opts)
+         if status and flags["no-doc"] then
+            remove_doc_dir(name, version)
+         end
+         return status, err, errcode
       end)
    end
    
@@ -155,6 +172,10 @@ function cmd_build.command(flags, name, version)
    ok, err = do_build(name, version, opts)
    if not ok then return nil, err end
    name, version = ok, err
+
+   if flags["no-doc"] then
+      remove_doc_dir(name, version)
+   end
 
    if opts.build_only_deps then
       util.printout("Stopping after installing dependencies for " ..name.." "..version)
