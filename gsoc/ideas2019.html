@@ -1,0 +1,250 @@
+<!doctype html>
+<html>
+<head>
+<title>Ideas List - Google Summer of Code 2019</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400italic,400bold,400,700" type="text/css"/>
+<link rel="stylesheet" href="../style.css" type="text/css"/>
+<style>
+table {
+   width: 100%;
+}
+td { 
+   padding: 5px;
+   background-color: white;
+   border: 1px solid #c1cce4;
+}
+h3 {
+   border-bottom: solid 2px black;
+}
+h4 {
+   font-style: italic;
+   border-bottom: solid 1px #c0c0c0;
+}
+</style>
+</head>
+<body>
+   <div class="content">
+      <div class="header"><div class="header_inner"><div class="user_panel"><a href="https://github.com/keplerproject/luarocks/wiki/Download">Install</a> &middot; <a href="https://github.com/keplerproject/luarocks/wiki/Documentation">Docs</a> &middot; <a href="https://luarocks.org/login">Log In</a> &middot; <a href="https://luarocks.org/register">Register</a></div><a href="https://luarocks.org/"><img alt="LuaRocks" class="text_logo" src="https://luarocks.org/static/header_luarocks_name.svg"/></a><form method="GET" action="https://luarocks.org/search" class="header_search"><input type="text" placeholder="Search modules or uploaders..." name="q"/></form></div></div>
+      <div class="index_page">
+         <div class="main_column">
+
+<h2>Ideas List - Google Summer of Code 2019</h2>
+
+
+<div class="project">
+<h3>Expression-level coverage analysis for LuaCov</h3>
+
+<h4>Brief explanation</h4>
+
+<p>
+LuaCov only offers line-level coverage analysis, meaning that it can tell if a line executed or not, but not if every possible branch within that line executed. That means, for example, that if a statement like <tt>if x and y > 20 then return 10 end</tt> is written in a single line, we don't have coverage information if it has been tested both with the condition being true and being false. This is due to a limitation in the Lua <tt>debug</tt> library, which only gives traces with at most line granularity. The idea of this project is to patch the Lua VM adding expression-level tracing, and then adjusting LuaCov to make it use it.
+</p>
+
+<h4>Knowledge prerequisites</h4>
+<ul>
+<li>C</li>
+<li>Lua</li>
+</ul>
+
+<h4>Mentor</h4>
+<p>
+<a href="http://hisham.hm/">Hisham Muhammad</a> - <a href="mailto:h@hisham.hm">h@hisham.hm</a>
+</p>
+</div>
+
+<!-- ------------------------------------------- -->
+<hr/>
+
+<div class="project">
+<h3>Lua graphing library</h3>
+
+<h4>Brief explanation</h4>
+
+<p>
+To create a graphical library possibly using IUP extensible by Lua to allow easy creation of software like a schematic editor/flowchart creator/mind maps/block diagrams in Lua. The library needs to create basic mechanisms and graphic checks to create custom blocks and interconnections and provide an API to use these to create complex interactions like hierarchical schematic editors, etc.
+</p>
+
+<h4>Knowledge prerequisites</h4>
+<ul>
+<li>Lua</li>
+</ul>
+
+<h4>Mentor</h4>
+<p>
+Milind Gupta - <a href="mailto:milind.gupta@gmail.com">milind.gupta@gmail.com</a>
+</p>
+</div>
+
+<!-- ------------------------------------------- -->
+<hr/>
+
+<div class="project">
+<h3>Better binary support for LuaRocks on Windows</h3>
+
+<h4>Brief explanation</h4>
+
+<p>
+Goal: have a number of binary basics available (eg. lfs, luasocket, OpenSSL based ones)
+</p>
+<p>
+Things to do:
+</p>
+
+<ul>
+<li>
+Establish a proper naming scheme to identify Windows runtime dependencies, see #786
+</li>
+<li>
+Make LR aware of the runtimes (storing in config), current MSVCRT entry
+</li>
+<li>
+Implement packing binary rocks with new binary tags
+Set up some CI which builds some basic binary rocks as a minimal set for multiple compiler targets (eg. lfs, LuaSocket)
+</li>
+<li>
+Set up some CI which builds some basic binary rocks with external dependencies as a minimal set for multiple compiler targets (eg. OpenSSL based ones)
+</li>
+<li>
+Optional: use pe-parser at LR runtime to validate that created libs adhere to the runtime required
+</li>
+<li>
+Optional: make LR installable without toolchain (just using binary rocks)
+</li>
+<li>
+Optional: integrate toolchain into LR installation
+</li>
+</ul>
+
+<p>
+See <a href="https://github.com/luarocks/luarocks/issues/788">#788</a>.
+</p>
+
+<h4>Knowledge prerequisites</h4>
+<ul>
+<li>Lua</li>
+<li>general knowledge of development on Windows platforms</li>
+</ul>
+
+
+<h4>Mentor</h4>
+<p>
+<a href="http://thijsschreijer.nl/">Thijs Schreijer</a> - <a href="mailto:thijs@thijsschreijer.nl">thijs@thijsschreijer.nl</a>
+</p>
+</div>
+
+<!-- ------------------------------------------- -->
+<hr/>
+
+<div class="project">
+<h3>
+New command line argument handling and auto-completion for luarocks
+</h3>
+
+<p>
+Update the command-line argument handling of
+LuaRocks and add support for Tab auto-completion
+support for popular shells such as bash, fish, zsh.
+</p>
+<p>
+May involve updates to the argparse library.
+</p>
+
+<p>
+See <a href="https://github.com/luarocks/luarocks/issues/879">#879</a>.
+</p>
+
+<h4>Knowledge prerequisites</h4>
+<ul>
+<li>Lua</li>
+<li>some shell scripting</li>
+</ul>
+
+<h4>Mentor</h4>
+<p>
+<a href="http://daurnimator.com/">Daurnimator</a> - <a href="mailto:quae@daurnimator.com">quae@daurnimator.com</a>
+</p>
+</div>
+
+<!-- ------------------------------------------- -->
+<hr/>
+
+<div class="project">
+<h3>
+Prosody plugin installer
+</h3>
+
+<p>
+This project would produce an easy way to install and manage plugins for the Prosody server.
+</p>
+
+<p>
+Prosody has <a href="https://modules.prosody.im">hundreds of community modules</a> that provide additional features and extensions to the core server. Currently installing these is a manual process that currently involves a number of manual steps.
+</p>
+
+<p>
+The goal of this project would be to produce simple commands to install, update and remove community modules. Rather than inventing a new package manager, the project would ideally build on top of the LuaRocks project. 
+</p>
+
+
+<p>Deliverables / Expected Results:</p>
+
+<ul>
+<li>
+Commands to install, update, remove and list installed plugins.
+</li>
+<li>
+Scripts to build and manage a repository of plugins.
+</li>
+</ul>
+
+<p>
+Milestones:
+</p>
+
+<ul>
+<li>Implement command to install a plugin from a repository
+</li>
+<li>
+Implement commands to remove and update installed plugins
+</li>
+<li>
+Develop scripts to build a plugin repository.
+</li>
+</ul>
+
+<p>More info:</p>
+
+<ul>
+<li>   Website: <a href="https://prosody.im/">https://prosody.im/</a>
+</li>
+<li>  Source Code: <a href="https://hg.prosody.im/">https://hg.prosody.im/</a>
+</li>
+<li>   Description: Prosody is a lightweight XMPP server that aims to be easy to set up and configure, and efficient with system resources.
+</li>
+<li>   Project Contact Person: Matthew Wild @mwild1 <mwild1@gmail.com>
+</li>
+<li>   List of Teaser Tasks: <a href="https://issues.prosody.im/?q=state%3Dopen+difficulty%3Deasy">https://issues.prosody.im/?q=state%3Dopen+difficulty%3Deasy</a>
+</li>
+<li>   Contact chat: <a href="https://chat.prosody.im/">https://chat.prosody.im/</a>
+</li>
+</ul>
+
+<h4>Knowledge prerequisites</h4>
+<ul>
+<li>Lua</li>
+</ul>
+
+<h4>Mentors</h4>
+<p>
+<a href="http://github.com/mwild1/">Matthew Wild</a> - <a href="mailto:mwild1@gmail.com">mwild1@gmail.com</a>
+<br/>
+<a href="http://github.com/zash/">Kim Alvefur</a>
+</p>
+</div>
+
+
+         </div>
+      </div>
+   </div>
+</body>
+</html>
