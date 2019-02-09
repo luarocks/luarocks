@@ -147,7 +147,7 @@ end
 
 --- Driver function for the builtin build back-end.
 -- @param rockspec table: the loaded rockspec.
--- @return boolean or (nil, string): true if no errors ocurred,
+-- @return boolean or (nil, string): true if no errors occurred,
 -- nil and an error message otherwise.
 function builtin.run(rockspec)
    assert(rockspec:type() == "rockspec")

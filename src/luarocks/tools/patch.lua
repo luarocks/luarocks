@@ -3,7 +3,7 @@
 -- http://lua-users.org/wiki/LuaPatch
 --
 -- (c) 2008 David Manura, Licensed under the same terms as Lua (MIT license).
--- Code is heavilly based on the Python-based patch.py version 8.06-1
+-- Code is heavily based on the Python-based patch.py version 8.06-1
 --   Copyright (c) 2008 rainforce.org, MIT License
 --   Project home: http://code.google.com/p/python-patch/ .
 --   Version 0.1

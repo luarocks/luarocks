@@ -74,7 +74,7 @@ function help.command(description, commands, command)
       print_section("VARIABLES")
       util.printout([[
 	Variables from the "variables" table of the configuration file
-	can be overriden with VAR=VALUE assignments.]])
+	can be overridden with VAR=VALUE assignments.]])
       print_section("COMMANDS")
       for name, modname in util.sortedpairs(commands) do
          local cmd = require(modname)

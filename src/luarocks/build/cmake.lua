@@ -8,7 +8,7 @@ local cfg = require("luarocks.core.cfg")
 
 --- Driver function for the "cmake" build back-end.
 -- @param rockspec table: the loaded rockspec.
--- @return boolean or (nil, string): true if no errors ocurred,
+-- @return boolean or (nil, string): true if no errors occurred,
 -- nil and an error message otherwise.
 function cmake.run(rockspec)
    assert(rockspec:type() == "rockspec")
