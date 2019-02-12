@@ -161,6 +161,7 @@ function win32.wrap_script(script, target, deps_mode, name, version, ...)
    }
 
    wrapper:write("@echo off\r\n")
+   wrapper:write("setlocal\r\n")
    wrapper:write("set "..fs.Qb("LUAROCKS_SYSCONFDIR="..cfg.sysconfdir) .. "\r\n")
    if target == "luarocks" or target == "luarocks-admin" then
       wrapper:write("set "..fs.Qb(lpath_var.."="..package.path) .. "\r\n")
