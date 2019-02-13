@@ -91,7 +91,7 @@ function win32.Qb(arg)
    arg = arg:gsub('\\(\\*)"', '\\%1%1"')
    arg = arg:gsub('\\+$', '%0%0')
    arg = arg:gsub('"', '\\"')
-   arg = arg:gsub('%%', '%%%%')
+   -- arg = arg:gsub('%%', '%%%%')
    return '"' .. arg .. '"'
 end
 
