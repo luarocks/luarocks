@@ -180,6 +180,15 @@ local function detect_elf_system(fd, hdr, sections)
             idx = idx + (vn_next * (vn_cnt + 1))
          end
       end
+
+      local procfile = io.open("/proc/sys/kernel/ostype")
+      if procfile then
+	 local version = procfile:read(6)
+	 procfile:close()
+	 if version == "Linux\n" then
+	    return "linux"
+	 end
+      end
    end
    
    return system
