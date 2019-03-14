@@ -405,7 +405,14 @@ function cmd.run_command(description, commands, external_namespace, ...)
          end
       end
       if not lua_data then
-         die("Could not find a Lua interpreter for version " .. flags["lua-version"] .. " in your PATH")
+         util.warning("Could not find a Lua interpreter for version " ..
+                      flags["lua-version"] .. " in your PATH. " ..
+                      "Modules may not install with the correct configurations. " ..
+                      "You may want to specify to the path prefix to your build " ..
+                      "of Lua " .. flags["lua-version"] .. " using --lua-dir")
+         lua_data = {
+            lua_version = flags["lua-version"],
+         }
       end
    elseif project_dir then
       lua_data = find_lua_version_at(project_dir)
