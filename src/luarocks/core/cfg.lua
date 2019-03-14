@@ -47,7 +47,7 @@ local platform_order = {
    "mingw32",
 }
 
-local function detect_sysconfdir(lua_version)
+local function detect_sysconfdir()
    local src = debug.getinfo(1, "S").source:gsub("\\", "/"):gsub("/+", "/")
    if src:sub(1, 1) == "@" then
       src = src:sub(2)
@@ -57,7 +57,7 @@ local function detect_sysconfdir(lua_version)
       return
    end
    -- If installed in a Unix-like tree, use a Unix-like sysconfdir
-   local installdir = basedir:match("^(.*)/share/lua/" .. lua_version .. "$")
+   local installdir = basedir:match("^(.*)/share/lua/[^/]*$")
    if installdir then
       if installdir == "/usr" then
          return "/etc/luarocks"
@@ -77,7 +77,7 @@ local function set_confdirs(cfg, platforms, hardcoded_sysconfdir)
       cfg.sysconfdir = sysconfdir or ((os.getenv("PROGRAMFILES") or "c:") .. "/luarocks")
    else
       if not sysconfdir then
-         sysconfdir = detect_sysconfdir(cfg.lua_version)
+         sysconfdir = detect_sysconfdir()
       end
       cfg.home = os.getenv("HOME") or ""
       cfg.home_tree = (os.getenv("USER") ~= "root") and cfg.home.."/.luarocks"
