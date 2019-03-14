@@ -265,6 +265,19 @@ local function process_server_flags(flags)
    return true
 end
 
+local function find_lua_version_at(dirname)
+   local lua_version
+   for v in util.lua_versions("descending") do
+      if exists(dir.path(dirname, ".luarocks", "config-"..v..".lua")) then
+         lua_version = v
+         break
+      end
+   end
+   return {
+      lua_version = lua_version
+   }
+end
+
 --- Main command-line processor.
 -- Parses input arguments and calls the appropriate driver function
 -- to execute the action requested on the command-line, forwarding
@@ -395,16 +408,9 @@ function cmd.run_command(description, commands, external_namespace, ...)
          die("Could not find a Lua interpreter for version " .. flags["lua-version"] .. " in your PATH")
       end
    elseif project_dir then
-      local lua_version
-      for v in util.lua_versions("descending") do
-         if exists(dir.path(project_dir, ".luarocks", "config-"..v..".lua")) then
-            lua_version = v
-            break
-         end
-      end
-      lua_data = {
-         lua_version = lua_version
-      }
+      lua_data = find_lua_version_at(project_dir)
+   else
+      lua_data = find_lua_version_at(".")
    end
 
    -- FIXME A quick hack for the experimental Windows build
