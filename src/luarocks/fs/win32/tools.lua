@@ -36,7 +36,7 @@ end
 function tools.make_dir(directory)
    assert(directory)
    directory = dir.normalize(directory)
-   fs.execute_quiet(fs.Q(vars.MKDIR).." -p ", directory)
+   fs.execute_quiet(vars.MKDIR.." -p ", directory)
    if not fs.is_dir(directory) then
       return false, "failed making directory "..directory
    end
@@ -49,7 +49,7 @@ end
 -- @param directory string: pathname of directory to remove.
 function tools.remove_dir_if_empty(directory)
    assert(directory)
-   fs.execute_quiet(fs.Q(vars.RMDIR), directory)
+   fs.execute_quiet(vars.RMDIR, directory)
 end
 
 --- Remove a directory if it is empty.
@@ -58,7 +58,7 @@ end
 -- @param directory string: pathname of directory to remove.
 function tools.remove_dir_tree_if_empty(directory)
    assert(directory)
-   fs.execute_quiet(fs.Q(vars.RMDIR), directory)
+   fs.execute_quiet(vars.RMDIR, directory)
 end
 
 --- Copy a file.
@@ -69,7 +69,7 @@ end
 function tools.copy(src, dest)
    assert(src and dest)
    if dest:match("[/\\]$") then dest = dest:sub(1, -2) end
-   local ok = fs.execute(fs.Q(vars.CP), src, dest)
+   local ok = fs.execute(vars.CP, src, dest)
    if ok then
       return true
    else
@@ -87,7 +87,7 @@ function tools.copy_contents(src, dest)
    if not fs.is_dir(src) then
       return false, src .. " is not a directory"
    end
-   if fs.make_dir(dest) and fs.execute_quiet(fs.Q(vars.CP), "-dR", src.."\\*.*", dest) then
+   if fs.make_dir(dest) and fs.execute_quiet(vars.CP, "-dR", src.."\\*.*", dest) then
       return true
    else
       return false, "Failed copying "..src.." to "..dest
@@ -118,7 +118,7 @@ function tools.find(at)
       return {}
    end
    local result = {}
-   local pipe = io.popen(fs.command_at(at, fs.quiet_stderr(fs.Q(vars.FIND)), true))
+   local pipe = io.popen(fs.command_at(at, fs.quiet_stderr(vars.FIND), true))
    for file in pipe:lines() do
       -- Windows find is a bit different
       local first_two = file:sub(1,2)
@@ -137,7 +137,7 @@ end
 -- additional arguments.
 -- @return boolean: true on success, nil and error message on failure.
 function tools.zip(zipfile, ...)
-   if fs.execute_quiet(fs.Q(vars.SEVENZ).." -aoa a -tzip", zipfile, ...) then
+   if fs.execute_quiet(vars.SEVENZ.." -aoa a -tzip", zipfile, ...) then
       return true
    else
       return nil, "failed compressing " .. zipfile
@@ -149,7 +149,7 @@ end
 -- @return boolean: true on success, nil and error message on failure.
 function tools.unzip(zipfile)
    assert(zipfile)
-   if fs.execute_quiet(fs.Q(vars.SEVENZ).." -aoa x", zipfile) then
+   if fs.execute_quiet(vars.SEVENZ.." -aoa x", zipfile) then
       return true
    else
       return nil, "failed extracting " .. zipfile
@@ -165,7 +165,7 @@ local function sevenz(default_ext, infile, outfile)
 
    infile = fs.absolute_name(infile)
 
-   local cmdline = fs.Q(vars.SEVENZ).." -aoa -t* -o"..fs.Q(outdir).." x "..fs.Q(infile)
+   local cmdline = vars.SEVENZ.." -aoa -t* -o"..fs.Q(outdir).." x "..fs.Q(infile)
    local ok, err = fs.execute_quiet(cmdline)
    if not ok then
       return nil, "failed extracting " .. infile
@@ -214,7 +214,7 @@ end
 -- @return boolean: true if it is a regular file, false otherwise.
 function tools.is_file(file)
    assert(file)
-   return fs.execute(fs.Q(vars.TEST).." -f", file)
+   return fs.execute(vars.TEST.." -f", file)
 end
 
 --- Helper function for fs.set_permissions
@@ -255,13 +255,13 @@ function tools.set_permissions(filename, mode, scope)
          return false, "Could not take ownership of the given file"
       end
       -- Grant the current user the proper rights
-      ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r %USERNAME%:" .. perms)
+      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r %USERNAME%:" .. perms)
       if not ok then
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
       -- Finally, remove all the other users from the ACL in order to deny them access to the file
       for _, user in pairs(get_system_users()) do
-         local ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /remove " .. fs.Q(user))
+         local ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /remove " .. fs.Q(user))
          if not ok then
             return false, "Failed setting permission " .. mode .. " for " .. scope
          end
@@ -278,12 +278,12 @@ function tools.set_permissions(filename, mode, scope)
 
       local ok
       -- Grant permissions available to all users
-      ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r *S-1-1-0:" .. others_perms)
+      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r *S-1-1-0:" .. others_perms)
       if not ok then
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
       -- Grant permissions available only to the current user
-      ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /inheritance:d /grant %USERNAME%:" .. my_perms)
+      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant %USERNAME%:" .. my_perms)
       if not ok then
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
