@@ -35,7 +35,7 @@ $(builddir)/config-$(LUA_VERSION).lua: config.unix
 	@printf -- '-- LuaRocks configuration\n\n'\
 	'rocks_trees = {\n'\
 	'   { name = "user", root = home .. "/.luarocks" };\n'\
-	'   { name = "system", root = "'"$(rocks_tree)"'" };\n'\
+	"$$([ "$(rocks_tree)" != "$(HOME)/.luarocks" ] && printf '   { name = "system", root = "'"$(rocks_tree)"'" };\\n')"\
 	'}\n'\
 	"$$([ -n "$(LUA_INTERPRETER)" ] && printf 'lua_interpreter = "%s";\\n' "$(LUA_INTERPRETER)")"\
 	'variables = {\n'\

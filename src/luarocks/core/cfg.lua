@@ -710,7 +710,7 @@ function cfg.init(lua_data, project_dir, warning)
       if cfg.home_tree then
          table.insert(cfg.rocks_trees, { name = "user", root = cfg.home_tree } )
       end
-      if hardcoded.PREFIX then
+      if hardcoded.PREFIX and hardcoded.PREFIX ~= cfg.home_tree then
          table.insert(cfg.rocks_trees, { name = "system", root = hardcoded.PREFIX } )
       end
    end
