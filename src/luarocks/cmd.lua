@@ -151,26 +151,24 @@ local function check_popen()
    end
 end
 
+local function find_project_dir()
+   local try = "."
+   for _ = 1, 10 do -- FIXME detect when root dir was hit instead
+      if exists(try .. "/.luarocks") and exists(try .. "/lua_modules") then
+         return try
+      elseif exists(try .. "/.luarocks-no-project") then
+         return nil
+      end
+      try = try .. "/.."
+   end
+end
+
 local process_tree_flags
 do
    local function replace_tree(flags, root, tree)
       root = dir.normalize(root)
       flags["tree"] = root
       path.use_tree(tree or root)
-   end
-
-   local function find_project_dir()
-      local try = "."
-      for _ = 1, 10 do -- FIXME detect when root dir was hit instead
-         local abs = fs.absolute_name(try)
-         if fs.is_dir(abs .. "/.luarocks") and fs.is_dir(abs .. "/lua_modules") then
-            abs = abs:gsub("/.$", "")
-            return abs, abs .. "/lua_modules"
-         elseif fs.exists(abs .. "/.luarocks-no-project") then
-            return nil
-         end
-         try = try .. "/.."
-      end
    end
 
    local function strip_trailing_slashes()
@@ -185,7 +183,7 @@ do
       cfg.deploy_lib_dir = cfg.deploy_lib_dir:gsub("/+$", "")
    end
 
-   process_tree_flags = function(flags)
+   process_tree_flags = function(flags, project_dir)
 
       if cfg.local_by_default then
          flags["local"] = true
@@ -219,16 +217,14 @@ do
                "To force using the superuser's home, use --tree explicitly."
          end
          replace_tree(flags, cfg.home_tree)
+      elseif project_dir then
+         local project_tree = project_dir .. "/lua_modules"
+         table.insert(cfg.rocks_trees, 1, { name = "project", root = project_tree } )
+         loader.load_rocks_trees()
+         path.use_tree(project_tree)
       else
-         local project_dir, rocks_tree = find_project_dir()
-         if project_dir then
-            table.insert(cfg.rocks_trees, 1, { name = "project", root = rocks_tree } )
-            loader.load_rocks_trees()
-            path.use_tree(rocks_tree)
-         else
-            local trees = cfg.rocks_trees
-            path.use_tree(trees[#trees])
-         end
+         local trees = cfg.rocks_trees
+         path.use_tree(trees[#trees])
       end
 
       strip_trailing_slashes()
@@ -414,10 +410,13 @@ function cmd.run_command(description, commands, external_namespace, ...)
             lua_version = flags["lua-version"],
          }
       end
-   elseif project_dir then
-      lua_data = find_lua_version_at(project_dir)
    else
-      lua_data = find_lua_version_at(".")
+      if not project_dir then
+         project_dir = find_project_dir()
+      end
+      if project_dir then
+         lua_data = find_lua_version_at(project_dir)
+      end
    end
 
    -- FIXME A quick hack for the experimental Windows build
@@ -441,6 +440,10 @@ function cmd.run_command(description, commands, external_namespace, ...)
    -----------------------------------------------------------------------------
 
    fs.init()
+   
+   if project_dir then
+      project_dir = fs.absolute_name(project_dir)
+   end
 
    if flags["version"] then
       util.printout(program.." "..cfg.program_version)
@@ -464,7 +467,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
       die("Current directory does not exist. Please run LuaRocks from an existing directory.")
    end
 
-   ok, err = process_tree_flags(flags)
+   ok, err = process_tree_flags(flags, project_dir)
    if not ok then
       die(err)
    end
