@@ -352,7 +352,16 @@ function util.this_program(default)
       cur = dbg.source
       i=i+1
    end
-   return last:sub(1,1) == "@" and last:sub(2) or last
+   local prog = last:sub(1,1) == "@" and last:sub(2) or last
+
+   -- Check if we found the true path of a script that has a wrapper
+   local lrdir, binpath = prog:match("^(.*)/lib/luarocks/rocks%-[0-9.]*/[^/]+/[^/]+(/bin/[^/]+)$")
+   if lrdir then
+      -- Return the wrapper instead
+      return lrdir .. binpath
+   end
+
+   return prog
 end
 
 function util.deps_mode_help(program)
