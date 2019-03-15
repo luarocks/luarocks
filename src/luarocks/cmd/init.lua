@@ -7,6 +7,7 @@ local path = require("luarocks.path")
 local deps = require("luarocks.deps")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
+local persist = require("luarocks.persist")
 local write_rockspec = require("luarocks.cmd.write_rockspec")
 
 init.help_summary = "Initialize a directory for a Lua project using LuaRocks."
@@ -63,7 +64,7 @@ function init.command(flags, name, version)
       end
    end
 
-   util.printout("Initializing project " .. name .. " ...")
+   util.printout("Initializing project " .. name .. " for Lua " .. cfg.lua_version .. " ...")
    
    local has_rockspec = false
    for file in fs.dir() do
@@ -101,16 +102,19 @@ function init.command(flags, name, version)
    util.printout("Preparing ./.luarocks/ ...")
    fs.make_dir(".luarocks")
    local config_file = ".luarocks/config-" .. cfg.lua_version .. ".lua"
-   if not fs.exists(config_file) then
-      local fd = io.open(config_file, "w")
-      fd:write("-- LuaRocks configuration for use with Lua " .. cfg.lua_version .. "\n")
-      if cfg.lua_interpreter then
-         fd:write(("lua_interpreter = %q\n"):format(cfg.lua_interpreter))
+   
+   local config_tbl, err = persist.load_config_file_if_basic(config_file, cfg)
+   if config_tbl then
+      local globals = {
+         "lua_interpreter",
+         "luajit_version",
+      }
+      for _, v in ipairs(globals) do
+         if cfg[v] then
+            config_tbl[v] = cfg[v]
+         end
       end
-      if cfg.luajit_version then
-         fd:write(("luajit_version = %q\n"):format(cfg.luajit_version))
-      end
-      fd:write("variables = {\n")
+
       local varnames = {
          "LUA_DIR",
          "LUA_INCDIR",
@@ -120,13 +124,13 @@ function init.command(flags, name, version)
       }
       for _, varname in ipairs(varnames) do
          if cfg.variables[varname] then
-            fd:write(("   %s = %q,\n"):format(varname, cfg.variables[varname]))
+            config_tbl.variables = config_tbl.variables or {}
+            config_tbl.variables[varname] = cfg.variables[varname]
          end
       end
-      fd:write("}\n")
-      fd:close()
+      local ok, err = persist.save_from_table(config_file, config_tbl)
    else
-      util.printout(config_file .. " already exists. Not overwriting it!")
+      util.printout("Will not attempt to overwrite " .. config_file)
    end
 
    util.printout("Preparing ./lua_modules/ ...")
