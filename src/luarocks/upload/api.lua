@@ -109,27 +109,6 @@ local function encode_query_string(t, sep)
    return table.concat(buf)
 end
 
--- An ode to the multitude of JSON libraries out there...
-local function require_json()
-   local list = { "cjson", "dkjson", "json" }
-   for _, lib in ipairs(list) do
-      local json_ok, json = pcall(require, lib)
-      if json_ok then
-         pcall(json.use_lpeg) -- optional feature in dkjson
-         return json_ok, json
-      end
-   end
-   local errmsg = "Failed loading "
-   for i, name in ipairs(list) do
-      if i == #list then
-         errmsg = errmsg .."and '"..name.."'. Use 'luarocks search <partial-name>' to search for a library and 'luarocks install <name>' to install one."
-      else
-         errmsg = errmsg .."'"..name.."', "
-      end
-   end
-   return nil, errmsg
-end
-
 local function redact_api_url(url)
    url = tostring(url)
    return (url:gsub(".*/api/[^/]+/[^/]+", "")) or ""
@@ -140,7 +119,7 @@ if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
 
 function Api:request(url, params, post_params)
    local vars = cfg.variables
-   local json_ok, json = require_json()
+   local json_ok, json = util.require_json()
    if not json_ok then return nil, "A JSON library is required for this command. "..json end
    
    if fs.which_tool("downloader") == "wget" then
@@ -204,7 +183,7 @@ else -- use LuaSocket and LuaSec
 local warned_luasec = false
 
 function Api:request(url, params, post_params)
-   local json_ok, json = require_json()
+   local json_ok, json = util.require_json()
    if not json_ok then return nil, "A JSON library is required for this command. "..json end
    local server = tostring(self.config.server)
    local http_ok, http

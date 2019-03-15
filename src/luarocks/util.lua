@@ -527,4 +527,25 @@ function util.deep_copy(tbl)
    return copy
 end
 
+-- An ode to the multitude of JSON libraries out there...
+function util.require_json()
+   local list = { "cjson", "dkjson", "json" }
+   for _, lib in ipairs(list) do
+      local json_ok, json = pcall(require, lib)
+      if json_ok then
+         pcall(json.use_lpeg) -- optional feature in dkjson
+         return json_ok, json
+      end
+   end
+   local errmsg = "Failed loading "
+   for i, name in ipairs(list) do
+      if i == #list then
+         errmsg = errmsg .."and '"..name.."'. Use 'luarocks search <partial-name>' to search for a library and 'luarocks install <name>' to install one."
+      else
+         errmsg = errmsg .."'"..name.."', "
+      end
+   end
+   return nil, errmsg
+end
+
 return util
