@@ -57,6 +57,9 @@ function init.command(flags, name, version)
 
    if not name then
       name = dir.base_name(pwd)
+      if name == "/" then
+         return nil, "When running from the root directory, please specify the <name> argument"
+      end
    end
 
    util.printout("Initializing project " .. name .. " ...")
