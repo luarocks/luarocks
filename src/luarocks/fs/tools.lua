@@ -39,7 +39,7 @@ do
       if not tool then
          return nil
       end
-      return tool.name, fs.Q(vars[tool.var]) .. (tool.cmdarg and " "..tool.cmdarg or "")
+      return tool.name, vars[tool.var] .. (tool.cmdarg and " "..tool.cmdarg or "")
    end
 end
 
@@ -51,7 +51,7 @@ do
    function tools.current_dir()
       local current = cache_pwd
       if not current then
-         local pipe = io.popen(fs.quiet_stderr(fs.Q(vars.PWD)))
+         local pipe = io.popen(fs.quiet_stderr(vars.PWD))
          current = pipe:read("*l")
          pipe:close()
          cache_pwd = current
@@ -118,7 +118,7 @@ end
 -- @param at string: directory to list
 -- @return nil
 function tools.dir_iterator(at)
-   local pipe = io.popen(fs.command_at(at, fs.Q(vars.LS), true))
+   local pipe = io.popen(fs.command_at(at, vars.LS, true))
    for file in pipe:lines() do
       if file ~= "." and file ~= ".." then
          coroutine.yield(file)
@@ -147,7 +147,7 @@ function tools.use_downloader(url, filename, cache)
 
    local ok
    if downloader == "wget" then
-      local wget_cmd = fs.Q(vars.WGET).." "..vars.WGETNOCERTFLAG.." --no-cache --user-agent=\""..cfg.user_agent.." via wget\" --quiet "
+      local wget_cmd = vars.WGET.." "..vars.WGETNOCERTFLAG.." --no-cache --user-agent=\""..cfg.user_agent.." via wget\" --quiet "
       if cfg.connection_timeout and cfg.connection_timeout > 0 then
         wget_cmd = wget_cmd .. "--timeout="..tostring(cfg.connection_timeout).." --tries=1 "
       end
@@ -163,7 +163,7 @@ function tools.use_downloader(url, filename, cache)
          ok = fs.execute_quiet(wget_cmd, url)
       end
    elseif downloader == "curl" then
-      local curl_cmd = fs.Q(vars.CURL).." "..vars.CURLNOCERTFLAG.." -f -L --user-agent \""..cfg.user_agent.." via curl\" "
+      local curl_cmd = vars.CURL.." "..vars.CURLNOCERTFLAG.." -f -L --user-agent \""..cfg.user_agent.." via curl\" "
       if cfg.connection_timeout and cfg.connection_timeout > 0 then
         curl_cmd = curl_cmd .. "--connect-timeout "..tostring(cfg.connection_timeout).." "
       end

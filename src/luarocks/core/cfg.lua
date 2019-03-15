@@ -720,7 +720,7 @@ function cfg.init(lua_data, project_dir, warning)
    if platforms.windows and hardcoded.WIN_TOOLS then
       local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "PWD", "RMDIR", "TEST", "WGET", "MKDIR" }
       for _, tool in ipairs(tools) do
-         defaults.variables[tool] = hardcoded.WIN_TOOLS .. "/" .. defaults.variables[tool] .. ".exe"
+         defaults.variables[tool] = '"' .. hardcoded.WIN_TOOLS .. "/" .. defaults.variables[tool] .. '.exe"'
       end
    else
       defaults.fs_use_modules = true
