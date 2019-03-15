@@ -20,8 +20,9 @@ local write_table
 -- @param level number: the indentation level
 -- @param sub_order table: optional prioritization table
 -- @see write_table
-local function write_value(out, v, level, sub_order)
+function persist.write_value(out, v, level, sub_order)
    if type(v) == "table" then
+      level = level or 0
       write_table(out, v, level + 1, sub_order)
    elseif type(v) == "string" then
       if v:match("[\r\n]") then
@@ -80,7 +81,7 @@ local function write_table_key_assignment(out, k, level)
       out:write(k)
    else
       out:write("[")
-      write_value(out, k, level)
+      persist.write_value(out, k, level)
       out:write("]")
    end
    
@@ -112,7 +113,7 @@ write_table = function(out, tbl, level, field_order)
          write_table_key_assignment(out, k, level)
       end
 
-      write_value(out, v, level, sub_order)
+      persist.write_value(out, v, level, sub_order)
       if type(v) == "number" then
          sep = ", "
          indent = false
@@ -139,13 +140,13 @@ local function write_table_as_assignments(out, tbl, field_order)
          return nil, "cannot store '"..tostring(k).."' as a plain key."
       end
       out:write(k.." = ")
-      write_value(out, v, 0, sub_order)
+      persist.write_value(out, v, 0, sub_order)
       out:write("\n")
    end
    return true
 end
 
---- Write a table as series of assignments to a writer object.
+--- Write a table using Lua table syntax to a writer object.
 -- @param out table or userdata: a writer object supporting :write() method.
 -- @param tbl table: the table to be written.
 local function write_table_as_table(out, tbl)
@@ -153,7 +154,7 @@ local function write_table_as_table(out, tbl)
    for k, v, sub_order in util.sortedpairs(tbl) do
       out:write("   ")
       write_table_key_assignment(out, k, 1)
-      write_value(out, v, 1, sub_order)
+      persist.write_value(out, v, 1, sub_order)
       out:write(",\n")
    end
    out:write("}\n")
@@ -214,6 +215,28 @@ function persist.save_as_module(filename, tbl)
    write_table_as_table(out, tbl)
    out:close()
    return true
+end
+
+function persist.load_config_file_if_basic(filename, cfg)
+   local env = {
+      home = cfg.home
+   }
+   local result, err, errcode = persist.load_into_table(filename, env)
+   if errcode == "load" or errcode == "run" then
+      -- bad config file or depends on env, so error out
+      return nil, "Could not read existing config file " .. filename
+   end
+
+   local tbl
+   if errcode == "open" then
+      -- could not open, maybe file does not exist
+      tbl = {}
+   else
+      tbl = result
+      tbl.home = nil
+   end
+
+   return tbl
 end
 
 return persist

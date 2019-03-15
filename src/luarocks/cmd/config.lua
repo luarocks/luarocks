@@ -2,26 +2,61 @@
 -- Queries information about the LuaRocks configuration.
 local config_cmd = {}
 
+local persist = require("luarocks.persist")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local deps = require("luarocks.deps")
 local dir = require("luarocks.dir")
-local fun = require("luarocks.fun")
+local fs = require("luarocks.fs")
 
 config_cmd.help_summary = "Query information about the LuaRocks configuration."
-config_cmd.help_arguments = "<flag>"
+config_cmd.help_arguments = "(<key> | <key> <value> --scope=<scope> | <key> --unset --scope=<scope> | )"
 config_cmd.help = [[
---lua-incdir     Path to Lua header files.
+* When given a configuration key, it prints the value of that key
+  according to the currently active configuration (taking into account
+  all config files and any command-line flags passed)
 
---lua-libdir     Path to Lua library files.
+  Examples:
+     luarocks config lua_interpreter
+     luarocks config variables.LUA_INCDIR
+     luarocks config lua_version
 
---lua-ver        Lua version (in major.minor format). e.g. 5.1
+* When given a configuration key and a value,
+  it overwrites the config file (see the --scope option below to determine which)
+  and replaces the value of the given key with the given value.
 
---system-config  Location of the system config file.
+  * `lua_dir` is a special key as it checks for a valid Lua installation
+    (equivalent to --lua-dir) and sets several keys at once.
+  * `lua_version` is a special key as it changes the default Lua version
+    used by LuaRocks commands (eqivalent to passing --lua-version). 
 
---user-config    Location of the user config file.
+  Examples:
+     luarocks config variables.OPENSSL_DIR /usr/local/openssl
+     luarocks config lua_dir /usr/local
+     luarocks config lua_version 5.3
 
---rock-trees     Rocks trees in use. First the user tree, then the system tree.
+* When given a configuration key and --unset,
+  it overwrites the config file (see the --scope option below to determine which)
+  and deletes that key from the file.
+
+  Example: luarocks config variables.OPENSSL_DIR --unset
+
+* When given no arguments, it prints the entire currently active
+  configuration, resulting from reading the config files from
+  all scopes.
+
+  Example: luarocks config
+
+OPTIONS
+--scope=<scope>   The scope indicates which config file should be rewritten.
+                  Accepted values are "system", "user" or "project".
+                  * Using a wrapper created with `luarocks init`,
+                    the default is "project".
+                  * Using --local (or when `local_by_default` is `true`),
+                    the default is "user".
+                  * Otherwise, the default is "system".
+
+--json           Output as JSON
 ]]
 config_cmd.help_see_also = [[
 	https://github.com/luarocks/luarocks/wiki/Config-file-format
@@ -30,34 +65,12 @@ config_cmd.help_see_also = [[
 
 local function config_file(conf)
    print(dir.normalize(conf.file))
-   if conf.ok then
+   if conf.found then
       return true
    else
       return nil, "file not found"
    end
 end
-
-local function printf(fmt, ...)
-   print((fmt):format(...))
-end
-
-local cfg_maps = {
-   external_deps_patterns = true,
-   external_deps_subdirs = true,
-   rocks_provided = true,
-   rocks_provided_3_0 = true,
-   runtime_external_deps_patterns = true,
-   runtime_external_deps_subdirs = true,
-   upload = true,
-   variables = true,
-}
-
-local cfg_arrays = {
-   disabled_servers = true,
-   external_deps_dirs = true,
-   rocks_trees = true,
-   rocks_servers = true,
-}
 
 local cfg_skip = {
    errorcodes = true,
@@ -67,60 +80,163 @@ local cfg_skip = {
    upload_servers = true,
 }
 
-local function print_config(cfg)
-   for k, v in util.sortedpairs(cfg) do
-      k = tostring(k)
-      if type(v) == "string" or type(v) == "number" then
-         printf("%s = %q", k, v)
-      elseif type(v) == "boolean" then
-         printf("%s = %s", k, tostring(v))
-      elseif type(v) == "function" or cfg_skip[k] then
-         -- skip
-      elseif cfg_maps[k] then
-         printf("%s = {", k)
-         for kk, vv in util.sortedpairs(v) do
-            local keyfmt = kk:match("^[a-zA-Z_][a-zA-Z0-9_]*$") and "%s" or "[%q]"
-            if type(vv) == "table" then
-               local qvs = fun.map(vv, function(e) return string.format("%q", e) end)
-               printf("   "..keyfmt.." = {%s},", kk, table.concat(qvs, ", "))
-            else
-               printf("   "..keyfmt.." = %q,", kk, vv)
-            end
-         end
-         printf("}")
-      elseif cfg_arrays[k] then
-         if #v == 0 then
-            printf("%s = {}", k)
-         else
-            printf("%s = {", k)
-            for _, vv in ipairs(v) do
-               if type(vv) == "string" then
-                  printf("   %q,", vv)
-               elseif type(vv) == "table" then
-                  printf("   {")
-                  if next(vv) == 1 then
-                     for _, v3 in ipairs(vv) do
-                        printf("      %q,", v3)
-                     end
-                  else
-                     for k3, v3 in util.sortedpairs(vv) do
-                        local keyfmt = tostring(k3):match("^[a-zA-Z_][a-zA-Z0-9_]*$") and "%s" or "[%q]"
-                        printf("      "..keyfmt.." = %q,", k3, v3)
-                     end
-                  end
-                  printf("   },")
-               end
-            end
-            printf("}")
-         end
+local function should_skip(k, v)
+   return type(v) == "function" or cfg_skip[k]
+end
+
+local function cleanup(tbl)
+   local copy = {}
+   for k, v in pairs(tbl) do
+      if not should_skip(k, v) then
+         copy[k] = v
       end
    end
+   return copy
+end
+
+local function traverse_varstring(var, tbl, fn, missing_parent)
+   local k, r = var:match("^%[([0-9]+)%]%.(.*)$")
+   if k then
+      k = tonumber(k)
+   else
+      k, r = var:match("^([^.[]+)%.(.*)$")
+      if not k then
+         k, r = var:match("^([^[]+)(%[.*)$")
+      end
+   end
+   
+   if k then
+      if not tbl[k] and missing_parent then
+         missing_parent(tbl, k)
+      end
+
+      if tbl[k] then
+         return traverse_varstring(r, tbl[k], fn, missing_parent)
+      else
+         return nil, "Unknown entry " .. k
+      end
+   end
+
+   local i = var:match("^%[([0-9]+)%]$")
+   if i then
+      var = tonumber(i)
+   end
+   
+   return fn(tbl, var)
+end
+
+local function print_json(value)
+   local json_ok, json = util.require_json()
+   if not json_ok then
+      return nil, "A JSON library is required for this command. "..json
+   end
+
+   print(json.encode(value))
+   return true
+end
+
+local function print_entry(var, tbl, is_json)
+   return traverse_varstring(var, tbl, function(t, k)
+      if not t[k] then
+         return nil, "Unknown entry " .. k
+      end
+      local val = t[k]
+
+      if not should_skip(var, val) then
+         if is_json then
+            return print_json(val)
+         elseif type(val) == "string" then
+            print(val)
+         else
+            persist.write_value(io.stdout, val)
+         end
+      end
+      return true
+   end)
+end
+
+local function infer_type(var)
+   local typ
+   traverse_varstring(var, cfg, function(t, k)
+      if t[k] ~= nil then
+         typ = type(t[k])
+      end
+   end)
+   return typ
+end
+
+local function write_entries(keys, scope, do_unset)
+   if scope == "project" and not cfg.config_files.project then
+      return nil, "Current directory is not part of a project. You may want to run `luarocks init`."
+   end
+   
+   local tbl, err = persist.load_config_file_if_basic(cfg.config_files[scope].file, cfg)
+   if not tbl then
+      return nil, err
+   end
+   
+   for var, val in util.sortedpairs(keys) do
+      traverse_varstring(var, tbl, function(t, k)
+         if do_unset then
+            t[k] = nil
+         else
+            local typ = infer_type(var)
+            local v
+            if typ == "number" and tonumber(val) then
+               v = tonumber(val)
+            elseif typ == "boolean" and val == "true" then
+               v = true
+            elseif typ == "boolean" and val == "false" then
+               v = false
+            else
+               v = val
+            end
+            t[k] = v
+            keys[var] = v
+         end
+         return true
+      end, function(p, k)
+         p[k] = {}
+      end)
+   end
+
+   local ok, err = persist.save_from_table(cfg.config_files[scope].file, tbl)
+   if ok then
+      print(do_unset and "Removed" or "Wrote")
+      for var, val in util.sortedpairs(keys) do
+         if do_unset then
+            print(("\t%s"):format(var))
+         else
+            print(("\t%s = %q"):format(var, val))
+         end
+      end
+      print(do_unset and "from" or "to")
+      print("\t" .. cfg.config_files[scope].file)
+      return true
+   else
+      return nil, err
+   end
+end
+
+local function check_scope(flags)
+   local scope = flags["scope"]
+                 or (flags["local"] and "user")
+                 or (flags["project-tree"] and "project")
+                 or (cfg.local_by_default and "user")
+                 or "system"
+   if scope ~= "system" and scope ~= "user" and scope ~= "project" then
+      return nil, "Valid values for scope are: system, user, project"
+   end
+
+   return scope
 end
 
 --- Driver function for "config" command.
 -- @return boolean: True if succeeded, nil on errors.
-function config_cmd.command(flags)
+function config_cmd.command(flags, var, val)
    deps.check_lua(cfg.variables)
+   
+   -- deprecated flags
    if flags["lua-incdir"] then
       print(cfg.variables.LUA_INCDIR)
       return true
@@ -133,12 +249,11 @@ function config_cmd.command(flags)
       print(cfg.lua_version)
       return true
    end
-   local conf = cfg.which_config()
    if flags["system-config"] then
-      return config_file(conf.system)
+      return config_file(cfg.config_files.system)
    end
    if flags["user-config"] then
-      return config_file(conf.user)
+      return config_file(cfg.config_files.user)
    end
    if flags["rock-trees"] then
       for _, tree in ipairs(cfg.rocks_trees) do
@@ -151,9 +266,68 @@ function config_cmd.command(flags)
       end
       return true
    end
+
+   if var == "lua_version" and val then
+      local scope, err = check_scope(flags)
+      if not scope then
+         return nil, err
+      end
+
+      if scope == "project" and not cfg.config_files.project then
+         return nil, "Current directory is not part of a project. You may want to run `luarocks init`."
+      end
+
+      local prefix = dir.dir_name(cfg.config_files[scope].file)
+      local ok, err = fs.make_dir(prefix)
+      if not ok then
+         return nil, "could not set default Lua version: " .. err
+      end
+      local fd, err = io.open(dir.path(prefix, "default-lua-version.lua"), "w")
+      if not fd then
+         return nil, "could not set default Lua version: " .. err
+      end
+      
+      fd:write('return "' .. val .. '"\n')
+      fd:close()
+      print("Lua version will default to " .. val .. " in " .. prefix)
+   end
    
-   print_config(cfg)
-   return true
+   if var == "lua_dir" and val then
+      local scope, err = check_scope(flags)
+      if not scope then
+         return nil, err
+      end
+      local keys = {
+         ["variables.LUA_DIR"] = cfg.variables.LUA_DIR,
+         ["variables.LUA_BINDIR"] = cfg.variables.LUA_BINDIR,
+         ["variables.LUA_INCDIR"] = cfg.variables.LUA_INCDIR,
+         ["variables.LUA_LIBDIR"] = cfg.variables.LUA_LIBDIR,
+         ["lua_interpreter"] = cfg.lua_interpreter,
+      }
+      return write_entries(keys, scope, flags["unset"])
+   end
+
+   if var then
+      if val or flags["unset"] then
+         local scope, err = check_scope(flags)
+         if not scope then
+            return nil, err
+         end
+   
+         return write_entries({ [var] = val }, scope, flags["unset"])
+      else
+         return print_entry(var, cfg, flags["json"])
+      end
+   end
+
+   local cleancfg = cleanup(cfg)
+
+   if flags["json"] then
+      return print_json(cleancfg)
+   else
+      print(persist.save_from_table_to_string(cleancfg))
+      return true
+   end
 end
 
 return config_cmd

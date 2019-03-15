@@ -152,6 +152,33 @@ local function process_server_flags(flags)
    return true
 end
 
+local function get_lua_version(flags)
+   if flags["lua-version"] then
+      return flags["lua-version"] 
+   end
+   local dirs = {
+      cfg.home_tree,
+      cfg.sysconfdir,
+   }
+   if flags["project-tree"] then
+      table.insert(dirs, 1, dir.path(flags["project-tree"], ".."))
+   end
+   for _, d in ipairs(dirs) do
+      local f = dir.path(d, ".luarocks", "default-lua-version.lua")
+      local mod, err = loadfile(f, "t")
+      if mod then
+         local pok, ver = pcall(mod)
+         if pok and type(ver) == "string" and ver:match("%d+.%d+") then
+            if flags["verbose"] then
+               util.printout("Defaulting to Lua " .. ver .. " based on " .. f .. " ...")
+            end
+            return ver
+         end
+      end
+   end
+   return nil
+end
+
 --- Main command-line processor.
 -- Parses input arguments and calls the appropriate driver function
 -- to execute the action requested on the command-line, forwarding
@@ -249,6 +276,16 @@ function cmd.run_command(description, commands, external_namespace, ...)
    end
    command = command:gsub("-", "_")
 
+   if command == "config" then
+      if nonflags[1] == "lua_version" and nonflags[2] then
+         flags["lua-version"] = nonflags[2]
+      elseif nonflags[1] == "lua_dir" and nonflags[2] then
+         flags["lua-dir"] = nonflags[2]
+      end
+   end
+
+   local lua_version = get_lua_version(flags)
+
    if flags["deps-mode"] and not deps.check_deps_mode_flag(flags["deps-mode"]) then
       die("Invalid entry for --deps-mode.")
    end
@@ -256,47 +293,44 @@ function cmd.run_command(description, commands, external_namespace, ...)
    local detected
    if flags["lua-dir"] then
       local err
-      detected, err = util.find_lua(flags["lua-dir"], flags["lua-version"])
+      detected, err = util.find_lua(flags["lua-dir"], lua_version)
       if not detected then
          die(err)
       end
       assert(detected.lua_version)
       assert(detected.lua_dir)
-   elseif flags["lua-version"] then
+   elseif lua_version then
       local path_sep = (package.config:sub(1, 1) == "\\" and ";" or ":")
       for bindir in os.getenv("PATH"):gmatch("[^"..path_sep.."]+") do
          local parentdir = bindir:gsub("[\\/][^\\/]+[\\/]?$", "")
-         detected = util.find_lua(dir.path(parentdir), flags["lua-version"])
+         detected = util.find_lua(dir.path(parentdir), lua_version)
          if detected then
             break
          end
-         detected = util.find_lua(bindir, flags["lua-version"])
+         detected = util.find_lua(bindir, lua_version)
          if detected then
             break
          end
       end
       if not detected then
          util.warning("Could not find a Lua interpreter for version " ..
-                      flags["lua-version"] .. " in your PATH. " ..
+                      lua_version .. " in your PATH. " ..
                       "Modules may not install with the correct configurations. " ..
                       "You may want to specify to the path prefix to your build " ..
-                      "of Lua " .. flags["lua-version"] .. " using --lua-dir")
+                      "of Lua " .. lua_version .. " using --lua-dir")
          detected = {
-            lua_version = flags["lua-version"],
+            lua_version = lua_version,
          }
       end
    end
 
    if flags["project-tree"] then
       local project_tree = flags["project-tree"]:gsub("[/\\][^/\\]+$", "")
-      detected = detected or {
-         project_dir = project_tree
-      }
+      detected = detected or {}
+      detected.project_dir = project_tree
       local d = check_if_config_is_present(detected, project_tree)
       if d then
          detected = d
-      else
-         detected.project_dir = nil
       end
    else
       detected = detected or {}
