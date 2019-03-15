@@ -728,32 +728,30 @@ function cfg.init(detected, warning)
    cfg.variables.LUA = cfg.variables.LUA or (cfg.variables.LUA_BINDIR and (cfg.variables.LUA_BINDIR .. "/" .. cfg.lua_interpreter):gsub("//", "/"))
    cfg.user_agent = "LuaRocks/"..cfg.program_version.." "..cfg.arch
 
+   cfg.config_files = {
+      project = detected.project_dir and {
+         file = project_config_file,
+         found = not not project_config_ok,
+      },
+      system = {
+         file = sys_config_file,
+         found = not not sys_config_ok,
+      },
+      user = {
+         file = home_config_file,
+         found = not not home_config_ok,
+      },
+      nearest = project_config_ok
+                and project_config_file
+                or (home_config_ok
+                    and home_config_file
+                    or sys_config_file),
+   }
+
    ----------------------------------------
    -- Attributes of cfg are set.
    -- Let's add some methods.
    ----------------------------------------
-
-   function cfg.which_config()
-      return {
-         project = detected.project_dir and {
-            file = project_config_file,
-            ok = project_config_ok,
-         },
-         system = {
-            file = sys_config_file,
-            ok = sys_config_ok,
-         },
-         user = {
-            file = home_config_file,
-            ok = home_config_ok,
-         },
-         nearest = project_config_ok
-                   and project_config_file
-                   or (home_config_ok
-                       and home_config_file
-                       or sys_config_file),
-      }
-   end
 
    do
       local function make_paths_from_tree(tree)

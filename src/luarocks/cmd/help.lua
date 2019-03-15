@@ -90,14 +90,14 @@ function help.command(description, commands, command)
       util.printout()
       util.printout("\tConfiguration files:")
       local conf = cfg.config_files
-      util.printout("\t\tSystem  : ".. dir.normalize(conf.system.file) .. " (" .. get_status(conf.system.ok) ..")")
+      util.printout("\t\tSystem  : ".. dir.normalize(conf.system.file) .. " (" .. get_status(conf.system.found) ..")")
       if conf.user.file then
-         util.printout("\t\tUser    : ".. dir.normalize(conf.user.file) .. " (" .. get_status(conf.user.ok) ..")")
+         util.printout("\t\tUser    : ".. dir.normalize(conf.user.file) .. " (" .. get_status(conf.user.found) ..")")
       else
          util.printout("\t\tUser    : disabled in this LuaRocks installation.")
       end
       if conf.project then
-         util.printout("\t\tProject : ".. dir.normalize(conf.project.file) .. " (" .. get_status(conf.project.ok) ..")")
+         util.printout("\t\tProject : ".. dir.normalize(conf.project.file) .. " (" .. get_status(conf.project.found) ..")")
       end
       util.printout()
       util.printout("\tRocks trees in use: ")

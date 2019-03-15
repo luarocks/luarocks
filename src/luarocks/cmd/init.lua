@@ -92,14 +92,7 @@ function init.command(flags, name, version)
 
    if flags["reset"] then
       fs.delete(lua_wrapper)
-      for v in util.lua_versions() do
-         local config_file = dir.path(".luarocks", "config-"..v..".lua")
-         if v ~= cfg.lua_version then
-            fs.move(config_file, config_file .. "~")
-         else
-            fs.delete(config_file)
-         end
-      end
+      fs.delete(dir.path(".luarocks", "default_lua_version.lua"))
    end
 
    util.printout("Adding entries to .gitignore ...")

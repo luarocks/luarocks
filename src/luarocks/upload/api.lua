@@ -11,11 +11,10 @@ local multipart = require("luarocks.upload.multipart")
 local Api = {}
 
 local function upload_config_file()
-   local conf = cfg.which_config()
-   if not conf.user.file then
+   if not cfg.config_files.user.file then
       return nil
    end
-   return (conf.user.file:gsub("/[^/]+$", "/upload_config.lua"))
+   return (cfg.config_files.user.file:gsub("/[^/]+$", "/upload_config.lua"))
 end
 
 function Api:load_config()
