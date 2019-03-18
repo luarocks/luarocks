@@ -105,8 +105,8 @@ local function check_macosx_deployment_target(rockspec)
       if targetminor > versionminor then
          return nil, ("This rock requires Mac OSX 10.%d, and you are running 10.%d."):format(targetminor, versionminor)
       end
-      patch_variable("CC", target)
-      patch_variable("LD", target)
+      patch_variable("CC")
+      patch_variable("LD")
    end
    return true
 end
