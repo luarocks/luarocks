@@ -436,6 +436,7 @@ local function create_env(testing_paths)
    end
    
    local env_variables = {}
+   env_variables.GNUPGHOME = testing_paths.gpg_dir
    env_variables.LUA_VERSION = luaversion_short
    env_variables.LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/testing_config.lua"
    if test_env.TEST_TARGET_OS == "windows" then
@@ -593,6 +594,7 @@ local function create_paths(luaversion_full)
    end
 
    testing_paths.fixtures_dir = base_dir .. "/spec/fixtures"
+   testing_paths.gpg_dir = testing_paths.fixtures_dir .. "/gpg"
    testing_paths.fixtures_repo_dir = base_dir .. "/spec/fixtures/a_repo"
    testing_paths.util_dir = base_dir .. "/spec/util"
    testing_paths.testrun_dir = base_dir .. "/testrun"

@@ -230,6 +230,8 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          SVN = "svn",
          HG = "hg",
 
+         GPG = "gpg",
+
          RSYNC = "rsync",
          WGET = "wget",
          SCP = "scp",
