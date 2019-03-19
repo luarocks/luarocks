@@ -40,7 +40,11 @@ describe("LuaRocks upload tests #integration", function()
          assert.is_true(run.luarocks_bool("upload " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec " .. test_env.openssl_dirs .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/luarocks_site.lua"}))
       end)
 
-      it("LuaRocks upload rockspec with api-key and skip-pack", function()
+      it("#gpg rockspec with --sign", function()
+         print(run.luarocks("upload " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec " .. test_env.openssl_dirs .. " --api-key=123 --sign", {LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/luarocks_site.lua"}))
+      end)
+
+      it("rockspec with api-key and skip-pack", function()
          assert.is_true(run.luarocks_bool("upload --skip-pack " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec " .. test_env.openssl_dirs .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/luarocks_site.lua"}))
       end)
    end)
