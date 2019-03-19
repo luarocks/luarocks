@@ -149,6 +149,7 @@ local supported_flags = {
    ["rockspec"] = true,
    ["rockspec-format"] = "<ver>",
    ["server"] = "<server>",
+   ["sign"] = true,
    ["skip-pack"] = true,
    ["source"] = true,
    ["summary"] = "\"<text>\"",

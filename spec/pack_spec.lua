@@ -50,6 +50,16 @@ describe("LuaRocks pack #integration", function()
       assert(test_env.remove_files(lfs.currentdir(), "say%-"))
    end)
 
+   pending("#gpg --sign", function()
+      assert(run.luarocks_bool("install say 1.2"))
+      assert(run.luarocks_bool("install luassert"))
+      assert(run.luarocks_bool("install say 1.0"))
+      assert(run.luarocks_bool("pack say --sign"))
+      assert.is_truthy(lfs.attributes("say-1.2-1.all.rock"))
+      assert.is_truthy(lfs.attributes("say-1.2-1.all.rock.asc"))
+      assert(test_env.remove_files(lfs.currentdir(), "say%-"))
+   end)
+
    describe("#mock", function()
 
       setup(function()

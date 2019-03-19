@@ -5,11 +5,14 @@ local cmd_pack = {}
 
 local util = require("luarocks.util")
 local pack = require("luarocks.pack")
+local signing = require("luarocks.signing")
 local queries = require("luarocks.queries")
 
 cmd_pack.help_summary = "Create a rock, packing sources or binaries."
 cmd_pack.help_arguments = "{<rockspec>|<name> [<version>]}"
 cmd_pack.help = [[
+--sign     Produce a signature file as well.
+
 Argument may be a rockspec file, for creating a source rock,
 or the name of an installed package, for creating a binary rock.
 In the latter case, the app version may be given as a second
@@ -40,7 +43,18 @@ function cmd_pack.command(flags, arg, version)
    if err then
       return nil, err
    else
+      local sigfile
+      if flags["sign"] then
+         sigfile, err = signing.sign_file(file)
+         util.printout()
+      end
       util.printout("Packed: "..file)
+      if sigfile then
+         util.printout("Sigature stored in: "..sigfile)
+      end
+      if err then
+         return nil, err
+      end
       return true
    end
 end
