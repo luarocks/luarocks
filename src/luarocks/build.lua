@@ -12,40 +12,14 @@ local cfg = require("luarocks.core.cfg")
 local repos = require("luarocks.repos")
 local writer = require("luarocks.manif.writer")
 
-local opts_mt = {}
-
-opts_mt.__index = opts_mt
-
-function opts_mt.type()
-   return "build.opts"
-end
-
-function build.opts(opts)
-   local valid_opts = {
-      need_to_fetch = "boolean",
-      minimal_mode = "boolean",
-      deps_mode = "string",
-      build_only_deps = "boolean",
-      namespace = "string?",
-      branch = "boolean",
-   }
-   for k, v in pairs(opts) do
-      local tv = type(v)
-      if not valid_opts[k] then
-         error("invalid build option: "..k)
-      end
-      local vo, optional = valid_opts[k]:match("^(.-)(%??)$")
-      if not (tv == vo or (optional == "?" and tv == nil)) then
-         error("invalid type build option: "..k.." - got "..tv..", expected "..vo)
-      end
-   end
-   for k, v in pairs(valid_opts) do
-      if (not v:find("?", 1, true)) and opts[k] == nil then
-         error("missing build option: "..k)
-      end
-   end
-   return setmetatable(opts, opts_mt)
-end
+build.opts = util.opts_table("build.opts", {
+   need_to_fetch = "boolean",
+   minimal_mode = "boolean",
+   deps_mode = "string",
+   build_only_deps = "boolean",
+   namespace = "string?",
+   branch = "boolean",
+})
 
 do
    --- Write to the current directory the contents of a table,

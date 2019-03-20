@@ -657,5 +657,34 @@ do
    end
 end
 
+function util.opts_table(type_name, valid_opts)
+   local opts_mt = {}
+   
+   opts_mt.__index = opts_mt
+   
+   function opts_mt.type()
+      return type_name
+   end
+
+   return function(opts)
+      for k, v in pairs(opts) do
+         local tv = type(v)
+         if not valid_opts[k] then
+            error("invalid option: "..k)
+         end
+         local vo, optional = valid_opts[k]:match("^(.-)(%??)$")
+         if not (tv == vo or (optional == "?" and tv == nil)) then
+            error("invalid type option: "..k.." - got "..tv..", expected "..vo)
+         end
+      end
+      for k, v in pairs(valid_opts) do
+         if (not v:find("?", 1, true)) and opts[k] == nil then
+            error("missing option: "..k)
+         end
+      end
+      return setmetatable(opts, opts_mt)
+   end
+end
+
 return util
 
