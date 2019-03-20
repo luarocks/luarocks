@@ -48,6 +48,17 @@ only dependencies of the rockspec (see `luarocks help install`).
                     rockspec. Allows to specify a different branch to 
                     fetch. Particularly for "dev" rocks.
 
+--verify            Verify signature of the rockspec or src.rock being
+                    built. If the rockspec or src.rock is being downloaded,
+                    LuaRocks will attempt to download the signature as well.
+                    Otherwise, the signature file should be already
+                    available locally in the same directory.
+                    You need the signer’s public key in your local
+                    keyring for this option to work properly.
+
+--sign              To be used with --pack-binary-rock. Also produce
+                    a signature file for the generated .rock file.
+
 ]]
 
 --- Driver function for "make" command.
@@ -82,10 +93,15 @@ function make.command(flags, rockspec_filename)
       build_only_deps = false,
       namespace = flags["namespace"],
       branch = not not flags["branch"],
+      verify = not not flags["verify"],
    })
 
+   if flags["sign"] and not flags["pack-binary-rock"] then
+      return nil, "In the make command, --sign is meant to be used only with --pack-binary-rock"
+   end
+
    if flags["pack-binary-rock"] then
-      return pack.pack_binary_rock(name, rockspec.version, function()
+      return pack.pack_binary_rock(name, rockspec.version, flags["sign"], function()
          return build.build_rockspec(rockspec, opts)
       end)
    else

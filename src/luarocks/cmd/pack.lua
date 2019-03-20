@@ -40,23 +40,7 @@ function cmd_pack.command(flags, arg, version)
       local query = queries.new(name, version)
       file, err = pack.pack_installed_rock(query, flags["tree"])
    end
-   if err then
-      return nil, err
-   else
-      local sigfile
-      if flags["sign"] then
-         sigfile, err = signing.sign_file(file)
-         util.printout()
-      end
-      util.printout("Packed: "..file)
-      if sigfile then
-         util.printout("Sigature stored in: "..sigfile)
-      end
-      if err then
-         return nil, err
-      end
-      return true
-   end
+   return pack.report_and_sign_local_file(file, err, flags["sign"])
 end
 
 return cmd_pack
