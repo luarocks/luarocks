@@ -341,8 +341,12 @@ function search.pick_installed_rock(query, given_tree)
    --question: what do we do about multiple versions? This should
    --give us the latest version on the last repo (which is usually the global one)
    for vs, repositories in util.sortedpairs(versions, vers.compare_versions) do
-      if not version then version = vs end
-      for _, rp in ipairs(repositories) do repo_url = rp.repo end
+      if not version then
+         version = vs
+         for _, rp in ipairs(repositories) do
+            repo_url = rp.repo
+         end
+      end
    end
 
    local repo = tree_map[repo_url]
