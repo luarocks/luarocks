@@ -19,6 +19,7 @@ build.opts = util.opts_table("build.opts", {
    build_only_deps = "boolean",
    namespace = "string?",
    branch = "boolean",
+   verify = "boolean",
 })
 
 do
@@ -104,13 +105,13 @@ local function process_dependencies(rockspec, opts)
    end
    if not opts.build_only_deps then
       if next(rockspec.build_dependencies) then
-         local ok, err, errcode = deps.fulfill_dependencies(rockspec, "build_dependencies", opts.deps_mode)
+         local ok, err, errcode = deps.fulfill_dependencies(rockspec, "build_dependencies", opts.deps_mode, opts.verify)
          if err then
             return nil, err, errcode
          end
       end
    end
-   local ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode)
+   local ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify)
    if err then
       return nil, err, errcode
    end

@@ -5,6 +5,7 @@ local fetch = {}
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local rockspecs = require("luarocks.rockspecs")
+local signing = require("luarocks.signing")
 local persist = require("luarocks.persist")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
@@ -120,27 +121,52 @@ function fetch.find_base_dir(file, temp_dir, src_url, src_dir)
    return inferred_dir, found_dir
 end
 
+local function fetch_and_verify_signature_for(url, filename, tmpdir)
+   local sig_url = signing.signature_url(url)
+   local sig_file, err, errcode = fetch.fetch_url_at_temp_dir(sig_url, tmpdir)
+   if not sig_file then
+      return nil, "Could not fetch signature file for verification: " .. err, errcode
+   end
+   
+   local ok, err = signing.verify_signature(filename, sig_file)
+   if not ok then
+      return nil, "Failed signature verification: " .. err
+   end
+
+   return fs.absolute_name(sig_file)
+end
+
 --- Obtain a rock and unpack it.
 -- If a directory is not given, a temporary directory will be created,
 -- which will be deleted on program termination.
 -- @param rock_file string: URL or filename of the rock.
 -- @param dest string or nil: if given, directory will be used as
 -- a permanent destination.
+-- @param verify boolean: if true, download and verify signature for rockspec
 -- @return string or (nil, string, [string]): the directory containing the contents
 -- of the unpacked rock.
-function fetch.fetch_and_unpack_rock(rock_file, dest)
-   assert(type(rock_file) == "string")
+function fetch.fetch_and_unpack_rock(url, dest, verify)
+   assert(type(url) == "string")
    assert(type(dest) == "string" or not dest)
 
-   local name = dir.base_name(rock_file):match("(.*)%.[^.]*%.rock")
-   
-   local err, errcode
-   rock_file, err, errcode = fetch.fetch_url_at_temp_dir(rock_file,"luarocks-rock-"..name)
+   local name = dir.base_name(url):match("(.*)%.[^.]*%.rock")
+   local tmpname = "luarocks-rock-" .. name
+
+   local rock_file, err, errcode = fetch.fetch_url_at_temp_dir(url, tmpname)
    if not rock_file then
       return nil, "Could not fetch rock file: " .. err, errcode
    end
 
+   local sig_file
+   if verify then
+      sig_file, err = fetch_and_verify_signature_for(url, rock_file, tmpname)
+      if err then
+         return nil, err
+      end
+   end
+
    rock_file = fs.absolute_name(rock_file)
+
    local unpack_dir
    if dest then
       unpack_dir = dest
@@ -162,6 +188,12 @@ function fetch.fetch_and_unpack_rock(rock_file, dest)
    ok, err = fs.unzip(rock_file)
    if not ok then
       return nil, "Failed unpacking rock file: " .. rock_file .. ": " .. err
+   end
+   if sig_file then
+      ok, err = fs.copy(sig_file, ".")
+      if not ok then
+         return nil, "Failed copying signature file"
+      end
    end
    fs.pop_dir()
    return unpack_dir
@@ -210,33 +242,42 @@ end
 -- @param filename string: Local or remote filename of a rockspec.
 -- @param location string or nil: Where to download. If not given,
 -- a temporary dir is created.
+-- @param verify boolean: if true, download and verify signature for rockspec
 -- @return table or (nil, string, [string]): A table representing the rockspec
 -- or nil followed by an error message and optional error code.
-function fetch.load_rockspec(filename, location)
-   assert(type(filename) == "string")
+function fetch.load_rockspec(url, location, verify)
+   assert(type(url) == "string")
 
    local name
-   local basename = dir.base_name(filename)
+   local basename = dir.base_name(url)
    if basename == "rockspec" then
       name = "rockspec"
    else
       name = basename:match("(.*)%.rockspec")
       if not name then
-         return nil, "Filename '"..filename.."' does not look like a rockspec."
+         return nil, "Filename '"..url.."' does not look like a rockspec."
       end
    end
-   
-   local err, errcode
+
+   local tmpname = "luarocks-rockspec-"..name
+   local filename, err, errcode
    if location then
       local ok, err = fs.change_dir(location)
       if not ok then return nil, err end
-      filename, err = fetch.fetch_url(filename)
+      filename, err = fetch.fetch_url(url)
       fs.pop_dir()
    else
-      filename, err, errcode = fetch.fetch_url_at_temp_dir(filename,"luarocks-rockspec-"..name)
+      filename, err, errcode = fetch.fetch_url_at_temp_dir(url, tmpname)
    end
    if not filename then
       return nil, err, errcode
+   end
+
+   if verify then
+      local _, err = fetch_and_verify_signature_for(url, filename, tmpname)
+      if err then
+         return nil, err
+      end
    end
 
    return fetch.load_local_rockspec(filename)

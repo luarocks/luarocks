@@ -162,6 +162,7 @@ local supported_flags = {
    ["tree"] = "<path>",
    ["user-config"] = true,
    ["verbose"] = true,
+   ["verify"] = true,
    ["version"] = true,
 }
 

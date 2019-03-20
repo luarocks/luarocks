@@ -19,7 +19,7 @@ local make = require("luarocks.cmd.make")
 local cmd = require("luarocks.cmd")
 
 cmd_build.help_summary = "build/compile a rock."
-cmd_build.help_arguments = "[--pack-binary-rock] [--keep] {<rockspec>|<rock>|<name> [<version>]}"
+cmd_build.help_arguments = "[<flags...>] {<rockspec>|<rock>|<name> [<version>]}"
 cmd_build.help = [[
 Build and install a rock, compiling its C parts if any.
 Argument may be a rockspec file, a source rock file
@@ -40,17 +40,22 @@ or the name of a rock to be fetched from a repository.
 
 --only-deps         Installs only the dependencies of the rock.
 
+--verify            Verify signature of the rockspec or src.rock being
+                    built. If the rockspec or src.rock is being downloaded,
+                    LuaRocks will attempt to download the signature as well.
+                    Otherwise, the signature file should be already
+                    available locally in the same directory.
+                    You need the signer’s public key in your local
+                    keyring for this option to work properly.
+
+--sign              To be used with --pack-binary-rock. Also produce
+                    a signature file for the generated .rock file.
+
 ]]..util.deps_mode_help()
 
 --- Build and install a rock.
 -- @param rock_filename string: local or remote filename of a rock.
--- @param need_to_fetch boolean: true if sources need to be fetched,
--- false if the rockspec was obtained from inside a source rock.
--- @param deps_mode: string: Which trees to check dependencies for:
--- "one" for the current default tree, "all" for all trees,
--- "order" for all trees with priority >= the current default, "none" for no trees.
--- @param build_only_deps boolean: true to build the listed dependencies only.
--- @param namespace string?: an optional namespace
+-- @param opts table: build options
 -- @return boolean or (nil, string, [string]): True if build was successful,
 -- or false and an error message and an optional error code.
 local function build_rock(rock_filename, opts)
@@ -60,7 +65,7 @@ local function build_rock(rock_filename, opts)
    local ok, err, errcode
 
    local unpack_dir
-   unpack_dir, err, errcode = fetch.fetch_and_unpack_rock(rock_filename)
+   unpack_dir, err, errcode = fetch.fetch_and_unpack_rock(rock_filename, nil, opts.verify)
    if not unpack_dir then
       return nil, err, errcode
    end
@@ -100,7 +105,7 @@ local function do_build(ns_name, version, opts)
    end
 
    if url:match("%.rockspec$") then
-      local rockspec, err, errcode = fetch.load_rockspec(url)
+      local rockspec, err, errcode = fetch.load_rockspec(url, nil, opts.verify)
       if not rockspec then
          return nil, err, errcode
       end
@@ -151,10 +156,15 @@ function cmd_build.command(flags, name, version)
       build_only_deps = not not flags["only-deps"],
       namespace = flags["namespace"],
       branch = not not flags["branch"],
+      verify = not not flags["verify"],
    })
 
+   if flags["sign"] and not flags["pack-binary-rock"] then
+      return nil, "In the build command, --sign is meant to be used only with --pack-binary-rock"
+   end
+
    if flags["pack-binary-rock"] then
-      return pack.pack_binary_rock(name, version, function()
+      return pack.pack_binary_rock(name, version, flags["sign"], function()
          opts.build_only_deps = false
          local status, err, errcode = do_build(name, version, opts)
          if status and flags["no-doc"] then
