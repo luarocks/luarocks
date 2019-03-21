@@ -548,4 +548,113 @@ function util.require_json()
    return nil, errmsg
 end
 
+-- A portable version of fs.exists that can be used at early startup,
+-- before the platform has been determined and luarocks.fs has been
+-- initialized.
+function util.exists(file)
+   local fd, _, code = io.open(file, "r")
+   if code == 13 then
+      -- code 13 means "Permission denied" on both Unix and Windows
+      -- io.open on folders always fails with code 13 on Windows
+      return true
+   end
+   if fd then
+      fd:close()
+      return true
+   end
+   return false
+end
+
+do
+   local function Q(pathname)
+      if pathname:match("^.:") then
+         return pathname:sub(1, 2) .. '"' .. pathname:sub(3) .. '"'
+      end
+      return '"' .. pathname .. '"'
+   end
+
+   function util.check_lua_version(lua_exe, luaver)
+      if not util.exists(lua_exe) then
+         return nil
+      end
+      local lv, err = util.popen_read(Q(lua_exe) .. ' -e "io.write(_VERSION:sub(5))"')
+      if luaver and luaver ~= lv then
+         return nil
+      end
+      local ljv
+      if lv == "5.1" then
+         ljv = util.popen_read(Q(lua_exe) .. ' -e "io.write(tostring(jit and jit.version:sub(8)))"')
+         if ljv == "nil" then
+            ljv = nil
+         end
+      end
+      return lv, ljv
+   end
+
+   local find_lua_bindir
+   do
+      local exe_suffix = (package.config:sub(1, 1) == "\\" and ".exe" or "")
+
+      local function insert_lua_variants(names, luaver)
+         local variants = {
+            "lua" .. luaver .. exe_suffix,
+            "lua" .. luaver:gsub("%.", "") .. exe_suffix,
+            "lua-" .. luaver .. exe_suffix,
+            "lua-" .. luaver:gsub("%.", "") .. exe_suffix,
+         }
+         for _, name in ipairs(variants) do
+            names[name] = luaver
+            table.insert(names, name)
+         end
+      end
+
+      find_lua_bindir = function(prefix, luaver)
+         local names = {}
+         if luaver then
+            insert_lua_variants(names, luaver)
+         else
+            for v in util.lua_variants("descending") do
+               insert_lua_variants(names, v)
+            end
+         end
+         if luaver == "5.1" or not luaver then
+            table.insert(names, "luajit" .. exe_suffix)
+         end
+         table.insert(names, "lua" .. exe_suffix)
+
+         local bindirs = { prefix .. "/bin", prefix }
+         local tried = {}
+         for _, d in ipairs(bindirs) do
+            for _, name in ipairs(names) do
+               local lua_exe = d .. "/" .. name
+               table.insert(tried, lua_exe)
+               local lv, ljv = util.check_lua_version(lua_exe, luaver)
+               if lv then
+                  return name, d, lv, ljv
+               end
+            end
+         end
+         return nil, "Lua interpreter not found at " .. prefix .. "\n" ..
+                     "Tried:\t" .. table.concat(tried, "\n\t")
+      end
+   end
+
+   function util.find_lua(prefix, luaver)
+      local lua_interpreter, bindir, luajitver
+      lua_interpreter, bindir, luaver, luajitver = find_lua_bindir(prefix, luaver)
+      if not lua_interpreter then
+         return nil, bindir
+      end
+
+      return {
+         lua_version = luaver,
+         luajit_version = luajitver,
+         lua_interpreter = lua_interpreter,
+         lua_dir = prefix,
+         lua_bindir = bindir,
+      }
+   end
+end
+
 return util
+

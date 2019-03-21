@@ -38,106 +38,6 @@ local function is_ownership_ok(directory)
    return false
 end
 
-local function exists(file)
-   local fd = io.open(file, "r")
-   if fd then
-      fd:close()
-      return true
-   end
-   return false
-end
-
-do
-   local function Q(pathname)
-      if pathname:match("^.:") then
-         return pathname:sub(1, 2) .. '"' .. pathname:sub(3) .. '"'
-      end
-      return '"' .. pathname .. '"'
-   end
-
-   local function check_lua_version(lua_exe, luaver)
-      if not exists(lua_exe) then
-         return nil
-      end
-      local lv, err = util.popen_read(Q(lua_exe) .. ' -e "io.write(_VERSION:sub(5))"')
-      if luaver and luaver ~= lv then
-         return nil
-      end
-      local ljv
-      if lv == "5.1" then
-         ljv = util.popen_read(Q(lua_exe) .. ' -e "io.write(tostring(jit and jit.version:sub(8)))"')
-         if ljv == "nil" then
-            ljv = nil
-         end
-      end
-      return lv, ljv
-   end
-
-   local find_lua_bindir
-   do
-      local exe_suffix = (package.config:sub(1, 1) == "\\" and ".exe" or "")
-
-      local function insert_lua_versions(names, luaver)
-         local variants = {
-            "lua" .. luaver .. exe_suffix,
-            "lua" .. luaver:gsub("%.", "") .. exe_suffix,
-            "lua-" .. luaver .. exe_suffix,
-            "lua-" .. luaver:gsub("%.", "") .. exe_suffix,
-         }
-         for _, name in ipairs(variants) do
-            names[name] = luaver
-            table.insert(names, name)
-         end
-      end
-
-      find_lua_bindir = function(prefix, luaver)
-         local names = {}
-         if luaver then
-            insert_lua_versions(names, luaver)
-         else
-            for v in util.lua_versions("descending") do
-               insert_lua_versions(names, v)
-            end
-         end
-         if luaver == "5.1" or not luaver then
-            table.insert(names, "luajit" .. exe_suffix)
-         end
-         table.insert(names, "lua" .. exe_suffix)
-
-         local bindirs = { prefix .. "/bin", prefix }
-         local tried = {}
-         for _, d in ipairs(bindirs) do
-            for _, name in ipairs(names) do
-               local lua_exe = dir.path(d, name)
-               table.insert(tried, lua_exe)
-               local lv, ljv = check_lua_version(lua_exe, luaver)
-               if lv then
-                  return name, d, lv, ljv
-               end
-            end
-         end
-         return nil, "Lua interpreter not found at " .. prefix .. "\n" ..
-                     "Tried:\t" .. table.concat(tried, "\n\t")
-      end
-   end
-
-   function cmd.find_lua(prefix, luaver)
-      local lua_interpreter, bindir, luajitver
-      lua_interpreter, bindir, luaver, luajitver = find_lua_bindir(prefix, luaver)
-      if not lua_interpreter then
-         return nil, bindir
-      end
-
-      return {
-         lua_version = luaver,
-         luajit_version = luajitver,
-         lua_interpreter = lua_interpreter,
-         lua_dir = prefix,
-         lua_bindir = bindir,
-      }
-   end
-end
-
 local function check_popen()
    local popen_ok, popen_result = pcall(io.popen, "")
    if popen_ok then
@@ -151,16 +51,17 @@ local function check_popen()
    end
 end
 
-local function find_project_dir()
-   local try = "."
-   for _ = 1, 10 do -- FIXME detect when root dir was hit instead
-      if exists(try .. "/.luarocks") and exists(try .. "/lua_modules") then
-         return try
-      elseif exists(try .. "/.luarocks-no-project") then
-         return nil
+local function check_if_config_is_present(detected, try)
+   local versions = detected.lua_version 
+                    and { detected.lua_version }
+                    or  util.lua_versions("descending")
+   return fun.find(versions, function(v)
+      if util.exists(dir.path(try, ".luarocks", "config-"..v..".lua")) then
+         detected.project_dir = try
+         detected.lua_version = v
+         return detected
       end
-      try = try .. "/.."
-   end
+   end)
 end
 
 local process_tree_flags
@@ -259,19 +160,6 @@ local function process_server_flags(flags)
    end
 
    return true
-end
-
-local function find_lua_version_at(dirname)
-   local lua_version
-   for v in util.lua_versions("descending") do
-      if exists(dir.path(dirname, ".luarocks", "config-"..v..".lua")) then
-         lua_version = v
-         break
-      end
-   end
-   return {
-      lua_version = lua_version
-   }
 end
 
 --- Main command-line processor.
@@ -375,47 +263,65 @@ function cmd.run_command(description, commands, external_namespace, ...)
       die("Invalid entry for --deps-mode.")
    end
 
-   local project_dir
-   if flags["project-tree"] then
-      project_dir = flags["project-tree"]:gsub("[/\\][^/\\]+$", "")
-   end
-
-   local lua_data
+   local detected
    if flags["lua-dir"] then
       local err
-      lua_data, err = cmd.find_lua(flags["lua-dir"], flags["lua-version"])
-      if not lua_data then
+      detected, err = util.find_lua(flags["lua-dir"], flags["lua-version"])
+      if not detected then
          die(err)
       end
+      assert(detected.lua_version)
+      assert(detected.lua_dir)
    elseif flags["lua-version"] then
       local path_sep = (package.config:sub(1, 1) == "\\" and ";" or ":")
       for bindir in os.getenv("PATH"):gmatch("[^"..path_sep.."]+") do
          local parentdir = bindir:gsub("[\\/][^\\/]+[\\/]?$", "")
-         lua_data = cmd.find_lua(dir.path(parentdir), flags["lua-version"])
-         if lua_data then
+         detected = util.find_lua(dir.path(parentdir), flags["lua-version"])
+         if detected then
             break
          end
-         lua_data = cmd.find_lua(bindir, flags["lua-version"])
-         if lua_data then
+         detected = util.find_lua(bindir, flags["lua-version"])
+         if detected then
             break
          end
       end
-      if not lua_data then
+      if not detected then
          util.warning("Could not find a Lua interpreter for version " ..
                       flags["lua-version"] .. " in your PATH. " ..
                       "Modules may not install with the correct configurations. " ..
                       "You may want to specify to the path prefix to your build " ..
                       "of Lua " .. flags["lua-version"] .. " using --lua-dir")
-         lua_data = {
+         detected = {
             lua_version = flags["lua-version"],
          }
       end
-   else
-      if not project_dir then
-         project_dir = find_project_dir()
+   end
+
+   if flags["project-tree"] then
+      local project_tree = flags["project-tree"]:gsub("[/\\][^/\\]+$", "")
+      detected = detected or {
+         project_dir = project_tree
+      }
+      local d = check_if_config_is_present(detected, project_tree)
+      if d then
+         detected = d
+      else
+         detected.project_dir = nil
       end
-      if project_dir then
-         lua_data = find_lua_version_at(project_dir)
+   else
+      detected = detected or {}
+      local try = "."
+      for _ = 1, 10 do -- FIXME detect when root dir was hit instead
+         if util.exists(try .. "/.luarocks") and util.exists(try .. "/lua_modules") then
+            local d = check_if_config_is_present(detected, try)
+            if d then
+               detected = d
+               break
+            end
+         elseif util.exists(try .. "/.luarocks-no-project") then
+            break
+         end
+         try = try .. "/.."
       end
    end
 
@@ -433,16 +339,16 @@ function cmd.run_command(description, commands, external_namespace, ...)
    end
 
    -----------------------------------------------------------------------------
-   local ok, err = cfg.init(lua_data, project_dir, util.warning)
+   local ok, err = cfg.init(detected, util.warning)
    if not ok then
       die(err)
    end
    -----------------------------------------------------------------------------
 
    fs.init()
-   
-   if project_dir then
-      project_dir = fs.absolute_name(project_dir)
+
+   if detected.project_dir then
+      detected.project_dir = fs.absolute_name(detected.project_dir)
    end
 
    if flags["version"] then
@@ -467,7 +373,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
       die("Current directory does not exist. Please run LuaRocks from an existing directory.")
    end
 
-   ok, err = process_tree_flags(flags, project_dir)
+   ok, err = process_tree_flags(flags, detected.project_dir)
    if not ok then
       die(err)
    end
