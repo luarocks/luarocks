@@ -10,54 +10,66 @@ environment:
 
   matrix:
   # Lua 5.1 tests
-  - LUA: "lua 5.1"
+  - LUAV: "5.1"
+    LUAT: "lua"
     COMPILER: "vs"
     FILES: ""
     EXCLUDE: "integration"
-  - LUA: "lua 5.1"
+  - LUAV: "5.1"
+    LUAT: "lua"
     COMPILER: "vs"
     FILES: ""
     EXCLUDE: "unit"
-  - LUA: "lua 5.1"
+  - LUAV: "5.1"
+    LUAT: "lua"
     COMPILER: "mingw"
     FILES: "spec//build_spec.lua"
     EXCLUDE: ""
   # Lua 5.2 tests  
-  - LUA: "lua 5.2"
+  - LUAV: "5.2"
+    LUAT: "lua"
     COMPILER: "vs"
     FILES: ""
     EXCLUDE: "integration"
-  - LUA: "lua 5.2"
+  - LUAV: "5.2"
+    LUAT: "lua"
     COMPILER: "vs"
     FILES: ""
     EXCLUDE: "unit"
-  - LUA: "lua 5.2"
+  - LUAV: "5.2"
+    LUAT: "lua"
     COMPILER: "mingw"
     FILES: "spec//build_spec.lua"
     EXCLUDE: ""
   # Lua 5.3 tests
-  - LUA: "lua 5.3"
+  - LUAV: "5.3"
+    LUAT: "lua"
     COMPILER: "vs"
     FILES: ""
     EXCLUDE: "integration"
-  - LUA: "lua 5.3"
+  - LUAV: "5.3"
+    LUAT: "lua"
     COMPILER: "vs"
     FILES: ""
     EXCLUDE: "unit"
-  - LUA: "lua 5.3"
+  - LUAV: "5.3"
+    LUAT: "lua"
     COMPILER: "mingw"
     FILES: "spec//build_spec.lua"
     EXCLUDE: ""
   # LuaJIT 2.1 tests
-  - LUA: "luajit 2.1"
+  - LUAV: "2.1"
+    LUAT: "luajit"
     COMPILER: "vs"
     FILES: ""
     EXCLUDE: "integration"
-  - LUA: "luajit 2.1"
+  - LUAV: "2.1"
+    LUAT: "luajit"
     COMPILER: "vs"
     FILES: ""
     EXCLUDE: "unit"
-  - LUA: "luajit 2.1"
+  - LUAV: "2.1"
+    LUAT: "luajit"
     COMPILER: "mingw"
     FILES: "spec//build_spec.lua"
     EXCLUDE: ""
@@ -71,18 +83,33 @@ init:
 
 before_build:
   - set PATH=C:\Python27\Scripts;%PATH% # Add directory containing 'pip' to PATH
-  - pip install hererocks
-  - hererocks lua_install --%LUA% --luarocks latest --target=%COMPILER%
-  - call lua_install\bin\activate
+  - IF NOT EXIST lua_install-%LUAV%\bin\activate.bat ( pip install hererocks )
+  - IF NOT EXIST lua_install-%LUAV%\bin\activate.bat ( hererocks lua_install-%LUAV% --%LUAT% %LUAV% --luarocks latest --target=%COMPILER% )
+  - call lua_install-%LUAV%\bin\activate
 
 build_script:
-  - luarocks install busted 1> NUL 2> NUL
-  - luarocks install cluacov 1> NUL 2> NUL
+  - IF NOT EXIST lua_install-%LUAV%\bin\busted.bat ( luarocks install busted 1> NUL 2> NUL )
+  - IF NOT EXIST lua_install-%LUAV%\bin\luacov.bat ( luarocks install cluacov 1> NUL 2> NUL )
 
 test_script:
-  - busted -o gtest -v --lpath=.//?.lua --exclude-tags=ssh,unix,%EXCLUDE% -Xhelper lua_dir=%CD%\lua_install,appveyor,%COMPILER% %FILES%
+  - busted -o gtest -v --lpath=.//?.lua --exclude-tags=ssh,unix,%EXCLUDE% -Xhelper lua_dir=%CD%\lua_install-%LUAV%,appveyor,%COMPILER% %FILES%
 
 after_test:
   - pip install codecov
   - luacov -c testrun/luacov.config
   - cd testrun && codecov -f luacov.report.out -X gcov
+
+cache:
+  - lua_install-5.1
+  - lua_install-5.2
+  - lua_install-5.3
+  - lua_install-2.1
+  - testrun/testing_cache-5.1
+  - testrun/testing_cache-5.2
+  - testrun/testing_cache-5.3
+  - testrun/testing_cache-2.1
+  - testrun/testing_server-5.1
+  - testrun/testing_server-5.2
+  - testrun/testing_server-5.3
+  - testrun/testing_server-2.1
+  - testrun/binary-samples
