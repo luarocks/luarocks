@@ -237,10 +237,11 @@ function Api:request(url, params, post_params)
    if self.debug then
       util.printout(tostring(status))
    end
-   if status ~= 200 then
-      return nil, "API returned " .. tostring(status) .. " - " .. redact_api_url(url)
+   local pok, ret, err = pcall(json.decode, table.concat(out))
+   if pok and ret then
+      return ret
    end
-   return json.decode(table.concat(out))
+   return nil, "API returned " .. tostring(status) .. " - " .. redact_api_url(url)
 end
 
 end
