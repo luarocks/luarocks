@@ -71,6 +71,24 @@ function fun.flip(f)
    end
 end
 
+function fun.find(xs, f)
+   if type(xs) == "function" then
+      for v in xs do
+         local x = f(v)
+         if x then
+            return x
+         end
+      end
+   elseif type(xs) == "table" then
+      for _, v in ipairs(xs) do
+         local x = f(v)
+         if x then
+            return x
+         end
+      end
+   end
+end
+
 function fun.partial(f, ...)
    local n = select("#", ...)
    if n == 1 then
@@ -98,6 +116,28 @@ function fun.partial(f, ...)
          local unpack = unpack or table.unpack
          return f(unpack(args, 1, n+m))
       end
+   end
+end
+
+function fun.memoize(fn)
+   local memory = setmetatable({}, { __mode = "k" })
+   local errors = setmetatable({}, { __mode = "k" })
+   local NIL = {}
+   return function(arg)
+      if memory[arg] then
+         if memory[arg] == NIL then
+            return nil, errors[arg]
+         end
+         return memory[arg]
+      end
+      local ret1, ret2 = fn(arg)
+      if ret1 ~= nil then
+         memory[arg] = ret1
+      else
+         memory[arg] = NIL
+         errors[arg] = ret2
+      end
+      return ret1, ret2
    end
 end
 
