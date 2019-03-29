@@ -31,7 +31,7 @@ Options for specifying rockspec data:
                          link to.
 ]]
 
-local function write_gitignore()
+local function write_gitignore(entries)
    local gitignore = ""
    local fd = io.open(".gitignore", "r")
    if fd then
@@ -41,7 +41,8 @@ local function write_gitignore()
    end
    
    fd = io.open(".gitignore", gitignore and "a" or "w")
-   for _, entry in ipairs({"/lua", "/lua_modules"}) do
+   for _, entry in ipairs(entries) do
+      entry = "/" .. entry
       if not gitignore:find("\n"..entry.."\n", 1, true) then
          fd:write(entry.."\n")
       end
@@ -82,11 +83,27 @@ function init.command(flags, name, version)
    util.printout("Checking your Lua installation ...")
    local ok, err = deps.check_lua(cfg.variables)
    if not ok then
-      util.warning(err)
+      return nil, err
    end
-   
+
+   local ext = cfg.wrapper_suffix
+   local luarocks_wrapper = "luarocks" .. ext
+   local lua_wrapper = "lua" .. ext
+
+   if flags["reset"] then
+      fs.delete(lua_wrapper)
+      for v in util.lua_versions() do
+         local config_file = dir.path(".luarocks", "config-"..v..".lua")
+         if v ~= cfg.lua_version then
+            fs.move(config_file, config_file .. "~")
+         else
+            fs.delete(config_file)
+         end
+      end
+   end
+
    util.printout("Adding entries to .gitignore ...")
-   write_gitignore()
+   write_gitignore({ luarocks_wrapper, lua_wrapper, "lua_modules" })
 
    util.printout("Preparing ./.luarocks/ ...")
    fs.make_dir(".luarocks")
@@ -124,9 +141,7 @@ function init.command(flags, name, version)
    fs.make_dir("lua_modules/lib/luarocks/rocks-" .. cfg.lua_version)
    local tree = dir.path(pwd, "lua_modules")
 
-   local ext = cfg.wrapper_suffix
-
-   local luarocks_wrapper = "./luarocks" .. ext
+   luarocks_wrapper = dir.path(".", luarocks_wrapper)
    if not fs.exists(luarocks_wrapper) then
       util.printout("Preparing " .. luarocks_wrapper .. " ...")
       fs.wrap_script(arg[0], "luarocks", "none", nil, nil, "--project-tree", tree)
@@ -134,18 +149,7 @@ function init.command(flags, name, version)
       util.printout(luarocks_wrapper .. " already exists. Not overwriting it!")
    end
 
-   local lua_wrapper = "./lua" .. ext
-
-   if flags["reset"] then
-      fs.delete(lua_wrapper)
-      for v in util.lua_versions() do
-         if v ~= cfg.lua_version then
-            local config_file = dir.path(".luarocks", "config-"..v..".lua")
-            fs.move(config_file, config_file .. "~")
-         end
-      end
-   end
-
+   lua_wrapper = dir.path(".", lua_wrapper)
    if not fs.exists(lua_wrapper) then
       util.printout("Preparing " .. lua_wrapper .. " for version " .. cfg.lua_version .. "...")
       path.use_tree(tree)
