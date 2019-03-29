@@ -28,92 +28,92 @@ integration_script: &integration_script
 jobs:
   include:
     # Unit tests for linux
-    - stage: unit
+    - stage: Unit on Linux
       script: *unit_script
       os: linux
       env:
         - LUA="lua=5.1"
-    - stage: unit
+    - stage: Unit on Linux
       script: *unit_script
       os: linux
       env:
         - LUA="lua=5.2"
-    - stage: unit
+    - stage: Unit on Linux
       script: *unit_script
       os: linux
       env:
         - LUA="lua=5.3"
-    - stage: unit
+    - stage: Unit on Linux
       script: *unit_script
       os: linux
       env:
         - LUA="luajit=2.1"
-    # Unit tests for osx
-    - stage: unit
-      script: *unit_script
-      os: osx
-      env:
-        - LUA="lua=5.1"
-      language: generic
-    - stage: unit
-      script: *unit_script
-      os: osx
-      env:
-        - LUA="lua=5.2"
-      language: generic
-    - stage: unit
-      script: *unit_script
-      os: osx
-      env:
-        - LUA="lua=5.3"
-      language: generic
-    - stage: unit
-      script: *unit_script
-      os: osx
-      env:
-        - LUA="luajit=2.1"
-      language: generic
     # Integration tests for linux
-    - stage: integration
+    - stage: Integration on Linux
       script: *integration_script
       os: linux
       env:
         - LUA="lua=5.1"
-    - stage: integration
+    - stage: Integration on Linux
       script: *integration_script
       os: linux
       env:
         - LUA="lua=5.2"
-    - stage: integration
+    - stage: Integration on Linux
       script: *integration_script
       os: linux
       env:
         - LUA="lua=5.3"
-    - stage: integration
+    - stage: Integration on Linux
       script: *integration_script
       os: linux
       env:
         - LUA="luajit=2.1"
-    # Integration tests for osx
-    - stage: integration
+    # Unit tests for mac
+    - stage: Unit on Mac
+      script: *unit_script
+      os: osx
+      env:
+        - LUA="lua=5.1"
+      language: generic
+    - stage: Unit on Mac
+      script: *unit_script
+      os: osx
+      env:
+        - LUA="lua=5.2"
+      language: generic
+    - stage: Unit on Mac
+      script: *unit_script
+      os: osx
+      env:
+        - LUA="lua=5.3"
+      language: generic
+    - stage: Unit on Mac
+      script: *unit_script
+      os: osx
+      env:
+        - LUA="luajit=2.1"
+      language: generic
+    # Integration tests for mac
+    - stage: Integration on Mac
       script: *integration_script
       os: osx
       env:
         - LUA="lua=5.1"
       language: generic
-    - stage: integration
+    - stage: Integration on Mac
       script: *integration_script
       os: osx
       env:
         - LUA="lua=5.2"
       language: generic
-    - stage: integration
+    - stage: Integration on Mac
       script: *integration_script
       os: osx
       env:
         - LUA="lua=5.3"
       language: generic
-    - stage: integration
+    - stage: Integration on Mac
       script: *integration_script
       os: osx
       env:
