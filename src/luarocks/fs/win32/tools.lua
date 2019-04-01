@@ -201,22 +201,6 @@ function tools.bunzip2(infile, outfile)
    return sevenz("bz2", infile, outfile)
 end
 
---- Test is pathname is a directory.
--- @param file string: pathname to test
--- @return boolean: true if it is a directory, false otherwise.
-function tools.is_dir(file)
-   assert(file)
-   return fs.execute_quiet("if not exist " .. fs.Q(file.."\\").." invalidcommandname")
-end
-
---- Test is pathname is a regular file.
--- @param file string: pathname to test
--- @return boolean: true if it is a regular file, false otherwise.
-function tools.is_file(file)
-   assert(file)
-   return fs.execute(vars.TEST.." -f", file)
-end
-
 --- Helper function for fs.set_permissions
 -- @return table: an array of all system users
 local function get_system_users()
@@ -290,14 +274,6 @@ function tools.set_permissions(filename, mode, scope)
    end
 
    return true
-end
-
---- Test for existence of a file.
--- @param file string: filename to test
--- @return boolean: true if file exists, false otherwise.
-function tools.exists(file)
-   assert(file)
-   return fs.execute_quiet("if not exist " .. fs.Q(file) .. " invalidcommandname")
 end
 
 function tools.browser(url)

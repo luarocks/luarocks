@@ -590,6 +590,15 @@ function fs_lua.set_time(file, time)
    return lfs.touch(file, time)
 end
 
+else -- if not lfs_ok
+
+function fs_lua.exists(file)
+   assert(file)
+   file = dir.normalize(fs.absolute_name(file))
+   -- check if file exists by attempting to open it
+   return util.exists(file)
+end
+
 end
 
 ---------------------------------------------------------------------

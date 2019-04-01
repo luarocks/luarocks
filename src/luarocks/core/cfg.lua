@@ -242,7 +242,6 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          LS = "ls",
          RM = "rm",
          FIND = "find",
-         TEST = "test",
          CHMOD = "chmod",
          ICACLS = "icacls",
          MKTEMP = "mktemp",
@@ -718,7 +717,7 @@ function cfg.init(detected, warning)
    local defaults = make_defaults(lua_version, processor, platforms, cfg.home)
 
    if platforms.windows and hardcoded.WIN_TOOLS then
-      local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "PWD", "RMDIR", "TEST", "WGET", "MKDIR" }
+      local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "PWD", "RMDIR", "WGET", "MKDIR" }
       for _, tool in ipairs(tools) do
          defaults.variables[tool] = '"' .. hardcoded.WIN_TOOLS .. "/" .. defaults.variables[tool] .. '.exe"'
       end

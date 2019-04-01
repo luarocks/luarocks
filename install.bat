@@ -67,8 +67,17 @@ local function exec(cmd)
 end
 
 local function exists(filename)
-	local cmd = [[.\win32\tools\test -e "]]..filename..[["]]
-	return exec(cmd)
+	local fd, _, code = io.open(filename, "r")
+	if code == 13 then
+		-- code 13 means "Permission denied" on both Unix and Windows
+		-- io.open on folders always fails with code 13 on Windows
+		return true
+	end
+	if fd then
+		fd:close()
+		return true
+	end
+	return false
 end
 
 local function mkdir (dir)

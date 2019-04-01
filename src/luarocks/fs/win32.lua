@@ -234,6 +234,41 @@ function win32.replace_file(old_file, new_file)
    return os.rename(new_file, old_file)
 end
 
+function win32.is_dir(file)
+   file = fs.absolute_name(file)
+   file = dir.normalize(file)
+   local fd, _, code = io.open(file, "r")
+   if code == 13 then -- directories return "Permission denied"
+      fd, _, code = io.open(file .. "\\", "r")
+      if code == 2 then -- directories return 2, files return 22
+         return true
+      end
+   end
+   if fd then
+      fd:close()
+   end
+   return false
+end
+
+function win32.is_file(file)
+   file = fs.absolute_name(file)
+   file = dir.normalize(file)
+   local fd, _, code = io.open(file, "r")
+   if code == 13 then -- if "Permission denied"
+      fd, _, code = io.open(file .. "\\", "r")
+      if code == 2 then -- directories return 2, files return 22
+         return false
+      elseif code == 22 then
+         return true
+      end
+   end
+   if fd then
+      fd:close()
+      return true
+   end
+   return false
+end
+
 --- Test is file/dir is writable.
 -- Warning: testing if a file/dir is writable does not guarantee
 -- that it will remain writable and therefore it is no replacement
