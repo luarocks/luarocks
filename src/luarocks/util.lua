@@ -615,7 +615,7 @@ do
          if luaver then
             insert_lua_variants(names, luaver)
          else
-            for v in util.lua_variants("descending") do
+            for v in util.lua_versions("descending") do
                insert_lua_variants(names, v)
             end
          end
