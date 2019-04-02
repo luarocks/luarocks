@@ -1105,7 +1105,7 @@ function fs_lua.check_command_permissions(flags)
    if ok then
       return true
    else
-      if flags["local"] then
+      if flags["local"] or cfg.local_by_default then
          err = err .. " \n-- please check your permissions."
       else
          err = err .. " \n-- you may want to run as a privileged user or use your local tree with --local."

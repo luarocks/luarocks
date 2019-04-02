@@ -45,7 +45,6 @@ function help.command(description, commands, command)
    assert(type(commands) == "table")
 
    if not command then
-      local conf = cfg.which_config()
       print_banner()
       print_section("NAME")
       util.printout("\t"..program..[[ - ]]..description)
@@ -68,6 +67,7 @@ function help.command(description, commands, command)
 	--tree=<tree>          Which tree to operate on.
 	--local                Use the tree in the user's home directory.
 	                       To enable it, see ']]..program..[[ help path'.
+	--global               Use the system tree when `local_by_default` is `true`.
 	--verbose              Display verbose output of commands executed.
 	--timeout=<seconds>    Timeout on network operations, in seconds.
 	                       0 means no timeout (wait forever).
@@ -89,6 +89,7 @@ function help.command(description, commands, command)
       end
       util.printout()
       util.printout("\tConfiguration files:")
+      local conf = cfg.config_files
       util.printout("\t\tSystem  : ".. dir.normalize(conf.system.file) .. " (" .. get_status(conf.system.ok) ..")")
       if conf.user.file then
          util.printout("\t\tUser    : ".. dir.normalize(conf.user.file) .. " (" .. get_status(conf.user.ok) ..")")
