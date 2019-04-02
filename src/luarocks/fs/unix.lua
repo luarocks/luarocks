@@ -245,4 +245,11 @@ function unix.is_file(file)
    return false
 end
 
+function unix.system_cache_dir()
+   if fs.is_dir("/var/cache") then
+      return "/var/cache"
+   end
+   return dir.path(fs.system_temp_dir(), "cache")
+end
+
 return unix

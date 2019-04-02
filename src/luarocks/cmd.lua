@@ -23,21 +23,6 @@ cmd.errorcodes = {
    CRASH = 99
 }
 
-local function is_ownership_ok(directory)
-   local me = fs.current_user()
-   if not me then
-      return nil, "can't determine current user's name"
-   end
-   for _ = 1,3 do -- try up to grandparent
-      local owner = fs.attributes(directory, "owner")
-      if owner then
-         return owner == me
-      end
-      directory = dir.dir_name(directory)
-   end
-   return false
-end
-
 local function check_popen()
    local popen_ok, popen_result = pcall(io.popen, "")
    if popen_ok then
@@ -393,16 +378,9 @@ function cmd.run_command(description, commands, external_namespace, ...)
       end
    end
 
-   local user_owns_local_cache = is_ownership_ok(cfg.local_cache)
-   if user_owns_local_cache == false then
-      util.warning("The directory '" .. cfg.local_cache .. "' or its parent directory "..
-                   "is not owned by the current user and the cache has been disabled. "..
-                   "Please check the permissions and owner of that directory. "..
-                   (cfg.is_platform("unix")
-                    and ("If executing "..util.this_program("luarocks").." with sudo, you may want sudo's -H flag.")
-                    or ""))
-      cfg.local_cache = fs.make_temp_dir("local_cache")
-      util.schedule_function(fs.delete, cfg.local_cache)
+   -- if running as superuser, use system cache dir
+   if not cfg.home_tree then
+      cfg.local_cache = dir.path(fs.system_cache_dir(), "luarocks")
    end
 
    if commands[command] then

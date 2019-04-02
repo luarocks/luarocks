@@ -233,19 +233,6 @@ function tools.set_permissions(filename, mode, scope)
    return fs.execute(vars.CHMOD, perms, filename)
 end
 
-function tools.attributes(filename, attrtype)
-   local flag = ((attrtype == "permissions") and vars.STATPERMFLAG)
-             or ((attrtype == "owner") and vars.STATOWNERFLAG)
-   if not flag then return "" end
-   local pipe = io.popen(fs.quiet_stderr(vars.STAT.." "..flag.." "..fs.Q(filename)))
-   local ret = pipe:read("*l")
-   pipe:close()
-   if ret == "" then
-      return nil
-   end
-   return ret
-end
-
 function tools.browser(url)
    return fs.execute(cfg.web_browser, url)
 end

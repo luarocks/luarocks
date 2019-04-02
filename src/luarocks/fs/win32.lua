@@ -209,15 +209,6 @@ function win32.copy_binary(filename, dest)
    return true
 end
 
-function win32.attributes(filename, attrtype)
-   if attrtype == "permissions" then
-      return "" -- FIXME
-   elseif attrtype == "owner" then
-      return os.getenv("USERNAME") -- FIXME popen_read('powershell -Command "& {(get-acl '..filename..').owner}"'):gsub("^[^\\]*\\", "")
-   end
-   return nil
-end
-
 --- Move a file on top of the other.
 -- The new file ceases to exist under its original name,
 -- and takes over the name of the old file.
@@ -327,6 +318,10 @@ end
 
 function win32.export_cmd(var, val)
    return ("SET %s=%s"):format(var, val)
+end
+
+function win32.system_cache_dir()
+   return dir.path(fs.system_temp_dir(), "cache")
 end
 
 return win32
