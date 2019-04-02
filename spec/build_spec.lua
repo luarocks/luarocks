@@ -141,8 +141,8 @@ describe("LuaRocks build tests #integration", function()
 
    describe("LuaRocks build - basic builds", function()
       it("LuaRocks build luacov diff version", function()
-         assert.is_true(run.luarocks_bool("build luacov 0.11.0-1"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luacov/0.11.0-1/luacov-0.11.0-1.rockspec"))
+         assert.is_true(run.luarocks_bool("build luacov 0.13.0-1"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luacov/0.13.0-1/luacov-0.13.0-1.rockspec"))
       end)
       
       it("LuaRocks build command stdlib", function()

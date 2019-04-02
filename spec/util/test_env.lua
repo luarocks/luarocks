@@ -926,9 +926,12 @@ function test_env.main()
    end
 
    -- luacov is needed for both minimal or full environment
-   table.insert(urls, "/luacov-0.11.0-1.rockspec")
-   table.insert(urls, "/luacov-0.11.0-1.src.rock")
+   table.insert(urls, "/luacov-0.13.0-1.rockspec")
+   table.insert(urls, "/luacov-0.13.0-1.src.rock")
+   table.insert(urls, "/cluacov-0.1.1-1.rockspec")
+   table.insert(urls, "/cluacov-0.1.1-1.src.rock")
    table.insert(rocks, "luacov")
+   table.insert(rocks, "cluacov")
 
    -- Download rocks needed for LuaRocks testing environment
    lfs.mkdir(testing_paths.testing_server)
