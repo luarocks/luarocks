@@ -70,9 +70,9 @@ do
    end
 
    process_tree_flags = function(flags, project_dir)
-
-      if cfg.local_by_default then
-         flags["local"] = true
+   
+      if flags["global"] then
+         cfg.local_by_default = false
       end
 
       if flags["tree"] then
@@ -91,18 +91,23 @@ do
             local root_dir = fs.absolute_name(flags["tree"])
             replace_tree(flags, root_dir)
          end
-      elseif flags["project-tree"] then
-         local tree = flags["project-tree"]
-         table.insert(cfg.rocks_trees, 1, { name = "project", root = tree } )
-         loader.load_rocks_trees()
-         path.use_tree(tree)
       elseif flags["local"] then
          if not cfg.home_tree then
             return nil, "The --local flag is meant for operating in a user's home directory.\n"..
                "You are running as a superuser, which is intended for system-wide operation.\n"..
                "To force using the superuser's home, use --tree explicitly."
+         else
+            replace_tree(flags, cfg.home_tree)
          end
-         replace_tree(flags, cfg.home_tree)
+      elseif flags["project-tree"] then
+         local tree = flags["project-tree"]
+         table.insert(cfg.rocks_trees, 1, { name = "project", root = tree } )
+         loader.load_rocks_trees()
+         path.use_tree(tree)
+      elseif cfg.local_by_default then
+         if cfg.home_tree then
+            replace_tree(flags, cfg.home_tree)
+         end
       elseif project_dir then
          local project_tree = project_dir .. "/lua_modules"
          table.insert(cfg.rocks_trees, 1, { name = "project", root = project_tree } )

@@ -100,6 +100,7 @@ local supported_flags = {
    ["force"] = true,
    ["force-fast"] = true,
    ["from"] = "<server>",
+   ["global"] = true,
    ["help"] = true,
    ["home"] = true,
    ["homepage"] = "\"<url>\"",
