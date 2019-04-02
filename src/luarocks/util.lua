@@ -636,7 +636,10 @@ do
                end
             end
          end
-         return nil, "Lua interpreter not found at " .. prefix .. "\n" ..
+         local interp = luaver
+                        and ("Lua " .. luaver .. " interpreter")
+                        or  "Lua interpreter"
+         return nil, interp .. " not found at " .. prefix .. "\n" ..
                      "Tried:\t" .. table.concat(tried, "\n\t")
       end
    end
