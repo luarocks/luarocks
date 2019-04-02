@@ -670,6 +670,10 @@ local redirect_protocols = {
 
 local function request(url, method, http, loop_control)
    local result = {}
+   
+   if cfg.verbose then
+      print(method, url)
+   end
 
    local proxy = os.getenv("http_proxy")
    if type(proxy) ~= "string" then proxy = nil end
@@ -735,11 +739,26 @@ local function request(url, method, http, loop_control)
 end
 
 local function write_timestamp(filename, data)
-   local utfd = io.open(filename, "w")
-   if utfd then
-      utfd:write(data)
-      utfd:close()
+   local fd = io.open(filename, "w")
+   if fd then
+      fd:write(data)
+      fd:close()
    end
+end
+
+local function read_timestamp(filename)
+   local fd = io.open(filename, "r")
+   if fd then
+      local data = fd:read("*a")
+      fd:close()
+      return data
+   end
+end
+
+local function fail_with_status(filename, status, headers)
+   write_timestamp(filename .. ".unixtime", os.time())
+   write_timestamp(filename .. ".status", status)
+   return nil, status, headers
 end
 
 -- @param url string: URL to fetch.
@@ -751,25 +770,22 @@ end
 -- nil, error message and optionally HTTPS error in case of errors.
 local function http_request(url, filename, http, cache)
    if cache then
-      local tsfd = io.open(filename..".timestamp", "r")
-      if tsfd then
-         local timestamp = tsfd:read("*a")
-         tsfd:close()
-         local unixtime
-         local utfd = io.open(filename..".unixtime", "r")
-         if utfd then
-            unixtime = tonumber(utfd:read("*a"))
-            utfd:close()
-         end
+      local status = read_timestamp(filename..".status")
+      local timestamp = read_timestamp(filename..".timestamp")
+      if status or timestamp then
+         local unixtime = read_timestamp(filename..".unixtime")
          if unixtime then
             if os.time() - unixtime < cfg.cache_timeout then
+               if status then
+                  return nil, status, {}
+               end
                return true, nil, nil, true
             end
          end
 
          local result, status, headers, err = request(url, "HEAD", http)
          if not result then
-            return nil, status, headers
+            return fail_with_status(filename, status, headers)
          end
          if status == 200 and headers["last-modified"] == timestamp then
             write_timestamp(filename .. ".unixtime", os.time())
@@ -779,7 +795,9 @@ local function http_request(url, filename, http, cache)
    end
    local result, status, headers, err = request(url, "GET", http)
    if not result then
-      return nil, status, headers
+      if status then
+         return fail_with_status(filename, status, headers)
+      end
    end
    if cache and headers["last-modified"] then
       write_timestamp(filename .. ".timestamp", headers["last-modified"])
