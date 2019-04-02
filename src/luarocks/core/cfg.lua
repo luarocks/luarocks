@@ -188,6 +188,8 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       hooks_enabled = true,
       deps_mode = "one",
       check_certificates = false,
+      
+      cache_timeout = 10,
 
       lua_modules_path = "/share/lua/"..lua_version,
       lib_modules_path = "/lib/lua/"..lua_version,

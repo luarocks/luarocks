@@ -154,6 +154,7 @@ function tools.use_downloader(url, filename, cache)
       if cache then
          -- --timestamping is incompatible with --output-document,
          -- but that's not a problem for our use cases.
+         fs.delete(filename .. ".unixtime")
          fs.change_dir(dir.dir_name(filename))
          ok = fs.execute_quiet(wget_cmd.." --timestamping ", url)
          fs.pop_dir()
