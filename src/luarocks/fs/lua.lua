@@ -243,6 +243,10 @@ function fs_lua.filter_file(fn, input_filename, output_filename)
    return true
 end
 
+function fs_lua.system_temp_dir()
+   return os.getenv("TMPDIR") or os.getenv("TEMP") or "/tmp"
+end
+
 ---------------------------------------------------------------------
 -- LuaFileSystem functions
 ---------------------------------------------------------------------
@@ -986,18 +990,6 @@ function fs_lua.set_permissions(filename, mode, scope)
    return err == 0
 end
 
-function fs_lua.attributes(file, attrtype)
-   if attrtype == "permissions" then
-      return posix.stat(file, "mode") or nil
-   elseif attrtype == "owner" then
-      local uid = posix.stat(file, "uid")
-      if not uid then return nil end
-      return posix.getpwuid(uid).pw_name or nil
-   else
-      return nil
-   end
-end
-
 function fs_lua.current_user()
    return posix.getpwuid(posix.geteuid()).pw_name
 end
@@ -1013,7 +1005,7 @@ function fs_lua.make_temp_dir(name_pattern)
    assert(type(name_pattern) == "string")
    name_pattern = dir.normalize(name_pattern)
 
-   return posix.mkdtemp((os.getenv("TMPDIR") or "/tmp") .. "/luarocks_" .. name_pattern:gsub("/", "_") .. "-XXXXXX")
+   return posix.mkdtemp(fs.system_temp_dir() .. "/luarocks_" .. name_pattern:gsub("/", "_") .. "-XXXXXX")
 end
 
 end -- if posix.mkdtemp
@@ -1030,7 +1022,7 @@ function fs_lua.make_temp_dir(name_pattern)
    assert(type(name_pattern) == "string")
    name_pattern = dir.normalize(name_pattern)
 
-   local pattern = (os.getenv("TMPDIR") or os.getenv("TEMP") or "/tmp") .. "/luarocks_" .. name_pattern:gsub("/", "_") .. "-"
+   local pattern = fs.system_temp_dir() .. "/luarocks_" .. name_pattern:gsub("/", "_") .. "-"
 
    while true do
       local name = pattern .. tostring(math.random(10000000))

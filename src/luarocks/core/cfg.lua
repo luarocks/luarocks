@@ -259,15 +259,12 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          MD5SUM = "md5sum",
          OPENSSL = "openssl",
          MD5 = "md5",
-         STAT = "stat",
          TOUCH = "touch",
 
          CMAKE = "cmake",
          SEVENZ = "7z",
 
          RSYNCFLAGS = "--exclude=.git -Oavz",
-         STATPERMFLAG = "-c '%a'",
-         STATOWNERFLAG = "-c '%U'",
          CURLNOCERTFLAG = "",
          WGETNOCERTFLAG = "",
       },
@@ -419,8 +416,6 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
 
    if platforms.bsd then
       defaults.variables.MAKE = "gmake"
-      defaults.variables.STATPERMFLAG = "-f '%OLp'"
-      defaults.variables.STATOWNERFLAG = "-f '%Su'"
    end
 
    if platforms.macosx then
@@ -428,8 +423,6 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.external_lib_extension = "dylib"
       defaults.arch = "macosx-"..target_cpu
       defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
-      defaults.variables.STAT = "/usr/bin/stat"
-      defaults.variables.STATFLAG = "-f '%A'"
       local version = util.popen_read("sw_vers -productVersion")
       version = tonumber(version and version:match("^[^.]+%.([^.]+)")) or 3
       if version >= 10 then
