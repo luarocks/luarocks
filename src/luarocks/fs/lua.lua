@@ -734,6 +734,14 @@ local function request(url, method, http, loop_control)
    end
 end
 
+local function write_timestamp(filename, data)
+   local utfd = io.open(filename, "w")
+   if utfd then
+      utfd:write(data)
+      utfd:close()
+   end
+end
+
 -- @param url string: URL to fetch.
 -- @param filename string: local filename of the file to fetch.
 -- @param http table: The library to use (http from LuaSocket or LuaSec)
@@ -747,12 +755,25 @@ local function http_request(url, filename, http, cache)
       if tsfd then
          local timestamp = tsfd:read("*a")
          tsfd:close()
+         local unixtime
+         local utfd = io.open(filename..".unixtime", "r")
+         if utfd then
+            unixtime = tonumber(utfd:read("*a"))
+            utfd:close()
+         end
+         if unixtime then
+            if os.time() - unixtime < cfg.cache_timeout then
+               return true, nil, nil, true
+            end
+         end
+
          local result, status, headers, err = request(url, "HEAD", http)
          if not result then
             return nil, status, headers
          end
          if status == 200 and headers["last-modified"] == timestamp then
-            return true
+            write_timestamp(filename .. ".unixtime", os.time())
+            return true, nil, nil, true
          end
       end
    end
@@ -761,11 +782,8 @@ local function http_request(url, filename, http, cache)
       return nil, status, headers
    end
    if cache and headers["last-modified"] then
-      local tsfd = io.open(filename..".timestamp", "w")
-      if tsfd then
-         tsfd:write(headers["last-modified"])
-         tsfd:close()
-      end
+      write_timestamp(filename .. ".timestamp", headers["last-modified"])
+      write_timestamp(filename .. ".unixtime", os.time())
    end
    local file = io.open(filename, "wb")
    if not file then return nil, 0, {} end
@@ -796,8 +814,14 @@ local downloader_warning = false
 -- resulting local filename of the remote file as the basename of the URL;
 -- if that is not correct (due to a redirection, for example), the local
 -- filename can be given explicitly as this second argument.
--- @return (boolean, string): true and the filename on success,
--- false and the error message on failure.
+-- @return (boolean, string, boolean):
+-- In case of success:
+-- * true
+-- * a string with the filename
+-- * true if the file was retrieved from local cache
+-- In case of failure:
+-- * false
+-- * error message
 function fs_lua.download(url, filename, cache)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
@@ -809,15 +833,16 @@ function fs_lua.download(url, filename, cache)
       return fs.use_downloader(url, filename, cache)
    end
 
-   local ok, err, https_err
+   local ok, err, https_err, from_cache
    if util.starts_with(url, "http:") then
-      ok, err, https_err = http_request(url, filename, http, cache)
+      ok, err, https_err, from_cache = http_request(url, filename, http, cache)
    elseif util.starts_with(url, "ftp:") then
       ok, err = ftp_request(url, filename)
    elseif util.starts_with(url, "https:") then
       -- skip LuaSec when proxy is enabled since it is not supported
       if luasec_ok and not os.getenv("https_proxy") then
-         ok, err = http_request(url, filename, https, cache)
+         local _
+         ok, err, _, from_cache = http_request(url, filename, https, cache)
       else
          https_err = true
       end
@@ -834,7 +859,7 @@ function fs_lua.download(url, filename, cache)
    elseif not ok then
       return nil, err
    end
-   return true, filename
+   return true, filename, from_cache
 end
 
 else --...if socket_ok == false then

@@ -74,11 +74,11 @@ local function fetch_manifest_from(repo_url, filename)
    if not ok then
       return nil, "Failed creating temporary cache directory "..cache_dir
    end
-   local file, err, errcode = fetch.fetch_url(url, dir.path(cache_dir, filename), true)
+   local file, err, errcode, from_cache = fetch.fetch_url(url, dir.path(cache_dir, filename), true)
    if not file then
       return nil, "Failed fetching manifest for "..repo_url..(err and " - "..err or ""), errcode
    end
-   return file
+   return file, nil, nil, from_cache
 end
 
 --- Load a local or remote manifest describing a repository.
@@ -106,7 +106,7 @@ function manif.load_manifest(repo_url, lua_version)
    }
 
    local protocol, repodir = dir.split_url(repo_url)
-   local pathname
+   local pathname, from_cache
    if protocol == "file" then
       for _, filename in ipairs(filenames) do
          pathname = dir.path(repodir, filename)
@@ -117,7 +117,7 @@ function manif.load_manifest(repo_url, lua_version)
    else
       local err, errcode
       for _, filename in ipairs(filenames) do
-         pathname, err, errcode = fetch_manifest_from(repo_url, filename)
+         pathname, err, errcode, from_cache = fetch_manifest_from(repo_url, filename)
          if pathname then
             break
          end
@@ -131,13 +131,15 @@ function manif.load_manifest(repo_url, lua_version)
       local dirname = dir.dir_name(pathname)
       fs.change_dir(dirname)
       local nozip = pathname:match("(.*)%.zip$")
-      fs.delete(nozip)
-      local ok, err = fs.unzip(pathname)
-      fs.pop_dir()
-      if not ok then
-         fs.delete(pathname)
-         fs.delete(pathname..".timestamp")
-         return nil, "Failed extracting manifest file: " .. err
+      if not from_cache then
+         fs.delete(nozip)
+         local ok, err = fs.unzip(pathname)
+         fs.pop_dir()
+         if not ok then
+            fs.delete(pathname)
+            fs.delete(pathname..".timestamp")
+            return nil, "Failed extracting manifest file: " .. err
+         end
       end
       pathname = nozip
    end

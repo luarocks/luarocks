@@ -21,9 +21,16 @@ local cfg = require("luarocks.core.cfg")
 -- filename can be given explicitly as this second argument.
 -- @param cache boolean: compare remote timestamps via HTTP HEAD prior to
 -- re-downloading the file.
--- @return string or (nil, string, [string]): the absolute local pathname for the
--- fetched file, or nil and a message in case of errors, followed by
--- an optional error code.
+-- @return (string, nil, nil, boolean) or (nil, string, [string]):
+-- in case of success:
+-- * the absolute local pathname for the fetched file
+-- * nil
+-- * nil
+-- * `true` if the file was fetched from cache
+-- in case of failure:
+-- * nil
+-- * an error message
+-- * an optional error code.
 function fetch.fetch_url(url, filename, cache)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
@@ -32,11 +39,11 @@ function fetch.fetch_url(url, filename, cache)
    if protocol == "file" then
       return fs.absolute_name(pathname)
    elseif dir.is_basic_protocol(protocol) then
-      local ok, name = fs.download(url, filename, cache)
+      local ok, name, from_cache = fs.download(url, filename, cache)
       if not ok then
          return nil, "Failed downloading "..url..(filename and " - "..filename or ""), "network"
       end
-      return name
+      return name, nil, nil, from_cache
    else
       return nil, "Unsupported protocol "..protocol
    end
