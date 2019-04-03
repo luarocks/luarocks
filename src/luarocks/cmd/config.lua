@@ -278,17 +278,10 @@ function config_cmd.command(flags, var, val)
       end
 
       local prefix = dir.dir_name(cfg.config_files[scope].file)
-      local ok, err = fs.make_dir(prefix)
+      local ok, err = persist.save_default_lua_version(prefix, val)
       if not ok then
          return nil, "could not set default Lua version: " .. err
       end
-      local fd, err = io.open(dir.path(prefix, "default-lua-version.lua"), "w")
-      if not fd then
-         return nil, "could not set default Lua version: " .. err
-      end
-      
-      fd:write('return "' .. val .. '"\n')
-      fd:close()
       print("Lua version will default to " .. val .. " in " .. prefix)
    end
    

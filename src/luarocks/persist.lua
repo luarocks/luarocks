@@ -1,12 +1,12 @@
 
 --- Utility module for loading files into tables and
 -- saving tables into files.
--- Implemented separately to avoid interdependencies,
--- as it is used in the bootstrapping stage of the cfg module.
 local persist = {}
 
 local core = require("luarocks.core.persist")
 local util = require("luarocks.util")
+local dir = require("luarocks.dir")
+local fs = require("luarocks.fs")
 
 persist.load_into_table = core.load_into_table
 
@@ -237,6 +237,20 @@ function persist.load_config_file_if_basic(filename, cfg)
    end
 
    return tbl
+end
+
+function persist.save_default_lua_version(prefix, lua_version)
+   local ok, err = fs.make_dir(prefix)
+   if not ok then
+      return nil, err
+   end
+   local fd, err = io.open(dir.path(prefix, "default-lua-version.lua"), "w")
+   if not fd then
+      return nil, err
+   end
+   fd:write('return "' .. lua_version .. '"\n')
+   fd:close()
+   return true
 end
 
 return persist
