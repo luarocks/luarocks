@@ -289,6 +289,8 @@ function cmd.run_command(description, commands, external_namespace, ...)
    if flags["deps-mode"] and not deps.check_deps_mode_flag(flags["deps-mode"]) then
       die("Invalid entry for --deps-mode.")
    end
+   
+   local lua_found = false
 
    local detected
    if flags["lua-dir"] then
@@ -297,6 +299,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
       if not detected then
          die(err)
       end
+      lua_found = true
       assert(detected.lua_version)
       assert(detected.lua_dir)
    elseif lua_version then
@@ -312,12 +315,9 @@ function cmd.run_command(description, commands, external_namespace, ...)
             break
          end
       end
-      if not detected then
-         util.warning("Could not find a Lua interpreter for version " ..
-                      lua_version .. " in your PATH. " ..
-                      "Modules may not install with the correct configurations. " ..
-                      "You may want to specify to the path prefix to your build " ..
-                      "of Lua " .. lua_version .. " using --lua-dir")
+      if detected then
+         lua_found = true
+      else
          detected = {
             lua_version = lua_version,
          }
@@ -370,6 +370,24 @@ function cmd.run_command(description, commands, external_namespace, ...)
    -----------------------------------------------------------------------------
 
    fs.init()
+
+   if not lua_found then
+      if cfg.variables.LUA_DIR then
+         local found = util.find_lua(cfg.variables.LUA_DIR, cfg.lua_version)
+         if found then
+            lua_found = true
+         end
+      end
+   end
+
+   if not lua_found then
+      util.warning("Could not find a Lua interpreter for version " ..
+                   lua_version .. " in your PATH. " ..
+                   "Modules may not install with the correct configurations. " ..
+                   "You may want to specify to the path prefix to your build " ..
+                   "of Lua " .. lua_version .. " using --lua-dir")
+   end
+   cfg.lua_found = lua_found
 
    if detected.project_dir then
       detected.project_dir = fs.absolute_name(detected.project_dir)

@@ -634,9 +634,11 @@ do
             for _, name in ipairs(names) do
                local lua_exe = d .. "/" .. name
                table.insert(tried, lua_exe)
-               local lv, ljv = util.check_lua_version(lua_exe, luaver)
-               if lv then
-                  return name, d, lv, ljv
+               if not util.lua_is_wrapper(lua_exe) then
+                  local lv, ljv = util.check_lua_version(lua_exe, luaver)
+                  if lv then
+                     return name, d, lv, ljv
+                  end
                end
             end
          end
@@ -663,6 +665,16 @@ do
          lua_bindir = bindir,
       }
    end
+end
+
+function util.lua_is_wrapper(interp)
+   local fd, err = io.open(interp, "r")
+   if not fd then
+      return nil, err
+   end
+   local data = fd:read(1000)
+   fd:close()
+   return not not data:match("LUAROCKS_SYSCONFDIR")
 end
 
 function util.opts_table(type_name, valid_opts)
