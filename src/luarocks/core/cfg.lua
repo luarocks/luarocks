@@ -190,6 +190,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       check_certificates = false,
       
       cache_timeout = 10,
+      version_check_on_fail = true,
 
       lua_modules_path = "/share/lua/"..lua_version,
       lib_modules_path = "/lib/lua/"..lua_version,

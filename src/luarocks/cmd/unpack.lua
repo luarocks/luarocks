@@ -159,7 +159,7 @@ function unpack.command(flags, ns_name, version)
    if ns_name:match(".*%.rock") or ns_name:match(".*%.rockspec") then
       url = ns_name
    else
-      url, err = search.find_src_or_rockspec(ns_name, version)
+      url, err = search.find_src_or_rockspec(ns_name, version, true)
       if not url then
          return nil, err
       end

@@ -205,13 +205,17 @@ end
 
 -- Find out which other Lua versions provide rock versions matching a query,
 -- @param query table: a query object.
+-- @param cli boolean: print status messages as it works
 -- @return table: array of Lua versions supported, in "5.x" format.
-local function supported_lua_versions(query)
+local function supported_lua_versions(query, cli)
    assert(query:type() == "query")
    local result_tree = {}
 
    for lua_version in util.lua_versions() do
       if lua_version ~= cfg.lua_version then
+         if cli then
+            util.printout("Checking for Lua " .. lua_version .. "...")
+         end
          if search.search_repos(query, lua_version)[query.name] then
             table.insert(result_tree, lua_version)
          end
@@ -221,9 +225,9 @@ local function supported_lua_versions(query)
    return result_tree
 end
 
-function search.find_src_or_rockspec(ns_name, version)
+function search.find_src_or_rockspec(ns_name, version, cli)
    local query = queries.new(ns_name, version, false, "src|rockspec")
-   local url, err = search.find_suitable_rock(query)
+   local url, err = search.find_suitable_rock(query, cli)
    if not url then
       return nil, "Could not find a result named "..tostring(query)..": "..err
    end
@@ -232,27 +236,41 @@ end
 
 --- Attempt to get a single URL for a given search for a rock.
 -- @param query table: a query object.
+-- @param cli boolean: print status messages as it works
 -- @return string or (nil, string): URL for latest matching version
 -- of the rock if it was found, or nil followed by an error message.
-function search.find_suitable_rock(query)
+function search.find_suitable_rock(query, cli)
    assert(query:type() == "query")
+
+   if cfg.rocks_provided[query.name] ~= nil then
+      -- Do not install versions listed in cfg.rocks_provided.
+      return nil, "Rock "..query.name.." "..cfg.rocks_provided[query.name]..
+         " is already provided by VM or via 'rocks_provided' in the config file."
+   end
    
    local result_tree = search.search_repos(query)
    local first_rock = next(result_tree)
    if not first_rock then
-      if cfg.rocks_provided[query.name] == nil then
+      if cfg.version_check_on_fail then
+         if cli then
+            util.printout(query.name .. " not found for Lua " .. cfg.lua_version .. ".")
+            util.printout("Checking if available for other Lua versions...")
+         end
+      
          -- Check if constraints are satisfiable with other Lua versions.
-         local lua_versions = supported_lua_versions(query)
-
+         local lua_versions = supported_lua_versions(query, cli)
+   
          if #lua_versions ~= 0 then
             -- Build a nice message in "only Lua 5.x and 5.y but not 5.z." format
             for i, lua_version in ipairs(lua_versions) do
                lua_versions[i] = "Lua "..lua_version
             end
-
+   
             local versions_message = "only "..table.concat(lua_versions, " and ")..
-               " but not Lua "..cfg.lua_version.."."
-
+               " but not Lua "..cfg.lua_version..".\n"..
+               "(To suppress these checks run '"..
+               "luarocks --lua-version="..cfg.lua_version.." config version_check_on_fail false')"
+   
             if #query.constraints == 0 then
                return nil, query.name.." supports "..versions_message
             elseif #query.constraints == 1 and query.constraints[1].op == "==" then
@@ -263,14 +281,10 @@ function search.find_suitable_rock(query)
          end
       end
 
-      return nil, "No results matching query were found."
+      return nil, "No results matching query were found for Lua " .. cfg.lua_version .. "."
    elseif next(result_tree, first_rock) then
       -- Shouldn't happen as query must match only one package.
       return nil, "Several rocks matched query."
-   elseif cfg.rocks_provided[query.name] ~= nil then
-      -- Do not install versions listed in cfg.rocks_provided.
-      return nil, "Rock "..query.name.." "..cfg.rocks_provided[query.name]..
-         " was found but it is provided by VM or 'rocks_provided' in the config file."
    else
       return pick_latest_version(query.name, result_tree[first_rock])
    end

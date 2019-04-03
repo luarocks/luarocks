@@ -247,7 +247,7 @@ function install.command(flags, name, version)
          return install_rock_file(name, opts)
       end
    else
-      local url, err = search.find_suitable_rock(queries.new(name:lower(), version))
+      local url, err = search.find_suitable_rock(queries.new(name:lower(), version), true)
       if not url then
          return nil, err
       end
