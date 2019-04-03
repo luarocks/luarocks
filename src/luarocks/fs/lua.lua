@@ -779,11 +779,15 @@ local function http_request(url, filename, http, cache)
       if status or timestamp then
          local unixtime = read_timestamp(filename..".unixtime")
          if unixtime then
-            if os.time() - unixtime < cfg.cache_timeout then
-               if status then
+            local diff = os.time() - tonumber(unixtime)
+            if status then
+               if diff < cfg.cache_fail_timeout then
                   return nil, status, {}
                end
-               return true, nil, nil, true
+            else
+               if diff < cfg.cache_timeout then
+                  return true, nil, nil, true
+               end
             end
          end
 
