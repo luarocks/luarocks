@@ -111,9 +111,7 @@ describe("Luarocks init test #integration", function()
          ]], finally)
          write_file(tmpdir .. "/my_dependency.lua", "return {}", finally)
 
-         print(run.luarocks("install inspect"))
-
-         print(run.luarocks("build --verbose my_dependency-1.0-1.rockspec"))
+         assert.truthy(run.luarocks("build my_dependency-1.0-1.rockspec"))
          assert.truthy(lfs.attributes(myproject .. "/lua_modules/share/lua/" .. test_env.lua_version .."/my_dependency.lua"))
 
          os.remove(rockspec_filename)
