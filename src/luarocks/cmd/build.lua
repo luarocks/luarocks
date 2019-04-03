@@ -96,7 +96,7 @@ local function do_build(ns_name, version, opts)
    if ns_name:match("%.rockspec$") or ns_name:match("%.rock$") then
       url = ns_name
    else
-      url, err = search.find_src_or_rockspec(ns_name, version)
+      url, err = search.find_src_or_rockspec(ns_name, version, true)
       if not url then
          return nil, err
       end

@@ -165,7 +165,7 @@ function deps.fulfill_dependency(dep, deps_mode, name, version, rocks_provided, 
       return nil, "Failed matching dependencies"
    end
 
-   local url, search_err = search.find_suitable_rock(dep)
+   local url, search_err = search.find_suitable_rock(dep, true)
    if not url then
       return nil, "Could not satisfy dependency "..tostring(dep)..": "..search_err
    end

@@ -6,7 +6,6 @@ local search = require("luarocks.search")
 local queries = require("luarocks.queries")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
-local cfg = require("luarocks.core.cfg")
 
 local function get_file(filename)
    local protocol, pathname = dir.split_url(filename)
@@ -54,7 +53,7 @@ function download.download(arch, name, version, all)
       end
    else
       local url
-      url, search_err = search.find_suitable_rock(query)
+      url, search_err = search.find_suitable_rock(query, true)
       if url then
          return get_file(url)
       end
