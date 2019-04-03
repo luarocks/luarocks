@@ -16,8 +16,8 @@ init.help = [[
 <name> is the project name.
 <version> is an optional project version.
 
---reset                  Regenerate .luarocks/config-5.x.lua and ./lua wrapper
-                         if those already exist.
+--reset                  Delete .luarocks/config-5.x.lua and ./lua
+                         and generate new ones.
 
 Options for specifying rockspec data:
 
@@ -64,7 +64,16 @@ function init.command(flags, name, version)
       end
    end
 
-   util.printout("Initializing project " .. name .. " for Lua " .. cfg.lua_version .. " ...")
+   util.title("Initializing project '" .. name .. "' for Lua " .. cfg.lua_version .. " ...")
+
+   util.printout("Checking your Lua installation ...")
+   if not cfg.lua_found then
+      return nil, "Lua installation is not found."
+   end
+   local ok, err = deps.check_lua(cfg.variables)
+   if not ok then
+      return nil, err
+   end
    
    local has_rockspec = false
    for file in fs.dir() do
@@ -81,20 +90,9 @@ function init.command(flags, name, version)
       end
    end
 
-   util.printout("Checking your Lua installation ...")
-   local ok, err = deps.check_lua(cfg.variables)
-   if not ok then
-      return nil, err
-   end
-
    local ext = cfg.wrapper_suffix
    local luarocks_wrapper = "luarocks" .. ext
    local lua_wrapper = "lua" .. ext
-
-   if flags["reset"] then
-      fs.delete(lua_wrapper)
-      fs.delete(dir.path(".luarocks", "default_lua_version.lua"))
-   end
 
    util.printout("Adding entries to .gitignore ...")
    write_gitignore({ luarocks_wrapper, lua_wrapper, "lua_modules" })
@@ -102,6 +100,11 @@ function init.command(flags, name, version)
    util.printout("Preparing ./.luarocks/ ...")
    fs.make_dir(".luarocks")
    local config_file = ".luarocks/config-" .. cfg.lua_version .. ".lua"
+
+   if flags["reset"] then
+      fs.delete(lua_wrapper)
+      fs.delete(config_file)
+   end
    
    local config_tbl, err = persist.load_config_file_if_basic(config_file, cfg)
    if config_tbl then
@@ -129,8 +132,18 @@ function init.command(flags, name, version)
          end
       end
       local ok, err = persist.save_from_table(config_file, config_tbl)
+      if ok then
+         util.printout("Wrote " .. config_file)
+      else
+         util.printout("Failed writing " .. config_file .. ": " .. err)
+      end
    else
       util.printout("Will not attempt to overwrite " .. config_file)
+   end
+   
+   ok, err = persist.save_default_lua_version(".luarocks", cfg.lua_version)
+   if not ok then
+      util.printout("Failed setting default Lua version: " .. err)
    end
 
    util.printout("Preparing ./lua_modules/ ...")
@@ -147,12 +160,23 @@ function init.command(flags, name, version)
    end
 
    lua_wrapper = dir.path(".", lua_wrapper)
-   if not fs.exists(lua_wrapper) then
-      util.printout("Preparing " .. lua_wrapper .. " for version " .. cfg.lua_version .. "...")
-      path.use_tree(tree)
-      fs.wrap_script(nil, "lua", "all")
-   else
-      util.printout(lua_wrapper .. " already exists. Not overwriting it!")
+   local write_lua_wrapper = true
+   if fs.exists(lua_wrapper) then
+      if not util.lua_is_wrapper(lua_wrapper) then
+         util.printout(lua_wrapper .. " already exists and does not look like a wrapper script. Not overwriting.")
+         write_lua_wrapper = false
+      end
+   end
+   
+   if write_lua_wrapper then
+      local interp = dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)
+      if util.check_lua_version(interp, cfg.lua_version) then
+         util.printout("Preparing " .. lua_wrapper .. " for version " .. cfg.lua_version .. "...")
+         path.use_tree(tree)
+         fs.wrap_script(nil, "lua", "all")
+      else
+         util.warning("No Lua interpreter detected for version " .. cfg.lua_version .. ". Not creating " .. lua_wrapper)
+      end
    end
 
    return true
