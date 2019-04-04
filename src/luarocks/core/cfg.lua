@@ -814,7 +814,12 @@ function cfg.init(detected, warning)
    end
 
    function cfg.print_platforms()
-      return table.concat(platforms, ", ")
+      local platform_keys = {}
+      for k,_ in pairs(platforms) do
+         table.insert(platform_keys, k)
+      end
+      table.sort(platform_keys)
+      return table.concat(platform_keys, ", ")
    end
 
    return true
