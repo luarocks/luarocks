@@ -202,6 +202,7 @@ function deps.fulfill_dependencies(rockspec, depskey, deps_mode, verify)
    assert(type(verify) == "boolean" or verify == nil)
 
    if rockspec.supported_platforms and next(rockspec.supported_platforms) then
+      local all_negative = true
       local supported = false
       for _, plat in pairs(rockspec.supported_platforms) do
          local neg
@@ -211,13 +212,14 @@ function deps.fulfill_dependencies(rockspec, depskey, deps_mode, verify)
                return nil, "This rockspec for "..rockspec.package.." does not support "..plat.." platforms."
             end
          else
+            all_negative = false
             if cfg.is_platform(plat) then
                supported = true
                break
             end
          end
       end
-      if supported == false then
+      if supported == false and not all_negative then
          local plats = cfg.print_platforms()
          return nil, "This rockspec for "..rockspec.package.." does not support "..plats.." platforms."
       end
