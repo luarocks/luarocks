@@ -43,6 +43,16 @@ do
    function build.apply_patches(rockspec)
       assert(rockspec:type() == "rockspec")
 
+      if not (rockspec.build.extra_files or rockspec.build.patches) then
+         return true
+      end
+
+      local fd = io.open(".luarocks.patches.applied", "r")
+      if fd then
+         fd:close()
+         return true
+      end
+
       if rockspec.build.extra_files then
          extract_from_rockspec(rockspec.build.extra_files)
       end
@@ -56,6 +66,11 @@ do
                return nil, "Failed applying patch "..patch
             end
          end
+      end
+
+      fd = io.open(".luarocks.patches.applied", "w")
+      if fd then
+         fd:close()
       end
       return true
    end
@@ -374,10 +389,8 @@ function build.build_rockspec(rockspec, opts)
       fs.remove_dir_if_empty(path.versions_dir(name))
    end)
 
-   if not opts.minimal_mode then
-      local ok, err = build.apply_patches(rockspec)
-      if not ok then return nil, err end
-   end
+   ok, err = build.apply_patches(rockspec)
+   if not ok then return nil, err end
    
    ok, err = check_macosx_deployment_target(rockspec)
    if not ok then return nil, err end
