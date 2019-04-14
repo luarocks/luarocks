@@ -100,8 +100,8 @@ $(buildbinarydir)/luarocks-admin.exe: src/bin/luarocks-admin $(LUAROCKS_FILES)
 # Regular install
 # ----------------------------------------
 
-INSTALL_FILES = $(DESTDIR)$(bindir)/luarocks \
-	$(DESTDIR)$(bindir)/luarocks-admin \
+INSTALL_FILES = $(DESTDIR)$(bindir)/luarocks$(BINSUFFIX) \
+	$(DESTDIR)$(bindir)/luarocks-admin$(BINSUFFIX) \
 	$(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua \
 	$(patsubst src/%, $(DESTDIR)$(luadir)/%, $(LUAROCKS_FILES))
 
@@ -109,11 +109,11 @@ install: $(INSTALL_FILES)
 
 install-config: $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua
 
-$(DESTDIR)$(bindir)/luarocks: $(builddir)/luarocks
+$(DESTDIR)$(bindir)/luarocks$(BINSUFFIX): $(builddir)/luarocks
 	mkdir -p "$(@D)"
 	$(INSTALL) "$<" "$@"
 
-$(DESTDIR)$(bindir)/luarocks-admin: $(builddir)/luarocks-admin
+$(DESTDIR)$(bindir)/luarocks-admin$(BINSUFFIX): $(builddir)/luarocks-admin
 	mkdir -p "$(@D)"
 	$(INSTALL) "$<" "$@"
 
@@ -138,8 +138,8 @@ INSTALL_BINARY_FILES = $(patsubst src/%, $(DESTDIR)$(luadir)/%, $(LUAROCKS_CORE_
 
 install-binary: $(INSTALL_BINARY_FILES)
 	mkdir -p "$(buildbinarydir)"
-	$(INSTALL) "$(buildbinarydir)/luarocks.exe" "$(DESTDIR)$(bindir)/luarocks"
-	$(INSTALL) "$(buildbinarydir)/luarocks-admin.exe" "$(DESTDIR)$(bindir)/luarocks-admin"
+	$(INSTALL) "$(buildbinarydir)/luarocks.exe" "$(DESTDIR)$(bindir)/luarocks$(BINSUFFIX)"
+	$(INSTALL) "$(buildbinarydir)/luarocks-admin.exe" "$(DESTDIR)$(bindir)/luarocks-admin$(BINSUFFIX)"
 
 # ----------------------------------------
 # Bootstrap install

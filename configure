@@ -108,6 +108,11 @@ For better control, use the options below.
 Fine tuning of the installation directories:
   --sysconfdir=SYSCONFDIR      Directory for single-machine config [PREFIX/etc]
 
+Fine tuning of the installation binary:
+  --bin-suffix=SUFFIX          Suffix to append to luarocks and luarocks-admin
+                               binaries. e.g. --binsuffix=-5.1 will make
+                               luarocks-5.1 and luarocks-admin-5.1
+
 Where to install files provided by rocks:
   --rocks-tree=DIR             Root of the local tree of installed rocks.
                                To make files installed in this location
@@ -247,6 +252,12 @@ do
       [ -n "$value" ] || die "Missing value in flag $key."
       rocks_tree="$(canonicalpath "$value")"
       rocks_tree_SET=yes
+      ;;
+
+  # Customizing the luarocks binary
+  --bin-suffix)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      BINSUFFIX="$value"
       ;;
 
    # Where is your Lua interpreter:
@@ -485,6 +496,7 @@ LUA_BINDIR=$LUA_BINDIR
 LUA_INCDIR=$LUA_INCDIR
 LUA_LIBDIR=$LUA_LIBDIR
 FORCE_CONFIG=$FORCE_CONFIG
+BINSUFFIX=$BINSUFFIX
 EOF
 
 echo
