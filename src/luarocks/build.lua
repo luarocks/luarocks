@@ -47,7 +47,7 @@ do
          return true
       end
 
-      local fd = io.open(".luarocks.patches.applied", "r")
+      local fd = io.open(fs.absolute_name(".luarocks.patches.applied"), "r")
       if fd then
          fd:close()
          return true
@@ -68,7 +68,7 @@ do
          end
       end
 
-      fd = io.open(".luarocks.patches.applied", "w")
+      fd = io.open(fs.absolute_name(".luarocks.patches.applied"), "w")
       if fd then
          fd:close()
       end
