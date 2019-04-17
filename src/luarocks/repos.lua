@@ -262,6 +262,7 @@ end
 
 local function backup_existing(should_backup, target)
    if not should_backup then
+      fs.delete(target)
       return
    end
    if fs.exists(target) then
@@ -301,6 +302,7 @@ local function op_rename(op)
 
    if fs.exists(op.src) then
       fs.make_dir(dir.dir_name(op.dst))
+      fs.delete(op.dst)
       local ok, err = fs.move(op.src, op.dst)
       fs.remove_dir_tree_if_empty(dir.dir_name(op.src))
       return ok, err
