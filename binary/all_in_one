@@ -45,7 +45,6 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 local cmd = require("luarocks.cmd")
 local deps = require("luarocks.deps")
-local util = require("luarocks.util")
 local path = require("luarocks.path")
 local manif = require("luarocks.manif")
 local queries = require("luarocks.queries")
@@ -141,11 +140,11 @@ end
 
 local function write_hardcoded_module(dir)
 
-   local system
-   local processor = if_platform("windows", "x86")
-
+   local system, processor
    if if_platform("unix", true) then
       system, processor = sysdetect.detect()
+   else
+      system, processor = "windows", "x86"
    end
 
    local hardcoded = {
