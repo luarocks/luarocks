@@ -3,6 +3,7 @@ local test_env = require("spec.util.test_env")
 test_env.unload_luarocks()
 test_env.setup_specs()
 local fs = require("luarocks.fs")
+local path = require("luarocks.path")
 local cfg = require("luarocks.core.cfg")
 local lfs = require("lfs")
 local is_win = test_env.TEST_TARGET_OS == "windows"
@@ -10,6 +11,13 @@ local posix_ok = pcall(require, "posix")
 local testing_paths = test_env.testing_paths
 local get_tmp_path = test_env.get_tmp_path
 local write_file = test_env.write_file
+
+-- A chdir that works in both full and minimal mode, setting
+-- both the real process current dir and the LuaRocks internal stack in minimal mode
+local function chdir(d)
+   lfs.chdir(d)
+   fs.change_dir(d)
+end
 
 describe("Luarocks fs test #unit", function()   
    local exists_file = function(path)
@@ -449,7 +457,7 @@ describe("Luarocks fs test #unit", function()
             tmpdir = nil
          end
          if olddir then
-            lfs.chdir(olddir)
+            chdir(olddir)
             olddir = nil
          end
       end)
@@ -487,7 +495,7 @@ describe("Luarocks fs test #unit", function()
             tmpdir = nil
          end
          if olddir then
-            lfs.chdir(olddir)
+            chdir(olddir)
             olddir = nil
          end
       end)
@@ -530,7 +538,7 @@ describe("Luarocks fs test #unit", function()
             tmpdir = nil
          end
          if olddir then
-            lfs.chdir(olddir)
+            chdir(olddir)
          end
       end)
 
@@ -550,7 +558,7 @@ describe("Luarocks fs test #unit", function()
       it("returns false and does nothing if the current directory is not valid #unix", function()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
-         lfs.chdir(tmpdir)
+         chdir(tmpdir)
          lfs.rmdir(tmpdir)
          assert.falsy(fs.change_dir_to_root())
          assert.is_not.same("/", lfs.currentdir())
@@ -571,7 +579,7 @@ describe("Luarocks fs test #unit", function()
             tmpdir = nil
          end
          if olddir then
-            lfs.chdir(olddir)
+            chdir(olddir)
          end
       end)
 
@@ -1271,7 +1279,7 @@ describe("Luarocks fs test #unit", function()
          olddir = lfs.currentdir()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
-         lfs.chdir(tmpdir)
+         chdir(tmpdir)
          
          write_file("file1", "content1", finally)
          write_file("file2", "content2", finally)
@@ -1281,7 +1289,7 @@ describe("Luarocks fs test #unit", function()
       
       after_each(function()
          if olddir then
-            lfs.chdir(olddir)
+            chdir(olddir)
             if tmpdir then
                lfs.rmdir(tmpdir .. "/dir")
                lfs.rmdir(tmpdir)
@@ -1324,7 +1332,7 @@ describe("Luarocks fs test #unit", function()
          olddir = lfs.currentdir()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
-         lfs.chdir(tmpdir)
+         chdir(tmpdir)
          
          write_file("file1", "content1", finally)
          write_file("file2", "content2", finally)
@@ -1334,7 +1342,7 @@ describe("Luarocks fs test #unit", function()
       
       after_each(function()
          if olddir then
-            lfs.chdir(olddir)
+            chdir(olddir)
             if tmpdir then
                lfs.rmdir(tmpdir .. "/dir")
                lfs.rmdir(tmpdir)
@@ -1372,6 +1380,38 @@ describe("Luarocks fs test #unit", function()
          assert.falsy(fs.unzip("archive.zip"))
       end)
    end)
+
+   describe("fs.wrap_script", function()
+      local tmpdir
+      local olddir
+      
+      before_each(function()
+         olddir = lfs.currentdir()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         chdir(tmpdir)
+      end)
+      
+      after_each(function()
+         if olddir then
+            chdir(olddir)
+            if tmpdir then
+               lfs.rmdir(tmpdir)
+            end
+         end
+      end)
+
+      it("produces a wrapper for a Lua script", function()
+         write_file("my_script", "io.write('Hello ' .. arg[1])", finally)
+         path.use_tree(testing_paths.testing_tree)
+         local wrapper_name = fs.absolute_name("wrapper")
+         fs.wrap_script("my_script", wrapper_name, "one", nil, nil, "World")
+         local pd = assert(io.popen(wrapper_name .. test_env.wrapper_extension))
+         local data = pd:read("*a")
+         pd:close()
+         assert.same("Hello World", data)
+      end)
+   end)
    
    describe("fs.copy_binary", function()
       local tmpdir
@@ -1381,14 +1421,14 @@ describe("Luarocks fs test #unit", function()
          olddir = lfs.currentdir()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
-         lfs.chdir(tmpdir)
+         chdir(tmpdir)
          
          write_file("test.exe", "", finally)
       end)
       
       after_each(function()
          if olddir then
-            lfs.chdir(olddir)
+            chdir(olddir)
             if tmpdir then
                lfs.rmdir(tmpdir)
             end
@@ -1422,7 +1462,7 @@ describe("Luarocks fs test #unit", function()
          olddir = lfs.currentdir()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
-         lfs.chdir(tmpdir)
+         chdir(tmpdir)
          lfs.mkdir("lib")
          write_file("lib/module1.lua", "", finally)
          write_file("lib/module2.lua", "", finally)
@@ -1438,7 +1478,7 @@ describe("Luarocks fs test #unit", function()
       
       after_each(function()
          if olddir then
-            lfs.chdir(olddir)
+            chdir(olddir)
             if tmpdir then
                lfs.rmdir(tmpdir .. "/lib/internal")
                lfs.rmdir(tmpdir .. "/lib")
