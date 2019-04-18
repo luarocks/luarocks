@@ -97,13 +97,14 @@ function unix.wrap_script(script, target, deps_mode, name, version, ...)
 
    local argv = {
       fs.Q(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)),
+      "-e",
+      fs.Q(table.concat(luainit, ";")),
       script and fs.Q(script) or "",
       ...
    }
 
    wrapper:write("#!/bin/sh\n\n")
    wrapper:write("LUAROCKS_SYSCONFDIR="..fs.Q(cfg.sysconfdir) .. " ")
-   wrapper:write("LUA_INIT="..fs.Q(table.concat(luainit, ";")).." ")
    wrapper:write("exec "..table.concat(argv, " ")..' "$@"\n')
    wrapper:close()
 

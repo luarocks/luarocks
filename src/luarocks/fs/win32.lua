@@ -146,16 +146,27 @@ function win32.wrap_script(script, target, deps_mode, name, version, ...)
    end
 
    local lpath, lcpath = path.package_paths(deps_mode)
-   local lpath_var, lcpath_var = util.lua_path_variables()
 
-   local addctx
+   local luainit = {
+      "package.path="..util.LQ(lpath..";").."..package.path",
+      "package.cpath="..util.LQ(lcpath..";").."..package.cpath",
+   }
+   if target == "luarocks" or target == "luarocks-admin" then
+      luainit = {
+         "package.path="..util.LQ(package.path),
+         "package.cpath="..util.LQ(package.cpath),
+      }
+   end
    if name and version then
-      addctx = "local k,l,_=pcall(require,'luarocks.loader') _=k " ..
+      local addctx = "local k,l,_=pcall(require,'luarocks.loader') _=k " ..
                      "and l.add_context('"..name.."','"..version.."')"
+      table.insert(luainit, addctx)
    end
 
    local argv = {
       fs.Qb(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)),
+      "-e",
+      fs.Qb(table.concat(luainit, ";")),
       script and fs.Qb(script) or "",
       ...
    }
@@ -163,16 +174,6 @@ function win32.wrap_script(script, target, deps_mode, name, version, ...)
    wrapper:write("@echo off\r\n")
    wrapper:write("setlocal\r\n")
    wrapper:write("set "..fs.Qb("LUAROCKS_SYSCONFDIR="..cfg.sysconfdir) .. "\r\n")
-   if target == "luarocks" or target == "luarocks-admin" then
-      wrapper:write("set "..fs.Qb(lpath_var.."="..package.path) .. "\r\n")
-      wrapper:write("set "..fs.Qb(lcpath_var.."="..package.cpath) .. "\r\n")
-   else
-      wrapper:write("set "..fs.Qb(lpath_var.."="..lpath..";%"..lpath_var.."%") .. "\r\n")
-      wrapper:write("set "..fs.Qb(lcpath_var.."="..lcpath..";%"..lcpath_var.."%") .. "\r\n")
-   end
-   if addctx then
-      wrapper:write("set "..fs.Qb("LUA_INIT=" .. addctx) .. "\r\n")
-   end
    wrapper:write(table.concat(argv, " ") .. " %*\r\n")
    wrapper:write("exit /b %ERRORLEVEL%\r\n")
    wrapper:close()
