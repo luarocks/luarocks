@@ -560,7 +560,7 @@ function cfg.init(detected, warning)
    local lua_bindir = detected.lua_bindir or hardcoded.LUA_BINDIR or (arg and arg[-1] and arg[-1]:gsub("[\\/][^\\/]+$", ""))
    local lua_incdir = detected.lua_incdir or hardcoded.LUA_INCDIR
    local lua_libdir = detected.lua_libdir or hardcoded.LUA_LIBDIR
-   local lua_dir = detected.lua_dir or hardcoded.LUA_DIR
+   local lua_dir = detected.lua_dir or hardcoded.LUA_DIR or (lua_bindir and lua_bindir:gsub("[\\/]bin$", ""))
    
    local init = cfg.init
 
