@@ -1,5 +1,23 @@
 [
 {
+"3.1.0": {
+"date": "2019-04-29",
+"files": ["luarocks-3.1.0.tar.gz", "luarocks-3.1.0.tar.gz.asc", "luarocks-3.1.0-win32.zip", "luarocks-3.1.0-win32.zip.asc", "luarocks-3.1.0-windows-32.zip", "luarocks-3.1.0-windows-32.zip.asc", "luarocks-3.1.0-linux-x86_64.zip", "luarocks-3.1.0-linux-x86_64.zip.asc"],
+"about": [
+"config: add git-like modes for setting and inspecting configuration",
+"make: run rockspec patches on first `luarocks make` run and use a lockfile to avoid double patching",
+"persist selected Lua version when setting `luarocks config lua_version 5.x`",
+"new flag --global for overriding local_by_default = true",
+"do not complain if home cache cannot be created (use temp dir instead)",
+"caching improvements for increased performance",
+"project-based workflow: if ./.luarocks/config-5.x.lua exists, assume Lua 5.x",
+"install, pack, build, make: new flags --sign and --verify (using GPG)",
+"install: new flag --no-doc",
+"Improve Lua paths auto-detection",
+"Various bugfixes"
+]
+}},
+{
 "3.0.4": {
 "date": "2018-10-30",
 "files": ["luarocks-3.0.4.tar.gz", "luarocks-3.0.4.tar.gz.asc", "luarocks-3.0.4-win32.zip", "luarocks-3.0.4-win32.zip.asc", "luarocks-3.0.4-windows-32.zip", "luarocks-3.0.4-windows-32.zip.asc", "luarocks-3.0.4-linux-x86_64.zip", "luarocks-3.0.4-linux-x86_64.zip.asc"],
