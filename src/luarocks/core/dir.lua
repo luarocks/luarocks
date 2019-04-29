@@ -15,7 +15,7 @@ local require = nil
 -- of the path.
 function dir.path(...)
    local t = {...}
-   while t[1] == "" do
+   while t[1] == "" or t[1] == nil do
       table.remove(t, 1)
    end
    return (table.concat(t, "/"):gsub("([^:])/+", "%1/"):gsub("^/+", "/"):gsub("/*$", ""))

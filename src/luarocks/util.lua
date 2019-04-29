@@ -672,7 +672,7 @@ function util.lua_is_wrapper(interp)
    if not fd then
       return nil, err
    end
-   local data = fd:read(1000)
+   local data = fd:read(1000) or ''
    fd:close()
    return not not data:match("LUAROCKS_SYSCONFDIR")
 end
