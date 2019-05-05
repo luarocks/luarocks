@@ -633,12 +633,16 @@ do
          for _, d in ipairs(bindirs) do
             for _, name in ipairs(names) do
                local lua_exe = d .. "/" .. name
-               table.insert(tried, lua_exe)
-               if not util.lua_is_wrapper(lua_exe) then
+               local is_wrapper, err = util.lua_is_wrapper(lua_exe)
+               if is_wrapper == false then
                   local lv, ljv = util.check_lua_version(lua_exe, luaver)
                   if lv then
                      return name, d, lv, ljv
                   end
+               elseif is_wrapper == true or err == nil then
+                  table.insert(tried, lua_exe)
+               else
+                  table.insert(tried, string.format("%-13s (%s)", lua_exe, err))
                end
             end
          end
@@ -672,8 +676,11 @@ function util.lua_is_wrapper(interp)
    if not fd then
       return nil, err
    end
-   local data = fd:read(1000)
+   local data, err = fd:read(1000)
    fd:close()
+   if not data then
+      return nil, err
+   end
    return not not data:match("LUAROCKS_SYSCONFDIR")
 end
 
