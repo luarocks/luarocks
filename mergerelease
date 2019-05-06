@@ -1,0 +1,22 @@
+#!/bin/sh
+
+[ "$1" ] || {
+   echo "usage.....: $0 <release-branch>"
+   echo "example...: $0 release-3.1.0"
+   echo
+   echo "Before running this, make sure branch is tagged:"
+   echo "   git tag -s v3.1.0"
+   echo "   git push origin v3.1.0"
+   echo
+   exit 1
+}
+
+v="$1"
+
+git fetch --all
+git checkout master
+git diff master $v > version.diff
+git merge --no-ff $v
+patch -R -p1 < version.diff
+git add luarocks-dev-1.rockspec
+git commit -av --amend
