@@ -157,18 +157,15 @@ local function get_lua_version(flags)
       return flags["lua-version"] 
    end
    local dirs = {}
-   local next_i = 1
    if flags["project-tree"] then
-      dirs[next_i] = dir.path(flags["project-tree"], "..", ".luarocks")
-      next_i = next_i + 1
+      table.insert(dirs, dir.path(flags["project-tree"], "..", ".luarocks"))
    end
    if cfg.home_tree then
-      dirs[next_i] = dir.path(cfg.home_tree, ".luarocks")
-      next_i = next_i + 1
+      table.insert(dirs, dir.path(cfg.home_tree, ".luarocks"))
    end
-   dirs[next_i] = cfg.sysconfdir
-   for i=1, next_i do
-      local f = dir.path(dirs[i], "default-lua-version.lua")
+   table.insert(dirs, cfg.sysconfdir)
+   for _, d in ipairs(dirs) do
+      local f = dir.path(d, "default-lua-version.lua")
       local mod, err = loadfile(f, "t")
       if mod then
          local pok, ver = pcall(mod)
