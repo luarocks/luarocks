@@ -29,7 +29,12 @@ canonicalpath() {
    else
       if cd "$(dirname "$1")" >/dev/null 2>&1
       then
-         echo "$PWD/$(basename "$1")"
+         if [ "$PWD" = "/" ]
+         then
+            echo "/$(basename "$1")"
+         else
+            echo "$PWD/$(basename "$1")"
+         fi
       else
          echo "$1"
       fi
