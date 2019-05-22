@@ -97,6 +97,7 @@ local supported_flags = {
    ["deps-mode"] = "<mode>",
    ["detailed"] = "\"<text>\"",
    ["dev"] = true,
+   ["dir"] = "<path>",
    ["force"] = true,
    ["force-fast"] = true,
    ["from"] = "<server>",

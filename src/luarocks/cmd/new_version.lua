@@ -8,10 +8,11 @@ local download = require("luarocks.download")
 local fetch = require("luarocks.fetch")
 local persist = require("luarocks.persist")
 local fs = require("luarocks.fs")
+local dir = require("luarocks.dir")
 local type_rockspec = require("luarocks.type.rockspec")
 
 new_version.help_summary = "Auto-write a rockspec for a new version of a rock."
-new_version.help_arguments = "[--tag=<tag>] [<package>|<rockspec>] [<new_version>] [<new_url>]"
+new_version.help_arguments = "[--tag=<tag>] [--dir=<path>] [<package>|<rockspec>] [<new_version>] [<new_url>]"
 new_version.help = [[
 This is a utility function that writes a new rockspec, updating data
 from a previous one.
@@ -34,7 +35,9 @@ the new MD5 checksum.
 If a tag is given, it replaces the one from the old rockspec. If there is
 an old tag but no new one passed, it is guessed in the same way URL is.
 
-WARNING: it writes the new rockspec to the current directory,
+If a directory is not given, it defaults to the current directory.
+
+WARNING: it writes the new rockspec to the given directory,
 overwriting the file if it already exists.
 ]]
 
@@ -158,6 +161,12 @@ function new_version.command(flags, input, version, url)
       version = flags.tag:gsub("^v", "")
    end
    
+   local out_dir
+   if flags.dir then
+      out_dir = dir.normalize(flags.dir)
+      out_dir = out_dir:match('^(.-)/*$')
+   end
+
    if version then
       new_ver, new_rev = version:match("(.*)%-(%d+)$")
       new_rev = tonumber(new_rev)
@@ -183,7 +192,10 @@ function new_version.command(flags, input, version, url)
    end
    
    local out_filename = out_name.."-"..new_rockver.."-"..new_rev..".rockspec"
-   
+   if out_dir then
+      out_filename = out_dir .. "/" .. out_filename
+      fs.make_dir(out_dir)
+   end
    persist.save_from_table(out_filename, out_rs, type_rockspec.order)
    
    util.printout("Wrote "..out_filename)
