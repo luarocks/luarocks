@@ -202,6 +202,9 @@ function builtin.run(rockspec)
          return execute(variables.CC.." "..variables.CFLAGS, "-c", "-Fo"..object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
       end
       compile_library = function(library, objects, libraries, libdirs, name)
+         if libraries[cfg.target_cpu] then
+            libraries = libraries[cfg.target_cpu]
+         end
          local extras = { unpack(objects) }
          add_flags(extras, "-libpath:%s", libdirs)
          add_flags(extras, "%s.lib", libraries)
