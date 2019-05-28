@@ -243,7 +243,7 @@ function builtin.run(rockspec)
          local extras = { unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
          if cfg.gcc_rpath then
-            add_flags(extras, "-Wl,-rpath,%s:", libdirs)
+            add_flags(extras, "-Wl,-rpath,%s", libdirs)
          end
          add_flags(extras, "-l%s", libraries)
          if cfg.link_lua_explicitly then
