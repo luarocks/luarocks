@@ -561,6 +561,7 @@ function cfg.init(detected, warning)
    local lua_incdir = detected.lua_incdir or hardcoded.LUA_INCDIR
    local lua_libdir = detected.lua_libdir or hardcoded.LUA_LIBDIR
    local lua_dir = detected.lua_dir or hardcoded.LUA_DIR or (lua_bindir and lua_bindir:gsub("[\\/]bin$", ""))
+   local project_dir = detected.project_dir
    
    local init = cfg.init
 
@@ -636,8 +637,8 @@ function cfg.init(detected, warning)
       local name = "config-"..cfg.lua_version..".lua"
       sys_config_file = (cfg.sysconfdir .. "/" .. name):gsub("\\", "/")
       home_config_file = (cfg.homeconfdir .. "/" .. name):gsub("\\", "/")
-      if detected.project_dir then
-         project_config_file = detected.project_dir .. "/.luarocks/" .. name
+      if project_dir then
+         project_config_file = project_dir .. "/.luarocks/" .. name
       end
    end
 
@@ -680,7 +681,7 @@ function cfg.init(detected, warning)
       end
 
       -- finally, use the project-specific config file if any
-      if detected.project_dir then
+      if project_dir then
          project_config_ok, err = load_config_file(cfg, platforms, project_config_file)
          if err then
             return nil, err, "config"
@@ -694,6 +695,7 @@ function cfg.init(detected, warning)
    ----------------------------------------
 
    -- Settings detected or given via the CLI (i.e. --lua-dir) take precedence over config files:
+   cfg.project_dir = detected.project_dir
    cfg.lua_version = detected.lua_version or cfg.lua_version
    cfg.luajit_version = detected.luajit_version or cfg.luajit_version
    cfg.lua_interpreter = detected.lua_interpreter or cfg.lua_interpreter
@@ -731,7 +733,7 @@ function cfg.init(detected, warning)
    cfg.user_agent = "LuaRocks/"..cfg.program_version.." "..cfg.arch
 
    cfg.config_files = {
-      project = detected.project_dir and {
+      project = project_dir and {
          file = project_config_file,
          found = not not project_config_ok,
       },

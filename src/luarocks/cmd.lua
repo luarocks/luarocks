@@ -36,19 +36,6 @@ local function check_popen()
    end
 end
 
-local function check_if_config_is_present(detected, try)
-   local versions = detected.lua_version 
-                    and { detected.lua_version }
-                    or  util.lua_versions("descending")
-   return fun.find(versions, function(v)
-      if util.exists(dir.path(try, ".luarocks", "config-"..v..".lua")) then
-         detected.project_dir = try
-         detected.lua_version = v
-         return detected
-      end
-   end)
-end
-
 local process_tree_flags
 do
    local function replace_tree(flags, root, tree)
@@ -152,32 +139,153 @@ local function process_server_flags(flags)
    return true
 end
 
-local function get_lua_version(flags)
-   if flags["lua-version"] then
-      return flags["lua-version"] 
-   end
-   local dirs = {}
-   if flags["project-tree"] then
-      table.insert(dirs, dir.path(flags["project-tree"], "..", ".luarocks"))
-   end
-   if cfg.home_tree then
-      table.insert(dirs, dir.path(cfg.home_tree, ".luarocks"))
-   end
-   table.insert(dirs, cfg.sysconfdir)
-   for _, d in ipairs(dirs) do
-      local f = dir.path(d, "default-lua-version.lua")
-      local mod, err = loadfile(f, "t")
-      if mod then
-         local pok, ver = pcall(mod)
-         if pok and type(ver) == "string" and ver:match("%d+.%d+") then
-            if flags["verbose"] then
-               util.printout("Defaulting to Lua " .. ver .. " based on " .. f .. " ...")
-            end
-            return ver
-         end
+local function error_handler(err)
+   local mode = "Arch.: " .. (cfg and cfg.arch or "unknown")
+   if package.config:sub(1, 1) == "\\" then
+      if cfg and cfg.fs_use_modules then
+         mode = mode .. " (fs_use_modules = true)"
       end
    end
-   return nil
+   return debug.traceback("LuaRocks "..cfg.program_version..
+      " bug (please report at https://github.com/luarocks/luarocks/issues).\n"..
+      mode.."\n"..err, 2)
+end
+
+--- Display an error message and exit.
+-- @param message string: The error message.
+-- @param exitcode number: the exitcode to use
+local function die(message, exitcode)
+   assert(type(message) == "string", "bad error, expected string, got: " .. type(message))
+   util.printerr("\nError: "..message)
+
+   local ok, err = xpcall(util.run_scheduled_functions, error_handler)
+   if not ok then
+      util.printerr("\nError: "..err)
+      exitcode = cmd.errorcodes.CRASH
+   end
+
+   os.exit(exitcode or cmd.errorcodes.UNSPECIFIED)
+end
+
+local init_config
+do
+   local detect_config_via_flags
+   do
+      local function find_project_dir(project_tree)
+         if project_tree then
+            return project_tree:gsub("[/\\][^/\\]+$", "")
+         else
+            local try = "."
+            for _ = 1, 10 do -- FIXME detect when root dir was hit instead
+               if util.exists(try .. "/.luarocks") and util.exists(try .. "/lua_modules") then
+                  return try
+               elseif util.exists(try .. "/.luarocks-no-project") then
+                  break
+               end
+               try = try .. "/.."
+            end
+         end
+         return nil
+      end
+   
+      local function find_default_lua_version(flags, project_dir)
+         local dirs = {}
+         if project_dir then
+            table.insert(dirs, dir.path(project_dir, ".luarocks"))
+         end
+         if cfg.home_tree then
+            table.insert(dirs, dir.path(cfg.home_tree, ".luarocks"))
+         end
+         table.insert(dirs, cfg.sysconfdir)
+         for _, d in ipairs(dirs) do
+            local f = dir.path(d, "default-lua-version.lua")
+            local mod, err = loadfile(f, "t")
+            if mod then
+               local pok, ver = pcall(mod)
+               if pok and type(ver) == "string" and ver:match("%d+.%d+") then
+                  if flags["verbose"] then
+                     util.printout("Defaulting to Lua " .. ver .. " based on " .. f .. " ...")
+                  end
+                  return ver
+               end
+            end
+         end
+         return nil
+      end
+   
+      local function find_version_from_config(dirname)
+         return fun.find(util.lua_versions("descending"), function(v)
+            if util.exists(dir.path(dirname, ".luarocks", "config-"..v..".lua")) then
+               return v
+            end
+         end)
+      end
+   
+      local function detect_lua_via_flags(flags, project_dir)
+         local lua_version = flags["lua-version"]
+                             or find_default_lua_version(flags, project_dir)
+                             or (project_dir and find_version_from_config(project_dir))
+      
+         if flags["lua-dir"] then
+            local detected, err = util.find_lua(flags["lua-dir"], lua_version)
+            if not detected then
+               die(err)
+            end
+            return detected
+         end
+      
+         if lua_version then
+            local path_sep = (package.config:sub(1, 1) == "\\" and ";" or ":")
+            for bindir in os.getenv("PATH"):gmatch("[^"..path_sep.."]+") do
+               local parentdir = bindir:gsub("[\\/][^\\/]+[\\/]?$", "")
+               local detected = util.find_lua(dir.path(parentdir), lua_version)
+               if detected then
+                  return detected
+               end
+               detected = util.find_lua(bindir, lua_version)
+               if detected then
+                  return detected
+               end
+            end
+            return {
+               lua_version = lua_version,
+            }
+         end
+         
+         return {}
+      end
+      
+      detect_config_via_flags = function(flags)
+         local project_dir = find_project_dir(flags["project-tree"])
+         local detected = detect_lua_via_flags(flags, project_dir)
+         detected.project_dir = project_dir
+         return detected
+      end
+   end
+   
+   init_config = function(flags)
+      local detected = detect_config_via_flags(flags)
+   
+      -- FIXME A quick hack for the experimental Windows build
+      if os.getenv("LUAROCKS_CROSS_COMPILING") then
+         cfg.each_platform = function()
+            local i = 0
+            local plats = { "unix", "linux" }
+            return function()
+               i = i + 1
+               return plats[i]
+            end
+         end
+         fs.init()
+      end
+   
+      local ok, err = cfg.init(detected, util.warning)
+      if not ok then
+         return nil, err
+      end
+      
+      return (detected.lua_dir ~= nil)
+   end
 end
 
 --- Main command-line processor.
@@ -191,34 +299,6 @@ end
 function cmd.run_command(description, commands, external_namespace, ...)
 
    check_popen()
-
-   local function error_handler(err)
-      local mode = "Arch.: " .. (cfg and cfg.arch or "unknown")
-      if package.config:sub(1, 1) == "\\" then
-         if cfg and cfg.fs_use_modules then
-            mode = mode .. " (fs_use_modules = true)"
-         end
-      end
-      return debug.traceback("LuaRocks "..cfg.program_version..
-         " bug (please report at https://github.com/luarocks/luarocks/issues).\n"..
-         mode.."\n"..err, 2)
-   end
-
-   --- Display an error message and exit.
-   -- @param message string: The error message.
-   -- @param exitcode number: the exitcode to use
-   local function die(message, exitcode)
-      assert(type(message) == "string", "bad error, expected string, got: " .. type(message))
-      util.printerr("\nError: "..message)
-
-      local ok, err = xpcall(util.run_scheduled_functions, error_handler)
-      if not ok then
-         util.printerr("\nError: "..err)
-         exitcode = cmd.errorcodes.CRASH
-      end
-
-      os.exit(exitcode or cmd.errorcodes.UNSPECIFIED)
-   end
 
    local function process_arguments(...)
       local args = {...}
@@ -285,122 +365,44 @@ function cmd.run_command(description, commands, external_namespace, ...)
       end
    end
 
-   local lua_version = get_lua_version(flags)
-
    if flags["deps-mode"] and not deps.check_deps_mode_flag(flags["deps-mode"]) then
       die("Invalid entry for --deps-mode.")
    end
    
-   local lua_found = false
-
-   local detected
-   if flags["lua-dir"] then
-      local err
-      detected, err = util.find_lua(flags["lua-dir"], lua_version)
-      if not detected then
-         die(err)
-      end
-      lua_found = true
-      assert(detected.lua_version)
-      assert(detected.lua_dir)
-   elseif lua_version then
-      local path_sep = (package.config:sub(1, 1) == "\\" and ";" or ":")
-      for bindir in os.getenv("PATH"):gmatch("[^"..path_sep.."]+") do
-         local parentdir = bindir:gsub("[\\/][^\\/]+[\\/]?$", "")
-         detected = util.find_lua(dir.path(parentdir), lua_version)
-         if detected then
-            break
-         end
-         detected = util.find_lua(bindir, lua_version)
-         if detected then
-            break
-         end
-      end
-      if detected then
-         lua_found = true
-      else
-         detected = {
-            lua_version = lua_version,
-         }
-      end
-   end
-
-   if flags["project-tree"] then
-      local project_tree = flags["project-tree"]:gsub("[/\\][^/\\]+$", "")
-      detected = detected or {}
-      detected.project_dir = project_tree
-      local d = check_if_config_is_present(detected, project_tree)
-      if d then
-         detected = d
-      end
-   else
-      detected = detected or {}
-      local try = "."
-      for _ = 1, 10 do -- FIXME detect when root dir was hit instead
-         if util.exists(try .. "/.luarocks") and util.exists(try .. "/lua_modules") then
-            local d = check_if_config_is_present(detected, try)
-            if d then
-               detected = d
-               break
-            end
-         elseif util.exists(try .. "/.luarocks-no-project") then
-            break
-         end
-         try = try .. "/.."
-      end
-   end
-
-   -- FIXME A quick hack for the experimental Windows build
-   if os.getenv("LUAROCKS_CROSS_COMPILING") then
-      cfg.each_platform = function()
-         local i = 0
-         local plats = { "unix", "linux" }
-         return function()
-            i = i + 1
-            return plats[i]
-         end
-      end
-      fs.init()
-   end
-
    -----------------------------------------------------------------------------
-   local ok, err = cfg.init(detected, util.warning)
-   if not ok then
+   local lua_found, err = init_config(flags)
+   if err then
       die(err)
    end
    -----------------------------------------------------------------------------
-
-   fs.init()
-
-   lua_version = cfg.lua_version
-
-   if not lua_found then
-      if cfg.variables.LUA_DIR then
-         local found = util.find_lua(cfg.variables.LUA_DIR, cfg.lua_version)
-         if found then
-            lua_found = true
-         end
-      end
-   end
-
-   if not lua_found then
-      util.warning("Could not find a Lua interpreter for version " ..
-                   lua_version .. " in your PATH. " ..
-                   "Modules may not install with the correct configurations. " ..
-                   "You may want to specify to the path prefix to your build " ..
-                   "of Lua " .. lua_version .. " using --lua-dir")
-   end
-   cfg.lua_found = lua_found
-
-   if detected.project_dir then
-      detected.project_dir = fs.absolute_name(detected.project_dir)
-   end
 
    if flags["version"] then
       util.printout(program.." "..cfg.program_version)
       util.printout(description)
       util.printout()
       os.exit(cmd.errorcodes.OK)
+   end
+
+   fs.init()
+
+   -- if the Lua interpreter wasn't explicitly found before cfg.init,
+   -- try again now.
+   if not lua_found then
+      if cfg.variables.LUA_DIR then
+         lua_found = util.find_lua(cfg.variables.LUA_DIR, cfg.lua_version)
+      end
+   end
+
+   if not lua_found then
+      util.warning("Could not find a Lua " .. cfg.lua_version .. " interpreter in your PATH. " ..
+                   "Modules may not install with the correct configurations. " ..
+                   "You may want to specify to the path prefix to your build " ..
+                   "of Lua " .. cfg.lua_version .. " using --lua-dir")
+   end
+   cfg.lua_found = lua_found
+
+   if cfg.project_dir then
+      cfg.project_dir = fs.absolute_name(cfg.project_dir)
    end
 
    for _, module_name in ipairs(fs.modules(external_namespace)) do
@@ -418,7 +420,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
       die("Current directory does not exist. Please run LuaRocks from an existing directory.")
    end
 
-   ok, err = process_tree_flags(flags, detected.project_dir)
+   ok, err = process_tree_flags(flags, cfg.project_dir)
    if not ok then
       die(err)
    end
