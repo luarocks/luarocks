@@ -9,6 +9,7 @@ local help = {}
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
+local fs = require("luarocks.fs")
 
 local program = util.this_program("luarocks")
 
@@ -90,23 +91,23 @@ function help.command(description, commands, command)
       util.printout()
       util.printout("\tConfiguration files:")
       local conf = cfg.config_files
-      util.printout("\t\tSystem  : ".. dir.normalize(conf.system.file) .. " (" .. get_status(conf.system.found) ..")")
+      util.printout("\t\tSystem  : ".. fs.absolute_name(conf.system.file) .. " (" .. get_status(conf.system.found) ..")")
       if conf.user.file then
-         util.printout("\t\tUser    : ".. dir.normalize(conf.user.file) .. " (" .. get_status(conf.user.found) ..")")
+         util.printout("\t\tUser    : ".. fs.absolute_name(conf.user.file) .. " (" .. get_status(conf.user.found) ..")")
       else
          util.printout("\t\tUser    : disabled in this LuaRocks installation.")
       end
       if conf.project then
-         util.printout("\t\tProject : ".. dir.normalize(conf.project.file) .. " (" .. get_status(conf.project.found) ..")")
+         util.printout("\t\tProject : ".. fs.absolute_name(conf.project.file) .. " (" .. get_status(conf.project.found) ..")")
       end
       util.printout()
       util.printout("\tRocks trees in use: ")
       for _, tree in ipairs(cfg.rocks_trees) do
          if type(tree) == "string" then
-            util.printout("\t\t"..dir.normalize(tree))
+            util.printout("\t\t"..fs.absolute_name(tree))
          else
             local name = tree.name and " (\""..tree.name.."\")" or ""
-            util.printout("\t\t"..dir.normalize(tree.root)..name)
+            util.printout("\t\t"..fs.absolute_name(tree.root)..name)
          end
       end
       util.printout()
