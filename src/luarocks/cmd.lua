@@ -372,6 +372,8 @@ function cmd.run_command(description, commands, external_namespace, ...)
 
    fs.init()
 
+   lua_version = cfg.lua_version
+
    if not lua_found then
       if cfg.variables.LUA_DIR then
          local found = util.find_lua(cfg.variables.LUA_DIR, cfg.lua_version)
