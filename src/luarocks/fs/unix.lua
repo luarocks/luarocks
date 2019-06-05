@@ -208,7 +208,7 @@ end
 
 function unix.is_dir(file)
    file = fs.absolute_name(file)
-   file = dir.normalize(file) .. "/"
+   file = dir.normalize(file) .. "/."
    local fd, _, code = io.open(file, "r")
    if code == 2 then -- "No such file or directory"
       return false
