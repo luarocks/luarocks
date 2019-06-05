@@ -99,6 +99,13 @@ function fs.execute_env(env, command, ...)
    return fs.execute_string(table.concat(envstr, "\n") .. "\n" .. quote_args(command, ...))
 end
 
+local tool_available_cache = {}
+
+function fs_lua.set_tool_available(tool_name, value)
+   assert(type(value) == "boolean")
+   tool_available_cache[tool_name] = value
+end
+
 --- Checks if the given tool is available.
 -- The tool is executed using a flag, usually just to ask its version.
 -- @param tool_cmd string: The command to be used to check the tool's presence (e.g. hg in case of Mercurial)
@@ -111,12 +118,20 @@ function fs_lua.is_tool_available(tool_cmd, tool_name, arg)
    arg = arg or "--version"
    assert(type(arg) == "string")
 
-   if not fs.execute_quiet(tool_cmd, arg) then
+   local ok
+   if tool_available_cache[tool_name] ~= nil then
+      ok = tool_available_cache[tool_name]
+   else
+      ok = fs.execute_quiet(tool_cmd, arg)
+      tool_available_cache[tool_name] = (ok == true)
+   end
+
+   if ok then
+      return true
+   else   
       local msg = "'%s' program not found. Make sure %s is installed and is available in your PATH " ..
                   "(or you may want to edit the 'variables.%s' value in file '%s')"
       return nil, msg:format(tool_cmd, tool_name, tool_name:upper(), cfg.config_files.nearest)
-   else
-      return true
    end
 end
 
