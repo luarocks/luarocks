@@ -19,6 +19,48 @@ then
 
 ROCKSPEC="luarocks-$1-1.rockspec"
 
+if [ "$1" = "branch" ]
+then
+   shift
+   version=$1
+
+   if git show $version &> /dev/null
+   then
+      echo "Branch $version already exists."
+      exit 1
+   fi
+
+   git reset
+   git checkout .
+   git checkout -B $version
+   ROCKSPEC="luarocks-$1-1.rockspec"
+   currentrockspec=$(ls luarocks-*.rockspec)
+   if [ "$currentrockspec" != "$ROCKSPEC" ] && ! [ -e "$ROCKSPEC" ]
+   then
+      git mv luarocks-*.rockspec "$ROCKSPEC"
+   fi
+   sed -i 's/"Configuring LuaRocks version .*"/"Configuring LuaRocks version '$version'..."/' configure
+   sed -i 's/version = "[^"]*"/version = "'$version'-1"/' $ROCKSPEC
+   sed -i 's/\(   url = "[^"]*",\)/\1\n   tag = "v'$version'"/' $ROCKSPEC
+   sed -i 's/program_version = "[^"]*"/program_version = "'$version'"/' src/luarocks/core/cfg.lua
+   sed -i 's/version: [0-9.]*/version: '$version'./' appveyor.yml
+   sed -i 's/LUAROCKS_VER: [0-9.]*/LUAROCKS_VER: '$version'/' appveyor.yml
+   program_series=${version%.*}
+   sed -i 's/program_series = "[0-9.]*"/program_series = "'$program_series'"/' src/luarocks/core/cfg.lua
+   sed -i 's/vars.VERSION = "[0-9.]*"/vars.VERSION = "'$program_series'"/' install.bat
+   echo "==============================================================================="
+   git diff
+   echo "==============================================================================="
+   echo "Does the change look alright? Press 'y' to commit"
+   echo "==============================================================================="
+   read
+   if [ "$REPLY" = "y" ]
+   then
+      git commit -av -m "Release $version"
+   fi
+fi
+
+
 [ -e "$ROCKSPEC" ] || {
    echo
    echo "$ROCKSPEC is missing. Please check rockspec version is correct."
