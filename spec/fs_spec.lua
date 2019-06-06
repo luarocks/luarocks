@@ -377,6 +377,24 @@ describe("Luarocks fs test #unit", function()
          lfs.mkdir(tmpdir)
          assert.same(false, fs.is_file("/nonexistent"))
       end)
+
+      it("#unix returns false when the argument is a symlink to a directory", function()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         local linkname = tmpdir .. "/symlink"
+         finally(function() os.remove(linkname) end)
+         lfs.link(tmpdir, linkname, true)
+         assert.falsy(fs.is_file(linkname))
+      end)
+
+      it("#unix returns true when the argument is a symlink to a file", function()
+         tmpfile = get_tmp_path()
+         create_file(tmpfile)
+         local linkname = tmpfile .. "_symlink"
+         finally(function() os.remove(linkname) end)
+         lfs.link(tmpfile, linkname, true)
+         assert.truthy(fs.is_file(linkname))
+      end)
    end)
 
    describe("fs.is_dir", function()
@@ -404,6 +422,24 @@ describe("Luarocks fs test #unit", function()
          tmpfile = get_tmp_path()
          create_file(tmpfile)
          assert.falsy(fs.is_dir(tmpfile))
+      end)
+
+      it("#unix returns true when the argument is a symlink to a directory", function()
+         tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         local linkname = tmpdir .. "/symlink"
+         finally(function() os.remove(linkname) end)
+         lfs.link(tmpdir, linkname, true)
+         assert.truthy(fs.is_dir(linkname))
+      end)
+
+      it("#unix returns false when the argument is a symlink to a file", function()
+         tmpfile = get_tmp_path()
+         create_file(tmpfile)
+         local linkname = tmpfile .. "_symlink"
+         finally(function() os.remove(linkname) end)
+         lfs.link(tmpfile, linkname, true)
+         assert.falsy(fs.is_dir(linkname))
       end)
 
       it("returns false when the argument does not exist", function()
