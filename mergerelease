@@ -18,7 +18,7 @@ git show origin v$v &> /dev/null || {
    echo "There is no pushed tag v$v in origin."
    echo
    echo "Before running this, make sure branch is tagged:"
-   echo "   git tag -s v$v"
+   echo "   git tag -s v$v $v -m 'Release $v'"
    echo "   git push origin v$v"
    echo
    exit 1
