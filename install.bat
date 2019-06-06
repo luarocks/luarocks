@@ -6,7 +6,7 @@ local vars = {}
 
 
 vars.PREFIX = nil
-vars.VERSION = "3.0"
+vars.VERSION = "3.1"
 vars.SYSCONFDIR = nil
 vars.SYSCONFFORCE = nil
 vars.CONFBACKUPDIR = nil
