@@ -141,13 +141,13 @@ git checkout master
 if [ -e ../luarocks-site ]
 then
    cd ../luarocks-site
+   git pull
 else
    cd ..
    git clone https://github.com/luarocks/luarocks-site
    cd luarocks-site
 fi
 
-git pull
 sed -i 's,luarocks-[0-9]*\.[0-9]*\.[0-9]*,luarocks-'$v',' static/md/home.md
 git add static/md/home.md
 
@@ -168,6 +168,7 @@ git push
 if [ -e ../luarocks.wiki ]
 then
    cd ../luarocks.wiki
+   git pull
 else
    cd ..
    git clone https://github.com/luarocks/luarocks.wiki.git
@@ -175,6 +176,8 @@ else
 fi
 
 sed -i "s,The current stable release is [^:]*:,The current stable release is '''$v''':," Download.mediawiki
+
+sed -i "s,luarocks-[0-9.]*[0-9],luarocks-$v," Installation-instructions-for-Unix.md
 
 gawk '
 BEGIN {
@@ -190,6 +193,7 @@ mv "Release-history.mediawiki.1" "Release-history.mediawiki"
 
 git add "Download.mediawiki"
 git add "Release-history.mediawiki"
+git add "Installation-instructions-for-Unix.md"
 
 confirm master
 
