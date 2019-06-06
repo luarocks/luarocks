@@ -17,7 +17,7 @@ if cfg.fs_use_modules then
    socket_ok, http = pcall(require, "socket.http")
    _, ftp = pcall(require, "socket.ftp")
    zip_ok, zip = pcall(require, "luarocks.tools.zip")
-   bz2_ok, bz2 = pcall(require, "luarocks.tools.bzip2")
+   bz2_ok, bz2 = pcall(require, "bz2")
    lfs_ok, lfs = pcall(require, "lfs")
    md5_ok, md5 = pcall(require, "md5")
    posix_ok, posix = pcall(require, "posix")

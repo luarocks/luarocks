@@ -650,6 +650,7 @@ function test_env.setup_specs(extra_rocks)
       require("spec.util.git_repo")
 
       package.path = test_env.env_variables.LUA_PATH
+      package.cpath = test_env.env_variables.LUA_CPATH
 
       test_env.platform = execute_output(test_env.testing_paths.lua .. " -e \"cfg = require('luarocks.core.cfg'); cfg.init(); print(cfg.arch)\"", false, test_env.env_variables)
       test_env.wrapper_extension = test_env.TEST_TARGET_OS == "windows" and ".bat" or ""
@@ -918,7 +919,8 @@ function test_env.main()
       table.insert(urls, "/md5-1.2-1.src.rock")
       --table.insert(urls, "/lzlib-0.4.1.53-1.src.rock")
       table.insert(urls, "/lua-zlib-1.2-0.src.rock")
-      rocks = {"luafilesystem", "luasocket", "md5", "lua-zlib"}
+      table.insert(urls, "/lua-bz2-0.1.0-1.src.rock")
+      rocks = {"luafilesystem", "luasocket", "md5", "lua-zlib", "lua-bz2"}
       if test_env.TEST_TARGET_OS ~= "windows" then
          table.insert(urls, "/luaposix-33.2.1-1.src.rock")
          table.insert(rocks, "luaposix")
