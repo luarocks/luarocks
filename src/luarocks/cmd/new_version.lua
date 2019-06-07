@@ -164,7 +164,6 @@ function new_version.command(flags, input, version, url)
    local out_dir
    if flags.dir then
       out_dir = dir.normalize(flags.dir)
-      out_dir = out_dir:match('^(.-)/*$')
    end
 
    if version then
@@ -193,7 +192,7 @@ function new_version.command(flags, input, version, url)
    
    local out_filename = out_name.."-"..new_rockver.."-"..new_rev..".rockspec"
    if out_dir then
-      out_filename = out_dir .. "/" .. out_filename
+      out_filename = dir.path(out_dir, out_filename)
       fs.make_dir(out_dir)
    end
    persist.save_from_table(out_filename, out_rs, type_rockspec.order)
