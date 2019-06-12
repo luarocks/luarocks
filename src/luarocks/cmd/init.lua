@@ -10,27 +10,30 @@ local util = require("luarocks.util")
 local persist = require("luarocks.persist")
 local write_rockspec = require("luarocks.cmd.write_rockspec")
 
-init.help_summary = "Initialize a directory for a Lua project using LuaRocks."
-init.help_arguments = "[<name> [<version>]]"
-init.help = [[
-<name> is the project name.
-<version> is an optional project version.
+function init.add_to_parser(parser)
+   local cmd = parser:command("init", "Initialize a directory for a Lua project using LuaRocks.", util.see_also())
+      :add_help(false)
 
---reset                  Delete .luarocks/config-5.x.lua and ./lua
-                         and generate new ones.
+   cmd:argument("name", "The project name."):args("?")
+   cmd:argument("version", "An optional project version."):args("?")
+   cmd:flag("--reset", "Delete .luarocks/config-5.x.lua and ./lua and generate new ones.")
 
-Options for specifying rockspec data:
-
---license="<string>"     A license string, such as "MIT/X11" or "GNU GPL v3".
---summary="<txt>"        A short one-line description summary.
---detailed="<txt>"       A longer description string.
---homepage=<url>         Project homepage.
---lua-versions=<ver>     Supported Lua versions. Accepted values are "5.1", "5.2",
-                         "5.3", "5.1,5.2", "5.2,5.3", or "5.1,5.2,5.3".
---rockspec-format=<ver>  Rockspec format version, such as "1.0" or "1.1".
---lib=<lib>[,<lib>]      A comma-separated list of libraries that C files need to
-                         link to.
-]]
+   cmd:group("Options for specifying rockspec data",
+      cmd:option("--license", 'A license string, such as "MIT/X11" or "GNU GPL v3".')
+         :argname("<string>"),
+      cmd:option("--summary", "A short one-line description summary.")
+         :argname("<txt>"),
+      cmd:option("--detailed", "A longer description string.")
+         :argname("<txt>"),
+      cmd:option("--homepage", "Project homepage.")
+         :argname("<url>"),
+      cmd:option("--lua-versions", "Supported Lua versions. Accepted values are "..
+         '"5.1", "5.2", "5.3", "5.1,5.2", "5.2,5.3", or "5.1,5.2,5.3".'),
+      cmd:option("--rockspec-format", 'Rockspec format version, such as "1.0" or "1.1".')
+         :argname("<ver>"),
+      cmd:option("--lib", "A comma-separated list of libraries that C files need to link to.")
+         :argname("<libs>"))
+end
 
 local function write_gitignore(entries)
    local gitignore = ""
@@ -53,10 +56,11 @@ end
 
 --- Driver function for "init" command.
 -- @return boolean: True if succeeded, nil on errors.
-function init.command(flags, name, version)
+function init.command(args)
 
    local pwd = fs.current_dir()
 
+   local name = args.name
    if not name then
       name = dir.base_name(pwd)
       if name == "/" then
@@ -84,7 +88,7 @@ function init.command(flags, name, version)
    end
 
    if not has_rockspec then
-      local ok, err = write_rockspec.command(flags, name, version or "dev", pwd)
+      local ok, err = write_rockspec.command(args, name, args.version or "dev", pwd)
       if not ok then
          util.printerr(err)
       end
@@ -101,7 +105,7 @@ function init.command(flags, name, version)
    fs.make_dir(".luarocks")
    local config_file = ".luarocks/config-" .. cfg.lua_version .. ".lua"
 
-   if flags["reset"] then
+   if args.reset then
       fs.delete(lua_wrapper)
       fs.delete(config_file)
    end

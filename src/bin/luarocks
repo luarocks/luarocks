@@ -33,4 +33,4 @@ local commands = {
    test = "luarocks.cmd.test",
 }
 
-cmd.run_command(description, commands, "luarocks.cmd.external", ...)
+cmd.run_command("luarocks", description, commands, "luarocks.cmd.external", ...)
