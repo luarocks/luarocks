@@ -24,7 +24,7 @@ To override this check and force the removal, use --force.
 To perform a forced removal without reporting dependency issues,
 use --force-fast.
 
-]]..util.deps_mode_help()
+]]--..util.deps_mode_help()
 
 --- Driver function for the "remove" command.
 -- @param name string: name of a rock. If a version is given, refer to

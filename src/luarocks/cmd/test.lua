@@ -23,7 +23,7 @@ test suite arguments.
                     specified in the rockspec and it could not be
                     auto-detected.
 
-]]..util.deps_mode_help()
+]]--..util.deps_mode_help()
 
 function cmd_test.command(flags, argument, ...)
    assert(type(argument) == "string" or not argument)

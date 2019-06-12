@@ -215,23 +215,22 @@ function util.this_program(default)
    return prog
 end
 
-function util.deps_mode_help(program)
+function util.deps_mode_option(parser)
    local cfg = require("luarocks.core.cfg")
-   return [[
---deps-mode=<mode>  How to handle dependencies. Four modes are supported:
-                    * all - use all trees from the rocks_trees list
-                      for finding dependencies
-                    * one - use only the current tree (possibly set
-                      with --tree)
-                    * order - use trees based on order (use the current
-                      tree and all trees below it on the rocks_trees list)
-                    * none - ignore dependencies altogether.
-                    The default mode may be set with the deps_mode entry
-                    in the configuration file.
-                    The current default is "]]..cfg.deps_mode..[[".
-                    Type ']]..util.this_program(program or "luarocks")..[[' with no arguments to see
-                    your list of rocks trees.
-]]
+
+   parser:option("--deps-mode", "How to handle dependencies. Four modes are supported:\n"..
+      "* all - use all trees from the rocks_trees list for finding dependencies\n"..
+      "* one - use only the current tree (possibly set with --tree)\n"..
+      "* order - use trees based on order (use the current tree and all "..
+      "trees below it on the rocks_trees list)\n"..
+      "* none - ignore dependencies altogether.\n"..
+      "The default mode may be set with the deps_mode entry in the configuration file.\n"..
+      'The current default is "'..cfg.deps_mode..'".\n'..
+      "Type '"..util.this_program(program or "luarocks").."' with no "..
+      "arguments to see your list of rocks trees.")
+      :argname("<mode>")
+      :choices({"all", "one", "order", "none"})
+   parser:flag("--nodeps"):hidden(true)
 end
 
 function util.see_help(command, program)

@@ -41,7 +41,7 @@ or a filename of a locally available rock.
                     You need the signer’s public key in your local
                     keyring for this option to work properly.
 
-]]..util.deps_mode_help()
+]]--..util.deps_mode_help()
 
 install.opts = util.opts_table("install.opts", {
    namespace = "string?",

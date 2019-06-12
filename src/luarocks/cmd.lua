@@ -370,6 +370,7 @@ Variables:
       :argname("<server>")
    parser:option("--only-sources", "Restrict downloads to paths matching the given URL.")
       :argname("<url>")
+   parser:option("--namespace"):hidden(true) -- TODO: Description
    parser:option("--lua-dir", "Which Lua installation to use.")
       :argname("<prefix>")
    parser:option("--lua-version", "Which Lua version to use.")
@@ -461,6 +462,11 @@ function cmd.run_command(program_name, description, commands, external_namespace
       os.exit(cmd.errorcodes.OK)
    end
 
+   -- Compatibility for old flag
+   if args.nodeps then
+      args.deps_mode = "none"
+   end
+
    if args.timeout then -- setting it in the config file will kick-in earlier in the process
       cfg.connection_timeout = args.timeout
    end
@@ -472,7 +478,7 @@ function cmd.run_command(program_name, description, commands, external_namespace
          args.lua_dir = args.value
       end
    end
-   
+
    -----------------------------------------------------------------------------
    local lua_found, err = init_config(args)
    if err then

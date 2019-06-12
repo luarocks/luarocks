@@ -18,40 +18,37 @@ local search = require("luarocks.search")
 local make = require("luarocks.cmd.make")
 local cmd = require("luarocks.cmd")
 
-cmd_build.help_summary = "build/compile a rock."
-cmd_build.help_arguments = "[<flags...>] {<rockspec>|<rock>|<name> [<version>]}"
-cmd_build.help = [[
-Build and install a rock, compiling its C parts if any.
-Argument may be a rockspec file, a source rock file
-or the name of a rock to be fetched from a repository.
+function cmd_build.add_to_parser(parser)
+   local cmd = parser:command("build", "Build and install a rock, compiling "..
+      "its C parts if any.", util.see_also())
+      :summary("Build/compile a rock.")
+      :add_help(false)
 
---pack-binary-rock  Do not install rock. Instead, produce a .rock file
-                    with the contents of compilation in the current
-                    directory.
+   cmd:argument("rock", "A rockspec file, a source rock file, or the name of "..
+      "a rock to be fetched from a repository.")
+   cmd:argument("version", "Rock version.")
+      :args("?")
 
---keep              Do not remove previously installed versions of the
-                    rock after building a new one. This behavior can
-                    be made permanent by setting keep_other_versions=true
-                    in the configuration file.
-
---branch=<name>     Override the `source.branch` field in the loaded
-                    rockspec. Allows to specify a different branch to 
-                    fetch. Particularly for "dev" rocks.
-
---only-deps         Installs only the dependencies of the rock.
-
---verify            Verify signature of the rockspec or src.rock being
-                    built. If the rockspec or src.rock is being downloaded,
-                    LuaRocks will attempt to download the signature as well.
-                    Otherwise, the signature file should be already
-                    available locally in the same directory.
-                    You need the signer’s public key in your local
-                    keyring for this option to work properly.
-
---sign              To be used with --pack-binary-rock. Also produce
-                    a signature file for the generated .rock file.
-
-]]..util.deps_mode_help()
+   cmd:flag("--pack-binary-rock", "Do not install rock. Instead, produce a "..
+      ".rock file with the contents of compilation in the current directory.")
+   cmd:flag("--keep", "Do not remove previously installed versions of the "..
+      "rock after building a new one. This behavior can be made permanent by "..
+      "setting keep_other_versions=true in the configuration file.")
+   cmd:option("--branch", "Override the `source.branch` field in the loaded "..
+      "rockspec. Allows to specify a different branch to fetch. Particularly "..
+      'for "dev" rocks.')
+      :argname("<name>")
+   cmd:flag("--only-deps", "Installs only the dependencies of the rock.")
+   cmd:flag("--verify", "Verify signature of the rockspec or src.rock being "..
+      "built. If the rockspec or src.rock is being downloaded, LuaRocks will "..
+      "attempt to download the signature as well. Otherwise, the signature "..
+      "file should be already available locally in the same directory.\n"..
+      "You need the signer’s public key in your local keyring for this "..
+      "option to work properly.")
+   cmd:flag("--sign", "To be used with --pack-binary-rock. Also produce a "..
+      "signature file for the generated .rock file.")
+   util.deps_mode_option(cmd)
+end
 
 --- Build and install a rock.
 -- @param rock_filename string: local or remote filename of a rock.
@@ -132,58 +129,54 @@ local function remove_doc_dir(name, version)
 end
 
 --- Driver function for "build" command.
--- @param name string: A local or remote rockspec or rock file.
 -- If a package name is given, forwards the request to "search" and,
 -- if returned a result, installs the matching rock.
--- @param version string: When passing a package name, a version number may
--- also be given.
+-- When passing a package name, a version number may also be given.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
-function cmd_build.command(flags, name, version)
-   assert(type(name) == "string" or not name)
-   assert(type(version) == "string" or not version)
-   
-   if not name then
-      return make.command(flags)
+function cmd_build.command(args)
+   if not args.rock then
+      return make.command(args)
    end
 
-   name = util.adjust_name_and_namespace(name, flags)
+   local name = util.adjust_name_and_namespace(args.rock, args)
 
    local opts = build.opts({
       need_to_fetch = true,
       minimal_mode = false,
-      deps_mode = deps.get_deps_mode(flags),
-      build_only_deps = not not flags["only-deps"],
-      namespace = flags["namespace"],
-      branch = not not flags["branch"],
-      verify = not not flags["verify"],
+      deps_mode = deps.get_deps_mode(args),
+      build_only_deps = not not args.only_deps,
+      namespace = args.namespace,
+      branch = not not args.branch,
+      verify = not not args.verify,
    })
 
-   if flags["sign"] and not flags["pack-binary-rock"] then
+   if args.sign and not args.pack_binary_rock then
       return nil, "In the build command, --sign is meant to be used only with --pack-binary-rock"
    end
 
-   if flags["pack-binary-rock"] then
-      return pack.pack_binary_rock(name, version, flags["sign"], function()
+   if args.pack_binary_rock then
+      return pack.pack_binary_rock(name, args.version, args.sign, function()
          opts.build_only_deps = false
-         local status, err, errcode = do_build(name, version, opts)
-         if status and flags["no-doc"] then
-            remove_doc_dir(name, version)
+         local status, err, errcode = do_build(name, args.version, opts)
+         if status and args.no_doc then
+            remove_doc_dir(name, args.version)
          end
          return status, err, errcode
       end)
    end
    
-   local ok, err = fs.check_command_permissions(flags)
+   local ok, err = fs.check_command_permissions(args)
    if not ok then
       return nil, err, cmd.errorcodes.PERMISSIONDENIED
    end
 
-   ok, err = do_build(name, version, opts)
+   ok, err = do_build(name, args.version, opts)
    if not ok then return nil, err end
+   local version
    name, version = ok, err
 
-   if flags["no-doc"] then
+   if args.no_doc then
       remove_doc_dir(name, version)
    end
 
@@ -191,15 +184,15 @@ function cmd_build.command(flags, name, version)
       util.printout("Stopping after installing dependencies for " ..name.." "..version)
       util.printout()
    else
-      if (not flags["keep"]) and not cfg.keep_other_versions then
-         local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
+      if (not args.keep) and not cfg.keep_other_versions then
+         local ok, err = remove.remove_other_versions(name, version, args.force, args.force_fast)
          if not ok then
             util.printerr(err)
          end
       end
    end
 
-   writer.check_dependencies(nil, deps.get_deps_mode(flags))
+   writer.check_dependencies(nil, deps.get_deps_mode(args))
    return name, version
 end
 
