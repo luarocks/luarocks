@@ -9,9 +9,10 @@ local deps = require("luarocks.deps")
 local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
 
-config_cmd.help_summary = "Query information about the LuaRocks configuration."
-config_cmd.help_arguments = "(<key> | <key> <value> --scope=<scope> | <key> --unset --scope=<scope> | )"
-config_cmd.help = [[
+function config_cmd.add_to_parser(parser)
+   local cmd = parser:command("config", [[
+Query information about the LuaRocks configuration.
+
 * When given a configuration key, it prints the value of that key
   according to the currently active configuration (taking into account
   all config files and any command-line flags passed)
@@ -45,23 +46,35 @@ config_cmd.help = [[
   configuration, resulting from reading the config files from
   all scopes.
 
-  Example: luarocks config
+  Example: luarocks config]], util.see_also([[
+   https://github.com/luarocks/luarocks/wiki/Config-file-format
+   for detailed information on the LuaRocks config file format.
+]]))
+      :summary("Query information about the LuaRocks configuration.")
+      :add_help(false)
 
-OPTIONS
---scope=<scope>   The scope indicates which config file should be rewritten.
-                  Accepted values are "system", "user" or "project".
-                  * Using a wrapper created with `luarocks init`,
-                    the default is "project".
-                  * Using --local (or when `local_by_default` is `true`),
-                    the default is "user".
-                  * Otherwise, the default is "system".
+   cmd:argument("key", "The configuration key.")
+      :args("?")
+   cmd:argument("value", "The configuration value.")
+      :args("?")
 
---json           Output as JSON
-]]
-config_cmd.help_see_also = [[
-	https://github.com/luarocks/luarocks/wiki/Config-file-format
-	for detailed information on the LuaRocks config file format.
-]]
+   cmd:option("--scope", "The scope indicates which config file should be rewritten.\n"..
+      'Accepted values are "system", "user" or "project".\n'..
+      '* Using a wrapper created with `luarocks init`, the default is "project".\n'..
+      '* Using --local (or when `local_by_default` is `true`), the default is "user".\n'..
+      '* Otherwise, the default is "system".')
+      :choices({"system", "user", "project"})
+   cmd:flag("--unset", "Delete the key from the configuration file.")
+   cmd:flag("--json", "Output as JSON.")
+
+   -- Deprecated flags
+   cmd:flag("--lua-incdir"):hidden(true)
+   cmd:flag("--lua-libdir"):hidden(true)
+   cmd:flag("--lua-ver"):hidden(true)
+   cmd:flag("--system-config"):hidden(true)
+   cmd:flag("--user-config"):hidden(true)
+   cmd:flag("--rock-trees"):hidden(true)
+end
 
 local function config_file(conf)
    print(dir.normalize(conf.file))
@@ -218,45 +231,40 @@ local function write_entries(keys, scope, do_unset)
    end
 end
 
-local function check_scope(flags)
-   local scope = flags["scope"]
-                 or (flags["local"] and "user")
-                 or (flags["project-tree"] and "project")
-                 or (cfg.local_by_default and "user")
-                 or "system"
-   if scope ~= "system" and scope ~= "user" and scope ~= "project" then
-      return nil, "Valid values for scope are: system, user, project"
-   end
-
-   return scope
+local function get_scope(flags)
+   return flags["scope"]
+          or (flags["local"] and "user")
+          or (flags["project_tree"] and "project")
+          or (cfg.local_by_default and "user")
+          or "system"
 end
 
 --- Driver function for "config" command.
 -- @return boolean: True if succeeded, nil on errors.
-function config_cmd.command(flags, var, val)
+function config_cmd.command(args)
    deps.check_lua_incdir(cfg.variables)
    deps.check_lua_libdir(cfg.variables)
    
    -- deprecated flags
-   if flags["lua-incdir"] then
+   if args["lua_incdir"] then
       print(cfg.variables.LUA_INCDIR)
       return true
    end
-   if flags["lua-libdir"] then
+   if args["lua_libdir"] then
       print(cfg.variables.LUA_LIBDIR)
       return true
    end
-   if flags["lua-ver"] then
+   if args["lua_ver"] then
       print(cfg.lua_version)
       return true
    end
-   if flags["system-config"] then
+   if args["system_config"] then
       return config_file(cfg.config_files.system)
    end
-   if flags["user-config"] then
+   if args["user_config"] then
       return config_file(cfg.config_files.user)
    end
-   if flags["rock-trees"] then
+   if args["rock_trees"] then
       for _, tree in ipairs(cfg.rocks_trees) do
       	if type(tree) == "string" then
       	   util.printout(dir.normalize(tree))
@@ -268,29 +276,22 @@ function config_cmd.command(flags, var, val)
       return true
    end
 
-   if var == "lua_version" and val then
-      local scope, err = check_scope(flags)
-      if not scope then
-         return nil, err
-      end
-
+   if args.key == "lua_version" and args.value then
+      local scope = get_scope(args)
       if scope == "project" and not cfg.config_files.project then
          return nil, "Current directory is not part of a project. You may want to run `luarocks init`."
       end
 
       local prefix = dir.dir_name(cfg.config_files[scope].file)
-      local ok, err = persist.save_default_lua_version(prefix, val)
+      local ok, err = persist.save_default_lua_version(prefix, args.value)
       if not ok then
          return nil, "could not set default Lua version: " .. err
       end
-      print("Lua version will default to " .. val .. " in " .. prefix)
+      print("Lua version will default to " .. args.value .. " in " .. prefix)
    end
    
-   if var == "lua_dir" and val then
-      local scope, err = check_scope(flags)
-      if not scope then
-         return nil, err
-      end
+   if args.key == "lua_dir" and args.value then
+      local scope = get_scope(args)
       local keys = {
          ["variables.LUA_DIR"] = cfg.variables.LUA_DIR,
          ["variables.LUA_BINDIR"] = cfg.variables.LUA_BINDIR,
@@ -298,25 +299,21 @@ function config_cmd.command(flags, var, val)
          ["variables.LUA_LIBDIR"] = cfg.variables.LUA_LIBDIR,
          ["lua_interpreter"] = cfg.lua_interpreter,
       }
-      return write_entries(keys, scope, flags["unset"])
+      return write_entries(keys, scope, args["unset"])
    end
 
-   if var then
-      if val or flags["unset"] then
-         local scope, err = check_scope(flags)
-         if not scope then
-            return nil, err
-         end
-   
-         return write_entries({ [var] = val }, scope, flags["unset"])
+   if args.key then
+      if args.value or args["unset"] then
+         local scope = get_scope(args)
+         return write_entries({ [args.key] = args.value }, scope, args["unset"])
       else
-         return print_entry(var, cfg, flags["json"])
+         return print_entry(args.key, cfg, args["json"])
       end
    end
 
    local cleancfg = cleanup(cfg)
 
-   if flags["json"] then
+   if args["json"] then
       return print_json(cleancfg)
    else
       print(persist.save_from_table_to_string(cleancfg))
