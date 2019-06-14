@@ -170,12 +170,13 @@ function deps.fulfill_dependency(dep, deps_mode, name, version, rocks_provided, 
       return nil, "Could not satisfy dependency "..tostring(dep)..": "..search_err
    end
    util.printout("Installing "..url)
-   local install_flags = {
+   local install_args = {
+      rock = url,
       deps_mode = deps_mode,
       namespace = dep.namespace,
       verify = verify,
    }
-   local ok, install_err, errcode = install.command(install_flags, url)
+   local ok, install_err, errcode = install.command(install_args)
    if not ok then
       return nil, "Failed installing dependency: "..url.." - "..install_err, errcode
    end

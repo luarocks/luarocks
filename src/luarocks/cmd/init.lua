@@ -14,8 +14,10 @@ function init.add_to_parser(parser)
    local cmd = parser:command("init", "Initialize a directory for a Lua project using LuaRocks.", util.see_also())
       :add_help(false)
 
-   cmd:argument("name", "The project name."):args("?")
-   cmd:argument("version", "An optional project version."):args("?")
+   cmd:argument("name", "The project name.")
+      :args("?")
+   cmd:argument("version", "An optional project version.")
+      :args("?")
    cmd:flag("--reset", "Delete .luarocks/config-5.x.lua and ./lua and generate new ones.")
 
    cmd:group("Options for specifying rockspec data",
@@ -60,15 +62,14 @@ function init.command(args)
 
    local pwd = fs.current_dir()
 
-   local name = args.name
-   if not name then
-      name = dir.base_name(pwd)
-      if name == "/" then
+   if not args.name then
+      args.name = dir.base_name(pwd)
+      if args.name == "/" then
          return nil, "When running from the root directory, please specify the <name> argument"
       end
    end
 
-   util.title("Initializing project '" .. name .. "' for Lua " .. cfg.lua_version .. " ...")
+   util.title("Initializing project '" .. args.name .. "' for Lua " .. cfg.lua_version .. " ...")
 
    util.printout("Checking your Lua installation ...")
    if not cfg.lua_found then
@@ -88,7 +89,9 @@ function init.command(args)
    end
 
    if not has_rockspec then
-      local ok, err = write_rockspec.command(args, name, args.version or "dev", pwd)
+      args.version = args.version or "dev"
+      args.location = pwd
+      local ok, err = write_rockspec.command(args)
       if not ok then
          util.printerr(err)
       end

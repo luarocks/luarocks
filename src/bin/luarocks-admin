@@ -9,7 +9,6 @@ local cmd = require("luarocks.cmd")
 local description = "LuaRocks repository administration interface"
 
 local commands = {
-   help = "luarocks.cmd.help",
    make_manifest = "luarocks.admin.cmd.make_manifest",
    add = "luarocks.admin.cmd.add",
    remove = "luarocks.admin.cmd.remove",

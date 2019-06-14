@@ -251,14 +251,14 @@ function api.new(flags)
    self.config = self:load_config() or {}
    self.config.server = flags["server"] or self.config.server or cfg.upload.server
    self.config.version = self.config.version or cfg.upload.version
-   self.config.key = flags["temp-key"] or flags["api-key"] or self.config.key
+   self.config.key = flags["temp_key"] or flags["api_key"] or self.config.key
    self.debug = flags["debug"]
    if not self.config.key then
       return nil, "You need an API key to upload rocks.\n" ..
                   "Navigate to "..self.config.server.."/settings to get a key\n" ..
                   "and then pass it through the --api-key=<key> flag."
    end
-   if flags["api-key"] then
+   if flags["api_key"] then
       self:save_config()
    end
    return self

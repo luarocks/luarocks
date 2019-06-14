@@ -16,9 +16,8 @@ local deps = require("luarocks.deps")
 local writer = require("luarocks.manif.writer")
 local cmd = require("luarocks.cmd")
 
-make.help_summary = "Compile package in current directory using a rockspec."
-make.help_arguments = "[--pack-binary-rock] [<rockspec>]"
-make.help = [[
+function make.add_to_parser(parser)
+   local cmd = parser:command("make", [[
 Builds sources in the current directory, but unlike "build",
 it does not fetch sources, etc., assuming everything is 
 available in the current directory. If no argument is given,
@@ -34,89 +33,86 @@ To install rocks, you'll normally want to use the "install" and
 
 NB: Use `luarocks install` with the `--only-deps` flag if you want to install
 only dependencies of the rockspec (see `luarocks help install`).
+]], util.see_also())
+      :summary("Compile package in current directory using a rockspec.")
+      :add_help(false)
 
---pack-binary-rock  Do not install rock. Instead, produce a .rock file
-                    with the contents of compilation in the current
-                    directory.
+   cmd:argument("rockspec", "Rockspec for the rock to build.")
+      :args("?")
 
---keep              Do not remove previously installed versions of the
-                    rock after installing a new one. This behavior can
-                    be made permanent by setting keep_other_versions=true
-                    in the configuration file.
-
---branch=<name>     Override the `source.branch` field in the loaded
-                    rockspec. Allows to specify a different branch to 
-                    fetch. Particularly for "dev" rocks.
-
---verify            Verify signature of the rockspec or src.rock being
-                    built. If the rockspec or src.rock is being downloaded,
-                    LuaRocks will attempt to download the signature as well.
-                    Otherwise, the signature file should be already
-                    available locally in the same directory.
-                    You need the signer’s public key in your local
-                    keyring for this option to work properly.
-
---sign              To be used with --pack-binary-rock. Also produce
-                    a signature file for the generated .rock file.
-
-]]
+   cmd:flag("--pack-binary-rock", "Do not install rock. Instead, produce a "..
+      ".rock file with the contents of compilation in the current directory.")
+   cmd:flag("--keep", "Do not remove previously installed versions of the "..
+      "rock after building a new one. This behavior can be made permanent by "..
+      "setting keep_other_versions=true in the configuration file.")
+   cmd:option("--branch", "Override the `source.branch` field in the loaded "..
+      "rockspec. Allows to specify a different branch to fetch. Particularly "..
+      'for "dev" rocks.')
+      :argname("<name>")
+   cmd:flag("--verify", "Verify signature of the rockspec or src.rock being "..
+      "built. If the rockspec or src.rock is being downloaded, LuaRocks will "..
+      "attempt to download the signature as well. Otherwise, the signature "..
+      "file should be already available locally in the same directory.\n"..
+      "You need the signer’s public key in your local keyring for this "..
+      "option to work properly.")
+   cmd:flag("--sign", "To be used with --pack-binary-rock. Also produce a "..
+      "signature file for the generated .rock file.")
+end
 
 --- Driver function for "make" command.
--- @param name string: A local rockspec.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
-function make.command(flags, rockspec_filename)
-   assert(type(rockspec_filename) == "string" or not rockspec_filename)
-   
-   if not rockspec_filename then
+function make.command(args)
+   local rockspec
+   if not args.rockspec then
       local err
-      rockspec_filename, err = util.get_default_rockspec()
-      if not rockspec_filename then
+      rockspec, err = util.get_default_rockspec()
+      if not rockspec then
          return nil, err
       end
    end
-   if not rockspec_filename:match("rockspec$") then
+   if not rockspec:match("rockspec$") then
       return nil, "Invalid argument: 'make' takes a rockspec as a parameter. "..util.see_help("make")
    end
    
-   local rockspec, err, errcode = fetch.load_rockspec(rockspec_filename)
+   local rockspec, err, errcode = fetch.load_rockspec(rockspec)
    if not rockspec then
       return nil, err
    end
 
-   local name = util.adjust_name_and_namespace(rockspec.name, flags)
+   local name = util.adjust_name_and_namespace(rockspec.name, args)
 
    local opts = build.opts({
       need_to_fetch = false,
       minimal_mode = true,
-      deps_mode = deps.get_deps_mode(flags),
+      deps_mode = deps.get_deps_mode(args),
       build_only_deps = false,
-      namespace = flags["namespace"],
-      branch = not not flags["branch"],
-      verify = not not flags["verify"],
+      namespace = args["namespace"],
+      branch = not not args["branch"],
+      verify = not not args["verify"],
    })
 
-   if flags["sign"] and not flags["pack-binary-rock"] then
+   if args["sign"] and not args["pack_binary_rock"] then
       return nil, "In the make command, --sign is meant to be used only with --pack-binary-rock"
    end
 
-   if flags["pack-binary-rock"] then
-      return pack.pack_binary_rock(name, rockspec.version, flags["sign"], function()
+   if args["pack_binary_rock"] then
+      return pack.pack_binary_rock(name, rockspec.version, args["sign"], function()
          return build.build_rockspec(rockspec, opts)
       end)
    else
-      local ok, err = fs.check_command_permissions(flags)
+      local ok, err = fs.check_command_permissions(args)
       if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
       ok, err = build.build_rockspec(rockspec, opts)
       if not ok then return nil, err end
       local name, version = ok, err
 
-      if (not flags["keep"]) and not cfg.keep_other_versions then
-         local ok, err = remove.remove_other_versions(name, version, flags["force"], flags["force-fast"])
+      if (not args["keep"]) and not cfg.keep_other_versions then
+         local ok, err = remove.remove_other_versions(name, version, args["force"], args["force_fast"])
          if not ok then util.printerr(err) end
       end
 
-      writer.check_dependencies(nil, deps.get_deps_mode(flags))
+      writer.check_dependencies(nil, deps.get_deps_mode(args))
       return name, version
    end
 end

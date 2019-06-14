@@ -6,42 +6,44 @@ local cmd_test = {}
 local util = require("luarocks.util")
 local test = require("luarocks.test")
 
-cmd_test.help_summary = "Run the test suite in the current directory."
-cmd_test.help_arguments = "[--test-type=<type>] [<rockspec>] [-- <args>]"
-cmd_test.help = [[
+function cmd_test.add_to_parser(parser)
+   local cmd = parser:command("test", [[
 Run the test suite for the Lua project in the current directory.
-If the first argument is a rockspec, it will use it to determine
-the parameters for running tests; otherwise, it will attempt to
-detect the rockspec.
 
-Any additional arguments are forwarded to the test suite. 
-To make sure that any flags passed in <args> are not interpreted
-as LuaRocks flags, use -- to separate LuaRocks arguments from
-test suite arguments.
+If the first argument is a rockspec, it will use it to determine the parameters
+for running tests; otherwise, it will attempt to detect the rockspec.
 
---test-type=<type>  Specify the test suite type manually if it was not
-                    specified in the rockspec and it could not be
-                    auto-detected.
+Any additional arguments are forwarded to the test suite.
+To make sure that test suite flags are not interpreted as LuaRocks flags, use --
+to separate LuaRocks arguments from test suite arguments.]],
+      util.see_also())
+      :summary("Run the test suite in the current directory.")
+      :add_help(false)
 
-]]--..util.deps_mode_help()
+   cmd:argument("rockspec", "Project rockspec.")
+      :args("?")
+   cmd:argument("args", "Test suite arguments.")
+      :args("*")
 
-function cmd_test.command(flags, argument, ...)
-   assert(type(argument) == "string" or not argument)
+   cmd:option("--test-type", "Specify the test suite type manually if it was "..
+      "not specified in the rockspec and it could not be auto-detected.")
+      :argname("<type>")
+   util.deps_mode_option(cmd)
+end
 
-   local arguments = { ... }
-
-   if argument and argument:match("rockspec$") then
-      return test.run_test_suite(argument, flags["test-type"], arguments)
+function cmd_test.command(args)
+   if args.rockspec and args.rockspec:match("rockspec$") then
+      return test.run_test_suite(args.rockspec, args["test_type"], args.args)
    end
    
-   table.insert(arguments, 1, argument)
+   table.insert(args.args, 1, args.rockspec)
    
    local rockspec, err = util.get_default_rockspec()
    if not rockspec then
       return nil, err
    end
 
-   return test.run_test_suite(rockspec, flags["test-type"], arguments)
+   return test.run_test_suite(rockspec, args["test_type"], args.args)
 end
 
 return cmd_test

@@ -11,36 +11,37 @@ local deps = require("luarocks.deps")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 
-make_manifest.help_summary = "Compile a manifest file for a repository."
+function make_manifest.add_to_parser(parser)
+   local cmd = parser:command("make_manifest", "Compile a manifest file for a repository.", 
+      util.see_also())
+      :add_help(false)
 
-make_manifest.help = [[
-<argument>, if given, is a local repository pathname.
+   cmd:argument("repository", "Local repository pathname.")
+      :args("?")
 
---local-tree  If given, do not write versioned versions of the manifest file.
-              Use this when rebuilding the manifest of a local rocks tree.
-]]
+   cmd:flag("--local-tree", "If given, do not write versioned versions of the manifest file.\n"..
+      "Use this when rebuilding the manifest of a local rocks tree.")
+   cmd:option("--deps-mode"):hidden(true) -- TODO: Description?
+end
 
 --- Driver function for "make_manifest" command.
--- @param repo string or nil: Pathname of a local repository. If not given,
--- the default local repository configured as cfg.rocks_dir is used.
 -- @return boolean or (nil, string): True if manifest was generated,
 -- or nil and an error message.
-function make_manifest.command(flags, repo)
-   assert(type(repo) == "string" or not repo)
-   repo = repo or cfg.rocks_dir
+function make_manifest.command(args)
+   local repo = args.repository or cfg.rocks_dir
   
    util.printout("Making manifest for "..repo)
    
-   if repo:match("/lib/luarocks") and not flags["local-tree"] then
+   if repo:match("/lib/luarocks") and not args["local_tree"] then
       util.warning("This looks like a local rocks tree, but you did not pass --local-tree.")
    end
    
-   local ok, err = writer.make_manifest(repo, deps.get_deps_mode(flags), not flags["local-tree"])
-   if ok and not flags["local-tree"] then
+   local ok, err = writer.make_manifest(repo, deps.get_deps_mode(args), not args["local_tree"])
+   if ok and not args["local_tree"] then
       util.printout("Generating index.html for "..repo)
       index.make_index(repo)
    end
-   if flags["local-tree"] then
+   if args["local_tree"] then
       for luaver in util.lua_versions() do
          fs.delete(dir.path(repo, "manifest-"..luaver))
       end

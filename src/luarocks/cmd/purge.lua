@@ -15,24 +15,24 @@ local remove = require("luarocks.remove")
 local queries = require("luarocks.queries")
 local cmd = require("luarocks.cmd")
 
-purge.help_summary = "Remove all installed rocks from a tree."
-purge.help_arguments = "--tree=<tree> [--old-versions]"
-purge.help = [[
+function purge.add_to_parser(parser)
+   local cmd = parser:command("purge", [[
 This command removes rocks en masse from a given tree.
 By default, it removes all rocks from a tree.
 
-The --tree argument is mandatory: luarocks purge does not
-assume a default tree.
+The --tree option is mandatory: luarocks purge does not assume a default tree.]],
+   util.see_also())
+      :summary("Remove all installed rocks from a tree.")
+      :add_help(false)
 
---old-versions  Keep the highest-numbered version of each
-                rock and remove the other ones. By default
-                it only removes old versions if they are
-                not needed as dependencies. This can be
-                overridden with the flag --force.
-]]
+   cmd:flag("--old-versions", "Keep the highest-numbered version of each "..
+      "rock and remove the other ones. By default it only removes old "..
+      "versions if they are not needed as dependencies. This can be "..
+      "overridden with the flag --force.")
+end
 
-function purge.command(flags)
-   local tree = flags["tree"]
+function purge.command(args)
+   local tree = args["tree"]
 
    if type(tree) ~= "string" then
       return nil, "The --tree argument is mandatory. "..util.see_help("purge")
@@ -43,21 +43,21 @@ function purge.command(flags)
       return nil, "Directory not found: "..tree
    end
 
-   local ok, err = fs.check_command_permissions(flags)
+   local ok, err = fs.check_command_permissions(args)
    if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
 
    search.local_manifest_search(results, path.rocks_dir(tree), queries.all())
 
    local sort = function(a,b) return vers.compare_versions(b,a) end
-   if flags["old-versions"] then
+   if args["old_versions"] then
       sort = vers.compare_versions
    end
 
    for package, versions in util.sortedpairs(results) do
       for version, _ in util.sortedpairs(versions, sort) do
-         if flags["old-versions"] then
+         if args["old_versions"] then
             util.printout("Keeping "..package.." "..version.."...")
-            local ok, err = remove.remove_other_versions(package, version, flags["force"], flags["force-fast"])
+            local ok, err = remove.remove_other_versions(package, version, args["force"], args["force_fast"])
             if not ok then
                util.printerr(err)
             end

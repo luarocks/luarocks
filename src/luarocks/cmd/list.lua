@@ -10,16 +10,19 @@ local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 
-list.help_summary = "List currently installed rocks."
-list.help_arguments = "[--porcelain] <filter>"
-list.help = [[
-<filter> is a substring of a rock name to filter by.
+function list.add_to_parser(parser)
+   local cmd = parser:command("list", "List currently installed rocks.", util.see_also())
+      :add_help(false)
 
---outdated    List only rocks for which there is a
-              higher version available in the rocks server.
+   cmd:argument("filter", "A substring of a rock name to filter by.")
+      :args("?")
+   cmd:argument("version", "Rock version to filter by.")
+      :args("?")
 
---porcelain   Produce machine-friendly output.
-]]
+   cmd:flag("--outdated", "List only rocks for which there is a higher "..
+      "version available in the rocks server.")
+   cmd:flag("--porcelain", "Produce machine-friendly output.")
+end
 
 local function check_outdated(trees, query)
    local results_installed = {}
@@ -65,20 +68,18 @@ local function list_outdated(trees, query, porcelain)
 end
 
 --- Driver function for "list" command.
--- @param filter string or nil: A substring of a rock name to filter by.
--- @param version string or nil: a version may also be passed.
 -- @return boolean: True if succeeded, nil on errors.
-function list.command(flags, filter, version)
-   local query = queries.new(filter and filter:lower() or "", version, true)
+function list.command(args)
+   local query = queries.new(args.filter and args.filter:lower() or "", args.version, true)
    local trees = cfg.rocks_trees
    local title = "Rocks installed for Lua "..cfg.lua_version
-   if flags["tree"] then
-      trees = { flags["tree"] }
-      title = title .. " in " .. flags["tree"]
+   if args["tree"] then
+      trees = { args["tree"] }
+      title = title .. " in " .. args["tree"]
    end
    
-   if flags["outdated"] then
-      return list_outdated(trees, query, flags["porcelain"])
+   if args["outdated"] then
+      return list_outdated(trees, query, args["porcelain"])
    end
    
    local results = {}
@@ -88,8 +89,8 @@ function list.command(flags, filter, version)
          util.warning(err)
       end
    end
-   util.title(title, flags["porcelain"])
-   search.print_result_tree(results, flags["porcelain"])
+   util.title(title, args["porcelain"])
+   search.print_result_tree(results, args["porcelain"])
    return true
 end
 

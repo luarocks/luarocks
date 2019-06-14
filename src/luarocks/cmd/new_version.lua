@@ -11,9 +11,8 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local type_rockspec = require("luarocks.type.rockspec")
 
-new_version.help_summary = "Auto-write a rockspec for a new version of a rock."
-new_version.help_arguments = "[--tag=<tag>] [--dir=<path>] [<package>|<rockspec>] [<new_version>] [<new_url>]"
-new_version.help = [[
+function new_version.add_to_parser(parser)
+   local cmd = parser:command("new_version", [[
 This is a utility function that writes a new rockspec, updating data
 from a previous one.
 
@@ -22,7 +21,7 @@ default server. If a rockspec is given, it uses it instead. If no argument
 is given, it looks for a rockspec same way 'luarocks make' does.
 
 If the version number is not given and tag is passed using --tag,
-it is used as the version, with 'v' removed from beginning.
+it is used as the version, with 'v' removed from beginnnumbering.
 Otherwise, it only increments the revision number of the given
 (or downloaded) rockspec.
 
@@ -38,8 +37,21 @@ an old tag but no new one passed, it is guessed in the same way URL is.
 If a directory is not given, it defaults to the current directory.
 
 WARNING: it writes the new rockspec to the given directory,
-overwriting the file if it already exists.
-]]
+overwriting the file if it already exists.]], util.see_also())
+      :summary("Auto-write a rockspec for a new version of a rock.")
+      :add_help(false)
+
+   cmd:argument("rock", "Package name or rockspec.")
+      :args("?")
+   cmd:argument("new_version", "New version of the rock.")
+      :args("?")
+   cmd:argument("new_url", "New URL of the rock.")
+      :args("?")
+
+   cmd:option("--dir", "Output directory for the new rockspec.")
+   cmd:option("--tag", "New SCM tag.")
+end
+
 
 local function try_replace(tbl, field, old, new)
    if not tbl[field] then
@@ -126,24 +138,23 @@ local function update_source_section(out_rs, url, tag, old_ver, new_ver)
    return true
 end
  
-function new_version.command(flags, input, version, url)
-   if not input then
+function new_version.command(args)
+   if not args.input then
       local err
-      input, err = util.get_default_rockspec()
-      if not input then
+      args.input, err = util.get_default_rockspec()
+      if not args.input then
          return nil, err
       end
    end
-   assert(type(input) == "string")
    
    local filename, err
-   if input:match("rockspec$") then
-      filename, err = fetch.fetch_url(input)
+   if args.input:match("rockspec$") then
+      filename, err = fetch.fetch_url(args.input)
       if not filename then
          return nil, err
       end
    else
-      filename, err = download.download("rockspec", input:lower())
+      filename, err = download.download("rockspec", args.input:lower())
       if not filename then
          return nil, err
       end
@@ -157,20 +168,20 @@ function new_version.command(flags, input, version, url)
    local old_ver, old_rev = valid_rs.version:match("(.*)%-(%d+)$")
    local new_ver, new_rev
 
-   if flags.tag and not version then
-      version = flags.tag:gsub("^v", "")
+   if args.tag and not args.new_version then
+      args.new_version = args.tag:gsub("^v", "")
    end
    
    local out_dir
-   if flags.dir then
-      out_dir = dir.normalize(flags.dir)
+   if args.dir then
+      out_dir = dir.normalize(args.dir)
    end
 
-   if version then
-      new_ver, new_rev = version:match("(.*)%-(%d+)$")
+   if args.new_version then
+      new_ver, new_rev = args.new_version:match("(.*)%-(%d+)$")
       new_rev = tonumber(new_rev)
       if not new_rev then
-         new_ver = version
+         new_ver = args.new_version
          new_rev = 1
       end
    else
@@ -183,7 +194,7 @@ function new_version.command(flags, input, version, url)
    local out_name = out_rs.package:lower()
    out_rs.version = new_rockver.."-"..new_rev
 
-   local ok, err = update_source_section(out_rs, url, flags.tag, old_ver, new_ver)
+   local ok, err = update_source_section(out_rs, args.new_url, args.tag, old_ver, new_ver)
    if not ok then return nil, err end
 
    if out_rs.build and out_rs.build.type == "module" then

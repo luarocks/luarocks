@@ -394,9 +394,7 @@ Variables:
    parser:option("--only-sources-from"):target("only_sources"):hidden(true)
 
    for _, module in util.sortedpairs(cmd_modules) do
-      if module.add_to_parser then -- TODO: Remove this check.
-         module.add_to_parser(parser)
-      end
+      module.add_to_parser(parser)
    end
 
    return parser

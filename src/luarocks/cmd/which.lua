@@ -8,20 +8,21 @@ local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
 
-which_cmd.help_summary = "Tell which file corresponds to a given module name."
-which_cmd.help_arguments = "<modname>"
-which_cmd.help = [[
-Given a module name like "foo.bar", output which file would be loaded to resolve
-that module by luarocks.loader, like "/usr/local/lua/]]..cfg.lua_version..[[/foo/bar.lua".
-]]
+function which_cmd.add_to_parser(parser)
+   local cmd = parser:command("which", 'Given a module name like "foo.bar", '..
+      "output which file would be loaded to resolve that module by "..
+      'luarocks.loader, like "/usr/local/lua/'..cfg.lua_version..'/foo/bar.lua".',
+      util.see_also())
+      :summary("Tell which file corresponds to a given module name.")
+      :add_help(false)
 
---- Driver function for "lua" command.
+   cmd:argument("modname", "Module name.")
+end
+
+--- Driver function for "which" command.
 -- @return boolean This function terminates the interpreter.
-function which_cmd.command(_, modname)
-   if modname == nil then
-      return nil, "Missing module name. " .. util.see_help("which")
-   end
-   local pathname, rock_name, rock_version = loader.which(modname)
+function which_cmd.command(args)
+   local pathname, rock_name, rock_version = loader.which(args.modname)
 
    if pathname then
       util.printout(pathname)
@@ -29,7 +30,7 @@ function which_cmd.command(_, modname)
       return true
    end
 
-   local modpath = modname:gsub("%.", "/")
+   local modpath = args.modname:gsub("%.", "/")
    for _, v in ipairs({"path", "cpath"}) do
       for p in package[v]:gmatch("([^;]+)") do
          local pathname = p:gsub("%?", modpath)
@@ -41,7 +42,7 @@ function which_cmd.command(_, modname)
       end
    end
 
-   return nil, "Module '" .. modname .. "' not found."
+   return nil, "Module '" .. args.modname .. "' not found."
 end
 
 return which_cmd

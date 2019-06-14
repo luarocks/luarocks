@@ -6,42 +6,46 @@ local cmd_download = {}
 local util = require("luarocks.util")
 local download = require("luarocks.download")
 
-cmd_download.help_summary = "Download a specific rock file from a rocks server."
-cmd_download.help_arguments = "[--all] [--arch=<arch> | --source | --rockspec] [<name> [<version>]]"
-cmd_download.help = [[
---all          Download all files if there are multiple matches.
---source       Download .src.rock if available.
---rockspec     Download .rockspec if available.
---arch=<arch>  Download rock for a specific architecture.
-]]
+function cmd_download.add_to_parser(parser)
+   local cmd = parser:command(
+      "download", "Download a specific rock file from a rocks server.", util.see_also())
+      :add_help(false)
+
+   cmd:argument("name", "Name of the rock.")
+      :args("?")
+   cmd:argument("version", "Version of the rock.")
+      :args("?")
+
+   cmd:flag("--all", "Download all files if there are multiple matches.")
+   cmd:mutex(
+      cmd:flag("--source", "Download .src.rock if available."),
+      cmd:flag("--rockspec", "Download .rockspec if available."),
+      cmd:option("--arch", "Download rock for a specific architecture."))
+end
 
 --- Driver function for the "download" command.
--- @param name string: a rock name.
--- @param version string or nil: if the name of a package is given, a
--- version may also be passed.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-function cmd_download.command(flags, name, version)
-   assert(type(version) == "string" or not version)
-   if type(name) ~= "string" and not flags["all"] then
+function cmd_download.command(args)
+   if not args.name and not args["all"] then
       return nil, "Argument missing. "..util.see_help("download")
    end
 
-   name = util.adjust_name_and_namespace(name, flags)
+   local name = util.adjust_name_and_namespace(args.name, args)
 
    if not name then name, version = "", "" end
 
    local arch
 
-   if flags["source"] then
+   if args["source"] then
       arch = "src"
-   elseif flags["rockspec"] then
+   elseif args["rockspec"] then
       arch = "rockspec"
-   elseif flags["arch"] then
-      arch = flags["arch"]
+   elseif args["arch"] then
+      arch = args["arch"]
    end
    
-   local dl, err = download.download(arch, name:lower(), version, flags["all"])
+   local dl, err = download.download(arch, name:lower(), version, args["all"])
    return dl and true, err
 end
 

@@ -8,37 +8,34 @@ local pack = require("luarocks.pack")
 local cfg = require("luarocks.core.cfg")
 local Api = require("luarocks.upload.api")
 
-upload.help_summary = "Upload a rockspec to the public rocks repository."
-upload.help_arguments = "[--skip-pack] [--api-key=<key>] [--force] <rockspec>"
-upload.help = [[
-<rockspec>       Pack a source rock file (.src.rock extension),
-                 upload rockspec and source rock to server.
+function upload.add_to_parser(parser)
+   local cmd = parser:command("upload", "Pack a source rock file (.src.rock extension) "..
+      "and upload it and the rockspec to the public rocks repository.", util.see_also())
+      :summary("Upload a rockspec to the public rocks repository.")
+      :add_help(false)
 
---skip-pack      Do not pack and send source rock.
+   cmd:argument("rockspec", "Rockspec for the rock to upload.")
 
---api-key=<key>  Give it an API key. It will be stored for subsequent uses.
-
---temp-key=<key> Use the given a temporary API key in this invocation only.
-                 It will not be stored.
-
---force          Replace existing rockspec if the same revision of
-                 a module already exists. This should be used only 
-                 in case of upload mistakes: when updating a rockspec,
-                 increment the revision number instead.
-
---sign           Upload a signature file alongside each file as well.
-]]
+   cmd:flag("--skip-pack", "Do not pack and send source rock.")
+   cmd:option("--api-key", "Pass an API key. It will be stored for subsequent uses.")
+      :argname("<key>")
+   cmd:option("--temp-key", "Use the given a temporary API key in this "..
+      "invocation only. It will not be stored.")
+      :argname("<key>")
+   cmd:flag("--force", "Replace existing rockspec if the same revision of a "..
+      "module already exists. This should be used only in case of upload "..
+      "mistakes: when updating a rockspec, increment the revision number "..
+      "instead.")
+   cmd:flag("--sign", "Upload a signature file alongside each file as well.")
+   cmd:flag("--debug"):hidden(true)
+end
 
 local function is_dev_version(version)
    return version:match("^dev") or version:match("^scm")
 end
 
-function upload.command(flags, fname)
-   if not fname then
-      return nil, "Missing rockspec. "..util.see_help("upload")
-   end
-
-   local api, err = Api.new(flags)
+function upload.command(args)
+   local api, err = Api.new(args)
    if not api then
       return nil, err
    end
@@ -46,12 +43,12 @@ function upload.command(flags, fname)
       api.debug = true
    end
 
-   local rockspec, err, errcode = fetch.load_rockspec(fname)
+   local rockspec, err, errcode = fetch.load_rockspec(args.rockspec)
    if err then
       return nil, err, errcode
    end
 
-   util.printout("Sending " .. tostring(fname) .. " ...")
+   util.printout("Sending " .. tostring(args.rockspec) .. " ...")
    local res, err = api:method("check_rockspec", {
       package = rockspec.package,
       version = rockspec.version
@@ -61,15 +58,15 @@ function upload.command(flags, fname)
    if not res.module then
       util.printout("Will create new module (" .. tostring(rockspec.package) .. ")")
    end
-   if res.version and not flags["force"] then
+   if res.version and not args["force"] then
       return nil, "Revision "..rockspec.version.." already exists on the server. "..util.see_help("upload")
    end
 
    local sigfname
    local rock_sigfname
 
-   if flags["sign"] then
-      sigfname, err = signing.sign_file(fname)
+   if args["sign"] then
+      sigfname, err = signing.sign_file(args.rockspec)
       if err then
          return nil, "Failed signing rockspec: " .. err
       end
@@ -77,13 +74,13 @@ function upload.command(flags, fname)
    end
 
    local rock_fname
-   if not flags["skip-pack"] and not is_dev_version(rockspec.version) then
+   if not args["skip_pack"] and not is_dev_version(rockspec.version) then
       util.printout("Packing " .. tostring(rockspec.package))
-      rock_fname, err = pack.pack_source_rock(fname)
+      rock_fname, err = pack.pack_source_rock(args.rockspec)
       if not rock_fname then
          return nil, err
       end
-      if flags["sign"] then
+      if args["sign"] then
          rock_sigfname, err = signing.sign_file(rock_fname)
          if err then
             return nil, "Failed signing rock: " .. err
@@ -95,7 +92,7 @@ function upload.command(flags, fname)
    local multipart = require("luarocks.upload.multipart")
 
    res, err = api:method("upload", nil, {
-     rockspec_file = multipart.new_file(fname),
+     rockspec_file = multipart.new_file(args.rockspec),
      rockspec_sig = sigfname and multipart.new_file(sigfname),
    })
    if not res then return nil, err end

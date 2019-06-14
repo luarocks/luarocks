@@ -13,24 +13,34 @@ local fetch = require("luarocks.fetch")
 local manif = require("luarocks.manif")
 local repos = require("luarocks.repos")
 
-show.help_summary = "Show information about an installed rock."
+function show.add_to_parser(parser)
+   local cmd = parser:command("show", [[
+Show information about an installed rock.
 
-show.help = [[
-<argument> is an existing package name.
 Without any flags, show all module information.
-With these flags, return only the desired information:
+With flags, return only the desired information.]], util.see_also())
+      :summary("Show information about an installed rock.")
+      :add_help(false)
 
---home       home page of project
---modules    all modules provided by this package as used by require()
---deps       packages this package depends on
---build-deps build-only dependencies for this package
---test-deps  dependencies for testing this package
---rockspec   the full path of the rockspec file
---mversion   the package version
---rock-tree  local tree where rock is installed
---rock-dir   data directory of the installed rock
-]]
+   cmd:argument("rock", "Name of an installed rock.")
+   cmd:argument("version", "Rock version.")
+      :args("?")
 
+   cmd:flag("--home", "Show home page of project.")
+   cmd:flag("--modules", "Show all modules provided by the package as used by require().")
+   cmd:flag("--deps", "Show packages the package depends on.")
+   cmd:flag("--build-deps", "Show build-only dependencies for the package.")
+   cmd:flag("--test-deps", "Show dependencies for testing the package.")
+   cmd:flag("--rockspec", "Show the full path of the rockspec file.")
+   cmd:flag("--mversion", "Show the package version.")
+   cmd:flag("--rock-tree", "Show local tree where rock is installed.")
+   cmd:flag("--rock-namespace", "Show rock namespace.")
+   cmd:flag("--rock-dir", "Show data directory of the installed rock.")
+   cmd:flag("--rock-license", "Show rock license.")
+   cmd:flag("--issues", "Show URL for project's issue tracker.")
+   cmd:flag("--labels", "List the labels of the rock.")
+   cmd:flag("--porcelain", "Produce machine-friendly output.")
+end
 
 local friendly_template = [[
           :
@@ -249,19 +259,14 @@ local function show_rock(template, namespace, name, version, rockspec, repo, min
 end
 
 --- Driver function for "show" command.
--- @param name or nil: an existing package name.
--- @param version string or nil: a version may also be passed.
 -- @return boolean: True if succeeded, nil on errors.
-function show.command(flags, name, version)
-   if not name then
-      return nil, "Argument missing. "..util.see_help("show")
-   end
-
-   name = util.adjust_name_and_namespace(name, flags)
+function show.command(args)
+   local name = util.adjust_name_and_namespace(args.rock, args)
+   local version = args.verson
    local query = queries.new(name, version)
    
    local repo, repo_url
-   name, version, repo, repo_url = search.pick_installed_rock(query, flags["tree"])
+   name, version, repo, repo_url = search.pick_installed_rock(query, args["tree"])
    if not name then
       return nil, version
    end
@@ -277,32 +282,32 @@ function show.command(flags, name, version)
    if not manifest then return nil,err end
    local minfo = manifest.repository[name][version][1]
 
-   if flags["rock-tree"] then util.printout(tree)
-   elseif flags["rock-namespace"] then util.printout(namespace)
-   elseif flags["rock-dir"] then util.printout(directory)
-   elseif flags["home"] then util.printout(descript.homepage)
-   elseif flags["rock-license"] then util.printout(descript.license)
-   elseif flags["issues"] then util.printout(descript.issues_url)
-   elseif flags["labels"] then util.printout(descript.labels and table.concat(descript.labels, "\n"))
-   elseif flags["modules"] then util.printout(keys_as_string(minfo.modules, "\n"))
-   elseif flags["deps"] then
+   if args["rock_tree"] then util.printout(tree)
+   elseif args["rock_namespace"] then util.printout(namespace)
+   elseif args["rock_dir"] then util.printout(directory)
+   elseif args["home"] then util.printout(descript.homepage)
+   elseif args["rock_license"] then util.printout(descript.license)
+   elseif args["issues"] then util.printout(descript.issues_url)
+   elseif args["labels"] then util.printout(descript.labels and table.concat(descript.labels, "\n"))
+   elseif args["modules"] then util.printout(keys_as_string(minfo.modules, "\n"))
+   elseif args["deps"] then
       for _, dep in ipairs(rockspec.dependencies) do
          util.printout(tostring(dep))
       end
-   elseif flags["build-deps"] then
+   elseif args["build_deps"] then
       for _, dep in ipairs(rockspec.build_dependencies) do
          util.printout(tostring(dep))
       end
-   elseif flags["test-deps"] then
+   elseif args["test_deps"] then
       for _, dep in ipairs(rockspec.test_dependencies) do
          util.printout(tostring(dep))
       end
-   elseif flags["rockspec"] then util.printout(rockspec_file)
-   elseif flags["mversion"] then util.printout(version)
-   elseif flags["porcelain"] then
-      show_rock(porcelain_template, namespace, name, version, rockspec, repo, minfo, flags["tree"])
+   elseif args["rockspec"] then util.printout(rockspec_file)
+   elseif args["mversion"] then util.printout(version)
+   elseif args["porcelain"] then
+      show_rock(porcelain_template, namespace, name, version, rockspec, repo, minfo, args["tree"])
    else
-      show_rock(friendly_template, namespace, name, version, rockspec, repo, minfo, flags["tree"])
+      show_rock(friendly_template, namespace, name, version, rockspec, repo, minfo, args["tree"])
    end
    return true
 end

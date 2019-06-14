@@ -11,20 +11,21 @@ local fs = require("luarocks.fs")
 local cache = require("luarocks.admin.cache")
 local index = require("luarocks.admin.index")
 
-add.help_summary = "Add a rock or rockspec to a rocks server."
-add.help_arguments = "[--server=<server>] [--no-refresh] {<rockspec>|<rock>...}"
-add.help = [[
-Arguments are local files, which may be rockspecs or rocks.
-The flag --server indicates which server to use.
-If not given, the default server set in the upload_server variable
-from the configuration file is used instead.
+function add.add_to_parser(parser)
+   local cmd = parser:command("add", "Add a rock or rockspec to a rocks server.",
+      util.see_also())
+      :add_help(false)
 
---no-refresh  The local cache should not be refreshed
-              prior to generation of the updated manifest.
---index       Produce an index.html file for the manifest.
-              This flag is automatically set if an index.html
-              file already exists.
-]]
+   cmd:argument("rock", "A local rockspec or rock file.")
+      :args("+")
+
+   cmd:option("--server", "The server to use. If not given, the default server "..
+      "set in the upload_server variable from the configuration file is used instead.")
+   cmd:flag("--no-refresh", "Do not refresh the local cache prior to "..
+      "generation of the updated manifest.")
+   cmd:flag("--index", "Produce an index.html file for the manifest. This "..
+      "flag is automatically set if an index.html file already exists.")
+end
 
 local function zip_manifests()
    for ver in util.lua_versions() do
@@ -124,14 +125,10 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
    return fs.execute(cmd)
 end
 
-function add.command(flags, ...)
-   local files = {...}
-   if #files < 1 then
-      return nil, "Argument missing. "..util.see_help("add", "luarocks-admin")
-   end
-   local server, server_table = cache.get_upload_server(flags["server"])
+function add.command(args)
+   local server, server_table = cache.get_upload_server(args["server"])
    if not server then return nil, server_table end
-   return add_files_to_server(not flags["no-refresh"], files, server, server_table, flags["index"])
+   return add_files_to_server(not args["no_refresh"], files, server, server_table, args["index"])
 end
 
 
