@@ -337,7 +337,7 @@ local function get_config_text()
    return buf.."\n"
 end
 
-local function get_parser(program_name, description, cmd_modules)
+local function get_parser(description, cmd_modules)
    local epilog = [[
 Variables:
    Variables from the "variables" table of the configuration file can be
@@ -346,7 +346,7 @@ Variables:
 ]]..get_config_text()
 
    local parser = argparse(
-      program_name, "LuaRocks "..cfg.program_version..", the Lua package manager\n\n"..
+      dir.base_name(program), "LuaRocks "..cfg.program_version..", the Lua package manager\n\n"..
       program.." - "..description, epilog)
       :help_max_width(80)
       :add_help("--help")
@@ -408,7 +408,7 @@ end
 -- @param commands table: contains the loaded modules representing commands.
 -- @param external_namespace string: where to look for external commands.
 -- @param ... string: Arguments given on the command-line.
-function cmd.run_command(program_name, description, commands, external_namespace, ...)
+function cmd.run_command(description, commands, external_namespace, ...)
 
    check_popen()
 
@@ -452,7 +452,7 @@ function cmd.run_command(program_name, description, commands, external_namespace
    end
 
    local args, cmdline_vars = process_cmdline_vars(...)
-   local parser = get_parser(program_name, description, cmd_modules)
+   local parser = get_parser(description, cmd_modules)
    args = parser:parse(args)
 
    if not args.command then
