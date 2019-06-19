@@ -448,7 +448,7 @@ local function get_registry(key, value)
 	return nil
 end
 
-local function get_visual_studio_directory()
+local function get_visual_studio_directory_from_registry()
 	assert(type(vars.LUA_RUNTIME)=="string", "requires vars.LUA_RUNTIME to be set before calling this function.")
 	local major, minor = vars.LUA_RUNTIME:match('VCR%u*(%d+)(%d)$') -- MSVCR<x><y> or VCRUNTIME<x><y>
 	if not major then 
@@ -469,6 +469,47 @@ local function get_visual_studio_directory()
     end
 	end
 	return nil
+end
+
+local function get_visual_studio_directory_from_vswhere()
+	assert(type(vars.LUA_RUNTIME)=="string", "requires vars.LUA_RUNTIME to be set before calling this function.")
+	local major, minor = vars.LUA_RUNTIME:match('VCR%u*(%d+)(%d)$')
+	if not major then
+		print(S[[    Cannot auto-detect Visual Studio version from $LUA_RUNTIME]])
+		return nil
+	end
+	if tonumber(major) < 14 then
+		return nil
+	end
+	local program_dir = os.getenv('PROGRAMFILES(X86)')
+	if not program_dir then
+		return nil
+	end
+	local vswhere = program_dir.."\\Microsoft Visual Studio\\Installer\\vswhere.exe"
+	if not exists(vswhere) then
+		return nil
+	end
+	local f, msg = io.popen('"'..vswhere..'" -products * -property installationPath')
+	if not f then return nil, "failed to run vswhere: "..msg end
+	local vsdir = nil
+	while true do
+		local l, err = f:read()
+		if not l then
+			if err then
+				f:close()
+				return nil, err
+			else
+				break
+			end
+		end
+		vsdir = l
+	end
+	f:close()
+	if not vsdir then
+		return nil
+	end
+	print("    Visual Studio 2017 or higher found in: "..vsdir)
+	return vsdir
 end
 
 local function get_windows_sdk_directory()
@@ -507,8 +548,19 @@ local function get_msvc_env_setup_cmd()
 	assert(type(vars.UNAME_M) == "string", "requires vars.UNAME_M to be set before calling this function.")
 	local x64 = vars.UNAME_M=="x86_64"
 
-	-- 1. try visual studio command line tools
-	local vcdir = get_visual_studio_directory()
+	-- 1. try visual studio command line tools of VS 2017 or higher
+	local vsdir = get_visual_studio_directory_from_vswhere()
+	if vsdir then
+		local vcvarsall = vsdir .. '\\VC\\Auxiliary\\Build\\vcvarsall.bat'
+		if exists(vcvarsall) then
+			local vcvarsall_args = { x86 = "", x86_64 = " x64" }
+			assert(vcvarsall_args[vars.UNAME_M], "vars.UNAME_M: only x86 and x86_64 are supported")
+			return ('call "%s"%s'):format(vcvarsall, vcvarsall_args[vars.UNAME_M])
+		end
+	end
+
+	-- 2. try visual studio command line tools
+	local vcdir = get_visual_studio_directory_from_registry()
 	if vcdir then
 		local vcvars_bats = {
 			x86 = {
@@ -537,7 +589,7 @@ local function get_msvc_env_setup_cmd()
 		end
 	end
 
-	-- 2. try for Windows SDKs command line tools.
+	-- 3. try for Windows SDKs command line tools.
 	local wsdkdir = get_windows_sdk_directory()
 	if wsdkdir then
 		local setenv = wsdkdir.."Bin\\SetEnv.cmd"
