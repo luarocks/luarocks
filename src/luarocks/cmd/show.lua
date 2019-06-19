@@ -20,7 +20,7 @@ Show information about an installed rock.
 Without any flags, show all module information.
 With flags, return only the desired information.]], util.see_also())
       :summary("Show information about an installed rock.")
-      :add_help(false)
+      :add_help("--help")
 
    cmd:argument("rock", "Name of an installed rock.")
    cmd:argument("version", "Rock version.")

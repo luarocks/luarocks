@@ -23,7 +23,7 @@ By default, it removes all rocks from a tree.
 The --tree option is mandatory: luarocks purge does not assume a default tree.]],
    util.see_also())
       :summary("Remove all installed rocks from a tree.")
-      :add_help(false)
+      :add_help("--help")
 
    cmd:flag("--old-versions", "Keep the highest-numbered version of each "..
       "rock and remove the other ones. By default it only removes old "..

@@ -23,7 +23,7 @@ Will only perform the removal if it does not break dependencies.
 To override this check and force the removal, use --force or --force-fast.]],
    util.see_also())
       :summary("Uninstall a rock.")
-      :add_help(false)
+      :add_help("--help")
 
    cmd:argument("rock", "Name of the rock to be uninstalled.")
    cmd:argument("version", "Version of the rock to uninstall.")

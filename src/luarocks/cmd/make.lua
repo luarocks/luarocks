@@ -35,7 +35,7 @@ NB: Use `luarocks install` with the `--only-deps` flag if you want to install
 only dependencies of the rockspec (see `luarocks help install`).
 ]], util.see_also())
       :summary("Compile package in current directory using a rockspec.")
-      :add_help(false)
+      :add_help("--help")
 
    cmd:argument("rockspec", "Rockspec for the rock to build.")
       :args("?")

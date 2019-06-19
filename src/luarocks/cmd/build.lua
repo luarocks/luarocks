@@ -22,7 +22,7 @@ function cmd_build.add_to_parser(parser)
    local cmd = parser:command("build", "Build and install a rock, compiling "..
       "its C parts if any.", util.see_also())
       :summary("Build/compile a rock.")
-      :add_help(false)
+      :add_help("--help")
 
    cmd:argument("rock", "A rockspec file, a source rock file, or the name of "..
       "a rock to be fetched from a repository.")

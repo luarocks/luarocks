@@ -350,7 +350,7 @@ Variables:
       program.." - "..description, epilog)
       :help_max_width(80)
       :add_help("--help")
-      :add_help_command({add_help = false})
+      :add_help_command()
       :command_target("command")
       :require_command(false)
 

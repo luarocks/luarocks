@@ -17,7 +17,7 @@ Argument may be a rock file, or the name of a rock in a rocks server.
 In the latter case, the rock version may be given as a second argument.]],
       util.see_also())
       :summary("Unpack the contents of a rock.")
-      :add_help(false)
+      :add_help("--help")
 
    cmd:argument("rock", "A rock file or the name of a rock.")
    cmd:argument("version", "Rock version.")

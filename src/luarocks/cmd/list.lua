@@ -12,7 +12,7 @@ local path = require("luarocks.path")
 
 function list.add_to_parser(parser)
    local cmd = parser:command("list", "List currently installed rocks.", util.see_also())
-      :add_help(false)
+      :add_help("--help")
 
    cmd:argument("filter", "A substring of a rock name to filter by.")
       :args("?")
