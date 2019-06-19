@@ -549,7 +549,10 @@ local function get_msvc_env_setup_cmd()
 	local x64 = vars.UNAME_M=="x86_64"
 
 	-- 1. try visual studio command line tools of VS 2017 or higher
-	local vsdir = get_visual_studio_directory_from_vswhere()
+	local vsdir, err = get_visual_studio_directory_from_vswhere()
+	if err then
+		print("    Error when finding Visual Studio directory from vswhere: "..err)
+	end
 	if vsdir then
 		local vcvarsall = vsdir .. '\\VC\\Auxiliary\\Build\\vcvarsall.bat'
 		if exists(vcvarsall) then
