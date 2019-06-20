@@ -7,8 +7,7 @@ local util = require("luarocks.util")
 local cache = require("luarocks.admin.cache")
 
 function refresh_cache.add_to_parser(parser)
-   local cmd = parser:command(
-      "refresh_cache", "Refresh local cache of a remote rocks server.", util.see_also())
+   local cmd = parser:command("refresh_cache", "Refresh local cache of a remote rocks server.", util.see_also())
       :add_help("--help")
 
    cmd:option("--from", "The server to use. If not given, the default server "..

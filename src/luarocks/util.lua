@@ -215,7 +215,7 @@ function util.this_program(default)
    return prog
 end
 
-function util.deps_mode_option(parser)
+function util.deps_mode_option(parser, program)
    local cfg = require("luarocks.core.cfg")
 
    parser:option("--deps-mode", "How to handle dependencies. Four modes are supported:\n"..

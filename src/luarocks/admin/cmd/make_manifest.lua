@@ -12,8 +12,7 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 
 function make_manifest.add_to_parser(parser)
-   local cmd = parser:command("make_manifest", "Compile a manifest file for a repository.", 
-      util.see_also())
+   local cmd = parser:command("make_manifest", "Compile a manifest file for a repository.", util.see_also())
       :add_help("--help")
 
    cmd:argument("repository", "Local repository pathname.")

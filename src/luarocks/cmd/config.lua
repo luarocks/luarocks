@@ -13,18 +13,18 @@ function config_cmd.add_to_parser(parser)
    local cmd = parser:command("config", [[
 Query information about the LuaRocks configuration.
 
-* When given a configuration key, it prints the value of that key
-  according to the currently active configuration (taking into account
-  all config files and any command-line flags passed)
+* When given a configuration key, it prints the value of that key according to
+  the currently active configuration (taking into account all config files and
+  any command-line flags passed)
 
   Examples:
      luarocks config lua_interpreter
      luarocks config variables.LUA_INCDIR
      luarocks config lua_version
 
-* When given a configuration key and a value,
-  it overwrites the config file (see the --scope option below to determine which)
-  and replaces the value of the given key with the given value.
+* When given a configuration key and a value, it overwrites the config file (see
+  the --scope option below to determine which) and replaces the value of the
+  given key with the given value.
 
   * `lua_dir` is a special key as it checks for a valid Lua installation
     (equivalent to --lua-dir) and sets several keys at once.
@@ -36,15 +36,14 @@ Query information about the LuaRocks configuration.
      luarocks config lua_dir /usr/local
      luarocks config lua_version 5.3
 
-* When given a configuration key and --unset,
-  it overwrites the config file (see the --scope option below to determine which)
-  and deletes that key from the file.
+* When given a configuration key and --unset, it overwrites the config file (see
+  the --scope option below to determine which) and deletes that key from the
+  file.
 
   Example: luarocks config variables.OPENSSL_DIR --unset
 
-* When given no arguments, it prints the entire currently active
-  configuration, resulting from reading the config files from
-  all scopes.
+* When given no arguments, it prints the entire currently active configuration,
+  resulting from reading the config files from all scopes.
 
   Example: luarocks config]], util.see_also([[
    https://github.com/luarocks/luarocks/wiki/Config-file-format

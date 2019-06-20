@@ -54,7 +54,6 @@ This command writes an initial version of a rockspec file,
 based on a name, a version, and a location (an URL or a local path).
 If only two arguments are given, the first one is considered the name and the
 second one is the location.
-
 If only one argument is given, it must be the location.
 If no arguments are given, current directory is used as the location.
 LuaRocks will attempt to infer name and version if not given,

@@ -7,8 +7,7 @@ local util = require("luarocks.util")
 local download = require("luarocks.download")
 
 function cmd_download.add_to_parser(parser)
-   local cmd = parser:command(
-      "download", "Download a specific rock file from a rocks server.", util.see_also())
+   local cmd = parser:command("download", "Download a specific rock file from a rocks server.", util.see_also())
       :add_help("--help")
 
    cmd:argument("name", "Name of the rock.")
@@ -33,7 +32,7 @@ function cmd_download.command(args)
 
    local name = util.adjust_name_and_namespace(args.name, args)
 
-   if not name then name, version = "", "" end
+   if not name then name, args.version = "", "" end
 
    local arch
 
@@ -45,7 +44,7 @@ function cmd_download.command(args)
       arch = args.arch
    end
    
-   local dl, err = download.download(arch, name:lower(), version, args.all)
+   local dl, err = download.download(arch, name:lower(), args.version, args.all)
    return dl and true, err
 end
 
