@@ -24,6 +24,30 @@ local lua_versions = {
    "5.1,5.2,5.3,5.4"
 }
 
+function write_rockspec.cmd_options(parser)
+   return parser:option("--output", "Write the rockspec with the given filename.\n"..
+         "If not given, a file is written in the current directory with a "..
+         "filename based on given name and version.")
+         :argname("<file>"),
+      parser:option("--license", 'A license string, such as "MIT/X11" or "GNU GPL v3".')
+         :argname("<string>"),
+      parser:option("--summary", "A short one-line description summary.")
+         :argname("<txt>"),
+      parser:option("--detailed", "A longer description string.")
+         :argname("<txt>"),
+      parser:option("--homepage", "Project homepage.")
+         :argname("<txt>"),
+      parser:option("--lua-versions", 'Supported Lua versions. Accepted values are: "'..
+         table.concat(lua_versions, '", "')..'".')
+         :argname("<ver>")
+         :choices(lua_versions),
+      parser:option("--rockspec-format", 'Rockspec format version, such as "1.0" or "1.1".')
+         :argname("<ver>"),
+      parser:option("--tag", "Tag to use. Will attempt to extract version number from it."),
+      parser:option("--lib", "A comma-separated list of libraries that C files need to link to.")
+         :argname("<libs>")
+end
+
 function write_rockspec.add_to_parser(parser)
    local cmd = parser:command("write_rockspec", [[
 This command writes an initial version of a rockspec file,
@@ -48,27 +72,7 @@ rockspec, and is not guaranteed to be complete or correct. ]], util.see_also())
    cmd:argument("location", "URL or path to the rock sources.")
       :args("?")
 
-   cmd:option("--output", "Write the rockspec with the given filename.\n"..
-      "If not given, a file is written in the current directory with a "..
-      "filename based on given name and version.")
-      :argname("<file>")
-   cmd:option("--license", 'A license string, such as "MIT/X11" or "GNU GPL v3".')
-      :argname("<string>")
-   cmd:option("--summary", "A short one-line description summary.")
-      :argname("<txt>")
-   cmd:option("--detailed", "A longer description string.")
-      :argname("<txt>")
-   cmd:option("--homepage", "Project homepage.")
-      :argname("<txt>")
-   cmd:option("--lua-versions", 'Supported Lua versions. Accepted values are: "'..
-      table.concat(lua_versions, '", "')..'".')
-      :argname("<ver>")
-      :choices(lua_versions)
-   cmd:option("--rockspec-format", 'Rockspec format version, such as "1.0" or "1.1".')
-      :argname("<ver>")
-   cmd:option("--tag", "Tag to use. Will attempt to extract version number from it.")
-   cmd:option("--lib", "A comma-separated list of libraries that C files need to link to.")
-      :argname("<libs>")
+   write_rockspec.cmd_options(cmd)
 end
 
 local function open_file(name)

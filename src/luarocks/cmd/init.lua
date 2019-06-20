@@ -20,21 +20,7 @@ function init.add_to_parser(parser)
       :args("?")
    cmd:flag("--reset", "Delete .luarocks/config-5.x.lua and ./lua and generate new ones.")
 
-   cmd:group("Options for specifying rockspec data",
-      cmd:option("--license", 'A license string, such as "MIT/X11" or "GNU GPL v3".')
-         :argname("<string>"),
-      cmd:option("--summary", "A short one-line description summary.")
-         :argname("<txt>"),
-      cmd:option("--detailed", "A longer description string.")
-         :argname("<txt>"),
-      cmd:option("--homepage", "Project homepage.")
-         :argname("<url>"),
-      cmd:option("--lua-versions", "Supported Lua versions. Accepted values are "..
-         '"5.1", "5.2", "5.3", "5.1,5.2", "5.2,5.3", or "5.1,5.2,5.3".'),
-      cmd:option("--rockspec-format", 'Rockspec format version, such as "1.0" or "1.1".')
-         :argname("<ver>"),
-      cmd:option("--lib", "A comma-separated list of libraries that C files need to link to.")
-         :argname("<libs>"))
+   cmd:group("Options for specifying rockspec data", write_rockspec.cmd_options(cmd))
 end
 
 local function write_gitignore(entries)
