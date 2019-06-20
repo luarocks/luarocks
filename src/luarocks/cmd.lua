@@ -39,11 +39,11 @@ local function check_popen()
    end
 end
 
-local process_tree_flags
+local process_tree_args
 do
-   local function replace_tree(flags, root, tree)
+   local function replace_tree(args, root, tree)
       root = dir.normalize(root)
-      flags["tree"] = root
+      args.tree = root
       path.use_tree(tree or root)
    end
 
@@ -59,44 +59,44 @@ do
       cfg.deploy_lib_dir = cfg.deploy_lib_dir:gsub("/+$", "")
    end
 
-   process_tree_flags = function(flags, project_dir)
+   process_tree_args = function(args, project_dir)
    
-      if flags["global"] then
+      if args.global then
          cfg.local_by_default = false
       end
 
-      if flags["tree"] then
+      if args.tree then
          local named = false
          for _, tree in ipairs(cfg.rocks_trees) do
-            if type(tree) == "table" and flags["tree"] == tree.name then
+            if type(tree) == "table" and args.tree == tree.name then
                if not tree.root then
                   return nil, "Configuration error: tree '"..tree.name.."' has no 'root' field."
                end
-               replace_tree(flags, tree.root, tree)
+               replace_tree(args, tree.root, tree)
                named = true
                break
             end
          end
          if not named then
-            local root_dir = fs.absolute_name(flags["tree"])
-            replace_tree(flags, root_dir)
+            local root_dir = fs.absolute_name(args.tree)
+            replace_tree(args, root_dir)
          end
-      elseif flags["local"] then
+      elseif args["local"] then
          if not cfg.home_tree then
             return nil, "The --local flag is meant for operating in a user's home directory.\n"..
                "You are running as a superuser, which is intended for system-wide operation.\n"..
                "To force using the superuser's home, use --tree explicitly."
          else
-            replace_tree(flags, cfg.home_tree)
+            replace_tree(args, cfg.home_tree)
          end
-      elseif flags["project_tree"] then
-         local tree = flags["project_tree"]
+      elseif args.project_tree then
+         local tree = args.project_tree
          table.insert(cfg.rocks_trees, 1, { name = "project", root = tree } )
          loader.load_rocks_trees()
          path.use_tree(tree)
       elseif cfg.local_by_default then
          if cfg.home_tree then
-            replace_tree(flags, cfg.home_tree)
+            replace_tree(args, cfg.home_tree)
          end
       elseif project_dir then
          local project_tree = project_dir .. "/lua_modules"
@@ -117,26 +117,26 @@ do
    end
 end
 
-local function process_server_flags(flags)
-   if flags["server"] then
-      local protocol, pathname = dir.split_url(flags["server"])
+local function process_server_args(args)
+   if args.server then
+      local protocol, pathname = dir.split_url(args.server)
       table.insert(cfg.rocks_servers, 1, protocol.."://"..pathname)
    end
 
-   if flags["dev"] then
+   if args.dev then
       local append_dev = function(s) return dir.path(s, "dev") end
       local dev_servers = fun.traverse(cfg.rocks_servers, append_dev)
       cfg.rocks_servers = fun.concat(dev_servers, cfg.rocks_servers)
    end
 
-   if flags["only_server"] then
-      if flags["dev"] then
+   if args.only_server then
+      if args.dev then
          return nil, "--only-server cannot be used with --dev"
       end
-      if flags["server"] then
+      if args.server then
          return nil, "--only-server cannot be used with --server"
       end
-      cfg.rocks_servers = { flags["only_server"] }
+      cfg.rocks_servers = { args.only_server }
    end
 
    return true
@@ -172,7 +172,7 @@ end
 
 local init_config
 do
-   local detect_config_via_flags
+   local detect_config_via_args
    do
       local function find_project_dir(project_tree)
          if project_tree then
@@ -191,7 +191,7 @@ do
          return nil
       end
    
-      local function find_default_lua_version(flags, project_dir)
+      local function find_default_lua_version(args, project_dir)
          if hardcoded.FORCE_CONFIG then
             return nil
          end
@@ -210,7 +210,7 @@ do
             if mod then
                local pok, ver = pcall(mod)
                if pok and type(ver) == "string" and ver:match("%d+.%d+") then
-                  if flags["verbose"] then
+                  if args.verbose then
                      util.printout("Defaulting to Lua " .. ver .. " based on " .. f .. " ...")
                   end
                   return ver
@@ -228,13 +228,13 @@ do
          end)
       end
    
-      local function detect_lua_via_flags(flags, project_dir)
-         local lua_version = flags["lua_version"]
-                             or find_default_lua_version(flags, project_dir)
+      local function detect_lua_via_args(args, project_dir)
+         local lua_version = args.lua_version
+                             or find_default_lua_version(args, project_dir)
                              or (project_dir and find_version_from_config(project_dir))
       
-         if flags["lua_dir"] then
-            local detected, err = util.find_lua(flags["lua_dir"], lua_version)
+         if args.lua_dir then
+            local detected, err = util.find_lua(args.lua_dir, lua_version)
             if not detected then
                die(err)
             end
@@ -262,14 +262,14 @@ do
          return {}
       end
       
-      detect_config_via_flags = function(flags)
-         local project_dir, given = find_project_dir(flags["project_tree"])
-         local detected = detect_lua_via_flags(flags, project_dir)
-         if flags["lua_version"] then
-            detected.given_lua_version = flags["lua_version"]
+      detect_config_via_args = function(args)
+         local project_dir, given = find_project_dir(args.project_tree)
+         local detected = detect_lua_via_args(args, project_dir)
+         if args.lua_version then
+            detected.given_lua_version = args.lua_version
          end
-         if flags["lua_dir"] then
-            detected.given_lua_dir = flags["lua_dir"]
+         if args.lua_dir then
+            detected.given_lua_dir = args.lua_dir
          end
          if given then
             detected.given_project_dir = project_dir
@@ -279,8 +279,8 @@ do
       end
    end
    
-   init_config = function(flags)
-      local detected = detect_config_via_flags(flags)
+   init_config = function(args)
+      local detected = detect_config_via_args(args)
    
       -- FIXME A quick hack for the experimental Windows build
       if os.getenv("LUAROCKS_CROSS_COMPILING") then
@@ -513,12 +513,12 @@ function cmd.run_command(description, commands, external_namespace, ...)
       die("Current directory does not exist. Please run LuaRocks from an existing directory.")
    end
 
-   local ok, err = process_tree_flags(args, cfg.project_dir)
+   local ok, err = process_tree_args(args, cfg.project_dir)
    if not ok then
       die(err)
    end
 
-   ok, err = process_server_flags(args)
+   ok, err = process_server_args(args)
    if not ok then
       die(err)
    end

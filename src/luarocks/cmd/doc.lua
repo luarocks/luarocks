@@ -63,7 +63,7 @@ function doc.command(args)
    local name = util.adjust_name_and_namespace(args.rock, args)
    local version = args.version
    local query = queries.new(name, version)
-   local iname, iversion, repo = search.pick_installed_rock(query, args["tree"])
+   local iname, iversion, repo = search.pick_installed_rock(query, args.tree)
    if not iname then
       util.printout(name..(version and " "..version or "").." is not installed. Looking for it in the rocks servers...")
       return try_to_open_homepage(name, version)
@@ -74,7 +74,7 @@ function doc.command(args)
    if not rockspec then return nil,err end
    local descript = rockspec.description or {}
 
-   if args["home"] then
+   if args.home then
       return show_homepage(descript.homepage, name, version)
    end
 
@@ -90,7 +90,7 @@ function doc.command(args)
       end
    end
    if not docdir then
-      if descript.homepage and not args["list"] then
+      if descript.homepage and not args.list then
          util.printout("Local documentation directory not found -- opening "..descript.homepage.." ...")
          fs.browser(descript.homepage)
          return true
@@ -104,7 +104,7 @@ function doc.command(args)
    local extensions = { htmlpatt, "%.md$", "%.txt$",  "%.textile$", "" }
    local basenames = { "index", "readme", "manual" }
    
-   local porcelain = args["porcelain"]
+   local porcelain = args.porcelain
    if #files > 0 then
       util.title("Documentation files for "..name.." "..version, porcelain)
       if porcelain then
@@ -119,7 +119,7 @@ function doc.command(args)
       end
    end
    
-   if args["list"] then
+   if args.list then
       return true
    end
    

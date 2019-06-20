@@ -58,14 +58,14 @@ function upload.command(args)
    if not res.module then
       util.printout("Will create new module (" .. tostring(rockspec.package) .. ")")
    end
-   if res.version and not args["force"] then
+   if res.version and not args.force then
       return nil, "Revision "..rockspec.version.." already exists on the server. "..util.see_help("upload")
    end
 
    local sigfname
    local rock_sigfname
 
-   if args["sign"] then
+   if args.sign then
       sigfname, err = signing.sign_file(args.rockspec)
       if err then
          return nil, "Failed signing rockspec: " .. err
@@ -74,13 +74,13 @@ function upload.command(args)
    end
 
    local rock_fname
-   if not args["skip_pack"] and not is_dev_version(rockspec.version) then
+   if not args.skip_pack and not is_dev_version(rockspec.version) then
       util.printout("Packing " .. tostring(rockspec.package))
       rock_fname, err = pack.pack_source_rock(args.rockspec)
       if not rock_fname then
          return nil, err
       end
-      if args["sign"] then
+      if args.sign then
          rock_sigfname, err = signing.sign_file(rock_fname)
          if err then
             return nil, "Failed signing rock: " .. err

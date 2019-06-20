@@ -87,17 +87,17 @@ function make.command(args)
       minimal_mode = true,
       deps_mode = deps.get_deps_mode(args),
       build_only_deps = false,
-      namespace = args["namespace"],
-      branch = not not args["branch"],
-      verify = not not args["verify"],
+      namespace = args.namespace,
+      branch = not not args.branch,
+      verify = not not args.verify,
    })
 
-   if args["sign"] and not args["pack_binary_rock"] then
+   if args.sign and not args.pack_binary_rock then
       return nil, "In the make command, --sign is meant to be used only with --pack-binary-rock"
    end
 
-   if args["pack_binary_rock"] then
-      return pack.pack_binary_rock(name, rockspec.version, args["sign"], function()
+   if args.pack_binary_rock then
+      return pack.pack_binary_rock(name, rockspec.version, args.sign, function()
          return build.build_rockspec(rockspec, opts)
       end)
    else
@@ -107,8 +107,8 @@ function make.command(args)
       if not ok then return nil, err end
       local name, version = ok, err
 
-      if (not args["keep"]) and not cfg.keep_other_versions then
-         local ok, err = remove.remove_other_versions(name, version, args["force"], args["force_fast"])
+      if (not args.keep) and not cfg.keep_other_versions then
+         local ok, err = remove.remove_other_versions(name, version, args.force, args.force_fast)
          if not ok then util.printerr(err) end
       end
 

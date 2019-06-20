@@ -57,25 +57,25 @@ function cmd_search.command(args)
 
    local name = util.adjust_name_and_namespace(args.name, args)
 
-   if args["all"] then
+   if args.all then
       name, args.version = "", nil
    end
 
-   if not args.name and not args["all"] then
+   if not args.name and not args.all then
       return nil, "Enter name and version or use --all. "..util.see_help("search")
    end
    
    local query = queries.new(name:lower(), args.version, true)
    local result_tree, err = search.search_repos(query)
-   local porcelain = args["porcelain"]
+   local porcelain = args.porcelain
    local full_name = name .. (args.version and " " .. args.version or "")
    util.title(full_name .. " - Search results for Lua "..cfg.lua_version..":", porcelain, "=")
    local sources, binaries = split_source_and_binary_results(result_tree)
-   if next(sources) and not args["binary"] then
+   if next(sources) and not args.binary then
       util.title("Rockspecs and source rocks:", porcelain)
       search.print_result_tree(sources, porcelain)
    end
-   if next(binaries) and not args["source"] then
+   if next(binaries) and not args.source then
       util.title("Binary and pure-Lua rocks:", porcelain)
       search.print_result_tree(binaries, porcelain)
    end

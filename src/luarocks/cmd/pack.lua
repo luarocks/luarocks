@@ -30,9 +30,9 @@ function cmd_pack.command(args)
    else
       local name = util.adjust_name_and_namespace(args.rock, args)
       local query = queries.new(name, args.version)
-      file, err = pack.pack_installed_rock(query, args["tree"])
+      file, err = pack.pack_installed_rock(query, args.tree)
    end
-   return pack.report_and_sign_local_file(file, err, args["sign"])
+   return pack.report_and_sign_local_file(file, err, args.sign)
 end
 
 return cmd_pack

@@ -27,7 +27,7 @@ end
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
 function cmd_download.command(args)
-   if not args.name and not args["all"] then
+   if not args.name and not args.all then
       return nil, "Argument missing. "..util.see_help("download")
    end
 
@@ -37,15 +37,15 @@ function cmd_download.command(args)
 
    local arch
 
-   if args["source"] then
+   if args.source then
       arch = "src"
-   elseif args["rockspec"] then
+   elseif args.rockspec then
       arch = "rockspec"
-   elseif args["arch"] then
-      arch = args["arch"]
+   elseif args.arch then
+      arch = args.arch
    end
    
-   local dl, err = download.download(arch, name:lower(), version, args["all"])
+   local dl, err = download.download(arch, name:lower(), version, args.all)
    return dl and true, err
 end
 

@@ -278,9 +278,9 @@ function write_rockspec.command(args)
       version = nil
    end
 
-   if args["tag"] then
+   if args.tag then
       if not version then
-         version = args["tag"]:gsub("^v", "")
+         version = args.tag:gsub("^v", "")
       end
    end
 
@@ -305,27 +305,27 @@ function write_rockspec.command(args)
    end
    version = version or "dev"
 
-   local filename = args["output"] or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
+   local filename = args.output or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
    
    local url = detect_url(location)
-   local homepage = detect_homepage(url, args["homepage"])
+   local homepage = detect_homepage(url, args.homepage)
    
    local rockspec, err = rockspecs.from_persisted_table(filename, {
-      rockspec_format = args["rockspec_format"],
+      rockspec_format = args.rockspec_format,
       package = name,
       version = version.."-1",
       source = {
          url = url,
-         tag = args["tag"],
+         tag = args.tag,
       },
       description = {
-         summary = args["summary"] or "*** please specify description summary ***",
-         detailed = args["detailed"] or "*** please enter a detailed description ***",
+         summary = args.summary or "*** please specify description summary ***",
+         detailed = args.detailed or "*** please enter a detailed description ***",
          homepage = homepage,
-         license = args["license"] or "*** please specify a license ***",
+         license = args.license or "*** please specify a license ***",
       },
       dependencies = {
-         lua_version_dep[args["lua_versions"]],
+         lua_version_dep[args.lua_versions],
       },
       build = {},
    })
@@ -342,7 +342,7 @@ function write_rockspec.command(args)
       rockspec.source.file = dir.base_name(location)
       if not dir.is_basic_protocol(rockspec.source.protocol) then
          if version ~= "dev" then
-            rockspec.source.tag = args["tag"] or "v" .. version
+            rockspec.source.tag = args.tag or "v" .. version
          end
       end
       rockspec.source.dir = nil
@@ -364,10 +364,10 @@ function write_rockspec.command(args)
    end
    
    local libs = nil
-   if args["lib"] then
+   if args.lib then
       libs = {}
       rockspec.external_dependencies = {}
-      for lib in args["lib"]:gmatch("([^,]+)") do
+      for lib in args.lib:gmatch("([^,]+)") do
          table.insert(libs, lib)
          rockspec.external_dependencies[lib:upper()] = {
             library = lib
@@ -378,13 +378,13 @@ function write_rockspec.command(args)
    local ok, err = fs.change_dir(local_dir)
    if not ok then return nil, "Failed reaching files from project - error entering directory "..local_dir end
 
-   if not (args["summary"] and args["detailed"]) then
+   if not (args.summary and args.detailed) then
       local summary, detailed = detect_description()
-      rockspec.description.summary = args["summary"] or summary
-      rockspec.description.detailed = args["detailed"] or detailed
+      rockspec.description.summary = args.summary or summary
+      rockspec.description.detailed = args.detailed or detailed
    end
 
-   if not args["license"] then
+   if not args.license then
       local license, fulltext = check_license()
       if license then
          rockspec.description.license = license

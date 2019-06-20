@@ -32,7 +32,7 @@ The --tree option is mandatory: luarocks purge does not assume a default tree.]]
 end
 
 function purge.command(args)
-   local tree = args["tree"]
+   local tree = args.tree
 
    if type(tree) ~= "string" then
       return nil, "The --tree argument is mandatory. "..util.see_help("purge")
@@ -49,15 +49,15 @@ function purge.command(args)
    search.local_manifest_search(results, path.rocks_dir(tree), queries.all())
 
    local sort = function(a,b) return vers.compare_versions(b,a) end
-   if args["old_versions"] then
+   if args.old_versions then
       sort = vers.compare_versions
    end
 
    for package, versions in util.sortedpairs(results) do
       for version, _ in util.sortedpairs(versions, sort) do
-         if args["old_versions"] then
+         if args.old_versions then
             util.printout("Keeping "..package.." "..version.."...")
-            local ok, err = remove.remove_other_versions(package, version, args["force"], args["force_fast"])
+            local ok, err = remove.remove_other_versions(package, version, args.force, args.force_fast)
             if not ok then
                util.printerr(err)
             end

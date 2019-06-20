@@ -80,9 +80,9 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
 end
 
 function admin_remove.command(args)
-   local server, server_table = cache.get_upload_server(args["server"])
+   local server, server_table = cache.get_upload_server(args.server)
    if not server then return nil, server_table end
-   return remove_files_from_server(not args["no_refresh"], files, server, server_table)
+   return remove_files_from_server(not args.no_refresh, files, server, server_table)
 end
 
 

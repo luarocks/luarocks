@@ -125,9 +125,9 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
 end
 
 function add.command(args)
-   local server, server_table = cache.get_upload_server(args["server"])
+   local server, server_table = cache.get_upload_server(args.server)
    if not server then return nil, server_table end
-   return add_files_to_server(not args["no_refresh"], files, server, server_table, args["index"])
+   return add_files_to_server(not args.no_refresh, files, server, server_table, args.index)
 end
 
 

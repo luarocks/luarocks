@@ -570,9 +570,9 @@ function deps.check_lua_libdir(vars)
    return nil, "Failed finding Lua library. You may need to configure LUA_LIBDIR.", "dependency"
 end
 
-function deps.get_deps_mode(flags)
-   if flags["deps_mode"] then
-      return flags["deps_mode"]
+function deps.get_deps_mode(args)
+   if args.deps_mode then
+      return args.deps_mode
    else
       return cfg.deps_mode
    end

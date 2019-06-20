@@ -73,13 +73,13 @@ function list.command(args)
    local query = queries.new(args.filter and args.filter:lower() or "", args.version, true)
    local trees = cfg.rocks_trees
    local title = "Rocks installed for Lua "..cfg.lua_version
-   if args["tree"] then
-      trees = { args["tree"] }
-      title = title .. " in " .. args["tree"]
+   if args.tree then
+      trees = { args.tree }
+      title = title .. " in " .. args.tree
    end
    
-   if args["outdated"] then
-      return list_outdated(trees, query, args["porcelain"])
+   if args.outdated then
+      return list_outdated(trees, query, args.porcelain)
    end
    
    local results = {}
@@ -89,8 +89,8 @@ function list.command(args)
          util.warning(err)
       end
    end
-   util.title(title, args["porcelain"])
-   search.print_result_tree(results, args["porcelain"])
+   util.title(title, args.porcelain)
+   search.print_result_tree(results, args.porcelain)
    return true
 end
 

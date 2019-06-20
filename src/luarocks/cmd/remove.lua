@@ -40,7 +40,7 @@ end
 function cmd_remove.command(args)
    local name = util.adjust_name_and_namespace(args.rock, args)
    
-   local deps_mode = args["deps_mode"] or cfg.deps_mode
+   local deps_mode = args.deps_mode or cfg.deps_mode
    
    local ok, err = fs.check_command_permissions(args)
    if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
@@ -60,7 +60,7 @@ function cmd_remove.command(args)
       return nil, "Could not find rock '"..name..(version and " "..version or "").."' in "..path.rocks_tree_to_string(cfg.root_dir)
    end
 
-   local ok, err = remove.remove_search_results(results, name, deps_mode, args["force"], args["force_fast"])
+   local ok, err = remove.remove_search_results(results, name, deps_mode, args.force, args.force_fast)
    if not ok then
       return nil, err
    end

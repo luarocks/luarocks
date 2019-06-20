@@ -32,21 +32,21 @@ end
 --- Driver function for "path" command.
 -- @return boolean This function always succeeds.
 function path_cmd.command(args)
-   local lr_path, lr_cpath, lr_bin = cfg.package_paths(args["tree"])
+   local lr_path, lr_cpath, lr_bin = cfg.package_paths(args.tree)
    local path_sep = cfg.export_path_separator
 
-   if args["lr_path"] then
+   if args.lr_path then
       util.printout(util.cleanup_path(lr_path, ';', cfg.lua_version))
       return true
-   elseif args["lr_cpath"] then
+   elseif args.lr_cpath then
       util.printout(util.cleanup_path(lr_cpath, ';', cfg.lua_version))
       return true
-   elseif args["lr_bin"] then
+   elseif args.lr_bin then
       util.printout(util.cleanup_path(lr_bin, path_sep))
       return true
    end
    
-   if args["append"] then
+   if args.append then
       lr_path = package.path .. ";" .. lr_path
       lr_cpath = package.cpath .. ";" .. lr_cpath
       lr_bin = os.getenv("PATH") .. path_sep .. lr_bin
@@ -60,7 +60,7 @@ function path_cmd.command(args)
 
    util.printout(fs.export_cmd(lpath_var, util.cleanup_path(lr_path, ';', cfg.lua_version)))
    util.printout(fs.export_cmd(lcpath_var, util.cleanup_path(lr_cpath, ';', cfg.lua_version)))
-   if not args["no_bin"] then
+   if not args.no_bin then
       util.printout(fs.export_cmd("PATH", util.cleanup_path(lr_bin, path_sep)))
    end
    return true

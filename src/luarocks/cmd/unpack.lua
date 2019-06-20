@@ -162,7 +162,7 @@ function unpack.command(args)
       end
    end
 
-   return run_unpacker(url, args["force"])
+   return run_unpacker(url, args.force)
 end
 
 return unpack

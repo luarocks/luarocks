@@ -230,10 +230,10 @@ local function write_entries(keys, scope, do_unset)
    end
 end
 
-local function get_scope(flags)
-   return flags["scope"]
-          or (flags["local"] and "user")
-          or (flags["project_tree"] and "project")
+local function get_scope(args)
+   return args.scope
+          or (args["local"] and "user")
+          or (args.project_tree and "project")
           or (cfg.local_by_default and "user")
           or "system"
 end
@@ -245,25 +245,25 @@ function config_cmd.command(args)
    deps.check_lua_libdir(cfg.variables)
    
    -- deprecated flags
-   if args["lua_incdir"] then
+   if args.lua_incdir then
       print(cfg.variables.LUA_INCDIR)
       return true
    end
-   if args["lua_libdir"] then
+   if args.lua_libdir then
       print(cfg.variables.LUA_LIBDIR)
       return true
    end
-   if args["lua_ver"] then
+   if args.lua_ver then
       print(cfg.lua_version)
       return true
    end
-   if args["system_config"] then
+   if args.system_config then
       return config_file(cfg.config_files.system)
    end
-   if args["user_config"] then
+   if args.user_config then
       return config_file(cfg.config_files.user)
    end
-   if args["rock_trees"] then
+   if args.rock_trees then
       for _, tree in ipairs(cfg.rocks_trees) do
       	if type(tree) == "string" then
       	   util.printout(dir.normalize(tree))
@@ -298,21 +298,21 @@ function config_cmd.command(args)
          ["variables.LUA_LIBDIR"] = cfg.variables.LUA_LIBDIR,
          ["lua_interpreter"] = cfg.lua_interpreter,
       }
-      return write_entries(keys, scope, args["unset"])
+      return write_entries(keys, scope, args.unset)
    end
 
    if args.key then
-      if args.value or args["unset"] then
+      if args.value or args.unset then
          local scope = get_scope(args)
-         return write_entries({ [args.key] = args.value }, scope, args["unset"])
+         return write_entries({ [args.key] = args.value }, scope, args.unset)
       else
-         return print_entry(args.key, cfg, args["json"])
+         return print_entry(args.key, cfg, args.json)
       end
    end
 
    local cleancfg = cleanup(cfg)
 
-   if args["json"] then
+   if args.json then
       return print_json(cleancfg)
    else
       print(persist.save_from_table_to_string(cleancfg))

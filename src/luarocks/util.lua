@@ -338,13 +338,13 @@ function util.LQ(s)
    return ("%q"):format(s)
 end
 
---- Normalize the --namespace flag and the user/rock syntax for namespaces.
--- If a namespace is given in user/rock syntax, update the --namespace flag;
--- If a namespace is given in --namespace flag, update the user/rock syntax.
+--- Normalize the --namespace option and the user/rock syntax for namespaces.
+-- If a namespace is given in user/rock syntax, update the --namespace option;
+-- If a namespace is given in --namespace option, update the user/rock syntax.
 -- In case of conflicts, the user/rock syntax takes precedence.
-function util.adjust_name_and_namespace(ns_name, flags)
+function util.adjust_name_and_namespace(ns_name, args)
    assert(type(ns_name) == "string" or not ns_name)
-   assert(type(flags) == "table")
+   assert(type(args) == "table")
 
    if not ns_name then
       return
@@ -354,10 +354,10 @@ function util.adjust_name_and_namespace(ns_name, flags)
 
    local name, namespace = util.split_namespace(ns_name)
    if namespace then
-      flags["namespace"] = namespace
+      args.namespace = namespace
    end
-   if flags["namespace"] then
-      name = flags["namespace"] .. "/" .. name
+   if args.namespace then
+      name = args.namespace .. "/" .. name
    end
    return name:lower()
 end

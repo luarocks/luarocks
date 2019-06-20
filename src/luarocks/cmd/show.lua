@@ -266,7 +266,7 @@ function show.command(args)
    local query = queries.new(name, version)
    
    local repo, repo_url
-   name, version, repo, repo_url = search.pick_installed_rock(query, args["tree"])
+   name, version, repo, repo_url = search.pick_installed_rock(query, args.tree)
    if not name then
       return nil, version
    end
@@ -282,32 +282,32 @@ function show.command(args)
    if not manifest then return nil,err end
    local minfo = manifest.repository[name][version][1]
 
-   if args["rock_tree"] then util.printout(tree)
-   elseif args["rock_namespace"] then util.printout(namespace)
-   elseif args["rock_dir"] then util.printout(directory)
-   elseif args["home"] then util.printout(descript.homepage)
-   elseif args["rock_license"] then util.printout(descript.license)
-   elseif args["issues"] then util.printout(descript.issues_url)
-   elseif args["labels"] then util.printout(descript.labels and table.concat(descript.labels, "\n"))
-   elseif args["modules"] then util.printout(keys_as_string(minfo.modules, "\n"))
-   elseif args["deps"] then
+   if args.rock_tree then util.printout(tree)
+   elseif args.rock_namespace then util.printout(namespace)
+   elseif args.rock_dir then util.printout(directory)
+   elseif args.home then util.printout(descript.homepage)
+   elseif args.rock_license then util.printout(descript.license)
+   elseif args.issues then util.printout(descript.issues_url)
+   elseif args.labels then util.printout(descript.labels and table.concat(descript.labels, "\n"))
+   elseif args.modules then util.printout(keys_as_string(minfo.modules, "\n"))
+   elseif args.deps then
       for _, dep in ipairs(rockspec.dependencies) do
          util.printout(tostring(dep))
       end
-   elseif args["build_deps"] then
+   elseif args.build_deps then
       for _, dep in ipairs(rockspec.build_dependencies) do
          util.printout(tostring(dep))
       end
-   elseif args["test_deps"] then
+   elseif args.test_deps then
       for _, dep in ipairs(rockspec.test_dependencies) do
          util.printout(tostring(dep))
       end
-   elseif args["rockspec"] then util.printout(rockspec_file)
-   elseif args["mversion"] then util.printout(version)
-   elseif args["porcelain"] then
-      show_rock(porcelain_template, namespace, name, version, rockspec, repo, minfo, args["tree"])
+   elseif args.rockspec then util.printout(rockspec_file)
+   elseif args.mversion then util.printout(version)
+   elseif args.porcelain then
+      show_rock(porcelain_template, namespace, name, version, rockspec, repo, minfo, args.tree)
    else
-      show_rock(friendly_template, namespace, name, version, rockspec, repo, minfo, args["tree"])
+      show_rock(friendly_template, namespace, name, version, rockspec, repo, minfo, args.tree)
    end
    return true
 end

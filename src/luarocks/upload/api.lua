@@ -245,20 +245,20 @@ end
 
 end
 
-function api.new(flags)
+function api.new(args)
    local self = {}
    setmetatable(self, { __index = Api })
    self.config = self:load_config() or {}
-   self.config.server = flags["server"] or self.config.server or cfg.upload.server
+   self.config.server = args.server or self.config.server or cfg.upload.server
    self.config.version = self.config.version or cfg.upload.version
-   self.config.key = flags["temp_key"] or flags["api_key"] or self.config.key
-   self.debug = flags["debug"]
+   self.config.key = args.temp_key or args.api_key or self.config.key
+   self.debug = args.debug
    if not self.config.key then
       return nil, "You need an API key to upload rocks.\n" ..
                   "Navigate to "..self.config.server.."/settings to get a key\n" ..
                   "and then pass it through the --api-key=<key> flag."
    end
-   if flags["api_key"] then
+   if args.api_key then
       self:save_config()
    end
    return self

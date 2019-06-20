@@ -223,15 +223,15 @@ function install.command(args)
    elseif args.rock:match("%.rock$") then
       local deps_mode = deps.get_deps_mode(args)
       local opts = install.opts({
-         namespace = args["namespace"],
-         keep = not not args["keep"],
-         force = not not args["force"],
-         force_fast = not not args["force_fast"],
-         no_doc = not not args["no_doc"],
+         namespace = args.namespace,
+         keep = not not args.keep,
+         force = not not args.force,
+         force_fast = not not args.force_fast,
+         no_doc = not not args.no_doc,
          deps_mode = deps_mode,
-         verify = not not args["verify"],
+         verify = not not args.verify,
       })
-      if args["only_deps"] then
+      if args.only_deps then
          return install_rock_file_deps(args.rock, opts)
       else
          return install_rock_file(args.rock, opts)
