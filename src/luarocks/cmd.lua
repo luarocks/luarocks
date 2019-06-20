@@ -308,7 +308,7 @@ local function get_status(status)
    return status and "ok" or "not found"
 end
 
-local function get_config_text()
+local function get_config_text(cfg)
    local buf = "Configuration:\n   Lua version: "..cfg.lua_version.."\n"
    if cfg.luajit_version then
       buf = buf.."   LuaJIT version: "..cfg.luajit_version.."\n"
@@ -343,7 +343,7 @@ Variables:
    Variables from the "variables" table of the configuration file can be
    overridden with VAR=VALUE assignments.
 
-]]..get_config_text()
+]]..get_config_text(cfg)
 
    local parser = argparse(
       dir.base_name(program), "LuaRocks "..cfg.program_version..", the Lua package manager\n\n"..

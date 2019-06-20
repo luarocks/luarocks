@@ -21,7 +21,7 @@ default server. If a rockspec is given, it uses it instead. If no argument
 is given, it looks for a rockspec same way 'luarocks make' does.
 
 If the version number is not given and tag is passed using --tag,
-it is used as the version, with 'v' removed from beginnnumbering.
+it is used as the version, with 'v' removed from beginning.
 Otherwise, it only increments the revision number of the given
 (or downloaded) rockspec.
 

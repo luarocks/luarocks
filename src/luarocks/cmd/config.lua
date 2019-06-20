@@ -59,7 +59,6 @@ Query information about the LuaRocks configuration.
       :args("?")
 
    cmd:option("--scope", "The scope indicates which config file should be rewritten.\n"..
-      'Accepted values are "system", "user" or "project".\n'..
       '* Using a wrapper created with `luarocks init`, the default is "project".\n'..
       '* Using --local (or when `local_by_default` is `true`), the default is "user".\n'..
       '* Otherwise, the default is "system".')

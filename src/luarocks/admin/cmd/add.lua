@@ -12,8 +12,7 @@ local cache = require("luarocks.admin.cache")
 local index = require("luarocks.admin.index")
 
 function add.add_to_parser(parser)
-   local cmd = parser:command("add", "Add a rock or rockspec to a rocks server.",
-      util.see_also())
+   local cmd = parser:command("add", "Add a rock or rockspec to a rocks server.", util.see_also())
       :add_help("--help")
 
    cmd:argument("rock", "A local rockspec or rock file.")
