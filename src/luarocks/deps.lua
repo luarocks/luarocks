@@ -545,7 +545,7 @@ function deps.check_lua(vars)
       "lua-" .. shortv,
       "lua",
    }
-   if cfg.luajit_version then
+   if cfg.lua_interpreter == "luajit" then
       table.insert(libnames, 1, "luajit-" .. cfg.lua_version)
    end
    local cache = {}
