@@ -9,7 +9,7 @@ local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local fun = require("luarocks.fun")
 local fs = require("luarocks.fs")
-local argparse = require("argparse")
+local argparse = require("luarocks.argparse")
 
 local hc_ok, hardcoded = pcall(require, "luarocks.core.hardcoded")
 if not hc_ok then
