@@ -95,7 +95,7 @@ function init.command(flags, name, version)
    local lua_wrapper = "lua" .. ext
 
    util.printout("Adding entries to .gitignore ...")
-   write_gitignore({ luarocks_wrapper, lua_wrapper, "lua_modules" })
+   write_gitignore({ luarocks_wrapper, lua_wrapper, "lua_modules", ".luarocks" })
 
    util.printout("Preparing ./.luarocks/ ...")
    fs.make_dir(".luarocks")
