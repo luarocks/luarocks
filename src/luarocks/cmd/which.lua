@@ -6,6 +6,7 @@ local which_cmd = {}
 local loader = require("luarocks.loader")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
+local fs = require("luarocks.fs")
 
 which_cmd.help_summary = "Tell which file corresponds to a given module name."
 which_cmd.help_arguments = "<modname>"
@@ -21,12 +22,26 @@ function which_cmd.command(_, modname)
       return nil, "Missing module name. " .. util.see_help("which")
    end
    local pathname, rock_name, rock_version = loader.which(modname)
-   if not pathname then
-      return nil, "Module '" .. modname .. "' not found by luarocks.loader."
+
+   if pathname then
+      util.printout(pathname)
+      util.printout("(provided by " .. tostring(rock_name) .. " " .. tostring(rock_version) .. ")")
+      return true
    end
-   util.printout(pathname)
-   util.printout("(provided by " .. tostring(rock_name) .. " " .. tostring(rock_version) .. ")")
-   return true
+
+   local modpath = modname:gsub("%.", "/")
+   for _, v in ipairs({"path", "cpath"}) do
+      for p in package[v]:gmatch("([^;]+)") do
+         local pathname = p:gsub("%?", modpath)
+         if fs.exists(pathname) then
+            util.printout(pathname)
+            util.printout("(found directly via package." .. v .. " -- not installed as a rock?)")
+            return true
+         end
+      end
+   end
+
+   return nil, "Module '" .. modname .. "' not found."
 end
 
 return which_cmd
