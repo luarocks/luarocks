@@ -453,7 +453,7 @@ function writer.check_dependencies(repo, deps_mode)
          for _, entry in ipairs(version_entries) do
             if entry.arch == "installed" then
                if manifest.dependencies[name] and manifest.dependencies[name][version] then
-                  deps.report_missing_dependencies(name, version, manifest.dependencies[name][version], deps_mode, cfg.rocks_provided_3_0)
+                  deps.report_missing_dependencies(name, version, manifest.dependencies[name][version], deps_mode, util.get_rocks_provided())
                end
             end
          end

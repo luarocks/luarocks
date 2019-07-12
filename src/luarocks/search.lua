@@ -164,9 +164,9 @@ function search.search_repos(query, lua_version)
          end
       end
    end
-   -- search through rocks in cfg.rocks_provided
+   -- search through rocks in rocks_provided
    local provided_repo = "provided by VM or rocks_provided"
-   for name, version in pairs(cfg.rocks_provided) do
+   for name, version in pairs(util.get_rocks_provided()) do
       local result = results.new(name, version, provided_repo, "installed")
       store_if_match(result_tree, result, query)
    end
@@ -242,9 +242,11 @@ end
 function search.find_suitable_rock(query, cli)
    assert(query:type() == "query")
 
-   if cfg.rocks_provided[query.name] ~= nil then
-      -- Do not install versions listed in cfg.rocks_provided.
-      return nil, "Rock "..query.name.." "..cfg.rocks_provided[query.name]..
+   local rocks_provided = util.get_rocks_provided()
+   
+   if rocks_provided[query.name] ~= nil then
+      -- Do not install versions listed in rocks_provided.
+      return nil, "Rock "..query.name.." "..rocks_provided[query.name]..
          " is already provided by VM or via 'rocks_provided' in the config file."
    end
    

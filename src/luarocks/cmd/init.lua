@@ -110,7 +110,6 @@ function init.command(flags, name, version)
    if config_tbl then
       local globals = {
          "lua_interpreter",
-         "luajit_version",
       }
       for _, v in ipairs(globals) do
          if cfg[v] then

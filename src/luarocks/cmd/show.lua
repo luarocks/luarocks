@@ -116,8 +116,9 @@ end
 
 local function installed_rock_label(dep, tree)
    local installed, version
-   if cfg.rocks_provided[dep.name] then
-      installed, version = true, cfg.rocks_provided[dep.name]
+   local rocks_provided = util.get_rocks_provided()
+   if rocks_provided[dep.name] then
+      installed, version = true, rocks_provided[dep.name]
    else
       installed, version = search.pick_installed_rock(dep, tree)
    end
