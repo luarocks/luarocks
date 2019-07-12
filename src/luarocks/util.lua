@@ -588,14 +588,25 @@ do
       if luaver and luaver ~= lv then
          return nil
       end
+      return lv
+   end
+
+   function util.get_luajit_version()
+      local cfg = require("luarocks.core.cfg")
+      if cfg.cache.luajit_version_checked then
+         return cfg.cache.luajit_version 
+      end
+      cfg.cache.luajit_version_checked = true
+
       local ljv
-      if lv == "5.1" then
-         ljv = util.popen_read(Q(lua_exe) .. ' -e "io.write(tostring(jit and jit.version:sub(8)))"')
+      if cfg.lua_version == "5.1" then
+         ljv = util.popen_read(Q(cfg.variables["LUA_BINDIR"] .. "/" .. cfg.lua_interpreter) .. ' -e "io.write(tostring(jit and jit.version:sub(8)))"')
          if ljv == "nil" then
             ljv = nil
          end
       end
-      return lv, ljv
+      cfg.cache.luajit_version = ljv
+      return ljv
    end
 
    local find_lua_bindir
@@ -636,9 +647,9 @@ do
                local lua_exe = d .. "/" .. name
                local is_wrapper, err = util.lua_is_wrapper(lua_exe)
                if is_wrapper == false then
-                  local lv, ljv = util.check_lua_version(lua_exe, luaver)
+                  local lv = util.check_lua_version(lua_exe, luaver)
                   if lv then
-                     return name, d, lv, ljv
+                     return name, d, lv
                   end
                elseif is_wrapper == true or err == nil then
                   table.insert(tried, lua_exe)
@@ -656,15 +667,14 @@ do
    end
 
    function util.find_lua(prefix, luaver)
-      local lua_interpreter, bindir, luajitver
-      lua_interpreter, bindir, luaver, luajitver = find_lua_bindir(prefix, luaver)
+      local lua_interpreter, bindir
+      lua_interpreter, bindir, luaver = find_lua_bindir(prefix, luaver)
       if not lua_interpreter then
          return nil, bindir
       end
 
       return {
          lua_version = luaver,
-         luajit_version = luajitver,
          lua_interpreter = lua_interpreter,
          lua_dir = prefix,
          lua_bindir = bindir,
@@ -712,6 +722,56 @@ function util.opts_table(type_name, valid_opts)
       end
       return setmetatable(opts, opts_mt)
    end
+end
+
+--- Return a table of modules that are already provided by the VM, which
+-- can be specified as dependencies without having to install an actual rock.
+-- @param rockspec (optional) a rockspec table, so that rockspec format
+-- version compatibility can be checked. If not given, maximum compatibility
+-- is assumed.
+-- @return a table with rock names as keys and versions and values,
+-- specifying modules that are already provided by the VM (including
+-- "lua" for the Lua version and, for format 3.0+, "luajit" if detected).
+function util.get_rocks_provided(rockspec)
+   local cfg = require("luarocks.core.cfg")
+   
+   if not rockspec and cfg.cache.rocks_provided then
+      return cfg.cache.rocks_provided
+   end
+
+   local rocks_provided = {}
+
+   local lv = cfg.lua_version
+
+   rocks_provided["lua"] = lv.."-1"
+
+   if lv == "5.2" or lv == "5.3" then
+      rocks_provided["bit32"] = lv.."-1"
+   end
+
+   if lv == "5.3" or lv == "5.4" then
+      rocks_provided["utf8"] = lv.."-1"
+   end
+
+   if lv == "5.1" then
+      local ljv = util.get_luajit_version()
+      if ljv then
+         rocks_provided["luabitop"] = ljv.."-1"
+         if (not rockspec) or rockspec:format_is_at_least("3.0") then
+            rocks_provided["luajit"] = ljv.."-1"
+         end
+      end
+   end
+
+   if cfg.rocks_provided then
+      util.deep_merge_under(rocks_provided, cfg.rocks_provided)
+   end
+
+   if not rockspec then
+      cfg.cache.rocks_provided = rocks_provided
+   end
+
+   return rocks_provided
 end
 
 return util

@@ -497,7 +497,7 @@ function deps.scan_deps(results, manifest, name, version, deps_mode)
       rocks_provided = rockspec.rocks_provided
       mdn[version] = dependencies
    else
-      rocks_provided = setmetatable({}, { __index = cfg.rocks_provided_3_0 })
+      rocks_provided = util.get_rocks_provided()
    end
    local matched = deps.match_deps(dependencies, rocks_provided, nil, deps_mode)
    results[name] = version
@@ -533,8 +533,9 @@ end
 
 function deps.check_lua(vars)
    local incdir_found = true
+   local ljv = util.get_luajit_version()
    if (not vars.LUA_INCDIR) and vars.LUA_DIR then
-      vars.LUA_INCDIR = find_lua_incdir(vars.LUA_DIR, cfg.lua_version, cfg.luajit_version)
+      vars.LUA_INCDIR = find_lua_incdir(vars.LUA_DIR, cfg.lua_version, ljv)
       incdir_found = (vars.LUA_INCDIR ~= nil)
    end
    local shortv = cfg.lua_version:gsub("%.", "")
@@ -545,7 +546,7 @@ function deps.check_lua(vars)
       "lua-" .. shortv,
       "lua",
    }
-   if cfg.luajit_version then
+   if ljv then
       table.insert(libnames, 1, "luajit-" .. cfg.lua_version)
    end
    local cache = {}

@@ -120,13 +120,14 @@ function util.show_table(t, tname, top_indent)
    return cart .. autoref
 end
 
---- Merges contents of src on top of dst's contents.
+--- Merges contents of src on top of dst's contents
+-- (i.e. if an key from src already exists in dst, replace it).
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.
 function util.deep_merge(dst, src)
    for k, v in pairs(src) do
       if type(v) == "table" then
-         if not dst[k] then
+         if dst[k] == nil then
             dst[k] = {}
          end
          if type(dst[k]) == "table" then
@@ -140,13 +141,14 @@ function util.deep_merge(dst, src)
    end
 end
 
---- Merges contents of src below those of dst's contents.
+--- Merges contents of src below those of dst's contents
+-- (i.e. if an key from src already exists in dst, do not replace it).
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.
 function util.deep_merge_under(dst, src)
    for k, v in pairs(src) do
       if type(v) == "table" then
-         if not dst[k] then
+         if dst[k] == nil then
             dst[k] = {}
          end
          if type(dst[k]) == "table" then

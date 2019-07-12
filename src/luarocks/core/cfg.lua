@@ -481,43 +481,18 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
    return defaults
 end
 
-local function make_rocks_provided(lua_version, luajit_version)
-   local rocks_provided = {}
-   local rocks_provided_3_0 = {}
-
-   rocks_provided["lua"] = lua_version.."-1"
-
-   if lua_version == "5.2" or lua_version == "5.3" then
-      rocks_provided["bit32"] = lua_version.."-1"
-   end
-
-   if lua_version == "5.3" or lua_version == "5.4" then
-      rocks_provided["utf8"] = lua_version.."-1"
-   end
-
-   if luajit_version then
-      rocks_provided["luabitop"] = luajit_version.."-1"
-      rocks_provided_3_0["luajit"] = luajit_version.."-1"
-   end
-
-   return rocks_provided, rocks_provided_3_0
-end
-
 local function use_defaults(cfg, defaults)
 
-   -- Populate some arrays with values from their 'defaults' counterparts
+   -- Populate variables with values from their 'defaults' counterparts
    -- if they were not already set by user.
-   for _, entry in ipairs({"variables", "rocks_provided"}) do
-      if not cfg[entry] then
-         cfg[entry] = {}
-      end
-      for k,v in pairs(defaults[entry]) do
-         if not cfg[entry][k] then
-            cfg[entry][k] = v
-         end
+   if not cfg.variables then
+      cfg.variables = {}
+   end
+   for k,v in pairs(defaults.variables) do
+      if not cfg.variables[k] then
+         cfg.variables[k] = v
       end
    end
-   util.deep_merge_under(defaults.rocks_provided_3_0, cfg.rocks_provided)
 
    util.deep_merge_under(cfg, defaults)
 
@@ -537,7 +512,6 @@ local cfg = {}
 -- @param detected table containing information detected about the 
 -- environment. All fields below are optional:
 -- * lua_version (in x.y format, e.g. "5.3")
--- * luajit_version (complete, e.g. "2.1.0-beta3")
 -- * lua_bindir (e.g. "/usr/local/bin")
 -- * lua_incdir (e.g. "/usr/local/include/lua5.3/")
 -- * lua_libdir(e.g. "/usr/local/lib")
@@ -556,7 +530,6 @@ function cfg.init(detected, warning)
    end
 
    local lua_version = detected.lua_version or hardcoded.LUA_VERSION or _VERSION:sub(5)
-   local luajit_version = detected.luajit_version or hardcoded.LUAJIT_VERSION or (jit and jit.version:sub(8))
    local lua_interpreter = detected.lua_interpreter or hardcoded.LUA_INTERPRETER or (arg and arg[-1] and arg[-1]:gsub(".*[\\/]", "")) or (is_windows and "lua.exe" or "lua")
    local lua_bindir = detected.lua_bindir or hardcoded.LUA_BINDIR or (arg and arg[-1] and arg[-1]:gsub("[\\/][^\\/]+$", ""))
    local lua_incdir = detected.lua_incdir or hardcoded.LUA_INCDIR
@@ -579,7 +552,6 @@ function cfg.init(detected, warning)
    cfg.major_version = major_version
 
    cfg.lua_version = lua_version
-   cfg.luajit_version = luajit_version
    cfg.lua_interpreter = lua_interpreter
 
    cfg.variables = {
@@ -698,7 +670,6 @@ function cfg.init(detected, warning)
    -- Settings detected or given via the CLI (i.e. --lua-dir) take precedence over config files:
    cfg.project_dir = project_dir
    cfg.lua_version = detected.lua_version or cfg.lua_version
-   cfg.luajit_version = detected.luajit_version or cfg.luajit_version
    cfg.lua_interpreter = detected.lua_interpreter or cfg.lua_interpreter
    cfg.variables.LUA_BINDIR = detected.lua_bindir or cfg.variables.LUA_BINDIR or lua_bindir
    cfg.variables.LUA_INCDIR = detected.lua_incdir or cfg.variables.LUA_INCDIR or lua_incdir
@@ -727,7 +698,6 @@ function cfg.init(detected, warning)
       defaults.fs_use_modules = true
    end
 
-   defaults.rocks_provided, defaults.rocks_provided_3_0 = make_rocks_provided(lua_version, luajit_version)
    use_defaults(cfg, defaults)
 
    cfg.variables.LUA = cfg.variables.LUA or (cfg.variables.LUA_BINDIR and (cfg.variables.LUA_BINDIR .. "/" .. cfg.lua_interpreter):gsub("//", "/"))
@@ -752,6 +722,8 @@ function cfg.init(detected, warning)
                     and home_config_file
                     or sys_config_file),
    }
+   
+   cfg.cache = {}
 
    ----------------------------------------
    -- Attributes of cfg are set.

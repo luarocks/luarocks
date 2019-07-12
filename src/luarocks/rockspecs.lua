@@ -5,7 +5,7 @@ local dir = require("luarocks.dir")
 local path = require("luarocks.path")
 local queries = require("luarocks.queries")
 local type_rockspec = require("luarocks.type.rockspec")
-local util = require("luarocks.core.util")
+local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
 
 local rockspec_mt = {}
@@ -142,9 +142,7 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
                                 or  ".") )
                       or base
 
-   rockspec.rocks_provided = (rockspec:format_is_at_least("3.0")
-                              and cfg.rocks_provided_3_0
-                              or  cfg.rocks_provided)
+   rockspec.rocks_provided = util.get_rocks_provided(rockspec)
 
    for _, key in ipairs({"dependencies", "build_dependencies", "test_dependencies"}) do
       local ok, err = convert_dependencies(rockspec, key)
