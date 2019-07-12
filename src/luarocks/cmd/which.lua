@@ -17,6 +17,9 @@ that module by luarocks.loader, like "/usr/local/lua/]]..cfg.lua_version..[[/foo
 --- Driver function for "lua" command.
 -- @return boolean This function terminates the interpreter.
 function which_cmd.command(_, modname)
+   if modname == nil then
+      return nil, "Missing module name. " .. util.see_help("which")
+   end
    local pathname, rock_name, rock_version = loader.which(modname)
    if not pathname then
       return nil, "Module '" .. modname .. "' not found by luarocks.loader."
