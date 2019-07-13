@@ -60,10 +60,10 @@ function path_cmd.command(flags)
    
    local lpath_var, lcpath_var = util.lua_path_variables()
 
-   util.printout(fs.export_cmd(lpath_var, util.cleanup_path(lr_path, ';', cfg.lua_version)))
-   util.printout(fs.export_cmd(lcpath_var, util.cleanup_path(lr_cpath, ';', cfg.lua_version)))
+   util.printout(fs.export_cmd(lpath_var, util.cleanup_path(lr_path, ';', cfg.lua_version, flags["append"])))
+   util.printout(fs.export_cmd(lcpath_var, util.cleanup_path(lr_cpath, ';', cfg.lua_version, flags["append"])))
    if not flags["no-bin"] then
-      util.printout(fs.export_cmd("PATH", util.cleanup_path(lr_bin, path_sep)))
+      util.printout(fs.export_cmd("PATH", util.cleanup_path(lr_bin, path_sep, nil, flags["append"])))
    end
    return true
 end
