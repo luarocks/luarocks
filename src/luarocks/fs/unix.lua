@@ -220,8 +220,11 @@ function unix.is_dir(file)
       return true
    end
    if fd then
+      local _, _, ecode = fd:read(1)
       fd:close()
-      return true
+      if ecode == 21 then -- "Is a directory"
+         return true
+      end
    end
    return false
 end
