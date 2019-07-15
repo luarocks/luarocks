@@ -8,7 +8,6 @@ local vars = {}
 vars.PREFIX = nil
 vars.VERSION = "3.0"
 vars.SYSCONFDIR = nil
-vars.SYSCONFFORCE = nil
 vars.CONFBACKUPDIR = nil
 vars.SYSCONFFILENAME = nil
 vars.CONFIG_FILE = nil
@@ -197,7 +196,6 @@ local function parse_options(args)
 			vars.PREFIX = option.value
 		elseif name == "/CONFIG" then
 			vars.SYSCONFDIR = option.value
-			vars.SYSCONFFORCE = true
 		elseif name == "/TREE" then
 			vars.TREE_ROOT = option.value
 		elseif name == "/SCRIPTS" then
@@ -835,7 +833,6 @@ vars.SYSCONFFILENAME = S"config-$LUA_VERSION.lua"
 vars.CONFIG_FILE = vars.SYSCONFDIR.."\\"..vars.SYSCONFFILENAME
 if SELFCONTAINED then
 	vars.SYSCONFDIR = vars.PREFIX
-	vars.SYSCONFFORCE = true
 	vars.TREE_ROOT = vars.PREFIX..[[\systree]]
 	REGISTRY = false
 end
@@ -1036,13 +1033,11 @@ return {
    SYSTEM = [[$SYSTEM]],
    PROCESSOR = [[$UNAME_M]],
    PREFIX = [[$PREFIX]],
+   SYSCONFDIR = [[$SYSCONFDIR]],
    WIN_TOOLS = [[$PREFIX/tools]],
 ]=])
 if FORCE_CONFIG then
 	f:write("   FORCE_CONFIG = true,\n")
-end
-if vars.SYSCONFFORCE then  -- only write this value when explcitly given, otherwise rely on defaults
-	f:write(S("   SYSCONFDIR = [[$SYSCONFDIR]],\n"))
 end
 f:write("}\n")
 f:close()
