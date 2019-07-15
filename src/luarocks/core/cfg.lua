@@ -561,7 +561,7 @@ function cfg.init(detected, warning)
    local lua_incdir = detected.lua_incdir or hardcoded.LUA_INCDIR
    local lua_libdir = detected.lua_libdir or hardcoded.LUA_LIBDIR
    local lua_dir = detected.lua_dir or hardcoded.LUA_DIR or (lua_bindir and lua_bindir:gsub("[\\/]bin$", ""))
-   local project_dir = detected.project_dir
+   local project_dir = (not hardcoded.FORCE_CONFIG) and detected.project_dir
    
    local init = cfg.init
 
@@ -695,7 +695,7 @@ function cfg.init(detected, warning)
    ----------------------------------------
 
    -- Settings detected or given via the CLI (i.e. --lua-dir) take precedence over config files:
-   cfg.project_dir = detected.project_dir
+   cfg.project_dir = project_dir
    cfg.lua_version = detected.lua_version or cfg.lua_version
    cfg.luajit_version = detected.luajit_version or cfg.luajit_version
    cfg.lua_interpreter = detected.lua_interpreter or cfg.lua_interpreter

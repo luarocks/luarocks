@@ -13,6 +13,11 @@ local dir = require("luarocks.dir")
 local fun = require("luarocks.fun")
 local fs = require("luarocks.fs")
 
+local hc_ok, hardcoded = pcall(require, "luarocks.core.hardcoded")
+if not hc_ok then
+   hardcoded = {}
+end
+
 local program = util.this_program("luarocks")
 
 cmd.errorcodes = {
@@ -189,6 +194,10 @@ do
       end
    
       local function find_default_lua_version(flags, project_dir)
+         if hardcoded.FORCE_CONFIG then
+            return nil
+         end
+
          local dirs = {}
          if project_dir then
             table.insert(dirs, dir.path(project_dir, ".luarocks"))
