@@ -306,7 +306,7 @@ end
 
 
 local function ziptime_to_luatime(ztime, zdate)
-   return {
+   local date = {
       year = shr(zdate, 9) + 1980,
       month = shr(lowbits(zdate, 9), 5),
       day = lowbits(zdate, 5),
@@ -314,6 +314,11 @@ local function ziptime_to_luatime(ztime, zdate)
       min = shr(lowbits(ztime, 11), 5),
       sec = lowbits(ztime, 5) * 2,
    }
+
+   if date.month == 0 then date.month = 1 end
+   if date.day == 0 then date.day = 1 end
+
+   return date
 end
 
 local function read_file_in_zip(zh, cdr)
