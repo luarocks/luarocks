@@ -370,6 +370,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.variables.LD = "gcc"
       defaults.gcc_rpath = true
       defaults.variables.LIBFLAG = "-shared"
+      defaults.variables.TEST = "test"
 
       defaults.external_deps_patterns = {
          bin = { "?" },
