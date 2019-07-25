@@ -206,49 +206,6 @@ function unix._unix_moderate_permissions(perms)
    return moderated_perms
 end
 
-function unix.is_dir(file)
-   file = fs.absolute_name(file)
-   file = dir.normalize(file) .. "/."
-   local fd, _, code = io.open(file, "r")
-   if code == 2 then -- "No such file or directory"
-      return false
-   end
-   if code == 20 then -- "Not a directory", regardless of permissions
-      return false
-   end
-   if code == 13 then -- "Permission denied", but is a directory
-      return true
-   end
-   if fd then
-      local _, _, ecode = fd:read(1)
-      fd:close()
-      if ecode == 21 then -- "Is a directory"
-         return true
-      end
-   end
-   return false
-end
-
-function unix.is_file(file)
-   file = fs.absolute_name(file)
-   if fs.is_dir(file) then
-      return false
-   end
-   file = dir.normalize(file)
-   local fd, _, code = io.open(file, "r")
-   if code == 2 then -- "No such file or directory"
-      return false
-   end
-   if code == 13 then -- "Permission denied", but it exists
-      return true
-   end
-   if fd then
-      fd:close()
-      return true
-   end
-   return false
-end
-
 function unix.system_cache_dir()
    if fs.is_dir("/var/cache") then
       return "/var/cache"
