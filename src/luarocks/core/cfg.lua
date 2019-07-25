@@ -806,12 +806,21 @@ function cfg.init(detected, warning)
       return platforms[name]
    end
 
-   function cfg.each_platform()
-      local i = 0
+   -- @param direction (optional) "least-specific-first" (default) or "most-specific-first"
+   function cfg.each_platform(direction)
+      direction = direction or "least-specific-first"
+      local i, delta
+      if direction == "least-specific-first" then
+         i = 0
+         delta = 1
+      else
+         i = #platform_order + 1
+         delta = -1
+      end
       return function()
          local p
          repeat
-            i = i + 1
+            i = i + delta
             p = platform_order[i]
          until (not p) or platforms[p]
          return p
