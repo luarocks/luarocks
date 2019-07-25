@@ -51,12 +51,21 @@ end
 do
    local function load_fns(fs_table, inits)
       for name, fn in pairs(fs_table) do
-         if not fs[name] then
+         if name ~= "init" and not fs[name] then
             fs[name] = fn
          end
       end
       if fs_table.init then
          table.insert(inits, fs_table.init)
+      end
+   end
+
+   local function load_platform_fns(patt, inits)
+      for platform in cfg.each_platform("most-specific-first") do
+         local ok, fs_plat = pcall(require, patt:format(platform))
+         if ok and fs_plat then
+            load_fns(fs_plat, inits)
+         end
       end
    end
 
@@ -73,26 +82,16 @@ do
       local inits = {}
 
       -- Load platform-specific functions
-      local loaded_platform = nil
-      for platform in cfg.each_platform() do
-         local ok, fs_plat = pcall(require, "luarocks.fs."..platform)
-         if ok and fs_plat then
-            loaded_platform = platform
-            load_fns(fs_plat, inits)
-            break
-         end
-      end
+      load_platform_fns("luarocks.fs.%s", inits)
 
       -- Load platform-independent pure-Lua functionality
-      local fs_lua = require("luarocks.fs.lua")
-      load_fns(fs_lua, inits)
+      load_fns(require("luarocks.fs.lua"), inits)
 
       -- Load platform-specific fallbacks for missing Lua modules
-      local ok, fs_plat_tools = pcall(require, "luarocks.fs."..loaded_platform..".tools")
-      if ok and fs_plat_tools then
-         load_fns(fs_plat_tools, inits)
-         load_fns(require("luarocks.fs.tools"))
-      end
+      load_platform_fns("luarocks.fs.%s.tools", inits)
+
+      -- Load platform-independent external tool functionality
+      load_fns(require("luarocks.fs.tools"), inits)
 
       -- Run platform-specific initializations after everything is loaded
       for _, init in ipairs(inits) do
