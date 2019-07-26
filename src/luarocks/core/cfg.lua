@@ -356,6 +356,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          lib = { "cyg?.dll", "?.dll", "lib?.dll" },
          include = { "?.h" }
       }
+      defaults.link_lua_explicitly = true
    end
 
    if platforms.unix then
