@@ -178,12 +178,12 @@ do
    do
       local function find_project_dir(project_tree)
          if project_tree then
-            return project_tree:gsub("[/\\][^/\\]+$", "")
+            return project_tree:gsub("[/\\][^/\\]+$", ""), true
          else
             local try = "."
             for _ = 1, 10 do -- FIXME detect when root dir was hit instead
                if util.exists(try .. "/.luarocks") and util.exists(try .. "/lua_modules") then
-                  return try
+                  return try, false
                elseif util.exists(try .. "/.luarocks-no-project") then
                   break
                end
@@ -265,8 +265,17 @@ do
       end
       
       detect_config_via_flags = function(flags)
-         local project_dir = find_project_dir(flags["project-tree"])
+         local project_dir, given = find_project_dir(flags["project-tree"])
          local detected = detect_lua_via_flags(flags, project_dir)
+         if flags["lua-version"] then
+            detected.given_lua_version = flags["lua-version"]
+         end
+         if flags["lua-dir"] then
+            detected.given_lua_dir = flags["lua-dir"]
+         end
+         if given then
+            detected.given_project_dir = project_dir
+         end
          detected.project_dir = project_dir
          return detected
       end
