@@ -531,7 +531,7 @@ local function find_lua_incdir(prefix, luaver, luajitver)
    return nil
 end
 
-function deps.check_lua(vars)
+function deps.check_lua_incdir(vars)
    local ljv = util.get_luajit_version()
 
    if (not vars.LUA_INCDIR) and vars.LUA_DIR then
@@ -541,30 +541,32 @@ function deps.check_lua(vars)
       end
    end
 
-   if cfg.link_lua_explicitly then
-      local shortv = cfg.lua_version:gsub("%.", "")
-      local libnames = {
-         "lua" .. cfg.lua_version,
-         "lua" .. shortv,
-         "lua-" .. cfg.lua_version,
-         "lua-" .. shortv,
-         "lua",
-      }
-      if ljv then
-         table.insert(libnames, 1, "luajit-" .. cfg.lua_version)
-      end
-      local cache = {}
-      for _, libname in ipairs(libnames) do
-         local ok = check_external_dependency("LUA", { library = libname }, vars, "build", cache)
-         if ok then
-            vars.LUALIB = vars.LUA_LIBDIR_FILE
-            return true
-         end
-      end
-      return nil, "Failed finding Lua library. You may need to configure LUA_LIBDIR.", "dependency"
-   end
-   
    return true
+end
+
+function deps.check_lua_libdir(vars)
+   local ljv = util.get_luajit_version()
+
+   local shortv = cfg.lua_version:gsub("%.", "")
+   local libnames = {
+      "lua" .. cfg.lua_version,
+      "lua" .. shortv,
+      "lua-" .. cfg.lua_version,
+      "lua-" .. shortv,
+      "lua",
+   }
+   if ljv then
+      table.insert(libnames, 1, "luajit-" .. cfg.lua_version)
+   end
+   local cache = {}
+   for _, libname in ipairs(libnames) do
+      local ok = check_external_dependency("LUA", { library = libname }, vars, "build", cache)
+      if ok then
+         vars.LUALIB = vars.LUA_LIBDIR_FILE
+         return true
+      end
+   end
+   return nil, "Failed finding Lua library. You may need to configure LUA_LIBDIR.", "dependency"
 end
 
 local valid_deps_modes = {

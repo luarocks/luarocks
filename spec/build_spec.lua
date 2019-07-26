@@ -507,7 +507,8 @@ describe("LuaRocks build tests #unit", function()
       runner.tick = true
       cfg.init()
       fs.init()
-      deps.check_lua(cfg.variables)
+      deps.check_lua_incdir(cfg.variables)
+      deps.check_lua_libdir(cfg.variables)
    end)
 
    teardown(function()

@@ -514,8 +514,6 @@ local cfg = {}
 -- environment. All fields below are optional:
 -- * lua_version (in x.y format, e.g. "5.3")
 -- * lua_bindir (e.g. "/usr/local/bin")
--- * lua_incdir (e.g. "/usr/local/include/lua5.3/")
--- * lua_libdir(e.g. "/usr/local/lib")
 -- * lua_dir (e.g. "/usr/local")
 -- * lua_interpreter (e.g. "lua-5.3")
 -- * project_dir (a string with the path of the project directory
@@ -533,8 +531,6 @@ function cfg.init(detected, warning)
    local lua_version = detected.lua_version or hardcoded.LUA_VERSION or _VERSION:sub(5)
    local lua_interpreter = detected.lua_interpreter or hardcoded.LUA_INTERPRETER or (arg and arg[-1] and arg[-1]:gsub(".*[\\/]", "")) or (is_windows and "lua.exe" or "lua")
    local lua_bindir = detected.lua_bindir or hardcoded.LUA_BINDIR or (arg and arg[-1] and arg[-1]:gsub("[\\/][^\\/]+$", ""))
-   local lua_incdir = detected.lua_incdir or hardcoded.LUA_INCDIR
-   local lua_libdir = detected.lua_libdir or hardcoded.LUA_LIBDIR
    local lua_dir = detected.lua_dir or hardcoded.LUA_DIR or (lua_bindir and lua_bindir:gsub("[\\/]bin$", ""))
    local project_dir = (not hardcoded.FORCE_CONFIG) and detected.project_dir
    
@@ -558,8 +554,8 @@ function cfg.init(detected, warning)
    cfg.variables = {
       LUA_DIR = lua_dir,
       LUA_BINDIR = lua_bindir,
-      LUA_INCDIR = lua_incdir,
-      LUA_LIBDIR = lua_libdir,
+      LUA_LIBDIR = hardcoded.LUA_LIBDIR,
+      LUA_INCDIR = hardcoded.LUA_INCDIR,
    }
 
    cfg.init = init
@@ -668,14 +664,14 @@ function cfg.init(detected, warning)
    -- Let's finish up the cfg table.
    ----------------------------------------
 
-   -- Settings detected or given via the CLI (i.e. --lua-dir) take precedence over config files:
-   cfg.project_dir = project_dir
-   cfg.lua_version = detected.lua_version or cfg.lua_version
+   -- Settings given via the CLI (i.e. --lua-dir) take precedence over config files.
+   cfg.project_dir = detected.given_project_dir or project_dir
+   cfg.lua_version = detected.given_lua_version or lua_version or cfg.lua_version
+   cfg.variables.LUA_DIR = detected.given_lua_dir or cfg.variables.LUA_DIR or lua_dir
+
    cfg.lua_interpreter = detected.lua_interpreter or cfg.lua_interpreter
-   cfg.variables.LUA_BINDIR = detected.lua_bindir or cfg.variables.LUA_BINDIR or lua_bindir
-   cfg.variables.LUA_INCDIR = detected.lua_incdir or cfg.variables.LUA_INCDIR or lua_incdir
-   cfg.variables.LUA_LIBDIR = detected.lua_libdir or cfg.variables.LUA_LIBDIR or lua_libdir
-   cfg.variables.LUA_DIR = detected.lua_dir or cfg.variables.LUA_DIR or lua_dir
+
+   cfg.variables.LUA_BINDIR = cfg.variables.LUA_BINDIR or lua_bindir
 
    -- Build a default list of rocks trees if not given
    if cfg.rocks_trees == nil then
