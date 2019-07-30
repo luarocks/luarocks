@@ -338,17 +338,10 @@ local function get_config_text(cfg)
 end
 
 local function get_parser(description, cmd_modules)
-   local epilog = [[
-Variables:
-   Variables from the "variables" table of the configuration file can be
-   overridden with VAR=VALUE assignments.
-
-]]..get_config_text(cfg)
-
    local basename = dir.base_name(program)
    local parser = argparse(
       basename, "LuaRocks "..cfg.program_version..", the Lua package manager\n\n"..
-      program.." - "..description, epilog)
+      program.." - "..description)
       :help_max_width(80)
       :add_help("--help")
       :add_help_command()
@@ -487,11 +480,6 @@ function cmd.run_command(description, commands, external_namespace, ...)
    local parser = get_parser(description, cmd_modules)
    args = parser:parse(args)
 
-   if not args.command then
-      util.printout(parser:get_help())
-      os.exit(cmd.errorcodes.OK)
-   end
-
    -- Compatibility for old flag
    if args.nodeps then
       args.deps_mode = "none"
@@ -527,7 +515,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
    if not lua_found then
       util.warning("Could not find a Lua " .. cfg.lua_version .. " interpreter in your PATH. " ..
                    "Modules may not install with the correct configurations. " ..
-                   "You may want to specify to the path prefix to your build " ..
+                   "You may want to specify the path prefix to your build " ..
                    "of Lua " .. cfg.lua_version .. " using --lua-dir")
    end
    cfg.lua_found = lua_found
@@ -566,6 +554,20 @@ function cmd.run_command(description, commands, external_namespace, ...)
    -- if running as superuser, use system cache dir
    if not cfg.home_tree then
       cfg.local_cache = dir.path(fs.system_cache_dir(), "luarocks")
+   end
+
+   parser:epilog([[
+Variables:
+   Variables from the "variables" table of the configuration file can be
+   overridden with VAR=VALUE assignments.
+
+]]..get_config_text(cfg))
+
+   if not args.command then
+      util.printout()
+      util.printout(parser:get_help())
+      util.printout()
+      os.exit(cmd.errorcodes.OK)
    end
 
    local cmd_mod = cmd_modules[args.command]

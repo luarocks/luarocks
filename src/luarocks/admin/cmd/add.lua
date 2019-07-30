@@ -20,6 +20,7 @@ function add.add_to_parser(parser)
 
    cmd:option("--server", "The server to use. If not given, the default server "..
       "set in the upload_server variable from the configuration file is used instead.")
+      :target("add_server")
    cmd:flag("--no-refresh", "Do not refresh the local cache prior to "..
       "generation of the updated manifest.")
    cmd:flag("--index", "Produce an index.html file for the manifest. This "..
@@ -125,7 +126,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
 end
 
 function add.command(args)
-   local server, server_table = cache.get_upload_server(args.server)
+   local server, server_table = cache.get_upload_server(args.add_server or args.server)
    if not server then return nil, server_table end
    return add_files_to_server(not args.no_refresh, args.rock, server, server_table, args.index)
 end

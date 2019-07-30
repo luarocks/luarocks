@@ -262,7 +262,7 @@ end
 -- @return boolean: True if succeeded, nil on errors.
 function show.command(args)
    local name = util.adjust_name_and_namespace(args.rock, args)
-   local version = args.verson
+   local version = args.version
    local query = queries.new(name, version)
    
    local repo, repo_url

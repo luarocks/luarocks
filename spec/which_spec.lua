@@ -22,7 +22,7 @@ describe("LuaRocks which tests #integration", function()
 
    it("fails on missing arguments", function()
       local output = run.luarocks("which")
-      assert.match("Missing module name", output, 1, true)
+      assert.match("missing argument 'modname'", output, 1, true)
    end)
 
    it("finds modules found in package.path", function()

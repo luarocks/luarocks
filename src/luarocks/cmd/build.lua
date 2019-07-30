@@ -25,6 +25,7 @@ function cmd_build.add_to_parser(parser)
 
    cmd:argument("rock", "A rockspec file, a source rock file, or the name of "..
       "a rock to be fetched from a repository.")
+      :args("?")
    cmd:argument("version", "Rock version.")
       :args("?")
 
@@ -33,6 +34,10 @@ function cmd_build.add_to_parser(parser)
    cmd:flag("--keep", "Do not remove previously installed versions of the "..
       "rock after building a new one. This behavior can be made permanent by "..
       "setting keep_other_versions=true in the configuration file.")
+   cmd:flag("--force", "If --keep is not specified, force removal of "..
+      "previously installed versions if it would break dependencies.")
+   cmd:flag("--force-fast", "Like --force, but performs a forced removal "..
+      "without reporting dependency issues.")
    cmd:option("--branch", "Override the `source.branch` field in the loaded "..
       "rockspec. Allows to specify a different branch to fetch. Particularly "..
       'for "dev" rocks.')

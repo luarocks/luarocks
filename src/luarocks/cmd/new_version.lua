@@ -139,22 +139,22 @@ local function update_source_section(out_rs, url, tag, old_ver, new_ver)
 end
  
 function new_version.command(args)
-   if not args.input then
+   if not args.rock then
       local err
-      args.input, err = util.get_default_rockspec()
-      if not args.input then
+      args.rock, err = util.get_default_rockspec()
+      if not args.rock then
          return nil, err
       end
    end
    
    local filename, err
-   if args.input:match("rockspec$") then
-      filename, err = fetch.fetch_url(args.input)
+   if args.rock:match("rockspec$") then
+      filename, err = fetch.fetch_url(args.rock)
       if not filename then
          return nil, err
       end
    else
-      filename, err = download.download("rockspec", args.input:lower())
+      filename, err = download.download("rockspec", args.rock:lower())
       if not filename then
          return nil, err
       end

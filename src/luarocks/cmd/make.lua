@@ -45,6 +45,10 @@ only dependencies of the rockspec (see `luarocks help install`).
    cmd:flag("--keep", "Do not remove previously installed versions of the "..
       "rock after building a new one. This behavior can be made permanent by "..
       "setting keep_other_versions=true in the configuration file.")
+   cmd:flag("--force", "If --keep is not specified, force removal of "..
+      "previously installed versions if it would break dependencies.")
+   cmd:flag("--force-fast", "Like --force, but performs a forced removal "..
+      "without reporting dependency issues.")
    cmd:option("--branch", "Override the `source.branch` field in the loaded "..
       "rockspec. Allows to specify a different branch to fetch. Particularly "..
       'for "dev" rocks.')
@@ -57,14 +61,15 @@ only dependencies of the rockspec (see `luarocks help install`).
       "option to work properly.")
    cmd:flag("--sign", "To be used with --pack-binary-rock. Also produce a "..
       "signature file for the generated .rock file.")
+   util.deps_mode_option(cmd)
 end
 
 --- Driver function for "make" command.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
 function make.command(args)
-   local rockspec
-   if not args.rockspec then
+   local rockspec = args.rockspec
+   if not rockspec then
       local err
       rockspec, err = util.get_default_rockspec()
       if not rockspec then

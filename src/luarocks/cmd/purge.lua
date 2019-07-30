@@ -29,6 +29,10 @@ The --tree option is mandatory: luarocks purge does not assume a default tree.]]
       "rock and remove the other ones. By default it only removes old "..
       "versions if they are not needed as dependencies. This can be "..
       "overridden with the flag --force.")
+   cmd:flag("--force", "If --old-versions is specified, force removal of "..
+      "previously installed versions if it would break dependencies.")
+   cmd:flag("--force-fast", "Like --force, but performs a forced removal "..
+      "without reporting dependency issues.")
 end
 
 function purge.command(args)
