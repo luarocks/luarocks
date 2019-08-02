@@ -28,7 +28,6 @@ to separate LuaRocks arguments from test suite arguments.]],
    cmd:option("--test-type", "Specify the test suite type manually if it was "..
       "not specified in the rockspec and it could not be auto-detected.")
       :argname("<type>")
-   util.deps_mode_option(cmd)
 end
 
 function cmd_test.command(args)
