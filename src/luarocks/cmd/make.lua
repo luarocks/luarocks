@@ -16,6 +16,31 @@ local deps = require("luarocks.deps")
 local writer = require("luarocks.manif.writer")
 local cmd = require("luarocks.cmd")
 
+function make.cmd_options(parser)
+   parser:flag("--pack-binary-rock", "Do not install rock. Instead, produce a "..
+      ".rock file with the contents of compilation in the current directory.")
+   parser:flag("--keep", "Do not remove previously installed versions of the "..
+      "rock after building a new one. This behavior can be made permanent by "..
+      "setting keep_other_versions=true in the configuration file.")
+   parser:flag("--force", "If --keep is not specified, force removal of "..
+      "previously installed versions if it would break dependencies.")
+   parser:flag("--force-fast", "Like --force, but performs a forced removal "..
+      "without reporting dependency issues.")
+   parser:option("--branch", "Override the `source.branch` field in the loaded "..
+      "rockspec. Allows to specify a different branch to fetch. Particularly "..
+      'for "dev" rocks.')
+      :argname("<name>")
+   parser:flag("--verify", "Verify signature of the rockspec or src.rock being "..
+      "built. If the rockspec or src.rock is being downloaded, LuaRocks will "..
+      "attempt to download the signature as well. Otherwise, the signature "..
+      "file should be already available locally in the same directory.\n"..
+      "You need the signer’s public key in your local keyring for this "..
+      "option to work properly.")
+   parser:flag("--sign", "To be used with --pack-binary-rock. Also produce a "..
+      "signature file for the generated .rock file.")
+   util.deps_mode_option(parser)
+end
+
 function make.add_to_parser(parser)
    local cmd = parser:command("make", [[
 Builds sources in the current directory, but unlike "build",
@@ -40,28 +65,7 @@ only dependencies of the rockspec (see `luarocks help install`).
    cmd:argument("rockspec", "Rockspec for the rock to build.")
       :args("?")
 
-   cmd:flag("--pack-binary-rock", "Do not install rock. Instead, produce a "..
-      ".rock file with the contents of compilation in the current directory.")
-   cmd:flag("--keep", "Do not remove previously installed versions of the "..
-      "rock after building a new one. This behavior can be made permanent by "..
-      "setting keep_other_versions=true in the configuration file.")
-   cmd:flag("--force", "If --keep is not specified, force removal of "..
-      "previously installed versions if it would break dependencies.")
-   cmd:flag("--force-fast", "Like --force, but performs a forced removal "..
-      "without reporting dependency issues.")
-   cmd:option("--branch", "Override the `source.branch` field in the loaded "..
-      "rockspec. Allows to specify a different branch to fetch. Particularly "..
-      'for "dev" rocks.')
-      :argname("<name>")
-   cmd:flag("--verify", "Verify signature of the rockspec or src.rock being "..
-      "built. If the rockspec or src.rock is being downloaded, LuaRocks will "..
-      "attempt to download the signature as well. Otherwise, the signature "..
-      "file should be already available locally in the same directory.\n"..
-      "You need the signer’s public key in your local keyring for this "..
-      "option to work properly.")
-   cmd:flag("--sign", "To be used with --pack-binary-rock. Also produce a "..
-      "signature file for the generated .rock file.")
-   util.deps_mode_option(cmd)
+   make.cmd_options(cmd)
 end
 
 --- Driver function for "make" command.
