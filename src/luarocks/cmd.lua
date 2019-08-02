@@ -395,13 +395,14 @@ Enabling completion for Fish:
       :argname("<server>")
    parser:option("--only-sources", "Restrict downloads to paths matching the given URL.")
       :argname("<url>")
-   parser:option("--namespace"):hidden(true) -- TODO: Description
+   parser:option("--namespace"):description("Specify the rocks server namespace to use.")
    parser:option("--lua-dir", "Which Lua installation to use.")
       :argname("<prefix>")
    parser:option("--lua-version", "Which Lua version to use.")
       :argname("<ver>")
    parser:option("--tree", "Which tree to operate on.")
-   parser:option("--project-tree"):hidden(true)  -- TODO: Description?
+   parser:option("--project-tree"):description("") -- TODO
+      :argname("<tree>")
    parser:flag("--local", "Use the tree in the user's home directory.\n"..
       "To enable it, see '"..program.." help path'.")
    parser:flag("--global", "Use the system tree when `local_by_default` is `true`.")

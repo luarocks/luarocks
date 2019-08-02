@@ -41,6 +41,10 @@ function install.add_to_parser(parser)
       "You need the signer’s public key in your local keyring for this "..
       "option to work properly.")
    util.deps_mode_option(cmd)
+   -- luarocks build options
+   parser:flag("--pack-binary-rock"):hidden(true)
+   parser:flag("--branch"):hidden(true)
+   parser:flag("--sign"):hidden(true)
 end
 
 install.opts = util.opts_table("install.opts", {

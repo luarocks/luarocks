@@ -27,7 +27,7 @@ function doc.add_to_parser(parser)
 
    cmd:flag("--home", "Open the home page of project.")
    cmd:flag("--list", "List documentation files only.")
-   cmd:flag("--porcelain"):hidden(true) -- TODO: Description?
+   cmd:flag("--porcelain"):description("Produce machine-friendly output.")
 end
 
 local function show_homepage(homepage, name, version)

@@ -20,7 +20,7 @@ function make_manifest.add_to_parser(parser)
 
    cmd:flag("--local-tree", "If given, do not write versioned versions of the manifest file.\n"..
       "Use this when rebuilding the manifest of a local rocks tree.")
-   cmd:option("--deps-mode"):hidden(true) -- TODO: Description?
+   util.deps_mode_option(cmd)
 end
 
 --- Driver function for "make_manifest" command.
