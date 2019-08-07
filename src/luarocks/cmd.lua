@@ -408,8 +408,6 @@ Enabling completion for Fish:
    parser:option("--lua-version", "Which Lua version to use.")
       :argname("<ver>")
    parser:option("--tree", "Which tree to operate on.")
-   parser:option("--project-tree"):description("") -- TODO
-      :argname("<tree>")
    parser:flag("--local", "Use the tree in the user's home directory.\n"..
       "To enable it, see '"..program.." help path'.")
    parser:flag("--global", "Use the system tree when `local_by_default` is `true`.")
@@ -420,6 +418,8 @@ Enabling completion for Fish:
       :argname("<seconds>")
       :convert(tonumber)
 
+   -- Used internally to force the use of a particular project tree
+   parser:option("--project-tree"):hidden(true)
    -- Compatibility for old names of some options
    parser:option("--to"):target("tree"):hidden(true)
    parser:option("--from"):target("server"):hidden(true)
