@@ -91,9 +91,11 @@ end
 -- through this function.
 -- @param repo_url string: URL or pathname for the repository.
 -- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
+-- @param versioned_only boolean: If true, do not fall back to the main manifest
+-- if a versioned manifest was not found.
 -- @return table or (nil, string, [string]): A table representing the manifest,
 -- or nil followed by an error message and an optional error code.
-function manif.load_manifest(repo_url, lua_version)
+function manif.load_manifest(repo_url, lua_version, versioned_only)
    assert(type(repo_url) == "string")
    assert(type(lua_version) == "string" or not lua_version)
    lua_version = lua_version or cfg.lua_version
@@ -107,7 +109,7 @@ function manif.load_manifest(repo_url, lua_version)
    local filenames = {
       "manifest-"..lua_version..".zip",
       "manifest-"..lua_version,
-      "manifest",
+      not versioned_only and "manifest" or nil,
    }
 
    local protocol, repodir = dir.split_url(repo_url)
