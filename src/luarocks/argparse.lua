@@ -584,12 +584,17 @@ function Option:_is_vararg()
    return self._maxargs ~= self._minargs
 end
 
-function Parser:_get_fullname()
+function Parser:_get_fullname(exclude_root)
    local parent = self._parent
+   if exclude_root and not parent then
+      return ""
+   end
    local buf = {self._name}
 
    while parent do
-      table.insert(buf, 1, parent._name)
+      if not exclude_root or parent._parent then
+         table.insert(buf, 1, parent._name)
+      end
       parent = parent._parent
    end
 
@@ -1234,45 +1239,54 @@ function Parser:_bash_option_args(buf, indent)
    end
 end
 
-function Parser:_bash_get_cmd(buf)
-   local cmds = {}
-   for _, command in ipairs(self._commands) do
-      if not command._is_help_command then
-         table.insert(cmds, (" "):rep(12) .. table.concat(command._aliases, "|") .. ")")
-         table.insert(cmds, (" "):rep(16) .. 'cmd="' .. command._name .. '"')
-         table.insert(cmds, (" "):rep(16) .. "break")
-         table.insert(cmds, (" "):rep(16) .. ";;")
-      end
+function Parser:_bash_get_cmd(buf, indent)
+   if #self._commands == 0 then
+      return
    end
 
-   if #cmds > 0 then
-      table.insert(buf, (" "):rep(4) .. "for arg in ${COMP_WORDS[@]:1}; do")
-      table.insert(buf, (" "):rep(8) .. 'case "$arg" in')
-      table.insert(buf, table.concat(cmds, "\n"))
-      table.insert(buf, (" "):rep(8) .. "esac")
-      table.insert(buf, (" "):rep(4) .. "done\n")
+   table.insert(buf, (" "):rep(indent) .. 'args=("${args[@]:1}")')
+   table.insert(buf, (" "):rep(indent) .. 'for arg in "${args[@]}"; do')
+   table.insert(buf, (" "):rep(indent + 4) .. 'case "$arg" in')
+
+   for _, command in ipairs(self._commands) do
+      table.insert(buf, (" "):rep(indent + 8) .. table.concat(command._aliases, "|") .. ")")
+      if self._parent then
+         table.insert(buf, (" "):rep(indent + 12) .. 'cmd="$cmd ' .. command._name .. '"')
+      else
+         table.insert(buf, (" "):rep(indent + 12) .. 'cmd="' .. command._name .. '"')
+      end
+      table.insert(buf, (" "):rep(indent + 12) .. 'opts="$opts ' .. command:_get_options() .. '"')
+      command:_bash_get_cmd(buf, indent + 12)
+      table.insert(buf, (" "):rep(indent + 12) .. "break")
+      table.insert(buf, (" "):rep(indent + 12) .. ";;")
    end
+
+   table.insert(buf, (" "):rep(indent + 4) .. "esac")
+   table.insert(buf, (" "):rep(indent) .. "done")
 end
 
 function Parser:_bash_cmd_completions(buf)
-   local subcmds = {}
-   for _, command in ipairs(self._commands) do
-      if #command._options > 0 and not command._is_help_command then
-         table.insert(subcmds, (" "):rep(8) .. command._name .. ")")
-         command:_bash_option_args(subcmds, 12)
-         table.insert(subcmds, (" "):rep(12) .. 'opts="$opts ' .. command:_get_options() .. '"')
-         table.insert(subcmds, (" "):rep(12) .. ";;")
-      end
+   local cmd_buf = {}
+   if self._parent then
+      self:_bash_option_args(cmd_buf, 12)
+   end
+   if #self._commands > 0 then
+      table.insert(cmd_buf, (" "):rep(12) .. 'COMPREPLY=($(compgen -W "' .. self:_get_commands() .. '" -- "$cur"))')
+   elseif self._is_help_command then
+      table.insert(cmd_buf, (" "):rep(12)
+         .. 'COMPREPLY=($(compgen -W "'
+         .. self._parent:_get_commands()
+         .. '" -- "$cur"))')
+   end
+   if #cmd_buf > 0 then
+      table.insert(buf, (" "):rep(8) .. "'" .. self:_get_fullname(true) .. "')")
+      table.insert(buf, table.concat(cmd_buf, "\n"))
+      table.insert(buf, (" "):rep(12) .. ";;")
    end
 
-   table.insert(buf, (" "):rep(4) .. 'case "$cmd" in')
-   table.insert(buf, (" "):rep(8) .. self._basename .. ")")
-   table.insert(buf, (" "):rep(12) .. 'COMPREPLY=($(compgen -W "' .. self:_get_commands() .. '" -- "$cur"))')
-   table.insert(buf, (" "):rep(12) .. ";;")
-   if #subcmds > 0 then
-      table.insert(buf, table.concat(subcmds, "\n"))
+   for _, command in ipairs(self._commands) do
+      command:_bash_cmd_completions(buf)
    end
-   table.insert(buf, (" "):rep(4) .. "esac\n")
 end
 
 function Parser:get_bash_complete()
@@ -1281,17 +1295,20 @@ function Parser:get_bash_complete()
    local buf = {([[
 _%s() {
     local IFS=$' \t\n'
-    local cur prev cmd opts arg
+    local args cur prev cmd opts arg
+    args=("${COMP_WORDS[@]}")
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    cmd="%s"
     opts="%s"
-]]):format(self._basename, self._basename, self:_get_options())}
+]]):format(self._basename, self:_get_options())}
 
    self:_bash_option_args(buf, 4)
-   self:_bash_get_cmd(buf)
+   self:_bash_get_cmd(buf, 4)
    if #self._commands > 0 then
+      table.insert(buf, "")
+      table.insert(buf, (" "):rep(4) .. 'case "$cmd" in')
       self:_bash_cmd_completions(buf)
+      table.insert(buf, (" "):rep(4) .. "esac\n")
    end
 
    table.insert(buf, ([=[
@@ -1441,23 +1458,48 @@ local function fish_escape(string)
    return string:gsub("[\\']", "\\%0")
 end
 
-function Parser:_fish_complete_help(buf, prefix)
+function Parser:_fish_get_cmd(buf, indent)
+   if #self._commands == 0 then
+      return
+   end
+
+   table.insert(buf, (" "):rep(indent) .. "set -e cmdline[1]")
+   table.insert(buf, (" "):rep(indent) .. "for arg in $cmdline")
+   table.insert(buf, (" "):rep(indent + 4) .. "switch $arg")
+
+   for _, command in ipairs(self._commands) do
+      table.insert(buf, (" "):rep(indent + 8) .. "case " .. table.concat(command._aliases, " "))
+      table.insert(buf, (" "):rep(indent + 12) .. "set cmd $cmd " .. command._name)
+      command:_fish_get_cmd(buf, indent + 12)
+      table.insert(buf, (" "):rep(indent + 12) .. "break")
+   end
+
+   table.insert(buf, (" "):rep(indent + 4) .. "end")
+   table.insert(buf, (" "):rep(indent) .. "end")
+end
+
+function Parser:_fish_complete_help(buf, basename)
+   local prefix = "complete -c " .. basename
    table.insert(buf, "")
 
    for _, command in ipairs(self._commands) do
-      for _, alias in ipairs(command._aliases) do
-         local line = ("%s -n '__fish_use_subcommand' -xa '%s'"):format(prefix, alias)
-         if command._description then
-            line = ("%s -d '%s'"):format(line, fish_escape(get_short_description(command)))
-         end
-         table.insert(buf, line)
+      local aliases = table.concat(command._aliases, " ")
+      local line
+      if self._parent then
+         line = ("%s -n '__fish_%s_using_command %s' -xa '%s'")
+            :format(prefix, basename, self:_get_fullname(true), aliases)
+      else
+         line = ("%s -n '__fish_%s_using_command' -xa '%s'"):format(prefix, basename, aliases)
       end
-
+      if command._description then
+         line = ("%s -d '%s'"):format(line, fish_escape(get_short_description(command)))
+      end
+      table.insert(buf, line)
    end
 
    if self._is_help_command then
-      local line = ("%s -n '__fish_seen_subcommand_from %s' -xa '%s'")
-         :format(prefix, table.concat(self._aliases, " "), self._parent:_get_commands())
+      local line = ("%s -n '__fish_%s_using_command %s' -xa '%s'")
+         :format(prefix, basename, self:_get_fullname(true), self._parent:_get_commands())
       table.insert(buf, line)
    end
 
@@ -1465,7 +1507,7 @@ function Parser:_fish_complete_help(buf, prefix)
       local parts = {prefix}
 
       if self._parent then
-         table.insert(parts, "-n '__fish_seen_subcommand_from " .. table.concat(self._aliases, " ") .. "'")
+         table.insert(parts, "-n '__fish_" .. basename .. "_seen_command " .. self:_get_fullname(true) .. "'")
       end
 
       for _, alias in ipairs(option._aliases) do
@@ -1490,7 +1532,7 @@ function Parser:_fish_complete_help(buf, prefix)
    end
 
    for _, command in ipairs(self._commands) do
-      command:_fish_complete_help(buf, prefix)
+      command:_fish_complete_help(buf, basename)
    end
 end
 
@@ -1498,8 +1540,31 @@ function Parser:get_fish_complete()
    self._basename = base_name(self._name)
    assert(self:_is_shell_safe())
    local buf = {}
-   local prefix = "complete -c " .. self._basename
-   self:_fish_complete_help(buf, prefix)
+
+   if #self._commands > 0 then
+      table.insert(buf, ([[
+function __fish_%s_print_command
+    set -l cmdline (commandline -poc)
+    set -l cmd]]):format(self._basename))
+      self:_fish_get_cmd(buf, 4)
+      table.insert(buf, ([[
+    echo "$cmd"
+end
+
+function __fish_%s_using_command
+    test (__fish_%s_print_command) = "$argv"
+    and return 0
+    or return 1
+end
+
+function __fish_%s_seen_command
+    string match -q "$argv*" (__fish_%s_print_command)
+    and return 0
+    or return 1
+end]]):format(self._basename, self._basename, self._basename, self._basename))
+   end
+
+   self:_fish_complete_help(buf, self._basename)
    return table.concat(buf, "\n") .. "\n"
 end
 
@@ -2004,7 +2069,7 @@ end
 
 local argparse = {}
 
-argparse.version = "0.6.0"
+argparse.version = "0.7.0"
 
 setmetatable(argparse, {__call = function(_, ...)
    return Parser(default_cmdline[0]):add_help(true)(...)
