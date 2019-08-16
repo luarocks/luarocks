@@ -71,19 +71,19 @@ end
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
 function make.command(args)
-   local rockspec = args.rockspec
-   if not rockspec then
+   local rockspec_filename = args.rockspec
+   if not rockspec_filename then
       local err
-      rockspec, err = util.get_default_rockspec()
-      if not rockspec then
+      rockspec_filename, err = util.get_default_rockspec()
+      if not rockspec_filename then
          return nil, err
       end
    end
-   if not rockspec:match("rockspec$") then
+   if not rockspec_filename:match("rockspec$") then
       return nil, "Invalid argument: 'make' takes a rockspec as a parameter. "..util.see_help("make")
    end
    
-   local rockspec, err, errcode = fetch.load_rockspec(rockspec)
+   local rockspec, err, errcode = fetch.load_rockspec(rockspec_filename)
    if not rockspec then
       return nil, err
    end
