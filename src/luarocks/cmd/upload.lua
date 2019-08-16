@@ -12,7 +12,6 @@ function upload.add_to_parser(parser)
    local cmd = parser:command("upload", "Pack a source rock file (.src.rock extension) "..
       "and upload it and the rockspec to the public rocks repository.", util.see_also())
       :summary("Upload a rockspec to the public rocks repository.")
-      :add_help("--help")
 
    cmd:argument("rockspec", "Rockspec for the rock to upload.")
 

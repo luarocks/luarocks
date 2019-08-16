@@ -18,7 +18,6 @@ And on Windows:
   luarocks path > "%temp%\_lrp.bat" && call "%temp%\_lrp.bat" && del "%temp%\_lrp.bat"]],
   util.see_also())
       :summary("Return the currently configured package path.")
-      :add_help("--help")
 
    cmd:flag("--no-bin", "Do not export the PATH variable.")
    cmd:flag("--append", "Appends the paths to the existing paths. Default is "..

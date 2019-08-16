@@ -50,7 +50,6 @@ Query information about the LuaRocks configuration.
    for detailed information on the LuaRocks config file format.
 ]]))
       :summary("Query information about the LuaRocks configuration.")
-      :add_help("--help")
 
    cmd:argument("key", "The configuration key.")
       :args("?")

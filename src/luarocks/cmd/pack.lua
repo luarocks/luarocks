@@ -10,7 +10,6 @@ local queries = require("luarocks.queries")
 
 function cmd_pack.add_to_parser(parser)
    local cmd = parser:command("pack", "Create a rock, packing sources or binaries.", util.see_also())
-      :add_help("--help")
 
    cmd:argument("rock", "A rockspec file, for creating a source rock, or the "..
       "name of an installed package, for creating a binary rock.")

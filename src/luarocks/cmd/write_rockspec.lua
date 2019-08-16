@@ -62,7 +62,6 @@ using 'dev' as a fallback default version.
 Note that the generated file is a _starting point_ for writing a
 rockspec, and is not guaranteed to be complete or correct. ]], util.see_also())
       :summary("Write a template for a rockspec file.")
-      :add_help("--help")
 
    cmd:argument("name", "Name of the rock.")
       :args("?")

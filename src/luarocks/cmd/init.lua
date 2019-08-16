@@ -12,7 +12,6 @@ local write_rockspec = require("luarocks.cmd.write_rockspec")
 
 function init.add_to_parser(parser)
    local cmd = parser:command("init", "Initialize a directory for a Lua project using LuaRocks.", util.see_also())
-      :add_help("--help")
 
    cmd:argument("name", "The project name.")
       :args("?")

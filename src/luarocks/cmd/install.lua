@@ -18,7 +18,6 @@ local dir = require("luarocks.dir")
 
 function install.add_to_parser(parser)
    local cmd = parser:command("install", "Install a rock.", util.see_also())
-      :add_help("--help")
 
    cmd:argument("rock", "The name of a rock to be fetched from a repository "..
       "or a filename of a locally available rock.")

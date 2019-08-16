@@ -12,7 +12,6 @@ function lint.add_to_parser(parser)
       "Returns success if the text of the rockspec is syntactically correct, else failure.",
       util.see_also())
       :summary("Check syntax of a rockspec.")
-      :add_help("--help")
 
    cmd:argument("rockspec", "The rockspec to check.")
 end

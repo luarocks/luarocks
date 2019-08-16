@@ -19,7 +19,6 @@ function doc.add_to_parser(parser)
    For more information about a rock, see the 'show' command.
 ]]))
       :summary("Show documentation for an installed rock.")
-      :add_help("--help")
 
    cmd:argument("rock", "Name of the rock.")
    cmd:argument("version", "Version of the rock.")

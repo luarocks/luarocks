@@ -18,7 +18,6 @@ To make sure that test suite flags are not interpreted as LuaRocks flags, use --
 to separate LuaRocks arguments from test suite arguments.]],
       util.see_also())
       :summary("Run the test suite in the current directory.")
-      :add_help("--help")
 
    cmd:argument("rockspec", "Project rockspec.")
       :args("?")

@@ -350,7 +350,6 @@ Variables:
       basename, "LuaRocks "..cfg.program_version..", the Lua package manager\n\n"..
       program.." - "..description, epilog)
       :help_max_width(80)
-      :add_help("--help")
       :add_help_command()
       :add_complete_command({
          help_max_width = 120,

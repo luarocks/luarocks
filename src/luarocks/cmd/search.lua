@@ -11,7 +11,6 @@ local results = require("luarocks.results")
 
 function cmd_search.add_to_parser(parser)
    local cmd = parser:command("search", "Query the LuaRocks servers.", util.see_also())
-      :add_help("--help")
 
    cmd:argument("name", "Name of the rock to search for.")
       :args("?")

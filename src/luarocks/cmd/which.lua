@@ -14,7 +14,6 @@ function which_cmd.add_to_parser(parser)
       'luarocks.loader, like "/usr/local/lua/'..cfg.lua_version..'/foo/bar.lua".',
       util.see_also())
       :summary("Tell which file corresponds to a given module name.")
-      :add_help("--help")
 
    cmd:argument("modname", "Module name.")
 end

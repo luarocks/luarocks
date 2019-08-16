@@ -39,7 +39,6 @@ If a directory is not given, it defaults to the current directory.
 WARNING: it writes the new rockspec to the given directory,
 overwriting the file if it already exists.]], util.see_also())
       :summary("Auto-write a rockspec for a new version of a rock.")
-      :add_help("--help")
 
    cmd:argument("rock", "Package name or rockspec.")
       :args("?")

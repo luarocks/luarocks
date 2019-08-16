@@ -13,7 +13,6 @@ local index = require("luarocks.admin.index")
 
 function admin_remove.add_to_parser(parser)
    local cmd = parser:command("remove", "Remove a rock or rockspec from a rocks server.", util.see_also())
-      :add_help("--help")
 
    cmd:argument("rock", "A local rockspec or rock file.")
       :args("+")
