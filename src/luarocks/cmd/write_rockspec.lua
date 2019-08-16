@@ -63,6 +63,8 @@ Note that the generated file is a _starting point_ for writing a
 rockspec, and is not guaranteed to be complete or correct. ]], util.see_also())
       :summary("Write a template for a rockspec file.")
 
+   parser:command("write-rockspec"):hidden(true):action(function(args) args.command = "write_rockspec" end)
+
    cmd:argument("name", "Name of the rock.")
       :args("?")
    cmd:argument("version", "Rock version.")

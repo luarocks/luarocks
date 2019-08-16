@@ -40,6 +40,8 @@ WARNING: it writes the new rockspec to the given directory,
 overwriting the file if it already exists.]], util.see_also())
       :summary("Auto-write a rockspec for a new version of a rock.")
 
+   parser:command("new-version"):hidden(true):action(function(args) args.command = "new_version" end)
+
    cmd:argument("rock", "Package name or rockspec.")
       :args("?")
    cmd:argument("new_version", "New version of the rock.")
