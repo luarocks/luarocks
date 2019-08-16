@@ -571,11 +571,7 @@ function deps.check_lua_libdir(vars)
 end
 
 function deps.get_deps_mode(args)
-   if args.deps_mode then
-      return args.deps_mode
-   else
-      return cfg.deps_mode
-   end
+   return args.deps_mode or cfg.deps_mode
 end
 
 return deps
