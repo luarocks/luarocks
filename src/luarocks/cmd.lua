@@ -304,6 +304,13 @@ do
    end
 end
 
+local variables_help = [[
+Variables:
+   Variables from the "variables" table of the configuration file can be
+   overridden with VAR=VALUE assignments.
+
+]]
+
 local function get_status(status)
    return status and "ok" or "not found"
 end
@@ -338,21 +345,15 @@ local function get_config_text(cfg)
 end
 
 local function get_parser(description, cmd_modules)
-   local epilog = [[
-Variables:
-   Variables from the "variables" table of the configuration file can be
-   overridden with VAR=VALUE assignments.
-
-]]..get_config_text(cfg)
-
    local basename = dir.base_name(program)
    local parser = argparse(
       basename, "LuaRocks "..cfg.program_version..", the Lua package manager\n\n"..
-      program.." - "..description, epilog)
+      program.." - "..description, variables_help.."Run '"..basename..
+      "' without any arguments to see the configuration.")
       :help_max_width(80)
       :add_help_command()
       :add_complete_command({
-         help_max_width = 120,
+         help_max_width = 100,
          summary = "Output a shell completion script.",
          description = [[
 Output a shell completion script.
@@ -564,14 +565,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
    end
 
    if not args.command then
-      -- Update the config text
-      parser:epilog([[
-Variables:
-   Variables from the "variables" table of the configuration file can be
-   overridden with VAR=VALUE assignments.
-
-]]..get_config_text(cfg))
-
+      parser:epilog(variables_help..get_config_text(cfg))
       util.printout()
       util.printout(parser:get_help())
       util.printout()
