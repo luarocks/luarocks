@@ -43,18 +43,17 @@ end
 
 function make.add_to_parser(parser)
    local cmd = parser:command("make", [[
-Builds sources in the current directory, but unlike "build",
-it does not fetch sources, etc., assuming everything is 
-available in the current directory. If no argument is given,
-it looks for a rockspec in the current directory and in "rockspec/"
-and "rockspecs/" subdirectories, picking the rockspec with newest version
-or without version name. If rockspecs for different rocks are found
-or there are several rockspecs without version, you must specify which to use,
+Builds sources in the current directory, but unlike "build", it does not fetch
+sources, etc., assuming everything is available in the current directory. If no
+argument is given, it looks for a rockspec in the current directory and in
+"rockspec/" and "rockspecs/" subdirectories, picking the rockspec with newest
+version or without version name. If rockspecs for different rocks are found or
+there are several rockspecs without version, you must specify which to use,
 through the command-line.
 
 This command is useful as a tool for debugging rockspecs. 
-To install rocks, you'll normally want to use the "install" and
-"build" commands. See the help on those for details.
+To install rocks, you'll normally want to use the "install" and "build"
+commands. See the help on those for details.
 
 NB: Use `luarocks install` with the `--only-deps` flag if you want to install
 only dependencies of the rockspec (see `luarocks help install`).
