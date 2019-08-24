@@ -7,24 +7,21 @@ local util = require("luarocks.util")
 local download = require("luarocks.download")
 local fetch = require("luarocks.fetch")
 
-lint.help_summary = "Check syntax of a rockspec."
-lint.help_arguments = "<rockspec>"
-lint.help = [[
-This is a utility function that checks the syntax of a rockspec.
+function lint.add_to_parser(parser)
+   local cmd = parser:command("lint", "Check syntax of a rockspec.\n\n"..
+      "Returns success if the text of the rockspec is syntactically correct, else failure.",
+      util.see_also())
+      :summary("Check syntax of a rockspec.")
 
-It returns success or failure if the text of a rockspec is
-syntactically correct.
-]]
+   cmd:argument("rockspec", "The rockspec to check.")
+end
 
-function lint.command(flags, input)
-   if not input then
-      return nil, "Argument missing. "..util.see_help("lint")
-   end
-   
-   local filename = input
-   if not input:match(".rockspec$") then
+function lint.command(args)
+
+   local filename = args.rockspec
+   if not filename:match(".rockspec$") then
       local err
-      filename, err = download.download("rockspec", input:lower())
+      filename, err = download.download("rockspec", filename:lower())
       if not filename then
          return nil, err
       end

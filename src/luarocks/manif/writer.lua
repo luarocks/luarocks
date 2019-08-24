@@ -279,7 +279,7 @@ function writer.make_rock_manifest(name, version)
 end
 
 -- Writes a 'rock_namespace' file in a locally installed rock directory.
--- @param name string: the rock name (may be in user/rock format)
+-- @param name string: the rock name, without a namespace
 -- @param version string: the rock version
 -- @param namespace string?: the namespace
 -- @return true if successful (or unnecessary, if there is no namespace),
@@ -288,8 +288,6 @@ function writer.make_namespace_file(name, version, namespace)
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    assert(type(namespace) == "string" or not namespace)
-   name = util.adjust_name_and_namespace(name, { namespace = namespace })
-   name, namespace = util.split_namespace(name)
    if not namespace then
       return true
    end

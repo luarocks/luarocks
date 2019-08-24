@@ -9,7 +9,6 @@ local cmd = require("luarocks.cmd")
 local description = "LuaRocks main command-line interface"
 
 local commands = {
-   help = "luarocks.cmd.help",
    init = "luarocks.cmd.init",
    pack = "luarocks.cmd.pack",
    unpack = "luarocks.cmd.unpack",

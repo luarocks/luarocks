@@ -10,15 +10,20 @@ local build = require("luarocks.build")
 local dir = require("luarocks.dir")
 local search = require("luarocks.search")
 
-unpack.help_summary = "Unpack the contents of a rock."
-unpack.help_arguments = "[--force] {<rock>|<name> [<version>]}"
-unpack.help = [[
+function unpack.add_to_parser(parser)
+   local cmd = parser:command("unpack", [[
 Unpacks the contents of a rock in a newly created directory.
 Argument may be a rock file, or the name of a rock in a rocks server.
-In the latter case, the app version may be given as a second argument.
+In the latter case, the rock version may be given as a second argument.]],
+      util.see_also())
+      :summary("Unpack the contents of a rock.")
 
---force   Unpack files even if the output directory already exists.
-]]
+   cmd:argument("rock", "A rock file or the name of a rock.")
+   cmd:argument("version", "Rock version.")
+      :args("?")
+
+   cmd:flag("--force", "Unpack files even if the output directory already exists.")
+end
 
 --- Load a rockspec file to the given directory, fetches the source
 -- files specified in the rockspec, and unpack them inside the directory.
@@ -141,31 +146,22 @@ local function run_unpacker(file, force)
 end
 
 --- Driver function for the "unpack" command.
--- @param ns_name string: may be a rock filename, for unpacking a 
--- rock file or the name of a rock to be fetched and unpacked.
--- @param version string or nil: if the name of a package is given, a
--- version may also be passed.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-function unpack.command(flags, ns_name, version)
-   assert(type(version) == "string" or not version)
-   if type(ns_name) ~= "string" then
-      return nil, "Argument missing. "..util.see_help("unpack")
-   end
-
-   ns_name = util.adjust_name_and_namespace(ns_name, flags)
+function unpack.command(args)
+   local ns_name = util.adjust_name_and_namespace(args.rock, args)
 
    local url, err
    if ns_name:match(".*%.rock") or ns_name:match(".*%.rockspec") then
       url = ns_name
    else
-      url, err = search.find_src_or_rockspec(ns_name, version, true)
+      url, err = search.find_src_or_rockspec(ns_name, args.version, true)
       if not url then
          return nil, err
       end
    end
 
-   return run_unpacker(url, flags["force"])
+   return run_unpacker(url, args.force)
 end
 
 return unpack

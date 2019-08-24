@@ -1092,10 +1092,10 @@ end
 
 --- Check if user has write permissions for the command.
 -- Assumes the configuration variables under cfg have been previously set up.
--- @param flags table: the flags table passed to run() drivers.
+-- @param args table: the args table passed to run() drivers.
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
-function fs_lua.check_command_permissions(flags)
+function fs_lua.check_command_permissions(args)
    local ok = true
    local err = ""
    for _, directory in ipairs { cfg.rocks_dir, cfg.deploy_lua_dir, cfg.deploy_bin_dir, cfg.deploy_lua_dir } do
@@ -1124,7 +1124,7 @@ function fs_lua.check_command_permissions(flags)
    if ok then
       return true
    else
-      if flags["local"] or cfg.local_by_default then
+      if args["local"] or cfg.local_by_default then
          err = err .. " \n-- please check your permissions."
       else
          err = err .. " \n-- you may want to run as a privileged user or use your local tree with --local."

@@ -77,162 +77,6 @@ function util.matchquote(s)
    return (s:gsub("[?%-+*%[%].%%()$^]","%%%1"))
 end
 
---- List of supported arguments.
--- Arguments that take no parameters are marked with the boolean true.
--- Arguments that take a parameter are marked with a descriptive string.
--- Arguments that may take an empty string are described in quotes,
--- (as in the value for --detailed="<text>").
--- For all other string values, it means the parameter is mandatory.
-local supported_flags = {
-   ["all"] = true,
-   ["api-key"] = "<key>",
-   ["append"] = true,
-   ["arch"] = "<arch>",
-   ["bin"] = true,
-   ["binary"] = true,
-   ["branch"] = "<branch-name>",
-   ["build-deps"] = true,
-   ["debug"] = true,
-   ["deps"] = true,
-   ["deps-mode"] = "<mode>",
-   ["detailed"] = "\"<text>\"",
-   ["dev"] = true,
-   ["dir"] = "<path>",
-   ["force"] = true,
-   ["force-fast"] = true,
-   ["from"] = "<server>",
-   ["global"] = true,
-   ["help"] = true,
-   ["home"] = true,
-   ["homepage"] = "\"<url>\"",
-   ["index"] = true,
-   ["issues"] = true,
-   ["json"] = true,
-   ["keep"] = true,
-   ["labels"] = true,
-   ["lib"] = "<library>",
-   ["license"] = "\"<text>\"",
-   ["list"] = true,
-   ["local"] = true,
-   ["local-tree"] = true,
-   ["lr-bin"] = true,
-   ["lr-cpath"] = true,
-   ["lr-path"] = true,
-   ["lua-dir"] = "<path>",
-   ["lua-version"] = "<vers>",
-   ["lua-versions"] = "<versions>",
-   ["lua-ver"] = true,
-   ["lua-incdir"] = true,
-   ["lua-libdir"] = true,
-   ["modules"] = true,
-   ["mversion"] = true,
-   ["namespace"] = "<namespace>",
-   ["no-bin"] = true,
-   ["no-doc"] = true,
-   ["no-refresh"] = true,
-   ["nodeps"] = true,
-   ["old-versions"] = true,
-   ["only-deps"] = true,
-   ["only-from"] = "<server>",
-   ["only-server"] = "<server>",
-   ["only-sources"] = "<url>",
-   ["only-sources-from"] = "<url>",
-   ["outdated"] = true,
-   ["output"] = "<file>",
-   ["pack-binary-rock"] = true,
-   ["porcelain"] = true,
-   ["project-tree"] = "<tree>",
-   ["quick"] = true,
-   ["reset"] = true,
-   ["rock-dir"] = true,
-   ["rock-license"] = true,
-   ["rock-namespace"] = true,
-   ["rock-tree"] = true,
-   ["rock-trees"] = true,
-   ["rockspec"] = true,
-   ["rockspec-format"] = "<ver>",
-   ["scope"] = "<system|user|project>",
-   ["server"] = "<server>",
-   ["sign"] = true,
-   ["skip-pack"] = true,
-   ["source"] = true,
-   ["summary"] = "\"<text>\"",
-   ["system-config"] = true,
-   ["tag"] = "<tag>",
-   ["test-type"] = "<type>",
-   ["temp-key"] = "<key>",
-   ["timeout"] = "<seconds>",
-   ["to"] = "<path>",
-   ["tree"] = "<path>",
-   ["unset"] = true,
-   ["user-config"] = true,
-   ["verbose"] = true,
-   ["verify"] = true,
-   ["version"] = true,
-}
-
---- Extract flags from an arguments list.
--- Given string arguments, extract flag arguments into a flags set.
--- For example, given "foo", "--tux=beep", "--bla", "bar", "--baz",
--- it would return the following:
--- {["bla"] = true, ["tux"] = "beep", ["baz"] = true}, "foo", "bar".
-function util.parse_flags(...)
-   local args = {...}
-   local flags = {}
-   local i = 1
-   local out = {}
-   local state = "initial"
-   while i <= #args do
-      local flag = args[i]:match("^%-%-(.*)")
-      if state == "initial" and flag == "" then
-         state = "ignore_flags"
-      elseif state == "initial" and flag then
-         local var,val = flag:match("([a-z_%-]*)=(.*)")
-         if val then
-            local vartype = supported_flags[var]
-            if type(vartype) == "string" then
-               if val == "" and vartype:sub(1,1) ~= '"' then
-                  return { ERROR = "Invalid argument: parameter to flag --"..var.."="..vartype.." cannot be empty." }
-               end
-               flags[var] = val
-            else
-               if vartype then
-                  return { ERROR = "Invalid argument: flag --"..var.." does not take an parameter." }
-               else
-                  return { ERROR = "Invalid argument: unknown flag --"..var.."." }
-               end
-            end
-         else
-            local var = flag
-            local vartype = supported_flags[var]
-            if type(vartype) == "string" then
-               i = i + 1
-               local val = args[i]
-               if not val then
-                  return { ERROR = "Invalid argument: flag --"..var.."="..vartype.." expects a parameter." }
-               end
-               if val:match("^%-%-.*") then
-                  return { ERROR = "Invalid argument: flag --"..var.."="..vartype.." expects a parameter (if you really want to pass "..val.." as an argument to --"..var..", use --"..var.."="..val..")." }
-               else
-                  if val == "" and vartype:sub(1,1) ~= '"' then
-                     return { ERROR = "Invalid argument: parameter to flag --"..var.."="..vartype.." cannot be empty." }
-                  end
-                  flags[var] = val
-               end
-            elseif vartype == true then
-               flags[var] = true
-            else
-               return { ERROR = "Invalid argument: unknown flag --"..var.."." }
-            end
-         end
-      elseif state == "ignore_flags" or (state == "initial" and not flag) then
-         table.insert(out, args[i])
-      end
-      i = i + 1
-   end
-   return flags, unpack(out)
-end
-
 local var_format_pattern = "%$%((%a[%a%d_]+)%)"
 
 -- Check if a set of needed variables are referenced
@@ -371,27 +215,34 @@ function util.this_program(default)
    return prog
 end
 
-function util.deps_mode_help(program)
+function util.deps_mode_option(parser, program)
    local cfg = require("luarocks.core.cfg")
-   return [[
---deps-mode=<mode>  How to handle dependencies. Four modes are supported:
-                    * all - use all trees from the rocks_trees list
-                      for finding dependencies
-                    * one - use only the current tree (possibly set
-                      with --tree)
-                    * order - use trees based on order (use the current
-                      tree and all trees below it on the rocks_trees list)
-                    * none - ignore dependencies altogether.
-                    The default mode may be set with the deps_mode entry
-                    in the configuration file.
-                    The current default is "]]..cfg.deps_mode..[[".
-                    Type ']]..util.this_program(program or "luarocks")..[[' with no arguments to see
-                    your list of rocks trees.
-]]
+
+   parser:option("--deps-mode", "How to handle dependencies. Four modes are supported:\n"..
+      "* all - use all trees from the rocks_trees list for finding dependencies\n"..
+      "* one - use only the current tree (possibly set with --tree)\n"..
+      "* order - use trees based on order (use the current tree and all "..
+      "trees below it on the rocks_trees list)\n"..
+      "* none - ignore dependencies altogether.\n"..
+      "The default mode may be set with the deps_mode entry in the configuration file.\n"..
+      'The current default is "'..cfg.deps_mode..'".\n'..
+      "Type '"..util.this_program(program or "luarocks").."' with no "..
+      "arguments to see your list of rocks trees.")
+      :argname("<mode>")
+      :choices({"all", "one", "order", "none"})
+   parser:flag("--nodeps"):hidden(true)
 end
 
 function util.see_help(command, program)
    return "See '"..util.this_program(program or "luarocks")..' help'..(command and " "..command or "").."'."
+end
+
+function util.see_also(text)
+   local see_also = "See also:\n"
+   if text then
+      see_also = see_also..text.."\n"
+   end
+   return see_also.."   '"..util.this_program("luarocks").." help' for general options and configuration."
 end
 
 function util.announce_install(rockspec)
@@ -487,13 +338,13 @@ function util.LQ(s)
    return ("%q"):format(s)
 end
 
---- Normalize the --namespace flag and the user/rock syntax for namespaces.
--- If a namespace is given in user/rock syntax, update the --namespace flag;
--- If a namespace is given in --namespace flag, update the user/rock syntax.
+--- Normalize the --namespace option and the user/rock syntax for namespaces.
+-- If a namespace is given in user/rock syntax, update the --namespace option;
+-- If a namespace is given in --namespace option, update the user/rock syntax.
 -- In case of conflicts, the user/rock syntax takes precedence.
-function util.adjust_name_and_namespace(ns_name, flags)
+function util.adjust_name_and_namespace(ns_name, args)
    assert(type(ns_name) == "string" or not ns_name)
-   assert(type(flags) == "table")
+   assert(type(args) == "table")
 
    if not ns_name then
       return
@@ -503,10 +354,10 @@ function util.adjust_name_and_namespace(ns_name, flags)
 
    local name, namespace = util.split_namespace(ns_name)
    if namespace then
-      flags["namespace"] = namespace
+      args.namespace = namespace
    end
-   if flags["namespace"] then
-      name = flags["namespace"] .. "/" .. name
+   if args.namespace then
+      name = args.namespace .. "/" .. name
    end
    return name:lower()
 end

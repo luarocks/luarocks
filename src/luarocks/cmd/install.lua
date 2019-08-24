@@ -16,32 +16,35 @@ local cfg = require("luarocks.core.cfg")
 local cmd = require("luarocks.cmd")
 local dir = require("luarocks.dir")
 
-install.help_summary = "Install a rock."
+function install.add_to_parser(parser)
+   local cmd = parser:command("install", "Install a rock.", util.see_also())
 
-install.help_arguments = "{<rock>|<name> [<version>]}"
+   cmd:argument("rock", "The name of a rock to be fetched from a repository "..
+      "or a filename of a locally available rock.")
+   cmd:argument("version", "Version of the rock.")
+      :args("?")
 
-install.help = [[
-Argument may be the name of a rock to be fetched from a repository
-or a filename of a locally available rock.
-
---keep              Do not remove previously installed versions of the
-                    rock after installing a new one. This behavior can
-                    be made permanent by setting keep_other_versions=true
-                    in the configuration file.
-
---only-deps         Installs only the dependencies of the rock.
-
---no-doc            Installs the rock without its documentation.
-
---verify            Verify signature of the rock being installed.
-                    If rock is being downloaded, LuaRocks will attempt
-                    to download the signature as well. If the rock is
-                    local, the signature file should be in the same
-                    directory.
-                    You need the signer’s public key in your local
-                    keyring for this option to work properly.
-
-]]..util.deps_mode_help()
+   cmd:flag("--keep", "Do not remove previously installed versions of the "..
+      "rock after building a new one. This behavior can be made permanent by "..
+      "setting keep_other_versions=true in the configuration file.")
+   cmd:flag("--force", "If --keep is not specified, force removal of "..
+      "previously installed versions if it would break dependencies.")
+   cmd:flag("--force-fast", "Like --force, but performs a forced removal "..
+      "without reporting dependency issues.")
+   cmd:flag("--only-deps", "Installs only the dependencies of the rock.")
+   cmd:flag("--no-doc", "Installs the rock without its documentation.")
+   cmd:flag("--verify", "Verify signature of the rockspec or src.rock being "..
+      "built. If the rockspec or src.rock is being downloaded, LuaRocks will "..
+      "attempt to download the signature as well. Otherwise, the signature "..
+      "file should be already available locally in the same directory.\n"..
+      "You need the signer’s public key in your local keyring for this "..
+      "option to work properly.")
+   util.deps_mode_option(cmd)
+   -- luarocks build options
+   parser:flag("--pack-binary-rock"):hidden(true)
+   parser:flag("--branch"):hidden(true)
+   parser:flag("--sign"):hidden(true)
+end
 
 install.opts = util.opts_table("install.opts", {
    namespace = "string?",
@@ -208,51 +211,46 @@ local function install_rock_file(filename, opts)
 end
 
 --- Driver function for the "install" command.
--- @param name string: name of a binary rock. If an URL or pathname
--- to a binary rock is given, fetches and installs it. If a rockspec or a
--- source rock is given, forwards the request to the "build" command.
+-- If an URL or pathname to a binary rock is given, fetches and installs it.
+-- If a rockspec or a source rock is given, forwards the request to the "build"
+-- command.
 -- If a package name is given, forwards the request to "search" and,
 -- if returned a result, installs the matching rock.
--- @param version string: When passing a package name, a version number
--- may also be given.
 -- @return boolean or (nil, string, exitcode): True if installation was
 -- successful, nil and an error message otherwise. exitcode is optionally returned.
-function install.command(flags, name, version)
-   if type(name) ~= "string" then
-      return nil, "Argument missing. "..util.see_help("install")
-   end
+function install.command(args)
+   args.rock = util.adjust_name_and_namespace(args.rock, args)
 
-   name = util.adjust_name_and_namespace(name, flags)
-
-   local ok, err = fs.check_command_permissions(flags)
+   local ok, err = fs.check_command_permissions(args)
    if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
 
-   if name:match("%.rockspec$") or name:match("%.src%.rock$") then
+   if args.rock:match("%.rockspec$") or args.rock:match("%.src%.rock$") then
       local build = require("luarocks.cmd.build")
-      return build.command(flags, name)
-   elseif name:match("%.rock$") then
-      local deps_mode = deps.get_deps_mode(flags)
+      return build.command(args)
+   elseif args.rock:match("%.rock$") then
+      local deps_mode = deps.get_deps_mode(args)
       local opts = install.opts({
-         namespace = flags["namespace"],
-         keep = not not flags["keep"],
-         force = not not flags["force"],
-         force_fast = not not flags["force-fast"],
-         no_doc = not not flags["no-doc"],
+         namespace = args.namespace,
+         keep = not not args.keep,
+         force = not not args.force,
+         force_fast = not not args.force_fast,
+         no_doc = not not args.no_doc,
          deps_mode = deps_mode,
-         verify = not not flags["verify"],
+         verify = not not args.verify,
       })
-      if flags["only-deps"] then
-         return install_rock_file_deps(name, opts)
+      if args.only_deps then
+         return install_rock_file_deps(args.rock, opts)
       else
-         return install_rock_file(name, opts)
+         return install_rock_file(args.rock, opts)
       end
    else
-      local url, err = search.find_suitable_rock(queries.new(name:lower(), version), true)
+      local url, err = search.find_suitable_rock(queries.new(args.rock:lower(), args.version), true)
       if not url then
          return nil, err
       end
       util.printout("Installing "..url)
-      return install.command(flags, url)
+      args.rock = url
+      return install.command(args)
    end
 end
 

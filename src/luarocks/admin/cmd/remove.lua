@@ -11,16 +11,17 @@ local fs = require("luarocks.fs")
 local cache = require("luarocks.admin.cache")
 local index = require("luarocks.admin.index")
 
-admin_remove.help_summary = "Remove a rock or rockspec from a rocks server."
-admin_remove.help_arguments = "[--server=<server>] [--no-refresh] {<rockspec>|<rock>...}"
-admin_remove.help = [[
-Arguments are local files, which may be rockspecs or rocks.
-The flag --server indicates which server to use.
-If not given, the default server set in the upload_server variable
-from the configuration file is used instead.
-The flag --no-refresh indicates the local cache should not be refreshed
-prior to generation of the updated manifest.
-]]
+function admin_remove.add_to_parser(parser)
+   local cmd = parser:command("remove", "Remove a rock or rockspec from a rocks server.", util.see_also())
+
+   cmd:argument("rock", "A local rockspec or rock file.")
+      :args("+")
+
+   cmd:option("--server", "The server to use. If not given, the default server "..
+      "set in the upload_server variable from the configuration file is used instead.")
+   cmd:flag("--no-refresh", "Do not refresh the local cache prior to "..
+      "generation of the updated manifest.")
+end
 
 local function remove_files_from_server(refresh, rockfiles, server, upload_server)
    assert(type(refresh) == "boolean" or not refresh)
@@ -76,14 +77,10 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    return true
 end
 
-function admin_remove.command(flags, ...)
-   local files = {...}
-   if #files < 1 then
-      return nil, "Argument missing. "..util.see_help("remove", "luarocks-admin")
-   end
-   local server, server_table = cache.get_upload_server(flags["server"])
+function admin_remove.command(args)
+   local server, server_table = cache.get_upload_server(args.server)
    if not server then return nil, server_table end
-   return remove_files_from_server(not flags["no-refresh"], files, server, server_table)
+   return remove_files_from_server(not args.no_refresh, args.rock, server, server_table)
 end
 
 

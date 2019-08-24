@@ -2,16 +2,14 @@
 --- Functions for command-line scripts.
 local cmd = {}
 
-local unpack = unpack or table.unpack
-
 local loader = require("luarocks.loader")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
-local deps = require("luarocks.deps")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local fun = require("luarocks.fun")
 local fs = require("luarocks.fs")
+local argparse = require("luarocks.argparse")
 
 local hc_ok, hardcoded = pcall(require, "luarocks.core.hardcoded")
 if not hc_ok then
@@ -41,11 +39,11 @@ local function check_popen()
    end
 end
 
-local process_tree_flags
+local process_tree_args
 do
-   local function replace_tree(flags, root, tree)
+   local function replace_tree(args, root, tree)
       root = dir.normalize(root)
-      flags["tree"] = root
+      args.tree = root
       path.use_tree(tree or root)
    end
 
@@ -61,44 +59,44 @@ do
       cfg.deploy_lib_dir = cfg.deploy_lib_dir:gsub("/+$", "")
    end
 
-   process_tree_flags = function(flags, project_dir)
+   process_tree_args = function(args, project_dir)
    
-      if flags["global"] then
+      if args.global then
          cfg.local_by_default = false
       end
 
-      if flags["tree"] then
+      if args.tree then
          local named = false
          for _, tree in ipairs(cfg.rocks_trees) do
-            if type(tree) == "table" and flags["tree"] == tree.name then
+            if type(tree) == "table" and args.tree == tree.name then
                if not tree.root then
                   return nil, "Configuration error: tree '"..tree.name.."' has no 'root' field."
                end
-               replace_tree(flags, tree.root, tree)
+               replace_tree(args, tree.root, tree)
                named = true
                break
             end
          end
          if not named then
-            local root_dir = fs.absolute_name(flags["tree"])
-            replace_tree(flags, root_dir)
+            local root_dir = fs.absolute_name(args.tree)
+            replace_tree(args, root_dir)
          end
-      elseif flags["local"] then
+      elseif args["local"] then
          if not cfg.home_tree then
             return nil, "The --local flag is meant for operating in a user's home directory.\n"..
                "You are running as a superuser, which is intended for system-wide operation.\n"..
                "To force using the superuser's home, use --tree explicitly."
          else
-            replace_tree(flags, cfg.home_tree)
+            replace_tree(args, cfg.home_tree)
          end
-      elseif flags["project-tree"] then
-         local tree = flags["project-tree"]
+      elseif args.project_tree then
+         local tree = args.project_tree
          table.insert(cfg.rocks_trees, 1, { name = "project", root = tree } )
          loader.load_rocks_trees()
          path.use_tree(tree)
       elseif cfg.local_by_default then
          if cfg.home_tree then
-            replace_tree(flags, cfg.home_tree)
+            replace_tree(args, cfg.home_tree)
          end
       elseif project_dir then
          local project_tree = project_dir .. "/lua_modules"
@@ -119,26 +117,26 @@ do
    end
 end
 
-local function process_server_flags(flags)
-   if flags["server"] then
-      local protocol, pathname = dir.split_url(flags["server"])
+local function process_server_args(args)
+   if args.server then
+      local protocol, pathname = dir.split_url(args.server)
       table.insert(cfg.rocks_servers, 1, protocol.."://"..pathname)
    end
 
-   if flags["dev"] then
+   if args.dev then
       local append_dev = function(s) return dir.path(s, "dev") end
       local dev_servers = fun.traverse(cfg.rocks_servers, append_dev)
       cfg.rocks_servers = fun.concat(dev_servers, cfg.rocks_servers)
    end
 
-   if flags["only-server"] then
-      if flags["dev"] then
+   if args.only_server then
+      if args.dev then
          return nil, "--only-server cannot be used with --dev"
       end
-      if flags["server"] then
+      if args.server then
          return nil, "--only-server cannot be used with --server"
       end
-      cfg.rocks_servers = { flags["only-server"] }
+      cfg.rocks_servers = { args.only_server }
    end
 
    return true
@@ -174,7 +172,7 @@ end
 
 local init_config
 do
-   local detect_config_via_flags
+   local detect_config_via_args
    do
       local function find_project_dir(project_tree)
          if project_tree then
@@ -193,7 +191,7 @@ do
          return nil
       end
    
-      local function find_default_lua_version(flags, project_dir)
+      local function find_default_lua_version(args, project_dir)
          if hardcoded.FORCE_CONFIG then
             return nil
          end
@@ -212,7 +210,7 @@ do
             if mod then
                local pok, ver = pcall(mod)
                if pok and type(ver) == "string" and ver:match("%d+.%d+") then
-                  if flags["verbose"] then
+                  if args.verbose then
                      util.printout("Defaulting to Lua " .. ver .. " based on " .. f .. " ...")
                   end
                   return ver
@@ -230,13 +228,13 @@ do
          end)
       end
    
-      local function detect_lua_via_flags(flags, project_dir)
-         local lua_version = flags["lua-version"]
-                             or find_default_lua_version(flags, project_dir)
+      local function detect_lua_via_args(args, project_dir)
+         local lua_version = args.lua_version
+                             or find_default_lua_version(args, project_dir)
                              or (project_dir and find_version_from_config(project_dir))
       
-         if flags["lua-dir"] then
-            local detected, err = util.find_lua(flags["lua-dir"], lua_version)
+         if args.lua_dir then
+            local detected, err = util.find_lua(args.lua_dir, lua_version)
             if not detected then
                die(err)
             end
@@ -264,14 +262,14 @@ do
          return {}
       end
       
-      detect_config_via_flags = function(flags)
-         local project_dir, given = find_project_dir(flags["project-tree"])
-         local detected = detect_lua_via_flags(flags, project_dir)
-         if flags["lua-version"] then
-            detected.given_lua_version = flags["lua-version"]
+      detect_config_via_args = function(args)
+         local project_dir, given = find_project_dir(args.project_tree)
+         local detected = detect_lua_via_args(args, project_dir)
+         if args.lua_version then
+            detected.given_lua_version = args.lua_version
          end
-         if flags["lua-dir"] then
-            detected.given_lua_dir = flags["lua-dir"]
+         if args.lua_dir then
+            detected.given_lua_dir = args.lua_dir
          end
          if given then
             detected.given_project_dir = project_dir
@@ -281,8 +279,8 @@ do
       end
    end
    
-   init_config = function(flags)
-      local detected = detect_config_via_flags(flags)
+   init_config = function(args)
+      local detected = detect_config_via_args(args)
    
       -- FIXME A quick hack for the experimental Windows build
       if os.getenv("LUAROCKS_CROSS_COMPILING") then
@@ -306,6 +304,135 @@ do
    end
 end
 
+local variables_help = [[
+Variables:
+   Variables from the "variables" table of the configuration file can be
+   overridden with VAR=VALUE assignments.
+
+]]
+
+local function get_status(status)
+   return status and "ok" or "not found"
+end
+
+local function get_config_text(cfg)
+   local buf = "Configuration:\n   Lua version: "..cfg.lua_version.."\n"
+   if cfg.luajit_version then
+      buf = buf.."   LuaJIT version: "..cfg.luajit_version.."\n"
+   end
+   buf = buf.."\n   Configuration files:\n"
+   local conf = cfg.config_files
+   buf = buf.."      System  : "..fs.absolute_name(conf.system.file).." ("..get_status(conf.system.found)..")\n"
+   if conf.user.file then
+      buf = buf.."      User    : "..fs.absolute_name(conf.user.file).." ("..get_status(conf.user.found)..")\n"
+   else
+      buf = buf.."      User    : disabled in this LuaRocks installation.\n"
+   end
+   if conf.project then
+      buf = buf.."      Project : "..fs.absolute_name(conf.project.file).." ("..get_status(conf.project.found)..")\n"
+   end
+   buf = buf.."\n   Rocks trees in use: \n"
+   for _, tree in ipairs(cfg.rocks_trees) do
+      if type(tree) == "string" then
+         buf = buf.."      "..fs.absolute_name(tree)
+      else
+         local name = tree.name and " (\""..tree.name.."\")" or ""
+         buf = buf.."      "..fs.absolute_name(tree.root)..name
+      end
+   end
+
+   return buf.."\n"
+end
+
+local function get_parser(description, cmd_modules)
+   local basename = dir.base_name(program)
+   local parser = argparse(
+      basename, "LuaRocks "..cfg.program_version..", the Lua package manager\n\n"..
+      program.." - "..description, variables_help.."Run '"..basename..
+      "' without any arguments to see the configuration.")
+      :help_max_width(80)
+      :add_help_command()
+      :add_complete_command({
+         help_max_width = 100,
+         summary = "Output a shell completion script.",
+         description = [[
+Output a shell completion script.
+
+Enabling completions for Bash:
+
+   Add the following line to your ~/.bashrc:
+      source <(]]..basename..[[ completion bash)
+   or save the completion script to the local completion directory:
+      ]]..basename..[[ completion bash > ~/.local/share/bash-completion/completions/]]..basename..[[
+
+
+Enabling completions for Zsh:
+
+   Save the completion script to a file in your $fpath.
+   You can add a new directory to your $fpath by adding e.g.
+      fpath=(~/.zfunc $fpath)
+   to your ~/.zshrc.
+   Then run:
+      ]]..basename..[[ completion zsh > ~/.zfunc/_]]..basename..[[
+
+
+Enabling completion for Fish:
+
+   Add the following line to your ~/.config/fish/config.fish:
+      ]]..basename..[[ completion fish | source
+   or save the completion script to the local completion directory:
+      ]]..basename..[[ completion fish > ~/.config/fish/completions/]]..basename..[[.fish
+]]})
+      :command_target("command")
+      :require_command(false)
+
+   parser:flag("--version", "Show version info and exit.")
+      :action(function()
+         util.printout(program.." "..cfg.program_version)
+         util.printout(description)
+         util.printout()
+         os.exit(cmd.errorcodes.OK)
+      end)
+   parser:flag("--dev", "Enable the sub-repositories in rocks servers for "..
+      "rockspecs of in-development versions.")
+   parser:option("--server", "Fetch rocks/rockspecs from this server "..
+      "(takes priority over config file).")
+   parser:option("--only-server", "Fetch rocks/rockspecs from this server only "..
+      "(overrides any entries in the config file).")
+      :argname("<server>")
+   parser:option("--only-sources", "Restrict downloads to paths matching the given URL.")
+      :argname("<url>")
+   parser:option("--namespace", "Specify the rocks server namespace to use.")
+   parser:option("--lua-dir", "Which Lua installation to use.")
+      :argname("<prefix>")
+   parser:option("--lua-version", "Which Lua version to use.")
+      :argname("<ver>")
+   parser:option("--tree", "Which tree to operate on.")
+   parser:flag("--local", "Use the tree in the user's home directory.\n"..
+      "To enable it, see '"..program.." help path'.")
+   parser:flag("--global", "Use the system tree when `local_by_default` is `true`.")
+   parser:flag("--verbose", "Display verbose output of commands executed.")
+   parser:option("--timeout", "Timeout on network operations, in seconds.\n"..
+      "0 means no timeout (wait forever). Default is "..
+      tostring(cfg.connection_timeout)..".")
+      :argname("<seconds>")
+      :convert(tonumber)
+
+   -- Used internally to force the use of a particular project tree
+   parser:option("--project-tree"):hidden(true)
+   -- Compatibility for old names of some options
+   parser:option("--to"):target("tree"):hidden(true)
+   parser:option("--from"):target("server"):hidden(true)
+   parser:option("--only-from"):target("only_server"):hidden(true)
+   parser:option("--only-sources-from"):target("only_sources"):hidden(true)
+
+   for _, module in util.sortedpairs(cmd_modules) do
+      module.add_to_parser(parser)
+   end
+
+   return parser
+end
+
 --- Main command-line processor.
 -- Parses input arguments and calls the appropriate driver function
 -- to execute the action requested on the command-line, forwarding
@@ -318,7 +445,20 @@ function cmd.run_command(description, commands, external_namespace, ...)
 
    check_popen()
 
-   local function process_arguments(...)
+   fs.init()
+
+   for _, module_name in ipairs(fs.modules(external_namespace)) do
+      if not commands[module_name] then
+         commands[module_name] = external_namespace.."."..module_name
+      end
+   end
+
+   local cmd_modules = {}
+   for name, module in pairs(commands) do
+      cmd_modules[name] = require(module)
+   end
+
+   local function process_cmdline_vars(...)
       local args = {...}
       local cmdline_vars = {}
       local last = #args
@@ -340,68 +480,37 @@ function cmd.run_command(description, commands, external_namespace, ...)
             end
          end
       end
-      local nonflags = { util.parse_flags(unpack(args)) }
-      local flags = table.remove(nonflags, 1)
-      if flags.ERROR then
-         die(flags.ERROR.." See --help.")
-      end
 
-      -- Compatibility for old names of some flags
-      if flags["to"] then flags["tree"] = flags["to"] end
-      if flags["from"] then flags["server"] = flags["from"] end
-      if flags["nodeps"] then flags["deps-mode"] = "none" end
-      if flags["only-from"] then flags["only-server"] = flags["only-from"] end
-      if flags["only-sources-from"] then flags["only-sources"] = flags["only-sources-from"] end
-
-      return flags, nonflags, cmdline_vars
+      return args, cmdline_vars
    end
 
-   local flags, nonflags, cmdline_vars = process_arguments(...)
+   local args, cmdline_vars = process_cmdline_vars(...)
+   local parser = get_parser(description, cmd_modules)
+   args = parser:parse(args)
 
-   if flags["timeout"] then   -- setting it in the config file will kick-in earlier in the process
-      local timeout = tonumber(flags["timeout"])
-      if timeout then
-         cfg.connection_timeout = timeout
-      else
-         die "Argument error: --timeout expects a numeric argument."
+   -- Compatibility for old flag
+   if args.nodeps then
+      args.deps_mode = "none"
+   end
+
+   if args.timeout then -- setting it in the config file will kick-in earlier in the process
+      cfg.connection_timeout = args.timeout
+   end
+
+   if args.command == "config" then
+      if args.key == "lua_version" and args.value then
+         args.lua_version = args.value
+      elseif args.key == "lua_dir" and args.value then
+         args.lua_dir = args.value
       end
    end
 
-   local command
-   if flags["help"] or #nonflags == 0 then
-      command = "help"
-   else
-      command = table.remove(nonflags, 1)
-   end
-   command = command:gsub("-", "_")
-
-   if command == "config" then
-      if nonflags[1] == "lua_version" and nonflags[2] then
-         flags["lua-version"] = nonflags[2]
-      elseif nonflags[1] == "lua_dir" and nonflags[2] then
-         flags["lua-dir"] = nonflags[2]
-      end
-   end
-
-   if flags["deps-mode"] and not deps.check_deps_mode_flag(flags["deps-mode"]) then
-      die("Invalid entry for --deps-mode.")
-   end
-   
    -----------------------------------------------------------------------------
-   local lua_found, err = init_config(flags)
+   local lua_found, err = init_config(args)
    if err then
       die(err)
    end
    -----------------------------------------------------------------------------
-
-   if flags["version"] then
-      util.printout(program.." "..cfg.program_version)
-      util.printout(description)
-      util.printout()
-      os.exit(cmd.errorcodes.OK)
-   end
-
-   fs.init()
 
    -- if the Lua interpreter wasn't explicitly found before cfg.init,
    -- try again now.
@@ -414,7 +523,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
    if not lua_found then
       util.warning("Could not find a Lua " .. cfg.lua_version .. " interpreter in your PATH. " ..
                    "Modules may not install with the correct configurations. " ..
-                   "You may want to specify to the path prefix to your build " ..
+                   "You may want to specify the path prefix to your build " ..
                    "of Lua " .. cfg.lua_version .. " using --lua-dir")
    end
    cfg.lua_found = lua_found
@@ -423,13 +532,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
       cfg.project_dir = fs.absolute_name(cfg.project_dir)
    end
 
-   for _, module_name in ipairs(fs.modules(external_namespace)) do
-      if not commands[module_name] then
-         commands[module_name] = external_namespace.."."..module_name
-      end
-   end
-
-   if flags["verbose"] then
+   if args.verbose then
       cfg.verbose = true
       fs.verbose()
    end
@@ -438,24 +541,22 @@ function cmd.run_command(description, commands, external_namespace, ...)
       die("Current directory does not exist. Please run LuaRocks from an existing directory.")
    end
 
-   ok, err = process_tree_flags(flags, cfg.project_dir)
+   local ok, err = process_tree_args(args, cfg.project_dir)
    if not ok then
       die(err)
    end
 
-   ok, err = process_server_flags(flags)
+   ok, err = process_server_args(args)
    if not ok then
       die(err)
    end
 
-   if flags["only-sources"] then
-      cfg.only_sources_from = flags["only-sources"]
+   if args.only_sources then
+      cfg.only_sources_from = args.only_sources
    end
 
-   if command ~= "help" then
-      for k, v in pairs(cmdline_vars) do
-         cfg.variables[k] = v
-      end
+   for k, v in pairs(cmdline_vars) do
+      cfg.variables[k] = v
    end
 
    -- if running as superuser, use system cache dir
@@ -463,22 +564,23 @@ function cmd.run_command(description, commands, external_namespace, ...)
       cfg.local_cache = dir.path(fs.system_cache_dir(), "luarocks")
    end
 
-   if commands[command] then
-      local cmd_mod = require(commands[command])
-      local call_ok, ok, err, exitcode = xpcall(function()
-         if command == "help" then
-            return cmd_mod.command(description, commands, unpack(nonflags))
-         else
-            return cmd_mod.command(flags, unpack(nonflags))
-         end
-      end, error_handler)
-      if not call_ok then
-         die(ok, cmd.errorcodes.CRASH)
-      elseif not ok then
-         die(err, exitcode)
-      end
-   else
-      die("Unknown command: "..command)
+   if not args.command then
+      parser:epilog(variables_help..get_config_text(cfg))
+      util.printout()
+      util.printout(parser:get_help())
+      util.printout()
+      os.exit(cmd.errorcodes.OK)
+   end
+
+   local cmd_mod = cmd_modules[args.command]
+   local call_ok, ok, err, exitcode = xpcall(function()
+      return cmd_mod.command(args)
+   end, error_handler)
+
+   if not call_ok then
+      die(ok, cmd.errorcodes.CRASH)
+   elseif not ok then
+      die(err, exitcode)
    end
    util.run_scheduled_functions()
 end

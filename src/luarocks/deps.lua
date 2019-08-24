@@ -170,12 +170,13 @@ function deps.fulfill_dependency(dep, deps_mode, name, version, rocks_provided, 
       return nil, "Could not satisfy dependency "..tostring(dep)..": "..search_err
    end
    util.printout("Installing "..url)
-   local install_flags = {
+   local install_args = {
+      rock = url,
       deps_mode = deps_mode,
       namespace = dep.namespace,
       verify = verify,
    }
-   local ok, install_err, errcode = install.command(install_flags, url)
+   local ok, install_err, errcode = install.command(install_args)
    if not ok then
       return nil, "Failed installing dependency: "..url.." - "..install_err, errcode
    end
@@ -569,23 +570,8 @@ function deps.check_lua_libdir(vars)
    return nil, "Failed finding Lua library. You may need to configure LUA_LIBDIR.", "dependency"
 end
 
-local valid_deps_modes = {
-   one = true,
-   order = true,
-   all = true,
-   none = true,
-}
-
-function deps.check_deps_mode_flag(flag)
-   return valid_deps_modes[flag]
-end
-
-function deps.get_deps_mode(flags)
-   if flags["deps-mode"] then
-      return flags["deps-mode"]
-   else
-      return cfg.deps_mode
-   end
+function deps.get_deps_mode(args)
+   return args.deps_mode or cfg.deps_mode
 end
 
 return deps

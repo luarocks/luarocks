@@ -12,19 +12,22 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local download = require("luarocks.download")
 
-doc.help_summary = "Show documentation for an installed rock."
+function doc.add_to_parser(parser)
+   local cmd = parser:command("doc", "Show documentation for an installed rock.\n\n"..
+      "Without any flags, tries to load the documentation using a series of heuristics.\n"..
+      "With flags, return only the desired information.", util.see_also([[
+   For more information about a rock, see the 'show' command.
+]]))
+      :summary("Show documentation for an installed rock.")
 
-doc.help = [[
-<argument> is an existing package name.
-Without any flags, tries to load the documentation
-using a series of heuristics.
-With these flags, return only the desired information:
+   cmd:argument("rock", "Name of the rock.")
+   cmd:argument("version", "Version of the rock.")
+      :args("?")
 
---home      Open the home page of project.
---list      List documentation files only.
-
-For more information about a rock, see the 'show' command.
-]]
+   cmd:flag("--home", "Open the home page of project.")
+   cmd:flag("--list", "List documentation files only.")
+   cmd:flag("--porcelain", "Produce machine-friendly output.")
+end
 
 local function show_homepage(homepage, name, version)
    if not homepage then
@@ -54,17 +57,12 @@ local function try_to_open_homepage(name, version)
 end
 
 --- Driver function for "doc" command.
--- @param name or nil: an existing package name.
--- @param version string or nil: a version may also be passed.
 -- @return boolean: True if succeeded, nil on errors.
-function doc.command(flags, name, version)
-   if not name then
-      return nil, "Argument missing. "..util.see_help("doc")
-   end
-
-   name = util.adjust_name_and_namespace(name, flags)
+function doc.command(args)
+   local name = util.adjust_name_and_namespace(args.rock, args)
+   local version = args.version
    local query = queries.new(name, version)
-   local iname, iversion, repo = search.pick_installed_rock(query, flags["tree"])
+   local iname, iversion, repo = search.pick_installed_rock(query, args.tree)
    if not iname then
       util.printout(name..(version and " "..version or "").." is not installed. Looking for it in the rocks servers...")
       return try_to_open_homepage(name, version)
@@ -75,7 +73,7 @@ function doc.command(flags, name, version)
    if not rockspec then return nil,err end
    local descript = rockspec.description or {}
 
-   if flags["home"] then
+   if args.home then
       return show_homepage(descript.homepage, name, version)
    end
 
@@ -91,7 +89,7 @@ function doc.command(flags, name, version)
       end
    end
    if not docdir then
-      if descript.homepage and not flags["list"] then
+      if descript.homepage and not args.list then
          util.printout("Local documentation directory not found -- opening "..descript.homepage.." ...")
          fs.browser(descript.homepage)
          return true
@@ -105,7 +103,7 @@ function doc.command(flags, name, version)
    local extensions = { htmlpatt, "%.md$", "%.txt$",  "%.textile$", "" }
    local basenames = { "index", "readme", "manual" }
    
-   local porcelain = flags["porcelain"]
+   local porcelain = args.porcelain
    if #files > 0 then
       util.title("Documentation files for "..name.." "..version, porcelain)
       if porcelain then
@@ -120,7 +118,7 @@ function doc.command(flags, name, version)
       end
    end
    
-   if flags["list"] then
+   if args.list then
       return true
    end
    
