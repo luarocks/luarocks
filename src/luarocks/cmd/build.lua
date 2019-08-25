@@ -26,6 +26,7 @@ function cmd_build.add_to_parser(parser)
    cmd:argument("rock", "A rockspec file, a source rock file, or the name of "..
       "a rock to be fetched from a repository.")
       :args("?")
+      :action(util.namespaced_name_action)
    cmd:argument("version", "Rock version.")
       :args("?")
 
@@ -72,21 +73,20 @@ local function build_rock(rock_filename, opts)
    return ok, err, errcode
 end
 
-local function do_build(ns_name, version, opts)
-   assert(type(ns_name) == "string")
+local function do_build(name, namespace, version, opts)
+   assert(type(name) == "string")
+   assert(type(namespace) == "string" or not namespace)
    assert(version == nil or type(version) == "string")
    assert(opts:type() == "build.opts")
 
    local url, err
-   if ns_name:match("%.rockspec$") or ns_name:match("%.rock$") then
-      url = ns_name
+   if name:match("%.rockspec$") or name:match("%.rock$") then
+      url = name
    else
-      url, err = search.find_src_or_rockspec(ns_name, version, true)
+      url, err = search.find_src_or_rockspec(name, namespace, version, true)
       if not url then
          return nil, err
       end
-      local _, namespace = util.split_namespace(ns_name)
-      opts.namespace = namespace
    end
 
    if url:match("%.rockspec$") then
@@ -127,13 +127,11 @@ function cmd_build.command(args)
       return make.command(args)
    end
 
-   local name = util.adjust_name_and_namespace(args.rock, args)
-
    local opts = build.opts({
       need_to_fetch = true,
       minimal_mode = false,
       deps_mode = deps.get_deps_mode(args),
-      build_only_deps = not not args.only_deps,
+      build_only_deps = not not (args.only_deps and not args.pack_binary_rock),
       namespace = args.namespace,
       branch = args.branch,
       verify = not not args.verify,
@@ -144,9 +142,8 @@ function cmd_build.command(args)
    end
 
    if args.pack_binary_rock then
-      return pack.pack_binary_rock(name, args.version, args.sign, function()
-         opts.build_only_deps = false
-         local name, version, errcode = do_build(name, args.version, opts)
+      return pack.pack_binary_rock(args.rock, args.namespace, args.version, args.sign, function()
+         local name, version, errcode = do_build(args.rock, args.namespace, args.version, opts)
          if name and args.no_doc then
             remove_doc_dir(name, version)
          end
@@ -159,10 +156,10 @@ function cmd_build.command(args)
       return nil, err, cmd.errorcodes.PERMISSIONDENIED
    end
 
-   ok, err = do_build(name, args.version, opts)
-   if not ok then return nil, err end
-   local version
-   name, version = ok, err
+   local name, version, errcode = do_build(args.rock, args.namespace, args.version, opts)
+   if not name then
+      return nil, version, errcode
+   end
 
    if args.no_doc then
       remove_doc_dir(name, version)

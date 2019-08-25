@@ -215,6 +215,10 @@ function util.this_program(default)
    return prog
 end
 
+function util.format_rock_name(name, namespace, version)
+   return (namespace and namespace.."/" or "")..name..(version and " "..version or "")
+end
+
 function util.deps_mode_option(parser, program)
    local cfg = require("luarocks.core.cfg")
 
@@ -338,30 +342,6 @@ function util.LQ(s)
    return ("%q"):format(s)
 end
 
---- Normalize the --namespace option and the user/rock syntax for namespaces.
--- If a namespace is given in user/rock syntax, update the --namespace option;
--- If a namespace is given in --namespace option, update the user/rock syntax.
--- In case of conflicts, the user/rock syntax takes precedence.
-function util.adjust_name_and_namespace(ns_name, args)
-   assert(type(ns_name) == "string" or not ns_name)
-   assert(type(args) == "table")
-
-   if not ns_name then
-      return
-   elseif ns_name:match("%.rockspec$") or ns_name:match("%.rock$") then
-      return ns_name
-   end
-
-   local name, namespace = util.split_namespace(ns_name)
-   if namespace then
-      args.namespace = namespace
-   end
-   if args.namespace then
-      name = args.namespace .. "/" .. name
-   end
-   return name:lower()
-end
-
 -- Split name and namespace of a package name.
 -- @param ns_name a name that may be in "namespace/name" format
 -- @return string, string? - name and optionally a namespace
@@ -371,6 +351,27 @@ function util.split_namespace(ns_name)
       return p2, p1
    end
    return ns_name
+end
+
+--- Argparse action callback for namespaced rock arguments.
+function util.namespaced_name_action(args, target, ns_name)
+   assert(type(args) == "table")
+   assert(type(target) == "string")
+   assert(type(ns_name) == "string" or not ns_name)
+
+   if not ns_name then
+      return
+   end
+
+   if ns_name:match("%.rockspec$") or ns_name:match("%.rock$") then
+      args[target] = ns_name
+   else
+      local name, namespace = util.split_namespace(ns_name)
+      args[target] = name:lower()
+      if namespace then
+         args.namespace = namespace:lower()
+      end
+   end
 end
 
 function util.deep_copy(tbl)

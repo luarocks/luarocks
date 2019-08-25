@@ -69,7 +69,7 @@ end
 --- Driver function for "list" command.
 -- @return boolean: True if succeeded, nil on errors.
 function list.command(args)
-   local query = queries.new(args.filter and args.filter:lower() or "", args.version, true)
+   local query = queries.new(args.filter and args.filter:lower() or "", args.namespace, args.version, true)
    local trees = cfg.rocks_trees
    local title = "Rocks installed for Lua "..cfg.lua_version
    if args.tree then

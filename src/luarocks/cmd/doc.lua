@@ -21,6 +21,7 @@ function doc.add_to_parser(parser)
       :summary("Show documentation for an installed rock.")
 
    cmd:argument("rock", "Name of the rock.")
+      :action(util.namespaced_name_action)
    cmd:argument("version", "Version of the rock.")
       :args("?")
 
@@ -29,16 +30,16 @@ function doc.add_to_parser(parser)
    cmd:flag("--porcelain", "Produce machine-friendly output.")
 end
 
-local function show_homepage(homepage, name, version)
+local function show_homepage(homepage, name, namespace, version)
    if not homepage then
-      return nil, "No 'homepage' field in rockspec for "..name.." "..version
+      return nil, "No 'homepage' field in rockspec for "..util.format_rock_name(name, namespace, version)
    end
    util.printout("Opening "..homepage.." ...")
    fs.browser(homepage)
    return true
 end
 
-local function try_to_open_homepage(name, version)
+local function try_to_open_homepage(name, namespace, version)
    local temp_dir, err = fs.make_temp_dir("doc-"..name.."-"..(version or ""))
    if not temp_dir then
       return nil, "Failed creating temporary directory: "..err
@@ -46,26 +47,24 @@ local function try_to_open_homepage(name, version)
    util.schedule_function(fs.delete, temp_dir)
    local ok, err = fs.change_dir(temp_dir)
    if not ok then return nil, err end
-   local filename, err = download.download("rockspec", name, version)
+   local filename, err = download.download("rockspec", name, namespace, version)
    if not filename then return nil, err end
    local rockspec, err = fetch.load_local_rockspec(filename)
    if not rockspec then return nil, err end
    fs.pop_dir()
    local descript = rockspec.description or {}
-   if not descript.homepage then return nil, "No homepage defined for "..name end
-   return show_homepage(descript.homepage, name, version)
+   return show_homepage(descript.homepage, name, namespace, version)
 end
 
 --- Driver function for "doc" command.
 -- @return boolean: True if succeeded, nil on errors.
 function doc.command(args)
-   local name = util.adjust_name_and_namespace(args.rock, args)
-   local version = args.version
-   local query = queries.new(name, version)
+   local query = queries.new(args.rock, args.namespace, args.version)
    local iname, iversion, repo = search.pick_installed_rock(query, args.tree)
    if not iname then
-      util.printout(name..(version and " "..version or "").." is not installed. Looking for it in the rocks servers...")
-      return try_to_open_homepage(name, version)
+      local rock = util.format_rock_name(args.rock, args.namespace, args.version)
+      util.printout(rock.." is not installed. Looking for it in the rocks servers...")
+      return try_to_open_homepage(args.rock, args.namespace, args.version)
    end
    name, version = iname, iversion
    
@@ -74,7 +73,7 @@ function doc.command(args)
    local descript = rockspec.description or {}
 
    if args.home then
-      return show_homepage(descript.homepage, name, version)
+      return show_homepage(descript.homepage, name, args.namespace, version)
    end
 
    local directory = path.install_dir(name, version, repo)

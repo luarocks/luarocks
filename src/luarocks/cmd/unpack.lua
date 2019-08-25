@@ -19,6 +19,7 @@ In the latter case, the rock version may be given as a second argument.]],
       :summary("Unpack the contents of a rock.")
 
    cmd:argument("rock", "A rock file or the name of a rock.")
+      :action(util.namespaced_name_action)
    cmd:argument("version", "Rock version.")
       :args("?")
 
@@ -149,13 +150,11 @@ end
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
 function unpack.command(args)
-   local ns_name = util.adjust_name_and_namespace(args.rock, args)
-
    local url, err
-   if ns_name:match(".*%.rock") or ns_name:match(".*%.rockspec") then
-      url = ns_name
+   if args.rock:match(".*%.rock") or args.rock:match(".*%.rockspec") then
+      url = args.rock
    else
-      url, err = search.find_src_or_rockspec(ns_name, args.version, true)
+      url, err = search.find_src_or_rockspec(args.rock, args.namespace, args.version, true)
       if not url then
          return nil, err
       end

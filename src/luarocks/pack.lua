@@ -137,7 +137,7 @@ function pack.report_and_sign_local_file(file, err, sign)
    end
    util.printout("Packed: "..file)
    if sigfile then
-      util.printout("Sigature stored in: "..sigfile)
+      util.printout("Signature stored in: "..sigfile)
    end
    if err then
       return nil, err
@@ -145,7 +145,7 @@ function pack.report_and_sign_local_file(file, err, sign)
    return true
 end
 
-function pack.pack_binary_rock(name, version, sign, cmd)
+function pack.pack_binary_rock(name, namespace, version, sign, cmd)
 
    -- The --pack-binary-rock option for "luarocks build" basically performs
    -- "luarocks build" on a temporary tree and then "luarocks pack". The
@@ -169,7 +169,7 @@ function pack.pack_binary_rock(name, version, sign, cmd)
    if not rname then
       rname, rversion = name, version
    end
-   local query = queries.new(rname, rversion)
+   local query = queries.new(rname, namespace, rversion)
    local file, err = pack.pack_installed_rock(query, temp_dir)
    return pack.report_and_sign_local_file(file, err, sign)
 end

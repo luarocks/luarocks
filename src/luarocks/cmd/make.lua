@@ -83,14 +83,15 @@ function make.command(args)
       return nil, err
    end
 
-   local name = util.adjust_name_and_namespace(rockspec.name, args)
+   local name, namespace = util.split_namespace(rockspec.name)
+   namespace = namespace or args.namespace
 
    local opts = build.opts({
       need_to_fetch = false,
       minimal_mode = true,
       deps_mode = deps.get_deps_mode(args),
       build_only_deps = false,
-      namespace = args.namespace,
+      namespace = namespace,
       branch = args.branch,
       verify = not not args.verify,
    })
@@ -100,7 +101,7 @@ function make.command(args)
    end
 
    if args.pack_binary_rock then
-      return pack.pack_binary_rock(name, rockspec.version, args.sign, function()
+      return pack.pack_binary_rock(name, namespace, rockspec.version, args.sign, function()
          return build.build_rockspec(rockspec, opts)
       end)
    else

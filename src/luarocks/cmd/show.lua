@@ -22,6 +22,7 @@ With flags, return only the desired information.]], util.see_also())
       :summary("Show information about an installed rock.")
 
    cmd:argument("rock", "Name of an installed rock.")
+      :action(util.namespaced_name_action)
    cmd:argument("version", "Rock version.")
       :args("?")
 
@@ -260,12 +261,9 @@ end
 --- Driver function for "show" command.
 -- @return boolean: True if succeeded, nil on errors.
 function show.command(args)
-   local name = util.adjust_name_and_namespace(args.rock, args)
-   local version = args.version
-   local query = queries.new(name, version)
+   local query = queries.new(args.rock, args.namespace, args.version)
    
-   local repo, repo_url
-   name, version, repo, repo_url = search.pick_installed_rock(query, args.tree)
+   local name, version, repo, repo_url = search.pick_installed_rock(query, args.tree)
    if not name then
       return nil, version
    end

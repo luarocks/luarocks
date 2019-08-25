@@ -263,9 +263,7 @@ local function rockspec_cleanup(rockspec)
 end
 
 function write_rockspec.command(args)
-
-   local name = util.adjust_name_and_namespace(args.name, args)
-   local version = args.version
+   local name, version = args.name, args.version
    local location = args.location
 
    if not name then

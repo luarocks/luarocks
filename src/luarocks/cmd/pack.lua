@@ -13,6 +13,7 @@ function cmd_pack.add_to_parser(parser)
 
    cmd:argument("rock", "A rockspec file, for creating a source rock, or the "..
       "name of an installed package, for creating a binary rock.")
+      :action(util.namespaced_name_action)
    cmd:argument("version", "A version may be given if the first argument is a rock name.")
       :args("?")
 
@@ -27,8 +28,7 @@ function cmd_pack.command(args)
    if args.rock:match(".*%.rockspec") then
       file, err = pack.pack_source_rock(args.rock)
    else
-      local name = util.adjust_name_and_namespace(args.rock, args)
-      local query = queries.new(name, args.version)
+      local query = queries.new(args.rock, args.namespace, args.version)
       file, err = pack.pack_installed_rock(query, args.tree)
    end
    return pack.report_and_sign_local_file(file, err, args.sign)

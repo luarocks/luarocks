@@ -25,6 +25,7 @@ To override this check and force the removal, use --force or --force-fast.]],
       :summary("Uninstall a rock.")
 
    cmd:argument("rock", "Name of the rock to be uninstalled.")
+      :action(util.namespaced_name_action)
    cmd:argument("version", "Version of the rock to uninstall.")
       :args("?")
 
@@ -37,9 +38,8 @@ end
 -- @return boolean or (nil, string, exitcode): True if removal was
 -- successful, nil and an error message otherwise. exitcode is optionally returned.
 function cmd_remove.command(args)
-   local name = util.adjust_name_and_namespace(args.rock, args)
-   
-   local deps_mode = args.deps_mode or cfg.deps_mode
+   local name = args.rock
+   local deps_mode = deps.get_deps_mode(args)
    
    local ok, err = fs.check_command_permissions(args)
    if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
@@ -54,9 +54,10 @@ function cmd_remove.command(args)
 
    local results = {}
    name = name:lower()
-   search.local_manifest_search(results, cfg.rocks_dir, queries.new(name, version))
+   search.local_manifest_search(results, cfg.rocks_dir, queries.new(name, args.namespace, version))
    if not results[name] then
-      return nil, "Could not find rock '"..name..(version and " "..version or "").."' in "..path.rocks_tree_to_string(cfg.root_dir)
+      local rock = util.format_rock_name(name, args.namespace, version)
+      return nil, "Could not find rock '"..rock.."' in "..path.rocks_tree_to_string(cfg.root_dir)
    end
 
    local ok, err = remove.remove_search_results(results, name, deps_mode, args.force, args.force_fast)
