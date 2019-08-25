@@ -14,6 +14,7 @@ function cmd_search.add_to_parser(parser)
 
    cmd:argument("name", "Name of the rock to search for.")
       :args("?")
+      :action(util.namespaced_name_action)
    cmd:argument("version", "Rock version to search for.")
       :args("?")
 
@@ -53,8 +54,7 @@ end
 -- @return boolean or (nil, string): True if build was successful; nil and an
 -- error message otherwise.
 function cmd_search.command(args)
-
-   local name = util.adjust_name_and_namespace(args.name, args)
+   local name = args.name
 
    if args.all then
       name, args.version = "", nil
@@ -64,10 +64,10 @@ function cmd_search.command(args)
       return nil, "Enter name and version or use --all. "..util.see_help("search")
    end
    
-   local query = queries.new(name:lower(), args.version, true)
+   local query = queries.new(name, args.namespace, args.version, true)
    local result_tree, err = search.search_repos(query)
    local porcelain = args.porcelain
-   local full_name = name .. (args.version and " " .. args.version or "")
+   local full_name = util.format_rock_name(name, args.namespace, args.version)
    util.title(full_name .. " - Search results for Lua "..cfg.lua_version..":", porcelain, "=")
    local sources, binaries = split_source_and_binary_results(result_tree)
    if next(sources) and not args.binary then

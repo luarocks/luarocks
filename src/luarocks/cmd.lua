@@ -393,6 +393,7 @@ Enabling completion for Fish:
    parser:option("--only-sources", "Restrict downloads to paths matching the given URL.")
       :argname("<url>")
    parser:option("--namespace", "Specify the rocks server namespace to use.")
+      :convert(string.lower)
    parser:option("--lua-dir", "Which Lua installation to use.")
       :argname("<prefix>")
    parser:option("--lua-version", "Which Lua version to use.")

@@ -250,8 +250,8 @@ function search.find_suitable_rock(query)
    end
 end
 
-function search.find_src_or_rockspec(ns_name, version, check_lua_versions)
-   local query = queries.new(ns_name, version, false, "src|rockspec")
+function search.find_src_or_rockspec(name, namespace, version, check_lua_versions)
+   local query = queries.new(name, namespace, version, false, "src|rockspec")
    local url, err = search.find_rock_checking_lua_versions(query, check_lua_versions)
    if not url then
       return nil, "Could not find a result named "..tostring(query)..": "..err

@@ -21,6 +21,7 @@ function install.add_to_parser(parser)
 
    cmd:argument("rock", "The name of a rock to be fetched from a repository "..
       "or a filename of a locally available rock.")
+      :action(util.namespaced_name_action)
    cmd:argument("version", "Version of the rock.")
       :args("?")
 
@@ -212,8 +213,6 @@ end
 -- @return boolean or (nil, string, exitcode): True if installation was
 -- successful, nil and an error message otherwise. exitcode is optionally returned.
 function install.command(args)
-   args.rock = util.adjust_name_and_namespace(args.rock, args)
-
    local ok, err = fs.check_command_permissions(args)
    if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
 
@@ -238,7 +237,7 @@ function install.command(args)
       end
    else
       local url, err = search.find_rock_checking_lua_versions(
-                          queries.new(args.rock:lower(), args.version),
+                          queries.new(args.rock, args.namespace, args.version),
                           args.check_lua_versions)
       if not url then
          return nil, err

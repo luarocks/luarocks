@@ -102,7 +102,7 @@ local function match_dep(dep, get_versions)
          latest_matching_msg = " (latest matching is " .. latest_vstring .. ")"
       end
       util.printout("Forcing " .. dep.name .. " to pinned version " .. lockversion .. latest_matching_msg)
-      return nil, nil, queries.new(dep.name, lockversion)
+      return nil, nil, queries.new(dep.name, dep.namespace, lockversion)
    end
    
    return latest_vstring, locations[latest_vstring], dep, provided
@@ -155,11 +155,11 @@ function deps.match_deps(dependencies, rocks_provided, blacklist, deps_mode)
    return match_all_deps(dependencies, get_versions)
 end
 
-local function rock_status(name, get_versions)
-   assert(type(name) == "string")
+local function rock_status(dep, get_versions)
+   assert(dep:type() == "query")
    assert(type(get_versions) == "function")
 
-   local installed, _, _, provided = match_dep(queries.new(name), get_versions)
+   local installed, _, _, provided = match_dep(dep, get_versions)
    local installation_type = provided and "provided by VM" or "installed"
    return installed and installed.." "..installation_type or "not installed"
 end
@@ -197,7 +197,7 @@ function deps.report_missing_dependencies(name, version, dependencies, deps_mode
             first_missing_dep = false
          end
 
-         util.printout(("   %s (%s)"):format(tostring(dep), rock_status(dep.name, get_versions)))
+         util.printout(("   %s (%s)"):format(tostring(dep), rock_status(dep, get_versions)))
       end
    end
 end
@@ -301,11 +301,12 @@ function deps.fulfill_dependencies(rockspec, depskey, deps_mode, verify, deplock
       util.printout("Using dependencies pinned in lockfile: " .. filename)
 
       local get_versions = prepare_get_versions("none", rocks_provided, depskey)
-      for dname, dversion in deplocks.each(depskey) do
-         local dep = queries.new(dname, dversion)
+      for dnsname, dversion in deplocks.each(depskey) do
+         local dname, dnamespace = util.split_namespace(dnsname)
+         local dep = queries.new(dname, dnamespace, dversion)
 
          util.printout(("%s %s is pinned to %s (%s)"):format(
-            name, version, tostring(dep), rock_status(dep.name, get_versions)))
+            name, version, tostring(dep), rock_status(dep, get_versions)))
 
          local ok, err = deps.fulfill_dependency(dep, "none", rocks_provided, verify, depskey)
          if not ok then
@@ -331,7 +332,7 @@ function deps.fulfill_dependencies(rockspec, depskey, deps_mode, verify, deplock
    for _, dep in ipairs(rockspec[depskey]) do
 
       util.printout(("%s %s depends on %s (%s)"):format(
-         name, version, tostring(dep), rock_status(dep.name, get_versions)))
+         name, version, tostring(dep), rock_status(dep, get_versions)))
 
       local ok, found_or_err, _, no_upgrade = deps.fulfill_dependency(dep, deps_mode, rocks_provided, verify, depskey)
       if ok then

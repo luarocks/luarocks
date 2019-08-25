@@ -6,6 +6,7 @@ local search = require("luarocks.search")
 local queries = require("luarocks.queries")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
+local util = require("luarocks.util")
 
 local function get_file(filename)
    local protocol, pathname = dir.split_url(filename)
@@ -21,9 +22,9 @@ local function get_file(filename)
    end
 end
 
-function download.download(arch, name, version, all, check_lua_versions)
+function download.download(arch, name, namespace, version, all, check_lua_versions)
    local substring = (all and name == "")
-   local query = queries.new(name, version, substring, arch)
+   local query = queries.new(name, namespace, version, substring, arch)
    local search_err
 
    if all then
@@ -58,8 +59,8 @@ function download.download(arch, name, version, all, check_lua_versions)
          return get_file(url)
       end
    end
-   return nil, "Could not find a result named "..name..(version and " "..version or "")..
-      (search_err and ": "..search_err or ".")
+   local rock = util.format_rock_name(name, namespace, version)
+   return nil, "Could not find a result named "..rock..(search_err and ": "..search_err or ".")
 end
 
 return download

@@ -105,7 +105,7 @@ end
 
 function remove.remove_other_versions(name, version, force, fast)
    local results = {}
-   local query = queries.new(name, version, false, nil, "~=")
+   local query = queries.new(name, nil, version, false, nil, "~=")
    search.local_manifest_search(results, cfg.rocks_dir, query)
    if results[name] then
       return remove.remove_search_results(results, name, cfg.deps_mode, force, fast)
