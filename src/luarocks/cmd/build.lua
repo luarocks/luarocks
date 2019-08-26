@@ -30,6 +30,7 @@ function cmd_build.add_to_parser(parser)
       :args("?")
 
    cmd:flag("--only-deps", "Installs only the dependencies of the rock.")
+   cmd:flag("--no-doc", "Installs the rock without its documentation.")
    make.cmd_options(cmd)
 end
 
