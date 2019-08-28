@@ -405,7 +405,8 @@ local function generate(main_program, dir, skip)
    fd:write(reindent_c(table.concat(out, "\n")))
    fd:close()
 
-   deps.check_lua(cfg.variables)
+   deps.check_lua_incdir(cfg.variables)
+   deps.check_lua_libdir(cfg.variables)
    
    cmd = table.concat(filter_in(nonnull, {
       CC, "-o", TARGET .. "/" .. program_name .. ".exe",
