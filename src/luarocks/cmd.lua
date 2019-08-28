@@ -282,19 +282,6 @@ do
    init_config = function(args)
       local detected = detect_config_via_args(args)
    
-      -- FIXME A quick hack for the experimental Windows build
-      if os.getenv("LUAROCKS_CROSS_COMPILING") then
-         cfg.each_platform = function()
-            local i = 0
-            local plats = { "unix", "linux" }
-            return function()
-               i = i + 1
-               return plats[i]
-            end
-         end
-         fs.init()
-      end
-   
       local ok, err = cfg.init(detected, util.warning)
       if not ok then
          return nil, err
@@ -444,6 +431,18 @@ end
 function cmd.run_command(description, commands, external_namespace, ...)
 
    check_popen()
+
+   -- FIXME A quick hack for the experimental Windows build
+   if os.getenv("LUAROCKS_CROSS_COMPILING") then
+      cfg.each_platform = function()
+         local i = 0
+         local plats = { "unix", "linux" }
+         return function()
+            i = i + 1
+            return plats[i]
+         end
+      end
+   end
 
    fs.init()
 
