@@ -457,7 +457,7 @@ local function main()
    
    local dependencies = {
       md5 = "md5",
-      luasec = "./binary/luasec-0.7alpha-2.rockspec",
+      luasec = "./binary/luasec-0.8.1-2.rockspec",
       luaposix = if_platform("unix", "./binary/luaposix-34.0.4-1.rockspec"),
       luasocket = "luasocket",
       ["lua-zlib"] = "./binary/lua-zlib-1.2-0.rockspec",
