@@ -175,14 +175,15 @@ else
    cd luarocks.wiki
 fi
 
-sed -i "s,The current stable release is [^:]*:,The current stable release is '''$v''':," Download.mediawiki
+sed -i "s,Latest release: .*,Latest release: '''LuaRocks $v''' - '$(date +'%d/%b/%Y')'," Download.mediawiki
 
-sed -i "s,luarocks-[0-9.]*[0-9],luarocks-$v," Installation-instructions-for-Unix.md
+sed -i "s,luarocks-[0-9.]*[0-9],luarocks-$v,g" Download.mediawiki
 
 gawk '
 BEGIN {
    print "'\'\'\''Version '$v\'\'\'' - '$(date +'%d/%b/%Y')' - [http://luarocks.org/releases/luarocks-'$v'.tar.gz All Unix] -"
-   print "[http://luarocks.org/releases/luarocks-'$v'-windows-32.zip Windows all-in-one executable]"
+   print "[http://luarocks.org/releases/luarocks-'$v'-windows-32.zip Windows all-in-one executable] -"
+   print "[http://luarocks.github.io/luarocks/releases other files]"
    print ""
 }
 // {
