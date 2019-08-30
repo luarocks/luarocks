@@ -70,16 +70,22 @@ do
    end
 
    function fs.init()
-      if fs.current_dir then
-         -- already initialized
-         return
-      end
-
-      if not cfg.each_platform then
-         error("cfg is not initialized, please run cfg.init() first")
-      end
-
       local inits = {}
+
+      if fs.current_dir then
+         -- unload luarocks fs so it can be reloaded using all modules
+         -- providing extra functionality in the current package paths
+         for k, _ in pairs(fs) do
+            if k ~= "init" and k ~= "verbose" then
+               fs[k] = nil
+            end
+         end
+         for m, _ in pairs(package.loaded) do
+            if m:match("luarocks%.fs%.") then
+               package.loaded[m] = nil
+            end
+         end
+      end
 
       -- Load platform-specific functions
       load_platform_fns("luarocks.fs.%s", inits)
