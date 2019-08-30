@@ -326,9 +326,10 @@ local function get_config_text(cfg)
          local name = tree.name and " (\""..tree.name.."\")" or ""
          buf = buf.."      "..fs.absolute_name(tree.root)..name
       end
+      buf = buf .. "\n"
    end
 
-   return buf.."\n"
+   return buf
 end
 
 local function get_parser(description, cmd_modules)
