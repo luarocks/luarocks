@@ -11,6 +11,8 @@ local fun = require("luarocks.fun")
 local fs = require("luarocks.fs")
 local argparse = require("luarocks.argparse")
 
+local unpack = unpack or table.unpack
+
 local hc_ok, hardcoded = pcall(require, "luarocks.core.hardcoded")
 if not hc_ok then
    hardcoded = {}
@@ -455,6 +457,19 @@ function cmd.run_command(description, commands, external_namespace, ...)
    local cmd_modules = {}
    for name, module in pairs(commands) do
       cmd_modules[name] = require(module)
+      if not cmd_modules[name].add_to_parser then
+         cmd_modules[name].add_to_parser = function(parser)
+            parser:command(name, cmd_modules[name].help, util.see_also())
+                  :summary(cmd_modules[name].help_summary)
+                  :handle_options(false)
+                  :argument("input")
+                  :args("*")
+         end
+         local original_command = cmd_modules[name].command
+         cmd_modules[name].command = function(args)
+            return original_command(args, unpack(args.input))
+         end
+      end
    end
 
    local function process_cmdline_vars(...)
