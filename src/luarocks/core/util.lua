@@ -167,16 +167,16 @@ end
 -- @param list string: A path string (from $PATH or package.path)
 -- @param sep string: The separator
 -- @param lua_version (optional) string: The Lua version to use.
--- @param keep_last (optional) if true, keep last occurrence in case
--- of duplicates; otherwise keep first occurrence. The default is false.
-function util.cleanup_path(list, sep, lua_version, keep_last)
+-- @param keep_first (optional) if true, keep first occurrence in case
+-- of duplicates; otherwise keep last occurrence. The default is false.
+function util.cleanup_path(list, sep, lua_version, keep_first)
    assert(type(list) == "string")
    assert(type(sep) == "string")
    local parts = util.split_string(list, sep)
    local final, entries = {}, {}
    local start, stop, step
 
-   if keep_last then
+   if keep_first then
       start, stop, step = 1, #parts, 1
    else
       start, stop, step = #parts, 1, -1
@@ -192,11 +192,12 @@ function util.cleanup_path(list, sep, lua_version, keep_last)
          end)
       end
       if not entries[part] then
-         local at = keep_last and #final+1 or 1
+         local at = keep_first and #final+1 or 1
          table.insert(final, at, part)
          entries[part] = true
       end
    end
+
    return table.concat(final, sep)
 end
 

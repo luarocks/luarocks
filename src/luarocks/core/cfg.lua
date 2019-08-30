@@ -763,8 +763,8 @@ function cfg.init(detected, warning)
 
    function cfg.init_package_paths()
       local lr_path, lr_cpath, lr_bin = cfg.package_paths()
-      package.path = util.cleanup_path(package.path .. ";" .. lr_path, ";", lua_version)
-      package.cpath = util.cleanup_path(package.cpath .. ";" .. lr_cpath, ";", lua_version)
+      package.path = util.cleanup_path(package.path .. ";" .. lr_path, ";", lua_version, true)
+      package.cpath = util.cleanup_path(package.cpath .. ";" .. lr_cpath, ";", lua_version, true)
    end
 
    --- Check if platform was detected
