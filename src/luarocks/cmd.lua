@@ -460,19 +460,30 @@ function cmd.run_command(description, commands, external_namespace, ...)
 
    local cmd_modules = {}
    for name, module in pairs(commands) do
-      cmd_modules[name] = require(module)
-      if not cmd_modules[name].add_to_parser then
-         cmd_modules[name].add_to_parser = function(parser)
-            parser:command(name, cmd_modules[name].help, util.see_also())
-                  :summary(cmd_modules[name].help_summary)
-                  :handle_options(false)
-                  :argument("input")
-                  :args("*")
+      local pok, mod = pcall(require, module)
+      if pok and type(mod) == "table" then
+         if not mod.add_to_parser then
+            mod.add_to_parser = function(parser)
+               parser:command(name, mod.help, util.see_also())
+                     :summary(mod.help_summary)
+                     :handle_options(false)
+                     :argument("input")
+                     :args("*")
+            end
+            local original_command = mod.command
+            if original_command then
+               mod.command = function(args)
+                  return original_command(args, unpack(args.input))
+               end
+            end
          end
-         local original_command = cmd_modules[name].command
-         cmd_modules[name].command = function(args)
-            return original_command(args, unpack(args.input))
+         if mod.command then
+            cmd_modules[name] = mod
+         else
+            util.warning("command module " .. module .. " does not implement command(), skipping")
          end
+      else
+         util.warning("failed to load command module " .. module)
       end
    end
 
