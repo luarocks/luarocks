@@ -11,7 +11,7 @@ local fun = require("luarocks.fun")
 local fs = require("luarocks.fs")
 local argparse = require("luarocks.argparse")
 
-local unpack = unpack or table.unpack
+local unpack = table.unpack or unpack
 
 local hc_ok, hardcoded = pcall(require, "luarocks.core.hardcoded")
 if not hc_ok then
@@ -462,22 +462,21 @@ function cmd.run_command(description, commands, external_namespace, ...)
    for name, module in pairs(commands) do
       local pok, mod = pcall(require, module)
       if pok and type(mod) == "table" then
-         if not mod.add_to_parser then
-            mod.add_to_parser = function(parser)
-               parser:command(name, mod.help, util.see_also())
-                     :summary(mod.help_summary)
-                     :handle_options(false)
-                     :argument("input")
-                     :args("*")
-            end
-            local original_command = mod.command
-            if original_command then
+         local original_command = mod.command
+         if original_command then
+            if not mod.add_to_parser then
+               mod.add_to_parser = function(parser)
+                  parser:command(name, mod.help, util.see_also())
+                        :summary(mod.help_summary)
+                        :handle_options(false)
+                        :argument("input")
+                        :args("*")
+               end
+
                mod.command = function(args)
                   return original_command(args, unpack(args.input))
                end
             end
-         end
-         if mod.command then
             cmd_modules[name] = mod
          else
             util.warning("command module " .. module .. " does not implement command(), skipping")
