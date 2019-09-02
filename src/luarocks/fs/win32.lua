@@ -167,12 +167,15 @@ function win32.wrap_script(script, target, deps_mode, name, version, ...)
       fs.Qb(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)),
       "-e",
       fs.Qb(table.concat(luainit, ";")),
-      script and fs.Qb(script) or "",
+      script and fs.Qb(script) or "%I%",
       ...
    }
 
    wrapper:write("@echo off\r\n")
    wrapper:write("setlocal\r\n")
+   if not script then
+      wrapper:write([[IF "%*"=="" (set I=-i) ELSE (set I=)]] .. "\r\n")
+   end
    wrapper:write("set "..fs.Qb("LUAROCKS_SYSCONFDIR="..cfg.sysconfdir) .. "\r\n")
    wrapper:write(table.concat(argv, " ") .. " %*\r\n")
    wrapper:write("exit /b %ERRORLEVEL%\r\n")

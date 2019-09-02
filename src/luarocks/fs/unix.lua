@@ -99,7 +99,7 @@ function unix.wrap_script(script, target, deps_mode, name, version, ...)
       fs.Q(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)),
       "-e",
       fs.Q(table.concat(luainit, ";")),
-      script and fs.Q(script) or "",
+      script and fs.Q(script) or [[$([ "$*" ] || echo -i)]],
       ...
    }
 
