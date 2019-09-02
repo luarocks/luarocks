@@ -436,6 +436,9 @@ do
          return nil
       end
       local lv, err = util.popen_read(Q(lua_exe) .. ' -e "io.write(_VERSION:sub(5))"')
+      if lv == "" then
+         return nil
+      end
       if luaver and luaver ~= lv then
          return nil
       end
