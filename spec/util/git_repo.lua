@@ -82,6 +82,7 @@ function git_repo.start()
             test_env.execute("git add " .. name)
          end
          assert(test_env.execute("git commit -a -m 'initial commit'"))
+         assert(test_env.execute("git branch test-branch"))
          print("git daemon --reuseaddr --pid-file="..pidfile.." --base-path="..basedir.." --export-all "..repodir.." &")
          assert(test_env.execute("git daemon --reuseaddr --pid-file="..pidfile.." --base-path="..basedir.." --export-all "..repodir.." &"))
          assert(test_env.execute("sleep 0.1; netstat -ln | grep '0.0.0.0:9418 .* LISTEN'"))
