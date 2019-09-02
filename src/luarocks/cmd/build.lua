@@ -31,6 +31,10 @@ function cmd_build.add_to_parser(parser)
 
    cmd:flag("--only-deps", "Installs only the dependencies of the rock.")
    cmd:flag("--no-doc", "Installs the rock without its documentation.")
+   cmd:option("--branch", "Override the `source.branch` field in the loaded "..
+      "rockspec. Allows to specify a different branch to fetch. Particularly "..
+      'for "dev" rocks.')
+      :argname("<name>")
    make.cmd_options(cmd)
 end
 
@@ -131,7 +135,7 @@ function cmd_build.command(args)
       deps_mode = deps.get_deps_mode(args),
       build_only_deps = not not args.only_deps,
       namespace = args.namespace,
-      branch = not not args.branch,
+      branch = args.branch,
       verify = not not args.verify,
    })
 

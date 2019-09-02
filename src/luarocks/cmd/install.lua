@@ -42,7 +42,7 @@ function install.add_to_parser(parser)
    util.deps_mode_option(cmd)
    -- luarocks build options
    parser:flag("--pack-binary-rock"):hidden(true)
-   parser:flag("--branch"):hidden(true)
+   parser:option("--branch"):hidden(true)
    parser:flag("--sign"):hidden(true)
 end
 

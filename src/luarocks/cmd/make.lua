@@ -26,10 +26,6 @@ function make.cmd_options(parser)
       "previously installed versions if it would break dependencies.")
    parser:flag("--force-fast", "Like --force, but performs a forced removal "..
       "without reporting dependency issues.")
-   parser:option("--branch", "Override the `source.branch` field in the loaded "..
-      "rockspec. Allows to specify a different branch to fetch. Particularly "..
-      'for "dev" rocks.')
-      :argname("<name>")
    parser:flag("--verify", "Verify signature of the rockspec or src.rock being "..
       "built. If the rockspec or src.rock is being downloaded, LuaRocks will "..
       "attempt to download the signature as well. Otherwise, the signature "..
@@ -95,7 +91,7 @@ function make.command(args)
       deps_mode = deps.get_deps_mode(args),
       build_only_deps = false,
       namespace = args.namespace,
-      branch = not not args.branch,
+      branch = args.branch,
       verify = not not args.verify,
    })
 

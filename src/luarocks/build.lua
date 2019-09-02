@@ -18,7 +18,7 @@ build.opts = util.opts_table("build.opts", {
    deps_mode = "string",
    build_only_deps = "boolean",
    namespace = "string?",
-   branch = "boolean",
+   branch = "string?",
    verify = "boolean",
 })
 
@@ -337,18 +337,7 @@ local function write_rock_dir_files(rockspec, opts)
 end
 
 --- Build and install a rock given a rockspec.
--- @param rockspec_file string: local or remote filename of a rockspec.
--- @param need_to_fetch boolean: true if sources need to be fetched,
--- false if the rockspec was obtained from inside a source rock.
--- @param minimal_mode boolean: true if there's no need to fetch,
--- unpack or change dir (this is used by "luarocks make"). Implies
--- need_to_fetch = false.
--- @param deps_mode string: Dependency mode: "one" for the current default tree,
--- "all" for all trees, "order" for all trees with priority >= the current default,
--- "none" for no trees.
--- @param build_only_deps boolean: true to build the listed dependencies only.
--- @param namespace string?: a namespace for the rockspec
--- @param branch string?: a forced branch to use
+-- @param opts table: build options table
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
 function build.build_rockspec(rockspec, opts)

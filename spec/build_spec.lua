@@ -4,6 +4,7 @@ local get_tmp_path = test_env.get_tmp_path
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 local write_file = test_env.write_file
+local git_repo = require("spec.util.git_repo")
 
 test_env.unload_luarocks()
 local cfg = require("luarocks.core.cfg")
@@ -107,12 +108,6 @@ describe("LuaRocks build tests #integration", function()
             assert.is_true(run.luarocks_bool("build --verbose test-1.0-1.rockspec"))
             assert.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/test/1.0-1/test-1.0-1.rockspec"))
          end, finally)
-      end)
-      
-      it("LuaRocks build lpeg branch=master", function()
-         -- FIXME should use dev package
-         assert.is_true(run.luarocks_bool("build --branch=master lpeg"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lpeg/1.0.0-1/lpeg-1.0.0-1.rockspec"))
       end)
       
       it("LuaRocks build fails if the deps-mode argument is invalid", function()
@@ -928,5 +923,33 @@ describe("LuaRocks build tests #unit", function()
          end)
       end)
    end)
+
+   describe("#unix build from #git", function()
+      local git
+
+      setup(function()
+         git = git_repo.start()
+      end)
+      
+      teardown(function()
+         if git then
+            git:stop()
+         end
+      end)
+
+      it("using --branch", function()
+         write_file("my_branch-1.0-1.rockspec", [[
+            rockspec_format = "3.0"
+            package = "my_branch"
+            version = "1.0-1"
+            source = {
+               url = "git://localhost/testrock"
+            }
+         ]], finally)
+         assert.is_false(run.luarocks_bool("build --branch unknown-branch ./my_branch-1.0-1.rockspec"))
+         assert.is_true(run.luarocks_bool("build --branch test-branch ./my_branch-1.0-1.rockspec"))
+      end)
+   end)
+
 end)
 
