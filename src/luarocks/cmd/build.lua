@@ -142,11 +142,11 @@ function cmd_build.command(args)
    if args.pack_binary_rock then
       return pack.pack_binary_rock(name, args.version, args.sign, function()
          opts.build_only_deps = false
-         local status, err, errcode = do_build(name, args.version, opts)
-         if status and args.no_doc then
-            remove_doc_dir(name, args.version)
+         local name, version, errcode = do_build(name, args.version, opts)
+         if name and args.no_doc then
+            remove_doc_dir(name, version)
          end
-         return status, err, errcode
+         return name, version, errcode
       end)
    end
    
