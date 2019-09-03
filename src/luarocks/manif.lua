@@ -135,10 +135,10 @@ function manif.load_manifest(repo_url, lua_version, versioned_only)
    end
    if pathname:match(".*%.zip$") then
       pathname = fs.absolute_name(pathname)
-      local dirname = dir.dir_name(pathname)
-      fs.change_dir(dirname)
       local nozip = pathname:match("(.*)%.zip$")
       if not from_cache then
+         local dirname = dir.dir_name(pathname)
+         fs.change_dir(dirname)
          fs.delete(nozip)
          local ok, err = fs.unzip(pathname)
          fs.pop_dir()
