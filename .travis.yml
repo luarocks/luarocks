@@ -27,6 +27,7 @@ integration_script: &integration_script
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then shellcheck ./configure; fi
   - ./configure --with-lua=lua_install
   - ./makedist dev
+  - ./smoke_test.sh luarocks-dev.tar.gz
   - busted -o gtest --exclude-tags=gpg,git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
   - busted -o gtest --exclude-tags=gpg,git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
           
