@@ -108,7 +108,7 @@ local function manifest_search(result_tree, repo, query, lua_version, is_local)
       repo = repo .. "/manifests/" .. query.namespace
    end
 
-   local manifest, err, errcode = manif.load_manifest(repo, lua_version, true)
+   local manifest, err, errcode = manif.load_manifest(repo, lua_version, not is_local)
    if not manifest then
       return nil, err, errcode
    end
