@@ -69,7 +69,7 @@ $(builddir)/luarocks: src/bin/luarocks config.unix
 	'package.loaded["luarocks.core.hardcoded"] = { '\
 	"$$([ -n "$(FORCE_CONFIG)" ] && printf 'FORCE_CONFIG = true, ')"\
 	'SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
-	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'; \
+	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'\
 	'local list = package.searchers or package.loaders; table.insert(list, 1, function(name) if name:match("^luarocks%%.") then return loadfile([[$(luadir)/]] .. name:gsub([[%%.]], [[/]]) .. [[.lua]]) end end)\n'; \
 	tail -n +2 src/bin/luarocks \
 	)> "$@"
@@ -80,7 +80,7 @@ $(builddir)/luarocks-admin: src/bin/luarocks-admin config.unix
 	'package.loaded["luarocks.core.hardcoded"] = { '\
 	"$$([ -n "$(FORCE_CONFIG)" ] && printf 'FORCE_CONFIG = true, ')"\
 	'SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
-	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'; \
+	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'\
 	'local list = package.searchers or package.loaders; table.insert(list, 1, function(name) if name:match("^luarocks%%.") then return loadfile([[$(luadir)/]] .. name:gsub([[%%.]], [[/]]) .. [[.lua]]) end end)\n'; \
 	tail -n +2 src/bin/luarocks-admin \
 	)> "$@"
