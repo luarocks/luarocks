@@ -7,6 +7,10 @@ mkdir smoketestdir
 cp "$tarball" smoketestdir
 cd smoketestdir
 
+################################################################################
+# test installation with make install
+################################################################################
+
 tar zxvpf "$(basename "$tarball")"
 cd "$(basename "$tarball" .tar.gz)"
 ./configure --prefix=foobar
@@ -15,6 +19,7 @@ make
 ./luarocks --verbose install inspect
 ./luarocks --verbose show inspect
 ./lua -e 'print(assert(require("inspect")(_G)))'
+./luarocks --verbose remove inspect
 make install
 cd foobar
 bin/luarocks --verbose
@@ -24,8 +29,61 @@ bin/luarocks --verbose show inspect
    eval $(bin/luarocks path)
    lua -e 'print(assert(require("inspect")(_G)))'
 )
+bin/luarocks --verbose remove inspect
 cd ..
 rm -rf foobar
+
+################################################################################
+# test installation with make bootstrap
+################################################################################
+
+./configure --prefix=fooboot
+make bootstrap
+./luarocks --verbose
+./luarocks --verbose install inspect
+./luarocks --verbose show inspect
+./lua -e 'print(assert(require("inspect")(_G)))'
+./luarocks --verbose remove inspect
+cd fooboot
+bin/luarocks --verbose
+bin/luarocks --verbose install inspect
+bin/luarocks --verbose show inspect
+(
+   eval $(bin/luarocks path)
+   lua -e 'print(assert(require("inspect")(_G)))'
+)
+bin/luarocks --verbose remove inspect
+cd ..
+rm -rf fooboot
+
+################################################################################
+# test installation with luarocks install
+################################################################################
+
+./configure --prefix=foorock
+make bootstrap
+./luarocks make --pack-binary-rock
+cd foorock
+bin/luarocks install ../luarocks-*-1.all.rock
+bin/luarocks --verbose
+bin/luarocks --verbose install inspect
+bin/luarocks --verbose show inspect
+bin/luarocks install ../luarocks-*-1.all.rock --tree=../foorock2
+bin/luarocks --verbose remove inspect
+cd ../foorock2
+bin/luarocks --verbose
+bin/luarocks --verbose install inspect
+bin/luarocks --verbose show inspect
+(
+   eval $(bin/luarocks path)
+   lua -e 'print(assert(require("inspect")(_G)))'
+)
+bin/luarocks --verbose remove inspect
+cd ..
+rm -rf foorock
+rm -rf foorock2
+
+################################################################################
 
 if [ "$2" = "binary" ]
 then
