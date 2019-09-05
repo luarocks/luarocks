@@ -61,7 +61,21 @@ do
    end
 
    local function load_platform_fns(patt, inits)
-      for platform in cfg.each_platform("most-specific-first") do
+      local each_platform = cfg.each_platform
+
+      -- FIXME A quick hack for the experimental Windows build
+      if os.getenv("LUAROCKS_CROSS_COMPILING") then
+         each_platform = function()
+            local i = 0
+            local plats = { "linux", "unix" }
+            return function()
+               i = i + 1
+               return plats[i]
+            end
+         end
+      end
+
+      for platform in each_platform("most-specific-first") do
          local ok, fs_plat = pcall(require, patt:format(platform))
          if ok and fs_plat then
             load_fns(fs_plat, inits)
