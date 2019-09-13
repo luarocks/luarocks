@@ -17,6 +17,7 @@ local writer = require("luarocks.manif.writer")
 local cmd = require("luarocks.cmd")
 
 function make.cmd_options(parser)
+   parser:flag("--no-doc", "Install the rock without its documentation.")
    parser:flag("--pack-binary-rock", "Do not install rock. Instead, produce a "..
       ".rock file with the contents of compilation in the current directory.")
    parser:flag("--keep", "Do not remove previously installed versions of the "..
@@ -101,7 +102,11 @@ function make.command(args)
 
    if args.pack_binary_rock then
       return pack.pack_binary_rock(name, rockspec.version, args.sign, function()
-         return build.build_rockspec(rockspec, opts)
+         local name, version = build.build_rockspec(rockspec, opts)
+         if name and args.no_doc then
+            util.remove_doc_dir(name, version)
+         end
+         return name, version
       end)
    else
       local ok, err = fs.check_command_permissions(args)
@@ -109,6 +114,10 @@ function make.command(args)
       ok, err = build.build_rockspec(rockspec, opts)
       if not ok then return nil, err end
       local name, version = ok, err
+
+      if args.no_doc then
+         util.remove_doc_dir(name, version)
+      end
 
       if (not args.keep) and not cfg.keep_other_versions then
          local ok, err = remove.remove_other_versions(name, version, args.force, args.force_fast)
