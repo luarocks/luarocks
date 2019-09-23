@@ -412,8 +412,17 @@ function writer.remove_from_manifest(name, version, repo, deps_mode)
    end
 
    local package_entry = manifest.repository[name]
+   if package_entry == nil or package_entry[version] == nil then
+      -- entry is already missing from repository, no need to do anything
+      return true
+   end
 
    local version_entry = package_entry[version][1]
+   if not version_entry then
+      -- manifest looks corrupted, rebuild
+      return writer.make_manifest(rocks_dir, deps_mode)
+   end
+
    remove_package_items(manifest.modules, name, version, version_entry.modules)
    remove_package_items(manifest.commands, name, version, version_entry.commands)
 
