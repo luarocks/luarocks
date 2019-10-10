@@ -39,7 +39,7 @@ describe("Luarocks fs test #unit", function()
 
    local make_unreadable = function(path)
       if is_win then
-         fs.execute("icacls " .. fs.Q(path) .. " /inheritance:d /deny %USERNAME%:(R)")
+         fs.execute("icacls " .. fs.Q(path) .. " /inheritance:d /deny \"%USERNAME%\":(R)")
       else
          fs.execute("chmod -r " .. fs.Q(path))
       end
@@ -47,7 +47,7 @@ describe("Luarocks fs test #unit", function()
 
    local make_unwritable = function(path)
       if is_win then
-         fs.execute("icacls " .. fs.Q(path) .. " /inheritance:d /deny %USERNAME%:(W,M)")
+         fs.execute("icacls " .. fs.Q(path) .. " /inheritance:d /deny \"%USERNAME%\":(W,M)")
       else
          fs.execute("chmod -w " .. fs.Q(path))
       end
@@ -55,7 +55,7 @@ describe("Luarocks fs test #unit", function()
 
    local make_unexecutable = function(path)
       if is_win then
-         fs.execute("icacls " .. fs.Q(path) .. " /inheritance:d /deny %USERNAME%:(X)")
+         fs.execute("icacls " .. fs.Q(path) .. " /inheritance:d /deny \"%USERNAME%\":(X)")
       else
          fs.execute("chmod -x " .. fs.Q(path))
       end

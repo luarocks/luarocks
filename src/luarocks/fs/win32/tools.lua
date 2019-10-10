@@ -239,7 +239,7 @@ function tools.set_permissions(filename, mode, scope)
          return false, "Could not take ownership of the given file"
       end
       -- Grant the current user the proper rights
-      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r %USERNAME%:" .. perms)
+      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r \"%USERNAME%\":" .. perms)
       if not ok then
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
@@ -267,7 +267,7 @@ function tools.set_permissions(filename, mode, scope)
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
       -- Grant permissions available only to the current user
-      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant %USERNAME%:" .. my_perms)
+      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant \"%USERNAME%\"":" .. my_perms)
       if not ok then
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
