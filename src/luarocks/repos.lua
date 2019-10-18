@@ -276,6 +276,7 @@ local function backup_existing(should_backup, target)
       if not move_ok then
          return nil, move_err
       end
+      return backup
    end
 end
 
@@ -285,12 +286,30 @@ local function op_install(op)
       return nil, err
    end
 
+   local backup, err = backup_existing(op.backup, op.realdst or op.dst)
+   if err then
+      return nil, err
+   end
+   if backup then
+      op.backup_file = backup
+   end
+
    ok, err = op.fn(op.src, op.dst, op.backup)
    if not ok then
       return nil, err
    end
 
    fs.remove_dir_tree_if_empty(dir.dir_name(op.src))
+   return true
+end
+
+local function rollback_install(op)
+   fs.delete(op.dst)
+   if op.backup_file then
+      fs.move(op.backup_file, op.dst)
+   end
+   fs.remove_dir_tree_if_empty(dir.dir_name(op.dst))
+   return true
 end
 
 local function op_rename(op)
@@ -311,6 +330,10 @@ local function op_rename(op)
    end
 end
 
+local function rollback_rename(op)
+   return op_rename({ src = op.dst, dst = op.src })
+end
+
 local function op_delete(op)
    if op.suffix then
       local suffix = check_suffix(op.name, op.suffix)
@@ -320,6 +343,12 @@ local function op_delete(op)
    local ok, err = fs.delete(op.name)
    fs.remove_dir_tree_if_empty(dir.dir_name(op.name))
    return ok, err
+end
+
+local function rollback_ops(ops, op_fn, n)
+   for i = 1, n do
+      op_fn(ops[i])
+   end
 end
 
 --- Deploy a package from the rocks subdirectory.
@@ -341,23 +370,19 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    local renames = {}
    local installs = {}
 
-   local function install_binary(source, target, should_backup)
+   local function install_binary(source, target)
       if wrap_bin_scripts and fs.is_lua(source) then
-         backup_existing(should_backup, target .. (cfg.wrapper_suffix or ""))
          return fs.wrap_script(source, target, deps_mode, name, version)
       else
-         backup_existing(should_backup, target)
          return fs.copy_binary(source, target)
       end
    end
 
-   local function move_lua(source, target, should_backup)
-      backup_existing(should_backup, target)
+   local function move_lua(source, target)
       return fs.move(source, target, "read")
    end
 
-   local function move_lib(source, target, should_backup)
-      backup_existing(should_backup, target)
+   local function move_lib(source, target)
       return fs.move(source, target, "exec")
    end
 
@@ -372,8 +397,12 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
             local cur_paths = get_deploy_paths(cur_name, cur_version, "bin", file_path, repo)
             table.insert(renames, { src = cur_paths.nv, dst = cur_paths.v, suffix = cfg.wrapper_suffix })
          end
+         local target = mode == "nv" and paths.nv or paths.v
          local backup = name ~= cur_name or version ~= cur_version
-         table.insert(installs, { fn = install_binary, src = source, dst = mode == "nv" and paths.nv or paths.v, backup = backup })
+         local realdst = (wrap_bin_scripts and fs.is_lua(source))
+                         and (target .. (cfg.wrapper_suffix or ""))
+                         or target
+         table.insert(installs, { fn = install_binary, src = source, dst = target, backup = backup, realdst = realdst })
       end)
    end
 
@@ -390,8 +419,9 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
             cur_paths = get_deploy_paths(cur_name, cur_version, "lib", file_path:gsub("%.lua$", "." .. cfg.lib_extension), repo)
             table.insert(renames, { src = cur_paths.nv, dst = cur_paths.v })
          end
+         local target = mode == "nv" and paths.nv or paths.v
          local backup = name ~= cur_name or version ~= cur_version
-         table.insert(installs, { fn = move_lua, src = source, dst = mode == "nv" and paths.nv or paths.v, backup = backup })
+         table.insert(installs, { fn = move_lua, src = source, dst = target, backup = backup })
       end)
    end
 
@@ -408,16 +438,26 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
             cur_paths = get_deploy_paths(cur_name, cur_version, "lib", file_path, repo)
             table.insert(renames, { src = cur_paths.nv, dst = cur_paths.v })
          end
+         local target = mode == "nv" and paths.nv or paths.v
          local backup = name ~= cur_name or version ~= cur_version
-         table.insert(installs, { fn = move_lib, src = source, dst = mode == "nv" and paths.nv or paths.v, backup = backup })
+         table.insert(installs, { fn = move_lib, src = source, dst = target, backup = backup })
       end)
    end
 
-   for _, op in ipairs(renames) do
-      op_rename(op)
+   for i, op in ipairs(renames) do
+      local ok, err = op_rename(op)
+      if not ok then
+         rollback_ops(renames, rollback_rename, i - 1)
+         return nil, err
+      end
    end
-   for _, op in ipairs(installs) do
-      op_install(op)
+   for i, op in ipairs(installs) do
+      local ok, err = op_install(op)
+      if not ok then
+         rollback_ops(installs, rollback_install, i - 1)
+         rollback_ops(renames, rollback_rename, #renames)
+         return nil, err
+      end
    end
 
    local writer = require("luarocks.manif.writer")
