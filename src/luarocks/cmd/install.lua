@@ -42,6 +42,7 @@ function install.add_to_parser(parser)
    cmd:flag("--check-lua-versions", "If the rock can't be found, check repository "..
       "and report if it is available for another Lua version.")
    util.deps_mode_option(cmd)
+   cmd:flag("--no-manifest", "Skip creating/updating the manifest")
    -- luarocks build options
    parser:flag("--pack-binary-rock"):hidden(true)
    parser:option("--branch"):hidden(true)

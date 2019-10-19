@@ -584,6 +584,10 @@ function cmd.run_command(description, commands, external_namespace, ...)
       cfg.local_cache = dir.path(fs.system_cache_dir(), "luarocks")
    end
 
+   if args.no_manifest then
+      cfg.no_manifest = true
+   end
+
    if not args.command then
       parser:epilog(variables_help..get_config_text(cfg))
       util.printout()

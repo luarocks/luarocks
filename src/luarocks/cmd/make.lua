@@ -1,7 +1,7 @@
 
 --- Module implementing the LuaRocks "make" command.
 -- Builds sources in the current directory, but unlike "build",
--- it does not fetch sources, etc., assuming everything is 
+-- it does not fetch sources, etc., assuming everything is
 -- available in the current directory.
 local make = {}
 
@@ -40,6 +40,7 @@ function make.cmd_options(parser)
       "and report if it is available for another Lua version.")
    parser:flag("--pin", "Pin the exact dependencies used for the rockspec"..
       "being built into a luarocks.lock file in the current directory.")
+   parser:flag("--no-manifest", "Skip creating/updating the manifest")
    util.deps_mode_option(parser)
 end
 
@@ -53,7 +54,7 @@ version or without version name. If rockspecs for different rocks are found or
 there are several rockspecs without version, you must specify which to use,
 through the command-line.
 
-This command is useful as a tool for debugging rockspecs. 
+This command is useful as a tool for debugging rockspecs.
 To install rocks, you'll normally want to use the "install" and "build"
 commands. See the help on those for details.
 
@@ -87,7 +88,7 @@ function make.command(args)
    if not rockspec_filename:match("rockspec$") then
       return nil, "Invalid argument: 'make' takes a rockspec as a parameter. "..util.see_help("make")
    end
-   
+
    local rockspec, err, errcode = fetch.load_rockspec(rockspec_filename)
    if not rockspec then
       return nil, err

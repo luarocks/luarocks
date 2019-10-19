@@ -338,12 +338,18 @@ function writer.make_manifest(repo, deps_mode, remote)
          local vmanifest = { repository = {}, modules = {}, commands = {} }
          local ok, err = store_results(results, vmanifest)
          filter_by_lua_version(vmanifest, luaver, repo, cache)
-         save_table(repo, "manifest-"..luaver, vmanifest)
+         if not cfg.no_manifest then
+            save_table(repo, "manifest-"..luaver, vmanifest)
+         end
       end
    else
       update_dependencies(manifest, deps_mode)
    end
 
+   if cfg.no_manifest then
+      -- We want to have cache updated; but exit before save_table is called
+      return true
+   end
    return save_table(repo, "manifest", manifest)
 end
 
@@ -381,6 +387,10 @@ function writer.add_to_manifest(name, version, repo, deps_mode)
    if not ok then return nil, err end
 
    update_dependencies(manifest, deps_mode)
+
+   if cfg.no_manifest then
+      return true
+   end
    return save_table(rocks_dir, "manifest", manifest)
 end
 
@@ -436,6 +446,10 @@ function writer.remove_from_manifest(name, version, repo, deps_mode)
    end
 
    update_dependencies(manifest, deps_mode)
+
+   if cfg.no_manifest then
+      return true
+   end
    return save_table(rocks_dir, "manifest", manifest)
 end
 

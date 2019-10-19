@@ -187,6 +187,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       fs_use_modules = true,
       hooks_enabled = true,
       deps_mode = "one",
+      no_manifest = false,
       check_certificates = false,
 
       cache_timeout = 60,

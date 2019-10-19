@@ -232,7 +232,16 @@ describe("luarocks install #integration", function()
          assert.is_true(run.luarocks_bool("build --pack-binary-rock cprint"))
          assert.is_true(run.luarocks_bool("install cprint-0.1-2." .. test_env.platform .. ".rock"))
          assert.is_true(os.remove("cprint-0.1-2." .. test_env.platform .. ".rock"))
-      end)     
+      end)
+
+      it("accepts --no-manifest flag", function()
+         assert.is_true(run.luarocks_bool("install lxsh 0.8.6-2"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/manifest"))
+         assert.is.truthy(os.remove(testing_paths.testing_sys_rocks .. "/manifest"))
+
+         assert.is_true(run.luarocks_bool("install --no-manifest lxsh 0.8.6-2"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/manifest"))
+      end)
    end)
 
    describe("New install functionality based on pull request 552", function()
