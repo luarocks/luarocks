@@ -19,6 +19,8 @@ local cmd = require("luarocks.cmd")
 
 function cmd_build.add_to_parser(parser)
    local cmd = parser:command("build", "Build and install a rock, compiling its C parts if any.\n"..
+      "If the sources contain a luarocks.lock file, uses it as an authoritative source for "..
+      "exact version of dependencies.\n"..
       "If no arguments are given, behaves as luarocks make.", util.see_also())
       :summary("Build/compile a rock.")
 
@@ -33,6 +35,10 @@ function cmd_build.add_to_parser(parser)
       "rockspec. Allows to specify a different branch to fetch. Particularly "..
       'for "dev" rocks.')
       :argname("<name>")
+   parser:flag("--pin", "Create a luarocks.lock file listing the exact "..
+      "versions of each dependency found for this rock (recursively), "..
+      "and store it in the rock's directory. "..
+      "Ignores any existing luarocks.lock file in the rock's sources.")
    make.cmd_options(cmd)
 end
 
@@ -124,6 +130,7 @@ function cmd_build.command(args)
       branch = args.branch,
       verify = not not args.verify,
       check_lua_versions = not not args.check_lua_versions,
+      pin = not not args.pin,
    })
 
    if args.sign and not args.pack_binary_rock then
@@ -167,7 +174,9 @@ function cmd_build.command(args)
       end
    end
 
-   writer.check_dependencies(nil, deps.get_deps_mode(args))
+   if opts.deps_mode ~= "none" then
+      writer.check_dependencies(nil, deps.get_deps_mode(args))
+   end
    return name, version
 end
 

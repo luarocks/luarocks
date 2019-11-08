@@ -114,7 +114,7 @@ function install.install_binary_rock(rock_file, opts)
    end
 
    if deps_mode ~= "none" then
-      ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", deps_mode, opts.verify)
+      ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", deps_mode, opts.verify, install_dir)
       if err then return nil, err, errcode end
    end
 
@@ -163,7 +163,7 @@ function install.install_binary_rock_deps(rock_file, opts)
       return nil, "Failed loading rockspec for installed package: "..err, errcode
    end
 
-   ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify)
+   ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify, install_dir)
    if err then return nil, err, errcode end
 
    util.printout()

@@ -8,6 +8,7 @@ local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
 
+persist.run_file = core.run_file
 persist.load_into_table = core.load_into_table
 
 local write_table
@@ -200,7 +201,7 @@ function persist.save_from_table(filename, tbl, field_order)
 end
 
 --- Save the contents of a table as a module.
--- Each element of the table is saved as a global assignment.
+-- The module contains a 'return' statement that returns the table.
 -- Only numbers, strings and tables (containing numbers, strings
 -- or other recursively processed tables) are supported.
 -- @param filename string: the output filename

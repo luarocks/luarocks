@@ -13,6 +13,7 @@ local fetch = require("luarocks.fetch")
 local pack = require("luarocks.pack")
 local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
+local deplocks = require("luarocks.deplocks")
 local writer = require("luarocks.manif.writer")
 local cmd = require("luarocks.cmd")
 
@@ -37,6 +38,8 @@ function make.cmd_options(parser)
       "signature file for the generated .rock file.")
    parser:flag("--check-lua-versions", "If the rock can't be found, check repository "..
       "and report if it is available for another Lua version.")
+   parser:flag("--pin", "Pin the exact dependencies used for the rockspec"..
+      "being built into a luarocks.lock file in the current directory.")
    util.deps_mode_option(parser)
 end
 
@@ -53,6 +56,10 @@ through the command-line.
 This command is useful as a tool for debugging rockspecs. 
 To install rocks, you'll normally want to use the "install" and "build"
 commands. See the help on those for details.
+
+If the current directory contains a luarocks.lock file, it is used as the
+authoritative source for exact version of dependencies. The --pin flag
+overrides and recreates this file scanning dependency based on ranges.
 
 NB: Use `luarocks install` with the `--only-deps` flag if you want to install
 only dependencies of the rockspec (see `luarocks help install`).
@@ -97,6 +104,7 @@ function make.command(args)
       branch = args.branch,
       verify = not not args.verify,
       check_lua_versions = not not args.check_lua_versions,
+      pin = not not args.pin
    })
 
    if args.sign and not args.pack_binary_rock then

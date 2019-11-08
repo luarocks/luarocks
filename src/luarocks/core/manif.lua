@@ -102,7 +102,7 @@ function manif.scan_dependencies(name, version, tree_manifests, dest)
             if entries then
                for ver, _ in util.sortedpairs(entries, vers.compare_versions) do
                   if (not constraints) or vers.match_constraints(vers.parse_version(ver), constraints) then
-                     manif.scan_dependencies(pkg, version, tree_manifests, dest)
+                     manif.scan_dependencies(pkg, ver, tree_manifests, dest)
                   end
                end
             end

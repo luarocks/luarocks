@@ -10,7 +10,7 @@ local require = nil
 -- @return (true, any) or (nil, string, string): true and the return value
 -- of the file, or nil, an error message and an error code ("open", "load"
 -- or "run") in case of errors.
-local function run_file(filename, env)
+function persist.run_file(filename, env)
    local fd, err = io.open(filename)
    if not fd then
       return nil, err, "open"
@@ -67,7 +67,7 @@ function persist.load_into_table(filename, tbl)
    local save_mt = getmetatable(result)
    setmetatable(result, globals_mt)
    
-   local ok, err, errcode = run_file(filename, result)
+   local ok, err, errcode = persist.run_file(filename, result)
    
    setmetatable(result, save_mt)
 
