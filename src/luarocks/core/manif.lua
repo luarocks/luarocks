@@ -5,6 +5,9 @@ local manif = {}
 local persist = require("luarocks.core.persist")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.core.dir")
+local util = require("luarocks.core.util")
+local vers = require("luarocks.core.vers")
+local path = require("luarocks.core.path")
 local require = nil
 --------------------------------------------------------------------------------
 
@@ -62,6 +65,50 @@ function manif.fast_load_local_manifest(repo_url)
 
    local pathname = dir.path(repo_url, "manifest")
    return manif.manifest_loader(pathname, repo_url, nil, true)
+end
+
+function manif.load_rocks_tree_manifests(deps_mode)
+   local trees = {}
+   path.map_trees(deps_mode, function(tree)
+      local manifest, err = manif.fast_load_local_manifest(path.rocks_dir(tree))
+      if manifest then
+         table.insert(trees, {tree=tree, manifest=manifest})
+      end
+   end)
+   return trees
+end
+
+function manif.scan_dependencies(name, version, tree_manifests, dest)
+   if dest[name] then
+      return
+   end
+   dest[name] = version
+
+   for _, tree in ipairs(tree_manifests) do
+      local manifest = tree.manifest
+
+      local pkgdeps
+      if manifest.dependencies and manifest.dependencies[name] then
+         pkgdeps = manifest.dependencies[name][version]
+      end
+      if not pkgdeps then
+         return nil
+      end
+      for _, dep in ipairs(pkgdeps) do
+         local pkg, constraints = dep.name, dep.constraints
+
+         for _, t in ipairs(tree_manifests) do
+            local entries = t.manifest.repository[pkg]
+            if entries then
+               for ver, _ in util.sortedpairs(entries, vers.compare_versions) do
+                  if (not constraints) or vers.match_constraints(vers.parse_version(ver), constraints) then
+                     manif.scan_dependencies(pkg, version, tree_manifests, dest)
+                  end
+               end
+            end
+         end
+      end
+   end
 end
 
 return manif

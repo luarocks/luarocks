@@ -184,7 +184,7 @@ describe("luarocks install #integration", function()
       it("only-deps of luasocket packed rock", function()
          assert.is_true(run.luarocks_bool("build --pack-binary-rock luasocket 3.0rc1-2"))
          local output = run.luarocks("install --only-deps " .. "luasocket-3.0rc1-2." .. test_env.platform .. ".rock")
-         assert.are.same("Successfully installed dependencies for luasocket 3.0rc1-2", output:gsub("\n", ""))
+         assert.match("Successfully installed dependencies for luasocket 3.0rc1-2", output, 1, true)
          assert.is_true(os.remove("luasocket-3.0rc1-2." .. test_env.platform .. ".rock"))
       end)
 
