@@ -24,7 +24,6 @@ end
 local path = require("luarocks.core.path")
 local manif = require("luarocks.core.manif")
 local vers = require("luarocks.core.vers")
-local util = require("luarocks.core.util")
 local require = nil
 --------------------------------------------------------------------------------
 
@@ -52,29 +51,6 @@ end
 
 loader.context = {}
 
--- Contains a table when rocks trees are loaded,
--- or 'false' to indicate rocks trees failed to load.
--- 'nil' indicates rocks trees were not attempted to be loaded yet.
-loader.rocks_trees = nil
-
-function loader.load_rocks_trees()
-   local any_ok = false
-   local trees = {}
-   for _, tree in ipairs(cfg.rocks_trees or {}) do
-      local manifest, err = manif.fast_load_local_manifest(path.rocks_dir(tree))
-      if manifest then
-         any_ok = true
-         table.insert(trees, {tree=tree, manifest=manifest})
-      end
-   end
-   if not any_ok then
-      loader.rocks_trees = false
-      return false
-   end
-   loader.rocks_trees = trees
-   return true
-end
-
 --- Process the dependencies of a package to determine its dependency
 -- chain for loading modules.
 -- @param name string: The name of an installed rock.
@@ -90,40 +66,12 @@ function loader.add_context(name, version)
       temporary_global = false
    end
 
-   if loader.context[name] then
-      return
-   end
-   loader.context[name] = version
-
-   if not loader.rocks_trees and not loader.load_rocks_trees() then
+   local tree_manifests = manif.load_rocks_tree_manifests()
+   if not tree_manifests then
       return nil
    end
 
-   for _, tree in ipairs(loader.rocks_trees) do
-      local manifest = tree.manifest
-
-      local pkgdeps
-      if manifest.dependencies and manifest.dependencies[name] then
-         pkgdeps = manifest.dependencies[name][version]
-      end
-      if not pkgdeps then
-         return nil
-      end
-      for _, dep in ipairs(pkgdeps) do
-         local pkg, constraints = dep.name, dep.constraints
-   
-         for _, tree in ipairs(loader.rocks_trees) do
-            local entries = tree.manifest.repository[pkg]
-            if entries then
-               for ver, pkgs in util.sortedpairs(entries, vers.compare_versions) do
-                  if (not constraints) or vers.match_constraints(vers.parse_version(ver), constraints) then
-                     loader.add_context(pkg, version)
-                  end
-               end
-            end
-         end
-      end
-   end
+   return manif.scan_dependencies(name, version, tree_manifests, loader.context)
 end
 
 --- Internal sorting function.
@@ -186,18 +134,19 @@ end
 -- * name of the rock containing the module (eg. "luasocket")
 -- * version of the rock (eg. "2.0.2-1")
 -- * return value of filter_file_name
--- * tree of the module (string or table in `rocks_trees` format)
+-- * tree of the module (string or table in `tree_manifests` format)
 local function select_module(module, filter_file_name)
    --assert(type(module) == "string")
    --assert(type(filter_module_name) == "function")
 
-   if not loader.rocks_trees and not loader.load_rocks_trees() then
+   local tree_manifests = manif.load_rocks_tree_manifests()
+   if not tree_manifests then
       return nil
    end
 
    local providers = {}
    local initmodule
-   for _, tree in ipairs(loader.rocks_trees) do
+   for _, tree in ipairs(tree_manifests) do
       local entries = tree.manifest.modules[module]
       if entries then
          add_providers(providers, entries, tree, module, filter_file_name)
@@ -223,7 +172,7 @@ end
 -- * name of the rock containing the module (eg. "luasocket")
 -- * version of the rock (eg. "2.0.2-1")
 -- * name of the module (eg. "socket.core", or "socket.core_2_0_2" if file is stored versioned).
--- * tree of the module (string or table in `rocks_trees` format)
+-- * tree of the module (string or table in `tree_manifests` format)
 local function pick_module(module)
    return
       select_module(module, function(file_name, name, version, tree, i)

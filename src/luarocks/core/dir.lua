@@ -37,5 +37,17 @@ function dir.split_url(url)
    return protocol, pathname
 end
 
+--- Normalize a url or local path.
+-- URLs should be in the "protocol://path" format. System independent
+-- forward slashes are used, removing trailing and double slashes
+-- @param url string: an URL or a local pathname.
+-- @return string: Normalized result.
+function dir.normalize(name)
+   local protocol, pathname = dir.split_url(name)
+   pathname = pathname:gsub("\\", "/"):gsub("(.)/*$", "%1"):gsub("//", "/")
+   if protocol ~= "file" then pathname = protocol .."://"..pathname end
+   return pathname
+end
+
 return dir
 
