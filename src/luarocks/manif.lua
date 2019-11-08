@@ -16,6 +16,8 @@ local queries = require("luarocks.queries")
 local type_manifest = require("luarocks.type.manifest")
 
 manif.cache_manifest = core.cache_manifest
+manif.load_rocks_tree_manifests = core.load_rocks_tree_manifests
+manif.scan_dependencies = core.scan_dependencies
 
 manif.rock_manifest_cache = {}
 

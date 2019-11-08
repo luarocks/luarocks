@@ -2,7 +2,7 @@
 --- Functions for command-line scripts.
 local cmd = {}
 
-local loader = require("luarocks.loader")
+local manif = require("luarocks.manif")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 local cfg = require("luarocks.core.cfg")
@@ -94,7 +94,7 @@ do
       elseif args.project_tree then
          local tree = args.project_tree
          table.insert(cfg.rocks_trees, 1, { name = "project", root = tree } )
-         loader.load_rocks_trees()
+         manif.load_rocks_tree_manifests()
          path.use_tree(tree)
       elseif cfg.local_by_default then
          if cfg.home_tree then
@@ -103,7 +103,7 @@ do
       elseif project_dir then
          local project_tree = project_dir .. "/lua_modules"
          table.insert(cfg.rocks_trees, 1, { name = "project", root = project_tree } )
-         loader.load_rocks_trees()
+         manif.load_rocks_tree_manifests()
          path.use_tree(project_tree)
       else
          local trees = cfg.rocks_trees

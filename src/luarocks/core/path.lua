@@ -109,4 +109,42 @@ function path.which_i(file_name, name, version, tree, i)
    return file_name
 end
 
+function path.rocks_tree_to_string(tree)
+   if type(tree) == "string" then
+      return tree
+   else
+      assert(type(tree) == "table")
+      return tree.root
+   end
+end
+
+--- Apply a given function to the active rocks trees based on chosen dependency mode.
+-- @param deps_mode string: Dependency mode: "one" for the current default tree,
+-- "all" for all trees, "order" for all trees with priority >= the current default,
+-- "none" for no trees (this function becomes a nop).
+-- @param fn function: function to be applied, with the tree dir (string) as the first
+-- argument and the remaining varargs of map_trees as the following arguments.
+-- @return a table with all results of invocations of fn collected.
+function path.map_trees(deps_mode, fn, ...)
+   local result = {}
+   local current = cfg.root_dir or cfg.rocks_trees[1]
+   if deps_mode == "one" then
+      table.insert(result, (fn(current, ...)) or 0)
+   else
+      local use = false
+      if deps_mode == "all" then
+         use = true
+      end
+      for _, tree in ipairs(cfg.rocks_trees or {}) do
+         if dir.normalize(path.rocks_tree_to_string(tree)) == dir.normalize(path.rocks_tree_to_string(current)) then
+            use = true
+         end
+         if use then
+            table.insert(result, (fn(tree, ...)) or 0)
+         end
+      end
+   end
+   return result
+end
+
 return path
