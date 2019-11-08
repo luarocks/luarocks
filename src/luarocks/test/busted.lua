@@ -21,7 +21,7 @@ function busted.run_tests(test, args)
       test = {}
    end
 
-   local ok, bustedver, where = deps.fulfill_dependency(queries.new("busted"))
+   local ok, bustedver, where = deps.fulfill_dependency(queries.new("busted"), nil, nil, nil, "test_dependencies")
    if not ok then
       return nil, bustedver
    end

@@ -116,11 +116,11 @@ describe("LuaRocks build #integration", function()
       end)
       
       it("with --only-sources", function()
-         assert.is_true(run.luarocks_bool("download --server=" .. testing_paths.fixtures_dir .. "/a_repo --rockspec a_rock")) 
+         assert.is_true(run.luarocks_bool("download --server=" .. testing_paths.fixtures_dir .. "/a_repo --rockspec a_rock 1.0")) 
          assert.is_false(run.luarocks_bool("build --only-sources=\"http://example.com\" a_rock-1.0-1.rockspec"))
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
 
-         assert.is_true(run.luarocks_bool("download --server=" .. testing_paths.fixtures_dir .. "/a_repo --source a_rock"))
+         assert.is_true(run.luarocks_bool("download --server=" .. testing_paths.fixtures_dir .. "/a_repo --source a_rock 1.0"))
          assert.is_true(run.luarocks_bool("build --only-sources=\"http://example.com\" a_rock-1.0-1.src.rock"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
 
@@ -199,7 +199,42 @@ describe("LuaRocks build #integration", function()
             assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/test/1.0-1/test-1.0-1.rockspec"))
          end)
       end)
-      
+
+      it("supports --pin #pinning", function()
+         test_env.run_in_tmp(function(tmpdir)
+            write_file("test-1.0-1.rockspec", [[
+               package = "test"
+               version = "1.0-1"
+               source = {
+                  url = "file://]] .. tmpdir:gsub("\\", "/") .. [[/test.lua"
+               }
+               dependencies = {
+                  "a_rock >= 0.8"
+               }
+               build = {
+                  type = "builtin",
+                  modules = {
+                     test = "test.lua"
+                  }
+               }
+            ]], finally)
+            write_file("test.lua", "return {}", finally)
+
+            assert.is_true(run.luarocks_bool("build --server=" .. testing_paths.fixtures_dir .. "/a_repo test-1.0-1.rockspec --pin --tree=lua_modules"))
+            assert.is.truthy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/test/1.0-1/test-1.0-1.rockspec"))
+            assert.is.truthy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/a_rock/2.0-1/a_rock-2.0-1.rockspec"))
+            local lockfilename = "./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/test/1.0-1/luarocks.lock"
+            assert.is.truthy(lfs.attributes(lockfilename))
+            local lockdata = loadfile(lockfilename)()
+            assert.same({
+               dependencies = {
+                  ["a_rock"] = "2.0-1",
+                  ["lua"] = test_env.lua_version .. "-1",
+               }
+            }, lockdata)
+         end)
+      end)
+
       it("lmathx deps partial match", function()
          assert.is_true(run.luarocks_bool("build lmathx"))
 

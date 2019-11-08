@@ -11,6 +11,7 @@ local deps = require("luarocks.deps")
 local cfg = require("luarocks.core.cfg")
 local repos = require("luarocks.repos")
 local writer = require("luarocks.manif.writer")
+local deplocks = require("luarocks.deplocks")
 
 build.opts = util.opts_table("build.opts", {
    need_to_fetch = "boolean",
@@ -21,6 +22,7 @@ build.opts = util.opts_table("build.opts", {
    branch = "string?",
    verify = "boolean",
    check_lua_versions = "boolean",
+   pin = "boolean",
 })
 
 do
@@ -125,6 +127,7 @@ local function process_dependencies(rockspec, opts)
    if opts.deps_mode == "none" then
       return true
    end
+
    if not opts.build_only_deps then
       if next(rockspec.build_dependencies) then
          local ok, err, errcode = deps.fulfill_dependencies(rockspec, "build_dependencies", opts.deps_mode, opts.verify)
@@ -326,6 +329,11 @@ local function write_rock_dir_files(rockspec, opts)
    local name, version = rockspec.name, rockspec.version
 
    fs.copy(rockspec.local_abs_filename, path.rockspec_file(name, version), "read")
+   
+   local deplock_file = deplocks.get_abs_filename(rockspec.name)
+   if deplock_file then
+      fs.copy(deplock_file, dir.path(path.install_dir(name, version), "luarocks.lock"), "read")
+   end
 
    local ok, err = writer.make_rock_manifest(name, version)
    if not ok then return nil, err end
@@ -362,7 +370,14 @@ function build.build_rockspec(rockspec, opts)
       end
    end
 
-   local ok, err = process_dependencies(rockspec, opts)
+   local ok, err = fetch_and_change_to_source_dir(rockspec, opts)
+   if not ok then return nil, err end
+
+   if opts.pin then
+      deplocks.init(rockspec.name, ".")
+   end
+ 
+   ok, err = process_dependencies(rockspec, opts)
    if not ok then return nil, err end
 
    local name, version = rockspec.name, rockspec.version
@@ -373,10 +388,6 @@ function build.build_rockspec(rockspec, opts)
    if repos.is_installed(name, version) then
       repos.delete_version(name, version, opts.deps_mode)
    end
-
-   ok, err = fetch_and_change_to_source_dir(rockspec, opts)
-   if not ok then return nil, err end
-   
    local dirs, err = prepare_install_dirs(name, version)
    if not dirs then return nil, err end
    
@@ -404,6 +415,10 @@ function build.build_rockspec(rockspec, opts)
    fs.pop_dir()
    if opts.need_to_fetch then
       fs.pop_dir()
+   end
+
+   if opts.pin then
+      deplocks.write_file()
    end
 
    ok, err = write_rock_dir_files(rockspec, opts)

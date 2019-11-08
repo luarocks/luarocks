@@ -267,6 +267,50 @@ describe("luarocks install #integration", function()
       end)
    end)
 
+   it("respects luarocks.lock in package #pinning", function()
+      test_env.run_in_tmp(function(tmpdir)
+         write_file("test-1.0-1.rockspec", [[
+            package = "test"
+            version = "1.0-1"
+            source = {
+               url = "file://]] .. tmpdir:gsub("\\", "/") .. [[/test.lua"
+            }
+            dependencies = {
+               "a_rock >= 0.8"
+            }
+            build = {
+               type = "builtin",
+               modules = {
+                  test = "test.lua"
+               }
+            }
+         ]], finally)
+         write_file("test.lua", "return {}", finally)
+         write_file("luarocks.lock", [[
+            return {
+               dependencies = {
+                  ["a_rock"] = "1.0-1",
+               }
+            }
+         ]], finally)
+
+         assert.is_true(run.luarocks_bool("make --pack-binary-rock --server=" .. testing_paths.fixtures_dir .. "/a_repo test-1.0-1.rockspec"))
+         assert.is_true(os.remove("luarocks.lock"))
+
+         assert.is.truthy(lfs.attributes("./test-1.0-1.all.rock"))
+
+         assert.is.falsy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/test/1.0-1/test-1.0-1.rockspec"))
+         assert.is.falsy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
+
+         print(run.luarocks("install ./test-1.0-1.all.rock --tree=lua_modules --server=" .. testing_paths.fixtures_dir .. "/a_repo"))
+
+         assert.is.truthy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/test/1.0-1/test-1.0-1.rockspec"))
+         assert.is.truthy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/test/1.0-1/luarocks.lock"))
+         assert.is.truthy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
+         assert.is.falsy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/a_rock/2.0-1"))
+      end)
+   end)
+
    describe("#unix install runs build from #git", function()
       local git
 
