@@ -280,27 +280,52 @@ local function backup_existing(should_backup, target)
    end
 end
 
-local function op_install(op)
-   local ok, err = fs.make_dir(dir.dir_name(op.dst))
-   if not ok then
-      return nil, err
+local function prepare_op_install()
+   local mkdirs = {}
+   local rmdirs = {}
+
+   local function memoize_mkdir(d)
+      if mkdirs[d] then
+         return true
+      end
+      local ok, err = fs.make_dir(d)
+      if not ok then
+         return nil, err
+      end
+      mkdirs[d] = true
+      return true
    end
 
-   local backup, err = backup_existing(op.backup, op.realdst or op.dst)
-   if err then
-      return nil, err
+   local function op_install(op)
+      local ok, err = memoize_mkdir(dir.dir_name(op.dst))
+      if not ok then
+         return nil, err
+      end
+   
+      local backup, err = backup_existing(op.backup, op.realdst or op.dst)
+      if err then
+         return nil, err
+      end
+      if backup then
+         op.backup_file = backup
+      end
+   
+      ok, err = op.fn(op.src, op.dst, op.backup)
+      if not ok then
+         return nil, err
+      end
+   
+      rmdirs[dir.dir_name(op.src)] = true
+      return true
    end
-   if backup then
-      op.backup_file = backup
+   
+   local function done_op_install()
+      for d, _ in pairs(rmdirs) do
+         fs.remove_dir_tree_if_empty(d)
+      end
    end
-
-   ok, err = op.fn(op.src, op.dst, op.backup)
-   if not ok then
-      return nil, err
-   end
-
-   fs.remove_dir_tree_if_empty(dir.dir_name(op.src))
-   return true
+   
+   return op_install, done_op_install
 end
 
 local function rollback_install(op)
@@ -334,15 +359,32 @@ local function rollback_rename(op)
    return op_rename({ src = op.dst, dst = op.src })
 end
 
-local function op_delete(op)
-   if op.suffix then
-      local suffix = check_suffix(op.name, op.suffix)
-      op.name = op.name .. suffix
+local function prepare_op_delete()
+   local deletes = {}
+   local rmdirs = {}
+   
+   local function done_op_delete()
+      for _, f in ipairs(deletes) do
+         os.remove(f)
+      end
+
+      for d, _ in pairs(rmdirs) do
+         fs.remove_dir_tree_if_empty(d)
+      end
    end
 
-   local ok, err = fs.delete(op.name)
-   fs.remove_dir_tree_if_empty(dir.dir_name(op.name))
-   return ok, err
+   local function op_delete(op)
+      if op.suffix then
+         local suffix = check_suffix(op.name, op.suffix)
+         op.name = op.name .. suffix
+      end
+   
+      table.insert(deletes, op.name)
+      
+      rmdirs[dir.dir_name(op.name)] = true
+   end
+   
+   return op_delete, done_op_delete
 end
 
 local function rollback_ops(ops, op_fn, n)
@@ -451,6 +493,7 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
          return nil, err
       end
    end
+   local op_install, done_op_install = prepare_op_install()
    for i, op in ipairs(installs) do
       local ok, err = op_install(op)
       if not ok then
@@ -459,6 +502,7 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
          return nil, err
       end
    end
+   done_op_install()
 
    local writer = require("luarocks.manif.writer")
    return writer.add_to_manifest(name, version, nil, deps_mode)
@@ -544,9 +588,12 @@ function repos.delete_version(name, version, deps_mode, quick)
       end)
    end
 
+   local op_delete, done_op_delete = prepare_op_delete()
    for _, op in ipairs(deletes) do
       op_delete(op)
    end
+   done_op_delete()
+   
    if not quick then
       for _, op in ipairs(renames) do
          op_rename(op)
