@@ -65,27 +65,6 @@ function manif.load_rock_manifest(name, version, root)
    return rock_manifest.rock_manifest
 end
 
-
-local function fetch_manifest_from(repo_url, filename)
-   local url = dir.path(repo_url, filename)
-   local name = repo_url:gsub("[/:]","_")
-   local cache_dir = dir.path(cfg.local_cache, name)
-   local ok = fs.make_dir(cache_dir)
-   if not ok then
-      cfg.local_cache = fs.make_temp_dir("local_cache")
-      cache_dir = dir.path(cfg.local_cache, name)
-      ok = fs.make_dir(cache_dir)
-      if not ok then
-         return nil, "Failed creating temporary cache directory "..cache_dir
-      end
-   end
-   local file, err, errcode, from_cache = fetch.fetch_url(url, dir.path(cache_dir, filename), true)
-   if not file then
-      return nil, "Failed fetching manifest for "..repo_url..(err and " - "..err or ""), errcode
-   end
-   return file, nil, nil, from_cache
-end
-
 --- Load a local or remote manifest describing a repository.
 -- All functions that use manifest tables assume they were obtained
 -- through this function.
@@ -124,7 +103,7 @@ function manif.load_manifest(repo_url, lua_version, versioned_only)
    else
       local err, errcode
       for _, filename in ipairs(filenames) do
-         pathname, err, errcode, from_cache = fetch_manifest_from(repo_url, filename)
+         pathname, err, errcode, from_cache = fetch.fetch_caching(dir.path(repo_url, filename))
          if pathname then
             break
          end
