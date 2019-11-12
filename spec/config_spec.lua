@@ -170,6 +170,27 @@ describe("LuaRocks config tests #integration", function()
       end)
    end)
 
+   describe("unset config keys", function()
+      it("unsets a simple config key", function()
+         test_env.run_in_tmp(function(tmpdir)
+            local myproject = tmpdir .. "/myproject"
+            lfs.mkdir(myproject)
+            lfs.chdir(myproject)
+            
+            assert(run.luarocks("init"))
+            assert.truthy(run.luarocks_bool("config my_var my_value"))
+
+            local output = run.luarocks("config my_var")
+            assert.match("my_value", output)
+
+            assert.truthy(run.luarocks_bool("config my_var --unset"))
+
+            output = run.luarocks("config my_var")
+            assert.not_match("my_value", output)
+         end, finally)
+      end)
+   end)
+
    describe("write config keys", function()
       it("rejects invalid --scope", function()
          assert.is_false(run.luarocks_bool("config web_browser foo --scope=foo"))
