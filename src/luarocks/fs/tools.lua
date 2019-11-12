@@ -15,8 +15,8 @@ do
    
    local tool_options = {
       downloader = {
-         { var = "CURL", name = "curl" },
          { var = "WGET", name = "wget" },
+         { var = "CURL", name = "curl" },
       },
       md5checker = {
          { var = "MD5SUM", name = "md5sum" },
@@ -168,7 +168,10 @@ function tools.use_downloader(url, filename, cache)
       if cfg.connection_timeout and cfg.connection_timeout > 0 then
         curl_cmd = curl_cmd .. "--connect-timeout "..tostring(cfg.connection_timeout).." "
       end
-      ok = fs.execute_string(fs.quiet_stderr(curl_cmd..fs.Q(url).." > "..fs.Q(filename)))
+      if cache then
+         curl_cmd = curl_cmd .. " -R -z \"" .. filename .. "\" "
+      end
+      ok = fs.execute_string(fs.quiet_stderr(curl_cmd..fs.Q(url).." --output "..fs.Q(filename)))
    else
       return false, "No downloader tool available -- please install 'wget' or 'curl' in your system"
    end

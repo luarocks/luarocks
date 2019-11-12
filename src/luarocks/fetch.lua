@@ -10,6 +10,33 @@ local persist = require("luarocks.persist")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 
+function fetch.fetch_caching(url)
+   local repo_url, filename = url:match("^(.*)/([^/]+)$")
+   local name = repo_url:gsub("[/:]","_")
+   local cache_dir = dir.path(cfg.local_cache, name)
+   local ok = fs.make_dir(cache_dir)
+   if not ok then
+      cfg.local_cache = fs.make_temp_dir("local_cache")
+      cache_dir = dir.path(cfg.local_cache, name)
+      ok = fs.make_dir(cache_dir)
+      if not ok then
+         return nil, "Failed creating temporary cache directory "..cache_dir
+      end
+   end
+
+   local cachefile = dir.path(cache_dir, filename)
+   if cfg.aggressive_cache and (not name:match("^manifest")) and fs.exists(cachefile) then
+ print("FAST TRACK!", cfg.aggressive_cache)
+      return cachefile, nil, nil, true
+   end
+
+   local file, err, errcode, from_cache = fetch.fetch_url(url, cachefile, true)
+   if not file then
+      return nil, "Failed downloading "..repo_url..(err and " - "..err or ""), errcode
+   end
+   return file, nil, nil, from_cache
+end
+
 --- Fetch a local or remote file.
 -- Make a remote or local URL/pathname local, fetching the file if necessary.
 -- Other "fetch" and "load" functions use this function to obtain files.
@@ -60,7 +87,7 @@ end
 -- @return (string, string) or (nil, string, [string]): absolute local pathname of
 -- the fetched file and temporary directory name; or nil and an error message
 -- followed by an optional error code
-function fetch.fetch_url_at_temp_dir(url, tmpname, filename)
+function fetch.fetch_url_at_temp_dir(url, tmpname, filename, cache)
    assert(type(url) == "string")
    assert(type(tmpname) == "string")
    assert(type(filename) == "string" or not filename)
@@ -81,11 +108,26 @@ function fetch.fetch_url_at_temp_dir(url, tmpname, filename)
       util.schedule_function(fs.delete, temp_dir)
       local ok, err = fs.change_dir(temp_dir)
       if not ok then return nil, err end
-      local file, err, errcode = fetch.fetch_url(url, filename)
+
+      local file, err, errcode
+
+      if cache then
+         local cachefile
+         cachefile, err, errcode = fetch.fetch_caching(url)
+
+         if cachefile then
+            file = dir.path(temp_dir, filename)
+            fs.copy(cachefile, file)
+         end
+      else
+         file, err, errcode = fetch.fetch_url(url, filename, cache)
+      end
+
       fs.pop_dir()
       if not file then
          return nil, "Error fetching file: "..err, errcode
       end
+
       return file, temp_dir
    end
 end
@@ -159,7 +201,7 @@ function fetch.fetch_and_unpack_rock(url, dest, verify)
    local name = dir.base_name(url):match("(.*)%.[^.]*%.rock")
    local tmpname = "luarocks-rock-" .. name
 
-   local rock_file, err, errcode = fetch.fetch_url_at_temp_dir(url, tmpname)
+   local rock_file, err, errcode = fetch.fetch_url_at_temp_dir(url, tmpname, nil, true)
    if not rock_file then
       return nil, "Could not fetch rock file: " .. err, errcode
    end
@@ -274,7 +316,7 @@ function fetch.load_rockspec(url, location, verify)
       filename, err = fetch.fetch_url(url)
       fs.pop_dir()
    else
-      filename, err, errcode = fetch.fetch_url_at_temp_dir(url, tmpname)
+      filename, err, errcode = fetch.fetch_url_at_temp_dir(url, tmpname, nil, true)
    end
    if not filename then
       return nil, err, errcode
