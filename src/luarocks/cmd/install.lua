@@ -97,9 +97,7 @@ function install.install_binary_rock(rock_file, opts)
       return nil, "Failed loading rockspec for installed package: "..err, errcode
    end
 
-   if opts.deps_mode == "none" then
-      util.warning("skipping dependency checks.")
-   else
+   if opts.deps_mode ~= "none" then
       ok, err, errcode = deps.check_external_deps(rockspec, "install")
       if err then return nil, err, errcode end
    end
