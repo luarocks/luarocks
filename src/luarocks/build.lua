@@ -123,7 +123,6 @@ local function process_dependencies(rockspec, opts)
    end
 
    if opts.deps_mode == "none" then
-      util.warning("skipping dependency checks.")
       return true
    end
    if not opts.build_only_deps then
