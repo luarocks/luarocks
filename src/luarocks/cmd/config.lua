@@ -302,7 +302,7 @@ function config_cmd.command(args)
    if args.key then
       if args.value or args.unset then
          local scope = get_scope(args)
-         return write_entries({ [args.key] = args.value }, scope, args.unset)
+         return write_entries({ [args.key] = args.value or args.unset }, scope, args.unset)
       else
          return print_entry(args.key, cfg, args.json)
       end
