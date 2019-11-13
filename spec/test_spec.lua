@@ -38,7 +38,7 @@ describe("luarocks test #integration", function()
 
    describe("busted backend", function()
 
-      setup(function()
+      lazy_setup(function()
          -- Try to cache rocks from the host system to speed up test
          os.execute("luarocks pack busted")
          os.execute("luarocks pack lua_cliargs")
@@ -91,7 +91,7 @@ local test_command = require("luarocks.test.command")
 describe("LuaRocks test #unit", function()
    local runner
    
-   setup(function()
+   lazy_setup(function()
       cfg.init()
       fs.init()
       runner = require("luacov.runner")
@@ -99,7 +99,7 @@ describe("LuaRocks test #unit", function()
       runner.tick = true
    end)
    
-   teardown(function()
+   lazy_teardown(function()
       runner.shutdown()
    end)
    
