@@ -39,8 +39,8 @@ local c_module_source = [[
    }
 ]]
 
-describe("LuaRocks build tests #integration", function()
-   setup(function()
+describe("LuaRocks build #integration", function()
+   lazy_setup(function()
       cfg.init()
       fs.init()
    end)
@@ -49,12 +49,12 @@ describe("LuaRocks build tests #integration", function()
       test_env.setup_specs(extra_rocks)
    end)
 
-   describe("LuaRocks build - basic testing set", function()
-      it("LuaRocks build invalid", function()
+   describe("basic testing set", function()
+      it("invalid", function()
          assert.is_false(run.luarocks_bool("build invalid"))
       end)
       
-      it("LuaRocks build with no arguments behaves as luarocks make", function()
+      it("with no arguments behaves as luarocks make", function()
          test_env.run_in_tmp(function(tmpdir)
             write_file("c_module-1.0-1.rockspec", [[
                package = "c_module"
@@ -77,18 +77,18 @@ describe("LuaRocks build tests #integration", function()
       end)
    end)
 
-   describe("LuaRocks build - building with flags", function()
-      it("LuaRocks build fails if it doesn't have the permissions to access the specified tree #unix", function()
+   describe("building with flags", function()
+      it("fails if it doesn't have the permissions to access the specified tree #unix", function()
          assert.is_false(run.luarocks_bool("build --tree=/usr " .. testing_paths.fixtures_dir .. "/a_rock-1.0.1-rockspec"))
          assert.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
       end)
       
-      it("LuaRocks build fails if it doesn't have the permissions to access the specified tree's parent #unix", function()
+      it("fails if it doesn't have the permissions to access the specified tree's parent #unix", function()
          assert.is_false(run.luarocks_bool("build --tree=/usr/invalid " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec"))
          assert.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
       end)
       
-      it("LuaRocks build verbose", function() 
+      it("verbose", function()
          test_env.run_in_tmp(function(tmpdir)
             write_file("test-1.0-1.rockspec", [[
                package = "test"
@@ -110,12 +110,12 @@ describe("LuaRocks build tests #integration", function()
          end, finally)
       end)
       
-      it("LuaRocks build fails if the deps-mode argument is invalid", function()
+      it("fails if the deps-mode argument is invalid", function()
          assert.is_false(run.luarocks_bool("build --deps-mode=123 " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec"))
          assert.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
       end)
       
-      it("LuaRocks build with --only-sources", function()
+      it("with --only-sources", function()
          assert.is_true(run.luarocks_bool("download --server=" .. testing_paths.fixtures_dir .. "/a_repo --rockspec a_rock")) 
          assert.is_false(run.luarocks_bool("build --only-sources=\"http://example.com\" a_rock-1.0-1.rockspec"))
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
@@ -128,24 +128,24 @@ describe("LuaRocks build tests #integration", function()
          assert.is_true(os.remove("a_rock-1.0-1.src.rock"))
       end)
       
-      it("LuaRocks build fails if an empty tree is given", function()
+      it("fails if an empty tree is given", function()
          assert.is_false(run.luarocks_bool("build --tree=\"\" " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec"))
          assert.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
       end)
    end)
 
-   describe("LuaRocks build - basic builds", function()
-      it("LuaRocks build luacov diff version", function()
+   describe("basic builds", function()
+      it("luacov diff version", function()
          assert.is_true(run.luarocks_bool("build luacov 0.13.0-1"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luacov/0.13.0-1/luacov-0.13.0-1.rockspec"))
       end)
       
-      it("LuaRocks build command stdlib", function()
+      it("command stdlib", function()
          assert.is_true(run.luarocks_bool("build stdlib"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/stdlib/41.0.0-1/stdlib-41.0.0-1.rockspec"))
       end)
       
-      it("LuaRocks build fails if the current platform is not supported", function()
+      it("fails if the current platform is not supported", function()
          test_env.run_in_tmp(function(tmpdir)
             write_file("test-1.0-1.rockspec", [[
                package = "test"
@@ -175,7 +175,7 @@ describe("LuaRocks build tests #integration", function()
          end, finally)
       end)
       
-      it("LuaRocks build with skipping dependency checks", function()
+      it("with skipping dependency checks", function()
          test_env.run_in_tmp(function(tmpdir)
             write_file("test-1.0-1.rockspec", [[
                package = "test"
@@ -200,7 +200,7 @@ describe("LuaRocks build tests #integration", function()
          end)
       end)
       
-      it("LuaRocks build lmathx deps partial match", function()
+      it("lmathx deps partial match", function()
          assert.is_true(run.luarocks_bool("build lmathx"))
 
          if test_env.LUA_V == "5.1" or test_env.LUAJIT_V then
@@ -247,21 +247,21 @@ describe("LuaRocks build tests #integration", function()
       end)
    end)
 
-   describe("LuaRocks build - more complex tests", function()
+   describe("more complex tests", function()
       if test_env.TYPE_TEST_ENV == "full" then
-         it("LuaRocks build luacheck show downloads test_config", function()
+         it("luacheck show downloads test_config", function()
             local output = run.luarocks("build luacheck", { LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/testing_config_show_downloads.lua"} )
             assert.is.truthy(output:match("%.%.%."))
          end)
       end
 
-      it("LuaRocks build luasec only deps", function()
+      it("luasec only deps", function()
          assert.is_true(run.luarocks_bool("build luasec " .. test_env.openssl_dirs .. " --only-deps"))
          assert.is_false(run.luarocks_bool("show luasec"))
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasec/0.6-1/luasec-0.6-1.rockspec"))
       end)
       
-      it("LuaRocks build only deps of a given rockspec", function()
+      it("only deps of a given rockspec", function()
          test_env.run_in_tmp(function(tmpdir)
             write_file("test-1.0-1.rockspec", [[
                package = "test"
@@ -287,7 +287,7 @@ describe("LuaRocks build tests #integration", function()
          end, finally)
       end)
 
-      it("LuaRocks build only deps of a given rock", function()
+      it("only deps of a given rock", function()
          test_env.run_in_tmp(function(tmpdir)
             write_file("test-1.0-1.rockspec", [[
                package = "test"
@@ -316,7 +316,7 @@ describe("LuaRocks build tests #integration", function()
          end, finally)
       end)
 
-      it("LuaRocks build with https", function()
+      it("with https", function()
          assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
          assert.is_true(run.luarocks_bool("install luasec " .. test_env.openssl_dirs))
          
@@ -326,7 +326,7 @@ describe("LuaRocks build tests #integration", function()
          assert.is_true(os.remove("validate-args-1.5.4-1.rockspec"))
       end)
 
-      it("LuaRocks build fails if given an argument with an invalid patch", function()
+      it("fails if given an argument with an invalid patch", function()
          assert.is_false(run.luarocks_bool("build " .. testing_paths.fixtures_dir .. "/invalid_patch-0.1-1.rockspec"))
       end)
    end)
@@ -430,11 +430,11 @@ describe("LuaRocks build tests #integration", function()
    end)
 
    describe("#mock external dependencies", function()
-      setup(function()
+      lazy_setup(function()
          test_env.mock_server_init()
       end)
 
-      teardown(function()
+      lazy_teardown(function()
          test_env.mock_server_done()
       end)
       
@@ -493,10 +493,10 @@ local path = require("luarocks.path")
 local rockspecs = require("luarocks.rockspecs")
 local build_builtin = require("luarocks.build.builtin")
 
-describe("LuaRocks build tests #unit", function()
+describe("LuaRocks build #unit", function()
    local runner
 
-   setup(function()
+   lazy_setup(function()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
       runner.tick = true
@@ -506,7 +506,7 @@ describe("LuaRocks build tests #unit", function()
       deps.check_lua_libdir(cfg.variables)
    end)
 
-   teardown(function()
+   lazy_teardown(function()
       runner.shutdown()
    end)
 
@@ -927,11 +927,11 @@ describe("LuaRocks build tests #unit", function()
    describe("#unix build from #git", function()
       local git
 
-      setup(function()
+      lazy_setup(function()
          git = git_repo.start()
       end)
       
-      teardown(function()
+      lazy_teardown(function()
          if git then
             git:stop()
          end
