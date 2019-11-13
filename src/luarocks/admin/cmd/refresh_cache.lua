@@ -8,11 +8,14 @@ local cache = require("luarocks.admin.cache")
 
 function refresh_cache.add_to_parser(parser)
    local cmd = parser:command("refresh_cache", "Refresh local cache of a remote rocks server.", util.see_also())
-   parser:command("refresh-cache"):hidden(true):action(function(args) args.command = "refresh_cache" end)
+   local cmd2 = parser:command("refresh-cache"):hidden(true)
+      :action(function(args) args.command = "refresh_cache" end)
 
-   cmd:option("--from", "The server to use. If not given, the default server "..
-      "set in the upload_server variable from the configuration file is used instead.")
-      :argname("<server>")
+   for _, cmd in ipairs({cmd, cmd2}) do
+      cmd:option("--from", "The server to use. If not given, the default server "..
+         "set in the upload_server variable from the configuration file is used instead.")
+         :argname("<server>")
+   end
 end
 
 function refresh_cache.command(args)

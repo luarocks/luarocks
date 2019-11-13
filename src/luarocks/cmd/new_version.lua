@@ -38,17 +38,20 @@ WARNING: it writes the new rockspec to the given directory, overwriting the file
 if it already exists.]], util.see_also())
       :summary("Auto-write a rockspec for a new version of a rock.")
 
-   parser:command("new-version"):hidden(true):action(function(args) args.command = "new_version" end)
+   local cmd2 = parser:command("new-version"):hidden(true)
+      :action(function(args) args.command = "new_version" end)
 
-   cmd:argument("rock", "Package name or rockspec.")
-      :args("?")
-   cmd:argument("new_version", "New version of the rock.")
-      :args("?")
-   cmd:argument("new_url", "New URL of the rock.")
-      :args("?")
+   for _, cmd in ipairs({cmd, cmd2}) do
+      cmd:argument("rock", "Package name or rockspec.")
+         :args("?")
+      cmd:argument("new_version", "New version of the rock.")
+         :args("?")
+      cmd:argument("new_url", "New URL of the rock.")
+         :args("?")
 
-   cmd:option("--dir", "Output directory for the new rockspec.")
-   cmd:option("--tag", "New SCM tag.")
+      cmd:option("--dir", "Output directory for the new rockspec.")
+      cmd:option("--tag", "New SCM tag.")
+   end
 end
 
 

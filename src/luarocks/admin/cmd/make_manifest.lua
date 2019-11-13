@@ -13,14 +13,17 @@ local dir = require("luarocks.dir")
 
 function make_manifest.add_to_parser(parser)
    local cmd = parser:command("make_manifest", "Compile a manifest file for a repository.", util.see_also())
-   parser:command("make-manifest"):hidden(true):action(function(args) args.command = "make_manifest" end)
+   local cmd2 = parser:command("make-manifest"):hidden(true)
+      :action(function(args) args.command = "make_manifest" end)
 
-   cmd:argument("repository", "Local repository pathname.")
-      :args("?")
+   for _, cmd in ipairs({cmd, cmd2}) do
+      cmd:argument("repository", "Local repository pathname.")
+         :args("?")
 
-   cmd:flag("--local-tree", "If given, do not write versioned versions of the manifest file.\n"..
-      "Use this when rebuilding the manifest of a local rocks tree.")
-   util.deps_mode_option(cmd)
+      cmd:flag("--local-tree", "If given, do not write versioned versions of the manifest file.\n"..
+         "Use this when rebuilding the manifest of a local rocks tree.")
+      util.deps_mode_option(cmd)
+   end
 end
 
 --- Driver function for "make_manifest" command.

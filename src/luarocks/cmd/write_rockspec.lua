@@ -63,16 +63,19 @@ Note that the generated file is a _starting point_ for writing a
 rockspec, and is not guaranteed to be complete or correct. ]], util.see_also())
       :summary("Write a template for a rockspec file.")
 
-   parser:command("write-rockspec"):hidden(true):action(function(args) args.command = "write_rockspec" end)
+   local cmd2 = parser:command("write-rockspec"):hidden(true)
+      :action(function(args) args.command = "write_rockspec" end)
 
-   cmd:argument("name", "Name of the rock.")
-      :args("?")
-   cmd:argument("version", "Rock version.")
-      :args("?")
-   cmd:argument("location", "URL or path to the rock sources.")
-      :args("?")
+   for _, cmd in ipairs({cmd, cmd2}) do
+      cmd:argument("name", "Name of the rock.")
+         :args("?")
+      cmd:argument("version", "Rock version.")
+         :args("?")
+      cmd:argument("location", "URL or path to the rock sources.")
+         :args("?")
 
-   write_rockspec.cmd_options(cmd)
+      write_rockspec.cmd_options(cmd)
+   end
 end
 
 local function open_file(name)
