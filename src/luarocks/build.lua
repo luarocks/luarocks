@@ -20,6 +20,7 @@ build.opts = util.opts_table("build.opts", {
    namespace = "string?",
    branch = "string?",
    verify = "boolean",
+   check_lua_versions = "boolean",
 })
 
 do

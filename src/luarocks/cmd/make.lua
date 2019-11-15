@@ -34,6 +34,8 @@ function make.cmd_options(parser)
       "option to work properly.")
    parser:flag("--sign", "To be used with --pack-binary-rock. Also produce a "..
       "signature file for the generated .rock file.")
+   parser:flag("--check-lua-versions", "If the rock can't be found, check repository "..
+      "and report if it is available for another Lua version.")
    util.deps_mode_option(parser)
 end
 
@@ -93,6 +95,7 @@ function make.command(args)
       namespace = args.namespace,
       branch = args.branch,
       verify = not not args.verify,
+      check_lua_versions = not not args.check_lua_versions,
    })
 
    if args.sign and not args.pack_binary_rock then
