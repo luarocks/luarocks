@@ -49,6 +49,22 @@ describe("LuaRocks make tests #integration", function()
       assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket/3.0rc1-2/luasocket-3.0rc1-2.rockspec"))
    end)
 
+   it("LuaRocks make --no-doc", function()
+      finally(function()
+         lfs.chdir(testing_paths.testrun_dir)
+         test_env.remove_dir("luasocket-3.0rc1-2")
+         os.remove("luasocket-3.0rc1-2.src.rock")
+      end)
+
+      assert.is_true(run.luarocks_bool("download --source luasocket 3.0rc1-2"))
+      assert.is_true(run.luarocks_bool("unpack luasocket-3.0rc1-2.src.rock"))
+      lfs.chdir("luasocket-3.0rc1-2/luasocket-3.0-rc1/")
+      assert.is_true(run.luarocks_bool("make --no-doc luasocket-3.0rc1-2.rockspec"))
+
+      assert.is_true(run.luarocks_bool("show luasocket"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket/3.0rc1-2/doc"))
+   end)
+
    describe("LuaRocks making rockspecs (using lxsh)", function()
       --download lxsh and unpack it
       before_each(function()

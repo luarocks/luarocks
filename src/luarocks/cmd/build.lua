@@ -3,7 +3,6 @@
 -- Builds a rock, compiling its C parts if any.
 local cmd_build = {}
 
-local dir = require("luarocks.dir")
 local pack = require("luarocks.pack")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
@@ -29,8 +28,7 @@ function cmd_build.add_to_parser(parser)
    cmd:argument("version", "Rock version.")
       :args("?")
 
-   cmd:flag("--only-deps", "Installs only the dependencies of the rock.")
-   cmd:flag("--no-doc", "Installs the rock without its documentation.")
+   cmd:flag("--only-deps", "Install only the dependencies of the rock.")
    cmd:option("--branch", "Override the `source.branch` field in the loaded "..
       "rockspec. Allows to specify a different branch to fetch. Particularly "..
       'for "dev" rocks.')
@@ -104,18 +102,6 @@ local function do_build(ns_name, version, opts)
    return build_rock(url, opts)
 end
 
-local function remove_doc_dir(name, version)
-   local install_dir = path.install_dir(name, version)
-   for _, f in ipairs(fs.list_dir(install_dir)) do
-      local doc_dirs = { "doc", "docs" }
-      for _, d in ipairs(doc_dirs) do
-         if f == d then
-            fs.delete(dir.path(install_dir, f))
-         end
-      end
-   end
-end
-
 --- Driver function for "build" command.
 -- If a package name is given, forwards the request to "search" and,
 -- if returned a result, installs the matching rock.
@@ -148,7 +134,7 @@ function cmd_build.command(args)
          opts.build_only_deps = false
          local name, version, errcode = do_build(name, args.version, opts)
          if name and args.no_doc then
-            remove_doc_dir(name, version)
+            util.remove_doc_dir(name, version)
          end
          return name, version, errcode
       end)
@@ -165,7 +151,7 @@ function cmd_build.command(args)
    name, version = ok, err
 
    if args.no_doc then
-      remove_doc_dir(name, version)
+      util.remove_doc_dir(name, version)
    end
 
    if opts.build_only_deps then

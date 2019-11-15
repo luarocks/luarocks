@@ -31,8 +31,8 @@ function install.add_to_parser(parser)
       "previously installed versions if it would break dependencies.")
    cmd:flag("--force-fast", "Like --force, but performs a forced removal "..
       "without reporting dependency issues.")
-   cmd:flag("--only-deps", "Installs only the dependencies of the rock.")
-   cmd:flag("--no-doc", "Installs the rock without its documentation.")
+   cmd:flag("--only-deps", "Install only the dependencies of the rock.")
+   cmd:flag("--no-doc", "Install the rock without its documentation.")
    cmd:flag("--verify", "Verify signature of the rockspec or src.rock being "..
       "built. If the rockspec or src.rock is being downloaded, LuaRocks will "..
       "attempt to download the signature as well. Otherwise, the signature "..
@@ -190,15 +190,7 @@ local function install_rock_file(filename, opts)
    if not name then return nil, version end
 
    if opts.no_doc then
-      local install_dir = path.install_dir(name, version)
-      for _, f in ipairs(fs.list_dir(install_dir)) do
-         local doc_dirs = { "doc", "docs" }
-         for _, d in ipairs(doc_dirs) do
-            if f == d then
-               fs.delete(dir.path(install_dir, f))
-            end
-         end
-      end
+      util.remove_doc_dir(name, version)
    end
 
    if (not opts.keep) and not cfg.keep_other_versions then

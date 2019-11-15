@@ -628,5 +628,20 @@ function util.get_rocks_provided(rockspec)
    return rocks_provided
 end
 
-return util
+function util.remove_doc_dir(name, version)
+   local path = require("luarocks.path")
+   local fs = require("luarocks.fs")
+   local dir = require("luarocks.dir")
 
+   local install_dir = path.install_dir(name, version)
+   for _, f in ipairs(fs.list_dir(install_dir)) do
+      local doc_dirs = { "doc", "docs" }
+      for _, d in ipairs(doc_dirs) do
+         if f == d then
+            fs.delete(dir.path(install_dir, f))
+         end
+      end
+   end
+end
+
+return util
