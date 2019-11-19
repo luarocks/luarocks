@@ -454,7 +454,7 @@ do
 
       local ljv
       if cfg.lua_version == "5.1" then
-         ljv = util.popen_read(Q(cfg.variables["LUA_BINDIR"] .. "/" .. cfg.lua_interpreter) .. ' -e "io.write(tostring(jit and jit.version:gsub([[^%w-JIT ]], [[]])))"')
+         ljv = util.popen_read(Q(cfg.variables["LUA_BINDIR"] .. "/" .. cfg.lua_interpreter) .. ' -e "io.write(tostring(jit and jit.version:gsub([[^%S+ ]], [[]])))"')
          if ljv == "nil" then
             ljv = nil
          end
