@@ -23,6 +23,8 @@ In the latter case, the rock version may be given as a second argument.]],
       :args("?")
 
    cmd:flag("--force", "Unpack files even if the output directory already exists.")
+   cmd:flag("--check-lua-versions", "If the rock can't be found, check repository "..
+      "and report if it is available for another Lua version.")
 end
 
 --- Load a rockspec file to the given directory, fetches the source
@@ -155,7 +157,7 @@ function unpack.command(args)
    if ns_name:match(".*%.rock") or ns_name:match(".*%.rockspec") then
       url = ns_name
    else
-      url, err = search.find_src_or_rockspec(ns_name, args.version, true)
+      url, err = search.find_src_or_rockspec(ns_name, args.version, args.check_lua_versions)
       if not url then
          return nil, err
       end

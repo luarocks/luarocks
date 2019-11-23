@@ -21,7 +21,7 @@ local function get_file(filename)
    end
 end
 
-function download.download(arch, name, version, all)
+function download.download(arch, name, version, all, check_lua_versions)
    local substring = (all and name == "")
    local query = queries.new(name, version, substring, arch)
    local search_err
@@ -53,7 +53,7 @@ function download.download(arch, name, version, all)
       end
    else
       local url
-      url, search_err = search.find_suitable_rock(query, true)
+      url, search_err = search.find_rock_checking_lua_versions(query, check_lua_versions)
       if url then
          return get_file(url)
       end

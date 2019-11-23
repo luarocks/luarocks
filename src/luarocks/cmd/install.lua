@@ -39,6 +39,8 @@ function install.add_to_parser(parser)
       "file should be already available locally in the same directory.\n"..
       "You need the signer’s public key in your local keyring for this "..
       "option to work properly.")
+   cmd:flag("--check-lua-versions", "If the rock can't be found, check repository "..
+      "and report if it is available for another Lua version.")
    util.deps_mode_option(cmd)
    -- luarocks build options
    parser:flag("--pack-binary-rock"):hidden(true)
@@ -236,7 +238,9 @@ function install.command(args)
          return install_rock_file(args.rock, opts)
       end
    else
-      local url, err = search.find_suitable_rock(queries.new(args.rock:lower(), args.version), true)
+      local url, err = search.find_rock_checking_lua_versions(
+                          queries.new(args.rock:lower(), args.version),
+                          args.check_lua_versions)
       if not url then
          return nil, err
       end

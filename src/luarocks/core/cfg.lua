@@ -191,7 +191,6 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
 
       cache_timeout = 60,
       cache_fail_timeout = 86400,
-      version_check_on_fail = true,
 
       lua_modules_path = "/share/lua/"..lua_version,
       lib_modules_path = "/lib/lua/"..lua_version,

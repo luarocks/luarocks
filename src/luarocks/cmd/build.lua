@@ -79,7 +79,7 @@ local function do_build(ns_name, version, opts)
    if ns_name:match("%.rockspec$") or ns_name:match("%.rock$") then
       url = ns_name
    else
-      url, err = search.find_src_or_rockspec(ns_name, version, true)
+      url, err = search.find_src_or_rockspec(ns_name, version, opts.check_lua_versions)
       if not url then
          return nil, err
       end
@@ -123,6 +123,7 @@ function cmd_build.command(args)
       namespace = args.namespace,
       branch = args.branch,
       verify = not not args.verify,
+      check_lua_versions = not not args.check_lua_versions,
    })
 
    if args.sign and not args.pack_binary_rock then
