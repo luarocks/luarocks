@@ -35,13 +35,13 @@ jobs:
   include:
     # Smoke tests for release branches
     - stage: smoke
-      if: branch =~ [0-9].*
+      if: branch =~ ^[0-9].*
       script: *smoke_script
       os: linux
       env:
         - LUA="lua=5.3"
     - stage: smoke
-      if: branch =~ [0-9].*
+      if: branch =~ ^[0-9].*
       script: *smoke_script
       os: osx
       language: generic
