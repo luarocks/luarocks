@@ -42,7 +42,12 @@ function unix.absolute_name(pathname, relative_to)
    assert(type(pathname) == "string")
    assert(type(relative_to) == "string" or not relative_to)
 
-   relative_to = relative_to or fs.current_dir()
+   local unquoted = pathname:match("^['\"](.*)['\"]$")
+   if unquoted then
+      pathname = unquoted
+   end
+
+   relative_to = (relative_to or fs.current_dir()):gsub("/*$", "")
    if pathname:sub(1,1) == "/" then
       return pathname
    else

@@ -88,6 +88,40 @@ describe("Luarocks fs test #unit", function()
          assert.are.same(is_win and [["\\"%" \\\\" \\\\\\"]] or [['\% \\" \\\']], fs.Q([[\% \\" \\\]]))
       end)
    end)
+
+   describe("fs.absolute_name", function()
+      it("unchanged if already absolute", function()
+         if is_win then
+            assert.are.same("c:\\foo\\bar", fs.absolute_name("\"c:\\foo\\bar\""))
+            assert.are.same("c:\\foo\\bar", fs.absolute_name("c:\\foo\\bar"))
+            assert.are.same("d:\\foo\\bar", fs.absolute_name("d:\\foo\\bar"))
+            assert.are.same("\\foo\\bar", fs.absolute_name("\\foo\\bar"))
+         else
+            assert.are.same("/foo/bar", fs.absolute_name("/foo/bar"))
+         end
+      end)
+
+      it("converts to absolute if relative", function()
+         local cur = fs.current_dir()
+         if is_win then
+            assert.are.same(cur .. "/foo\\bar", fs.absolute_name("\"foo\\bar\""))
+            assert.are.same(cur .. "/foo\\bar", fs.absolute_name("foo\\bar"))
+         else
+            assert.are.same(cur .. "/foo/bar", fs.absolute_name("foo/bar"))
+         end
+      end)
+
+      it("converts a relative to specified base if given", function()
+         if is_win then
+            assert.are.same("c:\\bla/foo\\bar", fs.absolute_name("\"foo\\bar\"", "c:\\bla"))
+            assert.are.same("c:\\bla/foo\\bar", fs.absolute_name("foo\\bar", "c:\\bla"))
+            assert.are.same("c:\\bla/foo\\bar", fs.absolute_name("foo\\bar", "c:\\bla\\"))
+         else
+            assert.are.same("/bla/foo/bar", fs.absolute_name("foo/bar", "/bla"))
+            assert.are.same("/bla/foo/bar", fs.absolute_name("foo/bar", "/bla/"))
+         end
+      end)
+   end)
    
    describe("fs.execute_string", function()
       local tmpdir
