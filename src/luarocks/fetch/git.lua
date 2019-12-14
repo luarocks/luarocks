@@ -50,6 +50,13 @@ local function git_supports_shallow_submodules(git_cmd)
    return git_is_at_least(git_cmd, "1.8.4")
 end
 
+--- Git >= 2.10 can fetch submodules shallowly according to .gitmodules configuration, allowing more granularity.
+-- @param git_cmd string: name of git command.
+-- @return boolean: Whether Git can fetch submodules shallowly according to .gitmodules.
+local function git_supports_shallow_recommendations(git_cmd)
+   return git_is_at_least(git_cmd, "2.10.0")
+end
+
 local function git_identifier(git_cmd, ver)
    if not (ver:match("^dev%-%d+$") or ver:match("^scm%-%d+$")) then
       return nil
@@ -132,7 +139,9 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
    if rockspec:format_is_at_least("3.0") then
       command = {fs.Q(git_cmd), "submodule", "update", "--init", "--recursive"}
 
-      if git_supports_shallow_submodules(git_cmd) then
+      if git_supports_shallow_recommendations(git_cmd) then
+         table.insert(command, 5, "--recommend-shallow")
+      elseif git_supports_shallow_submodules(git_cmd) then
          -- Fetch only the last commit of each submodule.
          table.insert(command, 5, "--depth=1")
       end
