@@ -415,7 +415,7 @@ local function get_architecture()
 	if not proc then
 		die("Could not detect processor architecture used in "..vars.LUA_INTERPRETER)
 	end
-	print("arch: " .. proc .. " -> " .. pe.const.Machine[proc] )
+	print("arch: " .. proc .. " -> " .. pe.const.Machine[proc])
 	proc = pe.const.Machine[proc]  -- collect name from constant value
 	if proc == "IMAGE_FILE_MACHINE_I386" then
 		proc = "x86"
