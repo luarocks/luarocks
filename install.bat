@@ -399,8 +399,6 @@ end
 local function get_runtime()
 	local f
 	vars.LUA_RUNTIME, f = pe.msvcrt(vars.LUA_BINDIR.."\\"..vars.LUA_INTERPRETER)
-	print("msvcrt: " .. f)
-	print("vars.LUA_RUNTIME" .. vars.LUA_RUNTIME)
 	if type(vars.LUA_RUNTIME) ~= "string" then
 		-- analysis failed, issue a warning
 		vars.LUA_RUNTIME = "MSVCR80"
