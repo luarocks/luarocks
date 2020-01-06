@@ -29,15 +29,20 @@ local MAIN_PROGRAM = arg[1] or "src/bin/luarocks"
 local LUA_DIR = arg[2] or "/usr"
 local EXCLUDE = arg[3] or "^src/luarocks/admin/"
 local SYSCONFDIR = arg[4] or "/etc/luarocks"
-local TARGET = arg[5] or "build-binary"
+local TARGET_DIR = arg[5] or "build-binary"
 local FORCE_CONFIG = (arg[6] == "yes")
 local MY_PLATFORM = arg[7] or "unix"
 local CC = arg[8] or "gcc"
 local NM = arg[9] or "nm"
 local CROSSCOMPILER_SYSROOT = arg[10] or "/usr/lib/mingw-w64-sysroot/i686-w64-mingw32"
+local TRIPLET = arg[11] or CROSSCOMPILER_SYSROOT:gsub(".*/", "")
+local PROCESSOR = arg[12] or TRIPLET:gsub("%-.*", "")
+if PROCESSOR == "i686" then
+   PROCESSOR = "x86"
+end
 
-local LUA_MODULES = TARGET .. "/lua_modules"
-local CONFIG_DIR = TARGET .. "/.luarocks"
+local LUA_MODULES = TARGET_DIR .. "/lua_modules"
+local CONFIG_DIR = TARGET_DIR .. "/.luarocks"
 
 package.path = "./src/?.lua;" .. package.path
 
@@ -144,7 +149,7 @@ local function write_hardcoded_module(dir)
    if if_platform("unix", true) then
       system, processor = sysdetect.detect()
    else
-      system, processor = "windows", "x86"
+      system, processor = "windows", PROCESSOR
    end
 
    local hardcoded = {
@@ -400,7 +405,7 @@ local function generate(main_program, dir, skip)
 
    os.remove(hardcoded)
    
-   local c_filename = TARGET .. "/" .. program_name .. ".exe.c"
+   local c_filename = TARGET_DIR .. "/" .. program_name .. ".exe.c"
    local fd = io.open(c_filename, "w")
    fd:write(reindent_c(table.concat(out, "\n")))
    fd:close()
@@ -409,7 +414,7 @@ local function generate(main_program, dir, skip)
    deps.check_lua_libdir(cfg.variables)
    
    cmd = table.concat(filter_in(nonnull, {
-      CC, "-o", TARGET .. "/" .. program_name .. ".exe",
+      CC, "-o", TARGET_DIR .. "/" .. program_name .. ".exe",
       "-I", cfg.variables.LUA_INCDIR,
       if_platform("unix", "-rdynamic"),
       "-Os",
@@ -453,7 +458,7 @@ local function main()
          LIBFLAG = "-static",
       },
       platforms = if_platform("windows", { "windows", "win32", "mingw32" }),
-      external_deps_dirs = if_platform("windows", { CROSSCOMPILER_SYSROOT, fs.current_dir().."/windows-deps" }),
+      external_deps_dirs = if_platform("windows", { CROSSCOMPILER_SYSROOT, fs.current_dir() .. "/windows-deps-" .. TRIPLET }),
    })
    
    local dependencies = {

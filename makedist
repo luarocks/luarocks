@@ -167,14 +167,23 @@ then
    cd ..
    rm -f "$out-linux-x86_64.zip.asc"
 
-   make windows-binary
-   cd build-windows-binary
+   make windows-binary-32
+   cd build-windows-binary-i686-w64-mingw32
    mkdir "$out-windows-32"
    cp luarocks.exe "$out-windows-32/luarocks.exe"
    cp luarocks-admin.exe "$out-windows-32/luarocks-admin.exe"
    zip "../$out-windows-32.zip" "$out-windows-32"/*
    cd ..
    rm -f "$out-windows-32.zip.asc"
+
+   make windows-binary-64
+   cd build-windows-binary-x86_64-w64-mingw32
+   mkdir "$out-windows-64"
+   cp luarocks.exe "$out-windows-64/luarocks.exe"
+   cp luarocks-admin.exe "$out-windows-64/luarocks-admin.exe"
+   zip "../$out-windows-64.zip" "$out-windows-64"/*
+   cd ..
+   rm -f "$out-windows-64.zip.asc"
 
 fi
 
@@ -184,6 +193,7 @@ then
 
    for f in \
       $out-windows-32.zip \
+      $out-windows-64.zip \
       $out-linux-x86_64.zip \
       $out-win32.zip \
       $out.tar.gz
