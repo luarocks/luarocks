@@ -18,11 +18,15 @@ local unpack = table.unpack or unpack
 
 math.randomseed(os.time())
 
+local fs_is_verbose = false
+
 do
    local old_popen, old_execute
 
    -- patch io.popen and os.execute to display commands in verbose mode
    function fs.verbose()
+      fs_is_verbose = true
+
       if old_popen or old_execute then return end
       old_popen = io.popen
       io.popen = function(one, two)
@@ -52,7 +56,17 @@ do
    local function load_fns(fs_table, inits)
       for name, fn in pairs(fs_table) do
          if name ~= "init" and not fs[name] then
-            fs[name] = fn
+            fs[name] = function(...)
+               if fs_is_verbose then
+                  local args = { ... }
+                  for i, arg in ipairs(args) do
+                     local pok, v = pcall(string.format, "%q", arg)
+                     args[i] = pok and v or tostring(arg)
+                  end
+                  print("fs." .. name .. "(" .. table.concat(args, ", ") .. ")")
+               end
+               return fn(...)
+            end
          end
       end
       if fs_table.init then
