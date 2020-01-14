@@ -160,8 +160,7 @@ local function write_hardcoded_module(dir)
       SYSCONFDIR = if_platform("unix", SYSCONFDIR),
 
       LUA_DIR = if_platform("unix", cfg.variables.LUA_DIR),
-      LUA_BINDIR = if_platform("unix", cfg.variables.LUA_BINDIR)
-                or if_platform("windows", "."),
+      LUA_BINDIR = if_platform("unix", cfg.variables.LUA_BINDIR),
       LUA_INTERPRETER = if_platform("unix", cfg.lua_interpreter),
    }
    
