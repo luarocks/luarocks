@@ -130,9 +130,27 @@ local multiname = {"name", function(self, value)
    for alias in value:gmatch("%S+") do
       self._name = self._name or alias
       table.insert(self._aliases, alias)
+      table.insert(self._public_aliases, alias)
+      -- If alias contains '_', accept '-' also.
+      if alias:find("_", 1, true) then
+         table.insert(self._aliases, (alias:gsub("_", "-")))
+      end
    end
 
    -- Do not set _name as with other properties.
+   return true
+end}
+
+local multiname_hidden = {"hidden_name", function(self, value)
+   typecheck("hidden_name", {"string"}, value)
+
+   for alias in value:gmatch("%S+") do
+      table.insert(self._aliases, alias)
+      if alias:find("_", 1, true) then
+         table.insert(self._aliases, (alias:gsub("_", "-")))
+      end
+   end
+
    return true
 end}
 
@@ -257,12 +275,14 @@ local Parser = class({
 })
 
 local Command = class({
-   _aliases = {}
+   _aliases = {},
+   _public_aliases = {}
 }, {
    args = 3,
    multiname,
    typechecked("description", "string"),
    typechecked("epilog", "string"),
+   multiname_hidden,
    typechecked("summary", "string"),
    typechecked("target", "string"),
    typechecked("usage", "string"),
@@ -307,6 +327,7 @@ local Argument = class({
 
 local Option = class({
    _aliases = {},
+   _public_aliases = {},
    _mincount = 0,
    _overwrite = true
 }, {
@@ -317,6 +338,7 @@ local Option = class({
    typechecked("convert", "function", "table"),
    boundaries("args"),
    boundaries("count"),
+   multiname_hidden,
    typechecked("target", "string"),
    typechecked("defmode", "string"),
    typechecked("show_default", "boolean"),
@@ -505,22 +527,22 @@ function Option:_get_label_lines()
 
    if #argument_list == 0 then
       -- Don't put aliases for simple flags like `-h` on different lines.
-      return {table.concat(self._aliases, ", ")}
+      return {table.concat(self._public_aliases, ", ")}
    end
 
    local longest_alias_length = -1
 
-   for _, alias in ipairs(self._aliases) do
+   for _, alias in ipairs(self._public_aliases) do
       longest_alias_length = math.max(longest_alias_length, #alias)
    end
 
    local argument_list_repr = table.concat(argument_list, " ")
    local lines = {}
 
-   for i, alias in ipairs(self._aliases) do
+   for i, alias in ipairs(self._public_aliases) do
       local line = (" "):rep(longest_alias_length - #alias) .. alias .. " " .. argument_list_repr
 
-      if i ~= #self._aliases then
+      if i ~= #self._public_aliases then
          line = line .. ","
       end
 
@@ -531,7 +553,7 @@ function Option:_get_label_lines()
 end
 
 function Command:_get_label_lines()
-   return {table.concat(self._aliases, ", ")}
+   return {table.concat(self._public_aliases, ", ")}
 end
 
 function Argument:_get_description()
@@ -569,7 +591,7 @@ end
 function Option:_get_default_target()
    local res
 
-   for _, alias in ipairs(self._aliases) do
+   for _, alias in ipairs(self._public_aliases) do
       if alias:sub(1, 1) == alias:sub(2, 2) then
          res = alias:sub(3)
          break
