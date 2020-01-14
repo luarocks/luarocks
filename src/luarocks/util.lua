@@ -481,7 +481,7 @@ do
          end
       end
 
-      find_lua_bindir = function(prefix, luaver)
+      find_lua_bindir = function(prefix, luaver, verbose)
          local names = {}
          if luaver then
             insert_lua_variants(names, luaver)
@@ -517,13 +517,13 @@ do
                         and ("Lua " .. luaver .. " interpreter")
                         or  "Lua interpreter"
          return nil, interp .. " not found at " .. prefix .. "\n" ..
-                     "Tried:\t" .. table.concat(tried, "\n\t")
+                     (verbose and "Tried:\t" .. table.concat(tried, "\n\t") or "")
       end
    end
 
-   function util.find_lua(prefix, luaver)
+   function util.find_lua(prefix, luaver, verbose)
       local lua_interpreter, bindir
-      lua_interpreter, bindir, luaver = find_lua_bindir(prefix, luaver)
+      lua_interpreter, bindir, luaver = find_lua_bindir(prefix, luaver, verbose)
       if not lua_interpreter then
          return nil, bindir
       end

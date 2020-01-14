@@ -172,6 +172,30 @@ local function die(message, exitcode)
    os.exit(exitcode or cmd.errorcodes.UNSPECIFIED)
 end
 
+local function search_lua_in_path(lua_version, verbose)
+   local path_sep = (package.config:sub(1, 1) == "\\" and ";" or ":")
+   local all_tried = {}
+   for bindir in os.getenv("PATH"):gmatch("[^"..path_sep.."]+") do
+      local parentdir = bindir:gsub("[\\/][^\\/]+[\\/]?$", "")
+      local detected, tried = util.find_lua(dir.path(parentdir), lua_version)
+      if detected then
+         return detected
+      else
+         table.insert(all_tried, tried)
+      end
+      detected = util.find_lua(bindir, lua_version)
+      if detected then
+         return detected
+      else
+         table.insert(all_tried, tried)
+      end
+   end
+   return nil, "Could not find " ..
+               (lua_version and "Lua " .. lua_version or "Lua") ..
+               " in PATH." ..
+               (verbose and " Tried:\n" .. table.concat(all_tried, "\n") or "")
+end
+
 local init_config
 do
    local detect_config_via_args
@@ -244,17 +268,9 @@ do
          end
       
          if lua_version then
-            local path_sep = (package.config:sub(1, 1) == "\\" and ";" or ":")
-            for bindir in os.getenv("PATH"):gmatch("[^"..path_sep.."]+") do
-               local parentdir = bindir:gsub("[\\/][^\\/]+[\\/]?$", "")
-               local detected = util.find_lua(dir.path(parentdir), lua_version)
-               if detected then
-                  return detected
-               end
-               detected = util.find_lua(bindir, lua_version)
-               if detected then
-                  return detected
-               end
+            local detected = search_lua_in_path(lua_version)
+            if detected then
+               return detected
             end
             return {
                lua_version = lua_version,
@@ -535,15 +551,18 @@ function cmd.run_command(description, commands, external_namespace, ...)
 
    -- if the Lua interpreter wasn't explicitly found before cfg.init,
    -- try again now.
+   local tried
    if not lua_found then
       if cfg.variables.LUA_DIR then
-         lua_found = util.find_lua(cfg.variables.LUA_DIR, cfg.lua_version)
+         lua_found, tried = util.find_lua(cfg.variables.LUA_DIR, cfg.lua_version, args.verbose)
+      else
+         lua_found, tried = search_lua_in_path(cfg.lua_version, args.verbose)
       end
    end
 
-   if not lua_found then
-      util.warning("Could not find a Lua " .. cfg.lua_version .. " interpreter in your PATH. " ..
-                   "Modules may not install with the correct configurations. " ..
+   if not lua_found and args.command ~= "config" and args.command ~= "help" then
+      util.warning(tried ..
+                   "\nModules may not install with the correct configurations. " ..
                    "You may want to specify the path prefix to your build " ..
                    "of Lua " .. cfg.lua_version .. " using --lua-dir")
    end
