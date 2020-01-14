@@ -20,7 +20,7 @@ local extra_rocks = {
    "/lpeg-1.0.0-1.rockspec",
    "/lpeg-1.0.0-1.src.rock",
    "/luafilesystem-1.6.3-1.src.rock",
-   "/luasec-0.6-1.rockspec",
+   "/luasec-0.9-1.rockspec",
    "/luasocket-3.0rc1-2.src.rock",
    "/luasocket-3.0rc1-2.rockspec",
    "/stdlib-41.0.0-1.src.rock",
@@ -293,7 +293,7 @@ describe("LuaRocks build #integration", function()
       it("luasec only deps", function()
          assert.is_true(run.luarocks_bool("build luasec " .. test_env.openssl_dirs .. " --only-deps"))
          assert.is_false(run.luarocks_bool("show luasec"))
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasec/0.6-1/luasec-0.6-1.rockspec"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasec/0.9-1/luasec-0.9-1.rockspec"))
       end)
       
       it("only deps of a given rockspec", function()
@@ -904,7 +904,7 @@ describe("LuaRocks build #unit", function()
                if test_env.MINGW then
                   ssllib = "eay32"
                else
-                  ssllib = "ssleay32"
+                  ssllib = "libssl32MD"
                end
             end
 

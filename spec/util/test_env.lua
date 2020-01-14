@@ -263,10 +263,10 @@ function test_env.set_args()
       if package.config:sub(1,1) == "\\" then
          test_env.TEST_TARGET_OS = "windows"
          if test_env.APPVEYOR then
-            test_env.OPENSSL_INCDIR = "C:\\OpenSSL-Win32\\include"
-            test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-Win32\\lib"
+            test_env.OPENSSL_INCDIR = "C:\\OpenSSL-v111-Win32\\include"
+            test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-v111-Win32\\lib"
             if test_env.MINGW then
-               test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-Win32\\bin"
+               test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-v111-Win32\\bin"
             end
          end
       else

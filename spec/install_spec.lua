@@ -12,7 +12,7 @@ local extra_rocks = {
    "/cprint-0.1-2.src.rock",
    "/cprint-0.1-2.rockspec",
    "/lpeg-0.12-1.src.rock",
-   "/luasec-0.6-1.rockspec",
+   "/luasec-0.9-1.rockspec",
    "/luassert-1.7.0-1.src.rock",
    "/luasocket-3.0rc1-2.src.rock",
    "/luasocket-3.0rc1-2.rockspec",
