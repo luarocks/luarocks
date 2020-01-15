@@ -903,8 +903,10 @@ describe("LuaRocks build #unit", function()
             if test_env.TEST_TARGET_OS == "windows" then
                if test_env.MINGW then
                   ssllib = "eay32"
+                  os.execute("DIR C:\\OpenSSL-v111-Win32\\bin")
+                  os.execute("DIR C:\\OpenSSL-v111-Win32\\lib\\MinGW")
                else
-                  ssllib = "libssl32MD"
+                  ssllib = "libssl"
                   os.execute("DIR C:\\OpenSSL-v111-Win32\\lib")
                end
             end
