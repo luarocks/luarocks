@@ -665,8 +665,6 @@ function cfg.init(detected, warning)
    -- Let's finish up the cfg table.
    ----------------------------------------
 
-   cfg.variables.LUA_DIR = detected.given_lua_dir or cfg.variables.LUA_DIR
-
    -- Settings given via the CLI (i.e. --lua-dir) take precedence over config files.
    cfg.project_dir = detected.given_project_dir or cfg.project_dir
    cfg.lua_version = detected.given_lua_version or cfg.lua_version
