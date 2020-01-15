@@ -144,7 +144,7 @@ local function process_dependencies(rockspec, opts)
 end
 
 local function fetch_and_change_to_source_dir(rockspec, opts)
-   if opts.minimal_mode then
+   if opts.minimal_mode or opts.build_only_deps then
       return true
    end
    if opts.need_to_fetch then
