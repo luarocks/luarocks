@@ -176,13 +176,14 @@ local function search_lua_in_path(lua_version, verbose)
    local path_sep = (package.config:sub(1, 1) == "\\" and ";" or ":")
    local all_tried = {}
    for bindir in os.getenv("PATH"):gmatch("[^"..path_sep.."]+") do
-      local parentdir = bindir:gsub("[\\/][^\\/]+[\\/]?$", "")
-      local detected, tried = util.find_lua(dir.path(parentdir), lua_version)
+      local parentdir = dir.path((bindir:gsub("[\\/][^\\/]+[\\/]?$", "")))
+      local detected, tried = util.find_lua(parentdir, lua_version)
       if detected then
          return detected
       else
          table.insert(all_tried, tried)
       end
+      bindir = dir.path(bindir)
       detected = util.find_lua(bindir, lua_version)
       if detected then
          return detected
