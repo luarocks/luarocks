@@ -495,11 +495,11 @@ do
          end
          table.insert(names, "lua" .. exe_suffix)
 
-         local bindirs = { prefix .. "/bin", prefix }
          local tried = {}
-         for _, d in ipairs(bindirs) do
+         local dir_sep = package.config:sub(1, 1)
+         for _, d in ipairs({ prefix .. dir_sep .. "bin", prefix }) do
             for _, name in ipairs(names) do
-               local lua_exe = d .. "/" .. name
+               local lua_exe = d .. dir_sep .. name
                local is_wrapper, err = util.lua_is_wrapper(lua_exe)
                if is_wrapper == false then
                   local lv = util.check_lua_version(lua_exe, luaver)
