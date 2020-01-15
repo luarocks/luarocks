@@ -12,7 +12,10 @@ local require = nil
 -- May be used to read more, passing, for instance, "*a".
 -- @return string: the output of the program.
 function util.popen_read(cmd, spec)
-   local tmpfile = os.tmpname()
+   local dir_sep = package.config:sub(1, 1)
+   local tmpfile = (dir_sep == "\\")
+                   and (os.getenv("TMP") .. "/luarocks-" .. tostring(math.floor(math.random() * 10000)))
+                   or os.tmpname()
    os.execute(cmd .. " > " .. tmpfile)
    local fd = io.open(tmpfile, "rb")
    if not fd then
