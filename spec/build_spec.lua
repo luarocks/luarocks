@@ -905,6 +905,7 @@ describe("LuaRocks build #unit", function()
                   ssllib = "eay32"
                else
                   ssllib = "libssl32MD"
+                  os.execute("DIR C:\\OpenSSL-v111-Win32\\lib")
                end
             end
 
