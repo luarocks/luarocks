@@ -415,6 +415,21 @@ local function resolve_prefix(prefix, dirs)
    end
 end
 
+local function add_patterns_for_file(files, file, patterns)
+   -- If it doesn't look like it contains a filename extension
+   if not (file:match("%.[a-z]+$") or file:match("%.[a-z]+%.")) then
+      add_all_patterns(file, patterns, files)
+   else
+      for _, pattern in ipairs(patterns) do
+         local matched = deconstruct_pattern(file, pattern)
+         if matched then
+            add_all_patterns(matched, patterns, files)
+         end
+      end
+      table.insert(files, file)
+   end
+end
+
 local function check_external_dependency_at(prefix, name, ext_files, vars, dirs, err_files, cache)
    local fs = require("luarocks.fs")
    cache = cache or {}
@@ -433,22 +448,27 @@ local function check_external_dependency_at(prefix, name, ext_files, vars, dirs,
          paths = { dir.path(prefix, dirdata.subdir) }
       end
       dirdata.dir = paths[1]
-      local file = ext_files[dirdata.testfile]
-      if file then
+      local file_or_files = ext_files[dirdata.testfile]
+      if file_or_files then
          local files = {}
-         -- If it doesn't look like it contains a filename extension
-         if not (file:match("%.[a-z]+$") or file:match("%.[a-z]+%.")) then
-            add_all_patterns(file, dirdata.pattern, files)
-         else
-            for _, pattern in ipairs(dirdata.pattern) do
-               local matched = deconstruct_pattern(file, pattern)
-               if matched then
-                  add_all_patterns(matched, dirdata.pattern, files)
-               end
+         if type(file_or_files) == "string" then
+            add_patterns_for_file(files, file_or_files, dirdata.pattern)
+         elseif type(file_or_files) == "table" then
+            for _, f in ipairs(file_or_files) do
+               add_patterns_for_file(files, f, dirdata.pattern)
             end
-            table.insert(files, file)
          end
+
          local found = false
+         table.sort(files, function(a, b)
+            if (not a:match("%*")) and b:match("%*") then
+               return true
+            elseif a:match("%*") and (not b:match("%*")) then
+               return false
+            else
+               return a < b
+            end
+         end)
          for _, f in ipairs(files) do
 
             -- small convenience hack
@@ -458,7 +478,7 @@ local function check_external_dependency_at(prefix, name, ext_files, vars, dirs,
 
             local pattern
             if f:match("%*") then
-               pattern = f:gsub("([-.+])", "%%%1"):gsub("%*", ".*")
+               pattern = "^" .. f:gsub("([-.+])", "%%%1"):gsub("%*", ".*") .. "$"
                f = "matching "..f
             end
 
@@ -467,8 +487,9 @@ local function check_external_dependency_at(prefix, name, ext_files, vars, dirs,
                   if not cache[d] then
                      cache[d] = fs.list_dir(d)
                   end
+                  local match = string.match
                   for _, entry in ipairs(cache[d]) do
-                     if entry:match(pattern) then
+                     if match(entry, pattern) then
                         found = true
                         break
                      end
@@ -677,12 +698,10 @@ function deps.check_lua_libdir(vars)
       table.insert(libnames, 1, "luajit-" .. cfg.lua_version)
    end
    local cache = {}
-   for _, libname in ipairs(libnames) do
-      local ok = check_external_dependency("LUA", { library = libname }, vars, "build", cache)
-      if ok then
-         vars.LUALIB = vars.LUA_LIBDIR_FILE
-         return true
-      end
+   local ok = check_external_dependency("LUA", { library = libnames }, vars, "build", cache)
+   if ok then
+      vars.LUALIB = vars.LUA_LIBDIR_FILE
+      return true
    end
    return nil, "Failed finding Lua library. You may need to configure LUA_LIBDIR.", "dependency"
 end
