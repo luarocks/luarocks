@@ -901,13 +901,20 @@ describe("LuaRocks build #unit", function()
          it("automatically extracts the modules and libraries if they are not given and builds against any external dependencies", function()
             local ssllib = "ssl"
             if test_env.TEST_TARGET_OS == "windows" then
+               os.execute("DIR C:\\OpenSSL-v111-Win32\\bin")
+               os.execute("DIR C:\\OpenSSL-v111-Win32\\lib\\MinGW")
+               os.execute("DIR C:\\OpenSSL-v111-Win32\\lib")
+               os.execute("DIR C:\\OpenSSL-v11-Win32\\bin")
+               os.execute("DIR C:\\OpenSSL-v11-Win32\\lib\\MinGW")
+               os.execute("DIR C:\\OpenSSL-v11-Win32\\lib")
+               os.execute("DIR C:\\OpenSSL-Win32\\bin")
+               os.execute("DIR C:\\OpenSSL-Win32\\lib\\MinGW")
+               os.execute("DIR C:\\OpenSSL-Win32\\lib")
+               os.execute("DIR C:\\")
                if test_env.MINGW then
                   ssllib = "eay32"
-                  os.execute("DIR C:\\OpenSSL-v111-Win32\\bin")
-                  os.execute("DIR C:\\OpenSSL-v111-Win32\\lib\\MinGW")
                else
                   ssllib = "libssl"
-                  os.execute("DIR C:\\OpenSSL-v111-Win32\\lib")
                end
             end
 
