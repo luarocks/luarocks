@@ -404,11 +404,14 @@ Enabling completion for Fish:
       "rockspecs of in-development versions.")
    parser:option("--server", "Fetch rocks/rockspecs from this server "..
       "(takes priority over config file).")
+      :hidden_name("--from")
    parser:option("--only-server", "Fetch rocks/rockspecs from this server only "..
       "(overrides any entries in the config file).")
       :argname("<server>")
+      :hidden_name("--only-from")
    parser:option("--only-sources", "Restrict downloads to paths matching the given URL.")
       :argname("<url>")
+      :hidden_name("--only-sources-from")
    parser:option("--namespace", "Specify the rocks server namespace to use.")
       :convert(string.lower)
    parser:option("--lua-dir", "Which Lua installation to use.")
@@ -416,6 +419,7 @@ Enabling completion for Fish:
    parser:option("--lua-version", "Which Lua version to use.")
       :argname("<ver>")
    parser:option("--tree", "Which tree to operate on.")
+      :hidden_name("--to")
    parser:flag("--local", "Use the tree in the user's home directory.\n"..
       "To enable it, see '"..program.." help path'.")
    parser:flag("--global", "Use the system tree when `local_by_default` is `true`.")
@@ -428,11 +432,6 @@ Enabling completion for Fish:
 
    -- Used internally to force the use of a particular project tree
    parser:option("--project-tree"):hidden(true)
-   -- Compatibility for old names of some options
-   parser:option("--to"):target("tree"):hidden(true)
-   parser:option("--from"):target("server"):hidden(true)
-   parser:option("--only-from"):target("only_server"):hidden(true)
-   parser:option("--only-sources-from"):target("only_sources"):hidden(true)
 
    for _, module in util.sortedpairs(cmd_modules) do
       module.add_to_parser(parser)
