@@ -23,6 +23,16 @@ rocks trees.
 * [Installation instructions for macOS](http://luarocks.org/en/Installation_instructions_for_macOS)
 * [Installation instructions for Windows](http://luarocks.org/en/Installation_instructions_for_Windows)
 
+## Contributing
+
+* Create a new branch with a meaningful name `git checkout -b branch_name`.<br />
+* Develop your feature on Xcode IDE  and run it .<br />
+* Add the files you changed `git add file_name`.<br />
+* Commit your changes `git commit -m "Message briefly explaining the feature"`.<br />
+* Keep one commit per feature. If you forgot to add changes, you can edit the previous commit `git commit --amend`.<br />
+* Push to your repo `git push --set-upstream origin branch-name`.<br />
+* Go into [the Github repo](https://github.com/luarocks/luarocks.git) and create a pull request explaining your changes.<br />
+
 ## License
 
 LuaRocks is free software and uses the [MIT license](http://luarocks.org/en/License), the same as Lua 5.x.
