@@ -6,7 +6,6 @@ local testing_paths = test_env.testing_paths
 test_env.unload_luarocks()
 
 local extra_rocks = {
-   "/luasec-0.6-1.rockspec",
    "/luassert-1.7.0-1.src.rock",
    "/luasocket-3.0rc1-2.src.rock",
    "/luasocket-3.0rc1-2.rockspec",

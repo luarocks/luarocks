@@ -20,11 +20,11 @@ local extra_rocks = {
    "/lpeg-1.0.0-1.rockspec",
    "/lpeg-1.0.0-1.src.rock",
    "/luafilesystem-1.6.3-1.src.rock",
-   "/luasec-0.6-1.rockspec",
    "/luasocket-3.0rc1-2.src.rock",
    "/luasocket-3.0rc1-2.rockspec",
    "/stdlib-41.0.0-1.src.rock",
-   "/validate-args-1.5.4-1.rockspec"
+   "/validate-args-1.5.4-1.rockspec",
+   "spec/fixtures/a_rock-1.0-1.src.rock",
 }
 
 local c_module_source = [[
@@ -290,10 +290,13 @@ describe("LuaRocks build #integration", function()
          end)
       end
 
-      it("luasec only deps", function()
-         assert.is_true(run.luarocks_bool("build luasec " .. test_env.openssl_dirs .. " --only-deps"))
-         assert.is_false(run.luarocks_bool("show luasec"))
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasec/0.6-1/luasec-0.6-1.rockspec"))
+      it("only deps", function()
+         local rockspec = testing_paths.fixtures_dir .. "/build_only_deps-0.1-1.rockspec"
+
+         assert.is_true(run.luarocks_bool("build " .. rockspec .. " --only-deps"))
+         assert.is_false(run.luarocks_bool("show build_only_deps"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/build_only_deps/0.1-1/build_only_deps-0.1-1.rockspec"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
       end)
       
       it("only deps of a given rockspec", function()
@@ -349,16 +352,6 @@ describe("LuaRocks build #integration", function()
             assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/test/1.0-1/test-1.0-1.rockspec"))
             assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
          end, finally)
-      end)
-
-      it("with https", function()
-         assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
-         assert.is_true(run.luarocks_bool("install luasec " .. test_env.openssl_dirs))
-         
-         assert.is_true(run.luarocks_bool("build validate-args-1.5.4-1.rockspec"))
-         assert.is.truthy(run.luarocks("show validate-args"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/validate-args/1.5.4-1/validate-args-1.5.4-1.rockspec"))
-         assert.is_true(os.remove("validate-args-1.5.4-1.rockspec"))
       end)
 
       it("fails if given an argument with an invalid patch", function()
@@ -899,15 +892,19 @@ describe("LuaRocks build #unit", function()
          end)
 
          it("automatically extracts the modules and libraries if they are not given and builds against any external dependencies", function()
-            local ssllib = "ssl"
+            local fdir = testing_paths.fixtures_dir
             if test_env.TEST_TARGET_OS == "windows" then
                if test_env.MINGW then
-                  ssllib = "eay32"
+                  os.execute("gcc -shared -o " .. fdir .. "/libfixturedep.dll -Wl,--out-implib," .. fdir .."/libfixturedep.a " .. fdir .. "/fixturedep.c")
                else
-                  ssllib = "ssleay32"
+                  os.execute("cl " .. fdir .. "\\fixturedep.c /link /export:fixturedep_fn /out:" .. fdir .. "\\fixturedep.dll /implib:" .. fdir .. "\\fixturedep.lib")
                end
+            elseif test_env.TEST_TARGET_OS == "linux" then
+               os.execute("gcc -shared -o " .. fdir .. "/libfixturedep.so " .. fdir .. "/fixturedep.c")
+            elseif test_env.TEST_TARGET_OS == "osx" then
+               os.execute("cc -dynamiclib -o " .. fdir .. "/libfixturedep.dylib " .. fdir .. "/fixturedep.c")
             end
-
+         
             local rockspec = {
                rockspec_format = "3.0",
                package = "c_module",
@@ -916,8 +913,8 @@ describe("LuaRocks build #unit", function()
                   url = "http://example.com/c_module"
                },
                external_dependencies = {
-                  OPENSSL = {
-                     library = ssllib -- Use OpenSSL since it is available on all testing platforms
+                  FIXTUREDEP = {
+                     library = "fixturedep"
                   }
                },
                build = {
@@ -927,8 +924,7 @@ describe("LuaRocks build #unit", function()
             write_file("c_module.c", c_module_source, finally)
 
             rockspecs.from_persisted_table("c_module-1.0-1.rockspec", rockspec)
-            rockspec.variables["OPENSSL_INCDIR"] = test_env.OPENSSL_INCDIR
-            rockspec.variables["OPENSSL_LIBDIR"] = test_env.OPENSSL_LIBDIR
+            rockspec.variables["FIXTUREDEP_LIBDIR"] = testing_paths.fixtures_dir
             assert.truthy(build_builtin.run(rockspec))
          end)
 
