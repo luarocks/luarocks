@@ -347,8 +347,10 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.external_deps_patterns = {
          bin = { "?.exe", "?.bat" },
          -- mingw lookup list from http://stackoverflow.com/a/15853231/1793220
-         -- ...should we keep ?.lib at the end? It's not in the above list.
-         lib = { "lib?.dll.a", "?.dll.a", "lib?.a", "cyg?.dll", "lib?.dll", "?.dll", "?.lib" },
+         --~ 2020-01-23: putting ?.lib first allows use of the llvm-mingw32 compiler toolchain
+         --~ https://github.com/mstorsjo/llvm-mingw
+         --~ The LLVM linker doesn't support linking to a dll (GNU ld does).         
+         lib = { "?.lib", "lib?.dll.a", "?.dll.a", "lib?.a", "cyg?.dll", "lib?.dll", "?.dll" },
          include = { "?.h" }
       }
       defaults.runtime_external_deps_patterns = {
