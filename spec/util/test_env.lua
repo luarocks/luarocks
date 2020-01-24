@@ -263,10 +263,10 @@ function test_env.set_args()
       if package.config:sub(1,1) == "\\" then
          test_env.TEST_TARGET_OS = "windows"
          if test_env.APPVEYOR then
-            test_env.OPENSSL_INCDIR = "C:\\OpenSSL-Win32\\include"
-            test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-Win32\\lib"
+            test_env.OPENSSL_INCDIR = "C:\\OpenSSL-v111-Win32\\include"
+            test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-v111-Win32\\lib"
             if test_env.MINGW then
-               test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-Win32\\bin"
+               test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-v111-Win32\\bin"
             end
          end
       else
@@ -374,27 +374,35 @@ end
 -- @return make_manifest boolean: true if new rocks downloaded
 local function download_rocks(urls, save_path)
    local luarocks_repo = "https://luarocks.org/"
-   local any_downloads = false
 
    local to_download = {}
+   local fixtures = {}
    for _, url in ipairs(urls) do
-      -- check if already downloaded
-      if not test_env.exists(save_path .. "/" .. url) then
-         table.insert(to_download, luarocks_repo .. url)
-         any_downloads = true
+      if url:match("^spec/fixtures") then
+         table.insert(fixtures, (url:gsub("^spec/fixtures", test_env.testing_paths.fixtures_dir)))
+      else
+         -- check if already downloaded
+         if not test_env.exists(save_path .. "/" .. url) then
+            table.insert(to_download, luarocks_repo .. url)
+         end
       end
    end
-   if not any_downloads then
-      return false
+
+   if #fixtures > 0 then
+      os.execute("cp " .. table.concat(fixtures, " ") .. " " .. save_path)
    end
-   local cmd
-   if test_env.TEST_TARGET_OS == "windows" then
-      cmd = test_env.testing_paths.win_tools .. "/wget --no-check-certificate -cP " .. save_path
-   else
-      cmd = "wget -cP " .. save_path
+
+   if #to_download > 0 then
+      local cmd
+      if test_env.TEST_TARGET_OS == "windows" then
+         cmd = test_env.testing_paths.win_tools .. "/wget --no-check-certificate -cP " .. save_path
+      else
+         cmd = "wget -cP " .. save_path
+      end
+      assert(execute_bool(cmd.." "..table.concat(to_download, " ")))
    end
-   assert(execute_bool(cmd.." "..table.concat(to_download, " ")))
-   return true
+
+   return (#fixtures > 0) or (#to_download > 0)
 end
 
 --- Create a file containing a string.

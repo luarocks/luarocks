@@ -12,7 +12,6 @@ local extra_rocks = {
    "/cprint-0.1-2.src.rock",
    "/cprint-0.1-2.rockspec",
    "/lpeg-0.12-1.src.rock",
-   "/luasec-0.6-1.rockspec",
    "/luassert-1.7.0-1.src.rock",
    "/luasocket-3.0rc1-2.src.rock",
    "/luasocket-3.0rc1-2.rockspec",
@@ -25,6 +24,9 @@ local extra_rocks = {
    "/luafilesystem-1.6.3-1.src.rock",
    "/sailor-0.5-3.src.rock",
    "/sailor-0.5-4.src.rock",
+   "spec/fixtures/a_repo/has_build_dep-1.0-1.all.rock",
+   "spec/fixtures/a_repo/a_build_dep-1.0-1.all.rock",
+   "spec/fixtures/a_repo/a_rock-1.0-1.src.rock",
 }
 
 describe("luarocks install #integration", function()
@@ -77,8 +79,8 @@ describe("luarocks install #integration", function()
       end)
 
       it("installs a package with a dependency", function()
-         assert.is_true(run.luarocks_bool("install luasec " .. test_env.openssl_dirs))
-         assert.is_true(run.luarocks_bool("show luasocket"))
+         assert.is_true(run.luarocks_bool("install has_build_dep"))
+         assert.is_true(run.luarocks_bool("show a_rock"))
       end)
 
       it("installs a package without its documentation", function()
@@ -135,14 +137,11 @@ describe("luarocks install #integration", function()
    end)
 
    describe("more complex tests", function()
-      it('luasec with skipping dependency checks', function()
-         assert.is_true(run.luarocks_bool("install luasec " .. test_env.openssl_dirs .. " --nodeps"))
-         assert.is_true(run.luarocks_bool("show luasec"))
-         if env_variables.TYPE_TEST_ENV == "minimal" then
-            assert.is_false(run.luarocks_bool(test_env.quiet("show luasocket")))
-            assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket"))
-         end
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasec"))
+      it('skipping dependency checks', function()
+         assert.is_true(run.luarocks_bool("install has_build_dep --nodeps"))
+         assert.is_true(run.luarocks_bool("show has_build_dep"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/has_build_dep"))
       end)
 
       it('handle relative path in --tree #632', function()
