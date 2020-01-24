@@ -544,6 +544,10 @@ local function check_external_dependency(name, ext_files, vars, mode, cache)
          dirs.LIBDIR.pattern = fun.filter(util.deep_copy(dirs.LIBDIR.pattern), function(s)
             return not s:match("%.a$")
          end)
+      elseif cfg.is_platform("windows") and name == "LUA" then
+         dirs.LIBDIR.pattern = fun.filter(util.deep_copy(dirs.LIBDIR.pattern), function(s)
+            return not s:match("%.dll$")
+         end)
       end
       ok, err_dirname, err_testfile = check_external_dependency_at(prefix, name, ext_files, vars, dirs, err_files, cache)
       if ok then
