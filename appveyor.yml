@@ -82,7 +82,7 @@ init:
 - set PATH=C:\MinGW\bin;%PATH%
 
 before_build:
-  - set PATH=C:\Python27\Scripts;%PATH% # Add directory containing 'pip' to PATH
+  - set PATH=C:\Python37\Scripts;%PATH% # Add directory containing 'pip' to PATH
   - IF NOT EXIST lua_install-%LUAV%\bin\activate.bat ( pip install hererocks )
   - IF NOT EXIST lua_install-%LUAV%\bin\activate.bat ( hererocks lua_install-%LUAV% --%LUAT% %LUAV% --luarocks latest --target=%COMPILER% )
   - call lua_install-%LUAV%\bin\activate
