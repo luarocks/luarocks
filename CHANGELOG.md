@@ -1,5 +1,79 @@
 
-## What's new in LuaRocks 3.0
+## What's new in LuaRocks 3.3.0
+
+### Features
+
+* **Dependency pinning**
+  * Adds a new flag called `--pin` which creates a `luarocks.lock`
+    when building a rock with `luarocks build` or `luarocks make`.
+    This lock file contains the exact version numbers of every
+    direct or indirect dependency of the rock (in other words,
+    it is the transitive closure of the dependencies.)
+    For `make`, the `luarocks.lock` file is created in the current
+    directory.
+    The lock file is also installed as part of the rock in
+    its metadata directory alongside its rockspec.
+    When using `--pin`, if a lock file already exists, it is
+    ignored and overwritten.
+  * When building a rock with `luarocks make`, if there is a
+    `luarocks.lock` file in the current directory, the exact
+    versions specified there will be used for resolving dependencies.
+  * When building a rock with `luarocks build`, if there is a
+    `luarocks.lock` file in root of its sources, the exact
+    versions specified there will be used for resolving dependencies.
+  * When installing a `.rock` file with `luarocks install`, if the
+    rock contains a `luarocks.lock` file (i.e., if its dependencies
+    were pinned with `--pin` when the rock was built), the exact
+    versions specified there will be used for resolving dependencies.
+* Improved VM type detection to support moonjit
+* git: Support for shallow recommendations
+* Initial support for Windows on ARM
+* Support for building 64-bit Windows all-in-one binary
+* More filesystem debugging output when using `--verbose` (now it
+  reports operations even when using LuaFileSystem-backed implementations)
+* `--no-manifest` flag for creating a package without updating the
+  manifest files
+* `--no-doc` flag is now supported by `luarocks make`
+
+### Performance improvements
+
+* Speed up dependency checks
+* Speed up installation and deletion when deploying files
+* build: do not download sources when when building with `--only-deps`
+* New flag `--check-lua-versions`: when a rock name is not found, only
+  checks for availability in other Lua versions if this flag is given
+
+### Fixes
+
+* safer rollback on installation failure
+* config: fix `--unset` flag
+* Fix command name invocations with dashes (e.g. `luarocks-admin make-manifest`)
+* Fix fallback to PATH search when Lua interpreter is not configured
+* Windows: support usernames with spaces
+* Windows: fix generation of temporary filenames (#1058)
+* Windows: force `.lib` over `.dll` extension when resolving `LUALIB`
+
+## What's new in LuaRocks 3.2.1
+
+## What's new in LuaRocks 3.2.0
+
+## What's new in LuaRocks 3.1.3
+
+## What's new in LuaRocks 3.1.2
+
+## What's new in LuaRocks 3.1.1
+
+## What's new in LuaRocks 3.1.0
+
+## What's new in LuaRocks 3.0.4
+
+## What's new in LuaRocks 3.0.3
+
+## What's new in LuaRocks 3.0.2
+
+## What's new in LuaRocks 3.0.1
+
+## What's new in LuaRocks 3.0.0
 
 - [New rockspec format](#new-rockspec-format)
 - [New commands](#new-commands), including [luarocks init](https://github.com/luarocks/luarocks/wiki/Project:-LuaRocks-per-project-workflow) for per-project workflows
