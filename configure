@@ -308,7 +308,7 @@ do
    # --------------------------------
    --versioned-rocks-dir)
       echo "--versioned-rocks-dir is no longer necessary."
-      echo "The rocks tree in LuaRocks 3.0 is always versioned."
+      echo "The rocks tree in LuaRocks 3.x is always versioned."
       ;;
    --lua-suffix)
       echo "--lua-suffix is no longer necessary."
@@ -323,7 +323,7 @@ do
 done
 
 echo
-BLUE "Configuring LuaRocks version dev..."
+BLUE "Configuring LuaRocks version 3.3.0..."
 echo
 echo
 
