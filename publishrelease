@@ -25,6 +25,8 @@ git checkout v$v || {
 packages=(
    luarocks-$v-windows-32.zip
    luarocks-$v-windows-32.zip.asc
+   luarocks-$v-windows-64.zip
+   luarocks-$v-windows-64.zip.asc
    luarocks-$v-linux-x86_64.zip
    luarocks-$v-linux-x86_64.zip.asc
    luarocks-$v-win32.zip
@@ -88,7 +90,8 @@ gawk '
    print "<!-- add new release here -->"
    print ""
    print "<tr><td><a href=\"luarocks-'$v'.tar.gz\">luarocks-'$v'.tar.gz</a></td><td><a href=\"luarocks-'$v'.tar.gz.asc\">PGP signature</a></td></tr>"
-   print "<tr><td><a href=\"luarocks-'$v'-windows-32.zip\">luarocks-'$v'-windows-32.zip</a> (luarocks.exe stand-alone Windows binary)</td><td><a href=\"luarocks-'$v'-windows-32.zip.asc\">PGP signature</a></td></tr>"
+   print "<tr><td><a href=\"luarocks-'$v'-windows-32.zip\">luarocks-'$v'-windows-32.zip</a> (luarocks.exe stand-alone Windows 32-bit binary)</td><td><a href=\"luarocks-'$v'-windows-32.zip.asc\">PGP signature</a></td></tr>"
+   print "<tr><td><a href=\"luarocks-'$v'-windows-64.zip\">luarocks-'$v'-windows-64.zip</a> (luarocks.exe stand-alone Windows 64-bit binary)</td><td><a href=\"luarocks-'$v'-windows-64.zip.asc\">PGP signature</a></td></tr>"
    print "<tr><td><a href=\"luarocks-'$v'-linux-x86_64.zip\">luarocks-'$v'-linux-x86_64.zip</a> (luarocks stand-alone Linux x86_64 binary)</td><td><a href=\"luarocks-'$v'-linux-x86_64.zip.asc\">PGP signature</a></td></tr>"
    print "<tr><td><a href=\"luarocks-'$v'-win32.zip\">luarocks-'$v'-win32.zip</a> (legacy Windows package, includes Lua 5.1)</td><td><a href=\"luarocks-'$v'-win32.zip.asc\">PGP signature</a></td></tr>"
    done = 1
@@ -116,7 +119,7 @@ gawk '
       print "{"
       print "\"'$v'\": {"
       print "\"date\": \"'$(date +'%Y-%m-%d')'\","
-      print "\"files\": [\"luarocks-'$v'.tar.gz\", \"luarocks-'$v'.tar.gz.asc\", \"luarocks-'$v'-win32.zip\", \"luarocks-'$v'-win32.zip.asc\", \"luarocks-'$v'-windows-32.zip\", \"luarocks-'$v'-windows-32.zip.asc\", \"luarocks-'$v'-linux-x86_64.zip\", \"luarocks-'$v'-linux-x86_64.zip.asc\"],"
+      print "\"files\": [\"luarocks-'$v'.tar.gz\", \"luarocks-'$v'.tar.gz.asc\", \"luarocks-'$v'-win32.zip\", \"luarocks-'$v'-win32.zip.asc\", \"luarocks-'$v'-windows-32.zip\", \"luarocks-'$v'-windows-32.zip.asc\", \"luarocks-'$v'-windows-64.zip\", \"luarocks-'$v'-windows-64.zip.asc\", \"luarocks-'$v'-linux-x86_64.zip\", \"luarocks-'$v'-linux-x86_64.zip.asc\"],"
       print "\"about\": []"
       print "}},"
    }
@@ -188,7 +191,8 @@ sed -i "s,luarocks-[0-9.]*[0-9],luarocks-$v,g" Download.mediawiki
 gawk '
 BEGIN {
    print "'\'\'\''Version '$v\'\'\'' - '$(date +'%d/%b/%Y')' - [http://luarocks.org/releases/luarocks-'$v'.tar.gz All Unix] -"
-   print "[http://luarocks.org/releases/luarocks-'$v'-windows-32.zip Windows all-in-one executable] -"
+   print "[http://luarocks.org/releases/luarocks-'$v'-windows-32.zip Windows all-in-one executable (32-bit)] -"
+   print "[http://luarocks.org/releases/luarocks-'$v'-windows-64.zip Windows all-in-one executable (64-bit)] -"
    print "[http://luarocks.github.io/luarocks/releases other files]"
    print ""
 }
