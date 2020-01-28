@@ -55,23 +55,160 @@
 
 ## What's new in LuaRocks 3.2.1
 
+* fix installation of LuaRocks via rockspec (`make bootstrap` and
+`luarocks install`): correct a problem in the initialization of the
+luarocks.fs module and its interaction with the cfg module.
+* fix luarocks build --pack-binary-rock --no-doc
+* fix luarocks build --branch
+* luarocks init: fix Lua wrapper for interactive mode
+* fix compatibility issues with command add-ons loaded via
+luarocks.cmd.external modules
+* correct override of config values via CLI flags
+
 ## What's new in LuaRocks 3.2.0
+
+LuaRocks 3.2.0 now uses argument parsing based on argparse
+instead of a homegrown parser. This was implemented by Paul
+Ouellette as his Google Summer of Code project, mentored by
+Daurnimator.
+
+Release highlights:
+
+* Bugfix: luarocks path does not change the order of pre-existing path
+items when prepending or appending to path variables
+* Bugfix: fix directory detection on the Mac
+* When building with --force-config, LuaRocks now never uses the
+"project" directory, but only the forced configuration
+* Lua libdir is now only checked for commands/platforms that really
+need to link Lua explicitly
+* LuaJIT is now detected dynamically
+* RaptorJIT is now detected as a LuaJIT variant
+* Improvements in Lua autodetection at runtime
+* luarocks new_version: new option --dir
+* luarocks which: report modules found via package.path and
+package.cpath as well
+* install.bat: Improved detection for Visual Studio 2017 and higher
+* Bundled LuaSec in all-in-one binary bumped to version 0.8.1
 
 ## What's new in LuaRocks 3.1.3
 
+This is another bugfix release, that incldes a couple of fixes,
+including better Lua detection, and fixes specific to MacOS and
+FreeBSD.
+
 ## What's new in LuaRocks 3.1.2
+
+This is again a small fix release.
 
 ## What's new in LuaRocks 3.1.1
 
+This is a hotfix release fixing an issue that affected initialization
+in some scenarios.
+
 ## What's new in LuaRocks 3.1.0
+
+### More powerful `luarocks config`
+
+The `luarocks config` command used to only list the current
+configuration. It is now able to query and also _set_ individual
+values, like `git config`. You can now do things such as:
+
+   luarocks config variables.OPENSSL_DIR /usr/local/openssl
+   luarocks config lua_dir /usr/local
+   luarocks config lua_version 5.3
+
+and it will rewrite your luarocks configuration to store that value
+for later reuse. Note that setting `lua_version` will make that Lua
+version the default for `luarocks` invocations (you can always
+override on a per-call basis with `--lua-version`.
+
+You can specify the scope where you will apply the configuration
+change: system-wide, to the user's home config (with --local), or
+specifically to a project, if you run the command from within a
+project directory initialized with `luarocks init`.
+
+### New `--global` flag
+
+Some users prefer that LuaRocks default to system-wide installations,
+some users prefer to install everything to their home directory. The
+`local_by_default` configuration file controls this preference: when
+it is off, the `--local` file triggers user-specific. Before 3.1.0
+there was no convenient way to trigger system-wide installations when
+`local_by_default` was set to true. LuaRocks 3.1.0 adds a `--global`
+flag to this purpose. To enable local-by-default, you can now do:
+
+   luarocks config local_by_default true
+
+### `luarocks make` can deal with patches
+
+A rockspec can include embedded patch files, which are applied when a
+source rock is built. Now, when you run `luarocks make` on a source
+tree unpacked with `luarocks unpack`, the patches will be applied as
+well (and a hidden lockfile is created to avoid the patches to be
+re-applied incorrectly).
+
+### Smarter defaults when working with projects
+
+When working on a project initialized with `luarocks init`, the
+presence of a ./.luarocks/config-5.x.lua file will be enough to detect
+the project-based workflow and have `luarocks` default to that 5.x
+version. That means the `./luarocks` wrapper becomes less necessary;
+the `luarocks` from your $PATH will deal with the project just fine,
+git-style.
+
+### And more!
+
+There are also other improvements. LuaRocks uses the manifest cache a
+bit more aggressively, resulting in increased performance. Also, it no
+longer complains with a warning message if the home cache cannot be
+created (it just uses a temporary dir instead). And of course, the
+release includes multiple bugfixes.
 
 ## What's new in LuaRocks 3.0.4
 
+* Fork-free platform detection at startup
+* Improved detection of the default rockspec in commands such as `luarocks test`
+* Various minor bugfixes
+
 ## What's new in LuaRocks 3.0.3
+
+LuaRocks 3.0.3 is a minor bugfix release, fixing a regression in
+luarocks.loader introduced in 3.0.2.
 
 ## What's new in LuaRocks 3.0.2
 
+* Improvements in luarocks init, new --reset flag
+* write_rockspec: --lua-version renamed to --lua-versions
+* Improved behavior in module autodetection
+* Bugfixes in luarocks show
+* Fix upgrade/downgrade when a single rock has clashing module
+filenames (should fix the issue when downgrading luasec)
+* Fix for autodetected external dependencies with non-alphabetic
+characters (should fix the libstdc++ issue when installing xml)
+
+
 ## What's new in LuaRocks 3.0.1
+
+* Numerous bugfixes including:
+   * Handle missing global `arg`
+   * Fix umask behavior
+   * Do not overwrite paths in format 5.x.y when cleaning up path
+variables (#868)
+   * Do not detect files under lua_modules as part of your sources
+when running `luarocks write_rockspec`
+   * Windows: do not hardcode MINGW in the all-in-one binary: instead
+it properly detects when running from a Visual Studio Developer
+Console and uses that compiler instead
+   * configure: --sysconfdir was fixed to its correct meaning: it now
+defaults to /etc and not /etc/luarocks (`/luarocks` is appended to the
+value of sysconfdir)
+   * configure: fixed --force-config
+* Store Lua location in config file, so that a user can run `luarocks
+init --lua-dir=/my/lua/location` and have that location remain active
+for that project
+* Various improvements to the Unix makefile, including $(DESTDIR)
+support and an uninstall rule
+* Autodetect FreeBSD-style include paths (/usr/include/lua5x/)
 
 ## What's new in LuaRocks 3.0.0
 
