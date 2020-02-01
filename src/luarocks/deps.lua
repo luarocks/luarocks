@@ -655,6 +655,7 @@ local function find_lua_incdir(prefix, luaver, luajitver)
    local incdirs = {
       prefix .. "/include/lua/" .. luaver,
       prefix .. "/include/lua" .. luaver,
+      prefix .. "/include/lua-" .. luaver,
       prefix .. "/include/lua" .. shortv,
       prefix .. "/include",
       prefix,
