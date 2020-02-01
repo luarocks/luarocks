@@ -34,7 +34,8 @@ local FORCE_CONFIG = (arg[6] == "yes")
 local MY_PLATFORM = arg[7] or "unix"
 local CC = arg[8] or "gcc"
 local NM = arg[9] or "nm"
-local CROSSCOMPILER_SYSROOT = arg[10] or "/usr/lib/mingw-w64-sysroot/i686-w64-mingw32"
+--The calling script is also passing in the same path so it was removed for now...
+local CROSSCOMPILER_SYSROOT = "/usr/i686-w64-mingw32"
 local TRIPLET = arg[11] or CROSSCOMPILER_SYSROOT:gsub(".*/", "")
 local PROCESSOR = arg[12] or TRIPLET:gsub("%-.*", "")
 if PROCESSOR == "i686" then

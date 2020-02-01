@@ -18,3 +18,7 @@
 /luarocks
 /luarocks-admin
 /.luarocks
+/build*
+c:/
+/windows-deps*
+binary/log.txt
