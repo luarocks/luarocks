@@ -18,3 +18,4 @@
 /luarocks
 /luarocks-admin
 /.luarocks
+/*.snap
