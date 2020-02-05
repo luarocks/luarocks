@@ -8,9 +8,9 @@ description: |
   LuaRocks supports both local and remote repositories, and multiple local rocks trees.
 
 grade: stable # must be 'stable' to release into candidate/stable channels
-confinement: devmode # use 'strict' once you have the right plugs and slots
+confinement: strict # should be replaced with 'strict'
 
-parts: # I am not sure how to do this part really, I guess the make plugin is the most appropriate to use for luarocks?
+parts:
   luarocks:
     plugin: make
     source: .
@@ -22,12 +22,12 @@ parts: # I am not sure how to do this part really, I guess the make plugin is th
       - liblua5.3-dev
       - unzip
     override-build: |
-      ./configure --prefix=/root/parts/luarocks/install/usr/local
+      ./configure
       make build
-      make install
-    prime:
-      - usr/local/bin
+      snapcraftctl build
 
 apps:
   luarocks:
     command: usr/local/bin/luarocks
+  luarocks-admin:
+    command: usr/local/bin/luarocks-admin
