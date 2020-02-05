@@ -25,6 +25,8 @@ local extra_rocks = {
    "/stdlib-41.0.0-1.src.rock",
    "/validate-args-1.5.4-1.rockspec",
    "spec/fixtures/a_rock-1.0-1.src.rock",
+   "/busted-2.0.0-1.rockspec",
+   "/busted-2.0.rc13-0.rockspec",
 }
 
 local c_module_source = [[
@@ -289,6 +291,12 @@ describe("LuaRocks build #integration", function()
             assert.is.truthy(output:match("%.%.%."))
          end)
       end
+
+      it("downgrades directories correctly", function()
+         assert(run.luarocks_bool("build --nodeps busted 2.0.0" ))
+         assert(run.luarocks_bool("build --nodeps busted 2.0.rc13" ))
+         assert(run.luarocks_bool("build --nodeps busted 2.0.0" ))
+      end)
 
       it("only deps", function()
          local rockspec = testing_paths.fixtures_dir .. "/build_only_deps-0.1-1.rockspec"
