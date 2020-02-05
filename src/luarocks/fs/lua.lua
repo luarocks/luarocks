@@ -380,6 +380,20 @@ function fs_lua.remove_dir_tree_if_empty(d)
    end
 end
 
+local function are_the_same_file(f1, f2)
+   if f1 == f2 then
+      return true
+   end
+   if cfg.is_platform("unix") then
+      local i1 = lfs.attributes(f1, "ino")
+      local i2 = lfs.attributes(f2, "ino")
+      if i1 ~= nil and i1 == i2 then
+         return true
+      end
+   end
+   return false
+end
+
 --- Copy a file.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
@@ -395,7 +409,7 @@ function fs_lua.copy(src, dest, perms)
    if destmode == "directory" then
       dest = dir.path(dest, dir.base_name(src))
    end
-   if src == dest or (cfg.is_platform("unix") and lfs.attributes(src, "ino") == lfs.attributes(dest, "ino")) then
+   if are_the_same_file(src, dest) then
       return nil, "The source and destination are the same files"
    end
    local src_h, err = io.open(src, "rb")
