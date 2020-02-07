@@ -1,3 +1,11 @@
+## What's new in LuaRocks 3.3.1
+
+This is a bugfix release:
+
+* Fix downgrades of rocks containing directories: stop it
+  from creating spurious 0-byte files where directories have been 
+* Fix error message when attempting to copy a file that is missing
+* Detect OpenBSD-specific dependency paths
 
 ## What's new in LuaRocks 3.3.0
 
