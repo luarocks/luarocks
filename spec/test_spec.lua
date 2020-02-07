@@ -8,13 +8,13 @@ local write_file = test_env.write_file
 test_env.unload_luarocks()
 
 local extra_rocks = {
-   "/busted-2.0.rc12-1.rockspec",
+   "/busted-2.0.0-1.rockspec",
    "/lua_cliargs-3.0-1.src.rock",
    "/luafilesystem-1.7.0-2.src.rock",
    "/luasystem-0.2.1-0.src.rock",
    "/dkjson-2.5-2.src.rock",
    "/say-1.3-1.rockspec",
-   "/luassert-1.7.10-0.rockspec",
+   "/luassert-1.8.0-0.rockspec",
    "/lua-term-0.7-1.rockspec",
    "/penlight-1.5.4-1.rockspec",
    "/mediator_lua-1.1.2-0.rockspec",   
@@ -40,16 +40,10 @@ describe("luarocks test #integration", function()
 
       lazy_setup(function()
          -- Try to cache rocks from the host system to speed up test
-         os.execute("luarocks pack busted")
-         os.execute("luarocks pack lua_cliargs")
-         os.execute("luarocks pack luafilesystem")
-         os.execute("luarocks pack dkjson")
-         os.execute("luarocks pack luasystem")
-         os.execute("luarocks pack say")
-         os.execute("luarocks pack luassert")
-         os.execute("luarocks pack lua-term")
-         os.execute("luarocks pack penlight")
-         os.execute("luarocks pack mediator_lua")
+         for _, r in ipairs(extra_rocks) do
+            local n, v = r:match("^/(.*)%-([^%-]+)%-%d+%.[^%-]+$")
+            os.execute("luarocks pack " .. n .. " " .. v)
+         end
          if test_env.TEST_TARGET_OS == "windows" then
             os.execute("move *.rock " .. testing_paths.testing_server)
          else

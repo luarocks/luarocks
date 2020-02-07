@@ -272,7 +272,7 @@ local function backup_existing(should_backup, target)
       until not fs.exists(backup) -- Slight race condition here, but shouldn't be a problem.
    
       util.warning(target.." is not tracked by this installation of LuaRocks. Moving it to "..backup)
-      local move_ok, move_err = fs.move(target, backup)
+      local move_ok, move_err = os.rename(target, backup)
       if not move_ok then
          return nil, move_err
       end
@@ -331,7 +331,7 @@ end
 local function rollback_install(op)
    fs.delete(op.dst)
    if op.backup_file then
-      fs.move(op.backup_file, op.dst)
+      os.rename(op.backup_file, op.dst)
    end
    fs.remove_dir_tree_if_empty(dir.dir_name(op.dst))
    return true
@@ -347,7 +347,7 @@ local function op_rename(op)
    if fs.exists(op.src) then
       fs.make_dir(dir.dir_name(op.dst))
       fs.delete(op.dst)
-      local ok, err = fs.move(op.src, op.dst)
+      local ok, err = os.rename(op.src, op.dst)
       fs.remove_dir_tree_if_empty(dir.dir_name(op.src))
       return ok, err
    else
