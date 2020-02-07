@@ -1,7 +1,7 @@
 package = "lua-bz2"
 version = "0.1.0-1"
 source = {
-   url = "git+ssh://git@github.com/hishamhm/lua-bz2.git",
+   url = "git://github.com/hishamhm/lua-bz2",
    tag = "0.1.0",
 }
 description = {
