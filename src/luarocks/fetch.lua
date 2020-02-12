@@ -26,7 +26,6 @@ function fetch.fetch_caching(url)
 
    local cachefile = dir.path(cache_dir, filename)
    if cfg.aggressive_cache and (not name:match("^manifest")) and fs.exists(cachefile) then
- print("FAST TRACK!", cfg.aggressive_cache)
       return cachefile, nil, nil, true
    end
 
