@@ -534,6 +534,8 @@ local function check_external_dependency(name, ext_files, vars, mode, cache)
    local prefixes
    if vars[name .. "_DIR"] then
       prefixes = { vars[name .. "_DIR"] }
+   elseif vars.DEPS_DIR then
+      prefixes = { vars.DEPS_DIR }
    else
       prefixes = cfg.external_deps_dirs
    end
