@@ -78,6 +78,17 @@ describe("LuaRocks show #integration", function()
       run.luarocks_bool("show luacov 0.13.0")
    end)
 
+   it("can find by substring", function()
+      assert(run.luarocks_bool("install has_build_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+      assert.match("a_build_dep", run.luarocks("show has_"))
+   end)
+
+   it("fails when substring matches multiple", function()
+      assert(run.luarocks_bool("install has_build_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+      assert(run.luarocks_bool("install a_build_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+      assert.match("multiple installed packages match the name 'dep'", run.luarocks("show dep"))
+   end)
+
    it("shows #build_dependencies", function()
       assert(run.luarocks_bool("install has_build_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
       assert.match("a_build_dep", run.luarocks("show has_build_dep"))

@@ -361,9 +361,25 @@ function search.pick_installed_rock(query, given_tree)
       return nil, "cannot find package "..tostring(query).."\nUse 'list' to find installed rocks."
    end
 
+   if not result_tree[query.name] and next(result_tree, next(result_tree)) then
+      local out = { "multiple installed packages match the name '"..tostring(query).."':\n\n" }
+      for name, _ in util.sortedpairs(result_tree) do
+         table.insert(out, "   " .. name .. "\n")
+      end
+      table.insert(out, "\nPlease specify a single rock.\n")
+      return nil, table.concat(out)
+   end
+
    local version = nil
    local repo_url
-   local _, versions = util.sortedpairs(result_tree)()
+
+   local name, versions
+   if result_tree[query.name] then
+      name, versions = query.name, result_tree[query.name]
+   else
+      name, versions = util.sortedpairs(result_tree)()
+   end
+
    --question: what do we do about multiple versions? This should
    --give us the latest version on the last repo (which is usually the global one)
    for vs, repositories in util.sortedpairs(versions, vers.compare_versions) do
@@ -372,7 +388,7 @@ function search.pick_installed_rock(query, given_tree)
    end
 
    local repo = tree_map[repo_url]
-   return query.name, version, repo, repo_url
+   return name, version, repo, repo_url
 end
 
 return search

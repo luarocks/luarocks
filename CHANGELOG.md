@@ -1,3 +1,10 @@
+## What's new
+
+### Features
+
+* The `show` command can now accept a substring of the rock's name,
+  like `list`.
+
 ## What's new in LuaRocks 3.3.1
 
 This is a bugfix release:

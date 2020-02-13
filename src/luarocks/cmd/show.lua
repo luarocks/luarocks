@@ -261,7 +261,7 @@ end
 --- Driver function for "show" command.
 -- @return boolean: True if succeeded, nil on errors.
 function show.command(args)
-   local query = queries.new(args.rock, args.namespace, args.version)
+   local query = queries.new(args.rock, args.namespace, args.version, true)
    
    local name, version, repo, repo_url = search.pick_installed_rock(query, args.tree)
    if not name then
