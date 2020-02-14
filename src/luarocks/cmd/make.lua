@@ -62,9 +62,6 @@ commands. See the help on those for details.
 If the current directory contains a luarocks.lock file, it is used as the
 authoritative source for exact version of dependencies. The --pin flag
 overrides and recreates this file scanning dependency based on ranges.
-
-NB: Use `luarocks install` with the `--only-deps` flag if you want to install
-only dependencies of the rockspec (see `luarocks help install`).
 ]], util.see_also())
       :summary("Compile package in current directory using a rockspec.")
 
@@ -102,7 +99,7 @@ function make.command(args)
       need_to_fetch = false,
       minimal_mode = true,
       deps_mode = deps.get_deps_mode(args),
-      build_only_deps = false,
+      build_only_deps = not not (args.only_deps and not args.pack_binary_rock),
       namespace = namespace,
       branch = args.branch,
       verify = not not args.verify,
@@ -128,6 +125,12 @@ function make.command(args)
       ok, err = build.build_rockspec(rockspec, opts)
       if not ok then return nil, err end
       local name, version = ok, err
+
+      if opts.build_only_deps then
+         util.printout("Stopping after installing dependencies for " ..name.." "..version)
+         util.printout()
+         return name, version
+      end
 
       if args.no_doc then
          util.remove_doc_dir(name, version)

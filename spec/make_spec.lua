@@ -66,6 +66,18 @@ describe("luarocks make #integration", function()
       assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket/3.0rc1-2/doc"))
    end)
 
+   it("--only-deps", function()
+      local rockspec = testing_paths.fixtures_dir .. "/build_only_deps-0.1-1.rockspec"
+
+      test_env.remove_dir("build_only_deps-0.1-1/")
+      assert.is_true(run.luarocks_bool("unpack " .. rockspec))
+      lfs.chdir("build_only_deps-0.1-1/")
+      assert.is_true(run.luarocks_bool("make " .. rockspec .. " --only-deps"))
+      assert.is_false(run.luarocks_bool("show build_only_deps"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/build_only_deps/0.1-1/build_only_deps-0.1-1.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
+   end)
+
    describe("LuaRocks making rockspecs (using lxsh)", function()
       --download lxsh and unpack it
       before_each(function()
