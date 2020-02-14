@@ -41,6 +41,7 @@ function make.cmd_options(parser)
    parser:flag("--pin", "Pin the exact dependencies used for the rockspec"..
       "being built into a luarocks.lock file in the current directory.")
    parser:flag("--no-manifest", "Skip creating/updating the manifest")
+   parser:flag("--only-deps --deps-only", "Install only the dependencies of the rock.")
    util.deps_mode_option(parser)
 end
 

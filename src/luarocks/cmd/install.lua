@@ -32,7 +32,7 @@ function install.add_to_parser(parser)
       "previously installed versions if it would break dependencies.")
    cmd:flag("--force-fast", "Like --force, but performs a forced removal "..
       "without reporting dependency issues.")
-   cmd:flag("--only-deps", "Install only the dependencies of the rock.")
+   cmd:flag("--only-deps --deps-only", "Install only the dependencies of the rock.")
    cmd:flag("--no-doc", "Install the rock without its documentation.")
    cmd:flag("--verify", "Verify signature of the rockspec or src.rock being "..
       "built. If the rockspec or src.rock is being downloaded, LuaRocks will "..

@@ -31,7 +31,7 @@ function cmd_build.add_to_parser(parser)
    cmd:argument("version", "Rock version.")
       :args("?")
 
-   cmd:flag("--only-deps", "Install only the dependencies of the rock.")
+   cmd:flag("--only-deps --deps-only", "Install only the dependencies of the rock.")
    cmd:option("--branch", "Override the `source.branch` field in the loaded "..
       "rockspec. Allows to specify a different branch to fetch. Particularly "..
       'for "dev" rocks.')
