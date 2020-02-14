@@ -10,7 +10,7 @@ local extra_rocks = {
    "/lpeg-0.12-1.rockspec"
 }
 
-describe("LuaRocks new_version tests #integration", function()
+describe("luarocks new_version #integration", function()
 
    setup(function()
       test_env.setup_specs(extra_rocks)

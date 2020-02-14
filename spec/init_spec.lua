@@ -8,13 +8,13 @@ local lfs = require("lfs")
 
 test_env.unload_luarocks()
 
-describe("Luarocks init test #integration", function()
+describe("luarocks init #integration", function()
 
    setup(function()
       test_env.setup_specs()
    end)
 
-   it("LuaRocks init with no arguments", function()
+   it("with no arguments", function()
       test_env.run_in_tmp(function(tmpdir)
          local myproject = tmpdir .. "/myproject"
          lfs.mkdir(myproject)
@@ -75,7 +75,7 @@ describe("Luarocks init test #integration", function()
       end, finally)
    end)
    
-   it("LuaRocks init with given arguments", function()
+   it("with given arguments", function()
       test_env.run_in_tmp(function(tmpdir)
          local myproject = tmpdir .. "/myproject"
          lfs.mkdir(myproject)
@@ -86,7 +86,7 @@ describe("Luarocks init test #integration", function()
       end, finally)
    end)
    
-   it("LuaRocks init with --lua-versions", function()
+   it("with --lua-versions", function()
       test_env.run_in_tmp(function(tmpdir)
          local myproject = tmpdir .. "/myproject"
          lfs.mkdir(myproject)
@@ -102,7 +102,7 @@ describe("Luarocks init test #integration", function()
       end, finally)
    end)
 
-   it("LuaRocks init in a git repo", function()
+   it("in a git repo", function()
       test_env.run_in_tmp(function(tmpdir)
          local myproject = tmpdir .. "/myproject"
          copy_dir(testing_paths.fixtures_dir .. "/git_repo", myproject)
@@ -123,7 +123,7 @@ describe("Luarocks init test #integration", function()
       end, finally)
    end)
 
-   it("LuaRocks init does not autodetect config or dependencies as modules of the package", function()
+   it("does not autodetect config or dependencies as modules of the package", function()
       test_env.run_in_tmp(function(tmpdir)
          local myproject = tmpdir .. "/myproject"
          lfs.mkdir(myproject)

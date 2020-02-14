@@ -13,7 +13,7 @@ local extra_rocks = {
    "/say-1.0-1.src.rock"
 }
 
-describe("LuaRocks pack #integration", function()
+describe("luarocks pack #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)

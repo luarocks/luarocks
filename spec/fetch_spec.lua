@@ -13,7 +13,7 @@ local get_tmp_path = test_env.get_tmp_path
 local testing_paths = test_env.testing_paths
 local write_file = test_env.write_file
 
-describe("Luarocks fetch test #unit #mock", function()   
+describe("luarocks fetch #unit #mock", function()
    local are_same_files = function(file1, file2)
       return file1 == file2 or lfs.attributes(file1).ino == lfs.attributes(file2).ino
    end

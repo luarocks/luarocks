@@ -4,7 +4,7 @@ local testing_paths = test_env.testing_paths
 
 test_env.setup_specs()
 
-describe("LuaRocks external commands #integration", function()
+describe("luarocks external commands #integration", function()
    setup(function()
       test_env.mock_server_init()
    end)

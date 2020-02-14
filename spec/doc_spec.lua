@@ -4,21 +4,21 @@ local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
-describe("LuaRocks doc tests #integration", function()
+describe("luarocks doc #integration", function()
    before_each(function()
       test_env.setup_specs(extra_rocks)
    end)
 
-   describe("LuaRocks doc basic tests", function()
-      it("LuaRocks doc with no flags/arguments", function()
+   describe("basic tests", function()
+      it("with no flags/arguments", function()
          assert.is_false(run.luarocks_bool("doc"))
       end)
 
-      it("LuaRocks doc with invalid argument", function()
+      it("with invalid argument", function()
          assert.is_false(run.luarocks_bool("doc invalid"))
       end)
 
-      it("LuaRocks doc with no homepage and no doc folder", function()
+      it("with no homepage and no doc folder", function()
          test_env.run_in_tmp(function(tmpdir)
             test_env.write_file("test-1.0-1.rockspec", [[
                package = "test"
@@ -40,7 +40,7 @@ describe("LuaRocks doc tests #integration", function()
          end, finally)
       end)
 
-      it("LuaRocks doc with no doc folder but with homepage", function()
+      it("with no doc folder but with homepage", function()
          test_env.run_in_tmp(function(tmpdir)
             test_env.write_file("test-1.0-1.rockspec", [[
                package = "test"
@@ -75,8 +75,8 @@ describe("LuaRocks doc tests #integration", function()
       end)
    end)
    
-   describe("LuaRocks doc tests with flags", function()
-      it("LuaRocks doc of installed package", function()
+   describe("tests with flags", function()
+      it("of installed package", function()
          test_env.run_in_tmp(function(tmpdir)
             test_env.write_file("test-1.0-1.rockspec", [[
                package = "test"
@@ -101,7 +101,7 @@ describe("LuaRocks doc tests #integration", function()
          end, finally)
       end)
 
-      it("LuaRocks doc with --list", function()
+      it("with --list", function()
          test_env.run_in_tmp(function(tmpdir)
             test_env.write_file("test-1.0-1.rockspec", [[
                package = "test"
@@ -128,12 +128,12 @@ describe("LuaRocks doc tests #integration", function()
          end, finally)
       end)
       
-      it("LuaRocks doc with --local", function()
+      it("with --local", function()
          assert.is_true(run.luarocks_bool("install --server=" .. testing_paths.fixtures_dir .. "/a_repo a_rock"))
          assert.is_true(run.luarocks_bool("doc --server=" .. testing_paths.fixtures_dir .. "/a_repo a_rock --local"))
       end)
       
-      it("LuaRocks doc with --porcelain", function()
+      it("with --porcelain", function()
          test_env.run_in_tmp(function(tmpdir)
             test_env.write_file("test-1.0-1.rockspec", [[
                package = "test"

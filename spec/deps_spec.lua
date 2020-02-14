@@ -13,13 +13,13 @@ local extra_rocks = {
    "/lpeg-1.0.0-1.src.rock",
 }
 
-describe("LuaRocks deps tests #integration", function()
+describe("LuaRocks deps-mode #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
    end)
 
-   it("LuaRocks deps mode one", function()
+   it("one", function()
       assert.is_true(run.luarocks_bool("build --tree=system lpeg"))
       assert.is_true(run.luarocks_bool("build --deps-mode=one --tree=" .. testing_paths.testing_tree .. " lxsh"))
       
@@ -29,7 +29,7 @@ describe("LuaRocks deps tests #integration", function()
       assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
 
-   it("LuaRocks deps mode order", function()
+   it("order", function()
       assert.is_true(run.luarocks_bool("build --tree=system lpeg"))
       assert.is_true(run.luarocks_bool("build --deps-mode=order --tree=" .. testing_paths.testing_tree .. " lxsh"))
 
@@ -39,7 +39,7 @@ describe("LuaRocks deps tests #integration", function()
       assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
 
-   it("LuaRocks deps mode order sys", function()
+   it("order sys", function()
       assert.is_true(run.luarocks_bool("build --tree=" .. testing_paths.testing_tree .. " lpeg"))
       assert.is_true(run.luarocks_bool("build --deps-mode=order --tree=" .. testing_paths.testing_sys_tree .. " lxsh"))
 
@@ -49,7 +49,7 @@ describe("LuaRocks deps tests #integration", function()
       assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
 
-   it("LuaRocks deps mode all sys", function()
+   it("all sys", function()
       assert.is_true(run.luarocks_bool("build --tree=" .. testing_paths.testing_tree .. " lpeg"))
       assert.is_true(run.luarocks_bool("build --deps-mode=all --tree=" .. testing_paths.testing_sys_tree .. " lxsh"))
 
@@ -59,7 +59,7 @@ describe("LuaRocks deps tests #integration", function()
       assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
 
-   it("LuaRocks deps mode none", function()
+   it("none", function()
       assert.is_true(run.luarocks_bool("build --tree=" .. testing_paths.testing_tree .. " lpeg"))
       assert.is_true(run.luarocks_bool("build --deps-mode=none lxsh"))
 
@@ -78,7 +78,7 @@ describe("LuaRocks deps tests #integration", function()
       assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
 
-   it("LuaRocks deps mode make order", function()
+   it("make order", function()
       assert.is_true(run.luarocks_bool("build --tree=" .. testing_paths.testing_sys_tree .. " lpeg"))
       assert.is_true(run.luarocks_bool("download --source lxsh 0.8.6"))
       assert.is_true(run.luarocks_bool("unpack lxsh-0.8.6-2.src.rock"))
@@ -95,7 +95,7 @@ describe("LuaRocks deps tests #integration", function()
       assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
    end)
    
-   it("LuaRocks deps mode make order sys", function()
+   it("make order sys", function()
       assert.is_true(run.luarocks_bool("build --tree=" .. testing_paths.testing_tree .. " lpeg"))
       assert.is_true(run.luarocks_bool("download --source lxsh 0.8.6"))
       assert.is_true(run.luarocks_bool("unpack lxsh-0.8.6-2.src.rock"))

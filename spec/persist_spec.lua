@@ -4,7 +4,7 @@ local testing_paths = test_env.testing_paths
 test_env.unload_luarocks()
 local persist = require("luarocks.persist")
 
-describe("Luarocks persist test #unit", function()
+describe("luarocks.persist #unit", function()
    local runner
    
    setup(function()

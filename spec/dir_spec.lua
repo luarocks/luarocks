@@ -5,7 +5,7 @@ test_env.unload_luarocks()
 test_env.setup_specs()
 local dir = require("luarocks.dir")
 
-describe("Luarocks dir test #unit", function()
+describe("luarocks.dir #unit", function()
    local runner
    
    setup(function()

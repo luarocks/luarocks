@@ -9,23 +9,23 @@ local extra_rocks = {
    "/say-1.2-1.src.rock"
 }
 
-describe("LuaRocks list tests #integration", function()
+describe("luarocks list #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
    end)
 
-   it("LuaRocks list with no flags/arguments", function()
+   it("with no flags/arguments", function()
       local output = run.luarocks("list")
       assert.match("luacov", output)
    end)
 
-   it("LuaRocks list porcelain", function()
+   it("--porcelain", function()
       local output = run.luarocks("list --porcelain")
       assert.is.truthy(output:find("luacov\t0.13.0-1\tinstalled\t" .. testing_paths.testing_sys_rocks, 1, true))
    end)
 
-   it("LuaRocks list shows version number", function()
+   it("shows version number", function()
       local output = run.luarocks("list")
       assert.is.truthy(output:find("luacov"))
       assert.matches("0.13.0-1", output, 1, true)
@@ -38,7 +38,7 @@ describe("LuaRocks list tests #integration", function()
       assert.matches("1.0-1 < ", output, 1, true)
    end)
    
-   it("LuaRocks list invalid tree", function()
+   it("invalid tree", function()
       local output = run.luarocks("--tree=/some/invalid/tree list")
       assert(output:find("Rocks installed for Lua "..test_env.lua_version.." in /some/invalid/tree", 1, true))
    end)

@@ -15,13 +15,13 @@ local extra_rocks = {
    "/lxsh-0.8.6-2.rockspec"
 }
 
-describe("LuaRocks make tests #integration", function()
+describe("luarocks make #integration", function()
 
    before_each(function()
       test_env.setup_specs(extra_rocks)
    end)
 
-   it("LuaRocks make with no flags/arguments", function()
+   it("with no flags/arguments", function()
       finally(function()
          lfs.chdir(testing_paths.testrun_dir)
          test_env.remove_dir("empty")
@@ -31,7 +31,7 @@ describe("LuaRocks make tests #integration", function()
       assert.is_false(run.luarocks_bool("make"))
    end)
 
-   it("LuaRocks make with rockspec", function()
+   it("with rockspec", function()
       finally(function()
          -- delete downloaded and unpacked files
          lfs.chdir(testing_paths.testrun_dir)
@@ -50,7 +50,7 @@ describe("LuaRocks make tests #integration", function()
       assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket/3.0rc1-2/luasocket-3.0rc1-2.rockspec"))
    end)
 
-   it("LuaRocks make --no-doc", function()
+   it("--no-doc", function()
       finally(function()
          lfs.chdir(testing_paths.testrun_dir)
          test_env.remove_dir("luasocket-3.0rc1-2")
@@ -81,7 +81,7 @@ describe("LuaRocks make tests #integration", function()
          assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
       end)         
 
-      it("LuaRocks make default rockspec", function()
+      it("default rockspec", function()
          assert.is_true(run.luarocks_bool("new_version lxsh-0.8.6-2.rockspec"))
          assert.is_true(run.luarocks_bool("make"))
 
@@ -89,7 +89,7 @@ describe("LuaRocks make tests #integration", function()
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-3/lxsh-0.8.6-3.rockspec"))
       end)
 
-      it("LuaRocks make unnamed rockspec", function()
+      it("unnamed rockspec", function()
          finally(function()
             os.remove("rockspec")
          end)
@@ -101,7 +101,7 @@ describe("LuaRocks make tests #integration", function()
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
       end)
       
-      it("LuaRocks make ambiguous rockspec", function()
+      it("ambiguous rockspec", function()
          assert.is.truthy(os.rename("lxsh-0.8.6-2.rockspec", "lxsh2-0.8.6-2.rockspec"))
          local output = run.luarocks("make")
          assert.is.truthy(output:match("Error: Inconsistency between rockspec filename"))
@@ -110,7 +110,7 @@ describe("LuaRocks make tests #integration", function()
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
       end)
 
-      it("LuaRocks make ambiguous unnamed rockspec", function()
+      it("ambiguous unnamed rockspec", function()
          assert.is.truthy(os.rename("lxsh-0.8.6-2.rockspec", "1_rockspec"))
          test_env.copy("1_rockspec", "2_rockspec")
          local output = run.luarocks("make")
@@ -120,7 +120,7 @@ describe("LuaRocks make tests #integration", function()
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
       end)
       
-      it("LuaRocks make pack binary rock", function()
+      it("pack binary rock", function()
          assert.is_true(run.luarocks_bool("make --deps-mode=none --pack-binary-rock"))
          assert.is.truthy(lfs.attributes("lxsh-0.8.6-2.all.rock"))
       end)
@@ -244,7 +244,7 @@ describe("LuaRocks make tests #integration", function()
       end)
    end)
 
-   describe("#ddt LuaRocks make upgrading rockspecs with double deploy types", function()
+   describe("#ddt upgrading rockspecs with double deploy types", function()
       local deploy_lib_dir = testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION
       local deploy_lua_dir = testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION
       local so = test_env.lib_extension
@@ -347,7 +347,7 @@ describe("LuaRocks make tests #integration", function()
       end)
    end)
 
-   describe("LuaRocks make upgrading rockspecs with mixed deploy types", function()
+   describe("upgrading rockspecs with mixed deploy types", function()
       before_each(function()
          test_env.copy_dir(testing_paths.fixtures_dir .. "/mixed_deploy_type", "mdt")
       end)

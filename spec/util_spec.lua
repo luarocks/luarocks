@@ -9,15 +9,15 @@ describe("Basic tests #integration", function()
       test_env.setup_specs()
    end)
 
-   it("LuaRocks version", function()
+   it("--version", function()
       assert.is_true(run.luarocks_bool("--version"))
    end)
 
-   it("LuaRocks unknown command", function()
+   it("unknown command", function()
       assert.is_false(run.luarocks_bool("unknown_command"))
    end)
 
-   it("LuaRocks arguments fail", function()
+   it("arguments fail", function()
       assert.is_false(run.luarocks_bool("--porcelain=invalid"))
       assert.is_false(run.luarocks_bool("--invalid-flag"))
       assert.is_false(run.luarocks_bool("--server"))
@@ -26,7 +26,7 @@ describe("Basic tests #integration", function()
       assert.is_false(run.luarocks_bool("invalid=5"))
    end)
 
-   it("LuaRocks execute from not existing directory #unix", function()
+   it("executing from not existing directory #unix", function()
       local main_path = lfs.currentdir()
       assert.is_true(lfs.mkdir("idontexist"))
       assert.is_true(lfs.chdir("idontexist"))
@@ -41,15 +41,15 @@ describe("Basic tests #integration", function()
       assert.is.truthy(output:find("the Lua package manager"))
    end)
 
-   it("LuaRocks timeout", function()
+   it("--timeout", function()
       assert.is.truthy(run.luarocks("--timeout=10"))
    end)
    
-   it("LuaRocks timeout invalid", function()
+   it("--timeout invalid", function()
       assert.is_false(run.luarocks_bool("--timeout=abc"))
    end)
 
-   it("LuaRocks only server=testing", function()
+   it("--only-server", function()
       assert.is.truthy(run.luarocks("--only-server=testing"))
    end)
 
@@ -59,7 +59,7 @@ test_env.unload_luarocks()
 local util = require("luarocks.util")
 local core_util = require("luarocks.core.util")
 
-describe("Luarocks util test #unit", function()
+describe("luarocks.util #unit", function()
    local runner
    
    setup(function()

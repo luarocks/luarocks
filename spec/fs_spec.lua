@@ -19,7 +19,7 @@ local function chdir(d)
    fs.change_dir(d)
 end
 
-describe("Luarocks fs test #unit", function()   
+describe("luarocks.fs #unit", function()
    local exists_file = function(path)
       local ok, err, code = os.rename(path, path)
       if not ok and code == 13 then

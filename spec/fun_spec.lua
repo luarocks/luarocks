@@ -4,7 +4,7 @@ local testing_paths = test_env.testing_paths
 test_env.unload_luarocks()
 local fun = require("luarocks.fun")
 
-describe("LuaRocks fun tests #unit", function()
+describe("luarocks.fun #unit", function()
    local runner
    
    setup(function()
