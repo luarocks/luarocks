@@ -2,6 +2,9 @@
 
 ### Features
 
+* `luarocks make` now supports `--only-deps`
+* `--deps-only` is now an alias for `--only-deps` (useful in case
+  you always kept getting it wrong, like me!)
 * The `show` command can now accept a substring of the rock's name,
   like `list`.
 
