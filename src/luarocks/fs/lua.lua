@@ -905,8 +905,11 @@ function fs_lua.download(url, filename, cache)
       err = "Unsupported protocol"
    end
    if https_err then
+      local downloader, err = fs.which_tool("downloader")
+      if not downloader then
+         return nil, err
+      end
       if not downloader_warning then
-         local downloader = fs.which_tool("downloader")
          util.warning("falling back to "..downloader.." - install luasec to get native HTTPS support")
          downloader_warning = true
       end

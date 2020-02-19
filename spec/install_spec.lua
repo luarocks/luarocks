@@ -56,6 +56,18 @@ describe("luarocks install #integration", function()
          assert.is_false(run.luarocks_bool("install --local luasocket ", { USER = "root" } ))
       end)
 
+      it("fails with no downloader", function()
+         if test_env.TYPE_TEST_ENV ~= "full" then
+            local output = assert(run.luarocks("install https://example.com/rock-1.0.src.rock", { LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/testing_config_no_downloader.lua" } ))
+            assert.match("no downloader tool", output)
+
+            -- can do http but not https
+            assert(run.luarocks("install luasocket"))
+            output = assert(run.luarocks("install https://example.com/rock-1.0.src.rock", { LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/testing_config_no_downloader.lua" } ))
+            assert.match("no downloader tool", output)
+         end
+      end)
+
       it("fails not a zip file", function()
          test_env.run_in_tmp(function(tmpdir)
             write_file("not_a_zipfile-1.0-1.src.rock", [[
