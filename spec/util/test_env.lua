@@ -709,7 +709,9 @@ end
 --- Create configs for luacov and several versions of Luarocks
 -- configs needed for some tests.
 local function create_configs()
-   -- testing_config.lua and testing_config_show_downloads.lua
+   -- testing_config.lua
+   -- testing_config_show_downloads.lua
+   -- testing_config_no_downloader.lua
    local config_content = substitute([[
       rocks_trees = {
          "%{testing_tree}",
@@ -737,6 +739,8 @@ local function create_configs()
    test_env.write_file(test_env.testing_paths.testrun_dir .. "/testing_config.lua", config_content .. " \nweb_browser = \"true\"")
    test_env.write_file(test_env.testing_paths.testrun_dir .. "/testing_config_show_downloads.lua", config_content
                   .. "show_downloads = true \n rocks_servers={\"http://luarocks.org/repositories/rocks\"}")
+   test_env.write_file(test_env.testing_paths.testrun_dir .. "/testing_config_no_downloader.lua", config_content
+                  .. "variables = { WGET = 'invalid', CURL = 'invalid' }")
 
    -- testing_config_sftp.lua
    config_content = substitute([[

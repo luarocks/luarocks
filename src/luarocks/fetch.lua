@@ -31,7 +31,7 @@ function fetch.fetch_caching(url)
 
    local file, err, errcode, from_cache = fetch.fetch_url(url, cachefile, true)
    if not file then
-      return nil, "Failed downloading "..repo_url..(err and " - "..err or ""), errcode
+      return nil, err or "Failed downloading "..url, errcode
    end
    return file, nil, nil, from_cache
 end
@@ -67,7 +67,7 @@ function fetch.fetch_url(url, filename, cache)
    elseif dir.is_basic_protocol(protocol) then
       local ok, name, from_cache = fs.download(url, filename, cache)
       if not ok then
-         return nil, "Failed downloading "..url..(filename and " - "..filename or ""), "network"
+         return nil, "Failed downloading "..url..(name and " - "..name or ""), "network"
       end
       return name, nil, nil, from_cache
    else
