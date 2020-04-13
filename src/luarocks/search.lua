@@ -143,18 +143,18 @@ function search.search_repos(query, lua_version)
 
    local result_tree = {}
    for _, repo in ipairs(cfg.rocks_servers) do
-      if not cfg.disabled_servers[repo] then
-         if type(repo) == "string" then
-            repo = { repo }
-         end
-         for _, mirror in ipairs(repo) do
+      if type(repo) == "string" then
+         repo = { repo }
+      end
+      for _, mirror in ipairs(repo) do
+         if not cfg.disabled_servers[mirror] then
             local protocol, pathname = dir.split_url(mirror)
             if protocol == "file" then
                mirror = pathname
             end
             local ok, err, errcode = remote_manifest_search(result_tree, mirror, query, lua_version)
             if errcode == "network" then
-               cfg.disabled_servers[repo] = true
+               cfg.disabled_servers[mirror] = true
             end
             if ok then
                break
