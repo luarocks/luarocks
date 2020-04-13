@@ -542,6 +542,10 @@ function cfg.init(detected, warning)
    cfg.program_series = program_series
    cfg.major_version = major_version
 
+   if hardcoded.IS_BINARY then
+      cfg.is_binary = true
+   end
+
    -- Use detected values as defaults, overridable via config files or CLI args
 
    cfg.lua_version = detected.lua_version or hardcoded.LUA_VERSION or _VERSION:sub(5)

@@ -163,12 +163,18 @@ function win32.wrap_script(script, target, deps_mode, name, version, ...)
       "package.path="..util.LQ(lpath..";").."..package.path",
       "package.cpath="..util.LQ(lcpath..";").."..package.cpath",
    }
+
+   local remove_interpreter = false
    if target == "luarocks" or target == "luarocks-admin" then
+      if cfg.is_binary then
+         remove_interpreter = true
+      end
       luainit = {
          "package.path="..util.LQ(package.path),
          "package.cpath="..util.LQ(package.cpath),
       }
    end
+
    if name and version then
       local addctx = "local k,l,_=pcall(require,'luarocks.loader') _=k " ..
                      "and l.add_context('"..name.."','"..version.."')"
@@ -182,6 +188,11 @@ function win32.wrap_script(script, target, deps_mode, name, version, ...)
       script and fs.Qb(script) or "%I%",
       ...
    }
+   if remove_interpreter then
+      table.remove(argv, 1)
+      table.remove(argv, 1)
+      table.remove(argv, 1)
+   end
 
    wrapper:write("@echo off\r\n")
    wrapper:write("setlocal\r\n")

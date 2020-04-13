@@ -156,6 +156,7 @@ local function write_hardcoded_module(dir)
       SYSTEM = system,
       PROCESSOR = processor,
       FORCE_CONFIG = FORCE_CONFIG,
+      IS_BINARY = true,
 
       SYSCONFDIR = if_platform("unix", SYSCONFDIR),
 

@@ -88,12 +88,18 @@ function unix.wrap_script(script, target, deps_mode, name, version, ...)
       "package.path="..util.LQ(lpath..";").."..package.path",
       "package.cpath="..util.LQ(lcpath..";").."..package.cpath",
    }
+
+   local remove_interpreter = false
    if target == "luarocks" or target == "luarocks-admin" then
+      if cfg.is_binary then
+         remove_interpreter = true
+      end
       luainit = {
          "package.path="..util.LQ(package.path),
          "package.cpath="..util.LQ(package.cpath),
       }
    end
+
    if name and version then
       local addctx = "local k,l,_=pcall(require,"..util.LQ("luarocks.loader")..") _=k " ..
                      "and l.add_context("..util.LQ(name)..","..util.LQ(version)..")"
@@ -107,6 +113,11 @@ function unix.wrap_script(script, target, deps_mode, name, version, ...)
       script and fs.Q(script) or [[$([ "$*" ] || echo -i)]],
       ...
    }
+   if remove_interpreter then
+      table.remove(argv, 1)
+      table.remove(argv, 1)
+      table.remove(argv, 1)
+   end
 
    wrapper:write("#!/bin/sh\n\n")
    wrapper:write("LUAROCKS_SYSCONFDIR="..fs.Q(cfg.sysconfdir) .. " ")
