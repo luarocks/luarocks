@@ -807,7 +807,7 @@ local function http_request(url, filename, http, cache)
       local timestamp = read_timestamp(filename..".timestamp")
       if status or timestamp then
          local unixtime = read_timestamp(filename..".unixtime")
-         if unixtime then
+         if tonumber(unixtime) then
             local diff = os.time() - tonumber(unixtime)
             if status then
                if diff < cfg.cache_fail_timeout then
