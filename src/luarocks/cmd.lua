@@ -151,6 +151,9 @@ local function error_handler(err)
          mode = mode .. " (fs_use_modules = true)"
       end
    end
+   if cfg and cfg.is_binary then
+      mode = mode .. " (binary)"
+   end
    return debug.traceback("LuaRocks "..cfg.program_version..
       " bug (please report at https://github.com/luarocks/luarocks/issues).\n"..
       mode.."\n"..err, 2)
