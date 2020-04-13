@@ -149,12 +149,18 @@ local function select_module(module, filter_file_name)
    for _, tree in ipairs(tree_manifests) do
       local entries = tree.manifest.modules[module]
       if entries then
-         add_providers(providers, entries, tree, module, filter_file_name)
+         local n, v, f = add_providers(providers, entries, tree, module, filter_file_name)
+         if n then
+            return n, v, f
+         end
       else
          initmodule = initmodule or module .. ".init"
          entries = tree.manifest.modules[initmodule]
          if entries then
-            add_providers(providers, entries, tree, initmodule, filter_file_name)
+            local n, v, f = add_providers(providers, entries, tree, initmodule, filter_file_name)
+            if n then
+               return n, v, f
+            end
          end
       end
    end
