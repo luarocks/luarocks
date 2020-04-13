@@ -504,6 +504,19 @@ local function use_defaults(cfg, defaults)
    end
 end
 
+local function get_first_arg()
+   if not arg then
+      return
+   end
+   local first_arg = arg[0]
+   local i = -1
+   while arg[i] do
+      first_arg = arg[i]
+      i = i -1
+   end
+   return first_arg
+end
+
 --------------------------------------------------------------------------------
 
 local cfg = {}
@@ -543,13 +556,15 @@ function cfg.init(detected, warning)
    cfg.major_version = major_version
 
    -- Use detected values as defaults, overridable via config files or CLI args
+   
+   local first_arg = get_first_arg()
 
    cfg.lua_version = detected.lua_version or hardcoded.LUA_VERSION or _VERSION:sub(5)
-   cfg.lua_interpreter = detected.lua_interpreter or hardcoded.LUA_INTERPRETER or (arg and arg[-1] and arg[-1]:gsub(".*[\\/]", "")) or (is_windows and "lua.exe" or "lua")
+   cfg.lua_interpreter = detected.lua_interpreter or hardcoded.LUA_INTERPRETER or (first_arg and first_arg:gsub(".*[\\/]", "")) or (is_windows and "lua.exe" or "lua")
    cfg.project_dir = (not hardcoded.FORCE_CONFIG) and detected.project_dir
 
    do
-      local lua_bindir = detected.lua_bindir or hardcoded.LUA_BINDIR or (arg and arg[-1] and arg[-1]:gsub("[\\/][^\\/]+$", ""))
+      local lua_bindir = detected.lua_bindir or hardcoded.LUA_BINDIR or (first_arg and first_arg:gsub("[\\/][^\\/]+$", ""))
       local lua_dir = detected.lua_dir or hardcoded.LUA_DIR or (lua_bindir and lua_bindir:gsub("[\\/]bin$", ""))
       cfg.variables = {
          LUA_DIR = lua_dir,
