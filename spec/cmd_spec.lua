@@ -46,6 +46,10 @@ describe("LuaRocks command line #integration", function()
       it("passes if given a valid path with Lua", function()
          assert.truthy(run.luarocks("--lua-dir=" .. test_env.testing_paths.luadir))
       end)
+
+      it("passes if given a quoted path with Lua", function()
+         assert.truthy(run.luarocks("--lua-dir '" .. test_env.testing_paths.luadir .. "'"))
+      end)
    end)
 
    describe("--lua-version", function()
