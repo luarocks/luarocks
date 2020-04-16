@@ -4,6 +4,15 @@ local dir = {}
 local require = nil
 --------------------------------------------------------------------------------
 
+local function unquote(c)
+   local first, last = c:sub(1,1), c:sub(-1)
+   if (first == '"' and last == '"') or 
+      (first == "'" and last == "'") then
+      return c:sub(2,-2)
+   end
+   return c
+end
+
 --- Describe a path in a cross-platform way.
 -- Use this function to avoid platform-specific directory
 -- separators in other modules. Removes trailing slashes from
@@ -18,6 +27,9 @@ function dir.path(...)
    while t[1] == "" do
       table.remove(t, 1)
    end
+   for i, c in ipairs(t) do
+      t[i] = unquote(c)
+   end
    return (table.concat(t, "/"):gsub("([^:])/+", "%1/"):gsub("^/+", "/"):gsub("/*$", ""))
 end
 
@@ -29,6 +41,7 @@ end
 function dir.split_url(url)
    assert(type(url) == "string")
    
+   url = unquote(url)
    local protocol, pathname = url:match("^([^:]*)://(.*)")
    if not protocol then
       protocol = "file"
