@@ -566,8 +566,9 @@ function cmd.run_command(description, commands, external_namespace, ...)
    if not lua_found and args.command ~= "config" and args.command ~= "help" then
       util.warning(tried ..
                    "\nModules may not install with the correct configurations. " ..
-                   "You may want to specify the path prefix to your build " ..
-                   "of Lua " .. cfg.lua_version .. " using --lua-dir")
+                   "You may want to configure the path prefix to your build " ..
+                   "of Lua " .. cfg.lua_version .. " using\n\n" ..
+                   "   luarocks config --local lua_dir <your-lua-prefix>\n")
    end
    cfg.lua_found = lua_found
 
