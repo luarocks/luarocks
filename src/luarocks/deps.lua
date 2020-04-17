@@ -649,13 +649,20 @@ function deps.scan_deps(results, manifest, name, version, deps_mode)
    end
 end
 
-local function lua_h_exists(d)
+local function lua_h_exists(d, luaver)
+   local n = tonumber(luaver)
+   local major = math.floor(n)
+   local minor = (n - major) * 10
+   local luanum = math.floor(major * 100 + minor)
+
    local lua_h = dir.path(d, "lua.h")
    local fd = io.open(lua_h)
    if fd then
-      -- TODO check that LUA_VERSION_MAJOR and LUA_VERSION_MINOR match luaver
+      local data = fd:read("*a")
       fd:close()
-      return d
+      if data:match("LUA_VERSION_NUM%s*" .. tostring(luanum)) then
+         return d
+      end
    end
 end
 
@@ -672,7 +679,7 @@ local function find_lua_incdir(prefix, luaver, luajitver)
       luajitver and prefix .. "/include/luajit-" .. luajitver:match("^(%d+%.%d+)"),
    }
    for _, d in ipairs(incdirs) do
-      if lua_h_exists(d) then
+      if lua_h_exists(d, luaver) then
          return d
       end
    end
@@ -685,7 +692,7 @@ function deps.check_lua_incdir(vars)
    local ljv = util.get_luajit_version()
 
    if vars.LUA_INCDIR then
-      return lua_h_exists(vars.LUA_INCDIR)
+      return lua_h_exists(vars.LUA_INCDIR, cfg.lua_version)
    end
    
    if vars.LUA_DIR then
@@ -713,7 +720,9 @@ function deps.check_lua_libdir(vars)
       table.insert(libnames, 1, "luajit-" .. cfg.lua_version)
    end
    local cache = {}
+   local save_LUA_INCDIR = vars.LUA_INCDIR
    local ok = check_external_dependency("LUA", { library = libnames }, vars, "build", cache)
+   vars.LUA_INCDIR = save_LUA_INCDIR
    if ok then
       vars.LUALIB = vars.LUA_LIBDIR_FILE
       return true

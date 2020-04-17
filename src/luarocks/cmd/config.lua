@@ -240,8 +240,8 @@ end
 --- Driver function for "config" command.
 -- @return boolean: True if succeeded, nil on errors.
 function config_cmd.command(args)
-   deps.check_lua_incdir(cfg.variables)
-   deps.check_lua_libdir(cfg.variables)
+   deps.check_lua_incdir(cfg.variables, args.lua_version or cfg.lua_version)
+   deps.check_lua_libdir(cfg.variables, args.lua_version or cfg.lua_version)
    
    -- deprecated flags
    if args.lua_incdir then
