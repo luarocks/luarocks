@@ -233,7 +233,8 @@ local function get_scope(args)
           or (args["local"] and "user")
           or (args.project_tree and "project")
           or (cfg.local_by_default and "user")
-          or "system"
+          or (fs.is_writable(cfg.config_files["system"].file and "system"))
+          or "user"
 end
 
 --- Driver function for "config" command.
