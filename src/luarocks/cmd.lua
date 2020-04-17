@@ -266,7 +266,10 @@ do
          if args.lua_dir then
             local detected, err = util.find_lua(args.lua_dir, lua_version)
             if not detected then
-               die(err)
+               local suggestion = (not args.lua_version)
+                  and "\nYou may want to specify a different Lua version with --lua-version\n"
+                  or  ""
+               die(err .. suggestion)
             end
             return detected
          end
@@ -324,11 +327,45 @@ local function get_status(status)
    return status and "ok" or "not found"
 end
 
+local function use_to_fix_location(key)
+   local buf =  "                   ****************************************\n"
+   buf = buf .. "                   Use the command\n\n"
+   buf = buf .. "                      luarocks config " .. key .. " <dir>\n\n"
+   buf = buf .. "                   to fix the location\n"
+   buf = buf .. "                   ****************************************\n"
+   return buf
+end
+
 local function get_config_text(cfg)
-   local buf = "Configuration:\n   Lua version: "..cfg.lua_version.."\n"
+   local deps = require("luarocks.deps")
+
+   local libdir_ok = deps.check_lua_libdir(cfg.variables)
+   local incdir_ok = deps.check_lua_incdir(cfg.variables)
+   local bindir_ok = fs.exists(cfg.variables.LUA_BINDIR)
+   local luadir_ok = fs.exists(cfg.variables.LUA_DIR)
+   local lua_ok = fs.exists(cfg.variables.LUA)
+
+   local buf = "Configuration:\n"
+   buf = buf.."   Lua:\n"
+   buf = buf.."      Version    : "..cfg.lua_version.."\n"
    if cfg.luajit_version then
-      buf = buf.."   LuaJIT version: "..cfg.luajit_version.."\n"
+      buf = buf.."      LuaJIT     : "..cfg.luajit_version.."\n"
    end
+   buf = buf.."      Interpreter: "..(cfg.variables.LUA or "").." ("..get_status(lua_ok)..")\n"
+   buf = buf.."      LUA_DIR    : "..(cfg.variables.LUA_DIR or "").." ("..get_status(luadir_ok)..")\n"
+   if not lua_ok then
+      buf = buf .. use_to_fix_location("lua_dir")
+   end
+   buf = buf.."      LUA_BINDIR : "..(cfg.variables.LUA_BINDIR or "").." ("..get_status(bindir_ok)..")\n"
+   buf = buf.."      LUA_INCDIR : "..(cfg.variables.LUA_INCDIR or "").." ("..get_status(incdir_ok)..")\n"
+   if lua_ok and not incdir_ok then
+      buf = buf .. use_to_fix_location("variables.LUA_INCDIR")
+   end
+   buf = buf.."      LUA_LIBDIR : "..(cfg.variables.LUA_LIBDIR or "").." ("..get_status(libdir_ok)..")\n"
+   if lua_ok and not libdir_ok then
+      buf = buf .. use_to_fix_location("variables.LUA_LIBDIR")
+   end
+
    buf = buf.."\n   Configuration files:\n"
    local conf = cfg.config_files
    buf = buf.."      System  : "..fs.absolute_name(conf.system.file).." ("..get_status(conf.system.found)..")\n"

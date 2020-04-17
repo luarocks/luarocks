@@ -297,6 +297,10 @@ function config_cmd.command(args)
          ["variables.LUA_LIBDIR"] = cfg.variables.LUA_LIBDIR,
          ["lua_interpreter"] = cfg.lua_interpreter,
       }
+      if args.lua_version then
+         local prefix = dir.dir_name(cfg.config_files[scope].file)
+         persist.save_default_lua_version(prefix, args.lua_version)
+      end
       return write_entries(keys, scope, args.unset)
    end
 

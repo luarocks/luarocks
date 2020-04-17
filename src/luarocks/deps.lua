@@ -649,6 +649,16 @@ function deps.scan_deps(results, manifest, name, version, deps_mode)
    end
 end
 
+local function lua_h_exists(d)
+   local lua_h = dir.path(d, "lua.h")
+   local fd = io.open(lua_h)
+   if fd then
+      -- TODO check that LUA_VERSION_MAJOR and LUA_VERSION_MINOR match luaver
+      fd:close()
+      return d
+   end
+end
+
 local function find_lua_incdir(prefix, luaver, luajitver)
    luajitver = luajitver and luajitver:gsub("%-.*", "")
    local shortv = luaver:gsub("%.", "")
@@ -662,11 +672,7 @@ local function find_lua_incdir(prefix, luaver, luajitver)
       luajitver and prefix .. "/include/luajit-" .. luajitver:match("^(%d+%.%d+)"),
    }
    for _, d in ipairs(incdirs) do
-      local lua_h = dir.path(d, "lua.h")
-      local fd = io.open(lua_h)
-      if fd then
-         -- TODO check that LUA_VERSION_MAJOR and LUA_VERSION_MINOR match luaver
-         fd:close()
+      if lua_h_exists(d) then
          return d
       end
    end
@@ -678,14 +684,18 @@ end
 function deps.check_lua_incdir(vars)
    local ljv = util.get_luajit_version()
 
-   if (not vars.LUA_INCDIR) and vars.LUA_DIR then
+   if vars.LUA_INCDIR then
+      return lua_h_exists(vars.LUA_INCDIR)
+   end
+   
+   if vars.LUA_DIR then
       vars.LUA_INCDIR = find_lua_incdir(vars.LUA_DIR, cfg.lua_version, ljv)
-      if vars.LUA_INCDIR == nil then
-         return nil, "Failed finding Lua header files. You may need to install them or configure LUA_INCDIR.", "dependency"
+      if vars.LUA_INCDIR then
+         return true
       end
    end
 
-   return true
+   return nil, "Failed finding Lua header files. You may need to install them or configure LUA_INCDIR.", "dependency"
 end
 
 function deps.check_lua_libdir(vars)

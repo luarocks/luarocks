@@ -690,6 +690,8 @@ function cfg.init(detected, warning)
    if detected.given_lua_dir then
       cfg.variables.LUA_DIR = detected.given_lua_dir
       cfg.variables.LUA_BINDIR = detected.lua_bindir
+      cfg.variables.LUA_LIBDIR = nil
+      cfg.variables.LUA_INCDIR = nil
       cfg.lua_interpreter = detected.lua_interpreter
    end
 
