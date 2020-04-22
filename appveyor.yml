@@ -90,9 +90,10 @@ before_build:
 build_script:
   - IF NOT EXIST lua_install-%LUAV%\bin\busted.bat ( luarocks install busted 1> NUL 2> NUL )
   - IF NOT EXIST lua_install-%LUAV%\bin\luacov.bat ( luarocks install cluacov 1> NUL 2> NUL )
+  - luarocks install busted-htest 1> NUL 2> NUL
 
 test_script:
-  - busted -o gtest -v --lpath=.//?.lua --exclude-tags=ssh,unix,%EXCLUDE% -Xhelper lua_dir=%CD%\lua_install-%LUAV%,appveyor,%COMPILER% %FILES%
+  - busted -o htest -v --lpath=.//?.lua --exclude-tags=ssh,unix,%EXCLUDE% -Xhelper lua_dir=%CD%\lua_install-%LUAV%,appveyor,%COMPILER% %FILES%
 
 after_test:
   - pip install codecov

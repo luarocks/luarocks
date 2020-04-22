@@ -1,6 +1,6 @@
 return {
    default = {
-      output = "gtest",
+      output = "htest",
       verbose = true,
       ["exclude-pattern"] = "sum_spec", -- do not run spec files inside fixture
       helper = "spec.util.test_env",

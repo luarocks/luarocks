@@ -22,6 +22,7 @@ description = {
 }
 test_dependencies = {
    "luacov",
+   "busted-htest",
 }
 test = {
    type = "busted",

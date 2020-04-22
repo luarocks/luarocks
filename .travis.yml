@@ -19,8 +19,8 @@ smoke_script: &smoke_script
   - ./smoke_test.sh luarocks-$BRANCH.tar.gz
   
 unit_script: &unit_script
-  - busted -o gtest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
-  - busted -o gtest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
+  - busted -o htest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
+  - busted -o htest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
   
 integration_script: &integration_script
   - lua -v
@@ -28,8 +28,8 @@ integration_script: &integration_script
   - ./configure --with-lua=lua_install
   - ./makedist dev
   - ./smoke_test.sh luarocks-dev.tar.gz
-  - busted -o gtest --exclude-tags=gpg,git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
-  - busted -o gtest --exclude-tags=gpg,git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
+  - busted -o htest --exclude-tags=gpg,git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis"
+  - busted -o htest --exclude-tags=gpg,git,unit --verbose -Xhelper "lua_dir=$PWD/lua_install,travis,env=full"
           
 jobs:
   include:
@@ -148,6 +148,7 @@ before_install:
 install:
   - if [ ! -f lua_install/bin/busted ]; then luarocks install busted; fi
   - if [ ! -f lua_install/bin/luacov ]; then luarocks install cluacov; fi
+  - luarocks install busted-htest
 
 after_success:
   - luacov -c $TRAVIS_BUILD_DIR/testrun/luacov.config
