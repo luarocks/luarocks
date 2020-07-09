@@ -149,6 +149,9 @@ local function render(template, data)
             local n = cmd == "*" and #d or 1
             for i = 1, n do
                local tbl = cmd == "*" and d[i] or data
+               if type(tbl) == "string" then
+                  tbl = tbl:gsub("%%", "%%%%")
+               end
                table.insert(out, (line:gsub("${([a-z]+)}", tbl)))
             end
          end
