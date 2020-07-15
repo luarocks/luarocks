@@ -206,7 +206,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          {
            "https://luarocks.org",
            "https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/master/",
-           "http://luafr.org/luarocks/",
+           "https://luafr.org/luarocks/",
            "http://luarocks.logiceditor.com/rocks",
          }
       },
