@@ -239,7 +239,7 @@ local function indirect_deps(mdeps, rdeps, tree)
 end
 
 local function show_rock(template, namespace, name, version, rockspec, repo, minfo, tree)
-   local desc = rockspec.description
+   local desc = rockspec.description or {}
    local data = {
       namespace = namespace,
       package = rockspec.package,
