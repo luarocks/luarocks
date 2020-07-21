@@ -547,6 +547,27 @@ describe("LuaRocks build #unit", function()
    end)
 
    describe("build.builtin", function()
+      it("builtin auto installs files in lua subdir", function()
+         test_env.run_in_tmp(function(tmpdir)
+            lfs.mkdir("lua")
+            write_file("lua_module-1.0-1.rockspec", [[
+               package = "lua_module"
+               version = "1.0-1"
+               source = {
+                  url = "http://example.com/lua_module"
+               }
+               build = {
+                  type = "builtin",
+                  modules = {}
+               }
+            ]], finally)
+            write_file("lua/lua_module.lua", "return 123", finally)
+
+            assert.is_true(run.luarocks_bool("build"))
+            assert.match("[\\/]lua_module%.lua", run.luarocks("show lua_module"))
+         end, finally)
+      end)
+
       describe("builtin.autodetect_external_dependencies", function()
          it("returns false if the given build table has no external dependencies", function()
             local build_table = {
