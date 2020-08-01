@@ -106,7 +106,7 @@ function make.command(args)
       verify = not not args.verify,
       check_lua_versions = not not args.check_lua_versions,
       pin = not not args.pin,
-      no_install = args.no_install
+      no_install = not not args.no_install
    })
 
    if args.sign and not args.pack_binary_rock then
