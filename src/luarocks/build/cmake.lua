@@ -10,7 +10,7 @@ local cfg = require("luarocks.core.cfg")
 -- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string): true if no errors occurred,
 -- nil and an error message otherwise.
-function cmake.run(rockspec)
+function cmake.run(rockspec, no_install)
    assert(rockspec:type() == "rockspec")
    local build = rockspec.build
    local variables = build.variables or {}
@@ -66,7 +66,7 @@ function cmake.run(rockspec)
          return nil, "Failed building."
       end
    end
-   if do_install then
+   if do_install and not no_install then
       if not fs.execute_string(rockspec.variables.CMAKE.." --build build.luarocks --target install --config Release") then
          return nil, "Failed installing."
       end

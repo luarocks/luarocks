@@ -113,7 +113,9 @@ function make.command(args)
       return nil, "In the make command, --sign is meant to be used only with --pack-binary-rock"
    end
 
-   if args.pack_binary_rock then
+   if args.no_install then
+      return build.build_rockspec(rockspec, opts)
+   elseif args.pack_binary_rock then
       return pack.pack_binary_rock(name, namespace, rockspec.version, args.sign, function()
          local name, version = build.build_rockspec(rockspec, opts)
          if name and args.no_doc then

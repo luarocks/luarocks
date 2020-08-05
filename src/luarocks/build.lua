@@ -189,7 +189,7 @@ local function prepare_install_dirs(name, version)
    return dirs
 end
 
-local function run_build_driver(rockspec)
+local function run_build_driver(rockspec, no_install)
    local btype = rockspec.build.type
    if btype == "none" then
       return true
@@ -207,7 +207,7 @@ local function run_build_driver(rockspec)
    if not pok or type(driver) ~= "table" then
       return nil, "Failed initializing build back-end for build type '"..btype.."': "..driver
    end
-   local ok, err = driver.run(rockspec)
+   local ok, err = driver.run(rockspec, no_install)
    if not ok then
       return nil, "Build error: " .. err
    end
@@ -407,7 +407,7 @@ function build.build_rockspec(rockspec, opts)
    ok, err = check_macosx_deployment_target(rockspec)
    if not ok then return nil, err end
    
-   ok, err = run_build_driver(rockspec)
+   ok, err = run_build_driver(rockspec, opts.no_install)
    if not ok then return nil, err end
    
    if opts.no_install then
