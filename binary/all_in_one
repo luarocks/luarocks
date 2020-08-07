@@ -469,6 +469,7 @@ local function main()
       ["lua-zlib"] = "./binary/lua-zlib-1.2-0.rockspec",
       ["lua-bz2"] = "./binary/lua-bz2-0.1.0-1.rockspec",
       luafilesystem = "luafilesystem",
+      dkjson = "dkjson",
    }
    
    fs.make_dir(LUA_MODULES)
