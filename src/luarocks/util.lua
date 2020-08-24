@@ -600,7 +600,7 @@ function util.get_rocks_provided(rockspec)
 
    rocks_provided["lua"] = lv.."-1"
 
-   if lv == "5.2" or lv == "5.3" then
+   if lv == "5.2" then
       rocks_provided["bit32"] = lv.."-1"
    end
 
