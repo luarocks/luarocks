@@ -387,6 +387,7 @@ function build.build_rockspec(rockspec, opts)
    end   
 
    local dirs, err
+   local rollback
    if not opts.no_install then
       if repos.is_installed(name, version) then
          repos.delete_version(name, version, opts.deps_mode)
@@ -395,7 +396,7 @@ function build.build_rockspec(rockspec, opts)
       dirs, err = prepare_install_dirs(name, version)
       if not dirs then return nil, err end
 
-      local rollback = util.schedule_function(function()
+      rollback = util.schedule_function(function()
          fs.delete(path.install_dir(name, version))
          fs.remove_dir_if_empty(path.versions_dir(name))
       end)
