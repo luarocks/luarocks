@@ -38,7 +38,7 @@ end
 -- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string): true if no errors occurred,
 -- nil and an error message otherwise.
-function make.run(rockspec)
+function make.run(rockspec, not_install)
    assert(rockspec:type() == "rockspec")
 
    local build = rockspec.build
@@ -86,9 +86,11 @@ function make.run(rockspec)
    if not ok then
       return nil, "Failed building."
    end
-   ok = make_pass(make_cmd, build.install_pass, build.install_target, build.install_variables)
-   if not ok then
-      return nil, "Failed installing."
+   if not not_install then
+      ok = make_pass(make_cmd, build.install_pass, build.install_target, build.install_variables)
+      if not ok then
+         return nil, "Failed installing."
+      end
    end
    return true
 end

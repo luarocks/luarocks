@@ -18,6 +18,7 @@ local writer = require("luarocks.manif.writer")
 local cmd = require("luarocks.cmd")
 
 function make.cmd_options(parser)
+   parser:flag("--no-install", "Do not install the rock.")
    parser:flag("--no-doc", "Install the rock without its documentation.")
    parser:flag("--pack-binary-rock", "Do not install rock. Instead, produce a "..
       ".rock file with the contents of compilation in the current directory.")
@@ -104,14 +105,17 @@ function make.command(args)
       branch = args.branch,
       verify = not not args.verify,
       check_lua_versions = not not args.check_lua_versions,
-      pin = not not args.pin
+      pin = not not args.pin,
+      no_install = not not args.no_install
    })
 
    if args.sign and not args.pack_binary_rock then
       return nil, "In the make command, --sign is meant to be used only with --pack-binary-rock"
    end
 
-   if args.pack_binary_rock then
+   if args.no_install then
+      return build.build_rockspec(rockspec, opts)
+   elseif args.pack_binary_rock then
       return pack.pack_binary_rock(name, namespace, rockspec.version, args.sign, function()
          local name, version = build.build_rockspec(rockspec, opts)
          if name and args.no_doc then

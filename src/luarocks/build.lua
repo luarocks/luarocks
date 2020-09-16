@@ -23,6 +23,7 @@ build.opts = util.opts_table("build.opts", {
    verify = "boolean",
    check_lua_versions = "boolean",
    pin = "boolean",
+   no_install = "boolean"
 })
 
 do
@@ -188,7 +189,7 @@ local function prepare_install_dirs(name, version)
    return dirs
 end
 
-local function run_build_driver(rockspec)
+local function run_build_driver(rockspec, no_install)
    local btype = rockspec.build.type
    if btype == "none" then
       return true
@@ -206,7 +207,7 @@ local function run_build_driver(rockspec)
    if not pok or type(driver) ~= "table" then
       return nil, "Failed initializing build back-end for build type '"..btype.."': "..driver
    end
-   local ok, err = driver.run(rockspec)
+   local ok, err = driver.run(rockspec, no_install)
    if not ok then
       return nil, "Build error: " .. err
    end
@@ -385,16 +386,21 @@ function build.build_rockspec(rockspec, opts)
       return name, version
    end   
 
-   if repos.is_installed(name, version) then
-      repos.delete_version(name, version, opts.deps_mode)
+   local dirs, err
+   local rollback
+   if not opts.no_install then
+      if repos.is_installed(name, version) then
+         repos.delete_version(name, version, opts.deps_mode)
+      end
+
+      dirs, err = prepare_install_dirs(name, version)
+      if not dirs then return nil, err end
+
+      rollback = util.schedule_function(function()
+         fs.delete(path.install_dir(name, version))
+         fs.remove_dir_if_empty(path.versions_dir(name))
+      end)
    end
-   local dirs, err = prepare_install_dirs(name, version)
-   if not dirs then return nil, err end
-   
-   local rollback = util.schedule_function(function()
-      fs.delete(path.install_dir(name, version))
-      fs.remove_dir_if_empty(path.versions_dir(name))
-   end)
 
    ok, err = build.apply_patches(rockspec)
    if not ok then return nil, err end
@@ -402,9 +408,17 @@ function build.build_rockspec(rockspec, opts)
    ok, err = check_macosx_deployment_target(rockspec)
    if not ok then return nil, err end
    
-   ok, err = run_build_driver(rockspec)
+   ok, err = run_build_driver(rockspec, opts.no_install)
    if not ok then return nil, err end
    
+   if opts.no_install then
+      fs.pop_dir()
+      if opts.need_to_fetch then
+         fs.pop_dir()
+      end
+      return name, version
+   end
+
    ok, err = install_files(rockspec, dirs)
    if not ok then return nil, err end
    
