@@ -382,6 +382,9 @@ function build.build_rockspec(rockspec, opts)
 
    local name, version = rockspec.name, rockspec.version
    if opts.build_only_deps then
+      if opts.pin then
+         deplocks.write_file()
+      end
       return name, version
    end   
 
