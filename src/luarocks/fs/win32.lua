@@ -336,7 +336,11 @@ function win32.make_temp_dir(name_pattern)
 end
 
 function win32.tmpname()
-   return os.tmpname()
+   local tmpname = os.tmpname()
+   if tmpname:match("^\\") then
+      tmpname = os.getenv("TMP") .. tmpname
+   end
+   return tmpname
 end
 
 function win32.current_user()
