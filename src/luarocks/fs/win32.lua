@@ -336,7 +336,7 @@ function win32.make_temp_dir(name_pattern)
 end
 
 function win32.tmpname()
-   return os.getenv("TMP")..os.tmpname()
+   return os.tmpname()
 end
 
 function win32.current_user()
