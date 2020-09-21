@@ -26,8 +26,9 @@ revision number of the given (or downloaded) rockspec.
 
 If a URL is given, it replaces the one from the old rockspec with the given URL.
 If a URL is not given and a new version is given, it tries to guess the new URL
-by replacing occurrences of the version number in the URL or tag. It also tries
-to download the new URL to determine the new MD5 checksum.
+by replacing occurrences of the version number in the URL or tag; if the guessed
+URL is invalid, the old URL is restored. It also tries to download the new URL
+to determine the new MD5 checksum.
 
 If a tag is given, it replaces the one from the old rockspec. If there is an old
 tag but no new one passed, it is guessed in the same way URL is.
@@ -68,9 +69,12 @@ end
 -- If it specified MD5, update it.
 -- @return (true, false) if MD5 was not specified or it stayed same,
 -- (true, true) if MD5 changed, (nil, string) on error.
-local function check_url_and_update_md5(out_rs)
+local function check_url_and_update_md5(out_rs, invalid_is_error)
    local file, temp_dir = fetch.fetch_url_at_temp_dir(out_rs.source.url, "luarocks-new-version-"..out_rs.package)
    if not file then
+      if invalid_is_error then
+         return nil, "invalid URL - "..temp_dir
+      end
       util.warning("invalid URL - "..temp_dir)
       return true, false
    end
@@ -118,8 +122,14 @@ local function update_source_section(out_rs, url, tag, old_ver, new_ver)
    if out_rs.source.file then
       try_replace(out_rs.source, "file", old_ver, new_ver)
    end
+
+   local old_url = out_rs.source.url
    if try_replace(out_rs.source, "url", old_ver, new_ver) then
-      return check_url_and_update_md5(out_rs)
+      local ok, md5_changed = check_url_and_update_md5(out_rs, true)
+      if ok then
+         return ok, md5_changed
+      end
+      out_rs.source.url = old_url
    end
    if tag or try_replace(out_rs.source, "tag", old_ver, new_ver) then
       return true
