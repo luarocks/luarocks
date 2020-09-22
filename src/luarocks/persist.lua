@@ -3,6 +3,7 @@
 -- saving tables into files.
 local persist = {}
 
+local cfg = require("luarocks.core.cfg")
 local core = require("luarocks.core.persist")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
@@ -99,7 +100,7 @@ end
 write_table = function(out, tbl, level, field_order)
    out:write("{")
    local sep = "\n"
-   local indentation = "   "
+   local indentation = cfg.table_indentation or "   "
    local indent = true
    local i = 1
    for k, v, sub_order in util.sortedpairs(tbl, field_order) do

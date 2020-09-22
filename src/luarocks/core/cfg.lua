@@ -479,6 +479,9 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
    defaults.variables.LIB_EXTENSION = defaults.lib_extension
    defaults.variables.OBJ_EXTENSION = defaults.obj_extension
 
+   -- Set the preferred indentation used by `persist.write_table`
+   defaults.table_indentation = "   "
+
    return defaults
 end
 
