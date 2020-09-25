@@ -153,7 +153,7 @@ then
    git pull
 else
    cd ..
-   git clone https://github.com/luarocks/luarocks-site
+   git clone ssh://git@github.com/luarocks/luarocks-site
    cd luarocks-site
 fi
 
@@ -171,7 +171,7 @@ git push
 
 [ -e ../luarocks.wiki ] || {
    cd ..
-   git clone https://github.com/luarocks/luarocks.wiki.git
+   git clone ssh://git@github.com/luarocks/luarocks.wiki.git
 }
 
 if [ -e ../luarocks.wiki ]
@@ -180,7 +180,7 @@ then
    git pull
 else
    cd ..
-   git clone https://github.com/luarocks/luarocks.wiki.git
+   git clone ssh://git@github.com/luarocks/luarocks.wiki.git
    cd luarocks.wiki
 fi
 
