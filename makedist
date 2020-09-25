@@ -14,15 +14,17 @@ fi
 
 make clean || exit 1
 
+version=$1
+shift
+
 if [ "$1" != "dev" ]
 then
 
-ROCKSPEC="luarocks-$1-1.rockspec"
+ROCKSPEC="luarocks-$version-1.rockspec"
 
 if [ "$1" = "branch" ]
 then
    shift
-   version=$1
 
    if git show $version &> /dev/null
    then
@@ -33,7 +35,7 @@ then
    git reset
    git checkout .
    git checkout -B $version
-   ROCKSPEC="luarocks-$1-1.rockspec"
+   ROCKSPEC="luarocks-$version-1.rockspec"
    currentrockspec=$(ls luarocks-*.rockspec)
    if [ "$currentrockspec" != "$ROCKSPEC" ] && ! [ -e "$ROCKSPEC" ]
    then
@@ -66,38 +68,38 @@ fi
    echo "$ROCKSPEC is missing. Please check rockspec version is correct."
 }
 
-grep -q "LuaRocks version $1" "configure" || {
+grep -q "LuaRocks version $version" "configure" || {
    echo
    echo "version in configure is incorrect. Please fix it."
    exit 1
 }
 
-grep -q "\"$1-1\"" "$ROCKSPEC" || {
+grep -q "\"$version-1\"" "$ROCKSPEC" || {
    echo
    echo "version in rockspec is incorrect. Please fix it."
    exit 1
 }
 
-grep -q "program_version = \"$1\"" src/luarocks/core/cfg.lua || {
+grep -q "program_version = \"$version\"" src/luarocks/core/cfg.lua || {
    echo
    echo "program_version in src/luarocks/core/cfg.lua is incorrect. Please fix it."
    exit 1
 }
 
-grep -q "version: $1\\." appveyor.yml || {
+grep -q "version: $version\\." appveyor.yml || {
    echo
    echo "version in appveyor.yml is incorrect. Please fix it."
    exit 1
 }
 
-grep -q "LUAROCKS_VER: $1" appveyor.yml || {
+grep -q "LUAROCKS_VER: $version" appveyor.yml || {
    echo
    echo "LUAROCKS_VER in appveyor.yml is incorrect. Please fix it."
    exit 1
 }
 
-# e.g. if $1 is "2.3.0", $program_series is "2.3"
-program_series=${1%.*}
+# e.g. if $version is "2.3.0", $program_series is "2.3"
+program_series=${version%.*}
 
 grep -q "program_series = \"$program_series\"" src/luarocks/core/cfg.lua || {
    echo
@@ -113,7 +115,7 @@ grep -q "vars.VERSION = \"$program_series\"" install.bat || {
 
 fi
 
-out="luarocks-$1"
+out="luarocks-$version"
 rm -rf "$out"
 mkdir "$out"
 
