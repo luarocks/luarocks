@@ -17,7 +17,7 @@ make clean || exit 1
 version=$1
 shift
 
-if [ "$1" != "dev" ]
+if ! [ "$version" = "dev" ]
 then
 
 ROCKSPEC="luarocks-$version-1.rockspec"
@@ -118,8 +118,6 @@ fi
 out="luarocks-$version"
 rm -rf "$out"
 mkdir "$out"
-
-shift
 
 git ls-files | while read i
 do
