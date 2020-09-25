@@ -1,12 +1,46 @@
-## What's new
+## What's new in LuaRocks 3.4.0
 
 ### Features
 
 * `luarocks make` now supports `--only-deps`
+* `luarocks make` new flag: `--no-install`, which only performs
+  the compilation step
 * `--deps-only` is now an alias for `--only-deps` (useful in case
   you always kept getting it wrong, like me!)
-* The `show` command can now accept a substring of the rock's name,
+* `luarocks build` and `luarocks make` now support using
+  `--pin` and `--only-deps` at the same time, to produce a lock
+  file of dependencies in use without installing the main package.
+* `luarocks show` can now accept a substring of the rock's name,
   like `list`.
+* `luarocks config`: when running without system-wide permissions,
+  try storing the config locally by default.
+  Also, if setting both lua_dir and --lua-version explicitly,
+  auto-switch the default Lua version.
+* `luarocks` with no arguments now prints more info about the
+  location of the Lua interpreter which is being used
+* `luarocks new_version` now keeps the old URL if the MD5 doesn't
+  change.
+* `DEPS_DIR` is now accepted as a generic variable for dependency
+  directories (e.g. `luarocks install foo DEPS_DIR=/usr/local`)
+* Handle quoting of arguments at the application level, for
+  improved Windows support
+* All-in-one binary bundles `dkjson`, so it runs `luarocks upload`
+  without requiring any additional dependencies.
+* Tweaks for Terra compatibility
+
+### Fixes
+
+* win32: generate proper temp filename
+* No longer assume that Lua 5.3 is built with compat libraries and
+  bundles `bit32`
+* `luarocks show`: do not crash when rockspec description is empty
+* When detecting the location of `lua.h`, check that its version
+  matches the version of Lua being used
+* Fail gracefully when a third-party tool (wget, etc.) is missing
+* Fix logic for disabling mirrors that return network errors
+* Fix detection of Lua path based on arg variable
+* Fix regression on dependency matching of luarocks.loader
+
 
 ## What's new in LuaRocks 3.3.1
 
