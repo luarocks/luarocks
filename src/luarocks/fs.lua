@@ -59,9 +59,9 @@ do
             fs[name] = function(...)
                if fs_is_verbose then
                   local args = { ... }
-                  for i, arg in ipairs(args) do
-                     local pok, v = pcall(string.format, "%q", arg)
-                     args[i] = pok and v or tostring(arg)
+                  for i = 1, #args do
+                     local pok, v = pcall(string.format, "%q", args[i])
+                     args[i] = pok and v or tostring(args[i])
                   end
                   print("fs." .. name .. "(" .. table.concat(args, ", ") .. ")")
                end
