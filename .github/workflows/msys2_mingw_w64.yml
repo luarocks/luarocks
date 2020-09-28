@@ -1,0 +1,71 @@
+name: MSYS2 + Mingw-w64
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  test:
+    # Because the latest LuaSocket can't be built with the latest Mingw-w64.
+    # We need https://github.com/diegonehab/luasocket/pull/312 for this.
+    continue-on-error: true
+    name: ${{ matrix.label }}
+    strategy:
+      fail-fast: false
+      matrix:
+        label:
+          - Lua 5.3
+          - Lua 5.1
+          - LuaJIT 2.0.5
+        include:
+          - label: Lua 5.3
+            lua_interpreter: "lua.exe"
+            lua_version: "5.3"
+            msys2_package: mingw-w64-x86_64-lua
+          - label: Lua 5.1
+            lua_interpreter: "lua5.1.exe"
+            lua_version: "5.1"
+            msys2_package: mingw-w64-x86_64-lua51
+          - label: LuaJIT 2.0.5
+            lua_interpreter: "luajit.exe"
+            lua_version: "5.1"
+            msys2_package: mingw-w64-x86_64-luajit
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            make
+            unzip
+            zip
+            mingw-w64-x86_64-gcc
+            ${{ matrix.msys2_package }}
+      - name: Configure
+        run: |
+          ./configure \
+            --prefix=$HOME/local \
+            --with-lua-interpreter=${{ matrix.lua_interpreter }}
+      - name: Make
+        run: |
+          make
+      - name: Install
+        run: |
+          make install
+      - name: Install dependencies for test
+        run: |
+          set -eux
+          ~/local/bin/luarocks install busted
+          ~/local/bin/luarocks install cluacov
+          ~/local/bin/luarocks install busted-htest
+      - name: Run test
+        run: |
+          lua_modules/bin/busted.bat \
+            -o htest \
+            -v \
+            --exclude-tags=ssh,unix \
+            -Xhelper lua_dir=$(cygpath --windows /mingw64),lua_interpreter=${{ matrix.lua_interpreter }},msys2_mingw_w64

@@ -248,6 +248,8 @@ function test_env.set_args()
          test_env.MINGW = true
       elseif argument == "vs" then
          test_env.MINGW = false
+      elseif argument == "msys2_mingw_w64" then
+         test_env.MSYS2_MINGW_W64 = true
       elseif argument:find("^lua_dir=") then
          test_env.LUA_DIR = argument:match("^lua_dir=(.*)$")
       elseif argument:find("^lua_interpreter=") then
@@ -429,7 +431,9 @@ local function hash_environment(path)
       return execute_output("find " .. path .. " -type f -exec stat -f \"%z %N\" {} \\; | md5")
    elseif test_env.TEST_TARGET_OS == "windows" then
       return execute_output("\"" .. Q(test_env.testing_paths.win_tools .. "/find") .. " " .. Q(path)
-         .. " -printf \"%s %p\"\" > temp_sum.txt && certUtil -hashfile temp_sum.txt && del temp_sum.txt")
+         .. " -printf \"%s %p\"\" > temp_sum.txt && "
+         .. "C:\\Windows\\System32\\certUtil -hashfile temp_sum.txt && "
+         .. "del temp_sum.txt")
    end
 end
 
@@ -823,10 +827,14 @@ local function setup_luarocks()
    if test_env.TEST_TARGET_OS == "windows" then
       if test_env.MINGW then
          table.insert(lines, [[SYSTEM = "mingw",]])
+      elseif test_env.MSYS2_MINGW_W64 then
+         table.insert(lines, [[SYSTEM = "msys2_mingw_w64",]])
       else
          table.insert(lines, [[SYSTEM = "windows",]])
       end
-      table.insert(lines, ("WIN_TOOLS = %q,"):format(testing_paths.win_tools))
+      if not test_env.MSYS2_MINGW_W64 then
+         table.insert(lines, ("WIN_TOOLS = %q,"):format(testing_paths.win_tools))
+      end
    end
 
    table.insert(lines, "}")

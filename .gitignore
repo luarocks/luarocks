@@ -14,7 +14,9 @@
 /gh-pages
 /wiki
 /lua
+/lua.bat
 /lua_modules
 /luarocks
+/luarocks.bat
 /luarocks-admin
 /.luarocks

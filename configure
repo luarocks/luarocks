@@ -467,6 +467,26 @@ else
    die "Make sure it is installed and available in your PATH."
 fi
 
+dir_separator=$("$LUA_BINDIR/$LUA_INTERPRETER" -e 'print(package.config:sub(1, 1))')
+if [ "$dir_separator" = "\\" ]
+then
+  echo "Lua platform: $(GREEN "Mingw-w64 on MSYS2")"
+  LUA_MSYS2_MINGW_W64=yes
+  LUA_DIR="$(cygpath --windows "$LUA_DIR" | sed -e 's/\\/\\\\/g')"
+  LUA_BINDIR="$(cygpath --windows "$LUA_BINDIR" | sed -e 's/\\/\\\\/g')"
+  if [ "$LUA_INCDIR_SET" = "yes" ]
+  then
+    LUA_INCDIR="$(cygpath --windows "$LUA_INCDIR" | sed -e 's/\\/\\\\/g')"
+  fi
+  if [ "$LUA_LIBDIR_SET" = "yes" ]
+  then
+    LUA_LIBDIR="$(cygpath --windows "$LUA_LIBDIR" | sed -e 's/\\/\\\\/g')"
+  fi
+else
+  echo "Lua platform: $(GREEN "not Mingw-w64 on MSYS2")"
+  LUA_MSYS2_MINGW_W64=no
+fi
+
 # ----------------------------------------
 # Write config
 # ----------------------------------------
@@ -487,6 +507,7 @@ LUA_DIR=$LUA_DIR
 LUA_BINDIR=$LUA_BINDIR
 LUA_INCDIR=$LUA_INCDIR
 LUA_LIBDIR=$LUA_LIBDIR
+LUA_MSYS2_MINGW_W64=$LUA_MSYS2_MINGW_W64
 FORCE_CONFIG=$FORCE_CONFIG
 EOF
 
@@ -501,6 +522,7 @@ echo "Using Lua from.....................: $(GREEN "$LUA_DIR")"
 if [ "$LUA_BINDIR_SET" = "yes" ]; then echo "Lua bin directory..................: $(GREEN "$LUA_BINDIR")" ; fi
 if [ "$LUA_INCDIR_SET" = "yes" ]; then echo "Lua include directory..............: $(GREEN "$LUA_INCDIR")" ; fi
 if [ "$LUA_LIBDIR_SET" = "yes" ]; then echo "Lua lib directory..................: $(GREEN "$LUA_LIBDIR")" ; fi
+echo "Lua is built with Mingw-w64 on MSYS2...: $(GREEN "$LUA_MSYS2_MINGW_W64")"
 echo
 echo "* Type $(BOLD make) and $(BOLD make install):"
 echo "  to install to $prefix as usual."

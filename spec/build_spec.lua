@@ -959,7 +959,7 @@ describe("LuaRocks build #unit", function()
          it("automatically extracts the modules and libraries if they are not given and builds against any external dependencies", function()
             local fdir = testing_paths.fixtures_dir
             if test_env.TEST_TARGET_OS == "windows" then
-               if test_env.MINGW then
+               if test_env.MINGW or test_env.MSYS2_MINGW_W64 then
                   os.execute("gcc -shared -o " .. fdir .. "/libfixturedep.dll -Wl,--out-implib," .. fdir .."/libfixturedep.a " .. fdir .. "/fixturedep.c")
                else
                   os.execute("cl " .. fdir .. "\\fixturedep.c /link /export:fixturedep_fn /out:" .. fdir .. "\\fixturedep.dll /implib:" .. fdir .. "\\fixturedep.lib")

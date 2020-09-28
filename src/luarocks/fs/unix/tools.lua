@@ -152,13 +152,13 @@ function tools.unzip(zipfile)
    end
 end
 
-local function uncompress(default_ext, program, infile, outfile)
+local function uncompress(default_ext, program, uncompress_flag, infile, outfile)
    assert(type(infile) == "string")
    assert(outfile == nil or type(outfile) == "string")
    if not outfile then
       outfile = infile:gsub("%."..default_ext.."$", "")
    end
-   if fs.execute(fs.Q(program).." -c "..fs.Q(infile).." > "..fs.Q(outfile)) then
+   if fs.execute(fs.Q(program).." "..fs.Q(uncompress_flag).." -c "..fs.Q(infile).." > "..fs.Q(outfile)) then
       return true
    else
       return nil, "failed extracting " .. infile
@@ -171,7 +171,7 @@ end
 -- If not given, name is derived from input file.
 -- @return boolean: true on success; nil and error message on failure.
 function tools.gunzip(infile, outfile)
-   return uncompress("gz", "gunzip", infile, outfile)
+   return uncompress("gz", "gzip", "-d", infile, outfile)
 end
 
 --- Uncompresses a .bz2 file.
@@ -180,7 +180,7 @@ end
 -- If not given, name is derived from input file.
 -- @return boolean: true on success; nil and error message on failure.
 function tools.bunzip2(infile, outfile)
-   return uncompress("bz2", "bunzip2", infile, outfile)
+   return uncompress("bz2", "bzip2", "-d", infile, outfile)
 end
 
 do

@@ -45,6 +45,7 @@ local platform_order = {
    "windows",
    "win32",
    "mingw32",
+   "msys2_mingw_w64",
 }
 
 local function detect_sysconfdir()
@@ -70,7 +71,11 @@ end
 
 local function set_confdirs(cfg, platforms, hardcoded_sysconfdir)
    local sysconfdir = os.getenv("LUAROCKS_SYSCONFDIR") or hardcoded_sysconfdir
-   if platforms.windows then
+   local windows_style = platforms.windows
+   if platforms.msys_mingw then
+      windows_style = false
+   end
+   if windows_style then
       cfg.home = os.getenv("APPDATA") or "c:"
       cfg.home_tree = cfg.home.."/luarocks"
       cfg.homeconfdir = cfg.home_tree
@@ -167,6 +172,7 @@ local platform_sets = {
    linux = { unix = true, linux = true },
    mingw = { windows = true, win32 = true, mingw32 = true, mingw = true },
    msys = { unix = true, cygwin = true, msys = true },
+   msys2_mingw_w64 = { windows = true, win32 = true, mingw32 = true, mingw = true, msys = true, msys2_mingw_w64 = true },
 }
 
 local function make_platforms(system)
@@ -416,6 +422,29 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          lib = { "lib?.so", "?.dll", "lib?.dll" },
          include = { "?.h" }
       }
+      if platforms.mingw then
+         -- MSYS2 can build Windows programs that depend on
+         -- msys-2.0.dll (based on Cygwin) but MSYS2 is also designed
+         -- for building native Windows programs by MinGW. These
+         -- programs don't depend on msys-2.0.dll.
+         defaults.makefile = "Makefile"
+         defaults.cmake_generator = "MSYS Makefiles"
+         defaults.local_cache = home.."/.cache/luarocks"
+         defaults.variables.PWD = "cd"
+         local pipe = io.popen("cygpath --windows /bin/mkdir")
+         defaults.variables.MKDIR = pipe:read("*l")
+         pipe:close()
+         defaults.variables.MAKE = "make"
+         defaults.variables.CC = "gcc"
+         defaults.variables.RC = "windres"
+         defaults.variables.LD = "gcc"
+         defaults.variables.MT = nil
+         defaults.variables.AR = "ar"
+         defaults.variables.RANLIB = "ranlib"
+         defaults.variables.LUALIB = "liblua"..lua_version..".dll.a"
+         defaults.variables.CFLAGS = "-O2 -fPIC"
+         defaults.variables.LIBFLAG = "-shared"
+      end
    end
 
    if platforms.bsd then
@@ -600,12 +629,14 @@ function cfg.init(detected, warning)
          -- running from the Development Command prompt for VS 2017
          system = "windows"
       else
-         local fd = io.open("/bin/sh", "r")
-         if fd then
-            fd:close()
+         local msystem = os.getenv("MSYSTEM")
+         if msystem == nil then
+            system = "mingw"
+         elseif msystem == "MSYS" then
             system = "msys"
          else
-            system = "mingw"
+            -- MINGW32 or MINGW64
+            system = "msys2_mingw_w64"
          end
       end
    end
@@ -708,7 +739,7 @@ function cfg.init(detected, warning)
 
    local defaults = make_defaults(cfg.lua_version, processor, platforms, cfg.home)
 
-   if platforms.windows and hardcoded.WIN_TOOLS then
+   if platforms.windows and not platforms.msys2_mingw_w64 and hardcoded.WIN_TOOLS then
       local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "PWD", "RMDIR", "WGET", "MKDIR" }
       for _, tool in ipairs(tools) do
          defaults.variables[tool] = '"' .. hardcoded.WIN_TOOLS .. "/" .. defaults.variables[tool] .. '.exe"'
