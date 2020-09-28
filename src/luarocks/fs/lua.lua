@@ -10,6 +10,8 @@ local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 
+local pack = table.pack or function(...) return { n = select("#", ...), ... } end
+
 local socket_ok, zip_ok, lfs_ok, md5_ok, posix_ok, bz2_ok, _
 local http, ftp, zip, lfs, md5, posix, bz2
 
@@ -54,7 +56,9 @@ end
 
 local function quote_args(command, ...)
    local out = { command }
-   for _, arg in ipairs({...}) do
+   local args = pack(...)
+   for i=1, args.n do
+      local arg = args[i]
       assert(type(arg) == "string")
       out[#out+1] = fs.Q(arg)
    end

@@ -12,6 +12,7 @@ local fs = require("luarocks.fs")
 local argparse = require("luarocks.argparse")
 
 local unpack = table.unpack or unpack
+local pack = table.pack or function(...) return { n = select("#", ...), ... } end
 
 local hc_ok, hardcoded = pcall(require, "luarocks.core.hardcoded")
 if not hc_ok then
@@ -532,10 +533,10 @@ function cmd.run_command(description, commands, external_namespace, ...)
    end
 
    local function process_cmdline_vars(...)
-      local args = {...}
+      local args = pack(...)
       local cmdline_vars = {}
-      local last = #args
-      for i = 1, #args do
+      local last = args.n
+      for i = 1, args.n do
          if args[i] == "--" then
             last = i - 1
             break
