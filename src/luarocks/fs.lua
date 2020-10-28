@@ -58,8 +58,9 @@ do
          if name ~= "init" and not fs[name] then
             fs[name] = function(...)
                if fs_is_verbose then
-                  local args = { ... }
-                  for i, arg in ipairs(args) do
+                  local args = pack(...)
+                  for i=1, args.n do
+                     local arg = args[i]
                      local pok, v = pcall(string.format, "%q", arg)
                      args[i] = pok and v or tostring(arg)
                   end

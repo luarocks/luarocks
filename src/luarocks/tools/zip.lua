@@ -8,6 +8,8 @@ local fs = require("luarocks.fs")
 local fun = require("luarocks.fun")
 local dir = require("luarocks.dir")
 
+local pack = table.pack or function(...) return { n = select("#", ...), ... } end
+
 local stat_ok, stat = pcall(require, "posix.sys.stat")
 
 local function shr(n, m)
@@ -284,8 +286,10 @@ function zip.zip(zipfile, ...)
       return nil, "error opening "..zipfile
    end
 
+   local args = pack(...)
    local ok, err
-   for _, file in pairs({...}) do
+   for i=1, args.n do
+      local file = args[i]
       if fs.is_dir(file) then
          for _, entry in pairs(fs.find(file)) do
             local fullname = dir.path(file, entry)

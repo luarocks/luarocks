@@ -20,6 +20,7 @@ util.warning = core.warning
 util.keys = core.keys
 
 local unpack = unpack or table.unpack
+local pack = table.pack or function(...) return { n = select("#", ...), ... } end
 
 local scheduled_functions = {}
 local debug = require("debug")
@@ -34,7 +35,7 @@ local debug = require("debug")
 function util.schedule_function(f, ...)
    assert(type(f) == "function")
    
-   local item = { fn = f, args = {...} }
+   local item = { fn = f, args = pack(...) }
    table.insert(scheduled_functions, item)
    return item
 end
@@ -64,7 +65,7 @@ function util.run_scheduled_functions()
    end
    for i = #scheduled_functions, 1, -1 do
       local item = scheduled_functions[i]
-      item.fn(unpack(item.args))
+      item.fn(unpack(item.args, 1, item.args.n))
    end
 end
 
