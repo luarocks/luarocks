@@ -665,7 +665,11 @@ local function lua_h_exists(d, luaver)
       if data:match("LUA_VERSION_NUM%s*" .. tostring(luanum)) then
          return d
       end
+
+      return nil, "Lua header mismatches configured version. You may need to install them or configure LUA_INCDIR.", "dependency"
    end
+
+   return nil, "Failed finding Lua header files. You may need to install them or configure LUA_INCDIR.", "dependency"
 end
 
 local function find_lua_incdir(prefix, luaver, luajitver)
