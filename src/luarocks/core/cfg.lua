@@ -19,8 +19,8 @@ local sysdetect = require("luarocks.core.sysdetect")
 
 --------------------------------------------------------------------------------
 
-local program_version = "dev"
-local program_series = "3.0"
+local program_version = "3.5.0"
+local program_series = "3.5"
 local major_version = (program_version:match("([^.]%.[^.])")) or program_series
 
 local is_windows = package.config:sub(1,1) == "\\"
