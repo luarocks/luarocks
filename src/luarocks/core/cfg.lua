@@ -504,6 +504,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
 
    if platforms.openbsd then
       defaults.arch = "openbsd-"..target_cpu
+      defaults.gcc_rpath = false
    end
 
    if platforms.netbsd then
