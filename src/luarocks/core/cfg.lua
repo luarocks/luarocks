@@ -16,6 +16,7 @@ local next, table, pairs, require, os, pcall, ipairs, package, tonumber, type, a
 local util = require("luarocks.core.util")
 local persist = require("luarocks.core.persist")
 local sysdetect = require("luarocks.core.sysdetect")
+local vers = require("luarocks.core.vers")
 
 --------------------------------------------------------------------------------
 
@@ -457,16 +458,19 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.arch = "macosx-"..target_cpu
       defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
       local version = util.popen_read("sw_vers -productVersion")
-      version = tonumber(version and version:match("^[^.]+%.([^.]+)")) or 3
-      if version >= 10 then
-         version = 8
-      elseif version >= 5 then
-         version = 5
+      if not (version:match("^%d+%.%d+%.%d+$") or version:match("^%d+%.%d+$")) then
+         version = "10.3"
+      end
+      version = vers.parse_version(version)
+      if version >= vers.parse_version("10.10") then
+         version = vers.parse_version("10.8")
+      elseif version >= vers.parse_version("10.5") then
+         version = vers.parse_version("10.5")
       else
          defaults.gcc_rpath = false
       end
-      defaults.variables.CC = "env MACOSX_DEPLOYMENT_TARGET=10."..version.." gcc"
-      defaults.variables.LD = "env MACOSX_DEPLOYMENT_TARGET=10."..version.." gcc"
+      defaults.variables.CC = "env MACOSX_DEPLOYMENT_TARGET="..tostring(version).." gcc"
+      defaults.variables.LD = "env MACOSX_DEPLOYMENT_TARGET="..tostring(version).." gcc"
       defaults.web_browser = "open"
    end
 

@@ -9,6 +9,7 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
 local cfg = require("luarocks.core.cfg")
+local vers = require("luarocks.core.vers")
 local repos = require("luarocks.repos")
 local writer = require("luarocks.manif.writer")
 local deplocks = require("luarocks.deplocks")
@@ -82,9 +83,6 @@ end
 
 local function check_macosx_deployment_target(rockspec)
    local target = rockspec.build.macosx_deployment_target
-   local function minor(version) 
-      return tonumber(version and version:match("^[^.]+%.([^.]+)"))
-   end
    local function patch_variable(var)
       if rockspec.variables[var]:match("MACOSX_DEPLOYMENT_TARGET") then
          rockspec.variables[var] = (rockspec.variables[var]):gsub("MACOSX_DEPLOYMENT_TARGET=[^ ]*", "MACOSX_DEPLOYMENT_TARGET="..target)
@@ -94,10 +92,10 @@ local function check_macosx_deployment_target(rockspec)
    end
    if cfg.is_platform("macosx") and rockspec:format_is_at_least("3.0") and target then
       local version = util.popen_read("sw_vers -productVersion")
-      local versionminor = minor(version)
-      local targetminor = minor(target)
-      if targetminor > versionminor then
-         return nil, ("This rock requires Mac OSX 10.%d, and you are running 10.%d."):format(targetminor, versionminor)
+      if version:match("^%d+%.%d+%.%d+$") or version:match("^%d+%.%d+$") then
+         if vers.compare_versions(target, version) then
+            return nil, ("This rock requires Mac OSX %s, and you are running %s."):format(targetversion, version)
+         end
       end
       patch_variable("CC")
       patch_variable("LD")
