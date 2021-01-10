@@ -1,3 +1,13 @@
+## What's new in LuaRocks 3.5.0
+
+This is a small release:
+
+* Added support for MSYS2 and Mingw-w64
+* Reverted the change in MSVC environment variable set up script
+* Fixes a bug where `--verbose` raised an exception with a nil argument
+* Added proper error messages when lua.h is invalid
+
+
 ## What's new in LuaRocks 3.4.0
 
 ### Features
