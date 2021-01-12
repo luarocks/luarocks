@@ -45,8 +45,8 @@ function path_cmd.command(args)
       return true
    end
 
-   local clean_path = util.cleanup_path(os.getenv("PATH"), path_sep, nil, true)
-   
+   local clean_path = util.cleanup_path(os.getenv("PATH") or "", path_sep, nil, true)
+
    if args.append then
       lr_path = package.path .. ";" .. lr_path
       lr_cpath = package.cpath .. ";" .. lr_cpath

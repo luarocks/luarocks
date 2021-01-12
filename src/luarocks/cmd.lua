@@ -179,7 +179,7 @@ end
 local function search_lua_in_path(lua_version, verbose)
    local path_sep = (package.config:sub(1, 1) == "\\" and ";" or ":")
    local all_tried = {}
-   for bindir in os.getenv("PATH"):gmatch("[^"..path_sep.."]+") do
+   for bindir in (os.getenv("PATH") or ""):gmatch("[^"..path_sep.."]+") do
       local parentdir = dir.path((bindir:gsub("[\\/][^\\/]+[\\/]?$", "")))
       local detected, tried = util.find_lua(parentdir, lua_version)
       if detected then
