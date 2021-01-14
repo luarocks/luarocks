@@ -275,7 +275,7 @@ function fetch.load_local_rockspec(rel_filename, quick)
       return nil, abs_filename .. ": " .. err
    end
 
---   rockspec.build.type = "xmake"
+   rockspec.build.type = "xmake"
 
    local name_version = rockspec.package:lower() .. "-" .. rockspec.version
    if basename ~= "rockspec" and basename ~= name_version .. ".rockspec" then
