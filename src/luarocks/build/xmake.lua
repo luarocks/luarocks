@@ -37,12 +37,15 @@ local function add_platform_configs(info, rockspec, name)
    info.libraries = info.libraries or {}
    info._cflags   = info._cflags or {}
    info._shflags  = info._shflags or {}
+   info._syslinks = info._syslinks or {}
    table.insert(info.incdirs, variables.LUA_INCDIR)
    table.insert(info._cflags, variables.CFLAGS)
    table.insert(info._shflags, variables.LIBFLAG)
 
    -- add platform configuration
    if cfg.is_platform("mingw32") then
+      table.insert(info._shflags, dir.path(variables.LUA_LIBDIR, variables.LUALIB))
+      table.insert(info._syslinks, variables.MSVCRT or "m")
    elseif cfg.is_platform("win32") then
       local deffile = name .. ".def"
       local def = io.open(dir.path(fs.current_dir(), deffile), "w+")
@@ -52,6 +55,7 @@ local function add_platform_configs(info, rockspec, name)
       def:write("luaopen_"..exported_name.."\n")
       def:close()
       table.insert(info._shflags, "-def:" .. deffile)
+      table.insert(info._shflags, dir.path(variables.LUA_LIBDIR, variables.LUALIB))
    else
       if cfg.link_lua_explicitly then
         table.insert(info.libdirs, variables.LUA_LIBDIR)
@@ -149,6 +153,11 @@ local function autogen_xmakefile(xmakefile, rockspec)
              if info.libraries then
                 for _, library in ipairs(info.libraries) do
                    file:write("    add_links('" .. library .. "')\n")
+                end
+             end
+             if info._syslinks then
+                for _, link in ipairs(info._syslinks) do
+                   file:write("    add_syslinks('" .. link .. "')\n")
                 end
              end
              -- Install modules, e.g. socket.core -> lib/socket/core.so
