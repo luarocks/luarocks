@@ -329,7 +329,7 @@ local function detect_pe(fd)
       rdata_pos = bytes2number(rdata_pos, LITTLE)
       fd:seek("set", rdata_pos)
       local data = fd:read(512)
-      if data:match("cyggcc") then
+      if data:match("cygwin") or data:match("cyggcc") then
          system = "cygwin"
       end
    end
