@@ -167,6 +167,75 @@ local function autogen_xmakefile(xmakefile, rockspec)
    return true
 end
 
+-- Get xmake configuration arguments
+local function xmake_config_args(variables)
+
+   local args = ""
+   local XMAKE_PLAT                = variables.XMAKE_PLAT or os.getenv("XMAKE_PLAT")
+   local XMAKE_ARCH                = variables.XMAKE_ARCH or os.getenv("XMAKE_ARCH")
+   local XMAKE_MODE                = variables.XMAKE_ARCH or os.getenv("XMAKE_MODE")
+   local XMAKE_SDK                 = variables.XMAKE_SDK or os.getenv("XMAKE_SDK")
+   local XMAKE_MINGW               = variables.XMAKE_MINGW or os.getenv("XMAKE_MINGW")
+   local XMAKE_TOOLCHAIN           = variables.XMAKE_TOOLCHAIN or os.getenv("XMAKE_TOOLCHAIN")
+   local XMAKE_CC                  = variables.XMAKE_CC or os.getenv("XMAKE_CC")
+   local XMAKE_LD                  = variables.XMAKE_LD or os.getenv("XMAKE_LD")
+   local XMAKE_CFLAGS              = variables.XMAKE_CFLAGS or os.getenv("XMAKE_CFLAGS")
+   local XMAKE_LDFLAGS             = variables.XMAKE_CFLAGS or os.getenv("XMAKE_LDFLAGS")
+   local XMAKE_VS                  = variables.XMAKE_VS or os.getenv("XMAKE_VS")
+   local XMAKE_VS_SDKVER           = variables.XMAKE_VS_SDKVER or os.getenv("XMAKE_VS_SDKVER")
+   local XMAKE_VS_RUNTIME          = variables.XMAKE_VS_RUNTIME or os.getenv("XMAKE_VS_RUNTIME")
+   local XMAKE_VS_TOOLSET          = variables.XMAKE_VS_TOOLSET or os.getenv("XMAKE_VS_TOOLSET")
+   local XMAKE_XCODE_TARGET_MINVER = variables.XMAKE_XCODE_TARGET_MINVER or os.getenv("XMAKE_XCODE_TARGET_MINVER")
+   if XMAKE_PLAT then
+      args = args .. " -p " .. XMAKE_PLAT
+   elseif cfg.is_platform("mingw32") then
+      args = args .. " -p mingw"
+   end
+   if XMAKE_ARCH then
+      args = args .. " -a " .. XMAKE_ARCH
+   end
+   if XMAKE_MODE then
+      args = args .. " -m " .. XMAKE_MODE
+   end
+   if XMAKE_SDK then
+      args = args .. " --sdk=" .. XMAKE_SDK
+   end
+   if XMAKE_MINGW then
+      args = args .. " --mingw=" .. XMAKE_MINGW
+   end
+   if XMAKE_TOOLCHAIN then
+      args = args .. " --toolchain=" .. XMAKE_TOOLCHAIN
+   end
+   if XMAKE_CC then
+      args = args .. " --cc=" .. XMAKE_CC
+   end
+   if XMAKE_LD then
+      args = args .. " --sh=" .. XMAKE_LD
+   end
+   if XMAKE_CFLAGS then
+      args = args .. " --cxflags=" .. XMAKE_CFLAGS
+   end
+   if XMAKE_LDFLAGS then
+      args = args .. " --shflags=" .. XMAKE_LDFLAGS
+   end
+   if XMAKE_VS then
+      args = args .. " --vs=" .. XMAKE_VS
+   end
+   if XMAKE_VS_RUNTIME then
+      args = args .. " --vs_runtime=" .. XMAKE_VS_RUNTIME
+   end
+   if XMAKE_VS_SDKVER then
+      args = args .. " --vs_sdkver=" .. XMAKE_VS_SDKVER
+   end
+   if XMAKE_VS_TOOLSET then
+      args = args .. " --vs_toolset=" .. XMAKE_VS_TOOLSET
+   end
+   if XMAKE_XCODE_TARGET_MINVER then
+      args = args .. " --target_minver=" .. XMAKE_XCODE_TARGET_MINVER
+   end
+   return args
+end
+
 --- Driver function for the "xmake" build back-end.
 -- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string): true if no errors occurred,
@@ -176,6 +245,8 @@ function xmake.run(rockspec, no_install)
    -- Get rockspec
    assert(rockspec:type() == "rockspec")
    local build = rockspec.build
+   local variables = build.variables or {}
+   util.variable_substitutions(variables, rockspec.variables)
 
    -- Check xmake
    local xmake = rockspec.variables.XMAKE
@@ -215,10 +286,7 @@ function xmake.run(rockspec, no_install)
    end
 
    -- Do configure
-   local args = ""
-   if cfg.is_platform("mingw32") then
-      args = args .. " -p mingw"
-   end
+   local args = xmake_config_args(variables)
    if not fs.execute_string(xmake .. " f -y" .. args) then
       return nil, "Failed configuring."
    end
