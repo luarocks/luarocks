@@ -9,7 +9,7 @@ local path    = require("luarocks.path")
 local cfg     = require("luarocks.core.cfg")
 local builtin = require("luarocks.build.builtin")
 
--- from builtin.autoextract_libs
+-- From builtin.autoextract_libs
 local function autoextract_libs(external_dependencies, variables)
    if not external_dependencies then
       return nil, nil, nil
@@ -27,11 +27,14 @@ local function autoextract_libs(external_dependencies, variables)
    return libs, incdirs, libdirs
 end
 
--- add platform configuration
+-- Add platform configuration
 local function add_platform_configs(info, rockspec, name)
-   local variables = rockspec.variables
 
-   -- add lua library
+   -- Get variables
+   local variables = rockspec.variables
+   local XMAKE_PLAT = variables.XMAKE_PLAT or os.getenv("XMAKE_PLAT")
+
+   -- Add lua library
    info.incdirs   = info.incdirs or {}
    info.libdirs   = info.libdirs or {}
    info.libraries = info.libraries or {}
@@ -39,11 +42,13 @@ local function add_platform_configs(info, rockspec, name)
    info._shflags  = info._shflags or {}
    info._syslinks = info._syslinks or {}
    table.insert(info.incdirs, variables.LUA_INCDIR)
-   table.insert(info._cflags, variables.CFLAGS)
-   table.insert(info._shflags, variables.LIBFLAG)
+   if not XMAKE_PLAT then
+      table.insert(info._cflags, variables.CFLAGS)
+      table.insert(info._shflags, variables.LIBFLAG)
+   end
 
-   -- add platform configuration
-   if cfg.is_platform("mingw32") then
+   -- Add platform configuration
+   if XMAKE_PLAT == "mingw" or cfg.is_platform("mingw32") then
       table.insert(info._shflags, dir.path(variables.LUA_LIBDIR, variables.LUALIB))
       table.insert(info._syslinks, variables.MSVCRT or "m")
    elseif cfg.is_platform("win32") then
@@ -90,6 +95,7 @@ local function autogen_xmakefile(xmakefile, rockspec)
    end
 
    -- Generate xmake.lua
+   local XMAKE_PLAT = variables.XMAKE_PLAT or os.getenv("XMAKE_PLAT")
    local build_sources = false
    local file = assert(io.open(xmakefile, "w"))
    file:write('add_rules("mode.release", "mode.debug")\n')
@@ -108,7 +114,7 @@ local function autogen_xmakefile(xmakefile, rockspec)
              build_sources = true
              local module_name = name:match("([^.]*)$") .. "." .. util.matchquote(cfg.lib_extension)
              file:write('target("' .. name .. '")\n')
-             if cfg.is_platform("macosx") then
+             if not XMAKE_PLAT and cfg.is_platform("macosx") then
                 file:write('    set_kind("binary")\n')
              else
                 file:write('    set_kind("shared")\n')
