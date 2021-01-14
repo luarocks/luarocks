@@ -273,6 +273,8 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          CMAKE = "cmake",
          SEVENZ = "7z",
 
+         XMAKE = "xmake",
+
          RSYNCFLAGS = "--exclude=.git -Oavz",
          CURLNOCERTFLAG = "",
          WGETNOCERTFLAG = "",
