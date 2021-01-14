@@ -2,10 +2,11 @@
 --- Build back-end for xmake-based modules.
 local xmake = {}
 
-local fs = require("luarocks.fs")
-local util = require("luarocks.util")
-local dir = require("luarocks.dir")
-local cfg = require("luarocks.core.cfg")
+local fs      = require("luarocks.fs")
+local util    = require("luarocks.util")
+local dir     = require("luarocks.dir")
+local path    = require("luarocks.path")
+local cfg     = require("luarocks.core.cfg")
 local builtin = require("luarocks.build.builtin")
 
 -- from builtin.autoextract_libs
@@ -101,7 +102,7 @@ local function autogen_xmakefile(xmakefile, rockspec)
          if type(sources) == "string" then sources = {sources} end
          if #sources > 0 then
              build_sources = true
-             local module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)
+             local module_name = name:match("([^.]*)$") .. "." .. util.matchquote(cfg.lib_extension)
              file:write('target("' .. name .. '")\n')
              if cfg.is_platform("macosx") then
                 file:write('    set_kind("binary")\n')
@@ -150,6 +151,11 @@ local function autogen_xmakefile(xmakefile, rockspec)
                    file:write("    add_links('" .. library .. "')\n")
                 end
              end
+             -- Install modules, e.g. socket.core -> lib/socket/core.so
+             file:write("    on_install(function (target)\n")
+             file:write("        local moduledir = path.directory((target:name():gsub('%.', '/')))\n")
+             file:write("        import('target.action.install')(target, {libdir = path.join('lib', moduledir), bindir = path.join('lib', moduledir)})\n")
+             file:write("    end)\n")
              file:write('\n')
          end
       end
@@ -238,16 +244,8 @@ function xmake.run(rockspec, no_install)
       end
    end
 
-   build.install = build.install or {}
-   build.install.lib = build.install.lib or {}
-   local outputdir = dir.path("output", "lib")
-   if cfg.is_platform("macosx") then
-      outputdir = dir.path("output", "bin")
-   end
-   local files = fs.list_dir(outputdir)
-   for _, filename in ipairs(files) do
-      table.insert(build.install.lib, dir.path(outputdir, filename))
-   end
+   local libdir = path.lib_dir(rockspec.name, rockspec.version)
+   fs.copy_contents(dir.path("output", "lib"), libdir, "exec")
 
    return true
 end
