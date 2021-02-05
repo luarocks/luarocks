@@ -29,7 +29,7 @@ Query information about the LuaRocks configuration.
   * `lua_dir` is a special key as it checks for a valid Lua installation
     (equivalent to --lua-dir) and sets several keys at once.
   * `lua_version` is a special key as it changes the default Lua version
-    used by LuaRocks commands (eqivalent to passing --lua-version). 
+    used by LuaRocks commands (equivalent to passing --lua-version). 
 
   Examples:
      luarocks config variables.OPENSSL_DIR /usr/local/openssl
