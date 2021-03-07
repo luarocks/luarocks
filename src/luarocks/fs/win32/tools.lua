@@ -21,11 +21,11 @@ function tools.command_at(directory, cmd, exit_on_error)
    if exit_on_error then
       op = " && "
    end
-   local cmd = "cd " .. fs.Q(directory) .. op .. cmd
+   local cmd_prefixed = "cd " .. fs.Q(directory) .. op .. cmd
    if drive then
-      cmd = drive .. " & " .. cmd
+      cmd_prefixed = drive .. " & " .. cmd_prefixed
    end
-   return cmd
+   return cmd_prefixed
 end
 
 --- Create a directory if it does not already exist.

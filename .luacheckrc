@@ -28,3 +28,5 @@ ignore = {
 include_files = {
    "src/luarocks/**/*.lua"
 }
+
+unused_secondaries = false

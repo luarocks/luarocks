@@ -18,7 +18,7 @@ local make = require("luarocks.cmd.make")
 local cmd = require("luarocks.cmd")
 
 function cmd_build.add_to_parser(parser)
-   local cmd = parser:command("build", "Build and install a rock, compiling its C parts if any.\n"..
+   local cmd = parser:command("build", "Build and install a rock, compiling its C parts if any.\n"..  -- luacheck: ignore 431
       "If the sources contain a luarocks.lock file, uses it as an authoritative source for "..
       "exact version of dependencies.\n"..
       "If no arguments are given, behaves as luarocks make.", util.see_also())

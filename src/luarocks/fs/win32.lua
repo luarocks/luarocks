@@ -15,8 +15,11 @@ local util = require("luarocks.util")
 -- See http://lua-users.org/lists/lua-l/2013-11/msg00367.html
 local _prefix = "type NUL && "
 local _popen, _execute = io.popen, os.execute
+
+-- luacheck: push globals io os
 io.popen = function(cmd, ...) return _popen(_prefix..cmd, ...) end
 os.execute = function(cmd, ...) return _execute(_prefix..cmd, ...) end
+-- luacheck: pop
 
 --- Annotate command string for quiet execution.
 -- @param cmd string: A command-line string.
@@ -38,7 +41,7 @@ end
 local function split_root(pathname)
    local drive = ""
    local root = ""
-   local rest = ""
+   local rest
 
    local unquoted = pathname:match("^['\"](.*)['\"]$")
    if unquoted then

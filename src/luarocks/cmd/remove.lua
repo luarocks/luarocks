@@ -15,6 +15,7 @@ local queries = require("luarocks.queries")
 local cmd = require("luarocks.cmd")
 
 function cmd_remove.add_to_parser(parser)
+   -- luacheck: push ignore 431
    local cmd = parser:command("remove", [[
 Uninstall a rock.
 
@@ -23,6 +24,7 @@ Will only perform the removal if it does not break dependencies.
 To override this check and force the removal, use --force or --force-fast.]],
    util.see_also())
       :summary("Uninstall a rock.")
+   -- luacheck: pop
 
    cmd:argument("rock", "Name of the rock to be uninstalled.")
       :action(util.namespaced_name_action)

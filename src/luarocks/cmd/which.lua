@@ -32,7 +32,7 @@ function which_cmd.command(args)
    local modpath = args.modname:gsub("%.", "/")
    for _, v in ipairs({"path", "cpath"}) do
       for p in package[v]:gmatch("([^;]+)") do
-         local pathname = p:gsub("%?", modpath)
+         local pathname = p:gsub("%?", modpath)  -- luacheck: ignore 421
          if fs.exists(pathname) then
             util.printout(pathname)
             util.printout("(found directly via package." .. v .. " -- not installed as a rock?)")

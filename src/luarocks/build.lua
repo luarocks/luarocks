@@ -94,7 +94,7 @@ local function check_macosx_deployment_target(rockspec)
       local version = util.popen_read("sw_vers -productVersion")
       if version:match("^%d+%.%d+%.%d+$") or version:match("^%d+%.%d+$") then
          if vers.compare_versions(target, version) then
-            return nil, ("This rock requires Mac OSX %s, and you are running %s."):format(targetversion, version)
+            return nil, ("This rock requires Mac OSX %s, and you are running %s."):format(target, version)
          end
       end
       patch_variable("CC")

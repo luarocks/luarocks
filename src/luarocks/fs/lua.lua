@@ -215,7 +215,7 @@ function fs_lua.modules(at)
 
    local modules = {}
    local is_duplicate = {}
-   for _, path in ipairs(paths) do
+   for _, path in ipairs(paths) do  -- luacheck: ignore 421
       local files = fs.list_dir(path)
       for _, filename in ipairs(files or {}) do
          if filename:match("%.[lL][uU][aA]$") then
@@ -705,7 +705,7 @@ local redirect_protocols = {
    https = luasec_ok and https,
 }
 
-local function request(url, method, http, loop_control)
+local function request(url, method, http, loop_control)  -- luacheck: ignore 431
    local result = {}
    
    if cfg.verbose then
@@ -805,7 +805,7 @@ end
 -- via the HTTP Last-Modified header if the full download is needed.
 -- @return (boolean | (nil, string, string?)): True if successful, or
 -- nil, error message and optionally HTTPS error in case of errors.
-local function http_request(url, filename, http, cache)
+local function http_request(url, filename, http, cache)  -- luacheck: ignore 431
    if cache then
       local status = read_timestamp(filename..".status")
       local timestamp = read_timestamp(filename..".timestamp")
@@ -824,7 +824,7 @@ local function http_request(url, filename, http, cache)
             end
          end
 
-         local result, status, headers, err = request(url, "HEAD", http)
+         local result, status, headers, err = request(url, "HEAD", http)  -- luacheck: ignore 421
          if not result then
             return fail_with_status(filename, status, headers)
          end
