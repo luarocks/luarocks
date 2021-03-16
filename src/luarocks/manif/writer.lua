@@ -55,17 +55,26 @@ local function remove_package_items(storage, name, version, items)
    local package_identifier = name.."/"..version
 
    for item_name, path in pairs(items) do  -- luacheck: ignore 431
-      local all_identifiers = storage[item_name]
-
-      for i, identifier in ipairs(all_identifiers) do
-         if identifier == package_identifier then
-            table.remove(all_identifiers, i)
-            break
-         end
+      local key = item_name
+      local all_identifiers = storage[key]
+      if not all_identifiers then
+         key = key .. ".init"
+         all_identifiers = storage[key]
       end
 
-      if #all_identifiers == 0 then
-         storage[item_name] = nil
+      if all_identifiers then
+         for i, identifier in ipairs(all_identifiers) do
+            if identifier == package_identifier then
+               table.remove(all_identifiers, i)
+               break
+            end
+         end
+
+         if #all_identifiers == 0 then
+            storage[key] = nil
+         end
+      else
+         util.warning("Cannot find entry for " .. item_name .. " in manifest -- corrupted manifest?")
       end
    end
 end
