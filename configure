@@ -437,7 +437,7 @@ check_incdir() {
    do
       if [ -f "$lua_h" ]
       then
-         grep "LUA_VERSION_NUM.*$LUA_VERSION" $lua_h &> /dev/null && return
+         grep "LUA_VERSION_NUM.*$LUA_VERSION" "$lua_h" > /dev/null 2> /dev/null && return
       fi
       tried="$tried $lua_h"
    done
