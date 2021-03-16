@@ -583,7 +583,7 @@ local function get_msvc_env_setup_cmd()
 		for _, bat in ipairs(vcvars_bats[vars.UNAME_M]) do
 			local full_path = vcdir .. bat
 			if exists(full_path) then
-				return ('call "%s"'):format(full_path)
+				return ('call "%s" > NUL'):format(full_path)
 			end
 		end
 
@@ -592,7 +592,7 @@ local function get_msvc_env_setup_cmd()
 		local vcvarsall = vcdir .. 'vcvarsall.bat'
 		if exists(vcvarsall) then
 			local vcvarsall_args = { x86 = "", x86_64 = " amd64", arm64 = " x86_arm64" }
-			return ('call "%s"%s'):format(vcvarsall, vcvarsall_args[vars.UNAME_M])
+			return ('call "%s"%s > NUL'):format(vcvarsall, vcvarsall_args[vars.UNAME_M])
 		end
 	end
 
@@ -601,7 +601,7 @@ local function get_msvc_env_setup_cmd()
 	if wsdkdir then
 		local setenv = wsdkdir.."Bin\\SetEnv.cmd"
 		if exists(setenv) then
-			return ('call "%s" /%s'):format(setenv, x64 and "x64" or "x86")
+			return ('call "%s" /%s > NUL'):format(setenv, x64 and "x64" or "x86")
 		end
 	end
 
