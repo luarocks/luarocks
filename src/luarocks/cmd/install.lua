@@ -195,8 +195,12 @@ local function install_rock_file(filename, opts)
    end
 
    if (not opts.keep) and not cfg.keep_other_versions then
-      local ok, err = remove.remove_other_versions(name, version, opts.force, opts.force_fast)
-      if not ok then util.printerr(err) end
+      local ok, err, warn = remove.remove_other_versions(name, version, opts.force, opts.force_fast)
+      if not ok then
+         return nil, err
+      elseif warn then
+         util.printerr(err)
+      end
    end
 
    writer.check_dependencies(nil, opts.deps_mode)

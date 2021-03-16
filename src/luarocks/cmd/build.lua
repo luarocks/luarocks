@@ -165,8 +165,10 @@ function cmd_build.command(args)
       util.printout()
    else
       if (not args.keep) and not cfg.keep_other_versions then
-         local ok, err = remove.remove_other_versions(name, version, args.force, args.force_fast)
+         local ok, err, warn = remove.remove_other_versions(name, version, args.force, args.force_fast)
          if not ok then
+            return nil, err
+         elseif warn then
             util.printerr(err)
          end
       end
