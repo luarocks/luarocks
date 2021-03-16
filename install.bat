@@ -559,7 +559,7 @@ local function get_msvc_env_setup_cmd()
 		if exists(vcvarsall) then
 			local vcvarsall_args = { x86 = "", x86_64 = " x64", arm64 = " x86_arm64" }
 			assert(vcvarsall_args[vars.UNAME_M], "vars.UNAME_M: only x86, x86_64 and arm64 are supported")
-			return ('call "%s"%s'):format(vcvarsall, vcvarsall_args[vars.UNAME_M])
+			return ('call "%s"%s > NUL'):format(vcvarsall, vcvarsall_args[vars.UNAME_M])
 		end
 	end
 
