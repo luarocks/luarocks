@@ -607,7 +607,7 @@ function repos.delete_version(name, version, deps_mode, quick)
             local next_name, next_version = manif.get_next_provider("command", item_name)
             if next_name then
                add_to_double_checks(double_checks, next_name, next_version)
-               local next_paths = get_deploy_paths(next_name, next_version, "lua", file_path, repo)
+               local next_paths = get_deploy_paths(next_name, next_version, "bin", file_path, repo)
                table.insert(renames, { src = next_paths.v, dst = next_paths.nv, suffix = cfg.wrapper_suffix })
             end
          end
