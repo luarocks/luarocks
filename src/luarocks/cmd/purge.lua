@@ -62,8 +62,10 @@ function purge.command(args)
       for version, _ in util.sortedpairs(versions, sort) do
          if args.old_versions then
             util.printout("Keeping "..package.." "..version.."...")
-            local ok, err = remove.remove_other_versions(package, version, args.force, args.force_fast)
+            local ok, err, warn = remove.remove_other_versions(package, version, args.force, args.force_fast)
             if not ok then
+               util.printerr(err)
+            elseif warn then
                util.printerr(err)
             end
             break

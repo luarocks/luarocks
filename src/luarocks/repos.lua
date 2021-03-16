@@ -392,6 +392,28 @@ local function rollback_ops(ops, op_fn, n)
    end
 end
 
+--- Double check that all files referenced in `rock_manifest` are installed in `repo`.
+function repos.check_everything_is_installed(name, version, rock_manifest, repo, accept_versioned)
+   local missing = {}
+   for _, category in ipairs({"bin", "lua", "lib"}) do
+      local suffix = (category == "bin") and cfg.wrapper_suffix or ""
+      if rock_manifest[category] then
+         repos.recurse_rock_manifest_entry(rock_manifest[category], function(file_path)
+            local paths = get_deploy_paths(name, version, category, file_path, repo)
+            if not (fs.exists(paths.nv .. suffix) or (accept_versioned and fs.exists(paths.v .. suffix))) then
+               table.insert(missing, paths.nv .. suffix)
+            end
+         end)
+      end
+   end
+   if #missing > 0 then
+      return nil, "failed deploying files. " ..
+                  "The following files were not installed:\n" ..
+                  table.concat(missing, "\n")
+   end
+   return true
+end
+
 --- Deploy a package from the rocks subdirectory.
 -- @param name string: name of package
 -- @param version string: exact package version in string format
@@ -503,8 +525,35 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
    end
    done_op_install()
 
+   local ok, err = repos.check_everything_is_installed(name, version, rock_manifest, repo, true)
+   if not ok then
+      return nil, err
+   end
+
    local writer = require("luarocks.manif.writer")
    return writer.add_to_manifest(name, version, nil, deps_mode)
+end
+
+local function add_to_double_checks(double_checks, name, version)
+   double_checks[name] = double_checks[name] or {}
+   double_checks[name][version] = true
+end
+
+local function double_check_all(double_checks, repo)
+   local errs = {}
+   for next_name, versions in pairs(double_checks) do
+      for next_version in pairs(versions) do
+         local rock_manifest, load_err = manif.load_rock_manifest(next_name, next_version)
+         local ok, err = repos.check_everything_is_installed(next_name, next_version, rock_manifest, repo, true)
+         if not ok then
+            table.insert(errs, err)
+         end
+      end
+   end
+   if next(errs) then
+      return nil, table.concat(errs, "\n")
+   end
+   return true
 end
 
 --- Delete a package from the local repository.
@@ -536,6 +585,8 @@ function repos.delete_version(name, version, deps_mode, quick)
    local renames = {}
    local deletes = {}
 
+   local double_checks = {}
+
    if rock_manifest.bin then
       repos.recurse_rock_manifest_entry(rock_manifest.bin, function(file_path)
          local paths = get_deploy_paths(name, version, "bin", file_path, repo)
@@ -547,6 +598,7 @@ function repos.delete_version(name, version, deps_mode, quick)
 
             local next_name, next_version = manif.get_next_provider("command", item_name)
             if next_name then
+               add_to_double_checks(double_checks, next_name, next_version)
                local next_paths = get_deploy_paths(next_name, next_version, "lua", file_path, repo)
                table.insert(renames, { src = next_paths.v, dst = next_paths.nv, suffix = cfg.wrapper_suffix })
             end
@@ -565,6 +617,7 @@ function repos.delete_version(name, version, deps_mode, quick)
 
             local next_name, next_version = manif.get_next_provider("module", item_name)
             if next_name then
+               add_to_double_checks(double_checks, next_name, next_version)
                local next_lua_paths = get_deploy_paths(next_name, next_version, "lua", file_path, repo)
                table.insert(renames, { src = next_lua_paths.v, dst = next_lua_paths.nv })
                local next_lib_paths = get_deploy_paths(next_name, next_version, "lib", file_path:gsub("%.[^.]+$", ".lua"), repo)
@@ -585,6 +638,7 @@ function repos.delete_version(name, version, deps_mode, quick)
 
             local next_name, next_version = manif.get_next_provider("module", item_name)
             if next_name then
+               add_to_double_checks(double_checks, next_name, next_version)
                local next_lua_paths = get_deploy_paths(next_name, next_version, "lua", file_path:gsub("%.[^.]+$", ".lua"), repo)
                table.insert(renames, { src = next_lua_paths.v, dst = next_lua_paths.nv })
                local next_lib_paths = get_deploy_paths(next_name, next_version, "lib", file_path, repo)
@@ -603,6 +657,11 @@ function repos.delete_version(name, version, deps_mode, quick)
    if not quick then
       for _, op in ipairs(renames) do
          op_rename(op)
+      end
+
+      local ok, err = double_check_all(double_checks, repo)
+      if not ok then
+         return nil, err
       end
    end
 

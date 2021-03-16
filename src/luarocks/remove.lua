@@ -7,6 +7,7 @@ local repos = require("luarocks.repos")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
+local manif = require("luarocks.manif")
 local queries = require("luarocks.queries")
 
 --- Obtain a list of packages that depend on the given set of packages
@@ -107,10 +108,25 @@ function remove.remove_other_versions(name, version, force, fast)
    local results = {}
    local query = queries.new(name, nil, version, false, nil, "~=")
    search.local_manifest_search(results, cfg.rocks_dir, query)
+   local warn
    if results[name] then
-      return remove.remove_search_results(results, name, cfg.deps_mode, force, fast)
+      local ok, err = remove.remove_search_results(results, name, cfg.deps_mode, force, fast)
+      if not ok then -- downgrade failure to a warning
+         warn = err
+      end
    end
-   return true
+
+   if not fast then
+      -- since we're not using --keep, this means that all files of the rock being installed
+      -- should be available as non-versioned variants. Double-check that:
+      local rock_manifest, load_err = manif.load_rock_manifest(name, version)
+      local ok, err = repos.check_everything_is_installed(name, version, rock_manifest, cfg.root_dir, false)
+      if not ok then
+         return nil, err
+      end
+   end
+
+   return true, nil, warn
 end
 
 return remove
