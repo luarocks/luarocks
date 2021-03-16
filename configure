@@ -435,11 +435,14 @@ check_incdir() {
       "$incdir/lua.h" \
       $("$LUA_BINDIR/$LUA_INTERPRETER" -e 'print(jit and [['"$incdir"'/luajit-]]..jit.version:match("(%d+%.%d+)")..[[/lua.h]] or "")')
    do
-      [ -f "$lua_h" ] && return
+      if [ -f "$lua_h" ]
+      then
+         grep "LUA_VERSION_NUM.*$LUA_VERSION" $lua_h &> /dev/null && return
+      fi
       tried="$tried $lua_h"
    done
 
-   echo "$(RED "lua.h not found") (tried$tried)"
+   echo "$(RED "lua.h for Lua $LUA_VERSION not found") (tried$tried)"
    echo
    echo "If the development files for Lua (headers and libraries)"
    echo "are installed in your system, you may need to use the"
