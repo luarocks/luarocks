@@ -10,8 +10,6 @@ local dir = require("luarocks.dir")
 
 local pack = table.pack or function(...) return { n = select("#", ...), ... } end
 
-local stat_ok, stat = pcall(require, "posix.sys.stat")
-
 local function shr(n, m)
    return math.floor(n / 2^m)
 end

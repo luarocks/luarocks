@@ -5,7 +5,6 @@ local cmd_pack = {}
 
 local util = require("luarocks.util")
 local pack = require("luarocks.pack")
-local signing = require("luarocks.signing")
 local queries = require("luarocks.queries")
 
 function cmd_pack.add_to_parser(parser)

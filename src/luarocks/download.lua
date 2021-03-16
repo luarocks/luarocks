@@ -32,8 +32,8 @@ function download.download(arch, name, namespace, version, all, check_lua_versio
       local has_result = false
       local all_ok = true
       local any_err = ""
-      for name, result in pairs(results) do
-         for version, items in pairs(result) do
+      for name, result in pairs(results) do  -- luacheck: ignore 422
+         for version, items in pairs(result) do  -- luacheck: ignore 422
             for _, item in ipairs(items) do
                -- Ignore provided rocks.
                if item.arch ~= "installed" then

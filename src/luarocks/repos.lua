@@ -9,9 +9,8 @@ local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local vers = require("luarocks.core.vers")
-local E = {}
 
-local unpack = unpack or table.unpack
+local unpack = unpack or table.unpack  -- luacheck: ignore 211
 
 --- Get type and name of an item (a module or a command) provided by a file.
 -- @param deploy_type string: rock manifest subtree the file comes from ("bin", "lua", or "lib").
@@ -77,7 +76,7 @@ function repos.recurse_rock_manifest_entry(entry, action)
 
       for file, sub in pairs(tree) do
          local sub_path = (parent_path and (parent_path .. "/") or "") .. file
-         local ok, err
+         local ok, err  -- luacheck: ignore 231
 
          if type(sub) == "table" then
             ok, err = do_recurse_rock_manifest_entry(sub, sub_path)

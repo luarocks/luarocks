@@ -29,6 +29,7 @@ do
 
       if old_popen or old_execute then return end
       old_popen = io.popen
+      -- luacheck: push globals io os
       io.popen = function(one, two)
          if two == nil then
             print("\nio.popen: ", one)
@@ -49,6 +50,7 @@ do
          end
          return unpack(code, 1, code.n)
       end
+      -- luacheck: pop
    end
 end
 

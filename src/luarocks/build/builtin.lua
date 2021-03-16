@@ -252,7 +252,7 @@ function builtin.run(rockspec, no_install)
          end
          return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, unpack(extras))
       end
-      compile_static_library = function(library, objects, libraries, libdirs, name)
+      compile_static_library = function(library, objects, libraries, libdirs, name)  -- luacheck: ignore 211
          local ok = execute(variables.AR, "rc", library, unpack(objects))
          if ok then
             ok = execute(variables.RANLIB, library)

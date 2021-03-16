@@ -337,7 +337,7 @@ local function use_to_fix_location(key)
    return buf
 end
 
-local function get_config_text(cfg)
+local function get_config_text(cfg)  -- luacheck: ignore 431
    local deps = require("luarocks.deps")
 
    local libdir_ok = deps.check_lua_libdir(cfg.variables)

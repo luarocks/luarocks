@@ -10,8 +10,8 @@
 -- files. Run `luarocks` with no arguments to see the locations of
 -- these files in your platform.
 
-local next, table, pairs, require, os, pcall, ipairs, package, tonumber, type, assert =
-      next, table, pairs, require, os, pcall, ipairs, package, tonumber, type, assert
+local table, pairs, require, os, pcall, ipairs, package, type, assert =
+      table, pairs, require, os, pcall, ipairs, package, type, assert
 
 local util = require("luarocks.core.util")
 local persist = require("luarocks.core.persist")

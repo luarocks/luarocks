@@ -1,10 +1,12 @@
-
 --- A module which installs a Lua package loader that is LuaRocks-aware.
 -- This loader uses dependency information from the LuaRocks tree to load
 -- correct versions of modules. It does this by constructing a "context"
 -- table in the environment, which records which versions of packages were
 -- used to load previous modules, so that the loader chooses versions
 -- that are declared to be compatible with the ones loaded earlier.
+
+-- luacheck: globals luarocks
+
 local loaders = package.loaders or package.searchers
 local require, ipairs, table, type, next, tostring, error =
       require, ipairs, table, type, next, tostring, error
@@ -24,7 +26,7 @@ end
 local path = require("luarocks.core.path")
 local manif = require("luarocks.core.manif")
 local vers = require("luarocks.core.vers")
-local require = nil
+local require = nil  -- luacheck: ignore 411
 --------------------------------------------------------------------------------
 
 -- Workaround for wrappers produced by older versions of LuaRocks

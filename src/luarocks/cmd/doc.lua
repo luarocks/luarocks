@@ -66,7 +66,7 @@ function doc.command(args)
       util.printout(rock.." is not installed. Looking for it in the rocks servers...")
       return try_to_open_homepage(args.rock, args.namespace, args.version)
    end
-   name, version = iname, iversion
+   local name, version = iname, iversion
    
    local rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version, repo))
    if not rockspec then return nil,err end

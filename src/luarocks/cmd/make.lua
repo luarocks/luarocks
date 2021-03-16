@@ -13,7 +13,6 @@ local fetch = require("luarocks.fetch")
 local pack = require("luarocks.pack")
 local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
-local deplocks = require("luarocks.deplocks")
 local writer = require("luarocks.manif.writer")
 local cmd = require("luarocks.cmd")
 
@@ -47,6 +46,7 @@ function make.cmd_options(parser)
 end
 
 function make.add_to_parser(parser)
+   -- luacheck: push ignore 431
    local cmd = parser:command("make", [[
 Builds sources in the current directory, but unlike "build", it does not fetch
 sources, etc., assuming everything is available in the current directory. If no
@@ -65,6 +65,7 @@ authoritative source for exact version of dependencies. The --pin flag
 overrides and recreates this file scanning dependency based on ranges.
 ]], util.see_also())
       :summary("Compile package in current directory using a rockspec.")
+   -- luacheck: pop
 
    cmd:argument("rockspec", "Rockspec for the rock to build.")
       :args("?")
@@ -117,7 +118,7 @@ function make.command(args)
       return build.build_rockspec(rockspec, opts)
    elseif args.pack_binary_rock then
       return pack.pack_binary_rock(name, namespace, rockspec.version, args.sign, function()
-         local name, version = build.build_rockspec(rockspec, opts)
+         local name, version = build.build_rockspec(rockspec, opts)  -- luacheck: ignore 431
          if name and args.no_doc then
             util.remove_doc_dir(name, version)
          end
@@ -128,7 +129,7 @@ function make.command(args)
       if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
       ok, err = build.build_rockspec(rockspec, opts)
       if not ok then return nil, err end
-      local name, version = ok, err
+      local name, version = ok, err  -- luacheck: ignore 421
 
       if opts.build_only_deps then
          util.printout("Stopping after installing dependencies for " ..name.." "..version)
