@@ -523,7 +523,14 @@ function repos.delete_version(name, version, deps_mode, quick)
    assert(type(deps_mode) == "string")
 
    local rock_manifest, load_err = manif.load_rock_manifest(name, version)
-   if not rock_manifest then return nil, load_err end
+   if not rock_manifest then
+      if not quick then
+         local writer = require("luarocks.manif.writer")
+         writer.remove_from_manifest(name, version, nil, deps_mode)
+         return nil, "rock_manifest file not found for "..name.." "..version.." - removed entry from the manifest"
+      end
+      return nil, load_err
+   end
 
    local repo = cfg.root_dir
    local renames = {}
