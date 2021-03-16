@@ -248,6 +248,14 @@ end
 local function check_spot_if_available(name, version, deploy_type, file_path)
    local item_type, item_name = get_provided_item(deploy_type, file_path)
    local cur_name, cur_version = manif.get_current_provider(item_type, item_name)
+
+   -- older versions of LuaRocks (< 3) registered "foo.init" files as "foo"
+   -- (which caused problems, so that behavior was changed). But look for that
+   -- in the manifest anyway for backward compatibility.
+   if not cur_name and deploy_type == "lua" and item_name:match("%.init$") then
+      cur_name, cur_version = manif.get_current_provider(item_type, (item_name:gsub("%.init$", "")))
+   end
+
    if (not cur_name)
       or (name < cur_name)
       or (name == cur_name and (version == cur_version
