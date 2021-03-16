@@ -328,7 +328,7 @@ local function write_rock_dir_files(rockspec, opts)
    local name, version = rockspec.name, rockspec.version
 
    fs.copy(rockspec.local_abs_filename, path.rockspec_file(name, version), "read")
-   
+
    local deplock_file = deplocks.get_abs_filename(rockspec.name)
    if deplock_file then
       fs.copy(deplock_file, dir.path(path.install_dir(name, version), "luarocks.lock"), "read")
@@ -375,7 +375,7 @@ function build.build_rockspec(rockspec, opts)
    if opts.pin then
       deplocks.init(rockspec.name, ".")
    end
- 
+
    ok, err = process_dependencies(rockspec, opts)
    if not ok then return nil, err end
 
@@ -385,7 +385,7 @@ function build.build_rockspec(rockspec, opts)
          deplocks.write_file()
       end
       return name, version
-   end   
+   end
 
    local dirs, err
    local rollback
@@ -405,13 +405,13 @@ function build.build_rockspec(rockspec, opts)
 
    ok, err = build.apply_patches(rockspec)
    if not ok then return nil, err end
-   
+
    ok, err = check_macosx_deployment_target(rockspec)
    if not ok then return nil, err end
-   
+
    ok, err = run_build_driver(rockspec, opts.no_install)
    if not ok then return nil, err end
-   
+
    if opts.no_install then
       fs.pop_dir()
       if opts.need_to_fetch then
@@ -422,7 +422,7 @@ function build.build_rockspec(rockspec, opts)
 
    ok, err = install_files(rockspec, dirs)
    if not ok then return nil, err end
-   
+
    for _, d in pairs(dirs) do
       fs.remove_dir_if_empty(d.name)
    end
@@ -441,7 +441,7 @@ function build.build_rockspec(rockspec, opts)
 
    ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), opts.deps_mode)
    if not ok then return nil, err end
-   
+
    util.remove_scheduled_function(rollback)
    rollback = util.schedule_function(function()
       repos.delete_version(name, version, opts.deps_mode)

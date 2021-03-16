@@ -53,7 +53,7 @@ function upload.command(args)
       version = rockspec.version
    })
    if not res then return nil, err end
-   
+
    if not res.module then
       util.printout("Will create new module (" .. tostring(rockspec.package) .. ")")
    end
@@ -87,7 +87,7 @@ function upload.command(args)
          util.printout("Signed packed rock: "..rock_sigfname)
       end
    end
-   
+
    local multipart = require("luarocks.upload.multipart")
 
    res, err = api:method("upload", nil, {
@@ -95,13 +95,13 @@ function upload.command(args)
      rockspec_sig = sigfname and multipart.new_file(sigfname),
    })
    if not res then return nil, err end
-   
+
    if res.is_new and #res.manifests == 0 then
       util.printerr("Warning: module not added to root manifest due to name taken.")
    end
-   
+
    local module_url = res.module_url
-   
+
    if rock_fname then
       if (not res.version) or (not res.version.id) then
          return nil, "Invalid response from server."
@@ -113,7 +113,7 @@ function upload.command(args)
       })
       if not res then return nil, err end
    end
-   
+
    util.printout()
    util.printout("Done: " .. tostring(module_url))
    util.printout()

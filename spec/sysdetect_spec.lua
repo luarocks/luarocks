@@ -8,7 +8,7 @@ describe("luarocks.core.sysdetect #unix #unit", function()
       os.execute("[ -e binary-samples ] || git clone --depth=1 https://github.com/hishamhm/binary-samples")
       os.execute("cd binary-samples && git pull")
    end)
-   
+
    local files = {
       ["."] = "ignore",
       [".."] = "ignore",
@@ -56,7 +56,7 @@ describe("luarocks.core.sysdetect #unix #unit", function()
       ["elf-Haiku-GCC7-WebPositive"] = {"haiku", "x86"},
       ["pe-cygwin-ls.exe"] = {"cygwin", "x86"},
    }
-   
+
    describe("detect_file", function()
       it("detects system and processor", function()
          for f in lfs.dir("binary-samples") do

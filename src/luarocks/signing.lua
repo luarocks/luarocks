@@ -22,7 +22,7 @@ function signing.sign_file(file)
    if not gpg then
       return nil, err
    end
-   
+
    local sigfile = file .. ".asc"
    if fs.execute(gpg, "--armor", "--output", sigfile, "--detach-sign", file) then
       return sigfile

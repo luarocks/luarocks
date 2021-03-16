@@ -6,17 +6,17 @@ local fun = require("luarocks.fun")
 
 describe("luarocks.fun #unit", function()
    local runner
-   
+
    setup(function()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
       runner.tick = true
    end)
-   
+
    teardown(function()
       runner.shutdown()
    end)
-   
+
    describe("fun.concat", function()
       it("returns the concatenation of the two tables given as arguments", function()
          local t1, t2

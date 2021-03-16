@@ -42,10 +42,10 @@ end
 function cmd_remove.command(args)
    local name = args.rock
    local deps_mode = deps.get_deps_mode(args)
-   
+
    local ok, err = fs.check_command_permissions(args)
    if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
-   
+
    local rock_type = name:match("%.(rock)$") or name:match("%.(rockspec)$")
    local version = args.version
    local filename = name

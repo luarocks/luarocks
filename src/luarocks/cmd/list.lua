@@ -36,13 +36,13 @@ local function check_outdated(trees, query)
 
       local query_available = queries.new(name:lower())
       local results_available, err = search.search_repos(query_available)
-      
+
       if results_available[name] then
          local available_versions = util.keys(results_available[name])
          table.sort(available_versions, vers.compare_versions)
          local latest_available = available_versions[1]
          local latest_available_repo = results_available[name][latest_available][1].repo
-         
+
          if vers.compare_versions(latest_available, latest_installed) then
             table.insert(outdated, { name = name, installed = latest_installed, available = latest_available, repo = latest_available_repo })
          end
@@ -76,11 +76,11 @@ function list.command(args)
       trees = { args.tree }
       title = title .. " in " .. args.tree
    end
-   
+
    if args.outdated then
       return list_outdated(trees, query, args.porcelain)
    end
-   
+
    local results = {}
    for _, tree in ipairs(trees) do
       local ok, err, errcode = search.local_manifest_search(results, path.rocks_dir(tree), query)

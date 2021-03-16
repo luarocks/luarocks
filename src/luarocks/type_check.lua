@@ -22,7 +22,7 @@ do
          end
       end
    end
-   
+
    local function expand_magic_platforms(tbl)
       for k,v in pairs(tbl) do
          if v == type_check.MAGIC_PLATFORMS then
@@ -35,7 +35,7 @@ do
          end
       end
    end
-   
+
    -- Build a table of schemas.
    -- @param versions a table where each key is a version number as a string,
    -- and the value is a schema specification. Schema versions are considered
@@ -44,7 +44,7 @@ do
    function type_check.declare_schemas(inputs)
       local schemas = {}
       local parent_version
-   
+
       local versions = fun.reverse_in(fun.sort_in(util.keys(inputs), vers.compare_versions))
 
       for _, version in ipairs(versions) do
@@ -99,10 +99,10 @@ local function type_check_item(version, item, typetbl, context)
          return nil, err
       end
    end
-   
+
    local item_type = type(item) or "nil"
    local expected_type = typetbl._type or "table"
-   
+
    if expected_type == "number" then
       if not tonumber(item) then
          return nil, "Type mismatch on field "..context..": expected a number"
@@ -148,7 +148,7 @@ end
 -- in tbl that is correctly typed, type(tbl.x) == type(types.x)).
 -- If the reference table contains a field called MORE, then
 -- unknown fields in the checked table are accepted.
--- If it contains a field called ANY, then its type will be 
+-- If it contains a field called ANY, then its type will be
 -- used to check any unknown fields. If a field is prefixed
 -- with MUST_, it is mandatory; its absence from the table is
 -- a type error.
@@ -174,7 +174,7 @@ function type_check.type_check_table(version, tbl, typetbl, context)
 
    for k, v in pairs(tbl) do
       local t = typetbl[k] or typetbl._any
-      if t then 
+      if t then
          local ok, err = type_check_item(version, v, t, mkfield(context, k))
          if not ok then return nil, err end
       elseif typetbl._more then

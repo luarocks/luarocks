@@ -12,18 +12,18 @@ describe("luarocks write_rockspec tests #integration", function()
    it("fails with invalid argument", function()
       assert.is_false(run.luarocks_bool("write_rockspec invalid"))
    end)
-   
+
    it("fails with invalid zip", function()
       assert.is_false(run.luarocks_bool("write_rockspec http://example.com/invalid.zip"))
    end)
 
    describe("from #git #unix", function()
       local git
-   
+
       setup(function()
          git = git_repo.start()
       end)
-      
+
       teardown(function()
          git:stop()
       end)
@@ -46,21 +46,21 @@ describe("luarocks write_rockspec tests #integration", function()
          assert.is_true(run.luarocks_bool("write_rockspec git://localhost/testrock"))
          assert.is.truthy(lfs.attributes("testrock-dev-1.rockspec"))
       end)
-      
+
       it("runs with --tag", function()
          finally(function() os.remove("testrock-2.3.0-1.rockspec") end)
          assert.is_true(run.luarocks_bool("write_rockspec git://localhost/testrock --tag=v2.3.0"))
          assert.is.truthy(lfs.attributes("testrock-2.3.0-1.rockspec"))
          -- TODO check contents
       end)
-      
+
       it("runs with format flag", function()
          finally(function() os.remove("testrock-dev-1.rockspec") end)
          assert.is_true(run.luarocks_bool("write_rockspec git://localhost/testrock --rockspec-format=1.1 --lua-versions=5.1,5.2"))
          assert.is.truthy(lfs.attributes("testrock-dev-1.rockspec"))
          -- TODO check contents
       end)
-      
+
       it("runs with full flags", function()
          finally(function() os.remove("testrock-dev-1.rockspec") end)
          assert.is_true(run.luarocks_bool("write_rockspec git://localhost/testrock --lua-versions=5.1,5.2 --license=\"MIT/X11\" "

@@ -16,7 +16,7 @@ describe("luarocks path #integration", function()
 
    if _VERSION:match("[23]") then
       local v = _VERSION:gsub("Lua (%d+)%.(%d+)", "%1_%2")
-   
+
       it("with LUA_PATH_"..v, function()
          local output = run.luarocks("path", {
             ["LUA_PATH_"..v] = package.path,
@@ -49,23 +49,23 @@ describe("luarocks path #integration", function()
    it("--lr-path", function()
       assert.is_true(run.luarocks_bool("path --lr-path"))
    end)
-   
+
    it("--lr-cpath", function()
       assert.is_true(run.luarocks_bool("path --lr-cpath"))
    end)
-   
+
    it("--tree", function()
       assert.is_true(run.luarocks_bool("path --tree=lua_modules"))
    end)
-   
+
    it("--project-tree", function()
       local path1 = "/share/lua/5%." .. test_env.lua_version:sub(3, 3) .. "/%?%.lua"
       local path2 = "/share/lua/5%." .. test_env.lua_version:sub(3, 3) .. "/%?/init%.lua"
-      
+
       local path = run.luarocks("path --project-tree=foo")
       assert.truthy(path:find("foo" .. path1))
       assert.truthy(path:find("foo" .. path2))
-      
+
       path = run.luarocks("path --project-tree=foo --tree=bar")
       assert.falsy(path:find("foo" .. path1))
       assert.falsy(path:find("foo" .. path2))

@@ -132,7 +132,7 @@ function fs_lua.is_tool_available(tool_cmd, tool_name, arg)
 
    if ok then
       return true
-   else   
+   else
       local msg = "'%s' program not found. Make sure %s is installed and is available in your PATH " ..
                   "(or you may want to edit the 'variables.%s' value in file '%s')"
       return nil, msg:format(tool_cmd, tool_name, tool_name:upper(), cfg.config_files.nearest)
@@ -535,7 +535,7 @@ end
 --- Internal implementation function for fs.dir.
 -- Yields a filename on each iteration.
 -- @param at string: directory to list
--- @return nil or (nil and string): an error message on failure 
+-- @return nil or (nil and string): an error message on failure
 function fs_lua.dir_iterator(at)
    local pok, iter, arg = pcall(lfs.dir, at)
    if not pok then
@@ -707,7 +707,7 @@ local redirect_protocols = {
 
 local function request(url, method, http, loop_control)  -- luacheck: ignore 431
    local result = {}
-   
+
    if cfg.verbose then
       print(method, url)
    end

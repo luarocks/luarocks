@@ -62,7 +62,7 @@ describe("luarocks.fs #unit", function()
    end
 
    local runner
-   
+
    setup(function()
       cfg.init()
       fs.init()
@@ -70,7 +70,7 @@ describe("luarocks.fs #unit", function()
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
       runner.tick = true
    end)
-   
+
    teardown(function()
       runner.shutdown()
    end)
@@ -122,10 +122,10 @@ describe("luarocks.fs #unit", function()
          end
       end)
    end)
-   
+
    describe("fs.execute_string", function()
       local tmpdir
-      
+
       after_each(function()
          if tmpdir then
             lfs.rmdir(tmpdir)
@@ -140,7 +140,7 @@ describe("luarocks.fs #unit", function()
          assert.falsy(fs.execute_string("invalidcommand"))
       end)
    end)
-   
+
    describe("fs.dir_iterator", function()
       local tmpfile1
       local tmpfile2
@@ -218,7 +218,7 @@ describe("luarocks.fs #unit", function()
          end
       end)
    end)
-   
+
    describe("fs.is_writable", function()
       local tmpfile
       local tmpdir
@@ -268,7 +268,7 @@ describe("luarocks.fs #unit", function()
          assert.falsy(fs.is_writable("/nonexistent"))
       end)
    end)
-   
+
    describe("fs.set_time #unix", function()
       local tmpfile
       local tmpdir
@@ -787,13 +787,13 @@ describe("luarocks.fs #unit", function()
          assert.truthy(exists_file(tmpdir))
       end)
    end)
-   
+
    describe("fs.list_dir", function()
       local intfile1
       local intfile2
       local intdir
       local tmpdir
-      
+
       before_each(function()
          if intfile1 then
             os.remove(intfile1)
@@ -812,7 +812,7 @@ describe("luarocks.fs #unit", function()
             tmpdir = nil
          end
       end)
-      
+
       it("returns a table with the contents of the given directory", function()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
@@ -828,18 +828,18 @@ describe("luarocks.fs #unit", function()
          assert.truthy(result[2] == "intfile1" or result[2] == "intdir")
          assert.is_not.same(result[1], result[2])
       end)
-      
+
       it("returns an empty table if the argument is a file", function()
          intfile1 = get_tmp_path()
          create_file(intfile1)
          local result = fs.list_dir(intfile1)
          assert.same(#result, 0)
       end)
-      
+
       it("does nothing if the argument is nonexistent", function()
          assert.same(fs.list_dir("/nonexistent"), {})
       end)
-      
+
       it("does nothing if the argument doesn't have the proper permissions", function()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
@@ -1017,13 +1017,13 @@ describe("luarocks.fs #unit", function()
          assert.falsy(exists_file(dstdir .. "/internalfile"))
       end)
    end)
-   
+
    describe("fs.find", function()
       local tmpdir
       local intdir
       local intfile1
       local intfile2
-      
+
       after_each(function()
          if intfile1 then
             os.remove(intfile1)
@@ -1042,7 +1042,7 @@ describe("luarocks.fs #unit", function()
             tmpdir = nil
          end
       end)
-      
+
       local create_dir_tree = function()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
@@ -1053,7 +1053,7 @@ describe("luarocks.fs #unit", function()
          intfile2 = intdir .. "/intfile2"
          create_file(intfile2)
       end
-      
+
       it("returns a table of all the contents in the directory given as argument", function()
          create_dir_tree()
          local contents = {}
@@ -1068,7 +1068,7 @@ describe("luarocks.fs #unit", function()
          assert.same(contents["intdir"], true)
          assert.same(contents["intdir/intfile2"], true)
       end)
-      
+
       it("uses the current working directory if the argument is nil", function()
          create_dir_tree()
          local olddir = fs.current_dir()
@@ -1085,7 +1085,7 @@ describe("luarocks.fs #unit", function()
          assert.same(contents["intfile2"], true)
          fs.change_dir(olddir)
       end)
-      
+
       it("returns an empty table if the argument is nonexistent", function()
          local contents = fs.find("/nonexistent")
          local count = 0
@@ -1094,7 +1094,7 @@ describe("luarocks.fs #unit", function()
          end
          assert.same(count, 0)
       end)
-      
+
       it("returns an empty table if the argument is a file", function()
          intfile1 = get_tmp_path()
          create_file(intfile1)
@@ -1105,7 +1105,7 @@ describe("luarocks.fs #unit", function()
          end
          assert.same(count, 0)
       end)
-      
+
       it("does nothing if the argument doesn't have the proper permissions", function()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
@@ -1113,12 +1113,12 @@ describe("luarocks.fs #unit", function()
          assert.same(fs.find(tmpdir), {})
       end)
    end)
-   
+
    describe("fs.move", function()
       local srcfile
       local dstfile
       local tmpdir
-      
+
       after_each(function()
          if srcfile then
             os.remove(srcfile)
@@ -1133,7 +1133,7 @@ describe("luarocks.fs #unit", function()
             tmpdir  = nil
          end
       end)
-      
+
       it("returns true and moves the source (together with its permissions) to the destination", function()
          srcfile = get_tmp_path()
          create_file(srcfile)
@@ -1149,7 +1149,7 @@ describe("luarocks.fs #unit", function()
             assert.same(oldperms, lfs.attributes(dstfile, "permissions"))
          end
       end)
-      
+
       it("returns true and moves the source (with custom permissions) to the destination", function()
          srcfile = get_tmp_path()
          create_file(srcfile)
@@ -1161,13 +1161,13 @@ describe("luarocks.fs #unit", function()
          local dstcontents = assert(fd:read("*a"))
          assert.same(dstcontents, "foo")
       end)
-      
+
       it("returns false and does nothing if the source doesn't exist", function()
          dstfile = get_tmp_path()
          assert.falsy(fs.move("/nonexistent", dstfile))
          assert.falsy(fs.exists(dstfile))
       end)
-      
+
       it("returns false and does nothing if the destination already exists", function()
          srcfile = get_tmp_path()
          create_file(srcfile)
@@ -1179,7 +1179,7 @@ describe("luarocks.fs #unit", function()
          local dstcontents = assert(fd:read("*a"))
          assert.same(dstcontents, "bar")
       end)
-      
+
       it("returns false and does nothing if the destination path doesn't have the proper permissions", function()
          srcfile = get_tmp_path()
          create_file(srcfile)
@@ -1190,17 +1190,17 @@ describe("luarocks.fs #unit", function()
          assert.falsy(fs.exists(tmpdir .. "/dstfile"))
       end)
    end)
-   
+
    describe("fs.is_lua", function()
       local tmpfile
-      
+
       after_each(function()
          if tmpfile then
             os.remove(tmpfile)
             tmpfile = nil
          end
       end)
-      
+
       it("returns true if the argument is a valid lua script", function()
          tmpfile = get_tmp_path()
          create_file(tmpfile, "print(\"foo\")")
@@ -1212,13 +1212,13 @@ describe("luarocks.fs #unit", function()
          create_file(tmpfile, "#!/usr/bin/env lua\n\nprint(\"foo\")")
          assert.truthy(fs.is_lua(tmpfile))
       end)
-      
+
       it("returns false if the argument is not a valid lua script", function()
          tmpfile = os.tmpname()
          create_file(tmpfile)
          assert.falsy(fs.is_lua(tmpfile))
       end)
-      
+
       it("returns false if the argument is a valid lua script but doesn't have the proper permissions", function()
          tmpfile = get_tmp_path()
          create_file(tmpfile, "print(\"foo\")")
@@ -1281,15 +1281,15 @@ describe("luarocks.fs #unit", function()
          assert.falsy(exists_file(tmpdir))
       end)
    end)
-   
+
    describe("fs.download #mock", function()
       local tmpfile
       local tmpdir
-      
+
       setup(function()
          test_env.mock_server_init()
       end)
-      
+
       teardown(function()
          test_env.mock_server_done()
       end)
@@ -1304,7 +1304,7 @@ describe("luarocks.fs #unit", function()
             tmpdir = nil
          end
       end)
-      
+
       it("returns true and fetches the url argument into the specified filename", function()
          tmpfile = get_tmp_path()
          assert.truthy(fs.download("http://localhost:8080/file/a_rock.lua", tmpfile))
@@ -1316,7 +1316,7 @@ describe("luarocks.fs #unit", function()
          fd:close()
          assert.same(downloadcontent, originalcontent)
       end)
-      
+
       it("returns true and fetches the url argument into a file whose name matches the basename of the url if the filename argument is not given", function()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
@@ -1332,33 +1332,33 @@ describe("luarocks.fs #unit", function()
          assert.same(downloadcontent, originalcontent)
          fs.pop_dir()
       end)
-      
+
       it("returns false and does nothing if the url argument contains a nonexistent file", function()
          tmpfile = get_tmp_path()
          assert.falsy(fs.download("http://localhost:8080/file/nonexistent", tmpfile))
       end)
-      
+
       it("returns false and does nothing if the url argument is invalid", function()
          assert.falsy(fs.download("invalidurl"))
       end)
    end)
-   
+
    describe("fs.zip", function()
       local tmpdir
       local olddir
-      
+
       before_each(function()
          olddir = lfs.currentdir()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
          chdir(tmpdir)
-         
+
          write_file("file1", "content1", finally)
          write_file("file2", "content2", finally)
          lfs.mkdir("dir")
          write_file("dir/file3", "content3", finally)
       end)
-      
+
       after_each(function()
          if olddir then
             chdir(olddir)
@@ -1368,12 +1368,12 @@ describe("luarocks.fs #unit", function()
             end
          end
       end)
-      
+
       it("returns true and creates a zip archive of the given files", function()
          assert.truthy(fs.zip("archive.zip", "file1", "file2", "dir"))
          assert.truthy(exists_file("archive.zip"))
       end)
-      
+
       it("returns false and does nothing if the files specified in the arguments are invalid", function()
          assert.falsy(fs.zip("archive.zip", "nonexistent"))
          assert.falsy(exists_file("nonexistent"))
@@ -1381,7 +1381,7 @@ describe("luarocks.fs #unit", function()
    end)
 
    describe("fs.bunzip2", function()
-      
+
       it("uncompresses a .bz2 file", function()
          local input = testing_paths.fixtures_dir .. "/abc.bz2"
          local output = os.tmpname()
@@ -1393,25 +1393,25 @@ describe("luarocks.fs #unit", function()
          local abc = ("a"):rep(100000)..("b"):rep(100000)..("c"):rep(100000)
          assert.same(abc, content)
       end)
-      
+
    end)
-   
+
    describe("fs.unzip", function()
       local tmpdir
       local olddir
-      
+
       before_each(function()
          olddir = lfs.currentdir()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
          chdir(tmpdir)
-         
+
          write_file("file1", "content1", finally)
          write_file("file2", "content2", finally)
          lfs.mkdir("dir")
          write_file("dir/file3", "content3", finally)
       end)
-      
+
       after_each(function()
          if olddir then
             chdir(olddir)
@@ -1421,33 +1421,33 @@ describe("luarocks.fs #unit", function()
             end
          end
       end)
-      
+
       it("returns true and unzips the given zip archive", function()
          assert.truthy(fs.zip("archive.zip", "file1", "file2", "dir"))
          os.remove("file1")
          os.remove("file2")
          lfs.rmdir("dir")
-         
+
          assert.truthy(fs.unzip("archive.zip"))
          assert.truthy(exists_file("file1"))
          assert.truthy(exists_file("file2"))
          assert.truthy(exists_file("dir/file3"))
-         
+
          local fd
-         
+
          fd = assert(io.open("file1", "r"))
          assert.same(fd:read("*a"), "content1")
          fd:close()
-         
+
          fd = assert(io.open("file2", "r"))
          assert.same(fd:read("*a"), "content2")
          fd:close()
-         
+
          fd = assert(io.open("dir/file3", "r"))
          assert.same(fd:read("*a"), "content3")
          fd:close()
       end)
-      
+
       it("does nothing if the given archive is invalid", function()
          assert.falsy(fs.unzip("archive.zip"))
       end)
@@ -1456,14 +1456,14 @@ describe("luarocks.fs #unit", function()
    describe("fs.wrap_script", function()
       local tmpdir
       local olddir
-      
+
       before_each(function()
          olddir = lfs.currentdir()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
          chdir(tmpdir)
       end)
-      
+
       after_each(function()
          if olddir then
             chdir(olddir)
@@ -1484,20 +1484,20 @@ describe("luarocks.fs #unit", function()
          assert.same("Hello World", data)
       end)
    end)
-   
+
    describe("fs.copy_binary", function()
       local tmpdir
       local olddir
-      
+
       before_each(function()
          olddir = lfs.currentdir()
          tmpdir = get_tmp_path()
          lfs.mkdir(tmpdir)
          chdir(tmpdir)
-         
+
          write_file("test.exe", "", finally)
       end)
-      
+
       after_each(function()
          if olddir then
             chdir(olddir)
@@ -1506,7 +1506,7 @@ describe("luarocks.fs #unit", function()
             end
          end
       end)
-      
+
       it("returns true and copies the given binary file to the file specified in the dest argument", function()
          assert.truthy(fs.copy_binary("test.exe", lfs.currentdir() .. "/copy.exe"))
          assert.truthy(exists_file("copy.exe"))
@@ -1519,17 +1519,17 @@ describe("luarocks.fs #unit", function()
             fd:close()
          end
       end)
-      
+
       it("returns false and does nothing if the source file is invalid", function()
          assert.falsy(fs.copy_binary("invalid.exe", "copy.exe"))
       end)
    end)
-   
+
    describe("fs.modules", function()
       local tmpdir
       local olddir
       local oldpath
-      
+
       before_each(function()
          olddir = lfs.currentdir()
          tmpdir = get_tmp_path()
@@ -1547,7 +1547,7 @@ describe("luarocks.fs #unit", function()
          oldpath = package.path
          package.path = package.path .. tmpdir .. "/?.lua;"
       end)
-      
+
       after_each(function()
          if olddir then
             chdir(olddir)
@@ -1583,7 +1583,7 @@ describe("luarocks.fs #unit", function()
    end)
 
    describe("#unix fs._unix_rwx_to_number", function()
-   
+
       it("converts permissions in rwx notation to numeric ones", function()
          assert.same(tonumber("0644", 8), fs._unix_rwx_to_number("rw-r--r--"))
          assert.same(tonumber("0755", 8), fs._unix_rwx_to_number("rwxr-xr-x"))

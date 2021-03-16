@@ -33,7 +33,7 @@ describe("Basic tests #integration", function()
       local delete_path = lfs.currentdir()
       assert.is_true(os.remove(delete_path))
 
-      local output = run.luarocks("")      
+      local output = run.luarocks("")
       assert.is.falsy(output:find("the Lua package manager"))
       assert.is_true(lfs.chdir(main_path))
 
@@ -44,7 +44,7 @@ describe("Basic tests #integration", function()
    it("--timeout", function()
       assert.is.truthy(run.luarocks("--timeout=10"))
    end)
-   
+
    it("--timeout invalid", function()
       assert.is_false(run.luarocks_bool("--timeout=abc"))
    end)
@@ -61,17 +61,17 @@ local core_util = require("luarocks.core.util")
 
 describe("luarocks.util #unit", function()
    local runner
-   
+
    setup(function()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
       runner.tick = true
    end)
-   
+
    teardown(function()
       runner.shutdown()
    end)
-   
+
    describe("util.sortedpairs", function()
       local function collect(iter, state, var)
          local collected = {}
@@ -122,30 +122,30 @@ describe("luarocks.util #unit", function()
          }, {"k3", {"k2", {"sub order"}}, "k1"})))
       end)
    end)
-   
+
    describe("core.util.show_table", function()
       it("returns a pretty-printed string containing the representation of the given table", function()
          local result
-         
+
          local t1 = {1, 2, 3}
          result = core_util.show_table(t1)
          assert.truthy(result:find("[1] = 1", 1, true))
          assert.truthy(result:find("[2] = 2", 1, true))
          assert.truthy(result:find("[3] = 3", 1, true))
-         
+
          local t2 = {a = 1, b = 2, c = 3}
          result = core_util.show_table(t2)
          assert.truthy(result:find("[\"a\"] = 1", 1, true))
          assert.truthy(result:find("[\"b\"] = 2", 1, true))
          assert.truthy(result:find("[\"c\"] = 3", 1, true))
-         
+
          local t3 = {a = 1, b = "2", c = {3}}
          result = core_util.show_table(t3)
          assert.truthy(result:find("[\"a\"] = 1", 1, true))
          assert.truthy(result:find("[\"b\"] = \"2\"", 1, true))
          assert.truthy(result:find("[\"c\"] = {", 1, true))
          assert.truthy(result:find("[1] = 3", 1, true))
-         
+
          local t4 = {a = 1, b = {c = 2, d = {e = "4"}}}
          result = core_util.show_table(t4)
          assert.truthy(result:find("[\"a\"] = 1", 1, true))
@@ -155,7 +155,7 @@ describe("luarocks.util #unit", function()
          assert.truthy(result:find("[\"e\"] = \"4\"", 1, true))
       end)
    end)
-      
+
    describe("core.util.cleanup_path", function()
      it("does not change order of existing items of prepended path", function()
         local sys_path = '/usr/local/bin;/usr/bin'

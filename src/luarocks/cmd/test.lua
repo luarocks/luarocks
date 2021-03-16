@@ -33,9 +33,9 @@ function cmd_test.command(args)
    if args.rockspec and args.rockspec:match("rockspec$") then
       return test.run_test_suite(args.rockspec, args.test_type, args.args)
    end
-   
+
    table.insert(args.args, 1, args.rockspec)
-   
+
    local rockspec, err = util.get_default_rockspec()
    if not rockspec then
       return nil, err

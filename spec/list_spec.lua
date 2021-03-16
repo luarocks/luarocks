@@ -37,7 +37,7 @@ describe("luarocks list #integration", function()
       assert.is.truthy(output:find("say"))
       assert.matches("1.0-1 < ", output, 1, true)
    end)
-   
+
    it("invalid tree", function()
       local output = run.luarocks("--tree=/some/invalid/tree list")
       assert(output:find("Rocks installed for Lua "..test_env.lua_version.." in /some/invalid/tree", 1, true))

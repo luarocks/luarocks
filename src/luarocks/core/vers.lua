@@ -63,11 +63,11 @@ local version_mt = {
        return not (v2 < v1)
    end,
    --- Return version as a string.
-   -- @param v The version table. 
+   -- @param v The version table.
    -- @return The string representation.
    __tostring = function(v)
       return v.string
-   end,  
+   end,
 }
 
 local version_cache = {}
@@ -102,7 +102,7 @@ function vers.parse_version(vstring)
       version[i] = version[i] and version[i] + number/100000 or number
       i = i + 1
    end
-   
+
    -- trim leading and trailing spaces
    local v = vstring:match("^%s*(.*)%s*$")
    version.string = v
@@ -164,7 +164,7 @@ local function partial_match(version, requested)
    if type(version) ~= "table" then version = vers.parse_version(version) end
    if type(requested) ~= "table" then requested = vers.parse_version(requested) end
    if not version or not requested then return false end
-   
+
    for i, ri in ipairs(requested) do
       local vi = version[i] or 0
       if ri ~= vi then return false end

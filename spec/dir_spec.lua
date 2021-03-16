@@ -7,17 +7,17 @@ local dir = require("luarocks.dir")
 
 describe("luarocks.dir #unit", function()
    local runner
-   
+
    setup(function()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
       runner.tick = true
    end)
-   
+
    teardown(function()
       runner.shutdown()
    end)
-   
+
    describe("dir.is_basic_protocol", function()
       it("checks whether the arguments represent a valid protocol and returns the result of the check", function()
          assert.truthy(dir.is_basic_protocol("http"))

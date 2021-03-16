@@ -90,7 +90,7 @@ end
 local function update_dependencies(manifest, deps_mode)
    assert(type(manifest) == "table")
    assert(type(deps_mode) == "string")
-   
+
    for pkg, versions in pairs(manifest.repository) do
       for version, repositories in pairs(versions) do
          for _, repo in ipairs(repositories) do
@@ -160,7 +160,7 @@ local function filter_by_lua_version(manifest, lua_version, repodir, cache)
    assert(type(manifest) == "table")
    assert(type(repodir) == "string")
    assert((not cache) or type(cache) == "table")
-   
+
    cache = cache or {}
    lua_version = vers.parse_version(lua_version)
    for pkg, versions in pairs(manifest.repository) do
@@ -176,7 +176,7 @@ local function filter_by_lua_version(manifest, lua_version, repodir, cache)
                if rockspec then
                   cache[pathname] = rockspec
                   for _, dep in ipairs(rockspec.dependencies) do
-                     if dep.name == "lua" then 
+                     if dep.name == "lua" then
                         if not vers.match_constraints(lua_version, dep.constraints) then
                            table.insert(to_remove, version)
                         end

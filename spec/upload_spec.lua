@@ -17,15 +17,15 @@ describe("luarocks upload #integration", function()
    it("invalid rockspec", function()
       assert.is_false(run.luarocks_bool("upload invalid.rockspec"))
    end)
-   
+
    it("api key invalid", function()
       assert.is_false(run.luarocks_bool("upload --api-key=invalid invalid.rockspec"))
    end)
-   
+
    it("api key invalid and skip-pack", function()
       assert.is_false(run.luarocks_bool("upload --api-key=\"invalid\" --skip-pack " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.rockspec"))
    end)
-   
+
    it("force #unix", function()
       assert.is_true(test_env.need_rock("dkjson"))
       assert.is_false(run.luarocks_bool("upload --api-key=\"invalid\" --force " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.rockspec"))
@@ -33,7 +33,7 @@ describe("luarocks upload #integration", function()
 
    describe("tests with Xavante server #mock", function()
       before_each(test_env.mock_server_init)
-      
+
       after_each(test_env.mock_server_done)
 
       it("rockspec with api-key", function()

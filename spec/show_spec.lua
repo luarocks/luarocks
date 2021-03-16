@@ -5,7 +5,7 @@ local testing_paths = test_env.testing_paths
 test_env.unload_luarocks()
 
 describe("luarocks show #integration", function()
-   
+
    before_each(function()
       test_env.setup_specs()
    end)
@@ -13,12 +13,12 @@ describe("luarocks show #integration", function()
    it("with no flags/arguments", function()
          assert.is_false(run.luarocks_bool("show"))
    end)
-   
+
    describe("basic tests with flags", function()
       it("invalid", function()
          assert.is_false(run.luarocks_bool("show invalid"))
       end)
-      
+
       it("luacov", function()
          local output = run.luarocks("show luacov")
          assert.is.truthy(output:match("LuaCov"))
@@ -28,12 +28,12 @@ describe("luarocks show #integration", function()
          local output = run.luarocks("show LuaCov")
          assert.is.truthy(output:match("LuaCov"))
       end)
-      
+
       it("modules of luacov", function()
          local output = run.luarocks("show --modules luacov")
          assert.match("luacov.*luacov.defaults.*luacov.reporter.*luacov.reporter.default.*luacov.runner.*luacov.stats.*luacov.tick", output)
       end)
-      
+
       it("--deps", function()
          assert(run.luarocks_bool("build has_namespaced_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
          local output = run.luarocks("show --deps has_namespaced_dep")
@@ -45,21 +45,21 @@ describe("luarocks show #integration", function()
          local output = run.luarocks("show has_namespaced_dep")
          assert.match("a_user/a_rock.*2.0", output)
       end)
-      
+
       it("rockspec of luacov", function()
          local output = run.luarocks("show --rockspec luacov")
          assert.is.truthy(output:match("luacov--0.13.0--1.rockspec"))
       end)
-      
+
       it("mversion of luacov", function()
          local output = run.luarocks("show --mversion luacov")
          assert.is.truthy(output:match("0.13.0--1"))
       end)
-      
+
       it("rock tree of luacov", function()
          local output = run.luarocks("show --rock-tree luacov")
       end)
-      
+
       it("rock directory of luacov", function()
          local output = run.luarocks("show --rock-dir luacov")
       end)
@@ -67,7 +67,7 @@ describe("luarocks show #integration", function()
       it("issues URL of luacov", function()
          local output = run.luarocks("show --issues luacov")
       end)
-      
+
       it("labels of luacov", function()
          local output = run.luarocks("show --labels luacov")
       end)

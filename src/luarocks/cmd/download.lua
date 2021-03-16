@@ -43,7 +43,7 @@ function cmd_download.command(args)
    elseif args.arch then
       arch = args.arch
    end
-   
+
    local dl, err = download.download(arch, args.name, args.namespace, args.version, args.all, args.check_lua_versions)
    return dl and true, err
 end

@@ -63,7 +63,7 @@ do
    end
 
    process_tree_args = function(args, project_dir)
-   
+
       if args.global then
          cfg.local_by_default = false
       end
@@ -221,7 +221,7 @@ do
          end
          return nil
       end
-   
+
       local function find_default_lua_version(args, project_dir)
          if hardcoded.FORCE_CONFIG then
             return nil
@@ -250,7 +250,7 @@ do
          end
          return nil
       end
-   
+
       local function find_version_from_config(dirname)
          return fun.find(util.lua_versions("descending"), function(v)
             if util.exists(dir.path(dirname, ".luarocks", "config-"..v..".lua")) then
@@ -258,12 +258,12 @@ do
             end
          end)
       end
-   
+
       local function detect_lua_via_args(args, project_dir)
          local lua_version = args.lua_version
                              or find_default_lua_version(args, project_dir)
                              or (project_dir and find_version_from_config(project_dir))
-      
+
          if args.lua_dir then
             local detected, err = util.find_lua(args.lua_dir, lua_version)
             if not detected then
@@ -274,7 +274,7 @@ do
             end
             return detected
          end
-      
+
          if lua_version then
             local detected = search_lua_in_path(lua_version)
             if detected then
@@ -284,10 +284,10 @@ do
                lua_version = lua_version,
             }
          end
-         
+
          return {}
       end
-      
+
       detect_config_via_args = function(args)
          local project_dir, given = find_project_dir(args.project_tree)
          local detected = detect_lua_via_args(args, project_dir)
@@ -304,15 +304,15 @@ do
          return detected
       end
    end
-   
+
    init_config = function(args)
       local detected = detect_config_via_args(args)
-   
+
       local ok, err = cfg.init(detected, util.warning)
       if not ok then
          return nil, err
       end
-      
+
       return (detected.lua_dir ~= nil)
    end
 end

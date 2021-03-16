@@ -217,7 +217,7 @@ function win32.is_actual_binary(name)
    return false
 end
 
-function win32.copy_binary(filename, dest) 
+function win32.copy_binary(filename, dest)
    local ok, err = fs.copy(filename, dest)
    if not ok then
       return nil, err

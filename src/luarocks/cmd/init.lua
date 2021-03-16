@@ -30,7 +30,7 @@ local function write_gitignore(entries)
       fd:close()
       gitignore = "\n" .. gitignore .. "\n"
    end
-   
+
    fd = io.open(".gitignore", gitignore and "a" or "w")
    for _, entry in ipairs(entries) do
       entry = "/" .. entry
@@ -64,7 +64,7 @@ function init.command(args)
    if not ok then
       return nil, err
    end
-   
+
    local has_rockspec = false
    for file in fs.dir() do
       if file:match("%.rockspec$") then
@@ -97,7 +97,7 @@ function init.command(args)
       fs.delete(lua_wrapper)
       fs.delete(config_file)
    end
-   
+
    local config_tbl, err = persist.load_config_file_if_basic(config_file, cfg)
    if config_tbl then
       local globals = {
@@ -131,7 +131,7 @@ function init.command(args)
    else
       util.printout("Will not attempt to overwrite " .. config_file)
    end
-   
+
    ok, err = persist.save_default_lua_version(".luarocks", cfg.lua_version)
    if not ok then
       util.printout("Failed setting default Lua version: " .. err)
@@ -158,7 +158,7 @@ function init.command(args)
          write_lua_wrapper = false
       end
    end
-   
+
    if write_lua_wrapper then
       local interp = dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)
       if util.check_lua_version(interp, cfg.lua_version) then

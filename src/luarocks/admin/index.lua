@@ -87,7 +87,7 @@ local index_footer_begin = [[
 <a href="manifest">manifest file</a>
 ]]
 local index_manifest_ver = [[
-&bull; <a href="manifest-$VER">Lua $VER manifest file</a> (<a href="manifest-$VER.zip">zip</a>) 
+&bull; <a href="manifest-$VER">Lua $VER manifest file</a> (<a href="manifest-$VER.zip">zip</a>)
 ]]
 local index_footer_end = [[
 </p>
@@ -129,7 +129,7 @@ function index.make_index(repo)
    end
    local manifest = manif.load_manifest(repo)
    local out = io.open(dir.path(repo, "index.html"), "w")
-   
+
    out:write(index_header)
    for package, version_list in util.sortedpairs(manifest.repository) do
       local latest_rockspec = nil

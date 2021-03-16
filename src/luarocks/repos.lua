@@ -47,7 +47,7 @@ end
 -- versions of a package, or nil if none is available.
 local function get_installed_versions(name)
    assert(type(name) == "string" and not name:match("/"))
-   
+
    local dirs = fs.list_dir(path.versions_dir(name))
    return (dirs and #dirs > 0) and dirs or nil
 end
@@ -61,7 +61,7 @@ end
 function repos.is_installed(name, version)
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
-      
+
    return fs.is_dir(path.install_dir(name, version))
 end
 
@@ -172,11 +172,11 @@ function repos.run_hook(rockspec, hook_name)
    if not hooks then
       return true
    end
-   
+
    if cfg.hooks_enabled == false then
       return nil, "This rockspec contains hooks, which are blocked by the 'hooks_enabled' setting in your LuaRocks configuration."
    end
-   
+
    if not hooks.substituted_variables then
       util.variable_substitutions(hooks, rockspec.variables)
       hooks.substituted_variables = true
@@ -269,7 +269,7 @@ local function backup_existing(should_backup, target)
       repeat
          backup = backup.."~"
       until not fs.exists(backup) -- Slight race condition here, but shouldn't be a problem.
-   
+
       util.warning(target.." is not tracked by this installation of LuaRocks. Moving it to "..backup)
       local move_ok, move_err = os.rename(target, backup)
       if not move_ok then
@@ -300,7 +300,7 @@ local function prepare_op_install()
       if not ok then
          return nil, err
       end
-   
+
       local backup, err = backup_existing(op.backup, op.realdst or op.dst)
       if err then
          return nil, err
@@ -308,22 +308,22 @@ local function prepare_op_install()
       if backup then
          op.backup_file = backup
       end
-   
+
       ok, err = op.fn(op.src, op.dst, op.backup)
       if not ok then
          return nil, err
       end
-   
+
       rmdirs[dir.dir_name(op.src)] = true
       return true
    end
-   
+
    local function done_op_install()
       for d, _ in pairs(rmdirs) do
          fs.remove_dir_tree_if_empty(d)
       end
    end
-   
+
    return op_install, done_op_install
 end
 
@@ -361,7 +361,7 @@ end
 local function prepare_op_delete()
    local deletes = {}
    local rmdirs = {}
-   
+
    local function done_op_delete()
       for _, f in ipairs(deletes) do
          os.remove(f)
@@ -377,12 +377,12 @@ local function prepare_op_delete()
          local suffix = check_suffix(op.name, op.suffix)
          op.name = op.name .. suffix
       end
-   
+
       table.insert(deletes, op.name)
-      
+
       rmdirs[dir.dir_name(op.name)] = true
    end
-   
+
    return op_delete, done_op_delete
 end
 
@@ -406,7 +406,7 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
 
    local rock_manifest, load_err = manif.load_rock_manifest(name, version)
    if not rock_manifest then return nil, load_err end
-   
+
    local repo = cfg.root_dir
    local renames = {}
    local installs = {}
@@ -592,7 +592,7 @@ function repos.delete_version(name, version, deps_mode, quick)
       op_delete(op)
    end
    done_op_delete()
-   
+
    if not quick then
       for _, op in ipairs(renames) do
          op_rename(op)

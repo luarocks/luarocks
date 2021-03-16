@@ -8,7 +8,7 @@ local extra_rocks = {
 }
 
 describe("luarocks search #integration", function()
-   
+
    before_each(function()
       test_env.setup_specs(extra_rocks)
    end)
@@ -20,15 +20,15 @@ describe("luarocks search #integration", function()
    it("zlib", function()
       assert.is_true(run.luarocks_bool("search zlib"))
    end)
-   
+
    it("zlib 1.1", function()
       assert.is_true(run.luarocks_bool("search zlib 1.1"))
    end)
-   
+
    it("missing rock", function()
       assert.is_true(run.luarocks_bool("search missing_rock"))
    end)
-   
+
    it("with flag all", function()
       assert.is_true(run.luarocks_bool("search --all"))
    end)

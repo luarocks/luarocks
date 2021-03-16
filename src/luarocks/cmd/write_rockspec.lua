@@ -137,7 +137,7 @@ do
          return url
       end
    end
-   
+
    local function detect_scm_url(directory)
       return detect_url_from_command("git", "config --get remote.origin.url", directory) or
          detect_url_from_command("hg", "paths default", directory)
@@ -230,7 +230,7 @@ local function fill_as_builtin(rockspec, libs)
          libdirs[#libdirs+1] = "$("..upper.."_LIBDIR)"
       end
    end
-   
+
    rockspec.build.modules, rockspec.build.install, rockspec.build.copy_directories = builtin.autodetect_modules(libs, incdirs, libdirs)
 end
 
@@ -302,10 +302,10 @@ function write_rockspec.command(args)
    version = version or "dev"
 
    local filename = args.output or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
-   
+
    local url = detect_url(location)
    local homepage = detect_homepage(url, args.homepage)
-   
+
    local rockspec, err = rockspecs.from_persisted_table(filename, {
       rockspec_format = args.rockspec_format,
       package = name,
@@ -327,11 +327,11 @@ function write_rockspec.command(args)
    })
    assert(not err, err)
    rockspec.source.protocol = protocol
-   
+
    if not next(rockspec.dependencies) then
       util.warning("Please specify supported Lua versions with --lua-versions=<ver>. "..util.see_help("write_rockspec"))
    end
-   
+
    local local_dir = location
 
    if location:match("://") then
@@ -354,11 +354,11 @@ function write_rockspec.command(args)
          local_dir = nil
       end
    end
-   
+
    if not local_dir then
       local_dir = "."
    end
-   
+
    local libs = nil
    if args.lib then
       libs = {}
@@ -391,16 +391,16 @@ function write_rockspec.command(args)
          util.title("Please fill in the source.license field manually or use --license.")
       end
    end
-   
+
    fill_as_builtin(rockspec, libs)
-      
+
    rockspec_cleanup(rockspec)
-   
+
    persist.save_from_table(filename, rockspec, type_rockspec.order)
 
-   util.printout()   
+   util.printout()
    util.printout("Wrote template at "..filename.." -- you should now edit and finish it.")
-   util.printout()   
+   util.printout()
 
    return true
 end

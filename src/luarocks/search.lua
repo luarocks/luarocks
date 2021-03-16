@@ -61,13 +61,13 @@ function search.disk_search(repo, query, result_tree)
    assert(type(repo) == "string")
    assert(query:type() == "query")
    assert(type(result_tree) == "table" or not result_tree)
-   
+
    local fs = require("luarocks.fs")
-     
+
    if not result_tree then
       result_tree = {}
    end
-   
+
    for name in fs.dir(repo) do
       local pathname = dir.path(repo, name)
       local rname, rversion, rarch = path.parse_name(name)
@@ -231,13 +231,13 @@ function search.find_suitable_rock(query)
    assert(query:type() == "query")
 
    local rocks_provided = util.get_rocks_provided()
-   
+
    if rocks_provided[query.name] ~= nil then
       -- Do not install versions listed in rocks_provided.
       return nil, "Rock "..query.name.." "..rocks_provided[query.name]..
          " is already provided by VM or via 'rocks_provided' in the config file.", "provided"
    end
-   
+
    local result_tree = search.search_repos(query)
    local first_rock = next(result_tree)
    if not first_rock then
@@ -270,19 +270,19 @@ function search.find_rock_checking_lua_versions(query, check_lua_versions)
       if check_lua_versions then
          util.printout(query.name .. " not found for Lua " .. cfg.lua_version .. ".")
          util.printout("Checking if available for other Lua versions...")
-      
+
          -- Check if constraints are satisfiable with other Lua versions.
          local lua_versions = supported_lua_versions(query)
-      
+
          if #lua_versions ~= 0 then
             -- Build a nice message in "only Lua 5.x and 5.y but not 5.z." format
             for i, lua_version in ipairs(lua_versions) do
                lua_versions[i] = "Lua "..lua_version
             end
-      
+
             local versions_message = "only "..table.concat(lua_versions, " and ")..
                " but not Lua "..cfg.lua_version.."."
-      
+
             if #query.constraints == 0 then
                add = query.name.." supports "..versions_message
             elseif #query.constraints == 1 and query.constraints[1].op == "==" then
@@ -308,7 +308,7 @@ end
 function search.print_result_tree(result_tree, porcelain)
    assert(type(result_tree) == "table")
    assert(type(porcelain) == "boolean" or not porcelain)
-   
+
    if porcelain then
       for package, versions in util.sortedpairs(result_tree) do
          for version, repos in util.sortedpairs(versions, vers.compare_versions) do
@@ -320,7 +320,7 @@ function search.print_result_tree(result_tree, porcelain)
       end
       return
    end
-   
+
    for package, versions in util.sortedpairs(result_tree) do
       local namespaces = {}
       for version, repos in util.sortedpairs(versions, vers.compare_versions) do

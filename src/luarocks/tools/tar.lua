@@ -30,7 +30,7 @@ local function octal_to_number(octal)
    local number = 0
    octal = octal:gsub("%s", "")
    for i = #octal,1,-1 do
-      local digit = tonumber(octal:sub(i,i)) 
+      local digit = tonumber(octal:sub(i,i))
       if not digit then
          break
       end
@@ -93,7 +93,7 @@ function tar.untar(filename, destdir)
 
    local tar_handle = io.open(filename, "rb")
    if not tar_handle then return nil, "Error opening file "..filename end
-   
+
    local long_name, long_link_name
    local ok, err
    local make_dir = fun.memoize(fs.make_dir)

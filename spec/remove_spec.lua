@@ -26,11 +26,11 @@ describe("luarocks remove #integration", function()
       it("invalid rock", function()
          assert.is_false(run.luarocks_bool("remove invalid.rock"))
       end)
-      
+
       it("missing rock", function()
          assert.is_false(run.luarocks_bool("remove missing_rock"))
       end)
-      
+
       it("invalid argument", function()
          assert.is_false(run.luarocks_bool("remove luacov --deps-mode"))
       end)
@@ -62,7 +62,7 @@ describe("luarocks remove #integration", function()
          assert.is_false(run.luarocks_bool("remove coxpcall"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/coxpcall"))
       end)
-      
+
       it("force", function()
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/coxpcall"))
          assert.is_true(run.luarocks_bool("build copas"))
@@ -71,7 +71,7 @@ describe("luarocks remove #integration", function()
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/coxpcall"))
          assert.is.truthy(output:find("Checking stability of dependencies"))
       end)
-      
+
       it("force fast", function()
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/coxpcall"))
          assert.is_true(run.luarocks_bool("build copas"))
@@ -85,7 +85,7 @@ describe("luarocks remove #integration", function()
    it("#admin remove #ssh", function()
       assert.is_true(run.luarocks_admin_bool("--server=testing remove coxpcall-1.16.0-1.src.rock"))
    end)
-   
+
    it("#admin remove missing", function()
       assert.is_false(run.luarocks_admin_bool("--server=testing remove"))
    end)

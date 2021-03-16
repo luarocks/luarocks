@@ -51,7 +51,7 @@ end
 --- Copy a file.
 -- @param src string: Pathname of source
 -- @param dest string: Pathname of destination
--- @param perm string ("read" or "exec") or nil: Permissions for destination 
+-- @param perm string ("read" or "exec") or nil: Permissions for destination
 -- file or nil to use the source permissions
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.

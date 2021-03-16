@@ -94,7 +94,7 @@ function manif.scan_dependencies(name, version, tree_manifests, dest)
       if pkgdeps then
          for _, dep in ipairs(pkgdeps) do
             local pkg, constraints = dep.name, dep.constraints
-   
+
             for _, t in ipairs(tree_manifests) do
                local entries = t.manifest.repository[pkg]
                if entries then

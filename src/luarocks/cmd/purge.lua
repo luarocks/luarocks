@@ -42,7 +42,7 @@ function purge.command(args)
    if type(tree) ~= "string" then
       return nil, "The --tree argument is mandatory. "..util.see_help("purge")
    end
-   
+
    local results = {}
    if not fs.is_dir(tree) then
       return nil, "Directory not found: "..tree

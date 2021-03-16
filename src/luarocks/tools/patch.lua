@@ -114,7 +114,7 @@ local function file_lines(f)
     pos_beg = pos + 1
     if #line > 0 then
       return line
-    end    
+    end
   end
 end
 
@@ -526,7 +526,7 @@ local function patch_hunks(srcname, tgtname, hunks)
   tgt:close()
   src:close()
   return true
-end 
+end
 
 local function strip_dirs(filename, strip)
   if strip == nil then return filename end
@@ -616,7 +616,7 @@ local function patch_file(source, target, epoch, hunks, strip, create_delete)
         end
       end
       hunklineno = 1
-  
+
       -- todo \ No newline at end of file
     end
     -- check hunks in source file

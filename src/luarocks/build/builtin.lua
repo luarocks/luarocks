@@ -266,7 +266,7 @@ function builtin.run(rockspec, no_install)
    local lib_modules = {}
    local luadir = path.lua_dir(rockspec.name, rockspec.version)
    local libdir = path.lib_dir(rockspec.name, rockspec.version)
-   
+
    if not build.modules then
       if rockspec:format_is_at_least("3.0") then
          local libs, incdirs, libdirs = autoextract_libs(rockspec.external_dependencies, rockspec.variables)

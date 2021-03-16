@@ -15,7 +15,7 @@ end
 local function read_int8(fd)
    if io.type(fd) == "closed file" then
       return nil
-   end   
+   end
    local s = fd:read(1)
    if not s then
       fd:close()
@@ -44,7 +44,7 @@ end
 local function read(fd, bytes, endian)
    if io.type(fd) == "closed file" then
       return nil
-   end   
+   end
    local s = fd:read(bytes)
    if not s
       then fd:close()
@@ -138,7 +138,7 @@ end
 local function detect_elf_system(fd, hdr, sections)
    local system = e_osabi[hdr.osabi]
    local endian = hdr.endian
-   
+
    if system == "sysv" then
       local abitag = sections[".note.ABI-tag"]
       if abitag then
@@ -154,7 +154,7 @@ local function detect_elf_system(fd, hdr, sections)
       elseif sections[".note.openbsd.ident"] then
          return "openbsd"
       end
-      
+
       local gnu_version_r = sections[".gnu.version_r"]
       if gnu_version_r then
 
@@ -170,7 +170,7 @@ local function detect_elf_system(fd, hdr, sections)
 
             fd:seek("set", dynstr + vn_file)
             local libname = fd:read(64):gsub("%z.*", "")
-            
+
             if hdr.e_type == 0x03 and libname == "libroot.so" then
                return "haiku"
             elseif libname:match("linux") then
@@ -190,7 +190,7 @@ local function detect_elf_system(fd, hdr, sections)
          end
       end
    end
-   
+
    return system
 end
 
@@ -207,7 +207,7 @@ local function read_elf_header(fd)
    if not hdr.osabi then
       return nil
    end
-   
+
    local endian = hdr.endian
    fd:seek("set", 0x10)
    hdr.e_type = read(fd, 2, endian)
@@ -221,10 +221,10 @@ local function read_elf_header(fd)
    if elfversion ~= 1 then
       return nil
    end
-   
+
    local word = (hdr.bits == 1) and 4 or 8
    hdr.word = word
-   
+
    hdr.e_entry = read(fd, word, endian)
    hdr.e_phoff = read(fd, word, endian)
    hdr.e_shoff = read(fd, word, endian)
@@ -235,7 +235,7 @@ local function read_elf_header(fd)
    hdr.e_shentsize = read(fd, 2, endian)
    hdr.e_shnum = read(fd, 2, endian)
    hdr.e_shstrndx = read(fd, 2, endian)
-   
+
    return hdr, processor
 end
 
@@ -323,7 +323,7 @@ local function detect_pe(fd)
    fd:seek("set", peoffset + 4)       -- move to position of Machine section
    local machine = read(fd, 2, LITTLE)
    local processor = pe_machine[machine]
-  
+
    local rdata_pos = fd:read(736):match(".rdata%z%z............(....)")
    if rdata_pos then
       rdata_pos = bytes2number(rdata_pos, LITTLE)
@@ -333,7 +333,7 @@ local function detect_pe(fd)
          system = "cygwin"
       end
    end
-   
+
    return system, processor or "unknown"
 end
 
@@ -363,7 +363,7 @@ local cache_processor
 function sysdetect.detect(input_file)
    local dirsep = package.config:sub(1,1)
    local files
-   
+
    if input_file then
       files = { input_file }
    else

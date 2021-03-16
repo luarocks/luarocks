@@ -5,7 +5,7 @@ local run = test_env.run
 test_env.unload_luarocks()
 
 describe("LuaRocks command line #integration", function()
-   
+
    setup(function()
       test_env.setup_specs()
    end)

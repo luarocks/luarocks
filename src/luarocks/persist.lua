@@ -85,7 +85,7 @@ local function write_table_key_assignment(out, k, level)
       persist.write_value(out, k, level)
       out:write("]")
    end
-   
+
    out:write(" = ")
 end
 

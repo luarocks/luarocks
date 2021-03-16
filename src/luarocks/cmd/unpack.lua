@@ -32,7 +32,7 @@ end
 -- files specified in the rockspec, and unpack them inside the directory.
 -- @param rockspec_file string: The URL for a rockspec file.
 -- @param dir_name string: The directory where to store and unpack files.
--- @return table or (nil, string): the loaded rockspec table or 
+-- @return table or (nil, string): the loaded rockspec table or
 -- nil and an error message.
 local function unpack_rockspec(rockspec_file, dir_name)
    assert(type(rockspec_file) == "string")
@@ -61,7 +61,7 @@ end
 -- @param dir_name string: The directory where to unpack.
 -- @param kind string: the kind of rock file, as in the second-level
 -- extension in the rock filename (eg. "src", "all", "linux-x86")
--- @return table or (nil, string): the loaded rockspec table or 
+-- @return table or (nil, string): the loaded rockspec table or
 -- nil and an error message.
 local function unpack_rock(rock_file, dir_name, kind)
    assert(type(rock_file) == "string")
@@ -102,7 +102,7 @@ end
 -- by an error message.
 local function run_unpacker(file, force)
    assert(type(file) == "string")
-   
+
    local base_name = dir.base_name(file)
    local dir_name, kind, extension = base_name:match("(.*)%.([^.]+)%.(rock)$")
    if not extension then
@@ -139,7 +139,7 @@ local function run_unpacker(file, force)
             return nil, "Failed copying unpacked rockspec into unpacked source directory."
          end
       end
-      util.printout()   
+      util.printout()
       util.printout("Done. You may now enter directory ")
       util.printout(dir.path(dir_name, rockspec.source.dir))
       util.printout("and type 'luarocks make' to build.")

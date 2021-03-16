@@ -76,7 +76,7 @@ function unix.wrap_script(script, target, deps_mode, name, version, ...)
    assert(type(deps_mode) == "string")
    assert(type(name) == "string" or not name)
    assert(type(version) == "string" or not version)
-   
+
    local wrapper = io.open(target, "w")
    if not wrapper then
       return nil, "Could not open "..target.." for writing."
@@ -153,7 +153,7 @@ function unix.is_actual_binary(filename)
    return first ~= "#!"
 end
 
-function unix.copy_binary(filename, dest) 
+function unix.copy_binary(filename, dest)
    return fs.copy(filename, dest, "exec")
 end
 

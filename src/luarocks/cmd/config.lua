@@ -29,7 +29,7 @@ Query information about the LuaRocks configuration.
   * `lua_dir` is a special key as it checks for a valid Lua installation
     (equivalent to --lua-dir) and sets several keys at once.
   * `lua_version` is a special key as it changes the default Lua version
-    used by LuaRocks commands (equivalent to passing --lua-version). 
+    used by LuaRocks commands (equivalent to passing --lua-version).
 
   Examples:
      luarocks config variables.OPENSSL_DIR /usr/local/openssl
@@ -114,7 +114,7 @@ local function traverse_varstring(var, tbl, fn, missing_parent)
          k, r = var:match("^([^[]+)(%[.*)$")
       end
    end
-   
+
    if k then
       if not tbl[k] and missing_parent then
          missing_parent(tbl, k)
@@ -131,7 +131,7 @@ local function traverse_varstring(var, tbl, fn, missing_parent)
    if i then
       var = tonumber(i)
    end
-   
+
    return fn(tbl, var)
 end
 
@@ -179,12 +179,12 @@ local function write_entries(keys, scope, do_unset)
    if scope == "project" and not cfg.config_files.project then
       return nil, "Current directory is not part of a project. You may want to run `luarocks init`."
    end
-   
+
    local tbl, err = persist.load_config_file_if_basic(cfg.config_files[scope].file, cfg)
    if not tbl then
       return nil, err
    end
-   
+
    for var, val in util.sortedpairs(keys) do
       traverse_varstring(var, tbl, function(t, k)
          if do_unset then
@@ -242,7 +242,7 @@ end
 function config_cmd.command(args)
    deps.check_lua_incdir(cfg.variables, args.lua_version or cfg.lua_version)
    deps.check_lua_libdir(cfg.variables, args.lua_version or cfg.lua_version)
-   
+
    -- deprecated flags
    if args.lua_incdir then
       print(cfg.variables.LUA_INCDIR)
@@ -287,7 +287,7 @@ function config_cmd.command(args)
       end
       print("Lua version will default to " .. args.value .. " in " .. prefix)
    end
-   
+
    if args.key == "lua_dir" and args.value then
       local scope = get_scope(args)
       local keys = {

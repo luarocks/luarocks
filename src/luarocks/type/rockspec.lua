@@ -89,13 +89,13 @@ local rockspec_formats, versions = type_check.declare_schemas({
          post_install = { _type = "string" },
       },
    },
-   
+
    ["1.1"] = {
       deploy = {
          wrap_bin_scripts = { _type = "boolean" },
       }
    },
-   
+
    ["3.0"] = {
       description = {
          labels = {
@@ -135,7 +135,7 @@ local rockspec_formats, versions = type_check.declare_schemas({
    }
 })
 
-type_rockspec.order = {"rockspec_format", "package", "version", 
+type_rockspec.order = {"rockspec_format", "package", "version",
    { "source", { "url", "tag", "branch", "md5" } },
    { "description", {"summary", "detailed", "homepage", "license" } },
    "supported_platforms", "dependencies", "build_dependencies", "external_dependencies",
@@ -160,7 +160,7 @@ local function check_rockspec_using_version(rockspec, globals, version)
 end
 
 --- Type check a rockspec table.
--- Verify the correctness of elements from a 
+-- Verify the correctness of elements from a
 -- rockspec table, reporting on unknown fields and type
 -- mismatches.
 -- @return boolean or (nil, string): true if type checking

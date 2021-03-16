@@ -175,7 +175,7 @@ local function fetch_and_verify_signature_for(url, filename, tmpdir)
    if not sig_file then
       return nil, "Could not fetch signature file for verification: " .. err, errcode
    end
-   
+
    local ok, err = signing.verify_signature(filename, sig_file)
    if not ok then
       return nil, "Failed signature verification: " .. err
@@ -269,7 +269,7 @@ function fetch.load_local_rockspec(rel_filename, quick)
    if not tbl then
       return nil, "Could not load rockspec file "..abs_filename.." ("..err..")"
    end
-   
+
    local rockspec, err = rockspecs.from_persisted_table(abs_filename, tbl, err, quick)
    if not rockspec then
       return nil, abs_filename .. ": " .. err
@@ -279,12 +279,12 @@ function fetch.load_local_rockspec(rel_filename, quick)
    if basename ~= "rockspec" and basename ~= name_version .. ".rockspec" then
       return nil, "Inconsistency between rockspec filename ("..basename..") and its contents ("..name_version..".rockspec)."
    end
-   
+
    return rockspec
 end
 
 --- Load a local or remote rockspec into a table.
--- This is the entry point for the LuaRocks tools. 
+-- This is the entry point for the LuaRocks tools.
 -- Only the LuaRocks runtime loader should use
 -- load_local_rockspec directly.
 -- @param filename string: Local or remote filename of a rockspec.
@@ -425,7 +425,7 @@ function fetch.fetch_sources(rockspec, extract, dest_dir)
          return nil, "Unknown protocol "..protocol
       end
    end
-   
+
    if cfg.only_sources_from
    and rockspec.source.pathname
    and #rockspec.source.pathname > 0 then

@@ -55,7 +55,7 @@ function queries.new(name, namespace, version, substring, arch, operator)
    assert(type(substring) == "boolean" or not substring)
    assert(type(arch) == "string" or not arch)
    assert(type(operator) == "string" or not operator)
-   
+
    operator = operator or "=="
 
    local self = {
@@ -99,7 +99,7 @@ do
             ["="] = "==",
             ["!="] = "~="
          }
-         
+
          --- Consumes a constraint from a string, converting it to table format.
          -- For example, a string ">= 1.0, > 2.0" is converted to a table in the
          -- format {op = ">=", version={1,0}} and the rest, "> 2.0", is returned
@@ -110,20 +110,20 @@ do
          -- input string is invalid.
          parse_constraint = function(input)
             assert(type(input) == "string")
-         
+
             local no_upgrade, op, version, rest = input:match("^(@?)([<>=~!]*)%s*([%w%.%_%-]+)[%s,]*(.*)")
             local _op = operators[op]
             version = vers.parse_version(version)
             if not _op then
                return nil, "Encountered bad constraint operator: '"..tostring(op).."' in '"..input.."'"
             end
-            if not version then 
+            if not version then
                return nil, "Could not parse version from constraint: '"..input.."'"
             end
             return { op = _op, version = version, no_upgrade = no_upgrade=="@" and true or nil }, rest
          end
       end
-      
+
       --- Convert a list of constraints from string to table format.
       -- For example, a string ">= 1.0, < 2.0" is converted to a table in the format
       -- {{op = ">=", version={1,0}}, {op = "<", version={2,0}}}.
@@ -134,7 +134,7 @@ do
       -- or nil if the input string is invalid.
       parse_constraints = function(input)
          assert(type(input) == "string")
-      
+
          local constraints, oinput, constraint = {}, input
          while #input > 0 do
             constraint, input = parse_constraint(input)
@@ -147,26 +147,26 @@ do
          return constraints
       end
    end
-   
+
    --- Prepare a query in dependency table format.
    -- @param depstr string: A dependency in string format
    -- as entered in rockspec files.
    -- @return table: A query in table format, or nil and an error message in case of errors.
    function queries.from_dep_string(depstr)
       assert(type(depstr) == "string")
-   
+
       local ns_name, rest = depstr:match("^%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)")
       if not ns_name then
          return nil, "failed to extract dependency name from '"..depstr.."'"
       end
-   
+
       local constraints, err = parse_constraints(rest)
       if not constraints then
          return nil, err
       end
-   
+
       local name, namespace = util.split_namespace(ns_name)
-   
+
       local self = {
          name = name,
          namespace = namespace,

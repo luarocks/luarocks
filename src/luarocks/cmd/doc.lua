@@ -67,7 +67,7 @@ function doc.command(args)
       return try_to_open_homepage(args.rock, args.namespace, args.version)
    end
    local name, version = iname, iversion
-   
+
    local rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version, repo))
    if not rockspec then return nil,err end
    local descript = rockspec.description or {}
@@ -77,7 +77,7 @@ function doc.command(args)
    end
 
    local directory = path.install_dir(name, version, repo)
-   
+
    local docdir
    local directories = { "doc", "docs" }
    for _, d in ipairs(directories) do
@@ -101,7 +101,7 @@ function doc.command(args)
    local htmlpatt = "%.html?$"
    local extensions = { htmlpatt, "%.md$", "%.txt$",  "%.textile$", "" }
    local basenames = { "index", "readme", "manual" }
-   
+
    local porcelain = args.porcelain
    if #files > 0 then
       util.title("Documentation files for "..name.." "..version, porcelain)
@@ -116,11 +116,11 @@ function doc.command(args)
          end
       end
    end
-   
+
    if args.list then
       return true
    end
-   
+
    for _, extension in ipairs(extensions) do
       for _, basename in ipairs(basenames) do
          local filename = basename..extension

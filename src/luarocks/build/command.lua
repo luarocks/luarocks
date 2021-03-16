@@ -14,7 +14,7 @@ function command.run(rockspec, not_install)
    assert(rockspec:type() == "rockspec")
 
    local build = rockspec.build
-   
+
    util.variable_substitutions(build, rockspec.variables)
 
    local env = {

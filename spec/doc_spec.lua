@@ -6,7 +6,7 @@ test_env.unload_luarocks()
 
 describe("luarocks doc #integration", function()
    before_each(function()
-      test_env.setup_specs(extra_rocks)
+      test_env.setup_specs()
    end)
 
    describe("basic tests", function()
@@ -74,7 +74,7 @@ describe("luarocks doc #integration", function()
          assert.match("a_rock 2.0", run.luarocks("doc a_user/a_rock"))
       end)
    end)
-   
+
    describe("tests with flags", function()
       it("of installed package", function()
          test_env.run_in_tmp(function(tmpdir)
@@ -127,12 +127,12 @@ describe("luarocks doc #integration", function()
             assert.is.truthy(output:find("doc2%.md"))
          end, finally)
       end)
-      
+
       it("with --local", function()
          assert.is_true(run.luarocks_bool("install --server=" .. testing_paths.fixtures_dir .. "/a_repo a_rock"))
          assert.is_true(run.luarocks_bool("doc --server=" .. testing_paths.fixtures_dir .. "/a_repo a_rock --local"))
       end)
-      
+
       it("with --porcelain", function()
          test_env.run_in_tmp(function(tmpdir)
             test_env.write_file("test-1.0-1.rockspec", [[

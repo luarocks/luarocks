@@ -36,7 +36,7 @@ function cmake.run(rockspec, no_install)
 
    -- Execute cmake with variables.
    local args = ""
-   
+
    -- Try to pick the best generator. With msvc and x64, CMake does not select it by default so we need to be explicit.
    if cfg.cmake_generator then
       args = args .. ' -G"'..cfg.cmake_generator.. '"'
@@ -71,7 +71,7 @@ function cmake.run(rockspec, no_install)
          return nil, "Failed installing."
       end
    end
-   
+
    return true
 end
 

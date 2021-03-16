@@ -33,8 +33,8 @@ function lint.command(args)
    end
 
    local ok = true
-   
-   -- This should have been done in the type checker, 
+
+   -- This should have been done in the type checker,
    -- but it would break compatibility of other commands.
    -- Making 'lint' alone be stricter shouldn't be a problem,
    -- because extra-strict checks is what lint-type commands

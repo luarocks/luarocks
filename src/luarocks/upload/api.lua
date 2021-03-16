@@ -120,7 +120,7 @@ function Api:request(url, params, post_params)
    local vars = cfg.variables
    local json_ok, json = util.require_json()
    if not json_ok then return nil, "A JSON library is required for this command. "..json end
-   
+
    if fs.which_tool("downloader") == "wget" then
       local curl_ok, err = fs.is_tool_available(vars.CURL, "curl")
       if not curl_ok then
@@ -135,7 +135,7 @@ function Api:request(url, params, post_params)
       url = url .. ("?" .. encode_query_string(params))
    end
    local method = "GET"
-   local out 
+   local out
    local tmpfile = fs.tmpname()
    if post_params then
       method = "POST"
@@ -148,7 +148,7 @@ function Api:request(url, params, post_params)
          curl_cmd = curl_cmd .. "--form \""..k.."="..var.."\" "
       end
       if cfg.connection_timeout and cfg.connection_timeout > 0 then
-        curl_cmd = curl_cmd .. "--connect-timeout "..tonumber(cfg.connection_timeout).." " 
+        curl_cmd = curl_cmd .. "--connect-timeout "..tonumber(cfg.connection_timeout).." "
       end
       local ok = fs.execute_string(curl_cmd..fs.Q(url).." -o "..fs.Q(tmpfile))
       if not ok then
@@ -206,7 +206,7 @@ function Api:request(url, params, post_params)
    if not http_ok then
       return nil, "Failed loading socket library!"
    end
-   
+
    if not self.config.key then
       return nil, "Must have API key before performing any actions."
    end

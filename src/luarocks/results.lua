@@ -17,11 +17,11 @@ function results.new(name, version, repo, arch, namespace)
    assert(type(repo) == "string")
    assert(type(arch) == "string" or not arch)
    assert(type(namespace) == "string" or not namespace)
-   
+
    if not namespace then
       name, namespace = util.split_namespace(name)
    end
-   
+
    local self = {
       name = name,
       version = version,

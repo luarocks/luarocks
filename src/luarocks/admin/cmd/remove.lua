@@ -32,7 +32,7 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    local download_url, login_url = cache.get_server_urls(server, upload_server)
    local at = fs.current_dir()
    local refresh_fn = refresh and cache.refresh_local_cache or cache.split_server_url
-   
+
    local local_cache, protocol, server_path, user, password = refresh_fn(download_url, cfg.upload_user, cfg.upload_password)
    if not local_cache then
       return nil, protocol
@@ -40,10 +40,10 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    if protocol ~= "rsync" then
       return nil, "This command requires 'rsync', check your configuration."
    end
-   
+
    local ok, err = fs.change_dir(at)
    if not ok then return nil, err end
-   
+
    local nr_files = 0
    for _, rockfile in ipairs(rockfiles) do
       local basename = dir.base_name(rockfile)

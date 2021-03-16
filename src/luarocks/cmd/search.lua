@@ -63,7 +63,7 @@ function cmd_search.command(args)
    if not args.name and not args.all then
       return nil, "Enter name and version or use --all. "..util.see_help("search")
    end
-   
+
    local query = queries.new(name, args.namespace, args.version, true)
    local result_tree, err = search.search_repos(query)
    local porcelain = args.porcelain

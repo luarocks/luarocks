@@ -64,7 +64,7 @@ local manifest_formats = type_check.declare_schemas({
 })
 
 --- Type check a manifest table.
--- Verify the correctness of elements from a 
+-- Verify the correctness of elements from a
 -- manifest table, reporting on unknown fields and type
 -- mismatches.
 -- @return boolean or (nil, string): true if type checking

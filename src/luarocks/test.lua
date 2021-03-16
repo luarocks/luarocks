@@ -22,13 +22,13 @@ local function get_test_type(rockspec)
    if rockspec.test and rockspec.test.type then
       return rockspec.test.type
    end
-   
+
    for _, test_module in ipairs(test_modules) do
       if test_module.detect_type() then
          return test_modules[test_module]
       end
    end
-   
+
    return nil, "could not detect test type -- no test suite for " .. rockspec.package .. "?"
 end
 
@@ -45,7 +45,7 @@ function test.run_test_suite(rockspec_arg, test_type, args)
       assert(type(rockspec_arg) == "table")
       rockspec = rockspec_arg
    end
-   
+
    if not test_type then
       local err
       test_type, err = get_test_type(rockspec, test_type)
@@ -67,7 +67,7 @@ function test.run_test_suite(rockspec_arg, test_type, args)
    if not pok then
       return nil, "failed loading test execution module " .. mod_name
    end
-   
+
    return test_mod.run_tests(rockspec.test, args)
 end
 

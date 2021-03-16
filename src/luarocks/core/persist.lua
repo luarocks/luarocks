@@ -66,9 +66,9 @@ function persist.load_into_table(filename, tbl)
    }
    local save_mt = getmetatable(result)
    setmetatable(result, globals_mt)
-   
+
    local ok, err, errcode = persist.run_file(filename, result)
-   
+
    setmetatable(result, save_mt)
 
    if not ok then

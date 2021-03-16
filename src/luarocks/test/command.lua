@@ -20,7 +20,7 @@ function command.run_tests(test, args)
          script = "test.lua"
       }
    end
-   
+
    if not test.script and not test.command then
       test.script = "test.lua"
    end
@@ -31,7 +31,7 @@ function command.run_tests(test, args)
          table.insert(args, i, test.flags[i])
       end
    end
-   
+
    local ok
 
    if test.script then

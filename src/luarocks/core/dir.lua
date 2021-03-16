@@ -6,7 +6,7 @@ local require = nil
 
 local function unquote(c)
    local first, last = c:sub(1,1), c:sub(-1)
-   if (first == '"' and last == '"') or 
+   if (first == '"' and last == '"') or
       (first == "'" and last == "'") then
       return c:sub(2,-2)
    end
@@ -40,7 +40,7 @@ end
 -- @return string, string: the protocol, and the pathname without the protocol.
 function dir.split_url(url)
    assert(type(url) == "string")
-   
+
    url = unquote(url)
    local protocol, pathname = url:match("^([^:]*)://(.*)")
    if not protocol then

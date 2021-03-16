@@ -49,7 +49,7 @@ function path.manifest_file(tree)
 end
 
 --- Get the directory for all versions of a package in a tree.
--- @param name string: The package name. 
+-- @param name string: The package name.
 -- @return string: The resulting path -- does not guarantee that
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- the package (and by extension, the path) exists.
@@ -59,7 +59,7 @@ function path.versions_dir(name, tree)
 end
 
 --- Get the local installation directory (prefix) for a package.
--- @param name string: The package name. 
+-- @param name string: The package name.
 -- @param version string: The package version.
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that
@@ -71,7 +71,7 @@ function path.install_dir(name, version, tree)
 end
 
 --- Get the local filename of the rockspec of an installed rock.
--- @param name string: The package name. 
+-- @param name string: The package name.
 -- @param version string: The package version.
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that
@@ -83,7 +83,7 @@ function path.rockspec_file(name, version, tree)
 end
 
 --- Get the local filename of the rock_manifest file of an installed rock.
--- @param name string: The package name. 
+-- @param name string: The package name.
 -- @param version string: The package version.
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that
@@ -107,7 +107,7 @@ function path.rock_namespace_file(name, version, tree)
 end
 
 --- Get the local installation directory for C libraries of a package.
--- @param name string: The package name. 
+-- @param name string: The package name.
 -- @param version string: The package version.
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that
@@ -119,7 +119,7 @@ function path.lib_dir(name, version, tree)
 end
 
 --- Get the local installation directory for Lua modules of a package.
--- @param name string: The package name. 
+-- @param name string: The package name.
 -- @param version string: The package version.
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that
@@ -131,7 +131,7 @@ function path.lua_dir(name, version, tree)
 end
 
 --- Get the local installation directory for documentation of a package.
--- @param name string: The package name. 
+-- @param name string: The package name.
 -- @param version string: The package version.
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that
@@ -143,7 +143,7 @@ function path.doc_dir(name, version, tree)
 end
 
 --- Get the local installation directory for configuration files of a package.
--- @param name string: The package name. 
+-- @param name string: The package name.
 -- @param version string: The package version.
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that
@@ -156,7 +156,7 @@ end
 
 --- Get the local installation directory for command-line scripts
 -- of a package.
--- @param name string: The package name. 
+-- @param name string: The package name.
 -- @param version string: The package version.
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that

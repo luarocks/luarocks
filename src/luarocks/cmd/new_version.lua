@@ -60,7 +60,7 @@ local function try_replace(tbl, field, old, new)
    if new_field ~= old_field then
       util.printout("Guessing new '"..field.."' field as "..new_field)
       tbl[field] = new_field
-      return true      
+      return true
    end
    return false
 end
@@ -104,7 +104,7 @@ local function check_url_and_update_md5(out_rs, invalid_is_error)
       end
    end
 end
- 
+
 local function update_source_section(out_rs, url, tag, old_ver, new_ver)
    if tag then
       out_rs.source.tag = tag
@@ -144,7 +144,7 @@ local function update_source_section(out_rs, url, tag, old_ver, new_ver)
    end
    return true
 end
- 
+
 function new_version.command(args)
    if not args.rock then
       local err
@@ -153,7 +153,7 @@ function new_version.command(args)
          return nil, err
       end
    end
-   
+
    local filename, err
    if args.rock:match("rockspec$") then
       filename, err = fetch.fetch_url(args.rock)
@@ -178,7 +178,7 @@ function new_version.command(args)
    if args.tag and not args.new_version then
       args.new_version = args.tag:gsub("^v", "")
    end
-   
+
    local out_dir
    if args.dir then
       out_dir = dir.normalize(args.dir)
@@ -196,7 +196,7 @@ function new_version.command(args)
       new_rev = tonumber(old_rev) + 1
    end
    local new_rockver = new_ver:gsub("-", "")
-   
+
    local out_rs, err = persist.load_into_table(filename)
    local out_name = out_rs.package:lower()
    out_rs.version = new_rockver.."-"..new_rev
@@ -207,21 +207,21 @@ function new_version.command(args)
    if out_rs.build and out_rs.build.type == "module" then
       out_rs.build.type = "builtin"
    end
-   
+
    local out_filename = out_name.."-"..new_rockver.."-"..new_rev..".rockspec"
    if out_dir then
       out_filename = dir.path(out_dir, out_filename)
       fs.make_dir(out_dir)
    end
    persist.save_from_table(out_filename, out_rs, type_rockspec.order)
-   
+
    util.printout("Wrote "..out_filename)
 
    local valid_out_rs, err = fetch.load_local_rockspec(out_filename)
    if not valid_out_rs then
       return nil, "Failed loading generated rockspec: "..err
    end
-   
+
    return true
 end
 

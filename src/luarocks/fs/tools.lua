@@ -12,7 +12,7 @@ local dir_stack = {}
 
 do
    local tool_cache = {}
-   
+
    local tool_options = {
       downloader = {
          desc = "downloader",
@@ -147,7 +147,7 @@ function tools.use_downloader(url, filename, cache)
    assert(type(filename) == "string" or not filename)
 
    filename = fs.absolute_name(filename or dir.base_name(url))
-   
+
    local downloader, err = fs.which_tool("downloader")
    if not downloader then
       return nil, err

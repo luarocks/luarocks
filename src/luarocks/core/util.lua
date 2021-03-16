@@ -5,7 +5,7 @@ local require = nil
 --------------------------------------------------------------------------------
 
 --- Run a process and read a its output.
--- Equivalent to io.popen(cmd):read("*l"), except that it 
+-- Equivalent to io.popen(cmd):read("*l"), except that it
 -- closes the fd right away.
 -- @param cmd string: The command to execute
 -- @param spec string: "*l" by default, to read a single line.
@@ -63,7 +63,7 @@ function util.show_table(t, tname, top_indent)
    local autoref  -- for self references
 
    local function is_empty_table(tbl) return next(tbl) == nil end
-   
+
    local function basic_serialize(o)
       local so = tostring(o)
       if type(o) == "function" then
@@ -71,7 +71,7 @@ function util.show_table(t, tname, top_indent)
          -- info.name is nil because o is not a calling level
          if info.what == "C" then
             return ("%q"):format(so .. ", C function")
-         else 
+         else
             -- the information is defined through lines
             return ("%q"):format(so .. ", defined in (" .. info.linedefined .. "-" .. info.lastlinedefined .. ")" .. info.source)
          end
@@ -81,14 +81,14 @@ function util.show_table(t, tname, top_indent)
          return ("%q"):format(so)
       end
    end
-   
+
    local function add_to_cart(value, name, indent, saved, field)
       indent = indent or ""
       saved = saved or {}
       field = field or name
-      
+
       cart = cart .. indent .. field
-      
+
       if type(value) ~= "table" then
          cart = cart .. " = " .. basic_serialize(value) .. ";\n"
       else
@@ -113,7 +113,7 @@ function util.show_table(t, tname, top_indent)
          end
       end
    end
-   
+
    tname = tname or "__unnamed__"
    if type(t) ~= "table" then
       return tname .. " = " .. basic_serialize(t)
@@ -189,7 +189,7 @@ function util.cleanup_path(list, sep, lua_version, keep_first)
       local part = parts[i]:gsub("//", "/")
       if lua_version then
          part = part:gsub("/lua/([%d.]+)/", function(part_version)
-            if part_version:sub(1, #lua_version) ~= lua_version then            
+            if part_version:sub(1, #lua_version) ~= lua_version then
                return "/lua/"..lua_version.."/"
             end
          end)

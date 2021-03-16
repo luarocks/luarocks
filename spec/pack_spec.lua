@@ -35,7 +35,7 @@ describe("luarocks pack #integration", function()
    it("not installed rock", function()
       assert.is_false(run.luarocks_bool("pack cjson"))
    end)
-   
+
    it("not installed rock from non existing manifest", function()
       assert.is_false(run.luarocks_bool("pack /non/exist/temp.manif"))
    end)
@@ -66,7 +66,7 @@ describe("luarocks pack #integration", function()
       setup(function()
          test_env.mock_server_init()
       end)
-      
+
       teardown(function()
          test_env.mock_server_done()
       end)
@@ -79,7 +79,7 @@ describe("luarocks pack #integration", function()
          assert(run.luarocks_bool("pack a_rock-1.0-1.rockspec"))
          assert.is_truthy(lfs.attributes("a_rock-1.0-1.src.rock"))
       end)
-      
+
       describe("namespaced dependencies", function()
          it("can pack rockspec with namespaced dependencies", function()
             finally(function()

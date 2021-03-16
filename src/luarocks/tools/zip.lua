@@ -129,7 +129,7 @@ end
 -- @return true if succeeded, nil in case of failure.
 local function zipwriter_close_file_in_zip(self)
    local zh = self.ziphandle
-   
+
    if not self.in_open_file then
       return nil
    end
@@ -152,16 +152,16 @@ local function zipwriter_close_file_in_zip(self)
 
    -- File data
    zh:write(self.data)
-   
+
    -- Data descriptor
    zh:write(DATA_DESCRIPTOR_SIGNATURE)
    zh:write(number_to_lestring(lfh.crc32, 4))
    zh:write(number_to_lestring(lfh.compressed_size, 4))
    zh:write(number_to_lestring(lfh.uncompressed_size, 4))
-   
+
    table.insert(self.files, lfh)
    self.in_open_file = false
-   
+
    return true
 end
 
@@ -208,9 +208,9 @@ end
 -- @return true if succeeded, nil in case of failure.
 local function zipwriter_close(self)
    local zh = self.ziphandle
-   
+
    local central_directory_offset = zh:seek()
-   
+
    local size_of_central_directory = 0
    -- Central directory structure
    for _, lfh in ipairs(self.files) do
@@ -234,7 +234,7 @@ local function zipwriter_close(self)
       zh:write(lfh.file_name)
       size_of_central_directory = size_of_central_directory + 46 + lfh.file_name_length
    end
-   
+
    -- End of central directory record
    zh:write(END_OF_CENTRAL_DIR_SIGNATURE) -- signature
    zh:write(number_to_lestring(0, 2)) -- number of this disk
@@ -253,16 +253,16 @@ end
 -- @param name filename of the zipfile to be created.
 -- @return a zip handle, or nil in case of error.
 function zip.new_zipwriter(name)
-   
+
    local zw = {}
-  
+
    zw.ziphandle = io.open(fs.absolute_name(name), "wb")
    if not zw.ziphandle then
       return nil
    end
    zw.files = {}
    zw.in_open_file = false
-   
+
    zw.add = zipwriter_add
    zw.close = zipwriter_close
    zw.open_new_file_in_zip = zipwriter_open_new_file_in_zip
@@ -381,7 +381,7 @@ local function process_end_of_central_dir(zh)
          return nil, "Could not find End of Central Directory signature"
       end
    end
-   
+
    -- number of this disk (2 bytes)
    -- number of the disk with the start of the central directory (2 bytes)
    -- total number of entries in the central directory on this disk (2 bytes)
@@ -450,7 +450,7 @@ function zip.unzip(zipfile)
    if not cd_entries then
       return nil, cd_offset
    end
-   
+
    local ok, err = zh:seek("set", cd_offset)
    if not ok then
       return nil, err
@@ -513,7 +513,7 @@ end
 function zip.gzip(input_filename, output_filename)
    assert(type(input_filename) == "string")
    assert(output_filename == nil or type(output_filename) == "string")
-   
+
    if not output_filename then
       output_filename = input_filename .. ".gz"
    end
@@ -525,7 +525,7 @@ end
 function zip.gunzip(input_filename, output_filename)
    assert(type(input_filename) == "string")
    assert(output_filename == nil or type(output_filename) == "string")
-   
+
    if not output_filename then
       output_filename = input_filename:gsub("%.gz$", "")
    end

@@ -1,7 +1,6 @@
 local test_env = require("spec.util.test_env")
 local run = test_env.run
 local get_tmp_path = test_env.get_tmp_path
-local testing_paths = test_env.testing_paths
 local write_file = test_env.write_file
 
 test_env.unload_luarocks()
@@ -12,7 +11,7 @@ local extra_rocks = {
 }
 
 describe("luarocks lint #integration", function()
-   
+
    before_each(function()
       test_env.setup_specs(extra_rocks)
    end)
@@ -24,25 +23,25 @@ describe("luarocks lint #integration", function()
    it("invalid argument", function()
       assert.is_false(run.luarocks_bool("lint invalid"))
    end)
-   
+
    it("OK", function()
       assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
       local output = run.luarocks("lint validate-args-1.5.4-1.rockspec")
       assert.are.same(output, "")
       assert.is_true(os.remove("validate-args-1.5.4-1.rockspec"))
    end)
-   
+
    describe("mismatch set", function()
       local tmpdir
       local olddir
-      
+
       before_each(function()
          tmpdir = get_tmp_path()
          olddir = lfs.currentdir()
          lfs.mkdir(tmpdir)
          lfs.chdir(tmpdir)
       end)
-      
+
       after_each(function()
          if olddir then
             lfs.chdir(olddir)
@@ -51,7 +50,7 @@ describe("luarocks lint #integration", function()
             end
          end
       end)
-      
+
       it("mismatch string", function()
          write_file("type_mismatch_string-1.0-1.rockspec", [[
             package="type_mismatch_version"
@@ -59,7 +58,7 @@ describe("luarocks lint #integration", function()
          ]], finally)
          assert.is_false(run.luarocks_bool("lint type_mismatch_string-1.0-1.rockspec"))
       end)
-   
+
       it("mismatch version", function()
          write_file("type_mismatch_version-1.0-1.rockspec", [[
             package="type_mismatch_version"
@@ -67,7 +66,7 @@ describe("luarocks lint #integration", function()
          ]], finally)
          assert.is_false(run.luarocks_bool("lint type_mismatch_version-1.0-1.rockspec"))
       end)
-   
+
       it("mismatch table", function()
          write_file("type_mismatch_table-1.0-1.rockspec", [[
             package="type_mismatch_table"
@@ -77,7 +76,7 @@ describe("luarocks lint #integration", function()
          ]], finally)
          assert.is_false(run.luarocks_bool("lint type_mismatch_table-1.0-1.rockspec"))
       end)
-   
+
       it("mismatch no build table", function()
          write_file("no_build_table-1.0-1.rockspec", [[
             package = "no_build_table"

@@ -10,11 +10,11 @@ local fs = require("luarocks.fs")
 function path_cmd.add_to_parser(parser)
    local cmd = parser:command("path", [[
 Returns the package path currently configured for this installation
-of LuaRocks, formatted as shell commands to update LUA_PATH and LUA_CPATH. 
+of LuaRocks, formatted as shell commands to update LUA_PATH and LUA_CPATH.
 
-On Unix systems, you may run: 
+On Unix systems, you may run:
   eval `luarocks path`
-And on Windows: 
+And on Windows:
   luarocks path > "%temp%\_lrp.bat" && call "%temp%\_lrp.bat" && del "%temp%\_lrp.bat"]],
   util.see_also())
       :summary("Return the currently configured package path.")
@@ -56,7 +56,7 @@ function path_cmd.command(args)
       lr_cpath = lr_cpath .. ";" .. package.cpath
       lr_bin = lr_bin .. path_sep .. clean_path
    end
-   
+
    local lpath_var, lcpath_var = util.lua_path_variables()
 
    util.printout(fs.export_cmd(lpath_var, util.cleanup_path(lr_path, ';', cfg.lua_version, args.append)))

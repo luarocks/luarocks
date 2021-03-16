@@ -91,13 +91,13 @@ function pack.pack_installed_rock(query, tree)
    if not fs.exists(prefix) then
       return nil, "'"..name.." "..version.."' does not seem to be an installed rock."
    end
-   
+
    local rock_manifest, err = manif.load_rock_manifest(name, version, root)
    if not rock_manifest then return nil, err end
 
    local name_version = name .. "-" .. version
    local rock_file = fs.absolute_name(name_version .. "."..cfg.arch..".rock")
-   
+
    local temp_dir = fs.make_temp_dir("pack")
    fs.copy_contents(prefix, temp_dir)
 
@@ -111,7 +111,7 @@ function pack.pack_installed_rock(query, tree)
       local ok, err = copy_back_files(name, version, rock_manifest.lua, path.deploy_lua_dir(repo), dir.path(temp_dir, "lua"), "read")
       if not ok then return nil, "Failed copying back files: " .. err end
    end
-   
+
    local ok, err = fs.change_dir(temp_dir)
    if not ok then return nil, err end
    if not is_binary and not repos.has_binaries(name, version) then

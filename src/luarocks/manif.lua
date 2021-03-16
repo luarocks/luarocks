@@ -110,7 +110,7 @@ function manif.load_manifest(repo_url, lua_version, versioned_only)
             break
          end
       end
-      if not pathname then 
+      if not pathname then
          return nil, err, errcode
       end
    end
@@ -236,7 +236,7 @@ end
 function manif.get_versions(dep, deps_mode)
    assert(type(dep) == "table")
    assert(type(deps_mode) == "string")
-   
+
    local name = dep.name
    local namespace = dep.namespace
 

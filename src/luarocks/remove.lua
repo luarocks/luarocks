@@ -47,14 +47,14 @@ end
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
 -- @return boolean or (nil, string): true on success or nil and an error message.
-local function delete_versions(name, versions, deps_mode) 
+local function delete_versions(name, versions, deps_mode)
 
    for version, _ in pairs(versions) do
       util.printout("Removing "..name.." "..version.."...")
       local ok, err = repos.delete_version(name, version, deps_mode)
       if not ok then return nil, err end
    end
-   
+
    return true
 end
 
@@ -63,7 +63,7 @@ function remove.remove_search_results(results, name, deps_mode, force, fast)
 
    local version = next(versions)
    local second = next(versions, version)
-   
+
    local dependents = {}
    if not fast then
       util.printout("Checking stability of dependencies in the absence of")
@@ -71,7 +71,7 @@ function remove.remove_search_results(results, name, deps_mode, force, fast)
       util.printout()
       dependents = check_dependents(name, versions, deps_mode)
    end
-   
+
    if #dependents > 0 then
       if force or fast then
          util.printerr("The following packages may be broken by this forced removal:")
@@ -95,7 +95,7 @@ function remove.remove_search_results(results, name, deps_mode, force, fast)
          return nil, "Failed removing."
       end
    end
-   
+
    local ok, err = delete_versions(name, versions, deps_mode)
    if not ok then return nil, err end
 

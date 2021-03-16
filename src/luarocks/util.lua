@@ -34,7 +34,7 @@ local debug = require("debug")
 -- which can be used to remove the item later from the list.
 function util.schedule_function(f, ...)
    assert(type(f) == "function")
-   
+
    local item = { fn = f, args = pack(...) }
    table.insert(scheduled_functions, item)
    return item
@@ -122,12 +122,12 @@ end
 -- exists in vars. Only string values are processed; this function
 -- does not scan subtables recursively.
 -- @param tbl table: Table to have its string values modified.
--- @param vars table: Table containing string-string key-value pairs 
+-- @param vars table: Table containing string-string key-value pairs
 -- representing variables to replace in the strings values of tbl.
 function util.variable_substitutions(tbl, vars)
    assert(type(tbl) == "table")
    assert(type(vars) == "table")
-   
+
    local updated = {}
    for k, v in pairs(tbl) do
       if type(v) == "string" then
@@ -450,7 +450,7 @@ do
    function util.get_luajit_version()
       local cfg = require("luarocks.core.cfg")
       if cfg.cache.luajit_version_checked then
-         return cfg.cache.luajit_version 
+         return cfg.cache.luajit_version
       end
       cfg.cache.luajit_version_checked = true
 
@@ -553,9 +553,9 @@ end
 
 function util.opts_table(type_name, valid_opts)
    local opts_mt = {}
-   
+
    opts_mt.__index = opts_mt
-   
+
    function opts_mt.type()
       return type_name
    end
@@ -590,7 +590,7 @@ end
 -- "lua" for the Lua version and, for format 3.0+, "luajit" if detected).
 function util.get_rocks_provided(rockspec)
    local cfg = require("luarocks.core.cfg")
-   
+
    if not rockspec and cfg.cache.rocks_provided then
       return cfg.cache.rocks_provided
    end

@@ -24,7 +24,7 @@ function cache.get_server_urls(server, upload_server)
       elseif upload_server.http then download_url = "http://"..upload_server.http
       elseif upload_server.ftp then download_url = "ftp://"..upload_server.ftp
       end
-      
+
       if upload_server.ftp then login_url = "ftp://"..upload_server.ftp
       elseif upload_server.sftp then login_url = "sftp://"..upload_server.sftp
       end
@@ -57,7 +57,7 @@ local function download_cache(protocol, server_path, user, password)
       return fs.execute(cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..user.."@"..srv..":"..path.."/ ./")
    elseif protocol == "file" then
       return fs.copy_contents(server_path, ".")
-   else 
+   else
       local login_info = ""
       if user then login_info = " --user="..user end
       if password then login_info = login_info .. " --password="..password end
@@ -74,7 +74,7 @@ function cache.refresh_local_cache(url, given_user, given_password)
    end
 
    fs.change_dir(local_cache)
-   
+
    util.printout("Refreshing cache "..local_cache.."...")
 
    ok = download_cache(protocol, server_path, user, password)

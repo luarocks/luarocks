@@ -55,7 +55,7 @@ local function Q(arg)
       if arg:match("^"..drive_letter)  then
          arg = arg:gsub("/", "\\")
       end
-      
+
       if arg == "\\" then
          return '\\' -- CHDIR needs special handling for root dir
       end
@@ -128,10 +128,10 @@ end
 function test_env.execute_helper(command, print_command, env_variables)
    local final_command = ""
 
-   if print_command then 
+   if print_command then
       print("[EXECUTING]: " .. command)
    end
-   
+
    local unset_variables = {
       "LUA_PATH",
       "LUA_CPATH",
@@ -178,7 +178,7 @@ end
 -- @return true/false boolean: status of the command execution
 local function execute_bool(command, print_command, env_variables)
    command = test_env.execute_helper(command, print_command, env_variables)
-   
+
    local redirect_filename
    local redirect = ""
    if print_command ~= nil then
@@ -438,11 +438,11 @@ end
 -- @return env_variables table: table with created environment variables
 local function create_env(testing_paths)
    local luaversion_short = _VERSION:gsub("Lua ", "")
-   
+
    if test_env.LUAJIT_V then
       luaversion_short="5.1"
    end
-   
+
    local env_variables = {}
    env_variables.GNUPGHOME = testing_paths.gpg_dir
    env_variables.LUA_VERSION = luaversion_short
@@ -481,7 +481,7 @@ local function make_run_function(cmd_name, exec_function, with_coverage, do_prin
    if with_coverage then
       cmd_prefix = cmd_prefix .. "-e \"require('luacov.runner')('" .. test_env.testing_paths.testrun_dir .. "/luacov.config')\" "
    end
-   
+
    if cmd_name then
       cmd_prefix = cmd_prefix .. test_env.testing_paths.src_dir .. "/bin/" .. cmd_name .. " "
    end
@@ -547,7 +547,7 @@ local function build_environment(rocks, env_variables)
          move_file(rock .. "-*.rock", testing_paths.testing_cache)
       end
    end
-   
+
    test_env.copy_dir(testing_paths.testing_tree, testing_paths.testing_tree_copy)
    test_env.copy_dir(testing_paths.testing_sys_tree, testing_paths.testing_sys_tree_copy)
 end
@@ -653,7 +653,7 @@ function test_env.setup_specs(extra_rocks)
       end
 
       test_env.main()
-      
+
       -- preload before meddling with package.path
       require("spec.util.git_repo")
 
@@ -666,8 +666,8 @@ function test_env.setup_specs(extra_rocks)
       test_env.setup_done = true
       title("RUNNING TESTS")
    end
-   
-   if extra_rocks then 
+
+   if extra_rocks then
       local make_manifest = download_rocks(extra_rocks, test_env.testing_paths.testing_server)
       if make_manifest then
          test_env.run.luarocks_admin_nocov("make_manifest " .. test_env.testing_paths.testing_server)
@@ -677,7 +677,7 @@ function test_env.setup_specs(extra_rocks)
    if test_env.RESET_ENV then
       reset_environment(test_env.testing_paths, test_env.md5sums, test_env.env_variables)
    end
-   
+
    lfs.chdir(test_env.testing_paths.testrun_dir)
 end
 
@@ -903,7 +903,7 @@ local function prepare_mock_server_binary_rocks()
 end
 
 ---
--- Main function to create config files and testing environment 
+-- Main function to create config files and testing environment
 function test_env.main()
    local testing_paths = test_env.testing_paths
 
@@ -954,7 +954,7 @@ function test_env.main()
    local env_vars = {
       LUAROCKS_CONFIG = test_env.testing_paths.testrun_dir .. "/testing_config.lua"
    }
-   
+
    build_environment(rocks, env_vars)
 
    prepare_mock_server_binary_rocks()

@@ -38,7 +38,7 @@ describe("luarocks make #integration", function()
          test_env.remove_dir("luasocket-3.0rc1-2")
          os.remove("luasocket-3.0rc1-2.src.rock")
       end)
-   
+
       -- make luasocket
       assert.is_true(run.luarocks_bool("download --source luasocket 3.0rc1-2"))
       assert.is_true(run.luarocks_bool("unpack luasocket-3.0rc1-2.src.rock"))
@@ -85,13 +85,13 @@ describe("luarocks make #integration", function()
          assert.is_true(run.luarocks_bool("unpack lxsh-0.8.6-2.src.rock"))
          assert.is_true(lfs.chdir("lxsh-0.8.6-2/lxsh-0.8.6-1/"))
       end)
-   
+
       -- delete downloaded and unpacked files
       after_each(function()
          assert(lfs.chdir(testing_paths.testrun_dir))
          test_env.remove_dir("lxsh-0.8.6-2")
          assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
-      end)         
+      end)
 
       it("default rockspec", function()
          assert.is_true(run.luarocks_bool("new_version lxsh-0.8.6-2.rockspec"))
@@ -105,14 +105,14 @@ describe("luarocks make #integration", function()
          finally(function()
             os.remove("rockspec")
          end)
-      
+
          test_env.copy("lxsh-0.8.6-2.rockspec", "rockspec")
          assert.is_true(run.luarocks_bool("make"))
 
          assert.is_true(run.luarocks_bool("show lxsh"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
       end)
-      
+
       it("ambiguous rockspec", function()
          assert.is.truthy(os.rename("lxsh-0.8.6-2.rockspec", "lxsh2-0.8.6-2.rockspec"))
          local output = run.luarocks("make")
@@ -131,7 +131,7 @@ describe("luarocks make #integration", function()
          assert.is_false(run.luarocks_bool("show lxsh"))
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
       end)
-      
+
       it("pack binary rock", function()
          assert.is_true(run.luarocks_bool("make --deps-mode=none --pack-binary-rock"))
          assert.is.truthy(lfs.attributes("lxsh-0.8.6-2.all.rock"))
@@ -150,7 +150,7 @@ describe("luarocks make #integration", function()
                "a_rock 1.0"
             }
             build = {
-               type = "builtin", 
+               type = "builtin",
                modules = {
                   test = "test.lua"
                }
@@ -185,7 +185,7 @@ describe("luarocks make #integration", function()
                "a_rock >= 0.8"
             }
             build = {
-               type = "builtin", 
+               type = "builtin",
                modules = {
                   test = "test.lua"
                }
@@ -226,7 +226,7 @@ describe("luarocks make #integration", function()
                "a_rock >= 0.8"
             }
             build = {
-               type = "builtin", 
+               type = "builtin",
                modules = {
                   test = "test.lua"
                }
@@ -260,7 +260,7 @@ describe("luarocks make #integration", function()
       local deploy_lib_dir = testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION
       local deploy_lua_dir = testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION
       local so = test_env.lib_extension
-   
+
       before_each(function()
          test_env.copy_dir(testing_paths.fixtures_dir .. "/double_deploy_type", "ddt")
       end)
@@ -279,7 +279,7 @@ describe("luarocks make #integration", function()
          assert.is.falsy(lfs.attributes(deploy_lib_dir.."/ddt."..so.."~"))
          assert.is.falsy(lfs.attributes(deploy_lua_dir.."/ddt.lua~"))
          assert.is.falsy(lfs.attributes(deploy_lua_dir.."/ddt_file~"))
-  
+
          assert.is_true(run.luarocks_bool("make ddt/double_deploy_type-0.2.0-1.rockspec"))
          assert.is.truthy(lfs.attributes(deploy_lib_dir.."/ddt."..so))
          assert.is.truthy(lfs.attributes(deploy_lua_dir.."/ddt.lua"))

@@ -150,7 +150,7 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
          return nil, 'Failed to fetch submodules.'
       end
    end
-   
+
    if not rockspec.source.tag then
       rockspec.source.identifier = git_identifier(git_cmd, rockspec.version)
    end

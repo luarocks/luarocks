@@ -27,13 +27,13 @@ end
 -- or nil and an error message.
 function make_manifest.command(args)
    local repo = args.repository or cfg.rocks_dir
-  
+
    util.printout("Making manifest for "..repo)
-   
+
    if repo:match("/lib/luarocks") and not args.local_tree then
       util.warning("This looks like a local rocks tree, but you did not pass --local-tree.")
    end
-   
+
    local ok, err = writer.make_manifest(repo, deps.get_deps_mode(args), not args.local_tree)
    if ok and not args.local_tree then
       util.printout("Generating index.html for "..repo)

@@ -13,7 +13,7 @@ local cfg = require("luarocks.core.cfg")
 -- configured through variables.MAKE in the config files, or
 -- the appropriate platform-specific default).
 -- @param pass boolean: If true, run make; if false, do nothing.
--- @param target string: The make target; an empty string indicates 
+-- @param target string: The make target; an empty string indicates
 -- the default target.
 -- @param variables table: A table containing string-string key-value
 -- pairs representing variable assignments to be passed to make.
@@ -42,7 +42,7 @@ function make.run(rockspec, not_install)
    assert(rockspec:type() == "rockspec")
 
    local build = rockspec.build
-   
+
    if build.build_pass == nil then build.build_pass = true end
    if build.install_pass == nil then build.install_pass = true end
    build.build_variables = build.build_variables or {}
@@ -56,9 +56,9 @@ function make.run(rockspec, not_install)
       build.install_target = "-f "..makefile.." "..build.install_target
    end
 
-   if build.variables then   
+   if build.variables then
       for var, val in pairs(build.variables) do
-         build.build_variables[var] = val 
+         build.build_variables[var] = val
          build.install_variables[var] = val
       end
    end
@@ -67,9 +67,9 @@ function make.run(rockspec, not_install)
 
    util.variable_substitutions(build.build_variables, rockspec.variables)
    util.variable_substitutions(build.install_variables, rockspec.variables)
-   
+
    local auto_variables = { "CC" }
-   
+
    for _, variable in pairs(auto_variables) do
       if not build.build_variables[variable] then
          build.build_variables[variable] = rockspec.variables[variable]
@@ -79,7 +79,7 @@ function make.run(rockspec, not_install)
       end
    end
 
-   -- backwards compatibility 
+   -- backwards compatibility
    local make_cmd = cfg.make or rockspec.variables.MAKE
 
    local ok = make_pass(make_cmd, build.build_pass, build.build_target, build.build_variables)

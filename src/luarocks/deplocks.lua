@@ -46,10 +46,10 @@ function deplocks.load(root_rock_name, dirname)
       -- could not open, maybe file does not exist
       return true, nil
    end
-   
+
    deplock_abs_filename = fs.absolute_name(filename)
    deplock_root_rock_name = root_rock_name
-   
+
    deptable = result
    return true, filename
 end
@@ -58,7 +58,7 @@ function deplocks.add(depskey, name, version)
    if deptable_mode == "locked" then
       return
    end
-   
+
    local dk = deptable[depskey]
    if not dk then
       dk = {}
@@ -89,7 +89,7 @@ end
 
 -- a table-like interface to deplocks
 function deplocks.proxy(depskey)
-   return setmetatable({}, { 
+   return setmetatable({}, {
       __index = function(_, k)
          return deplocks.get(depskey, k)
       end,

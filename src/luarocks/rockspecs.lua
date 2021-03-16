@@ -1,5 +1,5 @@
 local rockspecs = {}
-   
+
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local path = require("luarocks.path")
@@ -31,9 +31,9 @@ end
 -- if it doesn't (or if nil is passed), this function does nothing.
 local function platform_overrides(tbl)
    assert(type(tbl) == "table" or not tbl)
-   
+
    if not tbl then return end
-   
+
    if tbl.platforms then
       for platform in cfg.each_platform() do
          local platform_tbl = tbl.platforms[platform]

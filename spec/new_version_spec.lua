@@ -15,7 +15,7 @@ describe("luarocks new_version #integration", function()
    setup(function()
       test_env.setup_specs(extra_rocks)
    end)
-   
+
    describe("basic tests", function()
       it("with no flags/arguments", function()
          finally(function()
@@ -26,7 +26,7 @@ describe("luarocks new_version #integration", function()
          assert(lfs.chdir("empty"))
          assert.is_false(run.luarocks_bool("new_version"))
       end)
-      
+
       it("with invalid", function()
          assert.is_false(run.luarocks_bool("new_version invalid"))
       end)
@@ -53,7 +53,7 @@ describe("luarocks new_version #integration", function()
          assert.is.truthy(lfs.attributes("abelhas-1.2-1.rockspec"))
          test_env.remove_files(lfs.currentdir(), "abelhas%-")
       end)
-      
+
       it("of luacov with tag", function()
          assert.is_true(run.luarocks_bool("download --rockspec luacov 0.13.0"))
          assert.is_true(run.luarocks_bool("new_version luacov-0.13.0-1.rockspec --tag v0.3"))

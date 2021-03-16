@@ -28,7 +28,7 @@ describe("luarocks download #integration", function()
       assert.is.truthy(lfs.attributes("validate-args-1.5.4-1.rockspec"))
       test_env.remove_files(lfs.currentdir(), "validate--args--")
    end)
-   
+
    it("rockspec version", function()
       assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
       assert.is.truthy(lfs.attributes("validate-args-1.5.4-1.rockspec"))

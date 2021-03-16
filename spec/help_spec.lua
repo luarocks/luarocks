@@ -16,11 +16,11 @@ describe("luarocks help #integration", function()
    it("invalid argument", function()
       assert.is_false(run.luarocks_bool("help invalid"))
    end)
-   
+
    it("config", function()
       assert.is_true(run.luarocks_bool("help config"))
    end)
-   
+
    it("luarocks-admin help with no flags/arguments", function()
       assert.is_true(run.luarocks_admin_bool(test_env.quiet("help")))
    end)

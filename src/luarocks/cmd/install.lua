@@ -75,16 +75,16 @@ function install.install_binary_rock(rock_file, opts)
    if not name then
       return nil, "Filename "..rock_file.." does not match format 'name-version-revision.arch.rock'."
    end
-   
+
    if arch ~= "all" and arch ~= cfg.arch then
       return nil, "Incompatible architecture "..arch, "arch"
    end
    if repos.is_installed(name, version) then
       repos.delete_version(name, version, opts.deps_mode)
    end
-   
+
    local install_dir = path.install_dir(name, version)
-   
+
    local rollback = util.schedule_function(function()
       fs.delete(install_dir)
       fs.remove_dir_if_empty(path.versions_dir(name))
@@ -139,7 +139,7 @@ end
 -- @param rock_file string: local or remote filename of a rock.
 -- @param opts table: installation options
 -- @return (string, string) or (nil, string, [string]): Name and version of
--- the rock whose dependencies were installed if succeeded or nil and an error message 
+-- the rock whose dependencies were installed if succeeded or nil and an error message
 -- followed by an error code.
 function install.install_binary_rock_deps(rock_file, opts)
    assert(type(rock_file) == "string")
@@ -149,7 +149,7 @@ function install.install_binary_rock_deps(rock_file, opts)
    if not name then
       return nil, "Filename "..rock_file.." does not match format 'name-version-revision.arch.rock'."
    end
-   
+
    if arch ~= "all" and arch ~= cfg.arch then
       return nil, "Incompatible architecture "..arch, "arch"
    end
@@ -158,7 +158,7 @@ function install.install_binary_rock_deps(rock_file, opts)
 
    local ok, err, errcode = fetch.fetch_and_unpack_rock(rock_file, install_dir, opts.verify)
    if not ok then return nil, err, errcode end
-   
+
    local rockspec, err = fetch.load_rockspec(path.rockspec_file(name, version))
    if err then
       return nil, "Failed loading rockspec for installed package: "..err, errcode

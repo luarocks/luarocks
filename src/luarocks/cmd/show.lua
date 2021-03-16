@@ -100,7 +100,7 @@ local function keys_as_string(t, sep)
    return table.concat(keys, sep or " ")
 end
 
-local function word_wrap(line) 
+local function word_wrap(line)
    local width = tonumber(os.getenv("COLUMNS")) or 80
    if width > 80 then width = 80 end
    if #line > width then
@@ -265,7 +265,7 @@ end
 -- @return boolean: True if succeeded, nil on errors.
 function show.command(args)
    local query = queries.new(args.rock, args.namespace, args.version, true)
-   
+
    local name, version, repo, repo_url = search.pick_installed_rock(query, args.tree)
    if not name then
       return nil, version

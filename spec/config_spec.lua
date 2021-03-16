@@ -9,7 +9,7 @@ local hardcoded
 test_env.unload_luarocks()
 
 describe("LuaRocks config tests #integration", function()
-   
+
    setup(function()
       test_env.setup_specs()
       test_env.unload_luarocks() -- need to be required here, because hardcoded is created after first loading of specs
@@ -55,12 +55,12 @@ describe("LuaRocks config tests #integration", function()
          local output = run.luarocks("config --lua-incdir")
          assert.match(hardcoded.LUA_DIR, output, 1, true)
       end)
-      
+
       it("--lua-libdir returns a subdir of LUA_DIR", function()
          local output = run.luarocks("config --lua-libdir")
          assert.match(hardcoded.LUA_DIR, output, 1, true)
       end)
-      
+
       it("--lua-ver returns the Lua version", function()
          local output = run.luarocks("config --lua-ver")
          local lua_version = _VERSION:gsub("Lua ", "")
@@ -69,17 +69,17 @@ describe("LuaRocks config tests #integration", function()
          end
          assert.are.same(lua_version, output)
       end)
-      
+
       it("--rock-trees lists rock trees", function()
          assert.is_true(run.luarocks_bool("config --rock-trees"))
       end)
-      
+
       describe("--user-config", function()
          it("returns user config dir", function()
             local user_config_path = run.luarocks("config --user-config")
             assert.is.truthy(lfs.attributes(user_config_path))
          end)
-      
+
          it("handles a missing user config", function()
             local output = run.luarocks("config --user-config", {LUAROCKS_CONFIG = "missing_file.lua"})
             assert.match("Warning", output)
@@ -89,7 +89,7 @@ describe("LuaRocks config tests #integration", function()
       describe("--system-config", function()
          local scdir = testing_paths.testing_lrprefix .. "/etc/luarocks"
          local configfile = scdir .. "/config-" .. env_variables.LUA_VERSION .. ".lua"
-   
+
          it("fails if system config doesn't exist", function()
             os.rename(configfile, configfile .. ".bak")
             finally(function()
@@ -97,28 +97,28 @@ describe("LuaRocks config tests #integration", function()
             end)
             assert.is_false(run.luarocks_bool("config --system-config"))
          end)
-         
+
          it("outputs the path of the system config", function()
             lfs.mkdir(testing_paths.testing_lrprefix)
             lfs.mkdir(testing_paths.testing_lrprefix .. "/etc/")
             lfs.mkdir(scdir)
-   
+
             local sysconfig = io.open(configfile, "w+")
             sysconfig:write(" ")
             sysconfig:close()
             finally(function()
                os.remove(configfile)
             end)
-            
+
             local output = run.luarocks("config --system-config")
             assert.are.same(configfile, output)
          end)
-         
+
          it("fails if system config is invalid", function()
             lfs.mkdir(testing_paths.testing_lrprefix)
             lfs.mkdir(testing_paths.testing_lrprefix .. "/etc/")
             lfs.mkdir(scdir)
-   
+
             local sysconfig = io.open(configfile, "w+")
             sysconfig:write("if if if")
             sysconfig:close()
@@ -176,7 +176,7 @@ describe("LuaRocks config tests #integration", function()
             local myproject = tmpdir .. "/myproject"
             lfs.mkdir(myproject)
             lfs.chdir(myproject)
-            
+
             assert(run.luarocks("init"))
             assert.truthy(run.luarocks_bool("config my_var my_value"))
 
@@ -206,7 +206,7 @@ describe("LuaRocks config tests #integration", function()
             local myproject = tmpdir .. "/myproject"
             lfs.mkdir(myproject)
             lfs.chdir(myproject)
-            
+
             assert(run.luarocks("init"))
             assert.truthy(run.luarocks_bool("config web_browser foo --scope=project"))
 
@@ -220,7 +220,7 @@ describe("LuaRocks config tests #integration", function()
             local myproject = tmpdir .. "/myproject"
             lfs.mkdir(myproject)
             lfs.chdir(myproject)
-            
+
             assert(run.luarocks("init"))
             assert.truthy(run.luarocks_bool("config variables.FOO_DIR /foo/bar --scope=project"))
 
@@ -234,7 +234,7 @@ describe("LuaRocks config tests #integration", function()
             local myproject = tmpdir .. "/myproject"
             lfs.mkdir(myproject)
             lfs.chdir(myproject)
-            
+
             assert(run.luarocks("init"))
             assert.truthy(run.luarocks_bool("config external_deps_patterns.lib[1] testtest --scope=project"))
 

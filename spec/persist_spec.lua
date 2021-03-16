@@ -6,17 +6,17 @@ local persist = require("luarocks.persist")
 
 describe("luarocks.persist #unit", function()
    local runner
-   
+
    setup(function()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
       runner.tick = true
    end)
-   
+
    teardown(function()
       runner.shutdown()
    end)
-   
+
    describe("persist.save_from_table_to_string", function()
       it("simple table", function()
          assert.are.same([[
