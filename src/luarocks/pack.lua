@@ -35,7 +35,13 @@ function pack.pack_source_rock(rockspec_file)
    local name_version = rockspec.name .. "-" .. rockspec.version
    local rock_file = fs.absolute_name(name_version .. ".src.rock")
 
-   local source_file, source_dir = fetch.fetch_sources(rockspec, false)
+   local temp_dir, err = fs.make_temp_dir("pack-"..name_version)
+   if not temp_dir then
+      return nil, "Failed creating temporary directory: "..err
+   end
+   util.schedule_function(fs.delete, temp_dir)
+
+   local source_file, source_dir = fetch.fetch_sources(rockspec, true, temp_dir)
    if not source_file then
       return nil, source_dir
    end
