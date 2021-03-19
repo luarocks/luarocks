@@ -80,6 +80,12 @@ describe("luarocks pack #integration", function()
          assert.is_truthy(lfs.attributes("a_rock-1.0-1.src.rock"))
       end)
 
+      it("fails packing a rockspec into a .src.rock dir if doesn't exist", function()
+         local output = run.luarocks("pack " .. testing_paths.fixtures_dir .. "/bad_pack-0.1-1.rockspec")
+         assert.match("Directory invalid_dir not found", output)
+         assert.is_falsy(lfs.attributes("bad_pack-0.1-1.src.rock"))
+      end)
+
       describe("namespaced dependencies", function()
          it("can pack rockspec with namespaced dependencies", function()
             finally(function()
