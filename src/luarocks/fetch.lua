@@ -63,7 +63,26 @@ function fetch.fetch_url(url, filename, cache)
 
    local protocol, pathname = dir.split_url(url)
    if protocol == "file" then
-      return fs.absolute_name(pathname)
+      local fullname = dir.normalize(fs.absolute_name(pathname))
+      if not fs.exists(fullname) then
+         local hint = (not pathname:match("^/"))
+                      and (" - note that given path in rockspec is not absolute: " .. url)
+                      or  ""
+         return nil, "Local file not found: " .. fullname .. hint
+      end
+      filename = filename or dir.base_name(pathname)
+      local dstname = dir.normalize(fs.absolute_name(dir.path(".", filename)))
+      local ok, err
+      if fullname == dstname then
+         ok = true
+      else
+         ok, err = fs.copy(fullname, dstname)
+      end
+      if ok then
+         return dstname
+      else
+         return nil, "Failed copying local file " .. fullname .. " to " .. dstname .. ": " .. err
+      end
    elseif dir.is_basic_protocol(protocol) then
       local ok, name, from_cache = fs.download(url, filename, cache)
       if not ok then

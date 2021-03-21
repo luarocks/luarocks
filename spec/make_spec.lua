@@ -67,10 +67,11 @@ describe("luarocks make #integration", function()
    end)
 
    it("--only-deps", function()
-      local rockspec = testing_paths.fixtures_dir .. "/build_only_deps-0.1-1.rockspec"
+      local rockspec = "build_only_deps-0.1-1.rockspec"
+      local src_rock = testing_paths.fixtures_dir .. "/build_only_deps-0.1-1.src.rock"
 
       test_env.remove_dir("build_only_deps-0.1-1/")
-      assert.is_true(run.luarocks_bool("unpack " .. rockspec))
+      assert.is_true(run.luarocks_bool("unpack " .. src_rock))
       lfs.chdir("build_only_deps-0.1-1/")
       assert.is_true(run.luarocks_bool("make " .. rockspec .. " --only-deps"))
       assert.is_false(run.luarocks_bool("show build_only_deps"))
