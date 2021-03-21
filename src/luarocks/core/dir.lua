@@ -58,6 +58,28 @@ end
 function dir.normalize(name)
    local protocol, pathname = dir.split_url(name)
    pathname = pathname:gsub("\\", "/"):gsub("(.)/*$", "%1"):gsub("//", "/")
+   local pieces = {}
+   local drive = ""
+   if pathname:match("^.:") then
+      drive, pathname = pathname:match("^(.:)(.*)$")
+   end
+   for piece in pathname:gmatch("(.-)/") do
+      if piece == ".." then
+         local prev = pieces[#pieces]
+         if not prev or prev == ".." then
+            table.insert(pieces, "..")
+         elseif prev ~= "" then
+            table.remove(pieces)
+         end
+      elseif piece ~= "." then
+         table.insert(pieces, piece)
+      end
+   end
+   local basename = pathname:match("[^/]+$")
+   if basename then
+      table.insert(pieces, basename)
+   end
+   pathname = drive .. table.concat(pieces, "/")
    if protocol ~= "file" then pathname = protocol .."://"..pathname end
    return pathname
 end

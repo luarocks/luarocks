@@ -52,8 +52,25 @@ describe("luarocks fetch #unit #mock", function()
       end)
 
       it("returns the absolute path of the filename argument if the url represents a file", function()
-         local file = fetch.fetch_url("file://a_rock.lua")
-         assert.truthy(are_same_files(file, lfs.currentdir() .. "/a_rock.lua"))
+         test_env.run_in_tmp(function(tmpdir)
+            write_file("test.lua", "return {}", finally)
+
+            fs.change_dir(tmpdir)
+            local file, err = fetch.fetch_url("file://test.lua")
+            assert.truthy(file, err)
+            assert.truthy(are_same_files(file, lfs.currentdir() .. "/test.lua"))
+            fs.pop_dir()
+         end, finally)
+      end)
+
+      it("fails if local path is invalid and returns a helpful hint for relative paths", function()
+         test_env.run_in_tmp(function(tmpdir)
+            write_file("test.lua", "return {}", finally)
+
+            local ok, err = fetch.fetch_url("file://boo.lua")
+            assert.falsy(ok)
+            assert.match("note that given path in rockspec is not absolute: file://boo.lua", err)
+         end, finally)
       end)
 
       it("returns false and does nothing if the url argument contains a nonexistent file", function()
