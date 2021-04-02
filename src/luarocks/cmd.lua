@@ -231,8 +231,8 @@ do
          if project_dir then
             table.insert(dirs, dir.path(project_dir, ".luarocks"))
          end
-         if cfg.home_tree then
-            table.insert(dirs, dir.path(cfg.home_tree, ".luarocks"))
+         if cfg.homeconfdir then
+            table.insert(dirs, cfg.homeconfdir)
          end
          table.insert(dirs, cfg.sysconfdir)
          for _, d in ipairs(dirs) do
