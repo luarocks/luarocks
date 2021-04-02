@@ -235,6 +235,7 @@ do
             table.insert(dirs, dir.path(cfg.home_tree, ".luarocks"))
          end
          table.insert(dirs, cfg.sysconfdir)
+         table.insert(dirs, cfg.homeconfdir)
          for _, d in ipairs(dirs) do
             local f = dir.path(d, "default-lua-version.lua")
             local mod, err = loadfile(f, "t")
