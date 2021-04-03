@@ -48,6 +48,7 @@ if it already exists.]], util.see_also())
 
    cmd:option("--dir", "Output directory for the new rockspec.")
    cmd:option("--tag", "New SCM tag.")
+   cmd:flag("--keep-url", "Keep the old url if a new one is not specified.")
 end
 
 
@@ -200,6 +201,10 @@ function new_version.command(args)
    local out_rs, err = persist.load_into_table(filename)
    local out_name = out_rs.package:lower()
    out_rs.version = new_rockver.."-"..new_rev
+
+   if not args.new_url and args.keep_url then
+      args.new_url = out_rs.source.url
+   end
 
    local ok, err = update_source_section(out_rs, args.new_url, args.tag, old_ver, new_ver)
    if not ok then return nil, err end
