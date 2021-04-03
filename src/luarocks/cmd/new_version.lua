@@ -70,6 +70,9 @@ end
 -- @return (true, false) if MD5 was not specified or it stayed same,
 -- (true, true) if MD5 changed, (nil, string) on error.
 local function check_url_and_update_md5(out_rs, invalid_is_error)
+   if not out_rs.source.md5 then
+      return true, false
+   end
    local file, temp_dir = fetch.fetch_url_at_temp_dir(out_rs.source.url, "luarocks-new-version-"..out_rs.package)
    if not file then
       if invalid_is_error then
