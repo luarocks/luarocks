@@ -85,7 +85,7 @@ do
             replace_tree(args, root_dir)
          end
       elseif args["local"] then
-         if not cfg.home_tree then
+         if os.getenv("USER") == "root" then
             return nil, "The --local flag is meant for operating in a user's home directory.\n"..
                "You are running as a superuser, which is intended for system-wide operation.\n"..
                "To force using the superuser's home, use --tree explicitly."
@@ -642,7 +642,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
    end
 
    -- if running as superuser, use system cache dir
-   if not cfg.home_tree then
+   if os.getenv("USER") == "root" then
       cfg.local_cache = dir.path(fs.system_cache_dir(), "luarocks")
    end
 

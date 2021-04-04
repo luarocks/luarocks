@@ -86,8 +86,8 @@ local function set_confdirs(cfg, platforms, hardcoded_sysconfdir)
          sysconfdir = detect_sysconfdir()
       end
       cfg.home = os.getenv("HOME") or ""
-      cfg.home_tree = (os.getenv("USER") ~= "root") and cfg.home.."/.luarocks"
-      cfg.homeconfdir = cfg.home.."/.luarocks"
+      cfg.home_tree = cfg.home.."/.luarocks"
+      cfg.homeconfdir = cfg.home_tree
       cfg.sysconfdir = sysconfdir or "/etc/luarocks"
    end
 end
