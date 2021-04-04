@@ -1,4 +1,4 @@
-
+/
 --- fs operations implemented with third-party tools for Windows platform abstractions.
 -- Download http://unxutils.sourceforge.net/ for Windows GNU utilities
 -- used by this module.
@@ -253,7 +253,7 @@ function tools.set_permissions(filename, mode, scope)
       -- Finally, remove all the other users from the ACL in order to deny them access to the file
       for _, user in pairs(get_system_users()) do
          if username ~= user then
-            local ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /remove " .. fs.Q(user))
+            local ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /remove " .. fs.Q(user))
             if not ok then
                return false, "Failed setting permission " .. mode .. " for " .. scope
             end
@@ -271,12 +271,12 @@ function tools.set_permissions(filename, mode, scope)
 
       local ok
       -- Grant permissions available to all users
-      ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r Everyone:" .. others_perms)
+      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r Everyone:" .. others_perms)
       if not ok then
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
       -- Grant permissions available only to the current user
-      ok = fs.execute_quiet(fs.Q(vars.ICACLS) .. " " .. fs.Q(filename) .. " /inheritance:d /grant %USERNAME%:" .. my_perms)
+      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant %USERNAME%:" .. my_perms)
       if not ok then
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
