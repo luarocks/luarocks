@@ -385,7 +385,8 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       }
       defaults.export_path_separator = ":"
       defaults.wrapper_suffix = ""
-      defaults.local_cache = home.."/.cache/luarocks"
+      local xdg_cache_home = os.getenv("XDG_CACHE_HOME") or home.."/.cache"
+      defaults.local_cache = xdg_cache_home.."/luarocks"
       if not defaults.variables.CFLAGS:match("-fPIC") then
          defaults.variables.CFLAGS = defaults.variables.CFLAGS.." -fPIC"
       end
