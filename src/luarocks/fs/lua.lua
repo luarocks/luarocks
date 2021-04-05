@@ -1034,6 +1034,10 @@ function fs_lua.current_user()
    return posix.getpwuid(posix.geteuid()).pw_name
 end
 
+function fs_lua.is_superuser()
+   return false
+end
+
 -- This call is not available on all systems, see #677
 if posix.mkdtemp then
 
