@@ -70,21 +70,6 @@ local function detect_sysconfdir()
    return basedir
 end
 
-local function set_confdirs(cfg, platforms, hardcoded_sysconfdir)
-   local sysconfdir = os.getenv("LUAROCKS_SYSCONFDIR") or hardcoded_sysconfdir
-   if platforms.windows and not platforms.msys2_mingw_w64 then
-      cfg.home = os.getenv("APPDATA") or "c:"
-      cfg.home_tree = cfg.home.."/luarocks"
-      cfg.homeconfdir = cfg.home_tree
-      cfg.sysconfdir = sysconfdir or ((os.getenv("PROGRAMFILES") or "c:") .. "/luarocks")
-   else
-      cfg.home = os.getenv("HOME") or ""
-      cfg.home_tree = cfg.home.."/.luarocks"
-      cfg.homeconfdir = cfg.home_tree
-      cfg.sysconfdir = sysconfdir or detect_sysconfdir() or "/etc/luarocks"
-   end
-end
-
 local load_config_file
 do
    -- Create global environment for the config files;
@@ -653,17 +638,24 @@ function cfg.init(detected, warning)
    local sys_config_file
    local home_config_file
    local project_config_file
+
+   local config_file_name = "config-"..cfg.lua_version..".lua"
+
    do
-      set_confdirs(cfg, platforms, hardcoded.SYSCONFDIR)
-      local name = "config-"..cfg.lua_version..".lua"
-      sys_config_file = (cfg.sysconfdir .. "/" .. name):gsub("\\", "/")
-      home_config_file = (cfg.homeconfdir .. "/" .. name):gsub("\\", "/")
-      if cfg.project_dir then
-         project_config_file = cfg.project_dir .. "/.luarocks/" .. name
+      local sysconfdir = os.getenv("LUAROCKS_SYSCONFDIR") or hardcoded.SYSCONFDIR
+      if platforms.windows and not platforms.msys2_mingw_w64 then
+         cfg.home = os.getenv("APPDATA") or "c:"
+         cfg.home_tree = cfg.home.."/luarocks"
+         cfg.sysconfdir = sysconfdir or ((os.getenv("PROGRAMFILES") or "c:") .. "/luarocks")
+      else
+         cfg.home = os.getenv("HOME") or ""
+         cfg.home_tree = cfg.home.."/.luarocks"
+         cfg.sysconfdir = sysconfdir or detect_sysconfdir() or "/etc/luarocks"
       end
    end
 
    -- Load system configuration file
+   sys_config_file = (cfg.sysconfdir .. "/" .. config_file_name):gsub("\\", "/")
    local sys_config_ok, err = load_config_file(cfg, platforms, sys_config_file)
    if err then
       return nil, err, "config"
@@ -693,8 +685,21 @@ function cfg.init(detected, warning)
          end
       end
 
+      -- try XDG config home
+      if platforms.unix and not home_config_ok then
+         local xdg_config_home = os.getenv("XDG_CONFIG_HOME") or cfg.home .. "/.config"
+         cfg.homeconfdir = xdg_config_home .. "/luarocks"
+         home_config_file = (cfg.homeconfdir .. "/" .. config_file_name):gsub("\\", "/")
+         home_config_ok, err = load_config_file(cfg, platforms, home_config_file)
+         if err then
+            return nil, err, "config"
+         end
+      end
+
       -- try the alternative defaults if there was no environment specified file or it didn't work
       if not home_config_ok then
+         cfg.homeconfdir = cfg.home_tree
+         home_config_file = (cfg.homeconfdir .. "/" .. config_file_name):gsub("\\", "/")
          home_config_ok, err = load_config_file(cfg, platforms, home_config_file)
          if err then
             return nil, err, "config"
@@ -703,6 +708,7 @@ function cfg.init(detected, warning)
 
       -- finally, use the project-specific config file if any
       if cfg.project_dir then
+         project_config_file = cfg.project_dir .. "/.luarocks/" .. config_file_name
          project_config_ok, err = load_config_file(cfg, platforms, project_config_file)
          if err then
             return nil, err, "config"
