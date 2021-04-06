@@ -4,6 +4,7 @@ local run = test_env.run
 local testing_paths = test_env.testing_paths
 local env_variables = test_env.env_variables
 local write_file = test_env.write_file
+local get_tmp_path = test_env.get_tmp_path
 local hardcoded
 
 test_env.unload_luarocks()
@@ -46,6 +47,30 @@ describe("LuaRocks config tests #integration", function()
          local output = run.luarocks("config", {LUAROCKS_CONFIG = "my_config.lua"})
          assert.match([[deploy_lua_dir = "/example/luadir"]], output)
          output = run.luarocks("config --tree=system", {LUAROCKS_CONFIG = "my_config.lua"})
+         assert.match([[deploy_lua_dir = "/example/luadir"]], output)
+      end)
+
+      it("#unix can find config via $XDG_CONFIG_HOME", function()
+         local tmpdir = get_tmp_path()
+         lfs.mkdir(tmpdir)
+         lfs.mkdir(tmpdir .. "/luarocks")
+         local tmp_config_file = tmpdir .. "/luarocks/config-" .. test_env.lua_version .. ".lua"
+         write_file(tmp_config_file, [[
+            rocks_trees = {
+               {
+                  name = "system",
+                  root = "/example/tree",
+                  lua_dir = "/example/luadir",
+               },
+            }
+         ]])
+         finally(function()
+            os.remove(tmp_config_file)
+            lfs.rmdir(tmpdir .. "/luarocks")
+            lfs.rmdir(tmpdir)
+         end)
+
+         local output = run.luarocks("config --verbose", {XDG_CONFIG_HOME = tmpdir, LUAROCKS_CONFIG="invalid"})
          assert.match([[deploy_lua_dir = "/example/luadir"]], output)
       end)
    end)
