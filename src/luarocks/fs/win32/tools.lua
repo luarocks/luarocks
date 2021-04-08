@@ -204,11 +204,17 @@ end
 --- Helper function for fs.set_permissions
 -- @return table: an array of all system users
 local function get_system_users()
+   local exclude = {
+      [""]              = true,
+      ["Name"]          = true,
+      ["\128\164\172\168\173\168\225\226\224\160\226\174\224"] = true, -- Administrator in cp866
+      ["Administrator"] = true,
+   }
    local result = {}
    local fd = assert(io.popen("wmic UserAccount get name"))
    for user in fd:lines() do
       user = user:gsub("%s+$", "")
-      if user ~= "" and user ~= "Name" and user ~= "Administrator" then
+      if not exclude[user] then
          table.insert(result, user)
       end
    end
@@ -238,16 +244,19 @@ function tools.set_permissions(filename, mode, scope)
       if not ok then
          return false, "Could not take ownership of the given file"
       end
+      local username = os.getenv('USERNAME')
       -- Grant the current user the proper rights
-      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r \"%USERNAME%\":" .. perms)
+      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r " .. fs.Q(username) .. ":" .. perms)
       if not ok then
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
       -- Finally, remove all the other users from the ACL in order to deny them access to the file
       for _, user in pairs(get_system_users()) do
-         local ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /remove " .. fs.Q(user))
-         if not ok then
-            return false, "Failed setting permission " .. mode .. " for " .. scope
+         if username ~= user then
+            local ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /remove " .. fs.Q(user))
+            if not ok then
+               return false, "Failed setting permission " .. mode .. " for " .. scope
+            end
          end
       end
    elseif scope == "all" then
@@ -262,12 +271,12 @@ function tools.set_permissions(filename, mode, scope)
 
       local ok
       -- Grant permissions available to all users
-      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r *S-1-1-0:" .. others_perms)
+      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant:r Everyone:" .. others_perms)
       if not ok then
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
       -- Grant permissions available only to the current user
-      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant \"%USERNAME%\":" .. my_perms)
+      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant %USERNAME%:" .. my_perms)
       if not ok then
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
