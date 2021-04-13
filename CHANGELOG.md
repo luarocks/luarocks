@@ -1,3 +1,56 @@
+## What's new in LuaRocks 3.7.0
+
+* Improved connectivity resiliency
+  * LuaRocks can now use mirrors for downloading rocks even if downloading
+    the manifest from the main server succeeds.
+    In previous versions, LuaRocks would check whether to use a mirror in the first
+    download operation, when it fetches the manifest. Once the server
+    (luarocks.org or one of its default mirrors) was chosen, it would stick with
+    it for the rest of the command.
+    The resulting behavior was that if the manifest fails to load, it switches to
+    a mirror and continues from there. But if the manifest fetches ok and the then
+    actual rock download fails, it would give up, instead of trying that in a
+    mirror as well.
+    Now, it retries every download on a mirror whenever the base URL matches one
+    configured in cfg.rocks_servers. The original behavior was satisfactory if
+    there was complete downtime in the main server, but this new behavior should
+    make the CLI much more resilient with regard to any intermittent failures
+    happening on the main server.
+* On Unix, it now respects environment variables $XDG_CACHE_HOME and $XDG_CONFIG_HOME
+  * This means the user's configuration typically resides in ~/.config/luarocks/
+    as per the XDG standard
+  * The legacy path ~/.luarocks/ continues to be tested first, for backwards
+    compatibility
+* Fixes check for the default Lua version set in the user's home configuration
+* Fixes an issue on Windows where it would incorrectly revoke permissions
+  from the current user when installing
+
+## What's new in LuaRocks 3.6.0
+
+* Adds a double-check step to verify that all files from a rock are installed
+* Improve resilience of the manifest reader to deal with manifests
+  written with older versions of LuaRocks lower than 3.0
+* `luarocks pack` now checks that the directory inside the archive being packed
+  as a `.src.rock` actually exists, refusing to pack an invalid rock from
+  a badly configured rockspec.
+* Fixes behavior of `luarocks pack` when the `url` entry of a rockspec
+  points to a bare file.
+* Remove an entry from the manifest if the rock itself is already missing
+* The `configure` script now checks that the version of `lua.h`
+  found matches that of the Lua interpreter detected or configured
+* Fixes the renaming of scripts when multiple versions are installed
+* Fixes availability check for `svn` for rockspecs using Subversion
+* Fixes for running with an empty PATH environment variable
+* Portability improvements:
+  * Windows: vcvarsall.bat output is now properly redirected to NUL
+    meaning that the output of `luarocks path` can be used in scripts
+  * Fixes autodetection for Cygwin
+  * Handles macOS versions greater than 10.10
+  * Adds platform specific configurations for NetBSD
+  * Respects CC/CFLAGS/LDFLAGS on FreeBSD
+* Luacheck now runs on the LuaRocks CI
+* Distributed binaries are built using Lua 5.3
+
 ## What's new in LuaRocks 3.5.0
 
 This is a small release:
@@ -57,7 +110,7 @@ This is a small release:
 This is a bugfix release:
 
 * Fix downgrades of rocks containing directories: stop it
-  from creating spurious 0-byte files where directories have been 
+  from creating spurious 0-byte files where directories have been
 * Fix error message when attempting to copy a file that is missing
 * Detect OpenBSD-specific dependency paths
 
@@ -330,7 +383,7 @@ the rockspec:
   LuaRocks in a "project directory":
   * it creates a `lua_modules` directory in the current directory for
     storing rocks
-  * it creates a `.luarocks/config-5.x.lua` local configuration file 
+  * it creates a `.luarocks/config-5.x.lua` local configuration file
   * it creates `lua` and `luarocks` wrapper scripts in the current
     directory that are configured to use `lua_modules` and
     `.luarocks/config-5.x.lua`
