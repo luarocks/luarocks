@@ -10,7 +10,25 @@ local persist = require("luarocks.persist")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 
-function fetch.fetch_caching(url)
+
+--- Fetch a local or remote file, using a local cache directory.
+-- Make a remote or local URL/pathname local, fetching the file if necessary.
+-- Other "fetch" and "load" functions use this function to obtain files.
+-- If a local pathname is given, it is returned as a result.
+-- @param url string: a local pathname or a remote URL.
+-- @param mirroring string: mirroring mode.
+-- If set to "no_mirror", then rocks_servers mirror configuration is not used.
+-- @return (string, nil, nil, boolean) or (nil, string, [string]):
+-- in case of success:
+-- * the absolute local pathname for the fetched file
+-- * nil
+-- * nil
+-- * `true` if the file was fetched from cache
+-- in case of failure:
+-- * nil
+-- * an error message
+-- * an optional error code.
+function fetch.fetch_caching(url, mirroring)
    local repo_url, filename = url:match("^(.*)/([^/]+)$")
    local name = repo_url:gsub("[/:]","_")
    local cache_dir = dir.path(cfg.local_cache, name)
@@ -29,11 +47,54 @@ function fetch.fetch_caching(url)
       return cachefile, nil, nil, true
    end
 
-   local file, err, errcode, from_cache = fetch.fetch_url(url, cachefile, true)
+   local file, err, errcode, from_cache = fetch.fetch_url(url, cachefile, true, mirroring)
    if not file then
       return nil, err or "Failed downloading "..url, errcode
    end
    return file, nil, nil, from_cache
+end
+
+local function ensure_trailing_slash(url)
+   return (url:gsub("/*$", "/"))
+end
+
+local function is_url_relative_to_rocks_servers(url, servers)
+   for _, item in ipairs(servers) do
+      if type(item) == "table" then
+         for i, s in ipairs(item) do
+            local base = ensure_trailing_slash(s)
+            if string.find(url, base, 1, true) == 1 then
+               return i, url:sub(#base + 1), item
+            end
+         end
+      end
+   end
+end
+
+local function download_with_mirrors(url, filename, cache, servers)
+   local idx, rest, mirrors = is_url_relative_to_rocks_servers(url, servers)
+
+   if not idx then
+      -- URL is not from a rock server
+      return fs.download(url, filename, cache)
+   end
+
+   -- URL is from a rock server: try to download it falling back to mirrors.
+   local err = "\n"
+   for i = idx, #mirrors do
+      local try_url = ensure_trailing_slash(mirrors[i]) .. rest
+      if i > idx then
+         util.warning("Failed downloading. Attempting mirror at " .. try_url)
+      end
+      local ok, name, from_cache = fs.download(try_url, filename, cache)
+      if ok then
+         return ok, name, from_cache
+      else
+         err = err .. name .. "\n"
+      end
+   end
+
+   return nil, err
 end
 
 --- Fetch a local or remote file.
@@ -47,6 +108,8 @@ end
 -- filename can be given explicitly as this second argument.
 -- @param cache boolean: compare remote timestamps via HTTP HEAD prior to
 -- re-downloading the file.
+-- @param mirroring string: mirroring mode.
+-- If set to "no_mirror", then rocks_servers mirror configuration is not used.
 -- @return (string, nil, nil, boolean) or (nil, string, [string]):
 -- in case of success:
 -- * the absolute local pathname for the fetched file
@@ -57,7 +120,7 @@ end
 -- * nil
 -- * an error message
 -- * an optional error code.
-function fetch.fetch_url(url, filename, cache)
+function fetch.fetch_url(url, filename, cache, mirroring)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
 
@@ -84,7 +147,12 @@ function fetch.fetch_url(url, filename, cache)
          return nil, "Failed copying local file " .. fullname .. " to " .. dstname .. ": " .. err
       end
    elseif dir.is_basic_protocol(protocol) then
-      local ok, name, from_cache = fs.download(url, filename, cache)
+      local ok, name, from_cache
+      if mirroring ~= "no_mirror" then
+         ok, name, from_cache = download_with_mirrors(url, filename, cache, cfg.rocks_servers)
+      else
+         ok, name, from_cache = fs.download(url, filename, cache)
+      end
       if not ok then
          return nil, "Failed downloading "..url..(name and " - "..name or ""), "network"
       end
