@@ -18,11 +18,13 @@ local queries = require("luarocks.queries")
 -- of the given list, or an array of strings in "name/version" format.
 local function check_dependents(name, versions, deps_mode)
    local dependents = {}
-   local blacklist = {}
-   blacklist[name] = {}
+
+   local skip_set = {}
+   skip_set[name] = {}
    for version, _ in pairs(versions) do
-      blacklist[name][version] = true
+      skip_set[name][version] = true
    end
+
    local local_rocks = {}
    local query_all = queries.all()
    search.local_manifest_search(local_rocks, cfg.rocks_dir, query_all)
@@ -31,13 +33,14 @@ local function check_dependents(name, versions, deps_mode)
       for rock_version, _ in pairs(rock_versions) do
          local rockspec, err = fetch.load_rockspec(path.rockspec_file(rock_name, rock_version))
          if rockspec then
-            local _, missing = deps.match_deps(rockspec.dependencies, rockspec.rocks_provided, blacklist, deps_mode)
+            local _, missing = deps.match_deps(rockspec.dependencies, rockspec.rocks_provided, skip_set, deps_mode)
             if missing[name] then
                table.insert(dependents, { name = rock_name, version = rock_version })
             end
          end
       end
    end
+
    return dependents
 end
 

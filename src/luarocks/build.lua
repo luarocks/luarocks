@@ -135,7 +135,7 @@ local function process_dependencies(rockspec, opts)
          end
       end
    end
-   local ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify)
+   ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify)
    if err then
       return nil, err, errcode
    end
