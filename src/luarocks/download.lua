@@ -18,7 +18,9 @@ local function get_file(filename)
          return nil, err
       end
    else
-      return fetch.fetch_url(filename)
+      -- discard third result
+      local ok, err = fetch.fetch_url(filename)
+      return ok, err
    end
 end
 
