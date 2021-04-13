@@ -14,7 +14,8 @@ local builtin = require("luarocks.build.builtin")
 local deplocks = require("luarocks.deplocks")
 
 --- Generate a function that matches dep queries against the manifest,
--- taking into account rocks_provided, the blacklist and the lockfile.
+-- taking into account rocks_provided, the list of versions to skip,
+-- and the lockfile.
 -- @param deps_mode "one", "none", "all" or "order"
 -- @param rocks_provided a one-level table mapping names to versions,
 -- listing rocks to consider provided by the VM
@@ -22,18 +23,18 @@ local deplocks = require("luarocks.deplocks")
 -- by this Lua implementation for the given dependency.
 -- @param depskey key to use when matching the lockfile ("dependencies",
 -- "build_dependencies", etc.)
--- @param blacklist a two-level table mapping names to versions to boolean,
--- listing rocks to not match
+-- @param skip_set a two-level table mapping names to versions to
+-- boolean, listing rocks that should not be matched
 -- @return function(dep): {string}, {string:string}, string, boolean
 -- * array of matching versions
 -- * map of versions to locations
 -- * version matched via lockfile if any
 -- * true if rock matched via rocks_provided
-local function prepare_get_versions(deps_mode, rocks_provided, depskey, blacklist)
+local function prepare_get_versions(deps_mode, rocks_provided, depskey, skip_set)
    assert(type(deps_mode) == "string")
    assert(type(rocks_provided) == "table")
    assert(type(depskey) == "string")
-   assert(type(blacklist) == "table" or blacklist == nil)
+   assert(type(skip_set) == "table" or skip_set == nil)
 
    return function(dep)
       local versions, locations
@@ -48,12 +49,11 @@ local function prepare_get_versions(deps_mode, rocks_provided, depskey, blacklis
          versions, locations = manif.get_versions(dep, deps_mode)
       end
 
-      if blacklist and blacklist[dep.name] then
-         local orig_versions = versions
-         versions = {}
-         for _, v in ipairs(orig_versions) do
-            if not blacklist[dep.name][v] then
-               table.insert(versions, v)
+      if skip_set and skip_set[dep.name] then
+         for i = #versions, 1, -1 do
+            local v = versions[i]
+            if skip_set[dep.name][v] then
+               table.remove(versions, i)
             end
          end
       end
@@ -65,8 +65,6 @@ local function prepare_get_versions(deps_mode, rocks_provided, depskey, blacklis
 end
 
 --- Attempt to match a dependency to an installed rock.
--- @param blacklist table: Versions that can't be accepted. Table where keys
--- are program versions and values are 'true'.
 -- @param get_versions a getter function obtained via prepare_get_versions
 -- @return (string, string, table) or (nil, nil, table):
 -- 1. latest installed version of the rock matching the dependency
@@ -135,7 +133,7 @@ end
 --- Attempt to match dependencies of a rockspec to installed rocks.
 -- @param dependencies table: The table of dependencies.
 -- @param rocks_provided table: The table of auto-provided dependencies.
--- @param blacklist table or nil: Program versions to not use as valid matches.
+-- @param skip_set table or nil: Program versions to not use as valid matches.
 -- Table where keys are program names and values are tables where keys
 -- are program versions and values are 'true'.
 -- @param deps_mode string: Which trees to check dependencies for
@@ -145,13 +143,13 @@ end
 -- parsed as tables; and a table of "no-upgrade" missing dependencies
 -- (to be used in plugin modules so that a plugin does not force upgrade of
 -- its parent application).
-function deps.match_deps(dependencies, rocks_provided, blacklist, deps_mode)
+function deps.match_deps(dependencies, rocks_provided, skip_set, deps_mode)
    assert(type(dependencies) == "table")
    assert(type(rocks_provided) == "table")
-   assert(type(blacklist) == "table" or blacklist == nil)
+   assert(type(skip_set) == "table" or skip_set == nil)
    assert(type(deps_mode) == "string")
 
-   local get_versions = prepare_get_versions(deps_mode, rocks_provided, "dependencies", blacklist)
+   local get_versions = prepare_get_versions(deps_mode, rocks_provided, "dependencies", skip_set)
    return match_all_deps(dependencies, get_versions)
 end
 
@@ -278,7 +276,8 @@ end
 -- Packages are installed using the LuaRocks "install" command.
 -- Aborts the program if a dependency could not be fulfilled.
 -- @param rockspec table: A rockspec in table format.
--- @param depskey string: Rockspec key to fetch to get dependency table.
+-- @param depskey string: Rockspec key to fetch to get dependency table
+-- ("dependencies", "build_dependencies", etc.).
 -- @param deps_mode string
 -- @param verify boolean
 -- @param deplock_dir string: dirname of the deplock file

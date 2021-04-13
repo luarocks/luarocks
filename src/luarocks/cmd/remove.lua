@@ -54,15 +54,16 @@ function cmd_remove.command(args)
       if not name then return nil, "Invalid "..rock_type.." filename: "..filename end
    end
 
-   local results = {}
    name = name:lower()
+
+   local results = {}
    search.local_manifest_search(results, cfg.rocks_dir, queries.new(name, args.namespace, version))
    if not results[name] then
       local rock = util.format_rock_name(name, args.namespace, version)
       return nil, "Could not find rock '"..rock.."' in "..path.rocks_tree_to_string(cfg.root_dir)
    end
 
-   local ok, err = remove.remove_search_results(results, name, deps_mode, args.force, args.force_fast)
+   ok, err = remove.remove_search_results(results, name, deps_mode, args.force, args.force_fast)
    if not ok then
       return nil, err
    end

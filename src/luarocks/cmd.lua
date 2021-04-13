@@ -165,6 +165,7 @@ end
 -- @param exitcode number: the exitcode to use
 local function die(message, exitcode)
    assert(type(message) == "string", "bad error, expected string, got: " .. type(message))
+   assert(exitcode == nil or type(exitcode) == "number", "bad error, expected number, got: " .. type(exitcode) .. " - " .. tostring(exitcode))
    util.printerr("\nError: "..message)
 
    local ok, err = xpcall(util.run_scheduled_functions, error_handler)
