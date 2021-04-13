@@ -105,7 +105,7 @@ function manif.load_manifest(repo_url, lua_version, versioned_only)
    else
       local err, errcode
       for _, filename in ipairs(filenames) do
-         pathname, err, errcode, from_cache = fetch.fetch_caching(dir.path(repo_url, filename))
+         pathname, err, errcode, from_cache = fetch.fetch_caching(dir.path(repo_url, filename), "no_mirror")
          if pathname then
             break
          end
