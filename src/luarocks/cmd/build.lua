@@ -94,9 +94,9 @@ local function do_build(name, namespace, version, opts)
    end
 
    if url:match("%.rockspec$") then
-      local rockspec, err, errcode = fetch.load_rockspec(url, nil, opts.verify)
+      local rockspec, err = fetch.load_rockspec(url, nil, opts.verify)
       if not rockspec then
-         return nil, err, errcode
+         return nil, err
       end
       return build.build_rockspec(rockspec, opts)
    end
@@ -138,11 +138,11 @@ function cmd_build.command(args)
 
    if args.pack_binary_rock then
       return pack.pack_binary_rock(args.rock, args.namespace, args.version, args.sign, function()
-         local name, version, errcode = do_build(args.rock, args.namespace, args.version, opts)
+         local name, version = do_build(args.rock, args.namespace, args.version, opts)
          if name and args.no_doc then
             util.remove_doc_dir(name, version)
          end
-         return name, version, errcode
+         return name, version
       end)
    end
 
@@ -151,9 +151,9 @@ function cmd_build.command(args)
       return nil, err, cmd.errorcodes.PERMISSIONDENIED
    end
 
-   local name, version, errcode = do_build(args.rock, args.namespace, args.version, opts)
+   local name, version = do_build(args.rock, args.namespace, args.version, opts)
    if not name then
-      return nil, version, errcode
+      return nil, version
    end
 
    if args.no_doc then
