@@ -223,7 +223,7 @@ function deps.fulfill_dependency(dep, deps_mode, rocks_provided, verify, depskey
    local search = require("luarocks.search")
    local install = require("luarocks.cmd.install")
 
-   local url, search_err = search.find_suitable_rock(dep, true)
+   local url, search_err = search.find_suitable_rock(dep)
    if not url then
       return nil, "Could not satisfy dependency "..tostring(dep)..": "..search_err
    end
