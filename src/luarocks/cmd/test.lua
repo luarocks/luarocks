@@ -23,7 +23,7 @@ to separate LuaRocks arguments from test suite arguments.]],
       :args("?")
    cmd:argument("args", "Test suite arguments.")
       :args("*")
-   cmd:flag("--prepare", "Install all dependencies, including the test ones")
+   cmd:flag("--prepare", "Only install dependencies needed for testing only, but do not run the test")
    
    cmd:option("--test-type", "Specify the test suite type manually if it was "..
       "not specified in the rockspec and it could not be auto-detected.")

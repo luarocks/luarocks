@@ -68,8 +68,8 @@ function test.run_test_suite(rockspec_arg, test_type, args, prepare)
       return nil, "failed loading test execution module " .. mod_name
    end
 
-   if prepare then 
-      return true  --"Installed all the dependencies"
+   if prepare then
+      return true
    else
       return test_mod.run_tests(rockspec.test, args)
    end
