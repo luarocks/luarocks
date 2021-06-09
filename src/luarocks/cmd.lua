@@ -146,6 +146,9 @@ local function process_server_args(args)
 end
 
 local function error_handler(err)
+   if not debug then
+      return err
+   end
    local mode = "Arch.: " .. (cfg and cfg.arch or "unknown")
    if package.config:sub(1, 1) == "\\" then
       if cfg and cfg.fs_use_modules then

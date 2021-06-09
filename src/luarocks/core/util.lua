@@ -67,7 +67,10 @@ function util.show_table(t, tname, top_indent)
    local function basic_serialize(o)
       local so = tostring(o)
       if type(o) == "function" then
-         local info = debug.getinfo(o, "S")
+         local info = debug and debug.getinfo(o, "S")
+         if not info then
+            return ("%q"):format(so)
+         end
          -- info.name is nil because o is not a calling level
          if info.what == "C" then
             return ("%q"):format(so .. ", C function")

@@ -50,6 +50,9 @@ local platform_order = {
 }
 
 local function detect_sysconfdir()
+   if not debug then
+      return
+   end
    local src = debug.getinfo(1, "S").source:gsub("\\", "/"):gsub("/+", "/")
    if src:sub(1, 1) == "@" then
       src = src:sub(2)

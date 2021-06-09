@@ -43,8 +43,8 @@ else
    -- a global.
    -- Detect when being called via -lluarocks.loader; this is
    -- most likely a wrapper.
-   local info = debug.getinfo(2, "nS")
-   if info.what == "C" and not info.name then
+   local info = debug and debug.getinfo(2, "nS")
+   if info and info.what == "C" and not info.name then
       luarocks = { loader = loader }
       temporary_global = true
       -- For the other half of this hack,
