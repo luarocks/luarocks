@@ -2067,6 +2067,9 @@ function Parser:parse(args)
 end
 
 local function xpcall_error_handler(err)
+   if not debug then
+      return tostring(err)
+   end
    return tostring(err) .. "\noriginal " .. debug.traceback("", 2):sub(2)
 end
 

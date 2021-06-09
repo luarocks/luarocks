@@ -23,7 +23,6 @@ local unpack = unpack or table.unpack
 local pack = table.pack or function(...) return { n = select("#", ...), ... } end
 
 local scheduled_functions = {}
-local debug = require("debug")
 
 --- Schedule a function to be executed upon program termination.
 -- This is useful for actions such as deleting temporary directories
@@ -198,7 +197,7 @@ function util.this_program(default)
    local i = 1
    local last, cur = default, default
    while i do
-      local dbg = debug.getinfo(i,"S")
+      local dbg = debug and debug.getinfo(i,"S")
       if not dbg then break end
       last = cur
       cur = dbg.source
