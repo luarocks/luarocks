@@ -69,7 +69,7 @@ function test.run_test_suite(rockspec_arg, test_type, args, prepare)
    end
 
    if prepare then
-      return true
+      return test_mod.run_tests(rockspec_arg, {"--version"})
    else
       return test_mod.run_tests(rockspec.test, args)
    end
