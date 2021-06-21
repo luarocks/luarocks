@@ -84,11 +84,11 @@ describe("luarocks test #integration", function()
          assert.is_true(run.luarocks_bool("unpack busted_project-0.1-1.src.rock"))
          lfs.chdir("busted_project-0.1-1/busted_project")
          assert.is_true(run.luarocks_bool("make"))
+         
+         run.luarocks_bool("remove busted")
          local prepareOutput = run.luarocks_bool("test --prepare")
          assert.is_true(run.luarocks_bool("show busted"))
-         assert.is_true(run.luarocks_bool("remove busted"))
-
-         
+          
          -- Assert that "test --prepare" run successfully
          assert.is_true(prepareOutput)
 
