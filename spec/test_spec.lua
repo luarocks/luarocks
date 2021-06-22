@@ -70,6 +70,32 @@ describe("luarocks test #integration", function()
          -- Assert that busted ran, whether successfully or not
          assert.match("%d+ success.* / %d+ failure.* / %d+ error.* / %d+ pending", output)
       end)
+
+      it("prepare", function()
+         finally(function()
+            -- delete downloaded and unpacked files
+            lfs.chdir(testing_paths.testrun_dir)
+            test_env.remove_dir("busted_project-0.1-1")
+            os.remove("busted_project-0.1-1.src.rock")
+         end)
+
+         -- make luassert
+         assert.is_true(run.luarocks_bool("download --server="..testing_paths.fixtures_repo_dir.." busted_project 0.1-1"))
+         assert.is_true(run.luarocks_bool("unpack busted_project-0.1-1.src.rock"))
+         lfs.chdir("busted_project-0.1-1/busted_project")
+         assert.is_true(run.luarocks_bool("make"))
+         
+         run.luarocks_bool("remove busted")
+         local prepareOutput = run.luarocks_bool("test --prepare")
+         assert.is_true(run.luarocks_bool("show busted"))
+          
+         -- Assert that "test --prepare" run successfully
+         assert.is_true(prepareOutput)
+
+         local output = run.luarocks("test")
+         assert.not_match(tostring(prepareOutput), output)
+         
+      end)
    end)
 end)
 

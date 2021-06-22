@@ -23,7 +23,8 @@ to separate LuaRocks arguments from test suite arguments.]],
       :args("?")
    cmd:argument("args", "Test suite arguments.")
       :args("*")
-
+   cmd:flag("--prepare", "Only install dependencies needed for testing only, but do not run the test")
+   
    cmd:option("--test-type", "Specify the test suite type manually if it was "..
       "not specified in the rockspec and it could not be auto-detected.")
       :argname("<type>")
@@ -31,7 +32,7 @@ end
 
 function cmd_test.command(args)
    if args.rockspec and args.rockspec:match("rockspec$") then
-      return test.run_test_suite(args.rockspec, args.test_type, args.args)
+      return test.run_test_suite(args.rockspec, args.test_type, args.args, args.prepare)
    end
 
    table.insert(args.args, 1, args.rockspec)
@@ -40,8 +41,8 @@ function cmd_test.command(args)
    if not rockspec then
       return nil, err
    end
-
-   return test.run_test_suite(rockspec, args.test_type, args.args)
+   
+   return test.run_test_suite(rockspec, args.test_type, args.args, args.prepare)
 end
 
 return cmd_test

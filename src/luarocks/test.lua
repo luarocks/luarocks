@@ -33,7 +33,7 @@ local function get_test_type(rockspec)
 end
 
 -- Run test suite as configured in rockspec in the current directory.
-function test.run_test_suite(rockspec_arg, test_type, args)
+function test.run_test_suite(rockspec_arg, test_type, args, prepare)
    local rockspec
    if type(rockspec_arg) == "string" then
       local err, errcode
@@ -68,7 +68,11 @@ function test.run_test_suite(rockspec_arg, test_type, args)
       return nil, "failed loading test execution module " .. mod_name
    end
 
-   return test_mod.run_tests(rockspec.test, args)
+   if prepare then
+      return test_mod.run_tests(rockspec_arg, {"--version"})
+   else
+      return test_mod.run_tests(rockspec.test, args)
+   end
 end
 
 return test
