@@ -220,12 +220,11 @@ function path.use_tree(tree)
    cfg.deploy_lua_dir = path.deploy_lua_dir(tree)
    cfg.deploy_lib_dir = path.deploy_lib_dir(tree)
 
-   -- TODO Do we want LuaRocks itself to use whatever tree is in use?
-   -- package.path = dir.path(path.deploy_lua_dir(tree), "?.lua") .. ";"
-   --             .. dir.path(path.deploy_lua_dir(tree), "?/init.lua") .. ";"
-   --             .. package.path
-   -- package.cpath = dir.path(path.deploy_lib_dir(tree), "?." .. cfg.lib_extension) .. ";"
-   --              .. package.cpath
+   package.path = dir.path(path.deploy_lua_dir(tree), "?.lua") .. ";"
+               .. dir.path(path.deploy_lua_dir(tree), "?/init.lua") .. ";"
+               .. package.path
+   package.cpath = dir.path(path.deploy_lib_dir(tree), "?." .. cfg.lib_extension) .. ";"
+                .. package.cpath
 end
 
 --- Get the namespace of a locally-installed rock, if any.
