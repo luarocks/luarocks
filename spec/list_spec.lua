@@ -22,13 +22,13 @@ describe("luarocks list #integration", function()
 
    it("--porcelain", function()
       local output = run.luarocks("list --porcelain")
-      assert.is.truthy(output:find("luacov\t0.13.0-1\tinstalled\t" .. testing_paths.testing_sys_rocks, 1, true))
+      assert.is.truthy(output:find("luacov\t0.15.0-1\tinstalled\t" .. testing_paths.testing_sys_rocks, 1, true))
    end)
 
    it("shows version number", function()
       local output = run.luarocks("list")
       assert.is.truthy(output:find("luacov"))
-      assert.matches("0.13.0-1", output, 1, true)
+      assert.matches("0.15.0-1", output, 1, true)
    end)
 
    it("LuaRocks install outdated and list it", function()

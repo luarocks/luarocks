@@ -48,12 +48,12 @@ describe("luarocks show #integration", function()
 
       it("rockspec of luacov", function()
          local output = run.luarocks("show --rockspec luacov")
-         assert.is.truthy(output:match("luacov--0.13.0--1.rockspec"))
+         assert.is.truthy(output:match("luacov--0.15.0--1.rockspec"))
       end)
 
       it("mversion of luacov", function()
          local output = run.luarocks("show --mversion luacov")
-         assert.is.truthy(output:match("0.13.0--1"))
+         assert.is.truthy(output:match("0.15.0--1"))
       end)
 
       it("rock tree of luacov", function()
@@ -74,8 +74,8 @@ describe("luarocks show #integration", function()
    end)
 
    it("old version of luacov", function()
-      run.luarocks("install luacov 0.13.0")
-      run.luarocks_bool("show luacov 0.13.0")
+      run.luarocks("install luacov 0.15.0")
+      run.luarocks_bool("show luacov 0.15.0")
    end)
 
    it("can find by substring", function()
