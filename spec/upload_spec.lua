@@ -46,6 +46,14 @@ describe("luarocks upload #integration", function()
          print(run.luarocks("upload " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec " .. test_env.openssl_dirs .. " --api-key=123 --sign", {LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/luarocks_site.lua"}))
       end)
 
+      it("with .rockspec and .src.rock", function()
+         assert.is_true(run.luarocks_bool("upload " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.src.rock " .. test_env.openssl_dirs, {LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/luarocks_site.lua"}))
+      end)
+
+      it("with arguments .src.rock and .rockspec out of order", function()
+         assert.is_false(run.luarocks_bool("upload " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.src.rock " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec " .. test_env.openssl_dirs, {LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/luarocks_site.lua"}))
+      end)
+
       it("rockspec with api-key and skip-pack", function()
          assert.is_true(run.luarocks_bool("upload --skip-pack " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec " .. test_env.openssl_dirs .. " --api-key=123", {LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/luarocks_site.lua"}))
       end)
