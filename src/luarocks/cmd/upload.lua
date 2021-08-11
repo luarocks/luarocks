@@ -14,7 +14,7 @@ function upload.add_to_parser(parser)
       :summary("Upload a rockspec to the public rocks repository.")
 
    cmd:argument("rockspec", "Rockspec for the rock to upload.")
-   cmd:argument("src_rock", "A corresponding .src.rock file; if not given it will be generated.")
+   cmd:argument("src-rock", "A corresponding .src.rock file; if not given it will be generated.")
       :args("?")
 
    cmd:flag("--skip-pack", "Do not pack and send source rock.")
