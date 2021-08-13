@@ -14,6 +14,8 @@ function upload.add_to_parser(parser)
       :summary("Upload a rockspec to the public rocks repository.")
 
    cmd:argument("rockspec", "Rockspec for the rock to upload.")
+   cmd:argument("src-rock", "A corresponding .src.rock file; if not given it will be generated.")
+      :args("?")
 
    cmd:flag("--skip-pack", "Do not pack and send source rock.")
    cmd:option("--api-key", "Pass an API key. It will be stored for subsequent uses.")
@@ -73,19 +75,22 @@ function upload.command(args)
    end
 
    local rock_fname
-   if not args.skip_pack and not is_dev_version(rockspec.version) then
+   if args.src_rock then
+      rock_fname = args.src_rock
+   elseif not args.skip_pack and not is_dev_version(rockspec.version) then
       util.printout("Packing " .. tostring(rockspec.package))
       rock_fname, err = pack.pack_source_rock(args.rockspec)
       if not rock_fname then
          return nil, err
       end
-      if args.sign then
-         rock_sigfname, err = signing.sign_file(rock_fname)
-         if err then
-            return nil, "Failed signing rock: " .. err
-         end
-         util.printout("Signed packed rock: "..rock_sigfname)
+   end
+
+   if rock_fname and args.sign then
+      rock_sigfname, err = signing.sign_file(rock_fname)
+      if err then
+         return nil, "Failed signing rock: " .. err
       end
+      util.printout("Signed packed rock: "..rock_sigfname)
    end
 
    local multipart = require("luarocks.upload.multipart")
