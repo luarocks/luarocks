@@ -36,7 +36,7 @@ end
 function tools.make_dir(directory)
    assert(directory)
    directory = dir.normalize(directory)
-   fs.execute_quiet(vars.MKDIR.." -p ", directory)
+   fs.execute_quiet(vars.MKDIR, directory)
    if not fs.is_dir(directory) then
       return false, "failed making directory "..directory
    end
