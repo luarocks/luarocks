@@ -480,6 +480,11 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
 
    if platforms.openbsd then
       defaults.arch = "openbsd-"..target_cpu
+      defaults.gcc_rpath = false
+      defaults.variables.CC = os.getenv("CC") or "cc"
+      defaults.variables.CFLAGS = os.getenv("CFLAGS") or defaults.variables.CFLAGS
+      defaults.variables.LD = defaults.variables.CC
+      defaults.variables.LIBFLAG = (os.getenv("LDFLAGS") or "").." -shared"
    end
 
    if platforms.netbsd then
