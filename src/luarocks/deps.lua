@@ -373,7 +373,7 @@ end
 -- @param files The array of constructed names
 local function add_all_patterns(file, patterns, files)
    for _, pattern in ipairs(patterns) do
-      table.insert(files, (pattern:gsub("?", file)))
+      table.insert(files, {#files + 1, (pattern:gsub("?", file))})
    end
 end
 
@@ -425,7 +425,7 @@ local function add_patterns_for_file(files, file, patterns)
             add_all_patterns(matched, patterns, files)
          end
       end
-      table.insert(files, file)
+      table.insert(files, {#files + 1, file})
    end
 end
 
@@ -460,16 +460,17 @@ local function check_external_dependency_at(prefix, name, ext_files, vars, dirs,
 
          local found = false
          table.sort(files, function(a, b)
-            if (not a:match("%*")) and b:match("%*") then
+            if (not a[2]:match("%*")) and b[2]:match("%*") then
                return true
-            elseif a:match("%*") and (not b:match("%*")) then
+            elseif a[2]:match("%*") and (not b[2]:match("%*")) then
                return false
             else
-               return a < b
+               return a[1] < b[1]
             end
          end)
-         for _, f in ipairs(files) do
+         for _, fa in ipairs(files) do
 
+            f = fa[2]
             -- small convenience hack
             if f:match("%.so$") or f:match("%.dylib$") or f:match("%.dll$") then
                f = f:gsub("%.[^.]+$", "."..cfg.external_lib_extension)
