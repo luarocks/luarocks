@@ -711,7 +711,12 @@ function deps.check_lua_incdir(vars)
 end
 
 function deps.check_lua_libdir(vars)
+   local fs = require("luarocks.fs")
    local ljv = util.get_luajit_version()
+
+   if vars.LUA_LIBDIR and vars.LUALIB and fs.exists(dir.path(vars.LUA_LIBDIR, vars.LUALIB)) then
+      return true
+   end
 
    local shortv = cfg.lua_version:gsub("%.", "")
    local libnames = {
@@ -729,7 +734,9 @@ function deps.check_lua_libdir(vars)
    local ok = check_external_dependency("LUA", { library = libnames }, vars, "build", cache)
    vars.LUA_INCDIR = save_LUA_INCDIR
    if ok then
-      vars.LUALIB = vars.LUA_LIBDIR_FILE
+      if fs.exists(dir.path(vars.LUA_LIBDIR, vars.LUA_LIBDIR_FILE)) then
+         vars.LUALIB = vars.LUA_LIBDIR_FILE
+      end
       return true
    end
    return nil, "Failed finding Lua library. You may need to configure LUA_LIBDIR.", "dependency"
