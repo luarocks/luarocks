@@ -470,7 +470,7 @@ local function check_external_dependency_at(prefix, name, ext_files, vars, dirs,
          end)
          for _, fa in ipairs(files) do
 
-            f = fa[2]
+            local f = fa[2]
             -- small convenience hack
             if f:match("%.so$") or f:match("%.dylib$") or f:match("%.dll$") then
                f = f:gsub("%.[^.]+$", "."..cfg.external_lib_extension)
