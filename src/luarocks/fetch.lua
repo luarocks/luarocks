@@ -502,6 +502,14 @@ function fetch.fetch_sources(rockspec, extract, dest_dir)
    assert(type(extract) == "boolean")
    assert(type(dest_dir) == "string" or not dest_dir)
 
+   -- auto-convert git://github.com URLs to use git+https
+   -- see https://github.blog/2021-09-01-improving-git-protocol-security-github/
+   if rockspec.source.url:match("^git://github%.com/")
+   or rockspec.source.url:match("^git://www%.github%.com/") then
+      rockspec.source.url = rockspec.source.url:gsub("^git://", "git+https://")
+      rockspec.source.protocol = "git+https"
+   end
+
    local protocol = rockspec.source.protocol
    local ok, proto
    if dir.is_basic_protocol(protocol) then
@@ -522,6 +530,7 @@ function fetch.fetch_sources(rockspec, extract, dest_dir)
          return nil, "Can't download "..rockspec.source.url.." -- only downloading from "..cfg.only_sources_from
       end
    end
+
    return proto.get_sources(rockspec, extract, dest_dir)
 end
 
