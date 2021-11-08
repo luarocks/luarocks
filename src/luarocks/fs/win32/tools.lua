@@ -275,8 +275,18 @@ function tools.set_permissions(filename, mode, scope)
       if not ok then
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
+
       -- Grant permissions available only to the current user
-      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant %USERNAME%:" .. my_perms)
+      ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant \"%USERNAME%\":" .. my_perms)
+
+      -- This may not be necessary if the above syntax is correct,
+      -- but I couldn't really test the extra quotes above, so if that
+      -- fails we try again with the syntax used in previous releases
+      -- just to be on the safe side
+      if not ok then
+         ok = fs.execute_quiet(vars.ICACLS .. " " .. fs.Q(filename) .. " /inheritance:d /grant %USERNAME%:" .. my_perms)
+      end
+
       if not ok then
          return false, "Failed setting permission " .. mode .. " for " .. scope
       end
