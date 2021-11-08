@@ -1,3 +1,25 @@
+## What's new in LuaRocks 3.8.0
+
+* Support GitHub's protocol security changes transparently.
+  * The raw git:// protocol will stop working on GitHub. LuaRocks already
+    supports git+https:// as an alternative, but to avoid having to update
+    every rockspec in the repository that uses git://github.com, which would
+    require a large coordinated effort, LuaRocks now auto-converts github.com
+    and www.github.com URLs that use git:// to git+https://
+* `luarocks test` has a new flag `--prepare` that checks, downloads and
+  installs the tool requirements and rockspec dependencies but does not
+  run the test suite for the rockspec being tested.
+* Code tweaks so that LuaRocks can run on a Lua interpreter built without
+  the `debug` library.
+* `luarocks upload` supports uploading pre-packaged `.src.rock` files.
+* Configuration fixes for OpenBSD.
+* Respect the existing value for the `variables.LUALIB` configuration
+  variable if given explicitly by the user in the config file, rather
+  than trying to override it with auto-detection.
+* Windows fixes for setting file permissions:
+  * Revert the use of `Everyone` back to `*S-1-1-0`
+  * Quote the use of the `%USERNAME%` variable to support names with spaces
+
 ## What's new in LuaRocks 3.7.0
 
 * Improved connectivity resiliency
