@@ -309,7 +309,7 @@ local function prepare_op_install()
          return nil, err
       end
 
-      local backup, err = backup_existing(op.backup, op.realdst or op.dst)
+      local backup, err = backup_existing(op.backup, op.dst)
       if err then
          return nil, err
       end
@@ -403,14 +403,22 @@ end
 --- Double check that all files referenced in `rock_manifest` are installed in `repo`.
 function repos.check_everything_is_installed(name, version, rock_manifest, repo, accept_versioned)
    local missing = {}
+   local suffix = cfg.wrapper_suffix or ""
    for _, category in ipairs({"bin", "lua", "lib"}) do
-      local suffix = (category == "bin") and cfg.wrapper_suffix or ""
       if rock_manifest[category] then
          repos.recurse_rock_manifest_entry(rock_manifest[category], function(file_path)
             local paths = get_deploy_paths(name, version, category, file_path, repo)
-            if not (fs.exists(paths.nv .. suffix) or (accept_versioned and fs.exists(paths.v .. suffix))) then
-               table.insert(missing, paths.nv .. suffix)
+            if category == "bin" then
+               if (fs.exists(paths.nv) or fs.exists(paths.nv .. suffix))
+               or (accept_versioned and (fs.exists(paths.v) or fs.exists(paths.v .. suffix))) then
+                  return
+               end
+            else
+               if fs.exists(paths.nv) or (accept_versioned and fs.exists(paths.v)) then
+                  return
+               end
             end
+            table.insert(missing, paths.nv)
          end)
       end
    end
@@ -470,10 +478,10 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
          end
          local target = mode == "nv" and paths.nv or paths.v
          local backup = name ~= cur_name or version ~= cur_version
-         local realdst = (wrap_bin_scripts and fs.is_lua(source))
-                         and (target .. (cfg.wrapper_suffix or ""))
-                         or target
-         table.insert(installs, { fn = install_binary, src = source, dst = target, backup = backup, realdst = realdst })
+         if wrap_bin_scripts and fs.is_lua(source) then
+            target = target .. (cfg.wrapper_suffix or "")
+         end
+         table.insert(installs, { fn = install_binary, src = source, dst = target, backup = backup })
       end)
    end
 
