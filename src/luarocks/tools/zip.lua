@@ -329,19 +329,13 @@ local function read_file_in_zip(zh, cdr)
       return nil, "failed reading Local File Header signature"
    end
 
-   local lfh = {}
-   lfh.version_needed = lestring_to_number(zh:read(2))
-   lfh.bitflag = lestring_to_number(zh:read(2))
-   lfh.compression_method = lestring_to_number(zh:read(2))
-   lfh.last_mod_file_time = lestring_to_number(zh:read(2))
-   lfh.last_mod_file_date = lestring_to_number(zh:read(2))
-   lfh.crc32 = lestring_to_number(zh:read(4))
-   lfh.compressed_size = lestring_to_number(zh:read(4))
-   lfh.uncompressed_size = lestring_to_number(zh:read(4))
-   lfh.file_name_length = lestring_to_number(zh:read(2))
-   lfh.extra_field_length = lestring_to_number(zh:read(2))
-   lfh.file_name = zh:read(lfh.file_name_length)
-   lfh.extra_field = zh:read(lfh.extra_field_length)
+   -- Skip over the rest of the zip file header. See
+   -- zipwriter_close_file_in_zip for the format.
+   zh:seek("cur", 22)
+   local file_name_length = lestring_to_number(zh:read(2))
+   local extra_field_length = lestring_to_number(zh:read(2))
+   zh:read(file_name_length)
+   zh:read(extra_field_length)
 
    local data = zh:read(cdr.compressed_size)
 
