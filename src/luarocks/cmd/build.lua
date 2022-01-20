@@ -36,7 +36,7 @@ function cmd_build.add_to_parser(parser)
       "rockspec. Allows to specify a different branch to fetch. Particularly "..
       'for "dev" rocks.')
       :argname("<name>")
-   parser:flag("--pin", "Create a luarocks.lock file listing the exact "..
+   cmd:flag("--pin", "Create a luarocks.lock file listing the exact "..
       "versions of each dependency found for this rock (recursively), "..
       "and store it in the rock's directory. "..
       "Ignores any existing luarocks.lock file in the rock's sources.")
