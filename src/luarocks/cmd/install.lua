@@ -43,6 +43,10 @@ function install.add_to_parser(parser)
       "and report if it is available for another Lua version.")
    util.deps_mode_option(cmd)
    cmd:flag("--no-manifest", "Skip creating/updating the manifest")
+   cmd:flag("--pin", "If the installed rock is a Lua module, create a "..
+      "luarocks.lock file listing the exact versions of each dependency found for "..
+      "this rock (recursively), and store it in the rock's directory. "..
+      "Ignores any existing luarocks.lock file in the rock's sources.")
    -- luarocks build options
    parser:flag("--pack-binary-rock"):hidden(true)
    parser:option("--branch"):hidden(true)
