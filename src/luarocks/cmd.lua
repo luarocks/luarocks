@@ -463,6 +463,7 @@ Enabling completion for Fish:
       :argname("<prefix>")
    parser:option("--lua-version", "Which Lua version to use.")
       :argname("<ver>")
+      :convert(function(s) return (s:match("^%d+%.%d+$")) end)
    parser:option("--tree", "Which tree to operate on.")
       :hidden_name("--to")
    parser:flag("--local", "Use the tree in the user's home directory.\n"..
