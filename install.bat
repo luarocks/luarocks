@@ -80,7 +80,7 @@ local function exists(filename)
 end
 
 local function mkdir (dir)
-	return exec([[.\win32\tools\mkdir -p "]]..dir..[[" >NUL]])
+	return exec([[MKDIR "]]..dir..[[" >NUL]])
 end
 
 -- does the current user have admin privileges ( = elevated)
