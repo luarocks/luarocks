@@ -145,7 +145,7 @@ function init.command(args)
    luarocks_wrapper = dir.path(".", luarocks_wrapper)
    if not fs.exists(luarocks_wrapper) then
       util.printout("Preparing " .. luarocks_wrapper .. " ...")
-      fs.wrap_script(arg[0], "luarocks", "none", nil, nil, "--project-tree", tree)
+      fs.wrap_script(arg[0], luarocks_wrapper, "none", nil, nil, "--project-tree", tree)
    else
       util.printout(luarocks_wrapper .. " already exists. Not overwriting it!")
    end
@@ -164,7 +164,7 @@ function init.command(args)
       if util.check_lua_version(interp, cfg.lua_version) then
          util.printout("Preparing " .. lua_wrapper .. " for version " .. cfg.lua_version .. "...")
          path.use_tree(tree)
-         fs.wrap_script(nil, "lua", "all")
+         fs.wrap_script(nil, lua_wrapper, "all")
       else
          util.warning("No Lua interpreter detected for version " .. cfg.lua_version .. ". Not creating " .. lua_wrapper)
       end

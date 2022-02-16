@@ -154,10 +154,9 @@ function win32.wrap_script(script, target, deps_mode, name, version, ...)
    assert(type(name) == "string" or not name)
    assert(type(version) == "string" or not version)
 
-   local batname = target .. ".bat"
-   local wrapper = io.open(batname, "wb")
+   local wrapper = io.open(target, "wb")
    if not wrapper then
-      return nil, "Could not open "..batname.." for writing."
+      return nil, "Could not open "..target.." for writing."
    end
 
    local lpath, lcpath = path.package_paths(deps_mode)
