@@ -90,14 +90,16 @@ local var_format_pattern = "%$%((%a[%a%d_]+)%)"
 -- needed variables.
 -- @param msg string: the warning message to display.
 function util.warn_if_not_used(var_defs, needed_set, msg)
-   needed_set = core.make_shallow_copy(needed_set)
+   local seen = {}
    for _, val in pairs(var_defs) do
       for used in val:gmatch(var_format_pattern) do
-         needed_set[used] = nil
+         seen[used] = true
       end
    end
    for var, _ in pairs(needed_set) do
-      util.warning(msg:format(var))
+      if not seen[var] then
+         util.warning(msg:format(var))
+      end
    end
 end
 

@@ -77,11 +77,16 @@ local load_config_file
 do
    -- Create global environment for the config files;
    local function env_for_config_file(cfg, platforms)
+      local platforms_copy = {}
+      for k,v in pairs(platforms) do
+         platforms_copy[k] = v
+      end
+
       local e
       e = {
          home = cfg.home,
          lua_version = cfg.lua_version,
-         platforms = util.make_shallow_copy(platforms),
+         platforms = platforms_copy,
          processor = cfg.target_cpu,   -- remains for compat reasons
          target_cpu = cfg.target_cpu,  -- replaces `processor`
          os_getenv = os.getenv,

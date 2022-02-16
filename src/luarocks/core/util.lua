@@ -28,19 +28,6 @@ function util.popen_read(cmd, spec)
    return out or ""
 end
 
---- Create a new shallow copy of a table: a new table with
--- the same keys and values. Keys point to the same objects as
--- the original table (ie, does not copy recursively).
--- @param tbl table: the input table
--- @return table: a new table with the same contents.
-function util.make_shallow_copy(tbl)
-   local copy = {}
-   for k,v in pairs(tbl) do
-      copy[k] = v
-   end
-   return copy
-end
-
 ---
 -- Formats tables with cycles recursively to any depth.
 -- References to other tables are shown as values.
