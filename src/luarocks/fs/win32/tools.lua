@@ -58,7 +58,15 @@ end
 -- @param directory string: pathname of directory to remove.
 function tools.remove_dir_tree_if_empty(directory)
    assert(directory)
-   fs.execute_quiet(vars.RMDIR, directory)
+   while true do
+      fs.execute_quiet(vars.RMDIR, directory)
+      local parent = dir.dir_name(directory)
+      if parent ~= directory then
+         directory = parent
+      else
+         break
+      end
+   end
 end
 
 --- Copy a file.
