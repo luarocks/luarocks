@@ -562,6 +562,10 @@ local cfg = {}
 function cfg.init(detected, warning)
    detected = detected or {}
 
+   local exit_ok = true
+   local exit_err = nil
+   local exit_what = nil
+
    local hc_ok, hardcoded = pcall(require, "luarocks.core.hardcoded")
    if not hc_ok then
       hardcoded = {}
@@ -670,7 +674,7 @@ function cfg.init(detected, warning)
    sys_config_file = (cfg.sysconfdir .. "/" .. config_file_name):gsub("\\", "/")
    local sys_config_ok, err = load_config_file(cfg, platforms, sys_config_file)
    if err then
-      return nil, err, "config"
+      exit_ok, exit_err, exit_what = nil, err, "config"
    end
 
    -- Load user configuration file (if allowed)
@@ -687,7 +691,7 @@ function cfg.init(detected, warning)
       if env_value then
          local env_ok, err = load_config_file(cfg, platforms, env_value)
          if err then
-            return nil, err, "config"
+            exit_ok, exit_err, exit_what = nil, err, "config"
          elseif warning and not env_ok then
             warning("Warning: could not load configuration file `"..env_value.."` given in environment variable "..env_var.."\n")
          end
@@ -704,7 +708,7 @@ function cfg.init(detected, warning)
          home_config_file = (cfg.homeconfdir .. "/" .. config_file_name):gsub("\\", "/")
          home_config_ok, err = load_config_file(cfg, platforms, home_config_file)
          if err then
-            return nil, err, "config"
+            exit_ok, exit_err, exit_what = nil, err, "config"
          end
       end
 
@@ -714,7 +718,7 @@ function cfg.init(detected, warning)
          home_config_file = (cfg.homeconfdir .. "/" .. config_file_name):gsub("\\", "/")
          home_config_ok, err = load_config_file(cfg, platforms, home_config_file)
          if err then
-            return nil, err, "config"
+            exit_ok, exit_err, exit_what = nil, err, "config"
          end
       end
 
@@ -723,7 +727,7 @@ function cfg.init(detected, warning)
          project_config_file = cfg.project_dir .. "/.luarocks/" .. config_file_name
          project_config_ok, err = load_config_file(cfg, platforms, project_config_file)
          if err then
-            return nil, err, "config"
+            exit_ok, exit_err, exit_what = nil, err, "config"
          end
       end
    end
@@ -876,7 +880,7 @@ function cfg.init(detected, warning)
       return table.concat(platform_keys, ", ")
    end
 
-   return true
+   return exit_ok, exit_err, exit_what
 end
 
 return cfg
