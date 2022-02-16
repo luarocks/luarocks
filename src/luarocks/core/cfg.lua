@@ -285,6 +285,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.external_deps_dirs = { "c:/external/", "c:/windows/system32" }
 
       defaults.makefile = "Makefile.win"
+      defaults.variables.PWD = "echo %cd%"
       defaults.variables.MAKE = "nmake"
       defaults.variables.CC = "cl"
       defaults.variables.RC = "rc"
@@ -762,7 +763,7 @@ function cfg.init(detected, warning)
    local defaults = make_defaults(cfg.lua_version, processor, platforms, cfg.home)
 
    if platforms.windows and hardcoded.WIN_TOOLS then
-      local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "PWD", "WGET", }
+      local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "WGET", }
       for _, tool in ipairs(tools) do
          defaults.variables[tool] = '"' .. hardcoded.WIN_TOOLS .. "/" .. defaults.variables[tool] .. '.exe"'
       end
