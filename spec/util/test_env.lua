@@ -836,28 +836,40 @@ local function setup_luarocks()
    print("LuaRocks set up correctly!")
 end
 
+local function mock_api_call(path)
+   if test_env.TEST_TARGET_OS == "windows" then
+      return test_env.execute(Q(test_env.testing_paths.win_tools .. "/wget") .. " --quiet --timeout=5 --tries=1 localhost:8080" .. path)
+   else
+      return test_env.execute("curl localhost:8080" .. path)
+   end
+end
+
 function test_env.mock_server_init()
    local testing_paths = test_env.testing_paths
    assert(test_env.need_rock("restserver-xavante"))
-   local final_command
-   local sleep_command
+
    if test_env.TEST_TARGET_OS == "windows" then
-      final_command = test_env.execute_helper("start /b \"\" " .. Q(testing_paths.lua) .. " " .. Q(testing_paths.util_dir .. "/mock-server.lua") .. " " .. Q(testing_paths.fixtures_dir), true, test_env.env_variables)
-      sleep_command = "timeout 1 > NUL"
+      os.execute(test_env.execute_helper("start /b \"\" " .. Q(testing_paths.lua) .. " " .. Q(testing_paths.util_dir .. "/mock-server.lua") .. " " .. Q(testing_paths.fixtures_dir), true, test_env.env_variables))
    else
-      final_command = test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.util_dir .. "/mock-server.lua " .. testing_paths.fixtures_dir .. " &", true, test_env.env_variables)
-      sleep_command = "sleep 1"
+      os.execute(test_env.execute_helper(testing_paths.lua .. " " .. testing_paths.util_dir .. "/mock-server.lua " .. testing_paths.fixtures_dir .. " &", true, test_env.env_variables))
    end
-   os.execute(final_command)
-   os.execute(sleep_command)
+
+   for _ = 1, 10 do
+      if mock_api_call("/api/tool_version") then
+         break
+      end
+
+      if test_env.TEST_TARGET_OS == "windows" then
+         os.execute("timeout 1 > NUL")
+      else
+         os.execute("sleep 1")
+      end
+   end
+
 end
 
 function test_env.mock_server_done()
-   if test_env.TEST_TARGET_OS == "windows" then
-      os.execute(Q(test_env.testing_paths.win_tools .. "/wget") .. " --quiet --timeout=5 --tries=1 localhost:8080/shutdown")
-   else
-      os.execute("curl localhost:8080/shutdown")
-   end
+   mock_api_call("/shutdown")
 end
 
 local function find_binary_rock(src_rock, dir)
