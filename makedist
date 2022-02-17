@@ -137,7 +137,7 @@ mkdir "release-windows"
 mv "$out" "release-windows/$out-win32"
 
 cd "release-unix/$out"
-rm -rf makedist install.bat win32 .travis.yml .gitignore appveyor* .appveyor
+rm -rf makedist install.bat win32 .github .gitignore appveyor* .appveyor
 cd ..
 tar czvpf ../"$out.tar.gz" "$out"
 rm -f ../"$out.tar.gz.asc"
@@ -145,7 +145,7 @@ cd ..
 rm -rf "release-unix"
 
 cd "release-windows/$out-win32"
-rm -rf makedist Makefile GNUmakefile configure .travis.yml .gitignore test appveyor* .appveyor
+rm -rf makedist Makefile GNUmakefile configure .github .gitignore test appveyor* .appveyor
 cd ..
 zip -r ../"$out-win32.zip" "$out-win32"
 rm -f ../"$out-win32.zip.asc"

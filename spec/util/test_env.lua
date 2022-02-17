@@ -17,7 +17,7 @@ ARGUMENTS
                           default: "minimal").
    noreset                Don't reset environment after each test
    clean                  Remove existing testing environment.
-   travis                 Add if running on TravisCI.
+   ci                     Add if running on Unix CI.
    appveyor               Add if running on Appveyor.
    os=<type>              Set OS ("linux", "osx", or "windows").
    lua_dir=<path>         Path of Lua installation (default "/usr/local")
@@ -238,8 +238,8 @@ function test_env.set_args()
          test_env.TEST_ENV_CLEAN = true
       elseif argument == "verbose" then
          test_env.VERBOSE = true
-      elseif argument == "travis" then
-         test_env.TRAVIS = true
+      elseif argument == "ci" then
+         test_env.CI = true
       elseif argument == "appveyor" then
          test_env.APPVEYOR = true
       elseif argument:find("^os=") then
@@ -273,13 +273,13 @@ function test_env.set_args()
          local system = execute_output("uname -s")
          if system == "Linux" then
             test_env.TEST_TARGET_OS = "linux"
-            if test_env.TRAVIS then
+            if test_env.CI then
                test_env.OPENSSL_INCDIR = "/usr/include"
                test_env.OPENSSL_LIBDIR = "/usr/lib/x86_64-linux-gnu"
             end
          elseif system == "Darwin" then
             test_env.TEST_TARGET_OS = "osx"
-            if test_env.TRAVIS then
+            if test_env.CI then
                test_env.OPENSSL_INCDIR = "/usr/local/opt/openssl/include"
                test_env.OPENSSL_LIBDIR = "/usr/local/opt/openssl/lib"
             end
@@ -643,7 +643,7 @@ end
 function test_env.setup_specs(extra_rocks)
    -- if global variable about successful creation of testing environment doesn't exist, build environment
    if not test_env.setup_done then
-      if test_env.TRAVIS then
+      if test_env.CI then
          if not test_env.exists(os.getenv("HOME") .. "/.ssh/id_rsa.pub") then
             execute_bool("ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa")
             execute_bool("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
