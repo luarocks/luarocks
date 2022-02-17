@@ -83,7 +83,9 @@ jobs:
       run: |
         eval $(luarocks path)
         luacov -c testrun/luacov.config
-        ( cd testrun/ && bash <(curl -s https://codecov.io/bash) )
+        curl -Os https://uploader.codecov.io/latest/$([ `uname -s` = "Linux" ] && echo "linux" || echo "macos")/codecov
+        chmod +x codecov
+        ( cd testrun/ && ../codecov )
         grep "Summary" -B1 -A1000 testrun/luacov.report.out
 
   ##############################################################################
