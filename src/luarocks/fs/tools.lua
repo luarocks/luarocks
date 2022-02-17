@@ -57,7 +57,7 @@ do
       local current = cache_pwd
       if not current then
          local pipe = io.popen(fs.quiet_stderr(vars.PWD))
-         current = pipe:read("*l")
+         current = pipe:read("*l"):gsub("%s*", "")
          pipe:close()
          cache_pwd = current
       end
