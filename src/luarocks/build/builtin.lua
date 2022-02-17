@@ -186,7 +186,7 @@ function builtin.run(rockspec, no_install)
          add_flags(extras, "-l%s", libraries)
          extras[#extras+1] = dir.path(variables.LUA_LIBDIR, variables.LUALIB)
          extras[#extras+1] = "-l" .. (variables.MSVCRT or "m")
-         local ok = execute(variables.LD.." "..variables.LDFLAGS, variables.LIBFLAG, "-o", library, unpack(extras))
+         local ok = execute(variables.LD.." "..variables.LDFLAGS.." "..variables.LIBFLAG, "-o", library, unpack(extras))
          return ok
       end
       --[[ TODO disable static libs until we fix the conflict in the manifest, which will take extending the manifest format.
@@ -254,7 +254,7 @@ function builtin.run(rockspec, no_install)
             extras[#extras+1] = "-L"..variables.LUA_LIBDIR
             extras[#extras+1] = "-llua"
          end
-         return execute(variables.LD.." "..variables.LDFLAGS, variables.LIBFLAG, "-o", library, unpack(extras))
+         return execute(variables.LD.." "..variables.LDFLAGS.." "..variables.LIBFLAG, "-o", library, unpack(extras))
       end
       compile_static_library = function(library, objects, libraries, libdirs, name)  -- luacheck: ignore 211
          local ok = execute(variables.AR, "rc", library, unpack(objects))
