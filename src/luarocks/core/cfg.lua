@@ -449,7 +449,9 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          version = "10.3"
       end
       version = vers.parse_version(version)
-      if version >= vers.parse_version("10.10") then
+      if version >= vers.parse_version("11.0") then
+         version = vers.parse_version("11.0")
+      elseif version >= vers.parse_version("10.10") then
          version = vers.parse_version("10.8")
       elseif version >= vers.parse_version("10.5") then
          version = vers.parse_version("10.5")
