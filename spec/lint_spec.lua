@@ -7,7 +7,7 @@ test_env.unload_luarocks()
 local lfs = require("lfs")
 
 local extra_rocks = {
-   "/validate-args-1.5.4-1.rockspec"
+   "/say-1.3-1.rockspec"
 }
 
 describe("luarocks lint #integration", function()
@@ -25,10 +25,10 @@ describe("luarocks lint #integration", function()
    end)
 
    it("OK", function()
-      assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
-      local output = run.luarocks("lint validate-args-1.5.4-1.rockspec")
+      assert.is_true(run.luarocks_bool("download --rockspec say 1.3-1"))
+      local output = run.luarocks("lint say-1.3-1.rockspec")
       assert.are.same(output, "")
-      assert.is_true(os.remove("validate-args-1.5.4-1.rockspec"))
+      assert.is_true(os.remove("say-1.3-1.rockspec"))
    end)
 
    describe("mismatch set", function()

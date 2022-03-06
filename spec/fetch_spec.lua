@@ -277,7 +277,7 @@ describe("luarocks fetch #unit #mock", function()
       end)
 
       it("returns false if the rockspec in invalid", function()
-         assert.falsy(fetch.load_local_rockspec(testing_paths.fixtures_dir .. "/invalid_validate-args-1.5.4-1.rockspec"))
+         assert.falsy(fetch.load_local_rockspec(testing_paths.fixtures_dir .. "/invalid_say-1.3-1.rockspec"))
       end)
 
       it("returns false if the rockspec version is not supported", function()

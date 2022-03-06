@@ -6,7 +6,7 @@ local testing_paths = test_env.testing_paths
 test_env.unload_luarocks()
 
 local extra_rocks = {
-   "/validate-args-1.5.4-1.rockspec"
+   "/say-1.3-1.rockspec",
 }
 
 describe("luarocks download #integration", function()
@@ -24,15 +24,15 @@ describe("luarocks download #integration", function()
    end)
 
    it("all with delete downloaded files", function() --TODO maybe download --all more rocks
-      assert.is_true(run.luarocks_bool("download --all validate-args"))
-      assert.is.truthy(lfs.attributes("validate-args-1.5.4-1.rockspec"))
-      test_env.remove_files(lfs.currentdir(), "validate--args--")
+      assert.is_true(run.luarocks_bool("download --all say"))
+      assert.is.truthy(lfs.attributes("say-1.3-1.rockspec"))
+      test_env.remove_files(lfs.currentdir(), "say--")
    end)
 
    it("rockspec version", function()
-      assert.is_true(run.luarocks_bool("download --rockspec validate-args 1.5.4-1"))
-      assert.is.truthy(lfs.attributes("validate-args-1.5.4-1.rockspec"))
-      test_env.remove_files(lfs.currentdir(), "validate--args--")
+      assert.is_true(run.luarocks_bool("download --rockspec say 1.3-1"))
+      assert.is.truthy(lfs.attributes("say-1.3-1.rockspec"))
+      test_env.remove_files(lfs.currentdir(), "say--")
    end)
 
    describe("#namespaces", function()

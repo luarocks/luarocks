@@ -23,7 +23,6 @@ local extra_rocks = {
    "/luasocket-3.0rc1-2.src.rock",
    "/luasocket-3.0rc1-2.rockspec",
    "/stdlib-41.0.0-1.src.rock",
-   "/validate-args-1.5.4-1.rockspec",
    "spec/fixtures/a_rock-1.0-1.src.rock",
    "/busted-2.0.0-1.rockspec",
    "/busted-2.0.rc13-0.rockspec",
