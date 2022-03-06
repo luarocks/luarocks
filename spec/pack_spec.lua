@@ -30,7 +30,7 @@ describe("luarocks pack #integration", function()
    end)
 
    it("invalid rockspec", function()
-      assert.is_false(run.luarocks_bool("pack " .. testing_paths.fixtures_dir .. "/invalid_validate-args-1.5.4-1.rockspec"))
+      assert.is_false(run.luarocks_bool("pack " .. testing_paths.fixtures_dir .. "/invalid_say-1.3-1.rockspec"))
    end)
 
    it("not installed rock", function()
