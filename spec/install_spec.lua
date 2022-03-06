@@ -22,11 +22,11 @@ local extra_rocks = {
    "/wsapi-1.6-1.src.rock",
    "/luafilesystem-1.6.3-2.src.rock",
    "/luafilesystem-1.6.3-1.src.rock",
-   "/sailor-0.5-3.src.rock",
-   "/sailor-0.5-4.src.rock",
    "spec/fixtures/a_repo/has_build_dep-1.0-1.all.rock",
    "spec/fixtures/a_repo/a_build_dep-1.0-1.all.rock",
    "spec/fixtures/a_repo/a_rock-1.0-1.src.rock",
+   "spec/fixtures/a_repo/non_lua_file-1.0-1.src.rock",
+   "spec/fixtures/a_repo/non_lua_file-1.0-2.src.rock",
 }
 
 describe("luarocks install #integration", function()
@@ -183,11 +183,11 @@ describe("luarocks install #integration", function()
       end)
 
       it('handle non-Lua files in build.install.lua when upgrading sailorproject/sailor#138', function()
-         assert.is_true(run.luarocks_bool("install sailor 0.5-3 --deps-mode=none"))
+         assert.is_true(run.luarocks_bool("install non_lua_file 1.0-1 --deps-mode=none"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION.."/sailor/blank-app/.htaccess"))
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION.."/sailor/blank-app/.htaccess~"))
 
-         assert.is_true(run.luarocks_bool("install sailor 0.5-4 --deps-mode=none"))
+         assert.is_true(run.luarocks_bool("install non_lua_file 1.0-2 --deps-mode=none"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION.."/sailor/blank-app/.htaccess"))
          assert.is.falsy(lfs.attributes(testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION.."/sailor/blank-app/.htaccess~"))
       end)
@@ -281,7 +281,7 @@ describe("luarocks install #integration", function()
 
    describe("#build_dependencies", function()
       it("install does not install a build dependency", function()
-         assert(run.luarocks_bool("install has_build_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo" ))
+         assert(run.luarocks_bool("install has_build_dep"))
          assert(run.luarocks_bool("show has_build_dep 1.0"))
          assert.falsy(run.luarocks_bool("show a_build_dep 1.0"))
       end)
