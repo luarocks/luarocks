@@ -158,7 +158,7 @@ function builtin.run(rockspec, no_install)
    local checked_lua_h = false
 
    for _, var in ipairs{ "CC", "CFLAGS", "LDFLAGS" } do
-      variables[var] = os.getenv(var) or variables[var] or ""
+      variables[var] = variables[var] or os.getenv(var) or ""
    end
 
    local function add_flags(extras, flag, flags)

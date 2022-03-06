@@ -45,6 +45,7 @@ local platform_order = {
    -- Windows
    "windows",
    "win32",
+   "mingw",
    "mingw32",
    "msys2_mingw_w64",
 }
@@ -293,7 +294,8 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.variables.MT = "mt"
       defaults.variables.AR = "lib"
       defaults.variables.LUALIB = "lua"..lua_version..".lib"
-      defaults.variables.CFLAGS = "/nologo /MD /O2"
+      defaults.variables.CFLAGS = os.getenv("CFLAGS") or "/nologo /MD /O2"
+      defaults.variables.LDFLAGS = os.getenv("LDFLAGS")
       defaults.variables.LIBFLAG = "/nologo /dll"
 
       defaults.external_deps_patterns = {
@@ -334,7 +336,8 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.variables.LD = "mingw32-gcc"
       defaults.variables.AR = "ar"
       defaults.variables.RANLIB = "ranlib"
-      defaults.variables.CFLAGS = "-O2"
+      defaults.variables.CFLAGS = os.getenv("CFLAGS") or "-O2"
+      defaults.variables.LDFLAGS = os.getenv("LDFLAGS")
       defaults.variables.LIBFLAG = "-shared"
       defaults.makefile = "Makefile"
       defaults.external_deps_patterns = {
@@ -358,7 +361,16 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.external_lib_extension = "so"
       defaults.obj_extension = "o"
       defaults.external_deps_dirs = { "/usr/local", "/usr", "/" }
-      defaults.variables.CFLAGS = "-O2"
+
+      defaults.variables.CFLAGS = os.getenv("CFLAGS") or "-O2"
+      -- we pass -fPIC via CFLAGS because of old Makefile-based Lua projects
+      -- which didn't have -fPIC in their Makefiles but which honor CFLAGS
+      if not defaults.variables.CFLAGS:match("-fPIC") then
+         defaults.variables.CFLAGS = defaults.variables.CFLAGS.." -fPIC"
+      end
+
+      defaults.variables.LDFLAGS = os.getenv("LDFLAGS")
+
       defaults.cmake_generator = "Unix Makefiles"
       defaults.variables.CC = "gcc"
       defaults.variables.LD = "gcc"
@@ -380,9 +392,6 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.wrapper_suffix = ""
       local xdg_cache_home = os.getenv("XDG_CACHE_HOME") or home.."/.cache"
       defaults.local_cache = xdg_cache_home.."/luarocks"
-      if not defaults.variables.CFLAGS:match("-fPIC") then
-         defaults.variables.CFLAGS = defaults.variables.CFLAGS.." -fPIC"
-      end
       defaults.web_browser = "xdg-open"
    end
 
@@ -430,7 +439,12 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          defaults.variables.AR = "ar"
          defaults.variables.RANLIB = "ranlib"
          defaults.variables.LUALIB = "liblua"..lua_version..".dll.a"
-         defaults.variables.CFLAGS = "-O2 -fPIC"
+
+         defaults.variables.CFLAGS = os.getenv("CFLAGS") or "-O2 -fPIC"
+         if not defaults.variables.CFLAGS:match("-fPIC") then
+            defaults.variables.CFLAGS = defaults.variables.CFLAGS.." -fPIC"
+         end
+
          defaults.variables.LIBFLAG = "-shared"
       end
    end
