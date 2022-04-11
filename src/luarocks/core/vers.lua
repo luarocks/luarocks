@@ -60,7 +60,7 @@ local version_mt = {
    -- @param v2 table: version table to compare.
    -- @return boolean: true if v1 is considered lower than or equal to v2.
    __le = function(v1, v2)
-       return not (v2 < v1)
+       return not (v2 < v1) -- luacheck: ignore
    end,
    --- Return version as a string.
    -- @param v The version table.

@@ -81,7 +81,7 @@ local function read_header_block(block)
    -- if header.version ~= "00" and header.version ~= " \0" then
    --    return false, "Unknown version "..header.version
    -- end
-   if not checksum_header(block) == header.chksum then
+   if checksum_header(block) ~= header.chksum then
       return false, "Failed header checksum"
    end
    return header

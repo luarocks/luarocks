@@ -540,7 +540,7 @@ local function write_new_file(filename, hunk)
   local fh = io.open(filename, "wb")
   if not fh then return false end
   for _, hline in ipairs(hunk.text) do
-    if not hline:sub(1,1) == "+" then
+    if hline:sub(1,1) ~= "+" then
       return false, "malformed patch"
     end
     fh:write(hline:sub(2))
