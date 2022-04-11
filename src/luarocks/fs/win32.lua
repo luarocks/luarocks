@@ -363,4 +363,15 @@ function win32.system_cache_dir()
    return dir.path(fs.system_temp_dir(), "cache")
 end
 
+function win32.search_in_path(program)
+   for d in (os.getenv("PATH") or ""):gmatch("([^;]+)") do
+      local fd = io.open(dir.path(d, program .. ".exe"), "r")
+      if fd then
+         fd:close()
+         return true, d
+      end
+   end
+   return false
+end
+
 return win32

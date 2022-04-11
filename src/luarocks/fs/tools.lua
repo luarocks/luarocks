@@ -22,8 +22,8 @@ do
       md5checker = {
          desc = "MD5 checker",
          { var = "MD5SUM", name = "md5sum" },
-         { var = "OPENSSL", name = "openssl", cmdarg = "md5", checkarg = "version" },
-         { var = "MD5", name = "md5", checkarg = "-shello" },
+         { var = "OPENSSL", name = "openssl", cmdarg = "md5" },
+         { var = "MD5", name = "md5" },
       },
    }
 
@@ -33,7 +33,7 @@ do
       if not tool then
          for _, opt in ipairs(tool_options[tooltype]) do
             table.insert(names, opt.name)
-            if fs.is_tool_available(vars[opt.var], opt.name, opt.checkarg) then
+            if fs.is_tool_available(vars[opt.var], opt.name) then
                tool = opt
                tool_cache[tooltype] = opt
                break

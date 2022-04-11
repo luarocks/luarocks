@@ -141,7 +141,7 @@ end
 -- @return boolean: true on success, nil and error message on failure.
 function tools.unzip(zipfile)
    assert(zipfile)
-   local ok, err = fs.is_tool_available(vars.UNZIP, "unzip", "--help")
+   local ok, err = fs.is_tool_available(vars.UNZIP, "unzip")
    if not ok then
       return nil, err
    end

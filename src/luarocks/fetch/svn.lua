@@ -20,7 +20,7 @@ function svn.get_sources(rockspec, extract, dest_dir)
    assert(type(dest_dir) == "string" or not dest_dir)
 
    local svn_cmd = rockspec.variables.SVN
-   local ok, err_msg = fs.is_tool_available(svn_cmd, "Subversion", "--version")
+   local ok, err_msg = fs.is_tool_available(svn_cmd, "Subversion")
    if not ok then
       return nil, err_msg
    end

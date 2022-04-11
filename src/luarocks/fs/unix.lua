@@ -234,4 +234,15 @@ function unix.system_cache_dir()
    return dir.path(fs.system_temp_dir(), "cache")
 end
 
+function unix.search_in_path(program)
+   for d in (os.getenv("PATH") or ""):gmatch("([^:]+)") do
+      local fd = io.open(dir.path(d, program), "r")
+      if fd then
+         fd:close()
+         return true, d
+      end
+   end
+   return false
+end
+
 return unix
