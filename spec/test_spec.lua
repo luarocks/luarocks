@@ -10,7 +10,7 @@ test_env.unload_luarocks()
 local extra_rocks = {
    "/busted-2.0.0-1.rockspec",
    "/lua_cliargs-3.0-1.src.rock",
-   "/luafilesystem-1.7.0-2.src.rock",
+   "/luafilesystem-${LUAFILESYSTEM}.src.rock",
    "/luasystem-0.2.1-0.src.rock",
    "/dkjson-2.5-2.src.rock",
    "/say-1.3-1.rockspec",
@@ -41,6 +41,7 @@ describe("luarocks test #integration", function()
       lazy_setup(function()
          -- Try to cache rocks from the host system to speed up test
          for _, r in ipairs(extra_rocks) do
+            r = test_env.V(r)
             local n, v = r:match("^/(.*)%-([^%-]+)%-%d+%.[^%-]+$")
             os.execute("luarocks pack " .. n .. " " .. v)
          end
@@ -84,17 +85,17 @@ describe("luarocks test #integration", function()
          assert.is_true(run.luarocks_bool("unpack busted_project-0.1-1.src.rock"))
          lfs.chdir("busted_project-0.1-1/busted_project")
          assert.is_true(run.luarocks_bool("make"))
-         
+
          run.luarocks_bool("remove busted")
          local prepareOutput = run.luarocks_bool("test --prepare")
          assert.is_true(run.luarocks_bool("show busted"))
-          
+
          -- Assert that "test --prepare" run successfully
          assert.is_true(prepareOutput)
 
          local output = run.luarocks("test")
          assert.not_match(tostring(prepareOutput), output)
-         
+
       end)
    end)
 end)

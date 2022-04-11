@@ -8,11 +8,11 @@ local write_file = test_env.write_file
 test_env.unload_luarocks()
 
 local extra_rocks = {
-   "/luasocket-3.0rc1-2.src.rock",
-   "/luasocket-3.0rc1-2.rockspec",
-   "/lpeg-0.12-1.src.rock",
-   "/lxsh-0.8.6-2.src.rock",
-   "/lxsh-0.8.6-2.rockspec"
+   "/luasocket-${LUASOCKET}.src.rock",
+   "/luasocket-${LUASOCKET}.rockspec",
+   "/lpeg-${LPEG}.src.rock",
+   "/lxsh-${LXSH}.src.rock",
+   "/lxsh-${LXSH}.rockspec"
 }
 
 describe("luarocks make #integration", function()
@@ -35,35 +35,35 @@ describe("luarocks make #integration", function()
       finally(function()
          -- delete downloaded and unpacked files
          lfs.chdir(testing_paths.testrun_dir)
-         test_env.remove_dir("luasocket-3.0rc1-2")
-         os.remove("luasocket-3.0rc1-2.src.rock")
+         test_env.remove_dir("luasocket-${LUASOCKET}")
+         os.remove("luasocket-${LUASOCKET}.src.rock")
       end)
 
       -- make luasocket
-      assert.is_true(run.luarocks_bool("download --source luasocket 3.0rc1-2"))
-      assert.is_true(run.luarocks_bool("unpack luasocket-3.0rc1-2.src.rock"))
-      lfs.chdir("luasocket-3.0rc1-2/luasocket-3.0-rc1/")
-      assert.is_true(run.luarocks_bool("make luasocket-3.0rc1-2.rockspec"))
+      assert.is_true(run.luarocks_bool("download --source luasocket ${LUASOCKET}"))
+      assert.is_true(run.luarocks_bool("unpack luasocket-${LUASOCKET}.src.rock"))
+      lfs.chdir("luasocket-${LUASOCKET}/luasocket/")
+      assert.is_true(run.luarocks_bool("make luasocket-${LUASOCKET}.rockspec"))
 
       -- test it
       assert.is_true(run.luarocks_bool("show luasocket"))
-      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket/3.0rc1-2/luasocket-3.0rc1-2.rockspec"))
+      assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket/${LUASOCKET}/luasocket-${LUASOCKET}.rockspec"))
    end)
 
    it("--no-doc", function()
       finally(function()
          lfs.chdir(testing_paths.testrun_dir)
-         test_env.remove_dir("luasocket-3.0rc1-2")
-         os.remove("luasocket-3.0rc1-2.src.rock")
+         test_env.remove_dir("luasocket-${LUASOCKET}")
+         os.remove("luasocket-${LUASOCKET}.src.rock")
       end)
 
-      assert.is_true(run.luarocks_bool("download --source luasocket 3.0rc1-2"))
-      assert.is_true(run.luarocks_bool("unpack luasocket-3.0rc1-2.src.rock"))
-      lfs.chdir("luasocket-3.0rc1-2/luasocket-3.0-rc1/")
-      assert.is_true(run.luarocks_bool("make --no-doc luasocket-3.0rc1-2.rockspec"))
+      assert.is_true(run.luarocks_bool("download --source luasocket ${LUASOCKET}"))
+      assert.is_true(run.luarocks_bool("unpack luasocket-${LUASOCKET}.src.rock"))
+      lfs.chdir("luasocket-${LUASOCKET}/luasocket")
+      assert.is_true(run.luarocks_bool("make --no-doc luasocket-${LUASOCKET}.rockspec"))
 
       assert.is_true(run.luarocks_bool("show luasocket"))
-      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket/3.0rc1-2/doc"))
+      assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luasocket/${LUASOCKET}/doc"))
    end)
 
    it("--only-deps", function()
@@ -82,24 +82,24 @@ describe("luarocks make #integration", function()
    describe("LuaRocks making rockspecs (using lxsh)", function()
       --download lxsh and unpack it
       before_each(function()
-         assert.is_true(run.luarocks_bool("download --source lxsh 0.8.6-2"))
-         assert.is_true(run.luarocks_bool("unpack lxsh-0.8.6-2.src.rock"))
-         assert.is_true(lfs.chdir("lxsh-0.8.6-2/lxsh-0.8.6-1/"))
+         assert.is_true(run.luarocks_bool("download --source lxsh ${LXSH}"))
+         assert.is_true(run.luarocks_bool("unpack lxsh-${LXSH}.src.rock"))
+         assert.is_true(lfs.chdir("lxsh-${LXSH}/lxsh-${LXSH_V}-1/"))
       end)
 
       -- delete downloaded and unpacked files
       after_each(function()
          assert(lfs.chdir(testing_paths.testrun_dir))
-         test_env.remove_dir("lxsh-0.8.6-2")
-         assert.is_true(os.remove("lxsh-0.8.6-2.src.rock"))
+         test_env.remove_dir("lxsh-${LXSH}")
+         assert.is_true(os.remove("lxsh-${LXSH}.src.rock"))
       end)
 
       it("default rockspec", function()
-         assert.is_true(run.luarocks_bool("new_version lxsh-0.8.6-2.rockspec"))
+         assert.is_true(run.luarocks_bool("new_version lxsh-${LXSH}.rockspec"))
          assert.is_true(run.luarocks_bool("make"))
 
          assert.is_true(run.luarocks_bool("show lxsh"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-3/lxsh-0.8.6-3.rockspec"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/${LXSH_V}-3/lxsh-${LXSH_V}-3.rockspec"))
       end)
 
       it("unnamed rockspec", function()
@@ -107,35 +107,35 @@ describe("luarocks make #integration", function()
             os.remove("rockspec")
          end)
 
-         test_env.copy("lxsh-0.8.6-2.rockspec", "rockspec")
+         test_env.copy("lxsh-${LXSH}.rockspec", "rockspec")
          assert.is_true(run.luarocks_bool("make"))
 
          assert.is_true(run.luarocks_bool("show lxsh"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/${LXSH}/lxsh-${LXSH}.rockspec"))
       end)
 
       it("ambiguous rockspec", function()
-         assert.is.truthy(os.rename("lxsh-0.8.6-2.rockspec", "lxsh2-0.8.6-2.rockspec"))
+         assert.is.truthy(os.rename("lxsh-${LXSH}.rockspec", "lxsh2-${LXSH}.rockspec"))
          local output = run.luarocks("make")
          assert.is.truthy(output:match("Error: Inconsistency between rockspec filename"))
 
          assert.is_false(run.luarocks_bool("show lxsh"))
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/${LXSH}/lxsh-${LXSH}.rockspec"))
       end)
 
       it("ambiguous unnamed rockspec", function()
-         assert.is.truthy(os.rename("lxsh-0.8.6-2.rockspec", "1_rockspec"))
+         assert.is.truthy(os.rename("lxsh-${LXSH}.rockspec", "1_rockspec"))
          test_env.copy("1_rockspec", "2_rockspec")
          local output = run.luarocks("make")
          assert.is.truthy(output:match("Error: Please specify which rockspec file to use"))
 
          assert.is_false(run.luarocks_bool("show lxsh"))
-         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/0.8.6-2/lxsh-0.8.6-2.rockspec"))
+         assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lxsh/${LXSH}/lxsh-${LXSH}.rockspec"))
       end)
 
       it("pack binary rock", function()
          assert.is_true(run.luarocks_bool("make --deps-mode=none --pack-binary-rock"))
-         assert.is.truthy(lfs.attributes("lxsh-0.8.6-2.all.rock"))
+         assert.is.truthy(lfs.attributes("lxsh-${LXSH}.all.rock"))
       end)
    end)
 

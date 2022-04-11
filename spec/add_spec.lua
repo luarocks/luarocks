@@ -5,8 +5,8 @@ local testing_paths = test_env.testing_paths
 test_env.unload_luarocks()
 
 local extra_rocks = {
-   "/luasocket-3.0rc1-2.src.rock",
-   "/luasocket-3.0rc1-2.rockspec"
+   "/luasocket-${LUASOCKET}.src.rock",
+   "/luasocket-${LUASOCKET}.rockspec"
 }
 
 describe("LuaRocks add tests #integration", function()
@@ -25,20 +25,20 @@ describe("LuaRocks add tests #integration", function()
       end)
 
       it("invalid server", function()
-         assert.is_false(run.luarocks_admin_bool("--server=invalid add " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.src.rock"))
+         assert.is_false(run.luarocks_admin_bool("--server=invalid add " .. testing_paths.testing_server .. "/luasocket-${LUASOCKET}.src.rock"))
       end)
 
       it("invalid server #ssh", function()
-         assert.is_true(run.luarocks_admin_bool("--server=testing add " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.src.rock"))
+         assert.is_true(run.luarocks_admin_bool("--server=testing add " .. testing_paths.testing_server .. "/luasocket-${LUASOCKET}.src.rock"))
       end)
 
       --TODO This test fails, sftp support not yet implemented
       it("invalid server", function()
-         assert.is_false(run.luarocks_admin_bool("--server=testing add luasocket-3.0rc1-2.src.rock", { LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/testing_config_sftp.lua" } ))
+         assert.is_false(run.luarocks_admin_bool("--server=testing add luasocket-${LUASOCKET}.src.rock", { LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/testing_config_sftp.lua" } ))
       end)
 
       it("split server url", function()
-         assert.is_false(run.luarocks_admin_bool("--server=\"localhost@/tmp/luarocks_testing\" add " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.src.rock"))
+         assert.is_false(run.luarocks_admin_bool("--server=\"localhost@/tmp/luarocks_testing\" add " .. testing_paths.testing_server .. "/luasocket-${LUASOCKET}.src.rock"))
       end)
    end)
 end)

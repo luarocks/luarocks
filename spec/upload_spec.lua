@@ -23,12 +23,12 @@ describe("luarocks upload #integration", function()
    end)
 
    it("api key invalid and skip-pack", function()
-      assert.is_false(run.luarocks_bool("upload --api-key=\"invalid\" --skip-pack " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.rockspec"))
+      assert.is_false(run.luarocks_bool("upload --api-key=\"invalid\" --skip-pack " .. testing_paths.testing_server .. "/luasocket-${LUASOCKET}.rockspec"))
    end)
 
    it("force #unix", function()
       assert.is_true(test_env.need_rock("dkjson"))
-      assert.is_false(run.luarocks_bool("upload --api-key=\"invalid\" --force " .. testing_paths.testing_server .. "/luasocket-3.0rc1-2.rockspec"))
+      assert.is_false(run.luarocks_bool("upload --api-key=\"invalid\" --force " .. testing_paths.testing_server .. "/luasocket-${LUASOCKET}.rockspec"))
    end)
 
    describe("tests with Xavante server #mock", function()

@@ -7,7 +7,7 @@ test_env.unload_luarocks()
 
 local extra_rocks = {
    "/abelhas-1.1-1.rockspec",
-   "/lpeg-0.12-1.rockspec"
+   "/lpeg-${LPEG}.rockspec"
 }
 
 describe("luarocks new_version #integration", function()
@@ -41,8 +41,8 @@ describe("luarocks new_version #integration", function()
 
    describe("more complex tests", function()
       it("of luacov", function()
-         assert.is_true(run.luarocks_bool("download --rockspec luacov 0.15.0"))
-         assert.is_true(run.luarocks_bool("new_version luacov-0.15.0-1.rockspec 0.2"))
+         assert.is_true(run.luarocks_bool("download --rockspec luacov ${LUACOV_V}"))
+         assert.is_true(run.luarocks_bool("new_version luacov-${LUACOV}.rockspec 0.2"))
          assert.is.truthy(lfs.attributes("luacov-0.2-1.rockspec"))
          test_env.remove_files(lfs.currentdir(), "luacov%-")
       end)
@@ -55,15 +55,15 @@ describe("luarocks new_version #integration", function()
       end)
 
       it("of luacov with tag", function()
-         assert.is_true(run.luarocks_bool("download --rockspec luacov 0.15.0"))
-         assert.is_true(run.luarocks_bool("new_version luacov-0.15.0-1.rockspec --tag v0.3"))
+         assert.is_true(run.luarocks_bool("download --rockspec luacov ${LUACOV_V}"))
+         assert.is_true(run.luarocks_bool("new_version luacov-${LUACOV}.rockspec --tag v0.3"))
          assert.is.truthy(lfs.attributes("luacov-0.3-1.rockspec"))
          test_env.remove_files(lfs.currentdir(), "luacov%-")
       end)
 
       it("updating md5", function()
-         assert.is_true(run.luarocks_bool("download --rockspec lpeg 0.12"))
-         assert.is_true(run.luarocks_bool("new_version lpeg-0.12-1.rockspec 0.2 https://luarocks.org/manifests/gvvaughan/lpeg-1.0.0-1.rockspec"))
+         assert.is_true(run.luarocks_bool("download --rockspec lpeg ${LPEG_V}"))
+         assert.is_true(run.luarocks_bool("new_version lpeg-${LPEG}.rockspec 0.2 https://luarocks.org/manifests/gvvaughan/lpeg-1.0.0-1.rockspec"))
          test_env.remove_files(lfs.currentdir(), "lpeg%-")
       end)
    end)

@@ -19,9 +19,9 @@ local extra_rocks = {
    "/lmathx-20150505-1.rockspec",
    "/lpeg-1.0.0-1.rockspec",
    "/lpeg-1.0.0-1.src.rock",
-   "/luafilesystem-1.6.3-1.src.rock",
-   "/luasocket-3.0rc1-2.src.rock",
-   "/luasocket-3.0rc1-2.rockspec",
+   "/luafilesystem-${LUAFILESYSTEM}.src.rock",
+   "/luasocket-${LUASOCKET}.src.rock",
+   "/luasocket-${LUASOCKET}.rockspec",
    "/stdlib-41.0.0-1.src.rock",
    "spec/fixtures/a_rock-1.0-1.src.rock",
    "/busted-2.0.0-1.rockspec",
@@ -137,8 +137,8 @@ describe("LuaRocks build #integration", function()
 
    describe("basic builds", function()
       it("luacov diff version", function()
-         assert.is_true(run.luarocks_bool("build luacov 0.15.0-1"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luacov/0.15.0-1/luacov-0.15.0-1.rockspec"))
+         assert.is_true(run.luarocks_bool("build luacov ${LUACOV}"))
+         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luacov/${LUACOV}/luacov-${LUACOV}.rockspec"))
       end)
 
       it("command stdlib", function()

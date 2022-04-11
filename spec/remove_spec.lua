@@ -3,16 +3,17 @@ local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 local env_variables = test_env.env_variables
+local V = test_env.V
 
 test_env.unload_luarocks()
 
 local extra_rocks = {
    "/abelhas-1.1-1.src.rock",
-   "/copas-2.0.1-1.src.rock",
+   "/copas-${COPAS}.src.rock",
    "/coxpcall-1.16.0-1.src.rock",
    "/coxpcall-1.16.0-1.rockspec",
-   "/luafilesystem-1.7.0-1.src.rock",
-   "/luafilesystem-1.6.3-2.src.rock",
+   "/luafilesystem-${LUAFILESYSTEM}.src.rock",
+   "/luafilesystem-${LUAFILESYSTEM_OLD}.src.rock",
 }
 
 describe("luarocks remove #integration", function()
@@ -85,31 +86,35 @@ describe("luarocks remove #integration", function()
       end)
 
       it("restores old versions", function()
-         assert.is_true(run.luarocks_bool("install luafilesystem 1.6.3"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/lfs."..test_env.lib_extension))
+         local libdir = testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION
+
+         assert.is_true(run.luarocks_bool("install luafilesystem ${LUAFILESYSTEM_OLD_V}"))
+         assert.is.truthy(lfs.attributes(libdir.."/lfs."..test_env.lib_extension))
 
          if test_env.TEST_TARGET_OS ~= "windows" then
-            local fd = io.open(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/lfs."..test_env.lib_extension, "r")
-            assert(fd:read("*a"):match("LuaFileSystem 1.6.3", 1, true))
+            local fd = io.open(libdir.."/lfs."..test_env.lib_extension, "r")
+            assert(fd:read("*a"):match(V"LuaFileSystem ${LUAFILESYSTEM_OLD_V}", 1, true))
             fd:close()
          end
 
-         assert.is_true(run.luarocks_bool("install luafilesystem 1.7.0 --keep"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/lfs."..test_env.lib_extension))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/luafilesystem_1_6_3_2-lfs."..test_env.lib_extension))
+         local suffix = (V"${LUAFILESYSTEM_OLD}"):gsub("[%.%-]", "_")
+
+         assert.is_true(run.luarocks_bool("install luafilesystem ${LUAFILESYSTEM_V} --keep"))
+         assert.is.truthy(lfs.attributes(libdir.."/lfs."..test_env.lib_extension))
+         assert.is.truthy(lfs.attributes(libdir.."/luafilesystem_"..suffix.."-lfs."..test_env.lib_extension))
 
          if test_env.TEST_TARGET_OS ~= "windows" then
-            local fd = io.open(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/lfs."..test_env.lib_extension, "r")
-            assert(fd:read("*a"):match("LuaFileSystem 1.7.0", 1, true))
+            local fd = io.open(libdir.."/lfs."..test_env.lib_extension, "r")
+            assert(fd:read("*a"):match(V"LuaFileSystem ${LUAFILESYSTEM_V}", 1, true))
             fd:close()
          end
 
-         assert.is_true(run.luarocks_bool("remove luafilesystem 1.7.0"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/lfs."..test_env.lib_extension))
+         assert.is_true(run.luarocks_bool("remove luafilesystem ${LUAFILESYSTEM_V}"))
+         assert.is.truthy(lfs.attributes(libdir.."/lfs."..test_env.lib_extension))
 
          if test_env.TEST_TARGET_OS ~= "windows" then
-            local fd = io.open(testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION.."/lfs."..test_env.lib_extension, "r")
-            assert(fd:read("*a"):match("LuaFileSystem 1.6.3", 1, true))
+            local fd = io.open(libdir.."/lfs."..test_env.lib_extension, "r")
+            assert(fd:read("*a"):match(V"LuaFileSystem ${LUAFILESYSTEM_OLD_V}", 1, true))
             fd:close()
          end
       end)
