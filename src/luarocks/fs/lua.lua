@@ -122,7 +122,7 @@ function fs_lua.is_tool_available(tool_cmd, tool_name)
    if tool_available_cache[tool_name] ~= nil then
       ok = tool_available_cache[tool_name]
    else
-      local tool_cmd_no_args = tool_cmd:gsub(" .*", "")
+      local tool_cmd_no_args = tool_cmd:gsub(" [^\"]*$", "")
 
       -- if it looks like the tool has a pathname, try that first
       if tool_cmd_no_args:match("[/\\]") then
