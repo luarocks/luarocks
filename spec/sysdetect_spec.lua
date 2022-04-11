@@ -55,6 +55,8 @@ describe("luarocks.core.sysdetect #unix #unit", function()
       ["elf-Haiku-GCC2-ls"] = {"haiku", "x86"},
       ["elf-Haiku-GCC7-WebPositive"] = {"haiku", "x86"},
       ["pe-cygwin-ls.exe"] = {"cygwin", "x86"},
+      ["elf-DragonFly-x86_64-less"] = {"dragonfly", "x86_64"},
+
    }
 
    describe("detect_file", function()

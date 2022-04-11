@@ -153,6 +153,9 @@ local function detect_elf_system(fd, hdr, sections)
          return "netbsd"
       elseif sections[".note.openbsd.ident"] then
          return "openbsd"
+      elseif sections[".note.tag"] and
+             sections[".note.tag"].namedata == "DragonFly" then
+         return "dragonfly"
       end
 
       local gnu_version_r = sections[".gnu.version_r"]

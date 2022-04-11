@@ -37,6 +37,7 @@ local platform_order = {
    "netbsd",
    "openbsd",
    "freebsd",
+   "dragonfly",
    "linux",
    "macosx",
    "cygwin",
@@ -151,6 +152,7 @@ end
 local platform_sets = {
    freebsd = { unix = true, bsd = true, freebsd = true },
    openbsd = { unix = true, bsd = true, openbsd = true },
+   dragonfly = { unix = true, bsd = true, dragonfly = true },
    solaris = { unix = true, solaris = true },
    windows = { windows = true, win32 = true },
    cygwin = { unix = true, cygwin = true },
@@ -451,6 +453,9 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
 
    if platforms.bsd then
       defaults.variables.MAKE = "gmake"
+      defaults.gcc_rpath = false
+      defaults.variables.CC = "cc"
+      defaults.variables.LD = defaults.variables.CC
    end
 
    if platforms.macosx then
@@ -492,27 +497,14 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
 
    if platforms.freebsd then
       defaults.arch = "freebsd-"..target_cpu
-      defaults.gcc_rpath = false
-      defaults.variables.CC = "cc"
-      defaults.variables.LD = defaults.variables.CC
-      defaults.variables.LIBFLAG = "-shared"
-   end
-
-   if platforms.openbsd then
+   elseif platforms.dragonfly then
+      defaults.arch = "dragonfly-"..target_cpu
+   elseif platforms.openbsd then
       defaults.arch = "openbsd-"..target_cpu
-      defaults.gcc_rpath = false
-      defaults.variables.CC = "cc"
-      defaults.variables.LD = defaults.variables.CC
-      defaults.variables.LIBFLAG = "-shared"
-   end
-
-   if platforms.netbsd then
+   elseif platforms.netbsd then
       defaults.arch = "netbsd-"..target_cpu
-   end
-
-   if platforms.solaris then
+   elseif platforms.solaris then
       defaults.arch = "solaris-"..target_cpu
-      --defaults.platforms = {"unix", "solaris"}
       defaults.variables.MAKE = "gmake"
    end
 
