@@ -6,7 +6,7 @@ MINGW_SYSROOT=/usr/lib/mingw-w64-sysroot/$(MINGW_PREFIX)
 # "mingw" or "mingw64"
 OPENSSL_PLATFORM=mingw
 # Versions of dependencies
-LIBLUA_VERSION=5.3.4
+LIBLUA_VERSION=5.4.3
 OPENSSL_VERSION=1.0.2o
 ZLIB_VERSION=1.2.11
 BZIP2_VERSION=1.0.6

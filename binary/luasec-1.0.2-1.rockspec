@@ -1,8 +1,8 @@
 package = "LuaSec"
-version = "0.8.1-2"
+version = "1.0.2-1"
 source = {
-   url = "https://github.com/brunoos/luasec/archive/luasec-0.8.1.tar.gz",
-   dir = "luasec-luasec-0.8.1"
+  url = "git://github.com/brunoos/luasec",
+  tag = "v1.0.2",
 }
 description = {
    summary = "A binding for OpenSSL library to provide TLS/SSL communication over LuaSocket.",
@@ -57,19 +57,10 @@ build = {
                   "ssl", "crypto"
                },
                sources = {
-                  "src/config.c", "src/ec.c", 
-                  "src/x509.c", "src/context.c", "src/ssl.c", 
+                  "src/options.c", "src/config.c", "src/ec.c",
+                  "src/x509.c", "src/context.c", "src/ssl.c",
                   "src/luasocket/buffer.c", "src/luasocket/io.c",
-                  "src/luasocket/timeout.c", "src/luasocket/usocket.c"
-               }
-            }
-         }
-      },
-      mingw32 = {
-         modules = {
-            ssl = {
-               libraries = {
-                  "ssl", "crypto", "ws2_32", "gdi32"
+                  "src/luasocket/usocket.c" -- , "src/luasocket/timeout.c"
                }
             }
          }
@@ -89,16 +80,16 @@ build = {
                   "$(OPENSSL_BINDIR)",
                },
                libraries = {
-                  "libssl32MD", "libcrypto32MD", "ws2_32"
+                  "ssl", "crypto", "ws2_32"
                },
                incdirs = {
                   "$(OPENSSL_INCDIR)", "src/", "src/luasocket"
                },
                sources = {
-                  "src/config.c", "src/ec.c", 
-                  "src/x509.c", "src/context.c", "src/ssl.c", 
+                  "src/options.c", "src/config.c", "src/ec.c",
+                  "src/x509.c", "src/context.c", "src/ssl.c",
                   "src/luasocket/buffer.c", "src/luasocket/io.c",
-                  "src/luasocket/timeout.c", "src/luasocket/wsocket.c"
+                  "src/luasocket/wsocket.c", "src/luasocket/timeout.c"
                }
             }
          },
@@ -110,12 +101,12 @@ index 95109c4..e5defa8 100644
 +++ b/src/ssl.c
 @@ -11,7 +11,7 @@
  #include <string.h>
- 
+
  #if defined(WIN32)
 -#include <Winsock2.h>
 +#include <winsock2.h>
  #endif
- 
+
  #include <openssl/ssl.h>
 ]]
          }

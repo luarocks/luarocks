@@ -1,4 +1,4 @@
-local _MODREV, _SPECREV = '34.0.4', '-1'
+local _MODREV, _SPECREV = '35.1', '-1'
 
 package = 'luaposix'
 version = _MODREV .. _SPECREV
@@ -14,14 +14,20 @@ description = {
 }
 
 dependencies = {
-   'bit32',
-   'lua >= 5.1, < 5.4',
-   'std.normalize',
+   'lua >= 5.1, < 5.5',
 }
+
+do
+   -- We only want to install a bit32 module for Lua 5.1.
+   local _ENV={package=nil, dependencies=dependencies}
+   if package then
+      dependencies[#dependencies + 1] = 'bit32'
+   end
+end
 
 source = {
    url = 'http://github.com/luaposix/luaposix/archive/v' .. _MODREV .. '.zip',
-   dir = 'luaposix-' .. _MODREV,  
+   dir = 'luaposix-' .. _MODREV,
 }
 
 build = {

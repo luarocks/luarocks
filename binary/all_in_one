@@ -164,7 +164,7 @@ local function write_hardcoded_module(dir)
       LUA_BINDIR = if_platform("unix", cfg.variables.LUA_BINDIR),
       LUA_INTERPRETER = if_platform("unix", cfg.lua_interpreter),
    }
-   
+
    local name = dir .. "/luarocks/core/hardcoded.lua"
    persist.save_as_module(name, hardcoded)
    return name
@@ -335,7 +335,7 @@ static int pmain(lua_State *L) {
 /* error handler, from luac */
 static int msghandler (lua_State *L) {
    /* is error object not a string? */
-   const char *msg = lua_tostring(L, 1);            
+   const char *msg = lua_tostring(L, 1);
    if (msg == NULL) {
       /* does it have a metamethod that produces a string */
       if (luaL_callmeta(L, 1, "__tostring") && lua_type(L, -1) == LUA_TSTRING) {
@@ -393,7 +393,7 @@ local function generate(main_program, dir, skip)
    local program_name = main_program:gsub(".*/", "")
 
    local hardcoded = write_hardcoded_module(dir)
-   
+
    local out = {}
    table.insert(out, ([[static const char* progname = %q;]]):format(program_name))
    table.insert(out, c_preamble)
@@ -404,7 +404,7 @@ local function generate(main_program, dir, skip)
    table.insert(out, c_main)
 
    os.remove(hardcoded)
-   
+
    local c_filename = TARGET_DIR .. "/" .. program_name .. ".exe.c"
    local fd = io.open(c_filename, "w")
    fd:write(reindent_c(table.concat(out, "\n")))
@@ -412,7 +412,7 @@ local function generate(main_program, dir, skip)
 
    deps.check_lua_incdir(cfg.variables)
    deps.check_lua_libdir(cfg.variables)
-   
+
    cmd = table.concat(filter_in(nonnull, {
       CC, "-o", TARGET_DIR .. "/" .. program_name .. ".exe",
       "-I", cfg.variables.LUA_INCDIR,
@@ -426,6 +426,7 @@ local function generate(main_program, dir, skip)
       cfg.variables.LUA_LIBDIR .. "/" .. cfg.variables.LUALIB:gsub("%.so.*$", ".a"),
       if_platform("unix", "-ldl"),
       if_platform("unix", "-lpthread"),
+      if_platform("windows", "-mwindows"),
       "-lm"
    }), " ")
    print(cmd)
@@ -445,7 +446,7 @@ local function main()
    path.use_tree(LUA_MODULES)
 
    local CONFIG_FILE = CONFIG_DIR .. "/config-" .. cfg.lua_version .. ".lua"
-   
+
    fs.make_dir(CONFIG_DIR)
 
    persist.save_from_table(CONFIG_FILE, {
@@ -456,22 +457,23 @@ local function main()
          LD = fs.current_dir() .. "/binary/static-gcc",
          LIB_EXTENSION = "a",
          LIBFLAG = "-static",
+         PWD = "pwd",
       },
       platforms = if_platform("windows", { "windows", "win32", "mingw32" }),
       external_deps_dirs = if_platform("windows", { CROSSCOMPILER_SYSROOT, fs.current_dir() .. "/windows-deps-" .. TRIPLET }),
    })
-   
+
    local dependencies = {
       md5 = "md5",
-      luasec = "./binary/luasec-0.8.1-2.rockspec",
-      luaposix = if_platform("unix", "./binary/luaposix-34.0.4-1.rockspec"),
-      luasocket = "luasocket",
+      luasec = "./binary/luasec-1.0.2-1.rockspec",
       ["lua-zlib"] = "./binary/lua-zlib-1.2-0.rockspec",
-      ["lua-bz2"] = "./binary/lua-bz2-0.1.0-1.rockspec",
+      ["lua-bz2"] = "./binary/lua-bz2-0.2.1-1.rockspec",
+      luaposix = if_platform("unix", "./binary/luaposix-35.1-1.rockspec"),
+      luasocket = "luasocket",
       luafilesystem = "luafilesystem",
       dkjson = "dkjson",
    }
-   
+
    fs.make_dir(LUA_MODULES)
    for name, arg in pairs(dependencies) do
       print("----------------------------------------------------------------")

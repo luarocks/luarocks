@@ -167,7 +167,8 @@ function win32.wrap_script(script, target, deps_mode, name, version, ...)
    }
 
    local remove_interpreter = false
-   if target == "luarocks" or target == "luarocks-admin" then
+   local base = dir.base_name(target):gsub("%..*$", "")
+   if base == "luarocks" or base == "luarocks-admin" then
       if cfg.is_binary then
          remove_interpreter = true
       end

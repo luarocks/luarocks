@@ -1,8 +1,8 @@
 package = "lua-bz2"
-version = "0.1.0-1"
+version = "0.2.1-1"
 source = {
    url = "git+ssh://git@github.com/hishamhm/lua-bz2.git",
-   tag = "0.1.0",
+   tag = "0.2.1",
 }
 description = {
    summary = "A Lua binding to Julian Seward's libbzip2",
