@@ -123,7 +123,20 @@ function fs_lua.is_tool_available(tool_cmd, tool_name)
       ok = tool_available_cache[tool_name]
    else
       local tool_cmd_no_args = tool_cmd:gsub(" .*", "")
-      ok = fs.search_in_path(tool_cmd_no_args)
+
+      -- if it looks like the tool has a pathname, try that first
+      if tool_cmd_no_args:match("[/\\]") then
+         local fd = io.open(tool_cmd_no_args, "r")
+         if fd then
+            fd:close()
+            ok = true
+         end
+      end
+
+      if not ok then
+         ok = fs.search_in_path(tool_cmd_no_args)
+      end
+
       tool_available_cache[tool_name] = (ok == true)
    end
 
