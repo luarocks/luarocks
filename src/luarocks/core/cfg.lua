@@ -481,10 +481,18 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.variables.LD = "env MACOSX_DEPLOYMENT_TARGET="..tostring(version).." gcc"
       defaults.web_browser = "open"
 
+      -- XCode SDK
       local sdk_path = util.popen_read("xcrun --show-sdk-path 2>/dev/null")
       if sdk_path then
          table.insert(defaults.external_deps_dirs, sdk_path .. "/usr")
       end
+
+      -- Homebrew
+      table.insert(defaults.external_deps_dirs, "/usr/local/opt")
+      defaults.external_deps_subdirs.lib = { "", "lib", }
+      defaults.runtime_external_deps_subdirs.lib = { "", "lib", }
+      table.insert(defaults.external_deps_patterns.lib, 1, "/?/lib/lib?.dylib")
+      table.insert(defaults.runtime_external_deps_patterns.lib, 1, "/?/lib/lib?.dylib")
    end
 
    if platforms.linux then
