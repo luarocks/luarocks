@@ -485,6 +485,8 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       local sdk_path = util.popen_read("xcrun --show-sdk-path 2>/dev/null")
       if sdk_path then
          table.insert(defaults.external_deps_dirs, sdk_path .. "/usr")
+         table.insert(defaults.external_deps_patterns.lib, 1, "lib?.tbd")
+         table.insert(defaults.runtime_external_deps_patterns.lib, 1, "lib?.tbd")
       end
 
       -- Homebrew
