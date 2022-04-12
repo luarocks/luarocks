@@ -480,6 +480,11 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.variables.CC = "env MACOSX_DEPLOYMENT_TARGET="..tostring(version).." gcc"
       defaults.variables.LD = "env MACOSX_DEPLOYMENT_TARGET="..tostring(version).." gcc"
       defaults.web_browser = "open"
+
+      local sdk_path = util.popen_read("xcrun --show-sdk-path 2>/dev/null")
+      if sdk_path then
+         table.insert(defaults.external_deps_dirs, sdk_path .. "/usr")
+      end
    end
 
    if platforms.linux then
