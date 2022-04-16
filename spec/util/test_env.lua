@@ -446,7 +446,7 @@ local function download_rocks(urls, save_path)
       else
          -- check if already downloaded
          if not test_env.exists(save_path .. "/" .. url) then
-            table.insert(to_download, luarocks_repo .. url)
+            table.insert(to_download, ((luarocks_repo .. url):gsub("org//", "org/")))
          end
       end
    end
@@ -972,7 +972,7 @@ local function prepare_mock_server_binary_rocks()
       "wsapi-1.6.1-1.src.rock",
       "rings-1.3.0-1.src.rock",
       "wsapi-xavante-1.6.1-1.src.rock",
-      "dkjson-2.5-2.src.rock",
+      "dkjson-${DKJSON}.src.rock",
       "restserver-0.1-1.src.rock",
       "restserver-xavante-0.2-1.src.rock",
    }
@@ -1019,9 +1019,8 @@ function test_env.main()
       table.insert(urls, "/luasocket-${LUASOCKET}.src.rock")
       table.insert(urls, "/luasocket-${LUASOCKET}.rockspec")
       table.insert(urls, "/md5-1.2-1.src.rock")
-      --table.insert(urls, "/lzlib-0.4.1.53-1.src.rock")
-      table.insert(urls, "/lua-zlib-1.2-0.src.rock")
-      table.insert(urls, "/lua-bz2-0.1.0-1.src.rock")
+      table.insert(urls, "/manifests/hisham/lua-zlib-1.2-0.src.rock")
+      table.insert(urls, "/manifests/hisham/lua-bz2-0.2.1.1-1.src.rock")
       rocks = {"luafilesystem", "luasocket", "md5", "lua-zlib", "lua-bz2"}
       if test_env.TEST_TARGET_OS ~= "windows" then
          if test_env.lua_version == "5.1" then
