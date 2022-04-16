@@ -665,11 +665,10 @@ local function lua_h_exists(d, luaver)
       if data:match("LUA_VERSION_NUM%s*" .. tostring(luanum)) then
          return d
       end
-
-      return nil, "Lua header mismatches configured version. You may need to install them or configure LUA_INCDIR.", "dependency"
+      return nil, "Lua header found at " .. d .. " does not match Lua version " .. luaver .. ". You may want to override this by configuring LUA_INCDIR.", "dependency", 2
    end
 
-   return nil, "Failed finding Lua header files. You may need to install them or configure LUA_INCDIR.", "dependency"
+   return nil, "Failed finding Lua header files. You may need to install them or configure LUA_INCDIR.", "dependency", 1
 end
 
 local function find_lua_incdir(prefix, luaver, luajitver)
@@ -684,14 +683,21 @@ local function find_lua_incdir(prefix, luaver, luajitver)
       prefix,
       luajitver and prefix .. "/include/luajit-" .. luajitver:match("^(%d+%.%d+)"),
    }
+   local errprio = 0
+   local mainerr
    for _, d in ipairs(incdirs) do
-      if lua_h_exists(d, luaver) then
+      local ok, err, _, prio = lua_h_exists(d, luaver)
+      if ok then
          return d
+      end
+      if prio > errprio then
+         mainerr = err
+         errprio = prio
       end
    end
 
    -- not found, will fallback to a default
-   return nil
+   return nil, mainerr
 end
 
 function deps.check_lua_incdir(vars)
@@ -702,10 +708,12 @@ function deps.check_lua_incdir(vars)
    end
 
    if vars.LUA_DIR then
-      vars.LUA_INCDIR = find_lua_incdir(vars.LUA_DIR, cfg.lua_version, ljv)
-      if vars.LUA_INCDIR then
+      local d, err = find_lua_incdir(vars.LUA_DIR, cfg.lua_version, ljv)
+      if d then
+         vars.LUA_INCDIR = d
          return true
       end
+      return nil, err
    end
 
    return nil, "Failed finding Lua header files. You may need to install them or configure LUA_INCDIR.", "dependency"
