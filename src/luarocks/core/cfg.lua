@@ -21,8 +21,6 @@ local vers = require("luarocks.core.vers")
 --------------------------------------------------------------------------------
 
 local program_version = "dev"
-local program_series = "3.0"
-local major_version = (program_version:match("([^.]%.[^.])")) or program_series
 
 local is_windows = package.config:sub(1,1) == "\\"
 
@@ -604,8 +602,6 @@ function cfg.init(detected, warning)
    end
 
    cfg.program_version = program_version
-   cfg.program_series = program_series
-   cfg.major_version = major_version
 
    if hardcoded.IS_BINARY then
       cfg.is_binary = true

@@ -17,8 +17,12 @@ make clean || exit 1
 version=$1
 shift
 
+#-------------------------------------------------------------------------------
 if ! [ "$version" = "dev" ]
 then
+
+# e.g. if $version is "2.3.0", $xyversion is "2.3"
+xyversion=${version%.*}
 
 ROCKSPEC="luarocks-$version-1.rockspec"
 
@@ -47,9 +51,7 @@ then
    sed -i 's/program_version = "[^"]*"/program_version = "'$version'"/' src/luarocks/core/cfg.lua
    sed -i 's/version: [0-9.]*/version: '$version'./' appveyor.yml
    sed -i 's/LUAROCKS_VER: [0-9.]*/LUAROCKS_VER: '$version'/' appveyor.yml
-   program_series=${version%.*}
-   sed -i 's/program_series = "[0-9.]*"/program_series = "'$program_series'"/' src/luarocks/core/cfg.lua
-   sed -i 's/vars.VERSION = "[0-9.]*"/vars.VERSION = "'$program_series'"/' install.bat
+   sed -i 's/vars.VERSION = "[0-9.]*"/vars.VERSION = "'$xyversion'"/' install.bat
    echo "==============================================================================="
    git diff
    echo "==============================================================================="
@@ -98,22 +100,14 @@ grep -q "LUAROCKS_VER: $version" appveyor.yml || {
    exit 1
 }
 
-# e.g. if $version is "2.3.0", $program_series is "2.3"
-program_series=${version%.*}
-
-grep -q "program_series = \"$program_series\"" src/luarocks/core/cfg.lua || {
-   echo
-   echo "program_series in src/luarocks/core/cfg.lua is incorrect. Please fix it."
-   exit 1
-}
-
-grep -q "vars.VERSION = \"$program_series\"" install.bat || {
+grep -q "vars.VERSION = \"$xyversion\"" install.bat || {
    echo
    echo "vars.VERSION in install.bat is incorrect. Please fix it."
    exit 1
 }
 
-fi
+fi # if ! [ "$version" = "dev" ]
+#-------------------------------------------------------------------------------
 
 out="luarocks-$version"
 rm -rf "$out"
