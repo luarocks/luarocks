@@ -742,22 +742,32 @@ function deps.check_lua_libdir(vars)
    local save_LUA_INCDIR = vars.LUA_INCDIR
    local ok = check_external_dependency("LUA", { library = libnames }, vars, "build", cache)
    vars.LUA_INCDIR = save_LUA_INCDIR
+   local err
    if ok then
       local filename = dir.path(vars.LUA_LIBDIR, vars.LUA_LIBDIR_FILE)
       local fd = io.open(filename, "r")
       if fd then
-         local txt = fd:read("*a")
-         fd:close()
-         if txt:match("Lua " .. cfg.lua_version, 1, true) then
-            vars.LUALIB = vars.LUA_LIBDIR_FILE
-            return true
-         else
-            return nil, "Lua library at " .. filename .. " does not match Lua version " .. cfg.lua_version .. ". You may want to override this by configuring LUA_INCDIR.", "dependency"
+         if not vars.LUA_LIBDIR_FILE:match((cfg.lua_version:gsub("%.", "%%.?"))) then
+            -- if filename isn't versioned, check file contents
+            local txt = fd:read("*a")
+            ok = txt:match("Lua " .. cfg.lua_version, 1, true)
+                 or txt:match("lua" .. (cfg.lua_version:gsub("%.", "")), 1, true)
+            if not ok then
+               err = "Lua library at " .. filename .. " does not match Lua version " .. cfg.lua_version .. ". You may want to override this by configuring LUA_INCDIR."
+            end
          end
+
+         fd:close()
       end
-      return true
    end
-   return nil, "Failed finding Lua library. You may need to configure LUA_LIBDIR.", "dependency"
+
+   if ok then
+      vars.LUALIB = vars.LUA_LIBDIR_FILE
+      return true
+   else
+      err = err or "Failed finding Lua library. You may need to configure LUA_LIBDIR."
+      return nil, err, "dependency"
+   end
 end
 
 function deps.get_deps_mode(args)
