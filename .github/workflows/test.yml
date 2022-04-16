@@ -43,7 +43,7 @@ jobs:
   TestMatrix:
     strategy:
       matrix:
-        lua-version: ["5.3", "luajit"]
+        lua-version: ["5.4", "luajit"]
         os: ["ubuntu-latest", "macos-latest"]
     runs-on: ${{ matrix.os }}
 
@@ -96,7 +96,7 @@ jobs:
 
     - uses: leafo/gh-actions-lua@v8.0.0
       with:
-        luaVersion: "5.3"
+        luaVersion: "5.4"
 
     - name: Smoke Test
       run: |

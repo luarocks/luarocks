@@ -10,8 +10,8 @@ local V = test_env.V
 test_env.unload_luarocks()
 
 local extra_rocks = {
-   "/cprint-0.1-2.src.rock",
-   "/cprint-0.1-2.rockspec",
+   "/cprint-${CPRINT}.src.rock",
+   "/cprint-${CPRINT}.rockspec",
    "/lpeg-${LPEG}.src.rock",
    "/luassert-1.7.0-1.src.rock",
    "/luasocket-${LUASOCKET}.src.rock",
@@ -248,8 +248,8 @@ describe("luarocks install #integration", function()
 
       it("binary rock of cprint", function()
          assert.is_true(run.luarocks_bool("build --pack-binary-rock cprint"))
-         assert.is_true(run.luarocks_bool("install cprint-0.1-2." .. test_env.platform .. ".rock"))
-         assert.is_true(os.remove("cprint-0.1-2." .. test_env.platform .. ".rock"))
+         assert.is_true(run.luarocks_bool("install cprint-${CPRINT}." .. test_env.platform .. ".rock"))
+         assert.is_true(os.remove("cprint-${CPRINT}." .. test_env.platform .. ".rock"))
       end)
 
       it("accepts --no-manifest flag", function()

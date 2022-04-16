@@ -12,7 +12,7 @@ local extra_rocks = {
    "/lua_cliargs-3.0-1.src.rock",
    "/luafilesystem-${LUAFILESYSTEM}.src.rock",
    "/luasystem-0.2.1-0.src.rock",
-   "/dkjson-2.5-2.src.rock",
+   "/dkjson-${DKJSON}.src.rock",
    "/say-1.3-1.rockspec",
    "/luassert-1.8.0-0.rockspec",
    "/lua-term-0.7-1.rockspec",

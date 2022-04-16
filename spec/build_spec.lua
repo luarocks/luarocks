@@ -22,7 +22,6 @@ local extra_rocks = {
    "/luafilesystem-${LUAFILESYSTEM}.src.rock",
    "/luasocket-${LUASOCKET}.src.rock",
    "/luasocket-${LUASOCKET}.rockspec",
-   "/stdlib-41.0.0-1.src.rock",
    "spec/fixtures/a_rock-1.0-1.src.rock",
    "/busted-2.0.0-1.rockspec",
    "/busted-2.0.rc13-0.rockspec",
@@ -139,11 +138,6 @@ describe("LuaRocks build #integration", function()
       it("luacov diff version", function()
          assert.is_true(run.luarocks_bool("build luacov ${LUACOV}"))
          assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/luacov/${LUACOV}/luacov-${LUACOV}.rockspec"))
-      end)
-
-      it("command stdlib", function()
-         assert.is_true(run.luarocks_bool("build stdlib"))
-         assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/stdlib/41.0.0-1/stdlib-41.0.0-1.rockspec"))
       end)
 
       it("fails if the current platform is not supported", function()
@@ -273,13 +267,14 @@ describe("LuaRocks build #integration", function()
       end)
 
       it("lmathx deps partial match", function()
-         assert.is_true(run.luarocks_bool("build lmathx"))
-
          if test_env.LUA_V == "5.1" or test_env.LUAJIT_V then
+            assert.is_true(run.luarocks_bool("build lmathx"))
             assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lmathx/20120430.51-1/lmathx-20120430.51-1.rockspec"))
          elseif test_env.LUA_V == "5.2" then
+            assert.is_true(run.luarocks_bool("build lmathx"))
             assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lmathx/20120430.52-1/lmathx-20120430.52-1.rockspec"))
          elseif test_env.LUA_V == "5.3" then
+            assert.is_true(run.luarocks_bool("build lmathx"))
             assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/lmathx/20150505-1/lmathx-20150505-1.rockspec"))
          end
       end)

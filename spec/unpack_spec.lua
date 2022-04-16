@@ -1,12 +1,13 @@
 local test_env = require("spec.util.test_env")
+local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 
 test_env.unload_luarocks()
 
 local extra_rocks = {
-   "/cprint-0.1-2.src.rock",
-   "/cprint-0.1-2.rockspec",
+   "/cprint-${CPRINT}.src.rock",
+   "/cprint-${CPRINT}.rockspec",
    "/luazip-1.2.4-1.rockspec"
 }
 
@@ -33,22 +34,22 @@ describe("luarocks unpack #integration", function()
    describe("more complex tests", function()
       it("download", function()
          assert.is_true(run.luarocks_bool("unpack cprint"))
-         test_env.remove_dir("cprint-0.1-2")
+         test_env.remove_dir("cprint-${CPRINT}")
       end)
 
       it("src", function()
          assert.is_true(run.luarocks_bool("download --source cprint"))
-         assert.is_true(run.luarocks_bool("unpack cprint-0.1-2.src.rock"))
-         os.remove("cprint-0.1-2.src.rock")
-         test_env.remove_dir("cprint-0.1-2")
+         assert.is_true(run.luarocks_bool("unpack cprint-${CPRINT}.src.rock"))
+         os.remove("cprint-${CPRINT}.src.rock")
+         test_env.remove_dir("cprint-${CPRINT}")
       end)
 
       it("src", function()
          assert.is_true(run.luarocks_bool("download --rockspec cprint"))
-         assert.is_true(run.luarocks_bool("unpack cprint-0.1-2.rockspec"))
-         os.remove("cprint-0.1-2.rockspec")
+         assert.is_true(run.luarocks_bool("unpack cprint-${CPRINT}.rockspec"))
+         os.remove("cprint-${CPRINT}.rockspec")
          os.remove("lua-cprint")
-         test_env.remove_dir("cprint-0.1-2")
+         test_env.remove_dir("cprint-${CPRINT}")
       end)
 
       -- #595 luarocks unpack of a git:// rockspec fails to copy the rockspec
@@ -62,9 +63,9 @@ describe("luarocks unpack #integration", function()
       it("binary", function()
          assert.is_true(run.luarocks_bool("build cprint"))
          assert.is_true(run.luarocks_bool("pack cprint"))
-         assert.is_true(run.luarocks_bool("unpack cprint-0.1-2." .. test_env.platform .. ".rock"))
-         test_env.remove_dir("cprint-0.1-2")
-         os.remove("cprint-0.1-2." .. test_env.platform .. ".rock")
+         assert.is_true(run.luarocks_bool("unpack cprint-${CPRINT}." .. test_env.platform .. ".rock"))
+         test_env.remove_dir("cprint-${CPRINT}")
+         os.remove("cprint-${CPRINT}." .. test_env.platform .. ".rock")
       end)
    end)
 end)
