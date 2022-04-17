@@ -1,4 +1,4 @@
-version: 3.0.0.{build}-test
+version: 3.9.0.{build}-test
 
 shallow_clone: true
 
@@ -6,7 +6,7 @@ matrix:
   fast_finish: true
 
 environment:
-  LUAROCKS_VER: 3.0.0
+  LUAROCKS_VER: 3.9.0
 
   matrix:
   # Lua 5.4 tests
