@@ -211,8 +211,8 @@ search_interpreter() {
 
 while [ -n "$1" ]
 do
-   value="$(echo "$1" | sed 's/[^=]*.\(.*\)/\1/')"
-   key="$(echo "$1" | sed 's/=.*//')"
+   key=${1%%=*}
+   value=${1#*=}
    if echo "$value" | grep "~" >/dev/null 2>/dev/null
    then
       echo
