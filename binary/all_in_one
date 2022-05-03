@@ -426,7 +426,7 @@ local function generate(main_program, dir, skip)
       cfg.variables.LUA_LIBDIR .. "/" .. cfg.variables.LUALIB:gsub("%.so.*$", ".a"),
       if_platform("unix", "-ldl"),
       if_platform("unix", "-lpthread"),
-      if_platform("windows", "-mwindows"),
+      if_platform("windows", "-mconsole -mwindows"),
       "-lm"
    }), " ")
    print(cmd)
