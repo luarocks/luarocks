@@ -481,7 +481,7 @@ local function main()
       print("----------------------------------------------------------------")
       local vers = manif.get_versions(queries.from_dep_string(name), "one")
       if not next(vers) then
-         local ok = os.execute("LUAROCKS_CONFIG='" .. CONFIG_FILE .. "' ./luarocks install '--tree=" .. LUA_MODULES .. "' " .. arg)
+         local ok = os.execute("LUAROCKS_CONFIG='" .. CONFIG_FILE .. "' ./luarocks install --no-project '--tree=" .. LUA_MODULES .. "' " .. arg)
          if ok ~= 0 and ok ~= true then
             error("Failed building dependency: " .. name)
          end
