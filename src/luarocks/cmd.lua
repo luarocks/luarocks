@@ -350,9 +350,9 @@ local function get_config_text(cfg)  -- luacheck: ignore 431
 
    local libdir_ok = deps.check_lua_libdir(cfg.variables)
    local incdir_ok = deps.check_lua_incdir(cfg.variables)
-   local bindir_ok = fs.exists(cfg.variables.LUA_BINDIR)
-   local luadir_ok = fs.exists(cfg.variables.LUA_DIR)
-   local lua_ok = fs.exists(cfg.variables.LUA)
+   local bindir_ok = cfg.variables.LUA_BINDIR and fs.exists(cfg.variables.LUA_BINDIR)
+   local luadir_ok = cfg.variables.LUA_DIR and fs.exists(cfg.variables.LUA_DIR)
+   local lua_ok = cfg.variables.LUA and fs.exists(cfg.variables.LUA)
 
    local buf = "Configuration:\n"
    buf = buf.."   Lua:\n"
