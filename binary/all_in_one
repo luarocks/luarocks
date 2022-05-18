@@ -456,6 +456,7 @@ local function main()
          CC = fs.current_dir() .. "/binary/static-gcc",
          LD = fs.current_dir() .. "/binary/static-gcc",
          LIB_EXTENSION = "a",
+         LUA_DIR = LUA_DIR,
          LIBFLAG = "-static",
          PWD = "pwd",
       },
