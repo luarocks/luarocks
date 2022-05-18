@@ -753,7 +753,7 @@ function deps.check_lua_libdir(vars)
             ok = txt:match("Lua " .. cfg.lua_version, 1, true)
                  or txt:match("lua" .. (cfg.lua_version:gsub("%.", "")), 1, true)
             if not ok then
-               err = "Lua library at " .. filename .. " does not match Lua version " .. cfg.lua_version .. ". You may want to override this by configuring LUA_INCDIR."
+               err = "Lua library at " .. filename .. " does not match Lua version " .. cfg.lua_version .. ". You may want to override this by configuring LUA_LIBDIR."
             end
          end
 
