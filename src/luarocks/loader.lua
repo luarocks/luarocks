@@ -194,11 +194,47 @@ end
 
 --- Return the pathname of the file that would be loaded for a module.
 -- @param module string: module name (eg. "socket.core")
--- @return filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so"),
--- the rock name and the rock version.
-function loader.which(module)
-   local rock_name, rock_version, file_name = select_module(module, path.which_i)
-   return file_name, rock_name, rock_version
+-- @param where string: places to look for the module. If `where` contains
+-- "l", it will search using the LuaRocks loader; if it contains "p",
+-- it will look in the filesystem using package.path and package.cpath.
+-- You can use both at the same time.
+-- @return If successful, it will return four values.
+-- * If found using the LuaRocks loader, it will return:
+--   * filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so"),
+--   * rock name
+--   * rock version
+--   * "l" to indicate the match comes from the loader.
+-- * If found scanning package.path and package.cpath, it will return:
+--   * filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so"),
+--   * "path" or "cpath"
+--   * nil
+--   * "p" to indicate the match comes from scanning package.path and cpath.
+-- If unsuccessful, nothing is returned.
+function loader.which(module, where)
+   where = where or "l"
+   if where:match("l") then
+      local rock_name, rock_version, file_name = select_module(module, path.which_i)
+      if rock_name then
+         local fd = io.open(file_name)
+         if fd then
+            fd:close()
+            return file_name, rock_name, rock_version, "l"
+         end
+      end
+   end
+   if where:match("p") then
+      local modpath = module:gsub("%.", "/")
+      for _, v in ipairs({"path", "cpath"}) do
+         for p in package[v]:gmatch("([^;]+)") do
+            local file_name = p:gsub("%?", modpath)  -- luacheck: ignore 421
+            local fd = io.open(file_name)
+            if fd then
+               fd:close()
+               return file_name, v, nil, "p"
+            end
+         end
+      end
+   end
 end
 
 --- Package loader for LuaRocks support.
