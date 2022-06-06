@@ -72,6 +72,31 @@ describe("luarocks.util #unit", function()
       runner.shutdown()
    end)
 
+   describe("util.variable_substitutions", function()
+      it("replaces variables", function()
+         local t = {
+            ["hello"] = "$(KIND) world",
+         }
+         util.variable_substitutions(t, {
+            ["KIND"] = "happy",
+         })
+         assert.are.same({
+            ["hello"] = "happy world",
+         }, t)
+      end)
+
+      it("missing variables are empty", function()
+         local t = {
+            ["hello"] = "$(KIND) world",
+         }
+         util.variable_substitutions(t, {
+         })
+         assert.are.same({
+            ["hello"] = " world",
+         }, t)
+      end)
+   end)
+
    describe("util.sortedpairs", function()
       local function collect(iter, state, var)
          local collected = {}
