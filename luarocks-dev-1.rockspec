@@ -13,7 +13,7 @@ description = {
       so that when one rock is requested all rocks it depends on are
       installed as well, and at run time, so that when a module is
       required, the correct version is loaded. LuaRocks supports both
-      local and remote repositories, and multiple local rocks trees. 
+      local and remote repositories, and multiple local rocks trees.
    ]],
    homepage = "http://www.luarocks.org",
    issues_url = "https://github.com/luarocks/luarocks/issues",
@@ -28,10 +28,10 @@ test = {
    type = "busted",
    platforms = {
       windows = {
-         flags = { "--exclude-tags=ssh,git,unix" }
+         flags = { "--exclude-tags=ssh,git,unix", "-Xhelper", "lua_dir=$(LUA_DIR)", "-Xhelper", "lua_interpreter=$(LUA)" }
       },
       unix = {
-         flags = { "--exclude-tags=ssh,git" }
+         flags = { "--exclude-tags=ssh,git", "-Xhelper", "lua_dir=$(LUA_DIR)", "-Xhelper", "lua_interpreter=$(LUA)" }
       }
    }
 }
