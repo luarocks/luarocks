@@ -654,15 +654,20 @@ local function create_paths(luaversion_full)
       testing_paths.lua_interpreter = test_env.LUA_INTERPRETER or "lua"
    end
 
-   local bindirs = {
-      testing_paths.luadir .. "/bin",
-      testing_paths.luadir,
-   }
-   for _, bindir in ipairs(bindirs) do
-      local lua = bindir .. "/" .. testing_paths.lua_interpreter
-      if test_env.exists(lua) then
-         testing_paths.lua_bindir = bindir
-         testing_paths.lua = lua
+   local locations
+   if testing_paths.lua_interpreter:match("[/\\]") then
+      locations = { testing_paths.lua_interpreter }
+   else
+      locations = {
+         testing_paths.luadir .. "/bin/" .. testing_paths.lua_interpreter,
+         testing_paths.luadir .. "/" .. testing_paths.lua_interpreter,
+      }
+   end
+
+   for _, location in ipairs(locations) do
+      if test_env.exists(location) then
+         testing_paths.lua_bindir = location:match("(.*)[/\\][^/\\]*$")
+         testing_paths.lua = location
          break
       end
    end
