@@ -40,13 +40,6 @@ function busted.run_tests(test, args)
       end
    end
 
-   if type(test.flags) == "table" then
-      -- insert any flags given in test.flags at the front of args
-      for i = 1, #test.flags do
-         table.insert(args, i, test.flags[i])
-      end
-   end
-
    local err
    ok, err = fs.execute(busted_exe, unpack(args))
    if ok then

@@ -25,13 +25,6 @@ function command.run_tests(test, args)
       test.script = "test.lua"
    end
 
-   if type(test.flags) == "table" then
-      -- insert any flags given in test.flags at the front of args
-      for i = 1, #test.flags do
-         table.insert(args, i, test.flags[i])
-      end
-   end
-
    local ok
 
    if test.script then
