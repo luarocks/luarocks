@@ -681,7 +681,7 @@ local function find_lua_incdir(prefix, luaver, luajitver)
       prefix .. "/include/lua" .. shortv,
       prefix .. "/include",
       prefix,
-      luajitver and prefix .. "/include/luajit-" .. luajitver:match("^(%d+%.%d+)"),
+      luajitver and (prefix .. "/include/luajit-" .. (luajitver:match("^(%d+%.%d+)") or "")),
    }
    local errprio = 0
    local mainerr
