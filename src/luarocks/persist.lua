@@ -188,6 +188,8 @@ end
 -- @return boolean or (nil, string): true if successful, or nil and a
 -- message in case of errors.
 function persist.save_from_table(filename, tbl, field_order)
+   local prefix = dir.dir_name(filename)
+   fs.make_dir(prefix)
    local out = io.open(filename, "w")
    if not out then
       return nil, "Cannot create file at "..filename
