@@ -331,10 +331,15 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.external_deps_dirs = { "c:/external/", "c:/mingw", "c:/windows/system32" }
       defaults.cmake_generator = "MinGW Makefiles"
       defaults.variables.MAKE = "mingw32-make"
-      defaults.variables.CC = "mingw32-gcc"
-      defaults.variables.RC = "windres"
-      defaults.variables.LD = "mingw32-gcc"
+      if target_cpu == "x86_64" then
+         defaults.variables.CC = "x86_64-w64-mingw32-gcc"
+         defaults.variables.LD = "x86_64-w64-mingw32-gcc"
+      else
+         defaults.variables.CC = "mingw32-gcc"
+         defaults.variables.LD = "mingw32-gcc"
+      end
       defaults.variables.AR = "ar"
+      defaults.variables.RC = "windres"
       defaults.variables.RANLIB = "ranlib"
       defaults.variables.CFLAGS = os.getenv("CFLAGS") or "-O2"
       defaults.variables.LDFLAGS = os.getenv("LDFLAGS")
