@@ -56,10 +56,17 @@ function test.run_test_suite(rockspec_arg, test_type, args, prepare)
    end
    assert(test_type)
 
-   if next(rockspec.test_dependencies) then
-      local ok, err, errcode = deps.fulfill_dependencies(rockspec, "test_dependencies", "all")
-      if err then
-         return nil, err, errcode
+   local all_deps = {
+      "dependencies",
+      "build_dependencies",
+      "test_dependencies",
+   }
+   for _, dep_kind in ipairs(all_deps) do
+      if next(rockspec[dep_kind]) then
+         local ok, err, errcode = deps.fulfill_dependencies(rockspec, dep_kind, "all")
+         if err then
+            return nil, err, errcode
+         end
       end
    end
 
