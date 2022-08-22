@@ -215,11 +215,11 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       connection_timeout = 30,  -- 0 = no timeout
 
       variables = {
-         MAKE = "make",
-         CC = "cc",
-         LD = "ld",
-         AR = "ar",
-         RANLIB = "ranlib",
+         MAKE = os.getenv("MAKE") or "make",
+         CC = os.getenv("CC") or "cc",
+         LD = os.getenv("CC") or "ld",
+         AR = os.getenv("AR") or "ar",
+         RANLIB = os.getenv("RANLIB") or "ranlib",
 
          CVS = "cvs",
          GIT = "git",
@@ -287,12 +287,12 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
 
       defaults.makefile = "Makefile.win"
       defaults.variables.PWD = "echo %cd%"
-      defaults.variables.MAKE = "nmake"
-      defaults.variables.CC = "cl"
-      defaults.variables.RC = "rc"
-      defaults.variables.LD = "link"
-      defaults.variables.MT = "mt"
-      defaults.variables.AR = "lib"
+      defaults.variables.MAKE = os.getenv("MAKE") or "nmake"
+      defaults.variables.CC = os.getenv("CC") or "cl"
+      defaults.variables.RC = os.getenv("WINDRES") or "rc"
+      defaults.variables.LD = os.getenv("LINK") or "link"
+      defaults.variables.MT = os.getenv("MT") or "mt"
+      defaults.variables.AR = os.getenv("AR") or "lib"
       defaults.variables.LUALIB = "lua"..lua_version..".lib"
       defaults.variables.CFLAGS = os.getenv("CFLAGS") or "/nologo /MD /O2"
       defaults.variables.LDFLAGS = os.getenv("LDFLAGS")
@@ -330,17 +330,17 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.static_lib_extension = "a"
       defaults.external_deps_dirs = { "c:/external/", "c:/mingw", "c:/windows/system32" }
       defaults.cmake_generator = "MinGW Makefiles"
-      defaults.variables.MAKE = "mingw32-make"
+      defaults.variables.MAKE = os.getenv("MAKE") or "mingw32-make"
       if target_cpu == "x86_64" then
-         defaults.variables.CC = "x86_64-w64-mingw32-gcc"
-         defaults.variables.LD = "x86_64-w64-mingw32-gcc"
+         defaults.variables.CC = os.getenv("CC") or "x86_64-w64-mingw32-gcc"
+         defaults.variables.LD = os.getenv("CC") or "x86_64-w64-mingw32-gcc"
       else
-         defaults.variables.CC = "mingw32-gcc"
-         defaults.variables.LD = "mingw32-gcc"
+         defaults.variables.CC = os.getenv("CC") or "mingw32-gcc"
+         defaults.variables.LD = os.getenv("CC") or "mingw32-gcc"
       end
-      defaults.variables.AR = "ar"
-      defaults.variables.RC = "windres"
-      defaults.variables.RANLIB = "ranlib"
+      defaults.variables.AR = os.getenv("AR") or "ar"
+      defaults.variables.RC = os.getenv("WINDRES") or "windres"
+      defaults.variables.RANLIB = os.getenv("RANLIB") or "ranlib"
       defaults.variables.CFLAGS = os.getenv("CFLAGS") or "-O2"
       defaults.variables.LDFLAGS = os.getenv("LDFLAGS")
       defaults.variables.LIBFLAG = "-shared"
@@ -377,8 +377,8 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.variables.LDFLAGS = os.getenv("LDFLAGS")
 
       defaults.cmake_generator = "Unix Makefiles"
-      defaults.variables.CC = "gcc"
-      defaults.variables.LD = "gcc"
+      defaults.variables.CC = os.getenv("CC") or "gcc"
+      defaults.variables.LD = os.getenv("CC") or "gcc"
       defaults.gcc_rpath = true
       defaults.variables.LIBFLAG = "-shared"
       defaults.variables.TEST = "test"
@@ -404,8 +404,8 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.lib_extension = "so" -- can be overridden in the config file for mingw builds
       defaults.arch = "cygwin-"..target_cpu
       defaults.cmake_generator = "Unix Makefiles"
-      defaults.variables.CC = "echo -llua | xargs gcc"
-      defaults.variables.LD = "echo -llua | xargs gcc"
+      defaults.variables.CC = "echo -llua | xargs " .. (os.getenv("CC") or "gcc")
+      defaults.variables.LD = "echo -llua | xargs " .. (os.getenv("CC") or "gcc")
       defaults.variables.LIBFLAG = "-shared"
       defaults.link_lua_explicitly = true
    end
@@ -436,13 +436,13 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          defaults.makefile = "Makefile"
          defaults.cmake_generator = "MSYS Makefiles"
          defaults.local_cache = home.."/.cache/luarocks"
-         defaults.variables.MAKE = "make"
-         defaults.variables.CC = "gcc"
-         defaults.variables.RC = "windres"
-         defaults.variables.LD = "gcc"
-         defaults.variables.MT = nil
-         defaults.variables.AR = "ar"
-         defaults.variables.RANLIB = "ranlib"
+         defaults.variables.MAKE = os.getenv("MAKE") or "make"
+         defaults.variables.CC = os.getenv("CC") or "gcc"
+         defaults.variables.RC = os.getenv("WINDRES") or "windres"
+         defaults.variables.LD = os.getenv("CC") or "gcc"
+         defaults.variables.MT = os.getenv("MT") or nil
+         defaults.variables.AR = os.getenv("AR") or "ar"
+         defaults.variables.RANLIB = os.getenv("RANLIB") or "ranlib"
          defaults.variables.LUALIB = "liblua"..lua_version..".dll.a"
 
          defaults.variables.CFLAGS = os.getenv("CFLAGS") or "-O2 -fPIC"
@@ -457,12 +457,12 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
    if platforms.bsd then
       defaults.variables.MAKE = "gmake"
       defaults.gcc_rpath = false
-      defaults.variables.CC = "cc"
-      defaults.variables.LD = defaults.variables.CC
+      defaults.variables.CC = os.getenv("CC") or "cc"
+      defaults.variables.LD = os.getenv("CC") or defaults.variables.CC
    end
 
    if platforms.macosx then
-      defaults.variables.MAKE = "make"
+      defaults.variables.MAKE = os.getenv("MAKE") or "make"
       defaults.external_lib_extension = "dylib"
       defaults.arch = "macosx-"..target_cpu
       defaults.variables.LIBFLAG = "-bundle -undefined dynamic_lookup -all_load"
