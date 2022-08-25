@@ -33,7 +33,7 @@ jobs:
     steps:
     - uses: actions/checkout@master
 
-    - uses: leafo/gh-actions-lua@v8.0.0
+    - uses: leafo/gh-actions-lua@master
       with:
         luaVersion: ${{ matrix.lua-version }}
 
