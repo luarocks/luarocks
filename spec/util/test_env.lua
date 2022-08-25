@@ -1019,14 +1019,19 @@ function test_env.main()
    local rocks = {} -- names of rocks, required for building environment
    local urls = {}  -- names of rock and rockspec files to be downloaded
 
+   local env_vars = {
+      LUAROCKS_CONFIG = test_env.testing_paths.testrun_dir .. "/testing_config.lua"
+   }
+
    if test_env.TYPE_TEST_ENV == "full" then
       table.insert(urls, "/luafilesystem-${LUAFILESYSTEM}.src.rock")
       table.insert(urls, "/luasocket-${LUASOCKET}.src.rock")
       table.insert(urls, "/luasocket-${LUASOCKET}.rockspec")
+      table.insert(urls, "/luasec-${LUASEC}.src.rock")
       table.insert(urls, "/md5-1.2-1.src.rock")
       table.insert(urls, "/manifests/hisham/lua-zlib-1.2-0.src.rock")
       table.insert(urls, "/manifests/hisham/lua-bz2-0.2.1.1-1.src.rock")
-      rocks = {"luafilesystem", "luasocket", "md5", "lua-zlib", "lua-bz2"}
+      rocks = {"luafilesystem", "luasocket", "luasec", "md5", "lua-zlib", "lua-bz2"}
       if test_env.TEST_TARGET_OS ~= "windows" then
          if test_env.lua_version == "5.1" then
             table.insert(urls, "/bit32-${BIT32}.src.rock")
@@ -1035,6 +1040,8 @@ function test_env.main()
          table.insert(urls, "/luaposix-${LUAPOSIX}.src.rock")
          table.insert(rocks, "luaposix")
       end
+      assert(test_env.run.luarocks_nocov("config variables.OPENSSL_INCDIR " .. Q(test_env.OPENSSL_INCDIR), env_vars))
+      assert(test_env.run.luarocks_nocov("config variables.OPENSSL_LIBDIR " .. Q(test_env.OPENSSL_LIBDIR), env_vars))
    end
 
    -- luacov is needed for both minimal or full environment
@@ -1048,10 +1055,6 @@ function test_env.main()
    -- Download rocks needed for LuaRocks testing environment
    lfs.mkdir(testing_paths.testing_server)
    download_rocks(urls, testing_paths.testing_server)
-
-   local env_vars = {
-      LUAROCKS_CONFIG = test_env.testing_paths.testrun_dir .. "/testing_config.lua"
-   }
 
    build_environment(rocks, env_vars)
 
