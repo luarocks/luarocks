@@ -920,7 +920,7 @@ local function mock_api_call(path)
    if test_env.TEST_TARGET_OS == "windows" then
       return test_env.execute(Q(test_env.testing_paths.win_tools .. "/wget") .. " --quiet --timeout=5 --tries=1 localhost:8080" .. path)
    else
-      return test_env.execute("curl localhost:8080" .. path)
+      return test_env.execute("curl -s localhost:8080" .. path)
    end
 end
 
