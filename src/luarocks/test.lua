@@ -62,7 +62,7 @@ function test.run_test_suite(rockspec_arg, test_type, args, prepare)
       "test_dependencies",
    }
    for _, dep_kind in ipairs(all_deps) do
-      if next(rockspec[dep_kind]) then
+      if rockspec[dep_kind] and next(rockspec[dep_kind]) then
          local ok, err, errcode = deps.fulfill_dependencies(rockspec, dep_kind, "all")
          if err then
             return nil, err, errcode
