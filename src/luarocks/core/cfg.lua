@@ -531,6 +531,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
    if platforms.serenity then
       defaults.arch = "serenity"..target_cpu
       defaults.variables.UNZIP = "unzip"
+      defaults.variables.MKTEMP = "mktemp -p /"
       defaults.web_browser = "br"
    end
 
