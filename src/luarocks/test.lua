@@ -77,7 +77,11 @@ function test.run_test_suite(rockspec_arg, test_type, args, prepare)
    end
 
    if prepare then
-      return test_mod.run_tests(rockspec_arg, {"--version"})
+      if test_type == "busted" then
+         return test_mod.run_tests(rockspec_arg, {"--version"})
+      else
+         return true
+      end
    else
       local flags = rockspec.test and rockspec.test.flags
       if type(flags) == "table" then
