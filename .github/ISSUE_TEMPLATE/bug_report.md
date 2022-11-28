@@ -1,7 +1,6 @@
 ---
 name: Bugs
 about: Bugs and unintented behaviour
-labels: 'bug'
 
 ---
 
