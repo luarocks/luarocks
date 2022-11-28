@@ -180,12 +180,20 @@ function builtin.run(rockspec, no_install)
          add_flags(extras, "-I%s", incdirs)
          return execute(variables.CC.." "..variables.CFLAGS, "-c", "-o", object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
       end
-      compile_library = function(library, objects, libraries, libdirs)
+      compile_library = function(library, objects, libraries, libdirs, name)
          local extras = { unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
          add_flags(extras, "-l%s", libraries)
          extras[#extras+1] = dir.path(variables.LUA_LIBDIR, variables.LUALIB)
-         extras[#extras+1] = "-l" .. (variables.MSVCRT or "m")
+
+         if variables.CC == "clang" or variables.CC == "clang-cl" then
+            local exported_name = name:gsub("%.", "_")
+            exported_name = exported_name:match('^[^%-]+%-(.+)$') or exported_name
+            extras[#extras+1] = string.format("-Wl,-export:luaopen_%s", exported_name)
+         else
+            extras[#extras+1] = "-l" .. (variables.MSVCRT or "m")
+         end
+
          local ok = execute(variables.LD.." "..variables.LDFLAGS.." "..variables.LIBFLAG, "-o", library, unpack(extras))
          return ok
       end
