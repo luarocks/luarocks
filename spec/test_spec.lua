@@ -98,6 +98,15 @@ describe("luarocks test #integration", function()
 
       end)
    end)
+
+   describe("command backend", function()
+      describe("prepare", function()
+         it("works with non-busted rocks", function()
+            write_file("test.lua", "", finally)
+            assert.is_true(run.luarocks_bool("test --prepare " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec"))
+         end)
+      end)
+   end)
 end)
 
 test_env.unload_luarocks()
