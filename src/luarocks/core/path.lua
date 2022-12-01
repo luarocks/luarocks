@@ -44,24 +44,29 @@ end
 function path.path_to_module(file)
    assert(type(file) == "string")
 
-   local name = file:match("(.*)%."..cfg.lua_extension.."$")
-   if name then
-      name = name:gsub("/", ".")
-   else
-      name = file:match("(.*)%."..cfg.lib_extension.."$")
-      if name then
-         name = name:gsub("/", ".")
-      --[[ TODO disable static libs until we fix the conflict in the manifest, which will take extending the manifest format.
-      else
-         name = file:match("(.*)%."..cfg.static_lib_extension.."$")
-         if name then
-            name = name:gsub("/", ".")
-         end
-      ]]
+   local exts = {}
+   local paths = package.path .. ";" .. package.cpath
+   for entry in paths:gmatch("[^;]+") do
+      local ext = entry:match("%.([a-z]+)$")
+      if ext then
+         exts[ext] = true
       end
    end
+
+   local name
+   for ext, _ in pairs(exts) do
+      name = file:match("(.*)%." .. ext .. "$")
+      if name then
+         name = name:gsub("[/\\]", ".")
+         break
+      end
+   end
+
    if not name then name = file end
+
+   -- remove any beginning and trailing slashes-converted-to-dots
    name = name:gsub("^%.+", ""):gsub("%.+$", "")
+
    return name
 end
 
