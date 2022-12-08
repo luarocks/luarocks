@@ -1,3 +1,23 @@
+## What's new in LuaRocks 3.9.2
+
+* Configuration now honors typical compiler environment variables
+  for all build backends:
+  * `MAKE`, `CC`, `AR`, `RANLIB` on Unix
+  * `MAKE`, `CC`, `AR`, `WINDRES`, `LINK`, `MT` on Windows
+* `builtin` build mode now supports Clang on Windows
+* `luarocks test` now checks/installs all dependency kinds
+  (build, runtime, test), so you don't need to run
+  `luarocks make --only-deps` in CI environments to get all
+  dependencies needed to run a test
+* MinGW: default to x86_64 compiler on 64-bit platforms
+* Fixed crash if `variables.LUA*` are unset in configuration
+* Fix `luarocks test --prepare` behavior for non-Busted tests
+* Internal API fixes
+  * `path.path_to_module`: accept custom file extensions in
+    package path variables
+  * `persist.save_from_table`: ensure directory exists when
+    saving a file
+
 ## What's new in LuaRocks 3.9.1
 
 * Fixed error message when Lua library is not found
