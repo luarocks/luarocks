@@ -20,7 +20,7 @@ local vers = require("luarocks.core.vers")
 
 --------------------------------------------------------------------------------
 
-local program_version = "dev"
+local program_version = "3.9.2"
 
 local is_windows = package.config:sub(1,1) == "\\"
 
