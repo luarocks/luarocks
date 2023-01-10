@@ -1,0 +1,89 @@
+.Dd $Mdocdate: January 10 2023 $
+.Dt LUAROCKS-INSTALL 1
+.Os
+.Sh NAME
+.Nm luarocks-install
+.Nd install a rock
+.Sh SYNOPSIS
+.Nm luarocks install
+.Bk -words
+.Op Fl h
+.Op Fl -keep
+.Op Fl -force
+.Op Fl -force-fast
+.Op Fl -only-deps
+.Op Fl -no-doc
+.Op Fl -verify
+.Op Fl -check-lua-versions
+.Op Fl -deps-mode Ar mode
+.Op Fl -no-manifest
+.Op Fl -pin
+.Ar rock
+.Op version
+.Ek
+
+.Sh DESCRIPTION
+.Nm luarocks install
+installs the rock named
+.Ar rock ,
+and if specified, version number
+.Ar version .
+.Pp
+The options are as follows:
+.Bl -tag -width keyword
+.It Fl h
+Show a help message and exit.
+.It Fl -keep
+Do not remove previously installed versions of the rock after building a new one. This behavior can be made permanent by setting keep_other_versions=true in the configuration file.
+.It Fl -force
+If --keep is not specified, force removal of previously installed versions even if it would break dependencies.
+.It Fl -force-fast
+Similar to --force, but performs a forced removal without reporting dependency issues.
+.It Fl -only-deps , Fl -deps-only
+Install only the dependencies of the rock.
+.It Fl -no-doc
+Install the rock without its documentation.
+.It Fl -verify
+Verify signature of the rockspec or src.rock being built. If the rockspec or src.rock is being downloaded,
+.Sy luarocks
+will attempt to download the signature as well. Otherwise, the signature file should be already available locally in the same directory. You need the signer’s public key in your local keyring for this option to work properly.
+.It Fl -check-lua-versions
+If the rock can't be found, check repository and report if it is available for another Lua version.
+.It Fl -deps-mode Ar mode
+Specify how to handle dependencies. Four modes are supported:
+.Pp
+.Bl -bullet
+.It
+.Sy all
+- use all trees from the rocks_trees list for finding dependencies
+.It
+.Sy one
+- use only the current tree (possibly set with --tree)
+.It
+.Sy order
+- use trees based on order (use the current tree and all trees below it on the rocks_trees list)
+.It
+.Sy none
+- ignore dependencies altogether.
+.El
+.Pp
+The default mode may be set with the deps_mode entry in the configuration file. The current default is
+.Ar one .
+Run
+.Sy luarocks
+with no arguments to see your
+list of rocks trees.
+.It Fl -no-manifest
+Skip creating/updating the manifest.
+.It Fl -pin
+If the installed rock is a Lua module, create a luarocks.lock file listing the exact versions of each dependency found for this rock (recursively), and store it in the rock's directory. Ignores any existing luarocks.lock file in the rock's sources.
+.El
+
+.Sh EXAMPLES
+.Pp
+Install version 1.7.0-1 of the
+.Sq luafilesystem
+rock into the system tree:
+.Pp
+.Dl # luarocks install luafilesystem 1.7.0-1
+.Pp
