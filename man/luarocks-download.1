@@ -1,0 +1,52 @@
+.Dd $Mdocdate: January 11 2023 $
+.Dt LUAROCKS-DOWNLOAD 1
+.Os
+.Sh NAME
+.Nm luarocks-download
+.Nd download a rock
+
+.Sh SYNOPSIS
+.Nm luarocks download
+.Bk -words
+.Op Fl h
+.Op Fl -source | Fl -rockspec | Fl arch Ar arch
+.Op Fl -all
+.Op Fl -check-lua-versions
+.Ar rock
+.Op version
+.Ek
+
+.Sh DESCRIPTION
+.Nm luarocks download
+downloads the rock named
+.Ar rock ,
+and if specified, version number
+.Ar version .
+The downloaded rock is placed in the current working directory.
+.Pp
+The options are as follows:
+.Bl -tag -width keyword
+.It Fl h
+Show a help message and exit.
+.It Fl -all
+If there are multiple matches, download all files.
+.It Fl -source
+Download the .src.rock file if it's available.
+.It Fl -rockspec
+Download the .rockspec file if it's available.
+.It Fl -arch Ar arch
+Download the rock for the
+.Ar arch
+architecture.
+.It Fl -check-lua-versions
+If the rock can't be found, check the repository and report if it's available for another Lua version.
+.El
+
+.Sh EXAMPLES
+.Pp
+Download the rockspec for the
+.Sq lua-cjson
+rock:
+.Pp
+.Dl # luarocks download --rockspec lua-cjson
+.Pp
