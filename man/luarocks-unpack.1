@@ -1,0 +1,49 @@
+.Dd $Mdocdate: January 11 2023 $
+.Dt LUAROCKS-UNPACK 1
+.Os
+.Sh NAME
+.Nm luarocks-unpack
+.Nd unpack a rock
+
+.Sh SYNOPSIS
+.Nm luarocks unpack
+.Bk -words
+.Op Fl h
+.Op Fl -check-lua-versions
+.Op Fl -force
+.Ar rock
+.Op version
+.Ek
+
+.Sh DESCRIPTION
+.Nm luarocks pack
+unpacks the contents of a rock into a newly created directory.
+The
+.Ar rock
+argument must be an already-packed rock, or the name of a rock in a rock server. In the latter case, the
+.Ar version
+argument can be used to specify the version of the rock to unpack.
+.Pp
+The options are as follows:
+.Bl -tag -width keyword
+.It Fl h
+Show a help message and exit.
+.It Fl -check-lua-versions
+If the rock can't be found, check the repository and report back if it is available for another Lua version.
+.It Fl -force
+Don't produce an error if the output directory already exists; unpack the rock anyways.
+.El
+
+.Sh EXAMPLES
+.Pp
+Unpack a local rock:
+.Pp
+.Dl $ luarocks pack mysuperawesomerock-0.1.0-1.rock
+.Pp
+Unpack version 1.1.2-1 of the xml rock:
+.Pp
+.Dl $ luarocks unpack xml 1.1.2-1
+.Pp
+
+.Sh SEE ALSO
+.Xr luarocks-pack 1
