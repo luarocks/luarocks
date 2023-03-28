@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         lua-version: ["5.4", "luajit"]
-        os: ["ubuntu-latest", "macos-latest"]
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -46,14 +46,30 @@ jobs:
         luarocks install busted-htest
 
     - name: Unit Test
+      if: runner.os != 'Windows'
       run: |
         eval $(luarocks path)
         busted -o htest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci"
         busted -o htest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci,env=full"
 
+    - name: Unit Test
+      if: runner.os == 'Windows'
+      run: |
+        luarocks path > "%temp%\_lrp.bat" && call "%temp%\_lrp.bat" && del "%temp%\_lrp.bat"
+        busted -o htest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci"
+        busted -o htest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci,env=full"
+
     - name: Integration Test
+      if: runner.os != 'Windows'
       run: |
         eval $(luarocks path)
+        busted -o htest --exclude-tags=ssh,gpg,git,unit --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci"
+        busted -o htest --exclude-tags=ssh,gpg,git,unit --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci,env=full"
+
+    - name: Integration Test
+      if: runner.os == 'Windows'
+      run: |
+        luarocks path > "%temp%\_lrp.bat" && call "%temp%\_lrp.bat" && del "%temp%\_lrp.bat"
         busted -o htest --exclude-tags=ssh,gpg,git,unit --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci"
         busted -o htest --exclude-tags=ssh,gpg,git,unit --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci,env=full"
 
