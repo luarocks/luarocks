@@ -126,7 +126,8 @@ function fs_lua.is_tool_available(tool_cmd, tool_name)
 
       -- if it looks like the tool has a pathname, try that first
       if tool_cmd_no_args:match("[/\\]") then
-         local fd = io.open(tool_cmd_no_args, "r")
+         local tool_cmd_no_args_normalized = dir.path(tool_cmd_no_args)
+         local fd = io.open(tool_cmd_no_args_normalized, "r")
          if fd then
             fd:close()
             ok = true
