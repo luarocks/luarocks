@@ -1,0 +1,94 @@
+.Dd $Mshowdate: March 29 2023 $
+.Dt LUAROCKS-SHOW 1
+.Os
+.Sh NAME
+.Nm luarocks-show
+.Nd show information about an installed rock
+
+.Sh SYNOPSIS
+.Nm luarocks show
+.Bk -words
+.Op Fl h
+.Op Fl -build-deps
+.Op Fl -deps
+.Op Fl -home
+.Op Fl -issues
+.Op Fl -labels
+.Op Fl -modules
+.Op Fl -mversion
+.Op Fl -porcelain
+.Op Fl -rockspec
+.Op Fl -rock-dir
+.Op Fl -rock-license
+.Op Fl -rock-namespace
+.Op Fl -rock-tree
+.Op Fl -test-deps
+.Ar rock
+.Op version
+.Ek
+
+.Sh DESCRIPTION
+.Nm luarocks show
+shows information about the (installed) rock named
+.Ar rock .
+If a version argument is given,
+.Nm luarocks show
+shows information for that specific version of
+.Ar rock .
+.Pp
+If
+.Nm luarocks show
+is not passed any flags, it shows all information about the module.
+If flags
+.Em are
+passed,
+.Nm luarocks show
+returns only the desired information.
+.Pp
+If you are looking for a way to view a rock's documentation, see the
+.Xr luarocks-doc 1
+command instead.
+.Pp
+The options are as follows:
+.Bl -tag -width keyword
+.It Fl h
+Show a help message and exit.
+.It Fl -build-deps
+Show packages the rock depends on for its building/compilation.
+.It Fl -deps
+Show packages the rock depends on.
+.It Fl -home
+Show the rock's home page.
+.It Fl -issues
+Show the URL for the rock's issue tracker.
+.It Fl -labels
+List the rock's labels.
+.It Fl -modules
+Show all modules that the package provides, as used by require().
+.It Fl -mversion
+Show the rock's version.
+.It Fl -porcelain
+Produce machine-friendly output.
+.It Fl -rockspec
+Show the path of the rock's rockspec file.
+.It Fl -rock-dir
+Show the data directory of the rock.
+.It Fl -rock-license
+Show the name of the license the rock is licensed under.
+.It Fl -rock-namespace
+Show the rock namespace.
+.It Fl -rock-tree
+Show the local tree where the rock is installed.
+.It Fl -test-deps
+Show packages the rock depends on for its tests.
+.El
+
+.Sh EXAMPLES
+.Pp
+Show information about version 1.1.2-1 of the xml package (as long as it's installed):
+.Pp
+.Dl $ luarocks show xml 1.1.2-1
+.Pp
+
+.Sh SEE ALSO
+.Xr luarocks-doc 1
