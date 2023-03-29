@@ -1,0 +1,61 @@
+.Dd $Mdocdate: March 29 2023 $
+.Dt LUAROCKS-DOC 1
+.Os
+.Sh NAME
+.Nm luarocks-doc
+.Nd show documentation for a rock
+
+.Sh SYNOPSIS
+.Nm luarocks doc
+.Bk -words
+.Op Fl h
+.Op Fl -home
+.Op Fl -list
+.Op Fl -porcelain
+.Ar rock
+.Op version
+.Ek
+
+.Sh DESCRIPTION
+.Nm luarocks doc
+shows the documentation for the installed rock named
+.Ar rock .
+If a version argument is given,
+.Nm luarocks doc
+uses the documentation for that specific version of
+.Ar rock .
+.Pp
+If
+.Nm luarocks doc
+is not passed any flags, it attempts to load the documentation using a series of heuristics.
+If flags
+.Em are
+passed,
+.Nm luarocks doc
+returns only the desired information.
+.Pp
+If you are looking for a way to get information on a rock, see the
+.Xr luarocks-show 1
+command instead.
+.Pp
+The options are as follows:
+.Bl -tag -width keyword
+.It Fl h
+Show a help message and exit.
+.It Fl -home
+Open the rock's home page.
+.It Fl -list
+List the files only; don't show their contents.
+.It Fl -porcelain
+Produce machine-friendly output.
+.El
+
+.Sh EXAMPLES
+.Pp
+View the documentation of version 1.1.2-1 of the xml package (as long as it's installed):
+.Pp
+.Dl $ luarocks doc xml 1.1.2-1
+.Pp
+
+.Sh SEE ALSO
+.Xr luarocks-show 1
