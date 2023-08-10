@@ -57,7 +57,7 @@ end
 -- plus an error message.
 function tools.copy(src, dest, perm)
    assert(src and dest)
-   if fs.execute(vars.CP.." -PR "..src..dest) then
+   if fs.execute(vars.CP.." -PR ", src, dest) then
       if perm then
          if fs.is_dir(dest) then
             dest = dir.path(dest, dir.base_name(src))
