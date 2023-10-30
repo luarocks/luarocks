@@ -63,6 +63,7 @@ function dir.normalize(name)
    if pathname:match("^.:") then
       drive, pathname = pathname:match("^(.:)(.*)$")
    end
+   pathname = pathname .. "/"
    for piece in pathname:gmatch("(.-)/") do
       if piece == ".." then
          local prev = pieces[#pieces]
@@ -75,11 +76,13 @@ function dir.normalize(name)
          table.insert(pieces, piece)
       end
    end
-   local basename = pathname:match("[^/]+$")
-   if basename then
-      table.insert(pieces, basename)
+   if #pieces == 0 then
+      pathname = drive .. "."
+   elseif #pieces == 1 and pieces[1] == "" then
+      pathname = drive .. "/"
+   else
+      pathname = drive .. table.concat(pieces, "/")
    end
-   pathname = drive .. table.concat(pieces, "/")
    if protocol ~= "file" then pathname = protocol .."://"..pathname end
    return pathname
 end
