@@ -641,36 +641,53 @@ local function reset_environment(testing_paths, md5sums)
    end
 end
 
+local function found_interpreter(testing_paths, luadir, lua_bindir)
+   local location = lua_bindir .. "/" .. testing_paths.lua_interpreter
+   if test_env.exists(location) then
+      testing_paths.lua_bindir = lua_bindir
+      testing_paths.luadir = luadir
+      testing_paths.lua = location
+      return true
+   end
+end
+
 local function create_paths(luaversion_full)
 
    local testing_paths = {}
+   local try_dirs
+
    if test_env.TEST_TARGET_OS == "windows" then
-      testing_paths.luadir = (test_env.LUA_DIR or os.getenv("ProgramFiles(x86)").."/LuaRocks")
+      try_dirs = { os.getenv("ProgramFiles(x86)").."/LuaRocks" }
       testing_paths.luarocks_tmp = os.getenv("TEMP")
-      testing_paths.lua_interpreter = test_env.LUA_INTERPRETER or "lua.exe"
+      testing_paths.lua_interpreter = "lua.exe"
    else
-      testing_paths.luadir = (test_env.LUA_DIR or "/usr/local")
+      try_dirs = { "/usr/local", "/usr" }
       testing_paths.luarocks_tmp = "/tmp/luarocks_testing"
-      testing_paths.lua_interpreter = test_env.LUA_INTERPRETER or "lua"
+      testing_paths.lua_interpreter = "lua"
    end
 
-   local locations
-   if testing_paths.lua_interpreter:match("[/\\]") then
-      locations = { testing_paths.lua_interpreter }
-   else
-      locations = {
-         testing_paths.luadir .. "/bin/" .. testing_paths.lua_interpreter,
-         testing_paths.luadir .. "/" .. testing_paths.lua_interpreter,
-      }
+   if test_env.LUA_DIR then
+      table.insert(try_dirs, 1, test_env.LUA_DIR)
    end
 
-   for _, location in ipairs(locations) do
-      if test_env.exists(location) then
-         testing_paths.lua_bindir = location:match("(.*)[/\\][^/\\]*$")
-         testing_paths.lua = location
+   if test_env.LUA_INTERPRETER then
+      testing_paths.lua_interpreter = test_env.LUA_INTERPRETER
+   end
+
+   local bindir, interp = testing_paths.lua_interpreter:match("^(.-)[/\\]([^/\\]*)$")
+   if bindir and interp then
+      testing_paths.lua_interpreter = interp
+      try_dirs = { bindir }
+   end
+
+   for _, try_dir in ipairs(try_dirs) do
+      if found_interpreter(testing_paths, try_dir, try_dir)
+      or found_interpreter(testing_paths, try_dir, try_dir .. "/bin")
+      then
          break
       end
    end
+
    assert(testing_paths.lua, "Lua interpreter not found! Run `busted -Xhelper help` for options")
 
    local base_dir = lfs.currentdir()
