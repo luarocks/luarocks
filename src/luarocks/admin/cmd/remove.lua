@@ -37,9 +37,6 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    if not local_cache then
       return nil, protocol
    end
-   if protocol ~= "rsync" then
-      return nil, "This command requires 'rsync', check your configuration."
-   end
 
    local ok, err = fs.change_dir(at)
    if not ok then return nil, err end
@@ -67,6 +64,17 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    writer.make_manifest(local_cache, "one", true)
    util.printout("Updating index.html...")
    index.make_index(local_cache)
+
+   if protocol == "file" then
+       local cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." --delete "..local_cache.."/ ".. server_path.."/"
+       util.printout(cmd)
+       fs.execute(cmd)
+       return true
+   end
+
+   if protocol ~= "rsync" then
+      return nil, "This command requires 'rsync', check your configuration."
+   end
 
    local srv, path = server_path:match("([^/]+)(/.+)")
    local cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." --delete -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
