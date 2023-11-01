@@ -8,6 +8,15 @@ local type_rockspec = require("luarocks.type.rockspec")
 local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
 
+local vendored_build_type_set = {
+   ["builtin"] = true,
+   ["cmake"] = true,
+   ["command"] = true,
+   ["make"] = true,
+   ["module"] = true, -- compatibility alias
+   ["none"] = true,
+}
+
 local rockspec_mt = {}
 
 rockspec_mt.__index = rockspec_mt
@@ -148,6 +157,27 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
       local ok, err = convert_dependencies(rockspec, key)
       if not ok then
          return nil, err
+      end
+   end
+
+   if rockspec.build
+      and rockspec.build.type
+      and not vendored_build_type_set[rockspec.build.type] then
+      local build_pkg_name = "luarocks-build-" .. rockspec.build.type
+      if not rockspec.build_dependencies then
+         rockspec.build_dependencies = {}
+      end
+
+      local found = false
+      for _, dep in ipairs(rockspec.build_dependencies) do
+         if dep.name == build_pkg_name then
+            found = true
+            break
+         end
+      end
+
+      if not found then
+         table.insert(rockspec.build_dependencies, queries.from_dep_string(build_pkg_name))
       end
    end
 
