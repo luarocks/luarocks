@@ -83,6 +83,9 @@ do
          if not named then
             local root_dir = fs.absolute_name(args.tree)
             replace_tree(args, root_dir)
+            if (args.deps_mode or cfg.deps_mode) ~= "order" then
+               table.insert(cfg.rocks_trees, 1, { name = "arg", root = root_dir } )
+            end
          end
       elseif args["local"] then
          if fs.is_superuser() then
