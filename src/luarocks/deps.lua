@@ -652,10 +652,8 @@ function deps.scan_deps(results, manifest, name, version, deps_mode)
 end
 
 local function lua_h_exists(d, luaver)
-   local n = tonumber(luaver)
-   local major = math.floor(n)
-   local minor = (n - major) * 10
-   local luanum = math.floor(major * 100 + minor)
+   local major, minor = luaver:match("(%d+)%.(%d+)")
+   local luanum = ("%s%02d"):format(major, tonumber(minor))
 
    local lua_h = dir.path(d, "lua.h")
    local fd = io.open(lua_h)
