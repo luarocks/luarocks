@@ -78,16 +78,16 @@ local function check_url_and_update_md5(out_rs, invalid_is_error)
       util.warning("invalid URL - "..temp_dir)
       return true, false
    end
+   do
+      local inferred_dir, found_dir = fetch.find_base_dir(file, temp_dir, out_rs.source.url, out_rs.source.dir)
+      if not inferred_dir then
+         return nil, found_dir
+      end
 
-   local inferred_dir, found_dir = fetch.find_base_dir(file, temp_dir, out_rs.source.url, out_rs.source.dir)
-   if not inferred_dir then
-      return nil, found_dir
+      if found_dir and found_dir ~= inferred_dir then
+         out_rs.source.dir = found_dir
+      end
    end
-
-   if found_dir and found_dir ~= inferred_dir then
-      out_rs.source.dir = found_dir
-   end
-
    if file then
       if out_rs.source.md5 then
          util.printout("File successfully downloaded. Updating MD5 checksum...")

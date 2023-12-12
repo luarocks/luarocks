@@ -159,8 +159,14 @@ local function fetch_and_change_to_source_dir(rockspec, opts)
       if not ok then
          return nil, err
       end
-   elseif rockspec.source.file then
-      local ok, err = fs.unpack_archive(rockspec.source.file)
+   else
+      if rockspec.source.file then
+         local ok, err = fs.unpack_archive(rockspec.source.file)
+         if not ok then
+            return nil, err
+         end
+      end
+      local ok, err = fetch.find_rockspec_source_dir(rockspec, ".")
       if not ok then
          return nil, err
       end

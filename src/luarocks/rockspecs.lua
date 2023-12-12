@@ -140,16 +140,8 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
    if rockspec.source.cvs_tag then rockspec.source.tag = rockspec.source.cvs_tag end
 
    rockspec.local_abs_filename = filename
-   local filebase = rockspec.source.file or rockspec.source.url
-   local base = dir.deduce_base_dir(filebase)
    rockspec.source.dir_set = rockspec.source.dir ~= nil
-   rockspec.source.dir = rockspec.source.dir
-                      or rockspec.source.module
-                      or ( (filebase:match("%.lua$") or filebase:match("%.c$"))
-                           and (rockspec:format_is_at_least("3.0")
-                                and (dir.is_basic_protocol(protocol) and "." or base)
-                                or  ".") )
-                      or base
+   rockspec.source.dir = rockspec.source.dir or rockspec.source.module
 
    rockspec.rocks_provided = util.get_rocks_provided(rockspec)
 
