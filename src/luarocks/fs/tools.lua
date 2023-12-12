@@ -64,7 +64,7 @@ do
       for _, directory in ipairs(dir_stack) do
          current = fs.absolute_name(directory, current)
       end
-      return current
+      return current, cache_pwd
    end
 end
 
@@ -107,9 +107,11 @@ end
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
 function tools.execute_string(cmd)
-   local current = fs.current_dir()
+   local current, cache_pwd = fs.current_dir()
    if not current then return false end
-   cmd = fs.command_at(current, cmd)
+   if current ~= cache_pwd then
+      cmd = fs.command_at(current, cmd)
+   end
    local code = os.execute(cmd)
    if code == 0 or code == true then
       return true
