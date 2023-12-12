@@ -234,6 +234,21 @@ function fetch.find_base_dir(file, temp_dir, src_url, src_dir)
    local ok, err = fs.change_dir(temp_dir)
    if not ok then return nil, err end
    fs.unpack_archive(file)
+
+   if not src_dir then
+      local rockspec = {
+         source = {
+            file = file,
+            dir = src_dir,
+            url = src_url,
+         }
+      }
+      ok, err = fetch.find_rockspec_source_dir(rockspec, ".")
+      if ok then
+         src_dir = rockspec.source.dir
+      end
+   end
+
    local inferred_dir = src_dir or dir.deduce_base_dir(src_url)
    local found_dir = nil
    if fs.exists(inferred_dir) then
@@ -459,33 +474,58 @@ function fetch.get_sources(rockspec, extract, dest_dir)
       if not ok then return nil, err end
       ok, err = fs.unpack_archive(rockspec.source.file)
       if not ok then return nil, err end
-      if not fs.exists(rockspec.source.dir) then
-
-         -- If rockspec.source.dir can't be found, see if we only have one
-         -- directory in store_dir.  If that's the case, assume it's what
-         -- we're looking for.
-         -- We only do this if the rockspec source.dir was not set, and only
-         -- with rockspecs newer than 3.0.
-         local file_count, found_dir = 0
-
-         if not rockspec.source.dir_set and rockspec:format_is_at_least("3.0") then
-            for file in fs.dir() do
-               file_count = file_count + 1
-               if fs.is_dir(file) then
-                  found_dir = file
-               end
-            end
-         end
-
-         if file_count == 1 and found_dir then
-            rockspec.source.dir = found_dir
-         else
-            return nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file, "source.dir", source_file, store_dir
-         end
-      end
+      ok, err = fetch.find_rockspec_source_dir(rockspec, ".")
+      if not ok then return nil, err end
       fs.pop_dir()
    end
    return source_file, store_dir
+end
+
+function fetch.find_rockspec_source_dir(rockspec, store_dir)
+   local ok, err = fs.change_dir(store_dir)
+   if not ok then return nil, err end
+
+   local file_count, dir_count, found_dir = 0, 0, 0
+
+   if rockspec.source.dir and fs.exists(rockspec.source.dir) then
+      ok, err = true, nil
+   elseif rockspec.source.file and rockspec.source.dir then
+      ok, err = nil, "Directory "..rockspec.source.dir.." not found inside archive "..rockspec.source.file
+   elseif not rockspec.source.dir_set then -- and rockspec:format_is_at_least("3.0") then
+
+      local name = dir.base_name(rockspec.source.file or rockspec.source.url or "")
+
+      if name:match("%.lua$") or name:match("%.c$") then
+         if fs.is_file(name) then
+            rockspec.source.dir = "."
+            ok, err = true, nil
+         end
+      end
+
+      if not rockspec.source.dir then
+         for file in fs.dir() do
+            file_count = file_count + 1
+            if fs.is_dir(file) then
+               dir_count = dir_count + 1
+               found_dir = file
+            end
+         end
+
+         if dir_count == 1 then
+            rockspec.source.dir = found_dir
+            ok, err = true, nil
+         else
+            ok, err = nil, "Could not determine source directory from rock contents (" .. tostring(file_count).." file(s), "..tostring(dir_count).." dir(s))"
+         end
+      end
+   else
+      ok, err = nil, "Could not determine source directory, please set source.dir in rockspec."
+   end
+
+   fs.pop_dir()
+
+   assert(rockspec.source.dir or not ok)
+   return ok, err
 end
 
 --- Download sources for building a rock, calling the appropriate protocol method.
@@ -511,7 +551,7 @@ function fetch.fetch_sources(rockspec, extract, dest_dir)
    end
 
    local protocol = rockspec.source.protocol
-   local ok, proto
+   local ok, err, proto
    if dir.is_basic_protocol(protocol) then
       proto = fetch
    else
@@ -531,7 +571,13 @@ function fetch.fetch_sources(rockspec, extract, dest_dir)
       end
    end
 
-   return proto.get_sources(rockspec, extract, dest_dir)
+   local source_file, store_dir = proto.get_sources(rockspec, extract, dest_dir)
+   if not source_file then return nil, store_dir end
+
+   ok, err = fetch.find_rockspec_source_dir(rockspec, store_dir)
+   if not ok then return nil, err, "source.dir", source_file, store_dir end
+
+   return source_file, store_dir
 end
 
 return fetch

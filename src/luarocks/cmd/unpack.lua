@@ -81,9 +81,9 @@ local function unpack_rock(rock_file, dir_name, kind)
    if kind == "src" then
       if rockspec.source.file then
          local ok, err = fs.unpack_archive(rockspec.source.file)
-         if not ok then
-            return nil, err
-         end
+         if not ok then return nil, err end
+         ok, err = fetch.find_rockspec_source_dir(rockspec, ".")
+         if not ok then return nil, err end
          ok, err = fs.change_dir(rockspec.source.dir)
          if not ok then return nil, err end
          ok, err = build.apply_patches(rockspec)
@@ -133,6 +133,7 @@ local function run_unpacker(file, force)
       return nil, err
    end
    if kind == "src" or kind == "rockspec" then
+      fetch.find_rockspec_source_dir(rockspec, ".")
       if rockspec.source.dir ~= "." then
          local ok = fs.copy(rockspec.local_abs_filename, rockspec.source.dir, "read")
          if not ok then
