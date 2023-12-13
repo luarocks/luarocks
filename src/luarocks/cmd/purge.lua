@@ -39,18 +39,10 @@ end
 function purge.command(args)
    local tree = args.tree
 
-   if type(tree) ~= "string" then
-      return nil, "The --tree argument is mandatory. "..util.see_help("purge")
-   end
-
-   local results = {}
-   if not fs.is_dir(tree) then
-      return nil, "Directory not found: "..tree
-   end
-
    local ok, err = fs.check_command_permissions(args)
    if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
 
+   local results = {}
    search.local_manifest_search(results, path.rocks_dir(tree), queries.all())
 
    local sort = function(a,b) return vers.compare_versions(b,a) end
@@ -80,5 +72,7 @@ function purge.command(args)
    end
    return writer.make_manifest(cfg.rocks_dir, "one")
 end
+
+purge.needs_lock = true
 
 return purge

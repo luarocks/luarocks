@@ -315,4 +315,43 @@ function tools.is_superuser()
    return fs.current_user() == "root"
 end
 
+function tools.lock_access(dirname, force)
+   fs.make_dir(dirname)
+
+   local tempfile = os.tmpname()
+   if not tempfile then
+      return nil, "failed creating temp file for locking"
+   end
+
+   local fd, fderr = io.open(tempfile, "w")
+   if not fd then
+      return nil, "failed opening temp file " .. tempfile .. " for locking: " .. fderr
+   end
+
+   local ok, werr = fd:write("lock file for " .. dirname)
+   if not ok then
+      return nil, "failed writing temp file " .. tempfile .. " for locking: " .. werr
+   end
+
+   fd:close()
+
+   local lockfile = dir.path(dirname, "lockfile.luarocks")
+
+   local force_flag = force and " -f" or ""
+
+   if fs.execute(vars.LN .. force_flag, tempfile, lockfile) then
+      return {
+         tempfile = tempfile,
+         lockfile = lockfile,
+      }
+   else
+      return nil, "File exists" -- same message as luafilesystem
+   end
+end
+
+function tools.unlock_access(lock)
+   os.remove(lock.lockfile)
+   os.remove(lock.tempfile)
+end
+
 return tools

@@ -26,6 +26,7 @@ cmd.errorcodes = {
    UNSPECIFIED = 1,
    PERMISSIONDENIED = 2,
    CONFIGFILE = 3,
+   LOCK = 4,
    CRASH = 99
 }
 
@@ -477,6 +478,8 @@ Enabling completion for Fish:
       "To enable it, see '"..program.." help path'.")
    parser:flag("--global", "Use the system tree when `local_by_default` is `true`.")
    parser:flag("--no-project", "Do not use project tree even if running from a project folder.")
+   parser:flag("--force-lock", "Attempt to overwrite the lock for commands " ..
+      "that require exclusive access, such as 'install'")
    parser:flag("--verbose", "Display verbose output of commands executed.")
    parser:option("--timeout", "Timeout on network operations, in seconds.\n"..
       "0 means no timeout (wait forever). Default is "..
@@ -672,9 +675,27 @@ function cmd.run_command(description, commands, external_namespace, ...)
    end
 
    local cmd_mod = cmd_modules[args.command]
+
+   local lock
+   if cmd_mod.needs_lock then
+      lock, err = fs.lock_access(path.root_dir(cfg.root_dir), args.force_lock)
+      if not lock then
+         local try_force = args.force_lock
+                           and (" - failed to force the lock" .. (err and ": " .. err or ""))
+                           or  " - use --force-lock to overwrite the lock"
+         die("command '" .. args.command .. "' " ..
+             "requires exclusive access to " .. cfg.root_dir ..
+             try_force, cmd.errorcodes.LOCK)
+      end
+   end
+
    local call_ok, ok, err, exitcode = xpcall(function()
       return cmd_mod.command(args)
    end, error_handler)
+
+   if lock then
+      fs.unlock_access(lock)
+   end
 
    if not call_ok then
       die(ok, cmd.errorcodes.CRASH)

@@ -255,4 +255,6 @@ function install.command(args)
    end
 end
 
+install.needs_lock = true
+
 return install

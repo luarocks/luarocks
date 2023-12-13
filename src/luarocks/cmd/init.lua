@@ -173,4 +173,6 @@ function init.command(args)
    return true
 end
 
+init.needs_lock = true
+
 return init

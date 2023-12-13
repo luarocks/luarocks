@@ -283,6 +283,18 @@ end
 
 if lfs_ok then
 
+function fs_lua.lock_access(dirname, force)
+   fs.make_dir(dirname)
+   if force then
+      os.remove(dir.path(dirname, "lockfile.lfs"))
+   end
+   return lfs.lock_dir(dirname)
+end
+
+function fs_lua.unlock_access(lock)
+   return lock:free()
+end
+
 --- Run the given command.
 -- The command is executed in the current directory in the dir stack.
 -- @param cmd string: No quoting/escaping is applied to the command.

@@ -238,6 +238,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          MKDIR = "mkdir",
          RMDIR = "rmdir",
          CP = "cp",
+         LN = "ln",
          LS = "ls",
          RM = "rm",
          FIND = "find",
