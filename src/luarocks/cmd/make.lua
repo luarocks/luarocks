@@ -155,4 +155,6 @@ function make.command(args)
    end
 end
 
+make.needs_lock = true
+
 return make

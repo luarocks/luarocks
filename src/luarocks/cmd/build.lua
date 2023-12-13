@@ -180,4 +180,6 @@ function cmd_build.command(args)
    return name, version
 end
 
+cmd_build.needs_lock = true
+
 return cmd_build

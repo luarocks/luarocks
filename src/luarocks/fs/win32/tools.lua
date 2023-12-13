@@ -316,4 +316,13 @@ function tools.set_time(filename, time)
    return true -- FIXME
 end
 
+function tools.lock_access(dirname)
+   -- NYI
+   return {}
+end
+
+function tools.unlock_access(lock)
+   -- NYI
+end
+
 return tools

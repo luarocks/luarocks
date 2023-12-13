@@ -72,4 +72,6 @@ function cmd_remove.command(args)
    return true
 end
 
+cmd_remove.needs_lock = true
+
 return cmd_remove

@@ -33,21 +33,25 @@ function fetch.fetch_caching(url, mirroring)
    local name = repo_url:gsub("[/:]","_")
    local cache_dir = dir.path(cfg.local_cache, name)
    local ok = fs.make_dir(cache_dir)
-   if not ok then
+   local lock = ok and fs.lock_access(cache_dir)
+   if not (ok and lock) then
       cfg.local_cache = fs.make_temp_dir("local_cache")
       cache_dir = dir.path(cfg.local_cache, name)
       ok = fs.make_dir(cache_dir)
       if not ok then
          return nil, "Failed creating temporary cache directory "..cache_dir
       end
+      lock = fs.lock_access(cache_dir)
    end
 
    local cachefile = dir.path(cache_dir, filename)
    if cfg.aggressive_cache and (not name:match("^manifest")) and fs.exists(cachefile) then
+      fs.unlock_access(lock)
       return cachefile, nil, nil, true
    end
 
    local file, err, errcode, from_cache = fetch.fetch_url(url, cachefile, true, mirroring)
+   fs.unlock_access(lock)
    if not file then
       return nil, err or "Failed downloading "..url, errcode
    end
