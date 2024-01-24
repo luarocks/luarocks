@@ -126,8 +126,12 @@ end
 
 local function process_server_args(args)
    if args.server then
-      local protocol, pathname = dir.split_url(args.server)
-      table.insert(cfg.rocks_servers, 1, protocol.."://"..pathname)
+      local user_servers = {}
+      for server in string.gmatch(args.server, "%S+") do
+         local protocol, pathname = dir.split_url(server)
+         table.insert(user_servers, protocol.."://"..pathname)
+     end
+     cfg.rocks_servers = fun.concat(user_servers, cfg.rocks_servers)
    end
 
    if args.dev then
@@ -455,9 +459,10 @@ Enabling completion for Fish:
       end)
    parser:flag("--dev", "Enable the sub-repositories in rocks servers for "..
       "rockspecs of in-development versions.")
-   parser:option("--server", "Fetch rocks/rockspecs from this server "..
+   parser:option("--server", "Fetch rocks/rockspecs from this servers "..
       "(takes priority over config file).")
       :hidden_name("--from")
+      :argname("<'server1 server2 server3'>")
    parser:option("--only-server", "Fetch rocks/rockspecs from this server only "..
       "(overrides any entries in the config file).")
       :argname("<server>")
