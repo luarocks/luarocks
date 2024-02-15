@@ -280,7 +280,12 @@ function config_cmd.command(args)
          return nil, "Current directory is not part of a project. You may want to run `luarocks init`."
       end
 
-      local prefix = dir.dir_name(cfg.config_files[scope].file)
+      local location = cfg.config_files[scope]
+      if (not location) or (not location.file) then
+         return nil, "could not get config file location for " .. tostring(scope) .. " scope"
+      end
+
+      local prefix = dir.dir_name(location.file)
       local ok, err = persist.save_default_lua_version(prefix, args.value)
       if not ok then
          return nil, "could not set default Lua version: " .. err
