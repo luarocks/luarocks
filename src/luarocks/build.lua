@@ -129,7 +129,7 @@ local function process_dependencies(rockspec, opts)
 
    if not opts.build_only_deps then
       if next(rockspec.build_dependencies) then
-         local ok, err, errcode = deps.fulfill_dependencies(rockspec, "build_dependencies", opts.deps_mode, opts.verify)
+         local ok, err, errcode = deps.fulfill_dependencies(rockspec, "build_dependencies", "all", opts.verify)
          if err then
             return nil, err, errcode
          end
