@@ -35,6 +35,16 @@ function win32.quiet_stderr(cmd)
    return cmd.." 2> NUL"
 end
 
+function win32.execute_env(env, command, ...)
+   assert(type(command) == "string")
+   local cmdstr = {}
+   for var, val in pairs(env) do
+      table.insert(cmdstr, fs.export_cmd(var, val))
+   end
+   table.insert(cmdstr, fs.quote_args(command, ...))
+   return fs.execute_string(table.concat(cmdstr, " & "))
+end
+
 -- Split path into drive, root and the rest.
 -- Example: "c:\\hello\\world" becomes "c:" "\\" "hello\\world"
 -- if any part is missing from input, it becomes an empty string.

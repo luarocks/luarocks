@@ -54,7 +54,7 @@ function fs_lua.is_writable(file)
    return result
 end
 
-local function quote_args(command, ...)
+function fs_lua.quote_args(command, ...)
    local out = { command }
    local args = pack(...)
    for i=1, args.n do
@@ -74,7 +74,7 @@ end
 -- otherwise.
 function fs_lua.execute(command, ...)
    assert(type(command) == "string")
-   return fs.execute_string(quote_args(command, ...))
+   return fs.execute_string(fs.quote_args(command, ...))
 end
 
 --- Run the given command, quoting its arguments, silencing its output.
@@ -88,19 +88,19 @@ end
 function fs_lua.execute_quiet(command, ...)
    assert(type(command) == "string")
    if cfg.verbose then -- omit silencing output
-      return fs.execute_string(quote_args(command, ...))
+      return fs.execute_string(fs.quote_args(command, ...))
    else
-      return fs.execute_string(fs.quiet(quote_args(command, ...)))
+      return fs.execute_string(fs.quiet(fs.quote_args(command, ...)))
    end
 end
 
-function fs.execute_env(env, command, ...)
+function fs_lua.execute_env(env, command, ...)
    assert(type(command) == "string")
    local envstr = {}
    for var, val in pairs(env) do
       table.insert(envstr, fs.export_cmd(var, val))
    end
-   return fs.execute_string(table.concat(envstr, "\n") .. "\n" .. quote_args(command, ...))
+   return fs.execute_string(table.concat(envstr, "\n") .. "\n" .. fs.quote_args(command, ...))
 end
 
 local tool_available_cache = {}
