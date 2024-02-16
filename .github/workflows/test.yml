@@ -41,6 +41,7 @@ jobs:
 
     - name: Prep
       run: |
+        luarocks make --only-deps
         luarocks install busted
         luarocks install cluacov
         luarocks install busted-htest

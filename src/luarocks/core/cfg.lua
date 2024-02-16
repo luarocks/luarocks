@@ -15,7 +15,6 @@ local table, pairs, require, os, pcall, ipairs, package, type, assert =
 
 local util = require("luarocks.core.util")
 local persist = require("luarocks.core.persist")
-local sysdetect = require("luarocks.core.sysdetect")
 local vers = require("luarocks.core.vers")
 
 --------------------------------------------------------------------------------
@@ -641,12 +640,12 @@ function cfg.init(detected, warning)
    -- A proper build of LuaRocks will hardcode the system
    -- and proc values with hardcoded.SYSTEM and hardcoded.PROCESSOR.
    -- If that is not available, we try to identify the system.
-   local system, processor = sysdetect.detect()
-   if hardcoded.SYSTEM then
-      system = hardcoded.SYSTEM
-   end
-   if hardcoded.PROCESSOR then
-      processor = hardcoded.PROCESSOR
+   local system, processor
+   if hardcoded.SYSTEM and hardcoded.PROCESSOR then
+      system, processor = hardcoded.SYSTEM, hardcoded.PROCESSOR
+   else
+      local sysdetect = require("sysdetect")
+      system, processor = sysdetect.detect()
    end
 
    if system == "windows" then

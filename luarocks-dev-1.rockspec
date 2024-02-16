@@ -20,6 +20,9 @@ description = {
    maintainer = "Hisham Muhammad",
    license = "MIT",
 }
+dependencies = {
+   "sysdetect 0.1.0",
+}
 test_dependencies = {
    "luacov",
    "busted-htest",
