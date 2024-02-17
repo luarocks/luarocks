@@ -36,6 +36,69 @@ describe("luarocks init #integration", function()
       end, finally)
    end)
 
+   it("with --no-gitignore", function()
+      test_env.run_in_tmp(function(tmpdir)
+         local myproject = tmpdir .. "/myproject"
+         lfs.mkdir(myproject)
+         lfs.chdir(myproject)
+
+         assert(run.luarocks("init --no-gitignore"))
+         if is_win then
+            assert.truthy(lfs.attributes(myproject .. "/lua.bat"))
+            assert.truthy(lfs.attributes(myproject .. "/luarocks.bat"))
+         else
+            assert.truthy(lfs.attributes(myproject .. "/lua"))
+            assert.truthy(lfs.attributes(myproject .. "/luarocks"))
+         end
+         assert.truthy(lfs.attributes(myproject .. "/lua_modules"))
+         assert.truthy(lfs.attributes(myproject .. "/.luarocks"))
+         assert.truthy(lfs.attributes(myproject .. "/.luarocks/config-" .. test_env.lua_version .. ".lua"))
+         assert.falsy(lfs.attributes(myproject .. "/.gitignore"))
+         assert.truthy(lfs.attributes(myproject .. "/myproject-dev-1.rockspec"))
+      end, finally)
+   end)
+
+   it("with --no-wrapper-scripts", function()
+      test_env.run_in_tmp(function(tmpdir)
+         local myproject = tmpdir .. "/myproject"
+         lfs.mkdir(myproject)
+         lfs.chdir(myproject)
+
+         assert(run.luarocks("init --no-wrapper-scripts"))
+         assert.falsy(lfs.attributes(myproject .. "/lua.bat"))
+         assert.falsy(lfs.attributes(myproject .. "/luarocks.bat"))
+         assert.falsy(lfs.attributes(myproject .. "/lua"))
+         assert.falsy(lfs.attributes(myproject .. "/luarocks"))
+         assert.truthy(lfs.attributes(myproject .. "/lua_modules"))
+         assert.truthy(lfs.attributes(myproject .. "/.luarocks"))
+         assert.truthy(lfs.attributes(myproject .. "/.luarocks/config-" .. test_env.lua_version .. ".lua"))
+         assert.truthy(lfs.attributes(myproject .. "/.gitignore"))
+         assert.truthy(lfs.attributes(myproject .. "/myproject-dev-1.rockspec"))
+      end, finally)
+   end)
+
+   it("with --wrapper-dir", function()
+      test_env.run_in_tmp(function(tmpdir)
+         local myproject = tmpdir .. "/myproject"
+         lfs.mkdir(myproject)
+         lfs.chdir(myproject)
+
+         assert(run.luarocks("init --wrapper-dir=./bin"))
+         if is_win then
+            assert.truthy(lfs.attributes(myproject .. "/bin/lua.bat"))
+            assert.truthy(lfs.attributes(myproject .. "/bin/luarocks.bat"))
+         else
+            assert.truthy(lfs.attributes(myproject .. "/bin/lua"))
+            assert.truthy(lfs.attributes(myproject .. "/bin/luarocks"))
+         end
+         assert.truthy(lfs.attributes(myproject .. "/lua_modules"))
+         assert.truthy(lfs.attributes(myproject .. "/.luarocks"))
+         assert.truthy(lfs.attributes(myproject .. "/.luarocks/config-" .. test_env.lua_version .. ".lua"))
+         assert.truthy(lfs.attributes(myproject .. "/.gitignore"))
+         assert.truthy(lfs.attributes(myproject .. "/myproject-dev-1.rockspec"))
+      end, finally)
+   end)
+
    it("lua wrapper works", function()
       test_env.run_in_tmp(function(tmpdir)
          local myproject = tmpdir .. "/myproject"

@@ -17,9 +17,23 @@ function init.add_to_parser(parser)
       :args("?")
    cmd:argument("version", "An optional project version.")
       :args("?")
-   cmd:flag("--reset", "Delete .luarocks/config-5.x.lua and ./lua and generate new ones.")
+   cmd:option("--wrapper-dir", "Location where the 'lua' and 'luarocks' wrapper scripts " ..
+      "should be generated; if not given, the current directory is used as a default.")
+   cmd:flag("--reset", "Delete any .luarocks/config-5.x.lua and ./lua and generate new ones.")
+   cmd:flag("--no-wrapper-scripts", "Do not generate wrapper ./lua and ./luarocks launcher scripts.")
+   cmd:flag("--no-gitignore", "Do not generate a .gitignore file.")
 
    cmd:group("Options for specifying rockspec data", write_rockspec.cmd_options(cmd))
+end
+
+local function gitignore_path(pwd, wrapper_dir, filename)
+   local norm_cur = dir.normalize(fs.absolute_name(pwd))
+   local norm_file = dir.normalize(fs.absolute_name(dir.path(wrapper_dir, filename)))
+   if norm_file:sub(1, #norm_cur) == norm_cur then
+      return norm_file:sub(#norm_cur)
+   else
+      return "/" .. filename
+   end
 end
 
 local function write_gitignore(entries)
@@ -41,9 +55,46 @@ local function write_gitignore(entries)
    fd:close()
 end
 
+local function write_wrapper_scripts(wrapper_dir, luarocks_wrapper, lua_wrapper)
+   local tree = dir.path(fs.current_dir(), "lua_modules")
+
+   fs.make_dir(wrapper_dir)
+
+   luarocks_wrapper = dir.path(wrapper_dir, luarocks_wrapper)
+   if not fs.exists(luarocks_wrapper) then
+      util.printout("Preparing " .. luarocks_wrapper .. " ...")
+      fs.wrap_script(arg[0], luarocks_wrapper, "none", nil, nil, "--project-tree", tree)
+   else
+      util.printout(luarocks_wrapper .. " already exists. Not overwriting it!")
+   end
+
+   lua_wrapper = dir.path(wrapper_dir, lua_wrapper)
+   local write_lua_wrapper = true
+   if fs.exists(lua_wrapper) then
+      if not util.lua_is_wrapper(lua_wrapper) then
+         util.printout(lua_wrapper .. " already exists and does not look like a wrapper script. Not overwriting.")
+         write_lua_wrapper = false
+      end
+   end
+
+   if write_lua_wrapper then
+      local interp = dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)
+      if util.check_lua_version(interp, cfg.lua_version) then
+         util.printout("Preparing " .. lua_wrapper .. " for version " .. cfg.lua_version .. "...")
+         path.use_tree(tree)
+         fs.wrap_script(nil, lua_wrapper, "all")
+      else
+         util.warning("No Lua interpreter detected for version " .. cfg.lua_version .. ". Not creating " .. lua_wrapper)
+      end
+   end
+end
+
 --- Driver function for "init" command.
 -- @return boolean: True if succeeded, nil on errors.
 function init.command(args)
+   local do_gitignore = not args.no_gitignore
+   local do_wrapper_scripts = not args.no_wrapper_scripts
+   local wrapper_dir = args.wrapper_dir or "."
 
    local pwd = fs.current_dir()
 
@@ -86,15 +137,24 @@ function init.command(args)
    local luarocks_wrapper = "luarocks" .. ext
    local lua_wrapper = "lua" .. ext
 
-   util.printout("Adding entries to .gitignore ...")
-   write_gitignore({ luarocks_wrapper, lua_wrapper, "lua_modules", ".luarocks" })
+   if do_gitignore then
+      util.printout("Adding entries to .gitignore ...")
+      local ignores = { "lua_modules", ".luarocks" }
+      if do_wrapper_scripts then
+         table.insert(ignores, 1, gitignore_path(pwd, wrapper_dir, luarocks_wrapper))
+         table.insert(ignores, 2, gitignore_path(pwd, wrapper_dir, lua_wrapper))
+      end
+      write_gitignore(ignores)
+   end
 
    util.printout("Preparing ./.luarocks/ ...")
    fs.make_dir(".luarocks")
    local config_file = ".luarocks/config-" .. cfg.lua_version .. ".lua"
 
    if args.reset then
-      fs.delete(lua_wrapper)
+      if do_wrapper_scripts then
+         fs.delete(dir.path(wrapper_dir, lua_wrapper))
+      end
       fs.delete(config_file)
    end
 
@@ -138,36 +198,10 @@ function init.command(args)
    end
 
    util.printout("Preparing ./lua_modules/ ...")
-
    fs.make_dir("lua_modules/lib/luarocks/rocks-" .. cfg.lua_version)
-   local tree = dir.path(pwd, "lua_modules")
 
-   luarocks_wrapper = dir.path(".", luarocks_wrapper)
-   if not fs.exists(luarocks_wrapper) then
-      util.printout("Preparing " .. luarocks_wrapper .. " ...")
-      fs.wrap_script(arg[0], luarocks_wrapper, "none", nil, nil, "--project-tree", tree)
-   else
-      util.printout(luarocks_wrapper .. " already exists. Not overwriting it!")
-   end
-
-   lua_wrapper = dir.path(".", lua_wrapper)
-   local write_lua_wrapper = true
-   if fs.exists(lua_wrapper) then
-      if not util.lua_is_wrapper(lua_wrapper) then
-         util.printout(lua_wrapper .. " already exists and does not look like a wrapper script. Not overwriting.")
-         write_lua_wrapper = false
-      end
-   end
-
-   if write_lua_wrapper then
-      local interp = dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)
-      if util.check_lua_version(interp, cfg.lua_version) then
-         util.printout("Preparing " .. lua_wrapper .. " for version " .. cfg.lua_version .. "...")
-         path.use_tree(tree)
-         fs.wrap_script(nil, lua_wrapper, "all")
-      else
-         util.warning("No Lua interpreter detected for version " .. cfg.lua_version .. ". Not creating " .. lua_wrapper)
-      end
+   if do_wrapper_scripts then
+      write_wrapper_scripts(wrapper_dir, luarocks_wrapper, lua_wrapper)
    end
 
    return true
