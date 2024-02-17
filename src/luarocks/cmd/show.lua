@@ -201,9 +201,8 @@ local function commands_to_list(name, version, repo)
 
    local bin_dir = path.deploy_bin_dir(repo)
    repos.recurse_rock_manifest_entry(rock_manifest.bin, function(pathname)
-      pathname = adjust_path(name, version, bin_dir, pathname)
       table.insert(ret, {
-         name = pathname,
+         name = name,
          file = adjust_path(name, version, bin_dir, pathname, cfg.wrapper_suffix),
       })
    end)
