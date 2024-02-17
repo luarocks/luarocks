@@ -124,8 +124,9 @@ function pack.pack_installed_rock(query, tree)
       rock_file = rock_file:gsub("%."..cfg.arch:gsub("%-","%%-").."%.", ".all.")
    end
    fs.delete(rock_file)
-   if not fs.zip(rock_file, unpack(fs.list_dir())) then
-      return nil, "Failed packing "..rock_file
+   ok, err = fs.zip(rock_file, unpack(fs.list_dir()))
+   if not ok then
+      return nil, "Failed packing " .. rock_file .. " - " .. err
    end
    fs.pop_dir()
    fs.delete(temp_dir)
