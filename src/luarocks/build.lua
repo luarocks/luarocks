@@ -129,7 +129,37 @@ local function process_dependencies(rockspec, opts)
 
    if not opts.build_only_deps then
       if next(rockspec.build_dependencies) then
+
+         local user_lua_version = cfg.lua_version
+         local running_lua_version = _VERSION:sub(5)
+
+         if running_lua_version ~= user_lua_version then
+            -- Temporarily flip the user-selected Lua version,
+            -- so that we install build dependencies for the
+            -- Lua version on which the LuaRocks program is running.
+
+            -- HACK: we have to do this by flipping a bunch of
+            -- global config settings, and this list may not be complete.
+            cfg.lua_version = running_lua_version
+            cfg.lua_modules_path = cfg.lua_modules_path:gsub(user_lua_version:gsub("%.", "%%."), running_lua_version)
+            cfg.lib_modules_path = cfg.lib_modules_path:gsub(user_lua_version:gsub("%.", "%%."), running_lua_version)
+            cfg.rocks_subdir = cfg.rocks_subdir:gsub(user_lua_version:gsub("%.", "%%."), running_lua_version)
+            path.use_tree(cfg.root_dir)
+         end
+
          local ok, err, errcode = deps.fulfill_dependencies(rockspec, "build_dependencies", "all", opts.verify)
+
+         path.add_to_package_paths(cfg.root_dir)
+
+         if running_lua_version ~= user_lua_version then
+            -- flip the settings back
+            cfg.lua_version = user_lua_version
+            cfg.lua_modules_path = cfg.lua_modules_path:gsub(running_lua_version:gsub("%.", "%%."), user_lua_version)
+            cfg.lib_modules_path = cfg.lib_modules_path:gsub(running_lua_version:gsub("%.", "%%."), user_lua_version)
+            cfg.rocks_subdir = cfg.rocks_subdir:gsub(running_lua_version:gsub("%.", "%%."), user_lua_version)
+            path.use_tree(cfg.root_dir)
+         end
+
          if err then
             return nil, err, errcode
          end
