@@ -398,7 +398,7 @@ function sysdetect.detect(input_file)
       if interp then
          if interp:match(dirsep) then
             -- interpreter path is absolute
-            table.insert(files, interp)
+            table.insert(files, 1, interp)
          else
             for d in (os.getenv("PATH") or ""):gmatch("[^"..PATHsep.."]+") do
                table.insert(files, d .. dirsep .. interp)
