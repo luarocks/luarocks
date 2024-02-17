@@ -91,13 +91,17 @@ local function update_dependencies(manifest, deps_mode)
    assert(type(manifest) == "table")
    assert(type(deps_mode) == "string")
 
+   if not manifest.dependencies then manifest.dependencies = {} end
+   local mdeps = manifest.dependencies
+
    for pkg, versions in pairs(manifest.repository) do
       for version, repositories in pairs(versions) do
          for _, repo in ipairs(repositories) do
             if repo.arch == "installed" then
-               repo.dependencies = {}
-               deps.scan_deps(repo.dependencies, manifest, pkg, version, deps_mode)
-               repo.dependencies[pkg] = nil
+               local rd = {}
+               repo.dependencies = rd
+               deps.scan_deps(rd, mdeps, pkg, version, deps_mode)
+               rd[pkg] = nil
             end
          end
       end
