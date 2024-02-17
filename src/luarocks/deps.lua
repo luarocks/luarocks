@@ -609,12 +609,12 @@ end
 -- to build a transitive closure of all dependent packages.
 -- Additionally ensures that `dependencies` table of the manifest is up-to-date.
 -- @param results table: The results table being built, maps package names to versions.
--- @param manifest table: The manifest table containing dependencies.
+-- @param mdeps table: The manifest dependencies table.
 -- @param name string: Package name.
 -- @param version string: Package version.
-function deps.scan_deps(results, manifest, name, version, deps_mode)
+function deps.scan_deps(results, mdeps, name, version, deps_mode)
    assert(type(results) == "table")
-   assert(type(manifest) == "table")
+   assert(type(mdeps) == "table")
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
 
@@ -623,10 +623,8 @@ function deps.scan_deps(results, manifest, name, version, deps_mode)
    if results[name] then
       return
    end
-   if not manifest.dependencies then manifest.dependencies = {} end
-   local md = manifest.dependencies
-   if not md[name] then md[name] = {} end
-   local mdn = md[name]
+   if not mdeps[name] then mdeps[name] = {} end
+   local mdn = mdeps[name]
    local dependencies = mdn[version]
    local rocks_provided
    if not dependencies then
@@ -647,7 +645,7 @@ function deps.scan_deps(results, manifest, name, version, deps_mode)
    local matched = match_all_deps(dependencies, get_versions)
    results[name] = version
    for _, match in pairs(matched) do
-      deps.scan_deps(results, manifest, match.name, match.version, deps_mode)
+      deps.scan_deps(results, mdeps, match.name, match.version, deps_mode)
    end
 end
 
