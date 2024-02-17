@@ -674,6 +674,12 @@ function cmd.run_command(description, commands, external_namespace, ...)
       os.exit(cmd.errorcodes.OK)
    end
 
+   if not cfg.variables["LUA_BINDIR"] then
+      return nil, "LUA_BINDIR not configured.\n" ..
+         "Please configure the location of the Lua interpreter with:\n" ..
+         "   luarocks config variables.LUA_BINDIR <path>"
+   end
+
    local cmd_mod = cmd_modules[args.command]
 
    local lock
