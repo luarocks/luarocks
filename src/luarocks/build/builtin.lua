@@ -321,7 +321,13 @@ function builtin.run(rockspec, no_install)
          local sources = info.sources
          if info[1] then sources = info end
          if type(sources) == "string" then sources = {sources} end
+         if type(sources) ~= "table" then
+            return nil, "error in rockspec: module '" .. name .. "' entry has no 'sources' list"
+         end
          for _, source in ipairs(sources) do
+            if type(source) ~= "string" then
+               return nil, "error in rockspec: module '" .. name .. "' does not specify source correctly."
+            end
             local object = source:gsub("%.[^.]*$", "."..cfg.obj_extension)
             if not object then
                object = source.."."..cfg.obj_extension
