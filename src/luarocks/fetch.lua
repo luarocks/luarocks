@@ -36,6 +36,9 @@ function fetch.fetch_caching(url, mirroring)
    local lock = ok and fs.lock_access(cache_dir)
    if not (ok and lock) then
       cfg.local_cache = fs.make_temp_dir("local_cache")
+      if not cfg.local_cache then
+         return nil, "Failed creating temporary local_cache directory"
+      end
       cache_dir = dir.path(cfg.local_cache, name)
       ok = fs.make_dir(cache_dir)
       if not ok then
@@ -209,7 +212,9 @@ function fetch.fetch_url_at_temp_dir(url, tmpname, filename, cache)
             file = dir.path(temp_dir, filename)
             fs.copy(cachefile, file)
          end
-      else
+      end
+
+      if not file then
          file, err, errcode = fetch.fetch_url(url, filename, cache)
       end
 
