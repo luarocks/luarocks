@@ -18,7 +18,6 @@ Query information about the LuaRocks configuration.
   any command-line flags passed)
 
   Examples:
-     luarocks config lua_interpreter
      luarocks config variables.LUA_INCDIR
      luarocks config lua_version
 
@@ -300,7 +299,7 @@ function config_cmd.command(args)
          ["variables.LUA_BINDIR"] = cfg.variables.LUA_BINDIR,
          ["variables.LUA_INCDIR"] = cfg.variables.LUA_INCDIR,
          ["variables.LUA_LIBDIR"] = cfg.variables.LUA_LIBDIR,
-         ["lua_interpreter"] = cfg.lua_interpreter,
+         ["variables.LUA"] = cfg.variables.LUA,
       }
       if args.lua_version then
          local prefix = dir.dir_name(cfg.config_files[scope].file)

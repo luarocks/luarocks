@@ -22,7 +22,7 @@ ARGUMENTS
    appveyor               Add if running on Appveyor.
    os=<type>              Set OS ("linux", "osx", or "windows").
    lua_dir=<path>         Path of Lua installation (default "/usr/local")
-   lua_interpreter=<lua>  Name of the interpreter (default "lua")
+   lua=<lua>              Name of the interpreter, may be full path (default "lua")
 ]]
 
 local function help()
@@ -107,7 +107,7 @@ lfs.attributes = function(f, ...) -- luacheck: ignore
    return lfs_attributes(V(f), ...)
 end
 
-function test_env.exists(path)
+local function exists(path)
    return lfs.attributes(path, "mode") ~= nil
 end
 
@@ -302,8 +302,8 @@ function test_env.set_args()
          test_env.MINGW = false
       elseif argument:find("^lua_dir=") then
          test_env.LUA_DIR = argument:match("^lua_dir=(.*)$")
-      elseif argument:find("^lua_interpreter=") then
-         test_env.LUA_INTERPRETER = argument:match("^lua_interpreter=(.*)$")
+      elseif argument:find("^lua=") then
+         test_env.LUA = argument:match("^lua=(.*)$")
       else
          help()
       end
@@ -371,7 +371,7 @@ end
 function test_env.remove_dir(path)
    path = V(path)
 
-   if test_env.exists(path) then
+   if exists(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
             local full_path = path..'/'..file
@@ -393,7 +393,7 @@ end
 function test_env.remove_subdirs(path, pattern)
    path = V(path)
 
-   if test_env.exists(path) then
+   if exists(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
             local full_path = path..'/'..file
@@ -414,7 +414,7 @@ function test_env.remove_files(path, pattern)
    path = V(path)
 
    local result_check = false
-   if test_env.exists(path) then
+   if exists(path) then
       for file in lfs.dir(path) do
          if file ~= "." and file ~= ".." then
             if file:find(pattern) then
@@ -445,7 +445,7 @@ local function download_rocks(urls, save_path)
          table.insert(fixtures, (url:gsub("^spec/fixtures", test_env.testing_paths.fixtures_dir)))
       else
          -- check if already downloaded
-         if not test_env.exists(save_path .. "/" .. url) then
+         if not exists(save_path .. "/" .. url) then
             table.insert(to_download, ((luarocks_repo .. url):gsub("org//", "org/")))
          end
       end
@@ -642,8 +642,8 @@ local function reset_environment(testing_paths, md5sums)
 end
 
 local function found_interpreter(testing_paths, luadir, lua_bindir)
-   local location = lua_bindir .. "/" .. testing_paths.lua_interpreter
-   if test_env.exists(location) then
+   local location = lua_bindir .. "/" .. testing_paths.lua_exe
+   if exists(location) then
       testing_paths.lua_bindir = lua_bindir
       testing_paths.luadir = luadir
       testing_paths.lua = location
@@ -651,44 +651,57 @@ local function found_interpreter(testing_paths, luadir, lua_bindir)
    end
 end
 
+local function find_lua()
+   -- (1) LUA is a full path
+   if test_env.LUA and test_env.LUA:match("[/\\]") then
+
+      local lua_bindir = test_env.LUA:match("^(.-)[/\\][^/\\]*$")
+      local luadir = test_env.LUA_DIR or lua_bindir:gsub("[/\\]bin$")
+      local lua = test_env.LUA
+
+      return lua_bindir, luadir, lua
+   end
+
+   -- (2) LUA is just the interpreter name
+   local lua_exe = test_env.LUA
+                   or ((test_env.TEST_TARGET_OS == "windows") and "lua.exe")
+                   or "lua"
+
+   -- (2.1) LUA_DIR was given
+   if test_env.LUA_DIR then
+
+      local luadir = test_env.LUA_DIR
+      local lua_bindir = exists(luadir .. "/bin")
+                   and luadir .. "/bin"
+                   or luadir
+      local lua = lua_bindir .. "/" .. lua_exe
+
+      return lua_bindir, luadir, lua
+   end
+
+   -- (2.2) LUA_DIR was not given, try some default paths
+   local try_dirs = (test_env.TEST_TARGET_OS == "windows")
+                    and { os.getenv("ProgramFiles(x86)").."/LuaRocks" }
+                    or  { "/usr/local", "/usr" }
+
+   for _, luadir in ipairs(try_dirs) do
+      for _, lua_bindir in ipairs({ luadir, luadir .. "/bin" }) do
+         local lua = lua_bindir .. "/" .. lua_exe
+         if exists(lua) then
+            return lua_bindir, luadir, lua
+         end
+      end
+   end
+end
+
 local function create_paths(luaversion_full)
 
    local testing_paths = {}
-   local try_dirs
 
-   if test_env.TEST_TARGET_OS == "windows" then
-      try_dirs = { os.getenv("ProgramFiles(x86)").."/LuaRocks" }
-      testing_paths.luarocks_tmp = os.getenv("TEMP")
-      testing_paths.lua_interpreter = "lua.exe"
-   else
-      try_dirs = { "/usr/local", "/usr" }
-      testing_paths.luarocks_tmp = "/tmp/luarocks_testing"
-      testing_paths.lua_interpreter = "lua"
+   testing_paths.lua_bindir, testing_paths.luadir, testing_paths.lua = find_lua()
+   if (not testing_paths.lua) or (not exists(testing_paths.lua)) then
+      error("Lua interpreter not found! Run `busted -Xhelper help` for options")
    end
-
-   if test_env.LUA_DIR then
-      table.insert(try_dirs, 1, test_env.LUA_DIR)
-   end
-
-   if test_env.LUA_INTERPRETER then
-      testing_paths.lua_interpreter = test_env.LUA_INTERPRETER
-   end
-
-   local bindir, interp = testing_paths.lua_interpreter:match("^(.-)[/\\]([^/\\]*)$")
-   if bindir and interp then
-      testing_paths.lua_interpreter = interp
-      try_dirs = { bindir }
-   end
-
-   for _, try_dir in ipairs(try_dirs) do
-      if found_interpreter(testing_paths, try_dir, try_dir)
-      or found_interpreter(testing_paths, try_dir, try_dir .. "/bin")
-      then
-         break
-      end
-   end
-
-   assert(testing_paths.lua, "Lua interpreter not found! Run `busted -Xhelper help` for options")
 
    local base_dir = lfs.currentdir()
 
@@ -712,6 +725,12 @@ local function create_paths(luaversion_full)
 
    testing_paths.testing_rocks = testing_paths.testing_tree .. "/lib/luarocks/rocks-" .. test_env.lua_version
    testing_paths.testing_sys_rocks = testing_paths.testing_sys_tree .. "/lib/luarocks/rocks-" .. test_env.lua_version
+
+   if test_env.TEST_TARGET_OS == "windows" then
+      testing_paths.luarocks_tmp = os.getenv("TEMP")
+   else
+      testing_paths.luarocks_tmp = "/tmp/luarocks_testing"
+   end
 
    if test_env.TEST_TARGET_OS == "windows" then
       testing_paths.win_tools = base_dir .. "/win32/tools"
@@ -739,7 +758,7 @@ function test_env.setup_specs(extra_rocks)
    -- if global variable about successful creation of testing environment doesn't exist, build environment
    if not test_env.setup_done then
       if test_env.CI then
-         if not test_env.exists(os.getenv("HOME") .. "/.ssh/id_rsa.pub") then
+         if not exists(os.getenv("HOME") .. "/.ssh/id_rsa.pub") then
             execute_bool("ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa")
             execute_bool("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
             execute_bool("chmod og-wx ~/.ssh/authorized_keys")
@@ -914,7 +933,7 @@ local function setup_luarocks()
       ("SYSCONFDIR = %q,"):format(testing_paths.testing_lrprefix .. "/etc/luarocks"),
       ("LUA_DIR = %q,"):format(testing_paths.luadir),
       ("LUA_BINDIR = %q,"):format(testing_paths.lua_bindir),
-      ("LUA_INTERPRETER = %q,"):format(testing_paths.lua_interpreter),
+      ("LUA = %q,"):format(testing_paths.lua),
    }
 
    if test_env.TEST_TARGET_OS == "windows" then
@@ -1083,6 +1102,7 @@ test_env.set_args()
 test_env.testing_paths = create_paths(test_env.LUA_V or test_env.LUAJIT_V)
 test_env.env_variables = create_env(test_env.testing_paths)
 test_env.run = make_run_functions()
+test_env.exists = exists
 test_env.V = V
 
 return test_env

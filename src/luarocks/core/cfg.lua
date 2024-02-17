@@ -175,7 +175,6 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
    -- Configure defaults:
    local defaults = {
 
-      lua_interpreter = "lua",
       local_by_default = false,
       accept_unknown_fields = false,
       fs_use_modules = true,
@@ -556,19 +555,6 @@ local function use_defaults(cfg, defaults)
    end
 end
 
-local function get_first_arg()
-   if not arg then
-      return
-   end
-   local first_arg = arg[0]
-   local i = -1
-   while arg[i] do
-      first_arg = arg[i]
-      i = i -1
-   end
-   return first_arg
-end
-
 --------------------------------------------------------------------------------
 
 local cfg = {}
@@ -580,7 +566,7 @@ local cfg = {}
 -- * lua_version (in x.y format, e.g. "5.3")
 -- * lua_bindir (e.g. "/usr/local/bin")
 -- * lua_dir (e.g. "/usr/local")
--- * lua_interpreter (e.g. "lua-5.3")
+-- * lua (e.g. "/usr/local/bin/lua-5.3")
 -- * project_dir (a string with the path of the project directory
 --   when using per-project environments, as created with `luarocks init`)
 -- @param warning a logging function for warnings that takes a string
@@ -615,16 +601,15 @@ function cfg.init(detected, warning)
 
    -- Use detected values as defaults, overridable via config files or CLI args
 
-   local first_arg = get_first_arg()
-
    cfg.lua_version = detected.lua_version or hardcoded.LUA_VERSION or _VERSION:sub(5)
-   cfg.lua_interpreter = detected.lua_interpreter or hardcoded.LUA_INTERPRETER or (first_arg and first_arg:gsub(".*[\\/]", "")) or (is_windows and "lua.exe" or "lua")
    cfg.project_dir = (not hardcoded.FORCE_CONFIG) and detected.project_dir
 
    do
-      local lua_bindir = detected.lua_bindir or hardcoded.LUA_BINDIR or (first_arg and first_arg:gsub("[\\/][^\\/]+$", ""))
-      local lua_dir = detected.lua_dir or hardcoded.LUA_DIR or (lua_bindir and lua_bindir:gsub("[\\/]bin$", ""))
+      local lua = detected.lua or hardcoded.LUA
+      local lua_bindir = detected.lua_bindir or hardcoded.LUA_BINDIR
+      local lua_dir = detected.lua_dir or hardcoded.LUA_DIR
       cfg.variables = {
+         LUA = lua,
          LUA_DIR = lua_dir,
          LUA_BINDIR = lua_bindir,
          LUA_LIBDIR = hardcoded.LUA_LIBDIR,
@@ -756,6 +741,11 @@ function cfg.init(detected, warning)
       end
    end
 
+   -- backwards compatibility:
+   if cfg.lua_interpreter and cfg.variables.LUA_BINDIR and not cfg.variables.LUA then
+      cfg.variables.LUA = (cfg.variables.LUA_BINDIR .. "/" .. cfg.lua_interpreter):gsub("\\", "/")
+   end
+
    ----------------------------------------
    -- Config files are loaded.
    -- Let's finish up the cfg table.
@@ -765,11 +755,11 @@ function cfg.init(detected, warning)
    cfg.project_dir = detected.given_project_dir or cfg.project_dir
    cfg.lua_version = detected.given_lua_version or cfg.lua_version
    if detected.given_lua_dir then
+      cfg.variables.LUA = detected.lua
       cfg.variables.LUA_DIR = detected.given_lua_dir
       cfg.variables.LUA_BINDIR = detected.lua_bindir
       cfg.variables.LUA_LIBDIR = nil
       cfg.variables.LUA_INCDIR = nil
-      cfg.lua_interpreter = detected.lua_interpreter
    end
 
    -- Build a default list of rocks trees if not given
@@ -794,9 +784,17 @@ function cfg.init(detected, warning)
       defaults.fs_use_modules = true
    end
 
+   -- if only cfg.variables.LUA is given in config files,
+   -- derive LUA_BINDIR and LUA_DIR from them.
+   if cfg.variables.LUA and not cfg.variables.LUA_BINDIR then
+      cfg.variables.LUA_BINDIR = cfg.variables.LUA:gsub("^(.*)[/\\][^/\\]*$")
+      if not cfg.variables.LUA_DIR then
+         cfg.variables.LUA_DIR = cfg.variables.LUA_BINDIR:gsub("[/\\]bin$", "") or cfg.variables.LUA_BINDIR
+      end
+   end
+
    use_defaults(cfg, defaults)
 
-   cfg.variables.LUA = cfg.variables.LUA or (cfg.variables.LUA_BINDIR and (cfg.variables.LUA_BINDIR .. "/" .. cfg.lua_interpreter):gsub("//", "/"))
    cfg.user_agent = "LuaRocks/"..cfg.program_version.." "..cfg.arch
 
    cfg.config_files = {

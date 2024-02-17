@@ -195,7 +195,7 @@ function win32.wrap_script(script, target, deps_mode, name, version, ...)
    end
 
    local argv = {
-      fs.Qb(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)),
+      fs.Qb(cfg.variables["LUA"]),
       "-e",
       fs.Qb(table.concat(luainit, ";")),
       script and fs.Qb(script) or "%I%",
