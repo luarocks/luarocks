@@ -318,10 +318,7 @@ end
 function tools.lock_access(dirname, force)
    fs.make_dir(dirname)
 
-   local tempfile = os.tmpname()
-   if not tempfile then
-      return nil, "failed creating temp file for locking"
-   end
+   local tempfile = dir.path(dirname, ".lock.tmp." .. tostring(math.random(100000000)))
 
    local fd, fderr = io.open(tempfile, "w")
    if not fd then
