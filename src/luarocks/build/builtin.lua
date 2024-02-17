@@ -279,11 +279,12 @@ function builtin.run(rockspec, no_install)
    local luadir = path.lua_dir(rockspec.name, rockspec.version)
    local libdir = path.lib_dir(rockspec.name, rockspec.version)
 
+   local autolibs, autoincdirs, autolibdirs = autoextract_libs(rockspec.external_dependencies, rockspec.variables)
+
    if not build.modules then
       if rockspec:format_is_at_least("3.0") then
-         local libs, incdirs, libdirs = autoextract_libs(rockspec.external_dependencies, rockspec.variables)
          local install, copy_directories
-         build.modules, install, copy_directories = builtin.autodetect_modules(libs, incdirs, libdirs)
+         build.modules, install, copy_directories = builtin.autodetect_modules(autolibs, autoincdirs, autolibdirs)
          build.install = build.install or install
          build.copy_directories = build.copy_directories or copy_directories
       else
@@ -332,7 +333,7 @@ function builtin.run(rockspec, no_install)
             if not object then
                object = source.."."..cfg.obj_extension
             end
-            ok = compile_object(object, source, info.defines, info.incdirs)
+            ok = compile_object(object, source, info.defines, info.incdirs or autoincdirs)
             if not ok then
                return nil, "Failed compiling object "..object
             end
@@ -345,7 +346,7 @@ function builtin.run(rockspec, no_install)
             if not ok then return nil, err end
          end
          lib_modules[module_name] = dir.path(libdir, module_name)
-         ok = compile_library(module_name, objects, info.libraries, info.libdirs, name)
+         ok = compile_library(module_name, objects, info.libraries, info.libdirs or autolibdirs, name)
          if not ok then
             return nil, "Failed compiling module "..module_name
          end
