@@ -184,7 +184,11 @@ local function die(message, exitcode)
    os.exit(exitcode or cmd.errorcodes.UNSPECIFIED)
 end
 
-local function search_lua_in_path(lua_version, verbose)
+local function search_lua(lua_version, verbose, search_at)
+   if search_at then
+      return util.find_lua(search_at, lua_version, verbose)
+   end
+
    local path_sep = (package.config:sub(1, 1) == "\\" and ";" or ":")
    local all_tried = {}
    for bindir in (os.getenv("PATH") or ""):gmatch("[^"..path_sep.."]+") do
@@ -284,7 +288,7 @@ do
          end
 
          if lua_version then
-            local detected = search_lua_in_path(lua_version)
+            local detected = search_lua(lua_version)
             if detected then
                return detected
             end
@@ -497,6 +501,19 @@ Enabling completion for Fish:
    return parser
 end
 
+local function get_first_arg()
+   if not arg then
+      return
+   end
+   local first_arg = arg[0]
+   local i = -1
+   while arg[i] do
+      first_arg = arg[i]
+      i = i -1
+   end
+   return first_arg
+end
+
 --- Main command-line processor.
 -- Parses input arguments and calls the appropriate driver function
 -- to execute the action requested on the command-line, forwarding
@@ -610,20 +627,47 @@ function cmd.run_command(description, commands, external_namespace, ...)
    -- try again now.
    local tried
    if not lua_found then
-      if cfg.variables.LUA_DIR then
-         lua_found, tried = util.find_lua(cfg.variables.LUA_DIR, cfg.lua_version, args.verbose)
-      else
-         lua_found, tried = search_lua_in_path(cfg.lua_version, args.verbose)
+      local detected
+      detected, tried = search_lua(cfg.lua_version, args.verbose, cfg.variables.LUA_DIR)
+      if detected then
+         lua_found = true
+         cfg.variables.LUA = detected.lua
+         cfg.variables.LUA_DIR = detected.lua_dir
+         cfg.variables.LUA_BINDIR = detected.lua_bindir
+         if args.lua_dir then
+            cfg.variables.LUA_INCDIR = nil
+            cfg.variables.LUA_LIBDIR = nil
+         end
       end
    end
 
-   if not lua_found and args.command ~= "config" and args.command ~= "help" then
-      util.warning(tried ..
-                   "\nModules may not install with the correct configurations. " ..
-                   "You may want to configure the path prefix to your build " ..
-                   "of Lua " .. cfg.lua_version .. " using\n\n" ..
-                   "   luarocks config --local lua_dir <your-lua-prefix>\n")
+   if lua_found then
+      assert(cfg.variables.LUA)
+   else
+      if args.command ~= "config" and args.command ~= "help" then
+         util.warning(tried ..
+                      "\nModules may not install with the correct configurations. " ..
+                      "You may want to configure the path prefix to your build " ..
+                      "of Lua " .. cfg.lua_version .. " using\n\n" ..
+                      "   luarocks config --local lua_dir <your-lua-prefix>\n")
+      end
+
+      -- Fallback producing _some_ Lua configuration based on the running interpreter.
+      -- Most likely won't produce correct results when running from the standalone binary,
+      -- so eventually we need to drop this and outright fail if Lua is not found
+      -- or explictly configured
+      if not cfg.variables.LUA then
+         local first_arg = get_first_arg()
+         cfg.variables.LUA_DIR = dir.dir_name(fs.absolute_name(first_arg))
+         cfg.variables.LUA_BINDIR = cfg.variables.LUA_DIR
+         local exe = fs.base_name(first_arg)
+         exe = exe:match("rocks") and ("lua" .. (cfg.arch:match("win") and ".exe" or "")) or exe
+         cfg.variables.LUA = dir.path(cfg.variables.LUA_BINDIR, exe)
+         cfg.variables.LUA_INCDIR = nil
+         cfg.variables.LUA_LIBDIR = nil
+      end
    end
+
    cfg.lua_found = lua_found
 
    if cfg.project_dir then

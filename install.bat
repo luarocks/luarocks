@@ -15,8 +15,9 @@ vars.TREE_ROOT = nil
 vars.TREE_BIN = nil
 vars.TREE_LMODULE = nil
 vars.TREE_CMODULE = nil
-vars.LUA_INTERPRETER = nil
+vars.LUA = nil
 vars.LUA_PREFIX = nil
+vars.LUA_DIR = nil
 vars.LUA_BINDIR = nil
 vars.LUA_INCDIR = nil
 vars.LUA_LIBDIR = nil
@@ -320,7 +321,7 @@ local function look_for_interpreter(directory)
 						end
 					end
 
-					vars.LUA_INTERPRETER = name
+					vars.LUA = full_name
 					vars.LUA_BINDIR = dir
 					return true
 				end
@@ -398,7 +399,7 @@ end
 
 local function get_runtime()
 	local f
-	vars.LUA_RUNTIME, f = pe.msvcrt(vars.LUA_BINDIR.."\\"..vars.LUA_INTERPRETER)
+	vars.LUA_RUNTIME, f = pe.msvcrt(vars.LUA)
 	if type(vars.LUA_RUNTIME) ~= "string" then
 		-- analysis failed, issue a warning
 		vars.LUA_RUNTIME = "MSVCR80"
@@ -411,9 +412,9 @@ end
 
 local function get_architecture()
 	-- detect processor arch interpreter was compiled for
-	local proc = (pe.parse(vars.LUA_BINDIR.."\\"..vars.LUA_INTERPRETER) or {}).Machine
+	local proc = (pe.parse(vars.LUA) or {}).Machine
 	if not proc then
-		die("Could not detect processor architecture used in "..vars.LUA_INTERPRETER)
+		die("Could not detect processor architecture used in "..vars.LUA)
 	end
 	print("arch: " .. proc .. " -> " .. pe.const.Machine[proc])
 	proc = pe.const.Machine[proc]  -- collect name from constant value
@@ -659,6 +660,7 @@ local function look_for_lua_install ()
 						print("Headers found, checking runtime to use...")
 						if get_runtime() then
 							print("Runtime check completed.")
+							vars.LUA_DIR = directory
 							return true
 						end
 					end
@@ -862,7 +864,8 @@ vars.INCDIR = S"$PREFIX\\include"
 vars.LUA_SHORTV = vars.LUA_VERSION:gsub("%.", "")
 
 if INSTALL_LUA then
-	vars.LUA_INTERPRETER = "lua5.1"
+	vars.LUA = vars.BINDIR .. "\\lua5.1.exe"
+	vars.LUA_DIR = vars.PREFIX
 	vars.LUA_BINDIR = vars.BINDIR
 	vars.LUA_LIBDIR = vars.LIBDIR
 	vars.LUA_INCDIR = vars.INCDIR
@@ -875,6 +878,9 @@ else
 	end
     vars.UNAME_M = get_architecture()  -- can only do when installation was found
 end
+
+assert(vars.LUA)
+assert(vars.LUA_DIR)
 
 -- check location of system tree
 if not vars.TREE_ROOT then
@@ -918,7 +924,7 @@ LuaRocks        : $PREFIX
 Config file     : $CONFIG_FILE
 Rocktree        : $TREE_ROOT
 
-Lua interpreter : $LUA_BINDIR\$LUA_INTERPRETER
+Lua interpreter : $LUA
     binaries    : $LUA_BINDIR
     libraries   : $LUA_LIBDIR
     includes    : $LUA_INCDIR
@@ -1031,7 +1037,7 @@ IF NOT "%LUA_PATH_5_3%"=="" (
    SET "LUA_PATH_5_3=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_3%"
 )
 SET "PATH=$BINDIR;%PATH%"
-"$LUA_BINDIR\$LUA_INTERPRETER" "$BINDIR\]]..c..[[.lua" %*
+"$LUA" "$BINDIR\]]..c..[[.lua" %*
 SET EXITCODE=%ERRORLEVEL%
 IF NOT "%EXITCODE%"=="2" GOTO EXITLR
 
@@ -1087,10 +1093,12 @@ vars.SYSTEM = USE_MINGW and "mingw" or "windows"
 local f = io.open(hardcoded_lua, "w")
 f:write(S[=[
 return {
+   LUA_DIR=[[$LUA_DIR]],
    LUA_INCDIR=[[$LUA_INCDIR]],
    LUA_LIBDIR=[[$LUA_LIBDIR]],
    LUA_BINDIR=[[$LUA_BINDIR]],
-   LUA_INTERPRETER=[[$LUA_INTERPRETER]],
+   LUA_VERSION=[[$LUA_VERSION]],
+   LUA=[[$LUA]],
    SYSTEM = [[$SYSTEM]],
    PROCESSOR = [[$UNAME_M]],
    PREFIX = [[$PREFIX]],

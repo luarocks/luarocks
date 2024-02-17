@@ -187,7 +187,8 @@ search_interpreter() {
    then
       if detect_lua_version "$lua_at/$name"
       then
-         echo "Lua interpreter found: $(GREEN "$lua_at/$name")"
+         LUA="$lua_at/$name"
+         echo "Lua interpreter found: $(GREEN "$LUA")"
          if [ "$LUA_BINDIR_SET" != "yes" ]
          then
             LUA_BINDIR="$lua_at"
@@ -196,7 +197,7 @@ search_interpreter() {
          then
             LUA_DIR=$(dirname "$lua_at")
          fi
-         LUA_INTERPRETER="$name"
+
          return 0
       fi
    fi
@@ -288,8 +289,8 @@ do
       ;;
    --with-lua-interpreter)
       [ -n "$value" ] || die "Missing value in flag $key."
-      LUA_INTERPRETER="$value"
-      LUA_INTERPRETER_SET=yes
+      LUA_EXE="$value"
+      LUA_EXE_SET=yes
       ;;
 
    # For specialized uses of LuaRocks:
@@ -366,9 +367,9 @@ case "$LUA_VERSION" in
    ;;
 esac
 
-if [ "$LUA_INTERPRETER_SET" = "yes" ]
+if [ "$LUA_EXE_SET" = "yes" ]
 then
-   names="$LUA_INTERPRETER"
+   names="$LUA_EXE"
 fi
 
 for name in $names
@@ -400,8 +401,8 @@ fi
 
 if [ "$LUA_VERSION_SET" = "yes" ]
 then
-   echo_n "Checking if $LUA_BINDIR/$LUA_INTERPRETER is Lua version $LUA_VERSION... "
-   if detect_lua_version "$LUA_BINDIR/$LUA_INTERPRETER"
+   echo_n "Checking if $LUA is Lua version $LUA_VERSION... "
+   if detect_lua_version "$LUA"
    then
       echo "yes"
    else
@@ -433,7 +434,7 @@ check_incdir() {
       "$incdir/lua-$LUA_VERSION/lua.h" \
       "$incdir/lua$(echo "$LUA_VERSION" | tr -d .)/lua.h" \
       "$incdir/lua.h" \
-      $("$LUA_BINDIR/$LUA_INTERPRETER" -e 'print(jit and [['"$incdir"'/luajit-]]..jit.version:match("(%d+%.%d+)")..[[/lua.h]] or "")')
+      $("$LUA" -e 'print(jit and [['"$incdir"'/luajit-]]..jit.version:match("(%d+%.%d+)")..[[/lua.h]] or "")')
    do
       if [ -f "$lua_h" ]
       then
@@ -485,7 +486,7 @@ prefix=$prefix
 sysconfdir=$sysconfdir
 rocks_tree=$rocks_tree
 LUA_VERSION=$LUA_VERSION
-LUA_INTERPRETER=$LUA_INTERPRETER
+LUA=$LUA
 LUA_DIR=$LUA_DIR
 LUA_BINDIR=$LUA_BINDIR
 LUA_INCDIR=$LUA_INCDIR

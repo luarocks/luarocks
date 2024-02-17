@@ -28,10 +28,10 @@ test = {
    type = "busted",
    platforms = {
       windows = {
-         flags = { "--exclude-tags=ssh,git,unix", "-Xhelper", "lua_dir=$(LUA_DIR)", "-Xhelper", "lua_interpreter=$(LUA)" }
+         flags = { "--exclude-tags=ssh,git,unix", "-Xhelper", "lua_dir=$(LUA_DIR)", "-Xhelper", "lua=$(LUA)" }
       },
       unix = {
-         flags = { "--exclude-tags=ssh,git", "-Xhelper", "lua_dir=$(LUA_DIR)", "-Xhelper", "lua_interpreter=$(LUA)" }
+         flags = { "--exclude-tags=ssh,git", "-Xhelper", "lua_dir=$(LUA_DIR)", "-Xhelper", "lua=$(LUA)" }
       }
    }
 }

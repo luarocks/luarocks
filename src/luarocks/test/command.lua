@@ -2,7 +2,6 @@
 local command = {}
 
 local fs = require("luarocks.fs")
-local dir = require("luarocks.dir")
 local cfg = require("luarocks.core.cfg")
 
 local unpack = table.unpack or unpack
@@ -31,7 +30,7 @@ function command.run_tests(test, args)
       if not fs.exists(test.script) then
          return nil, "Test script " .. test.script .. " does not exist"
       end
-      local lua = fs.Q(dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter))  -- get lua interpreter configured
+      local lua = fs.Q(cfg.variables["LUA"])  -- get lua interpreter configured
       ok = fs.execute(lua, test.script, unpack(args))
    elseif test.command then
       ok = fs.execute(test.command, unpack(args))

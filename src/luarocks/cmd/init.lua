@@ -78,8 +78,7 @@ local function write_wrapper_scripts(wrapper_dir, luarocks_wrapper, lua_wrapper)
    end
 
    if write_lua_wrapper then
-      local interp = dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)
-      if util.check_lua_version(interp, cfg.lua_version) then
+      if util.check_lua_version(cfg.variables.LUA, cfg.lua_version) then
          util.printout("Preparing " .. lua_wrapper .. " for version " .. cfg.lua_version .. "...")
          path.use_tree(tree)
          fs.wrap_script(nil, lua_wrapper, "all")
@@ -160,21 +159,12 @@ function init.command(args)
 
    local config_tbl, err = persist.load_config_file_if_basic(config_file, cfg)
    if config_tbl then
-      local globals = {
-         "lua_interpreter",
-      }
-      for _, v in ipairs(globals) do
-         if cfg[v] then
-            config_tbl[v] = cfg[v]
-         end
-      end
-
       local varnames = {
          "LUA_DIR",
          "LUA_INCDIR",
          "LUA_LIBDIR",
          "LUA_BINDIR",
-         "LUA_INTERPRETER",
+         "LUA",
       }
       for _, varname in ipairs(varnames) do
          if cfg.variables[varname] then

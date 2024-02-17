@@ -7,8 +7,7 @@ INSTALL = install
 INSTALL_DATA = $(INSTALL) -m 644
 BINARY_PLATFORM = unix
 
-SHEBANG = \#!$(LUA_BINDIR)/$(LUA_INTERPRETER)
-LUA = $(LUA_BINDIR)/$(LUA_INTERPRETER)
+SHEBANG = \#!$(LUA)
 luarocksconfdir = $(sysconfdir)/luarocks
 luadir = $(datarootdir)/lua/$(LUA_VERSION)
 builddir = ./build
@@ -38,12 +37,13 @@ $(builddir)/config-$(LUA_VERSION).lua: config.unix
 	'   { name = "user", root = home .. "/.luarocks" };\n'\
 	"$$([ "$(rocks_tree)" != "$(HOME)/.luarocks" ] && printf '   { name = "system", root = "'"$(rocks_tree)"'" };\\n')"\
 	'}\n'\
-	"$$([ -n "$(LUA_INTERPRETER)" ] && printf 'lua_interpreter = "%s";\\n' "$(LUA_INTERPRETER)")"\
 	'variables = {\n'\
 	"$$([ -n "$(LUA_DIR)" ] && printf '   LUA_DIR = "%s";\\n' "$(LUA_DIR)")"\
 	"$$([ -n "$(LUA_INCDIR)" ] && printf '   LUA_INCDIR = "%s";\\n' "$(LUA_INCDIR)")"\
 	"$$([ -n "$(LUA_BINDIR)" ] && printf '   LUA_BINDIR = "%s";\\n' "$(LUA_BINDIR)")"\
 	"$$([ -n "$(LUA_LIBDIR)" ] && printf '   LUA_LIBDIR = "%s";\\n' "$(LUA_LIBDIR)")"\
+	"$$([ -n "$(LUA_VERSION)" ] && printf '   LUA_VERSION = "%s";\\n' "$(LUA_VERSION)")"\
+	"$$([ -n "$(LUA)" ] && printf '   LUA = "%s";\\n' "$(LUA)")"\
 	'}\n'\
 	> $@
 
