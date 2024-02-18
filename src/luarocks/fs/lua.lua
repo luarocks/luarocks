@@ -373,9 +373,11 @@ function fs_lua.make_dir(directory)
          if not ok then
             return false, err
          end
-         ok, err = fs.set_permissions(path, "exec", "all")
-         if not ok then
-            return false, err
+         if cfg.is_platform("unix") then
+            ok, err = fs.set_permissions(path, "exec", "all")
+            if not ok then
+               return false, err
+            end
          end
       elseif mode ~= "directory" then
          return false, path.." is not a directory"
