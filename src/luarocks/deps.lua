@@ -630,7 +630,6 @@ function deps.scan_deps(results, mdeps, name, version, deps_mode)
    if not dependencies then
       local rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version), false)
       if not rockspec then
-         util.printerr("Couldn't load rockspec for "..name.." "..version..": "..err)
          return
       end
       dependencies = rockspec.dependencies
