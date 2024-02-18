@@ -374,8 +374,22 @@ function win32.system_cache_dir()
 end
 
 function win32.search_in_path(program)
+   if program:match("\\") then
+      local fd = io.open(dir.path(program), "r")
+      if fd then
+         fd:close()
+         return true, program
+      end
+
+      return false
+   end
+
+   if not program:lower():match("exe$") then
+      program = program .. ".exe"
+   end
+
    for d in (os.getenv("PATH") or ""):gmatch("([^;]+)") do
-      local fd = io.open(dir.path(d, program .. ".exe"), "r")
+      local fd = io.open(dir.path(d, program), "r")
       if fd then
          fd:close()
          return true, d
