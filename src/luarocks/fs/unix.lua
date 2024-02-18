@@ -227,6 +227,16 @@ function unix.system_cache_dir()
 end
 
 function unix.search_in_path(program)
+   if program:match("/") then
+      local fd = io.open(dir.path(program), "r")
+      if fd then
+         fd:close()
+         return true, program
+      end
+
+      return false
+   end
+
    for d in (os.getenv("PATH") or ""):gmatch("([^:]+)") do
       local fd = io.open(dir.path(d, program), "r")
       if fd then
