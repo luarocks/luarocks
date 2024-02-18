@@ -224,7 +224,7 @@ do
             local try = "."
             for _ = 1, 10 do -- FIXME detect when root dir was hit instead
                if util.exists(try .. "/.luarocks") and util.exists(try .. "/lua_modules") then
-                  return try, false
+                  return dir.normalize(try), false
                elseif util.exists(try .. "/.luarocks-no-project") then
                   break
                end
