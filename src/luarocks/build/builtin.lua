@@ -291,6 +291,18 @@ function builtin.run(rockspec, no_install)
          return nil, "Missing build.modules table"
       end
    end
+
+   local compile_temp_dir
+
+   local mkdir_cache = {}
+   local function cached_make_dir(name)
+      if name == "" or mkdir_cache[name] then
+         return true
+      end
+      mkdir_cache[name] = true
+      return fs.make_dir(name)
+   end
+
    for name, info in pairs(build.modules) do
       local moddir = path.module_to_path(name)
       if type(info) == "string" then
@@ -339,17 +351,33 @@ function builtin.run(rockspec, no_install)
             end
             table.insert(objects, object)
          end
+
+         if not compile_temp_dir then
+            compile_temp_dir = fs.make_temp_dir("build-" .. rockspec.package .. "-" .. rockspec.version)
+            util.schedule_function(fs.delete, compile_temp_dir)
+         end
+
          local module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.lib_extension)
          if moddir ~= "" then
             module_name = dir.path(moddir, module_name)
-            ok, err = fs.make_dir(moddir)
-            if not ok then return nil, err end
          end
-         lib_modules[module_name] = dir.path(libdir, module_name)
-         ok = compile_library(module_name, objects, info.libraries, info.libdirs or autolibdirs, name)
+
+         local build_name = dir.path(compile_temp_dir, module_name)
+         local build_dir = dir.dir_name(build_name)
+         cached_make_dir(build_dir)
+
+         lib_modules[build_name] = dir.path(libdir, module_name)
+         ok = compile_library(build_name, objects, info.libraries, info.libdirs or autolibdirs, name)
          if not ok then
             return nil, "Failed compiling module "..module_name
          end
+
+         -- for backwards compatibility, try keeping a copy of the module
+         -- in the old location (luasec-1.3.2-1 rockspec breaks otherwise)
+         if cached_make_dir(dir.dir_name(module_name)) then
+            fs.copy(build_name, module_name)
+         end
+
          --[[ TODO disable static libs until we fix the conflict in the manifest, which will take extending the manifest format.
          module_name = name:match("([^.]*)$").."."..util.matchquote(cfg.static_lib_extension)
          if moddir ~= "" then
@@ -366,7 +394,7 @@ function builtin.run(rockspec, no_install)
    if not no_install then
       for _, mods in ipairs({{ tbl = lua_modules, perms = "read" }, { tbl = lib_modules, perms = "exec" }}) do
          for name, dest in pairs(mods.tbl) do
-            fs.make_dir(dir.dir_name(dest))
+            cached_make_dir(dir.dir_name(dest))
             ok, err = fs.copy(name, dest, mods.perms)
             if not ok then
                return nil, "Failed installing "..name.." in "..dest..": "..err

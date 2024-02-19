@@ -296,7 +296,7 @@ do
             local ok, err = fs.make_dir(dest)
             if not ok then return nil, err end
          end
-         local ok = fs.copy(dir.path(file), dir.path(dest, filename), perms)
+         local ok = fs.copy(file, dir.path(dest, filename), perms)
          if not ok then
             return nil, "Failed copying "..file
          end
