@@ -8,6 +8,7 @@ local util = require("luarocks.util")
 local deps = require("luarocks.deps")
 local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
+local json = require("luarocks.vendor.dkjson")
 
 function config_cmd.add_to_parser(parser)
    local cmd = parser:command("config", [[
@@ -135,11 +136,6 @@ local function traverse_varstring(var, tbl, fn, missing_parent)
 end
 
 local function print_json(value)
-   local json_ok, json = util.require_json()
-   if not json_ok then
-      return nil, "A JSON library is required for this command. "..json
-   end
-
    print(json.encode(value))
    return true
 end

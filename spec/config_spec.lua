@@ -23,15 +23,7 @@ describe("LuaRocks config tests #integration", function()
       end)
 
       it("--json", function()
-         assert.is_true(run.luarocks_nocov("install dkjson"))
-         finally(function()
-            assert.is_true(run.luarocks_nocov("remove dkjson"))
-         end)
          assert.match('"rocks_servers":[', run.luarocks("config --json"), 1, true)
-      end)
-
-      it("--json fails without a json library", function()
-         assert.falsy(run.luarocks_bool("config --json"))
       end)
 
       it("with --tree respects custom config", function()
@@ -167,16 +159,8 @@ describe("LuaRocks config tests #integration", function()
       end)
 
       it("can read as JSON", function()
-         assert.is_true(run.luarocks_nocov("install dkjson"))
-         finally(function()
-            assert.is_true(run.luarocks_nocov("remove dkjson"))
-         end)
          local output = run.luarocks("config rocks_trees --json")
          assert.match('^%["', output)
-      end)
-
-      it("--json does not work without a json library", function()
-         assert.is_false(run.luarocks_bool("config rocks_trees --json"))
       end)
 
       it("reads an array -> hash config key", function()
