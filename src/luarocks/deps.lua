@@ -446,7 +446,6 @@ local function check_external_dependency_at(prefix, name, ext_files, vars, dirs,
       else
          paths = { dir.path(prefix, dirdata.subdir) }
       end
-      dirdata.dir = paths[1]
       local file_or_files = ext_files[dirdata.testfile]
       if file_or_files then
          local files = {}
@@ -511,6 +510,17 @@ local function check_external_dependency_at(prefix, name, ext_files, vars, dirs,
          end
          if not found then
             return nil, dirname, dirdata.testfile
+         end
+      else
+         -- When we have a set of subdir suffixes, look for one that exists.
+         -- For these reason, we now put "lib" ahead of "" on Windows in our
+         -- default set.
+         dirdata.dir = paths[1]
+         for _, p in ipairs(paths) do
+            if fs.exists(p) then
+               dirdata.dir = p
+               break
+            end
          end
       end
    end
