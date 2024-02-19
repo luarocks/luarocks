@@ -319,8 +319,8 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.local_cache = localappdata.."/LuaRocks/Cache"
       defaults.web_browser = "start"
 
-      defaults.external_deps_subdirs.lib = { "", "lib", "bin" }
-      defaults.runtime_external_deps_subdirs.lib = { "", "lib", "bin" }
+      defaults.external_deps_subdirs.lib = { "lib", "", "bin" }
+      defaults.runtime_external_deps_subdirs.lib = { "lib", "", "bin" }
       defaults.link_lua_explicitly = true
       defaults.fs_use_modules = false
    end
@@ -494,8 +494,8 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
 
       -- Homebrew
       table.insert(defaults.external_deps_dirs, "/usr/local/opt")
-      defaults.external_deps_subdirs.lib = { "", "lib", }
-      defaults.runtime_external_deps_subdirs.lib = { "", "lib", }
+      defaults.external_deps_subdirs.lib = { "lib", "" }
+      defaults.runtime_external_deps_subdirs.lib = { "lib", "" }
       table.insert(defaults.external_deps_patterns.lib, 1, "/?/lib/lib?.dylib")
       table.insert(defaults.runtime_external_deps_patterns.lib, 1, "/?/lib/lib?.dylib")
    end
@@ -505,11 +505,11 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
 
       local gcc_arch = util.popen_read("gcc -print-multiarch 2>/dev/null")
       if gcc_arch and gcc_arch ~= "" then
-         defaults.external_deps_subdirs.lib = { "lib", "lib/" .. gcc_arch, "lib64" }
-         defaults.runtime_external_deps_subdirs.lib = { "lib", "lib/" .. gcc_arch, "lib64" }
+         defaults.external_deps_subdirs.lib = { "lib/" .. gcc_arch, "lib64", "lib" }
+         defaults.runtime_external_deps_subdirs.lib = { "lib/" .. gcc_arch, "lib64", "lib" }
       else
-         defaults.external_deps_subdirs.lib = { "lib", "lib64" }
-         defaults.runtime_external_deps_subdirs.lib = { "lib", "lib64" }
+         defaults.external_deps_subdirs.lib = { "lib64", "lib" }
+         defaults.runtime_external_deps_subdirs.lib = { "lib64", "lib" }
       end
    end
 
