@@ -152,9 +152,9 @@ function init.command(args)
 
    if args.reset then
       if do_wrapper_scripts then
-         fs.delete(dir.path(wrapper_dir, lua_wrapper))
+         fs.delete(fs.absolute_name(dir.path(wrapper_dir, lua_wrapper)))
       end
-      fs.delete(config_file)
+      fs.delete(fs.absolute_name(config_file))
    end
 
    local config_tbl, err = persist.load_config_file_if_basic(config_file, cfg)
