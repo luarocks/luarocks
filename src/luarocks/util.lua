@@ -434,6 +434,10 @@ do
       end
       cfg.cache.luajit_version_checked = true
 
+      if not cfg.variables.LUA then
+         return nil
+      end
+
       local ljv
       if cfg.lua_version == "5.1" then
          -- Ignores extra version info for custom builds, e.g. "LuaJIT 2.1.0-beta3 some-other-version-info"

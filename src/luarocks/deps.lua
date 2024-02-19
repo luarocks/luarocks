@@ -706,7 +706,7 @@ local function lua_h_exists(d, luaver)
       return nil, "Lua header found at " .. d .. " does not match Lua version " .. luaver .. ". You may want to override this by configuring LUA_INCDIR.", "dependency", 2
    end
 
-   return nil, "Failed finding Lua header files. You may need to install them or configure LUA_INCDIR.", "dependency", 1
+   return nil, "Failed finding Lua header files (searched at " .. d .. "). You may need to install them or configure LUA_INCDIR.", "dependency", 1
 end
 
 local function find_lua_incdir(prefix, luaver, luajitver)
@@ -763,7 +763,7 @@ function deps.check_lua_incdir(vars)
       return nil, err
    end
 
-   return nil, "Failed finding Lua header files. You may need to install them or configure LUA_INCDIR.", "dependency"
+   return nil, "Failed finding Lua headers; neither LUA_DIR or LUA_INCDIR are set. You may need to install them or configure LUA_INCDIR.", "dependency"
 end
 
 function deps.check_lua_libdir(vars)
@@ -789,6 +789,7 @@ function deps.check_lua_libdir(vars)
    }
    if ljv then
       table.insert(libnames, 1, "luajit-" .. cfg.lua_version)
+      table.insert(libnames, 2, "luajit")
    end
    local cache = {}
    local save_LUA_INCDIR = vars.LUA_INCDIR

@@ -60,7 +60,7 @@ describe("LuaRocks command line #integration", function()
 
       it("warns but continues if given an invalid version", function()
          local output = run.luarocks("--lua-version=1.0")
-         assert.match("Warning: Lua 1.0 interpreter not found", output, 1, true)
+         assert.match("LUA *: %(not found%)", output)
          assert.match("Version%s*:%s*1.0", output)
       end)
 

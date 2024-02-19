@@ -125,10 +125,6 @@ function init.command(args)
 
    util.title("Initializing project '" .. args.name .. "' for Lua " .. cfg.lua_version .. " ...")
 
-   util.printout("Checking your Lua installation ...")
-   if not cfg.lua_found then
-      return nil, "Lua installation is not found."
-   end
    local ok, err = deps.check_lua_incdir(cfg.variables)
    if not ok then
       return nil, err
