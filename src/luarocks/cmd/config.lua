@@ -175,7 +175,9 @@ local function write_entries(keys, scope, do_unset)
       return nil, "Current directory is not part of a project. You may want to run `luarocks init`."
    end
 
-   local tbl, err = persist.load_config_file_if_basic(cfg.config_files[scope].file, cfg)
+   local file_name = cfg.config_files[scope].file
+
+   local tbl, err = persist.load_config_file_if_basic(file_name, cfg)
    if not tbl then
       return nil, err
    end
@@ -205,7 +207,12 @@ local function write_entries(keys, scope, do_unset)
       end)
    end
 
-   local ok, err = persist.save_from_table(cfg.config_files[scope].file, tbl)
+   local ok, err = fs.make_dir(dir.dir_name(file_name))
+   if not ok then
+      return nil, err
+   end
+
+   ok, err = persist.save_from_table(file_name, tbl)
    if ok then
       print(do_unset and "Removed" or "Wrote")
       for var, val in util.sortedpairs(keys) do
@@ -216,7 +223,7 @@ local function write_entries(keys, scope, do_unset)
          end
       end
       print(do_unset and "from" or "to")
-      print("\t" .. cfg.config_files[scope].file)
+      print("\t" .. file_name)
       return true
    else
       return nil, err
