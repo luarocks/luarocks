@@ -212,7 +212,11 @@ local function write_entries(keys, scope, do_unset)
          if do_unset then
             print(("\t%s"):format(var))
          else
-            print(("\t%s = %q"):format(var, val))
+            if type(val) == "string" then
+               print(("\t%s = %q"):format(var, val))
+            else
+               print(("\t%s = %s"):format(var, tostring(val)))
+            end
          end
       end
       print(do_unset and "from" or "to")
