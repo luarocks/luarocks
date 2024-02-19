@@ -142,8 +142,8 @@ end
 -- filename can be given explicitly as this second argument.
 -- @param cache boolean: compare remote timestamps via HTTP HEAD prior to
 -- re-downloading the file.
--- @return (boolean, string): true and the filename on success,
--- false and the error message on failure.
+-- @return (boolean, string, string): true and the filename on success,
+-- false and the error message and code on failure.
 function tools.use_downloader(url, filename, cache)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
@@ -152,7 +152,7 @@ function tools.use_downloader(url, filename, cache)
 
    local downloader, err = fs.which_tool("downloader")
    if not downloader then
-      return nil, err
+      return nil, err, "downloader"
    end
 
    local ok = false
@@ -187,7 +187,7 @@ function tools.use_downloader(url, filename, cache)
       return true, filename
    else
       os.remove(filename)
-      return false, "failed downloading " .. url
+      return false, "failed downloading " .. url, "network"
    end
 end
 
