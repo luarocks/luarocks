@@ -19,12 +19,6 @@ do
          { var = "WGET", name = "wget" },
          { var = "CURL", name = "curl" },
       },
-      md5checker = {
-         desc = "MD5 checker",
-         { var = "MD5SUM", name = "md5sum" },
-         { var = "OPENSSL", name = "openssl", cmdarg = "md5" },
-         { var = "MD5", name = "md5" },
-      },
    }
 
    function tools.which_tool(tooltype)
@@ -188,28 +182,6 @@ function tools.use_downloader(url, filename, cache)
    else
       os.remove(filename)
       return false, "failed downloading " .. url
-   end
-end
-
---- Get the MD5 checksum for a file.
--- @param file string: The file to be computed.
--- @return string: The MD5 checksum or nil + message
-function tools.get_md5(file)
-   local ok, md5checker = fs.which_tool("md5checker")
-   if not ok then
-      return false, md5checker
-   end
-
-   local pipe = io.popen(md5checker.." "..fs.Q(fs.absolute_name(file)))
-   local computed = pipe:read("*l")
-   pipe:close()
-   if computed then
-      computed = computed:match("("..("%x"):rep(32)..")")
-   end
-   if computed then
-      return computed
-   else
-      return nil, "Failed to compute MD5 hash for file "..tostring(fs.absolute_name(file))
    end
 end
 

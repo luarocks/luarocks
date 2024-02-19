@@ -249,9 +249,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          UNZIP = "unzip -n",
          GUNZIP = "gunzip",
          BUNZIP2 = "bunzip2",
-         TAR = "tar",
 
-         MD5SUM = "md5sum",
          OPENSSL = "openssl",
          MD5 = "md5",
          TOUCH = "touch",
@@ -776,7 +774,7 @@ function cfg.init(detected, warning)
    local defaults = make_defaults(cfg.lua_version, processor, platforms, cfg.home)
 
    if platforms.windows and hardcoded.WIN_TOOLS then
-      local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "WGET", }
+      local tools = { "SEVENZ", "CP", "FIND", "LS", "WGET", }
       for _, tool in ipairs(tools) do
          defaults.variables[tool] = '"' .. hardcoded.WIN_TOOLS .. "/" .. defaults.variables[tool] .. '.exe"'
       end
