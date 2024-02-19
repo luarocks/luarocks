@@ -7,6 +7,7 @@ local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local persist = require("luarocks.persist")
 local multipart = require("luarocks.upload.multipart")
+local json = require("luarocks.vendor.dkjson")
 
 local Api = {}
 
@@ -118,8 +119,6 @@ if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
 
 function Api:request(url, params, post_params)
    local vars = cfg.variables
-   local json_ok, json = util.require_json()
-   if not json_ok then return nil, "A JSON library is required for this command. "..json end
 
    if fs.which_tool("downloader") == "wget" then
       local curl_ok, err = fs.is_tool_available(vars.CURL, "curl")
@@ -182,8 +181,6 @@ else -- use LuaSocket and LuaSec
 local warned_luasec = false
 
 function Api:request(url, params, post_params)
-   local json_ok, json = util.require_json()
-   if not json_ok then return nil, "A JSON library is required for this command. "..json end
    local server = tostring(self.config.server)
    local http_ok, http
    local via = "luasocket"
