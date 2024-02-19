@@ -339,7 +339,7 @@ local function look_for_link_libraries(directory)
 	-- MinGW does not generate .lib, nor needs it to link, but MSVC does,
 	-- so .lib must be listed first to ensure they are found first if present,
 	-- to prevent MSVC trying to link to a .dll, which won't work.
-	local names = {S"lua$LUA_VERSION.lib", S"lua$LUA_SHORTV.lib", S"lua$LUA_VERSION.dll", S"lua$LUA_SHORTV.dll", "liblua.dll.a"}
+	local names = {S"lua$LUA_VERSION.lib", S"lua$LUA_SHORTV.lib", S"liblua$LUA_SHORTV.a", S"lua$LUA_VERSION.dll", S"lua$LUA_SHORTV.dll", "liblua.dll.a"}
 	local directories
 	if vars.LUA_LIBDIR then
 		directories = {vars.LUA_LIBDIR}
@@ -1151,7 +1151,6 @@ if USE_MINGW and vars.LUA_RUNTIME == "MSVCRT" then
 else
 	f:write("    MSVCRT = '"..vars.LUA_RUNTIME.."',\n")
 end
-f:write(S"    LUALIB = '$LUA_LIBNAME',\n")
 if USE_MINGW then
         f:write(S[[
     CC = $MINGW_CC,
