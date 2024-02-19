@@ -39,8 +39,8 @@ function lint.command(args)
    -- Making 'lint' alone be stricter shouldn't be a problem,
    -- because extra-strict checks is what lint-type commands
    -- are all about.
-   if not rs.description.license then
-      util.printerr("Rockspec has no license field.")
+   if not rs.description or not rs.description.license then
+      util.printerr("Rockspec has no description.license field.")
       ok = false
    end
 

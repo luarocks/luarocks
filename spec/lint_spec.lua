@@ -93,5 +93,19 @@ describe("luarocks lint #integration", function()
          ]], finally)
          assert.is_false(run.luarocks_bool("lint no_build_table-1.0-1.rockspec"))
       end)
+
+      it("no description field", function()
+         write_file("nodesc-1.0-1.rockspec", [[
+            package = "nodesc"
+            version = "0.1-1"
+            source = {
+               url = "http://example.com/foo/tar.gz"
+            }
+            dependencies = {
+               "lua >= 5.1"
+            }
+         ]], finally)
+         assert.is_false(run.luarocks_bool("lint nodesc-1.0-1.rockspec"))
+      end)
    end)
 end)
