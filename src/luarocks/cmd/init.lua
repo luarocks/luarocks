@@ -55,6 +55,22 @@ local function write_gitignore(entries)
    fd:close()
 end
 
+local function inject_tree(tree)
+   path.use_tree(tree)
+   local tree_set = false
+   for _, t in ipairs(cfg.rocks_trees) do
+      if type(t) == "table" then
+         if t.name == "project" then
+            t.root = tree
+            tree_set = true
+         end
+      end
+   end
+   if not tree_set then
+      table.insert(cfg.rocks_trees, 1, { name = "project", root = tree })
+   end
+end
+
 local function write_wrapper_scripts(wrapper_dir, luarocks_wrapper, lua_wrapper)
    local tree = dir.path(fs.current_dir(), "lua_modules")
 
@@ -80,7 +96,10 @@ local function write_wrapper_scripts(wrapper_dir, luarocks_wrapper, lua_wrapper)
    if write_lua_wrapper then
       if util.check_lua_version(cfg.variables.LUA, cfg.lua_version) then
          util.printout("Preparing " .. lua_wrapper .. " for version " .. cfg.lua_version .. "...")
-         path.use_tree(tree)
+
+         -- Inject tree so it shows up as a lookup path in the wrappers
+         inject_tree(tree)
+
          fs.wrap_script(nil, lua_wrapper, "all")
       else
          util.warning("No Lua interpreter detected for version " .. cfg.lua_version .. ". Not creating " .. lua_wrapper)
