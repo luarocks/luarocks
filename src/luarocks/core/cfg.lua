@@ -787,7 +787,7 @@ function cfg.init(detected, warning)
    -- if only cfg.variables.LUA is given in config files,
    -- derive LUA_BINDIR and LUA_DIR from them.
    if cfg.variables.LUA and not cfg.variables.LUA_BINDIR then
-      cfg.variables.LUA_BINDIR = cfg.variables.LUA:gsub("^(.*)[/\\][^/\\]*$")
+      cfg.variables.LUA_BINDIR = cfg.variables.LUA:match("^(.*)[/\\][^/\\]*$")
       if not cfg.variables.LUA_DIR then
          cfg.variables.LUA_DIR = cfg.variables.LUA_BINDIR:gsub("[/\\]bin$", "") or cfg.variables.LUA_BINDIR
       end

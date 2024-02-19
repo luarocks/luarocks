@@ -340,14 +340,18 @@ Variables:
 
 ]]
 
-local function get_status(status)
-   return status and "ok" or "not found"
+local lua_example = package.config:sub(1, 1) == "\\"
+                    and "<d:\\path\\lua.exe>"
+                    or  "</path/lua>"
+
+local function show_status(file, status)
+   return (file and file .. " " or "") .. (status and "(ok)" or "(not found)")
 end
 
-local function use_to_fix_location(key)
+local function use_to_fix_location(key, what)
    local buf =  "                   ****************************************\n"
    buf = buf .. "                   Use the command\n\n"
-   buf = buf .. "                      luarocks config " .. key .. " <dir>\n\n"
+   buf = buf .. "                      luarocks config " .. key .. " " .. (what or "<dir>") .. "\n\n"
    buf = buf .. "                   to fix the location\n"
    buf = buf .. "                   ****************************************\n"
    return buf
@@ -358,8 +362,6 @@ local function get_config_text(cfg)  -- luacheck: ignore 431
 
    local libdir_ok = deps.check_lua_libdir(cfg.variables)
    local incdir_ok = deps.check_lua_incdir(cfg.variables)
-   local bindir_ok = cfg.variables.LUA_BINDIR and fs.exists(cfg.variables.LUA_BINDIR)
-   local luadir_ok = cfg.variables.LUA_DIR and fs.exists(cfg.variables.LUA_DIR)
    local lua_ok = cfg.variables.LUA and fs.exists(cfg.variables.LUA)
 
    local buf = "Configuration:\n"
@@ -368,31 +370,29 @@ local function get_config_text(cfg)  -- luacheck: ignore 431
    if cfg.luajit_version then
       buf = buf.."      LuaJIT     : "..cfg.luajit_version.."\n"
    end
-   buf = buf.."      Interpreter: "..(cfg.variables.LUA or "").." ("..get_status(lua_ok)..")\n"
-   buf = buf.."      LUA_DIR    : "..(cfg.variables.LUA_DIR or "").." ("..get_status(luadir_ok)..")\n"
+   buf = buf.."      LUA        : "..show_status(cfg.variables.LUA, lua_ok).."\n"
    if not lua_ok then
-      buf = buf .. use_to_fix_location("lua_dir")
+      buf = buf .. use_to_fix_location("variables.LUA", lua_example)
    end
-   buf = buf.."      LUA_BINDIR : "..(cfg.variables.LUA_BINDIR or "").." ("..get_status(bindir_ok)..")\n"
-   buf = buf.."      LUA_INCDIR : "..(cfg.variables.LUA_INCDIR or "").." ("..get_status(incdir_ok)..")\n"
+   buf = buf.."      LUA_INCDIR : "..show_status(cfg.variables.LUA_INCDIR, incdir_ok).."\n"
    if lua_ok and not incdir_ok then
       buf = buf .. use_to_fix_location("variables.LUA_INCDIR")
    end
-   buf = buf.."      LUA_LIBDIR : "..(cfg.variables.LUA_LIBDIR or "").." ("..get_status(libdir_ok)..")\n"
+   buf = buf.."      LUA_LIBDIR : "..show_status(cfg.variables.LUA_LIBDIR, libdir_ok).."\n"
    if lua_ok and not libdir_ok then
       buf = buf .. use_to_fix_location("variables.LUA_LIBDIR")
    end
 
    buf = buf.."\n   Configuration files:\n"
    local conf = cfg.config_files
-   buf = buf.."      System  : "..fs.absolute_name(conf.system.file).." ("..get_status(conf.system.found)..")\n"
+   buf = buf.."      System  : "..show_status(fs.absolute_name(conf.system.file), conf.system.found).."\n"
    if conf.user.file then
-      buf = buf.."      User    : "..fs.absolute_name(conf.user.file).." ("..get_status(conf.user.found)..")\n"
+      buf = buf.."      User    : "..show_status(fs.absolute_name(conf.user.file), conf.user.found).."\n"
    else
       buf = buf.."      User    : disabled in this LuaRocks installation.\n"
    end
    if conf.project then
-      buf = buf.."      Project : "..fs.absolute_name(conf.project.file).." ("..get_status(conf.project.found)..")\n"
+      buf = buf.."      Project : "..show_status(fs.absolute_name(conf.project.file), conf.project.found).."\n"
    end
    buf = buf.."\n   Rocks trees in use: \n"
    for _, tree in ipairs(cfg.rocks_trees) do
@@ -638,33 +638,35 @@ function cmd.run_command(description, commands, external_namespace, ...)
             cfg.variables.LUA_INCDIR = nil
             cfg.variables.LUA_LIBDIR = nil
          end
+      else
+         cfg.variables.LUA = nil
+         cfg.variables.LUA_DIR = nil
+         cfg.variables.LUA_BINDIR = nil
+         cfg.variables.LUA_INCDIR = nil
+         cfg.variables.LUA_LIBDIR = nil
       end
    end
 
    if lua_found then
       assert(cfg.variables.LUA)
    else
-      if args.command ~= "config" and args.command ~= "help" then
-         util.warning(tried ..
-                      "\nModules may not install with the correct configurations. " ..
-                      "You may want to configure the path prefix to your build " ..
-                      "of Lua " .. cfg.lua_version .. " using\n\n" ..
-                      "   luarocks config --local lua_dir <your-lua-prefix>\n")
-      end
-
       -- Fallback producing _some_ Lua configuration based on the running interpreter.
       -- Most likely won't produce correct results when running from the standalone binary,
       -- so eventually we need to drop this and outright fail if Lua is not found
       -- or explictly configured
       if not cfg.variables.LUA then
          local first_arg = get_first_arg()
-         cfg.variables.LUA_DIR = dir.dir_name(fs.absolute_name(first_arg))
-         cfg.variables.LUA_BINDIR = cfg.variables.LUA_DIR
-         local exe = fs.base_name(first_arg)
+         local bin_dir = dir.dir_name(fs.absolute_name(first_arg))
+         local exe = dir.base_name(first_arg)
          exe = exe:match("rocks") and ("lua" .. (cfg.arch:match("win") and ".exe" or "")) or exe
-         cfg.variables.LUA = dir.path(cfg.variables.LUA_BINDIR, exe)
-         cfg.variables.LUA_INCDIR = nil
-         cfg.variables.LUA_LIBDIR = nil
+         local full_path = dir.path(bin_dir, exe)
+         if util.check_lua_version(full_path, cfg.lua_version) then
+            cfg.variables.LUA = dir.path(bin_dir, exe)
+            cfg.variables.LUA_DIR = bin_dir:gsub("[/\\]bin[/\\]?$", "")
+            cfg.variables.LUA_BINDIR = bin_dir
+            cfg.variables.LUA_INCDIR = nil
+            cfg.variables.LUA_LIBDIR = nil
+         end
       end
    end
 
@@ -718,10 +720,16 @@ function cmd.run_command(description, commands, external_namespace, ...)
       os.exit(cmd.errorcodes.OK)
    end
 
-   if not cfg.variables["LUA_BINDIR"] then
-      return nil, "LUA_BINDIR not configured.\n" ..
-         "Please configure the location of the Lua interpreter with:\n" ..
-         "   luarocks config variables.LUA_BINDIR <path>"
+   if not cfg.variables["LUA"] and args.command ~= "config" and args.command ~= "help" then
+      local flag = (not cfg.project_tree)
+                   and "--local "
+                   or ""
+      if args.lua_version then
+         flag = "--lua-version=" .. args.lua_version .. " " .. flag
+      end
+      die((tried or "Lua interpreter not found.") ..
+         "\nPlease set your Lua interpreter with:\n\n" ..
+         "   luarocks " .. flag.. "config variables.LUA " .. lua_example .. "\n")
    end
 
    local cmd_mod = cmd_modules[args.command]
