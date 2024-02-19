@@ -159,7 +159,7 @@ local function rock_status(dep, get_versions)
 
    local installed, _, _, provided = match_dep(dep, get_versions)
    local installation_type = provided and "provided by VM" or "installed"
-   return installed and installed.." "..installation_type or "not installed"
+   return installed and installed.." "..installation_type..": success" or "not installed"
 end
 
 --- Check depenendencies of a package and report any missing ones.
