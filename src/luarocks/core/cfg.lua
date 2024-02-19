@@ -293,14 +293,13 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       defaults.variables.LD = os.getenv("LINK") or "link"
       defaults.variables.MT = os.getenv("MT") or "mt"
       defaults.variables.AR = os.getenv("AR") or "lib"
-      defaults.variables.LUALIB = "lua"..lua_version..".lib"
       defaults.variables.CFLAGS = os.getenv("CFLAGS") or "/nologo /MD /O2"
       defaults.variables.LDFLAGS = os.getenv("LDFLAGS")
       defaults.variables.LIBFLAG = "/nologo /dll"
 
       defaults.external_deps_patterns = {
          bin = { "?.exe", "?.bat" },
-         lib = { "?.lib", "?.dll", "lib?.dll" },
+         lib = { "?.lib", "lib?.lib", "?.dll", "lib?.dll" },
          include = { "?.h" }
       }
       defaults.runtime_external_deps_patterns = {
@@ -443,7 +442,6 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          defaults.variables.MT = os.getenv("MT") or nil
          defaults.variables.AR = os.getenv("AR") or "ar"
          defaults.variables.RANLIB = os.getenv("RANLIB") or "ranlib"
-         defaults.variables.LUALIB = "liblua"..lua_version..".dll.a"
 
          defaults.variables.CFLAGS = os.getenv("CFLAGS") or "-O2 -fPIC"
          if not defaults.variables.CFLAGS:match("-fPIC") then
