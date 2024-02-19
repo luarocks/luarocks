@@ -10,7 +10,6 @@ local fun = require("luarocks.fun")
 local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
 local queries = require("luarocks.queries")
-local builtin = require("luarocks.build.builtin")
 local deplocks = require("luarocks.deplocks")
 
 --- Generate a function that matches dep queries against the manifest,
@@ -560,6 +559,40 @@ local function check_external_dependency(name, ext_files, vars, mode, cache)
    return nil, err_dirname, err_testfile, err_files
 end
 
+function deps.autodetect_external_dependencies(build)
+   -- only applies to the 'builtin' build type
+   if not build or not build.modules then
+      return nil
+   end
+
+   local extdeps = {}
+   local any = false
+   for _, data in pairs(build.modules) do
+      if type(data) == "table" and data.libraries then
+         local libraries = data.libraries
+         if type(libraries) == "string" then
+            libraries = { libraries }
+         end
+         local incdirs = {}
+         local libdirs = {}
+         for _, lib in ipairs(libraries) do
+            local upper = lib:upper():gsub("%+", "P"):gsub("[^%w]", "_")
+            any = true
+            extdeps[upper] = { library = lib }
+            table.insert(incdirs, "$(" .. upper .. "_INCDIR)")
+            table.insert(libdirs, "$(" .. upper .. "_LIBDIR)")
+         end
+         if not data.incdirs then
+            data.incdirs = incdirs
+         end
+         if not data.libdirs then
+            data.libdirs = libdirs
+         end
+      end
+   end
+   return any and extdeps or nil
+end
+
 --- Set up path-related variables for external dependencies.
 -- For each key in the external_dependencies table in the
 -- rockspec file, four variables are created: <key>_DIR, <key>_BINDIR,
@@ -577,7 +610,7 @@ function deps.check_external_deps(rockspec, mode)
    assert(rockspec:type() == "rockspec")
 
    if not rockspec.external_dependencies then
-      rockspec.external_dependencies = builtin.autodetect_external_dependencies(rockspec.build)
+      rockspec.external_dependencies = deps.autodetect_external_dependencies(rockspec.build)
    end
    if not rockspec.external_dependencies then
       return true
@@ -696,16 +729,25 @@ local function find_lua_incdir(prefix, luaver, luajitver)
 end
 
 function deps.check_lua_incdir(vars)
+   if vars.LUA_INCDIR_OK == true
+      then return true
+   end
+
    local ljv = util.get_luajit_version()
 
    if vars.LUA_INCDIR then
-      return lua_h_exists(vars.LUA_INCDIR, cfg.lua_version)
+      local ok, err = lua_h_exists(vars.LUA_INCDIR, cfg.lua_version)
+      if ok then
+         vars.LUA_INCDIR_OK = true
+      end
+      return ok, err
    end
 
    if vars.LUA_DIR then
       local d, err = find_lua_incdir(vars.LUA_DIR, cfg.lua_version, ljv)
       if d then
          vars.LUA_INCDIR = d
+         vars.LUA_INCDIR_OK = true
          return true
       end
       return nil, err
@@ -715,10 +757,15 @@ function deps.check_lua_incdir(vars)
 end
 
 function deps.check_lua_libdir(vars)
+   if vars.LUA_LIBDIR_OK == true
+      then return true
+   end
+
    local fs = require("luarocks.fs")
    local ljv = util.get_luajit_version()
 
    if vars.LUA_LIBDIR and vars.LUALIB and fs.exists(dir.path(vars.LUA_LIBDIR, vars.LUALIB)) then
+      vars.LUA_LIBDIR_OK = true
       return true
    end
 
@@ -758,6 +805,7 @@ function deps.check_lua_libdir(vars)
 
    if ok then
       vars.LUALIB = vars.LUA_LIBDIR_FILE
+      vars.LUA_LIBDIR_OK = true
       return true
    else
       err = err or "Failed finding Lua library. You may need to configure LUA_LIBDIR."

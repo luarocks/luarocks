@@ -561,7 +561,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
             util.warning("command module " .. module .. " does not implement command(), skipping")
          end
       else
-         util.warning("failed to load command module " .. module)
+         util.warning("failed to load command module " .. module .. ": " .. mod)
       end
    end
 

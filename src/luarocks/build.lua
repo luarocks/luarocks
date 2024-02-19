@@ -111,18 +111,6 @@ local function process_dependencies(rockspec, opts)
       end
    end
 
-   local ok, err, errcode = deps.check_lua_incdir(rockspec.variables)
-   if not ok then
-      return nil, err, errcode
-   end
-
-   if cfg.link_lua_explicitly then
-      local ok, err, errcode = deps.check_lua_libdir(rockspec.variables)
-      if not ok then
-         return nil, err, errcode
-      end
-   end
-
    if opts.deps_mode == "none" then
       return true
    end
@@ -165,11 +153,8 @@ local function process_dependencies(rockspec, opts)
          end
       end
    end
-   ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify)
-   if err then
-      return nil, err, errcode
-   end
-   return true
+
+   return deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify)
 end
 
 local function fetch_and_change_to_source_dir(rockspec, opts)
@@ -241,6 +226,21 @@ local function run_build_driver(rockspec, no_install)
    if not pok or type(driver) ~= "table" then
       return nil, "Failed initializing build back-end for build type '"..btype.."': "..driver
    end
+
+   if not driver.skip_lua_inc_lib_check then
+      local ok, err, errcode = deps.check_lua_incdir(rockspec.variables)
+      if not ok then
+         return nil, err, errcode
+      end
+
+      if cfg.link_lua_explicitly then
+         local ok, err, errcode = deps.check_lua_libdir(rockspec.variables)
+         if not ok then
+            return nil, err, errcode
+         end
+      end
+   end
+
    local ok, err = driver.run(rockspec, no_install)
    if not ok then
       return nil, "Build error: " .. err

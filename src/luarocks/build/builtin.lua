@@ -2,6 +2,11 @@
 --- A builtin build system: back-end to provide a portable way of building C-based Lua modules.
 local builtin = {}
 
+-- This build driver checks LUA_INCDIR and LUA_LIBDIR on demand,
+-- so that pure-Lua rocks don't need to have development headers
+-- installed.
+builtin.skip_lua_inc_lib_check = true
+
 local unpack = unpack or table.unpack
 
 local fs = require("luarocks.fs")
@@ -9,38 +14,7 @@ local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
-
-function builtin.autodetect_external_dependencies(build)
-   if not build or not build.modules then
-      return nil
-   end
-   local extdeps = {}
-   local any = false
-   for _, data in pairs(build.modules) do
-      if type(data) == "table" and data.libraries then
-         local libraries = data.libraries
-         if type(libraries) == "string" then
-            libraries = { libraries }
-         end
-         local incdirs = {}
-         local libdirs = {}
-         for _, lib in ipairs(libraries) do
-            local upper = lib:upper():gsub("%+", "P"):gsub("[^%w]", "_")
-            any = true
-            extdeps[upper] = { library = lib }
-            table.insert(incdirs, "$(" .. upper .. "_INCDIR)")
-            table.insert(libdirs, "$(" .. upper .. "_LIBDIR)")
-         end
-         if not data.incdirs then
-            data.incdirs = incdirs
-         end
-         if not data.libdirs then
-            data.libdirs = libdirs
-         end
-      end
-   end
-   return any and extdeps or nil
-end
+local deps = require("luarocks.deps")
 
 local function autoextract_libs(external_dependencies, variables)
    if not external_dependencies then
@@ -323,10 +297,16 @@ function builtin.run(rockspec, no_install)
       end
       if type(info) == "table" then
          if not checked_lua_h then
-            local lua_incdir, lua_h = variables.LUA_INCDIR, "lua.h"
-            if not fs.exists(dir.path(lua_incdir, lua_h)) then
-               return nil, "Lua header file "..lua_h.." not found (looked in "..lua_incdir.."). \n" ..
-                           "You need to install the Lua development package for your system."
+            local ok, err, errcode = deps.check_lua_incdir(rockspec.variables)
+            if not ok then
+               return nil, err, errcode
+            end
+
+            if cfg.link_lua_explicitly then
+               local ok, err, errcode = deps.check_lua_libdir(rockspec.variables)
+               if not ok then
+                  return nil, err, errcode
+               end
             end
             checked_lua_h = true
          end
