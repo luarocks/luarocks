@@ -101,7 +101,7 @@ local function download_with_mirrors(url, filename, cache, servers)
       end
    end
 
-   return nil, err
+   return nil, err, "network"
 end
 
 --- Fetch a local or remote file.
@@ -161,7 +161,7 @@ function fetch.fetch_url(url, filename, cache, mirroring)
          ok, name, from_cache = fs.download(url, filename, cache)
       end
       if not ok then
-         return nil, "Failed downloading "..url..(name and " - "..name or ""), "network"
+         return nil, "Failed downloading "..url..(name and " - "..name or ""), from_cache
       end
       return name, nil, nil, from_cache
    else

@@ -160,6 +160,9 @@ function search.search_repos(query, lua_version)
                break
             else
                util.warning("Failed searching manifest: "..err)
+               if errcode == "downloader" then
+                  break
+               end
             end
          end
       end

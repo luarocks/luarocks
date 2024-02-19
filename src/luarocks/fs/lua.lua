@@ -944,7 +944,7 @@ function fs_lua.download(url, filename, cache)
       end
       return fs.use_downloader(url, filename, cache)
    elseif not ok then
-      return nil, err
+      return nil, err, "network"
    end
    return true, filename, from_cache
 end
