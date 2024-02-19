@@ -238,6 +238,20 @@ describe("LuaRocks config tests #integration", function()
          end, finally)
       end)
 
+      it("writes a boolean config key", function()
+         test_env.run_in_tmp(function(tmpdir)
+            local myproject = tmpdir .. "/myproject"
+            lfs.mkdir(myproject)
+            lfs.chdir(myproject)
+
+            assert(run.luarocks("init"))
+            assert.truthy(run.luarocks_bool("config hooks_enabled true"))
+
+            local output = run.luarocks("config hooks_enabled")
+            assert.match("true", output)
+         end, finally)
+      end)
+
       it("writes an array config key", function()
          test_env.run_in_tmp(function(tmpdir)
             local myproject = tmpdir .. "/myproject"
