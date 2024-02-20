@@ -104,52 +104,50 @@ $(buildbinarydir)/luarocks-admin.exe: src/bin/luarocks-admin $(LUAROCKS_FILES)
 # Regular install
 # ----------------------------------------
 
-INSTALL_FILES = $(DESTDIR)$(bindir)/luarocks \
-	$(DESTDIR)$(bindir)/luarocks-admin \
-	$(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua \
-	$(patsubst src/%, $(DESTDIR)$(luadir)/%, $(LUAROCKS_FILES))
+INSTALL_FILES =
 
-install: $(INSTALL_FILES)
+install: all install-config
+	mkdir -p '$(DESTDIR)$(bindir)/'
+	$(INSTALL) '$(builddir)/luarocks' '$(DESTDIR)$(bindir)/luarocks'
+	$(INSTALL) '$(builddir)/luarocks-admin' '$(DESTDIR)$(bindir)/luarocks-admin'
+	find src/luarocks/ -type d | while read f; \
+	do \
+	   mkdir -p '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
+	done
+	find src/luarocks/ -type f -name '*.lua' | while read f; \
+	do \
+	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
+	done
 
-install-config: $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua
-
-$(DESTDIR)$(bindir)/luarocks: $(builddir)/luarocks
-	mkdir -p "$(@D)"
-	$(INSTALL) "$<" "$@"
-
-$(DESTDIR)$(bindir)/luarocks-admin: $(builddir)/luarocks-admin
-	mkdir -p "$(@D)"
-	$(INSTALL) "$<" "$@"
-
-$(DESTDIR)$(luadir)/luarocks/%.lua: src/luarocks/%.lua
-	mkdir -p "$(@D)"
-	$(INSTALL_DATA) "$<" "$@"
-
-$(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua: $(builddir)/config-$(LUA_VERSION).lua
-	mkdir -p "$(@D)"
-	$(INSTALL_DATA) "$<" "$@"
+install-config:
+	mkdir -p '$(DESTDIR)$(luarocksconfdir)/'
+	$(INSTALL_DATA)  '$(builddir)/config-$(LUA_VERSION).lua' '$(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua'
 
 uninstall:
-	rm -rf $(INSTALL_FILES)
+	rm -rf $(DESTDIR)$(bindir)/luarocks \
+	       $(DESTDIR)$(bindir)/luarocks-admin \
+	       $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua \
+	       $(patsubst src/%, $(DESTDIR)$(luadir)/%, $(LUAROCKS_FILES))
 
 # ----------------------------------------
 # Binary install
 # ----------------------------------------
 
-LUAROCKS_CORE_FILES = $(wildcard src/luarocks/core/* src/luarocks/loader.lua)
-INSTALL_BINARY_FILES = $(patsubst src/%, $(DESTDIR)$(luadir)/%, $(LUAROCKS_CORE_FILES)) \
-	$(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua
-
-install-binary: $(INSTALL_BINARY_FILES)
+install-binary: binary install-config
 	mkdir -p "$(buildbinarydir)"
 	$(INSTALL) "$(buildbinarydir)/luarocks.exe" "$(DESTDIR)$(bindir)/luarocks"
 	$(INSTALL) "$(buildbinarydir)/luarocks-admin.exe" "$(DESTDIR)$(bindir)/luarocks-admin"
+	mkdir -p '$(DESTDIR)$(luadir)/luarocks/core'
+	for f in src/luarocks/core/*.lua src/luarocks/loader.lua; \
+	do \
+	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
+	done
 
 # ----------------------------------------
 # Bootstrap install
 # ----------------------------------------
 
-bootstrap: luarocks $(DESTDIR)$(luarocksconfdir)/config-$(LUA_VERSION).lua
+bootstrap: luarocks install-config
 	./luarocks make --tree="$(DESTDIR)$(rocks_tree)"
 
 # ----------------------------------------
@@ -185,4 +183,4 @@ clean: windows-clean
 		./.luarocks \
 		./lua_modules
 
-.PHONY: all build install binary install-binary bootstrap clean windows-binary windows-clean
+.PHONY: all build install install-config binary install-binary bootstrap clean windows-binary windows-clean
