@@ -28,6 +28,8 @@ end
 local patch = require("luarocks.tools.patch")
 local tar = require("luarocks.tools.tar")
 
+local dir_sep = package.config:sub(1, 1)
+
 local dir_stack = {}
 
 --- Test is file/dir is writable.
@@ -277,6 +279,11 @@ function fs_lua.system_temp_dir()
    return os.getenv("TMPDIR") or os.getenv("TEMP") or "/tmp"
 end
 
+local function temp_dir_pattern(name_pattern)
+   return dir.path(fs.system_temp_dir(),
+                   "luarocks_" .. dir.normalize(name_pattern):gsub("[/\\]", "_") .. "-")
+end
+
 ---------------------------------------------------------------------
 -- LuaFileSystem functions
 ---------------------------------------------------------------------
@@ -361,12 +368,12 @@ function fs_lua.make_dir(directory)
      path = directory:sub(1, 2)
      directory = directory:sub(4)
    else
-     if directory:match("^/") then
+     if directory:match("^" .. dir_sep) then
         path = ""
      end
    end
-   for d in directory:gmatch("([^/]+)/*") do
-      path = path and path .. "/" .. d or d
+   for d in directory:gmatch("([^" .. dir_sep .. "]+)" .. dir_sep .. "*") do
+      path = path and path .. dir_sep .. d or d
       local mode = lfs.attributes(path, "mode")
       if not mode then
          local ok, err = lfs.mkdir(path)
@@ -504,7 +511,8 @@ end
 -- @return boolean or (boolean, string): true on success, false on failure,
 -- plus an error message.
 function fs_lua.copy_contents(src, dest, perms)
-   assert(src and dest)
+   assert(src)
+   assert(dest)
    src = dir.normalize(src)
    dest = dir.normalize(dest)
    if not fs.is_dir(src) then
@@ -589,7 +597,7 @@ local function recursive_find(cwd, prefix, result)
          table.insert(result, item)
          local pathname = dir.path(cwd, file)
          if lfs.attributes(pathname, "mode") == "directory" then
-            recursive_find(pathname, item.."/", result)
+            recursive_find(pathname, item .. dir_sep, result)
          end
       end
    end
@@ -656,9 +664,8 @@ else -- if not lfs_ok
 
 function fs_lua.exists(file)
    assert(file)
-   file = dir.normalize(fs.absolute_name(file))
    -- check if file exists by attempting to open it
-   return util.exists(file)
+   return util.exists(fs.absolute_name(file))
 end
 
 end
@@ -1072,9 +1079,8 @@ if posix.mkdtemp then
 -- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
 function fs_lua.make_temp_dir(name_pattern)
    assert(type(name_pattern) == "string")
-   name_pattern = dir.normalize(name_pattern)
 
-   return posix.mkdtemp(fs.system_temp_dir() .. "/luarocks_" .. name_pattern:gsub("/", "_") .. "-XXXXXX")
+   return posix.mkdtemp(temp_dir_pattern(name_pattern) .. "-XXXXXX")
 end
 
 end -- if posix.mkdtemp
@@ -1085,20 +1091,21 @@ end
 -- Other functions
 ---------------------------------------------------------------------
 
-if lfs_ok and not fs_lua.make_temp_dir then
+if not fs_lua.make_temp_dir then
 
 function fs_lua.make_temp_dir(name_pattern)
    assert(type(name_pattern) == "string")
-   name_pattern = dir.normalize(name_pattern)
 
-   local pattern = fs.system_temp_dir() .. "/luarocks_" .. name_pattern:gsub("/", "_") .. "-"
-
-   while true do
-      local name = pattern .. tostring(math.random(10000000))
-      if lfs.mkdir(name) then
+   local ok, err
+   for _ = 1, 3 do
+      local name = temp_dir_pattern(name_pattern) .. tostring(math.random(10000000))
+      ok, err = fs.make_dir(name)
+      if ok then
          return name
       end
    end
+
+   return nil, err
 end
 
 end

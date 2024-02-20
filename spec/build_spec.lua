@@ -5,6 +5,7 @@ local run = test_env.run
 local testing_paths = test_env.testing_paths
 local write_file = test_env.write_file
 local git_repo = require("spec.util.git_repo")
+local P = test_env.P
 
 test_env.unload_luarocks()
 local cfg = require("luarocks.core.cfg")
@@ -661,7 +662,7 @@ describe("LuaRocks build #unit", function()
             write_file("bin/binfile", "", finally)
 
             local _, install, copy_directories = build_builtin.autodetect_modules({}, {}, {})
-            assert.same(install, { bin = { "bin/binfile" } })
+            assert.same(install, { bin = { P"bin/binfile" } })
             assert.same(copy_directories, { "doc", "docs", "samples", "tests" })
 
             lfs.rmdir("doc")

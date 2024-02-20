@@ -45,7 +45,7 @@ function cache.split_server_url(url, user, password)
          user = credentials
       end
    end
-   local local_cache = cfg.local_cache .. "/" .. server_path:gsub("[\\/]", "_")
+   local local_cache = dir.path(cfg.local_cache, (server_path:gsub("[\\/]", "_")))
    return local_cache, protocol, server_path, user, password
 end
 

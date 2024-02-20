@@ -4,6 +4,8 @@ local util = {}
 local require = nil
 --------------------------------------------------------------------------------
 
+local dir_sep = package.config:sub(1, 1)
+
 --- Run a process and read a its output.
 -- Equivalent to io.popen(cmd):read("*l"), except that it
 -- closes the fd right away.
@@ -12,7 +14,6 @@ local require = nil
 -- May be used to read more, passing, for instance, "*a".
 -- @return string: the output of the program.
 function util.popen_read(cmd, spec)
-   local dir_sep = package.config:sub(1, 1)
    local tmpfile = (dir_sep == "\\")
                    and (os.getenv("TMP") .. "/luarocks-" .. tostring(math.floor(math.random() * 10000)))
                    or os.tmpname()
@@ -165,6 +166,9 @@ end
 function util.cleanup_path(list, sep, lua_version, keep_first)
    assert(type(list) == "string")
    assert(type(sep) == "string")
+
+   list = list:gsub(dir_sep, "/")
+
    local parts = util.split_string(list, sep)
    local final, entries = {}, {}
    local start, stop, step
@@ -191,7 +195,7 @@ function util.cleanup_path(list, sep, lua_version, keep_first)
       end
    end
 
-   return table.concat(final, sep)
+   return (table.concat(final, sep):gsub("/", dir_sep))
 end
 
 -- from http://lua-users.org/wiki/SplitJoin

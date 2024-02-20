@@ -37,7 +37,7 @@ local function is_hr(line)
 end
 
 local function parse(filename)
-   local fd = assert(io.open(filename, "r"))
+   local fd = assert(io.open(filename, "rb"))
    local input = assert(fd:read("*a"))
    fd:close()
 
@@ -67,11 +67,27 @@ local function parse(filename)
       os.exit(1)
    end
 
-   local function bool_arg(cmd, cur_block, field, arg)
+   local function bool_arg(cmd, cur, field, arg)
       if arg ~= "true" and arg ~= "false" then
          fail(cmd .. " argument must be 'true' or 'false'")
       end
-      cur_block[field] = (arg == "true")
+      cur[field] = (arg == "true")
+   end
+
+   local function block_start_arg(cmd, cur, field)
+      if not cur or cur.op ~= "RUN" then
+         fail(cmd .. " must be given in the context of a RUN")
+      end
+      if cur[field] then
+         fail(cmd .. " was already declared")
+      end
+
+      cur[field] = {
+         data = {}
+      }
+      cur_block = cur[field]
+      cur_block_name = cmd
+      table.insert(stack, "block start")
    end
 
    local test_env = require("spec.util.test_env")
@@ -109,7 +125,11 @@ local function parse(filename)
       end))
    end
 
-   for line in input:gmatch("[^\n]*") do
+   if input:sub(#input, #input) ~= "\n" then
+      input = input .. "\n"
+   end
+
+   for line in input:gmatch("([^\r\n]*)\r?\n?") do
       cur_line = cur_line + 1
 
       local state = stack[#stack]
@@ -182,34 +202,20 @@ local function parse(filename)
 
             cur_op.exit = code
             cur_op.exit_line = cur_line
+         elseif cmd == "VERBOSE" then
+            if not cur_op or cur_op.op ~= "RUN" then
+               fail("VERBOSE must be given in the context of a RUN")
+            end
+
+            bool_arg("VERBOSE", cur_op, "verbose", arg)
          elseif cmd == "STDERR" then
-            if not cur_op or cur_op.op ~= "RUN" then
-               fail("STDERR must be given in the context of a RUN")
-            end
-            if cur_op.stderr then
-               fail("STDERR was already declared")
-            end
-
-            cur_op.stderr = {
-               data = {}
-            }
-            cur_block = cur_op.stderr
-            cur_block_name = "STDERR"
-            table.insert(stack, "block start")
+            block_start_arg("STDERR", cur_op, "stderr")
+         elseif cmd == "NOT_STDERR" then
+            block_start_arg("NOT_STDERR", cur_op, "not_stderr")
          elseif cmd == "STDOUT" then
-            if not cur_op or cur_op.op ~= "RUN" then
-               fail("STDOUT must be given in the context of a RUN")
-            end
-            if cur_op.stdout then
-               fail("STDOUT was already declared")
-            end
-
-            cur_op.stdout = {
-               data = {}
-            }
-            cur_block = cur_op.stdout
-            cur_block_name = "STDOUT"
-            table.insert(stack, "block start")
+            block_start_arg("STDOUT", cur_op, "stdout")
+         elseif cmd == "NOT_STDOUT" then
+            block_start_arg("NOT_STDOUT", cur_op, "not_stdout")
          elseif cmd == "TEST" then
             table.remove(stack)
             start_test(arg)
@@ -298,7 +304,7 @@ function quick.compile(filename, env)
       write([=[    end ]=])
       for _, op in ipairs(t.ops) do
          if op.op == "FILE" then
-            write([=[ test_env.write_file(handle_tmpdir("]=], op.name, [=["), handle_tmpdir([=====[ ]=])
+            write(([=[ test_env.write_file(handle_tmpdir(%q), handle_tmpdir([=====[ ]=]):format(op.name))
             for _, line in ipairs(op.data) do
                write(line)
             end
@@ -324,7 +330,7 @@ function quick.compile(filename, env)
             write(([=[ local ok, _, code = os.execute(%s .. " " .. %q .. %q) ]=]):format(cmd_helper, op.args, redirs))
             write([=[ if type(ok) == "number" then code = (ok >= 256 and ok / 256 or ok) end ]=])
 
-            write([=[ local fd_stderr = assert(io.open("stderr.txt", "r")) ]=])
+            write([=[ local fd_stderr = assert(io.open("stderr.txt", "rb")) ]=])
             write([=[ local stderr_data = fd_stderr:read("*a") ]=])
             write([=[ fd_stderr:close() ]=])
 
@@ -332,19 +338,42 @@ function quick.compile(filename, env)
             write(([=[ assert(false, error_message(%d, "RUN crashed: ", stderr_data)) ]=]):format(op.line))
             write([=[ end ]=])
 
-            if op.stdout then
-               write([=[ local fd_stdout = assert(io.open("stdout.txt", "r")) ]=])
+            if op.stdout or op.not_stdout or op.verbose then
+               write([=[ local fd_stdout = assert(io.open("stdout.txt", "rb")) ]=])
                write([=[ local stdout_data = fd_stdout:read("*a") ]=])
                write([=[ fd_stdout:close() ]=])
+            end
 
+            if op.verbose then
+               write([=[ print() ]=])
+               write([=[ print("STDOUT: --" .. ("-"):rep(70)) ]=])
+               write([=[ print(stdout_data) ]=])
+               write([=[ print("STDERR: --" .. ("-"):rep(70)) ]=])
+               write([=[ print(stderr_data) ]=])
+               write([=[ print(("-"):rep(80)) ]=])
+               write([=[ print() ]=])
+            end
+
+            if op.stdout then
                write([=[ do ]=])
                write([=[ local block_at = 1 ]=])
                write([=[ local s, e, line ]=])
                for i, line in ipairs(op.stdout.data) do
                   write(([=[ line = %q ]=]):format(line))
-                  write(([=[ s, e = string.find(stdout_data, line, block_at, true) ]=]))
+                  write(([=[ s, e = string.find(stdout_data, line, 1, true) ]=]))
                   write(([=[ assert(s, error_message(%d, "STDOUT did not match: " .. line, stdout_data)) ]=]):format(op.stdout.start + i))
                   write(([=[ block_at = e + 1 ]=]):format(i))
+               end
+               write([=[ end ]=])
+            end
+
+            if op.not_stdout then
+               write([=[ do ]=])
+               write([=[ local line ]=])
+               for i, line in ipairs(op.not_stdout.data) do
+                  write(([=[ line = %q ]=]):format(line))
+                  write(([=[ s = string.find(stdout_data, line, 1, true) ]=]))
+                  write(([=[ assert(not s, error_message(%d, "NOT_STDOUT did match unwanted output: " .. line, stdout_data)) ]=]):format(op.stdout.start + i))
                end
                write([=[ end ]=])
             end
@@ -358,6 +387,17 @@ function quick.compile(filename, env)
                   write(([=[ s, e = string.find(stderr_data, line, block_at, true) ]=]))
                   write(([=[ assert(s, error_message(%d, "STDERR did not match: " .. line, stderr_data)) ]=]):format(op.stderr.start + i))
                   write(([=[ block_at = e + 1 ]=]):format(i))
+               end
+               write([=[ end ]=])
+            end
+
+            if op.not_stderr then
+               write([=[ do ]=])
+               write([=[ local line ]=])
+               for i, line in ipairs(op.not_stderr.data) do
+                  write(([=[ line = %q ]=]):format(line))
+                  write(([=[ s = string.find(stderr_data, line, block_at, true) ]=]))
+                  write(([=[ assert(not s, error_message(%d, "NOT_STDERR did match unwanted output: " .. line, stderr_data)) ]=]):format(op.stderr.start + i))
                end
                write([=[ end ]=])
             end

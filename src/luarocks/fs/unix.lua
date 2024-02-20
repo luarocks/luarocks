@@ -47,11 +47,11 @@ function unix.absolute_name(pathname, relative_to)
       pathname = unquoted
    end
 
-   relative_to = (relative_to or fs.current_dir()):gsub("/*$", "")
+   relative_to = relative_to or fs.current_dir()
    if pathname:sub(1,1) == "/" then
-      return pathname
+      return dir.normalize(pathname)
    else
-      return relative_to .. "/" .. pathname
+      return dir.path(relative_to, pathname)
    end
 end
 

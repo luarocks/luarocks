@@ -8,6 +8,8 @@ dir.path = core.path
 dir.split_url = core.split_url
 dir.normalize = core.normalize
 
+local dir_sep = package.config:sub(1, 1)
+
 --- Strip the path off a path+filename.
 -- @param pathname string: A path+name, such as "/a/b/c"
 -- or "\a\b\c".
@@ -15,8 +17,13 @@ dir.normalize = core.normalize
 function dir.base_name(pathname)
    assert(type(pathname) == "string")
 
-   local base = pathname:gsub("[/\\]*$", ""):match(".*[/\\]([^/\\]*)")
-   return base or pathname
+   local b
+   b = pathname:gsub("[/\\]", "/") -- canonicalize to forward slashes
+   b = b:gsub("/*$", "")           -- drop trailing slashes
+   b = b:match(".*[/\\]([^/\\]*)") -- match last component
+   b = b or pathname               -- fallback to original if no slashes
+
+   return b
 end
 
 --- Strip the name off a path+filename.
@@ -26,7 +33,15 @@ end
 -- no directory separators in input, "" is returned.
 function dir.dir_name(pathname)
    assert(type(pathname) == "string")
-   return (pathname:gsub("/*$", ""):match("(.*)[/]+[^/]*")) or ""
+
+   local d
+   d = pathname:gsub("[/\\]", "/") -- canonicalize to forward slashes
+   d = d:gsub("/*$", "")           -- drop trailing slashes
+   d = d:match("(.*)[/]+[^/]*")    -- match all components but the last
+   d = d or ""                     -- switch to "" if there's no match
+   d = d:gsub("/", dir_sep)        -- decanonicalize to native slashes
+
+   return d
 end
 
 --- Returns true if protocol does not require additional tools.
