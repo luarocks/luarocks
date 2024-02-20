@@ -12,6 +12,6 @@ RUN: luarocks config --system-config
 
 STDOUT:
 --------------------------------------------------------------------------------
-%{testing_lrprefix}/etc/luarocks/config-%{LUA_VERSION}.lua
+%{path(%{testing_lrprefix}/etc/luarocks/config-%{LUA_VERSION}.lua)}
 --------------------------------------------------------------------------------
-#TODO: ^^^ %{path()}
+

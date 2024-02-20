@@ -96,7 +96,7 @@ function doc.command(args)
       return nil, "Documentation directory not found for "..name.." "..version
    end
 
-   docdir = dir.normalize(docdir):gsub("/+", "/")
+   docdir = dir.normalize(docdir)
    local files = fs.find(docdir)
    local htmlpatt = "%.html?$"
    local extensions = { htmlpatt, "%.md$", "%.txt$",  "%.textile$", "" }

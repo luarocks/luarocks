@@ -1,10 +1,6 @@
 local test_env = require("spec.util.test_env")
-local lfs = require("lfs")
 local run = test_env.run
-local testing_paths = test_env.testing_paths
-local env_variables = test_env.env_variables
-local write_file = test_env.write_file
-local hardcoded
+local P = test_env.P
 
 test_env.unload_luarocks()
 
@@ -17,7 +13,6 @@ describe("luarocks which #integration", function()
    setup(function()
       test_env.setup_specs(extra_rocks)
       test_env.unload_luarocks() -- need to be required here, because hardcoded is created after first loading of specs
-      hardcoded = require("luarocks.core.hardcoded")
    end)
 
    it("fails on missing arguments", function()
@@ -28,7 +23,7 @@ describe("luarocks which #integration", function()
    it("finds modules found in package.path", function()
       assert.is_true(run.luarocks_bool("install say 1.2"))
       local output = run.luarocks("which say")
-      assert.match("say/init.lua", output, 1, true)
+      assert.match(P"say/init.lua", output, 1, true)
       assert.match("provided by say 1.2-1", output, 1, true)
    end)
 

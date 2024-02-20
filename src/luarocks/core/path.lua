@@ -5,6 +5,8 @@ local path = {}
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.core.dir")
 local require = nil
+
+local dir_sep = package.config:sub(1, 1)
 --------------------------------------------------------------------------------
 
 function path.rocks_dir(tree)
@@ -26,10 +28,10 @@ end
 -- @return string: a pathname with the same directory parts and a versioned basename.
 function path.versioned_name(file, prefix, name, version)
    assert(type(file) == "string")
-   assert(type(name) == "string" and not name:match("/"))
+   assert(type(name) == "string" and not name:match(dir_sep))
    assert(type(version) == "string")
 
-   local rest = file:sub(#prefix+1):gsub("^/*", "")
+   local rest = file:sub(#prefix+1):gsub("^" .. dir_sep .. "*", "")
    local name_version = (name.."_"..version):gsub("%-", "_"):gsub("%.", "_")
    return dir.path(prefix, name_version.."-"..rest)
 end
@@ -57,7 +59,7 @@ function path.path_to_module(file)
    for ext, _ in pairs(exts) do
       name = file:match("(.*)%." .. ext .. "$")
       if name then
-         name = name:gsub("[/\\]", ".")
+         name = name:gsub("[\\/]", ".")
          break
       end
    end

@@ -2,6 +2,7 @@ local test_env = require("spec.util.test_env")
 local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
+local P = test_env.P
 
 describe("Basic tests #integration", function()
 
@@ -182,34 +183,34 @@ describe("luarocks.util #unit", function()
    end)
 
    describe("core.util.cleanup_path", function()
-     it("does not change order of existing items of prepended path", function()
-        local sys_path = '/usr/local/bin;/usr/bin'
-        local lr_path = '/home/user/.luarocks/bin;/usr/bin'
-        local path = lr_path .. ';' .. sys_path
+      it("does not change order of existing items of prepended path", function()
+         local sys_path = P'/usr/local/bin;/usr/bin'
+         local lr_path = P'/home/user/.luarocks/bin;/usr/bin'
+         local path = lr_path .. ';' .. sys_path
 
-        local result = core_util.cleanup_path(path, ';', '5.3', false)
-        assert.are.equal('/home/user/.luarocks/bin;/usr/local/bin;/usr/bin', result)
-     end)
+         local result = core_util.cleanup_path(path, ';', '5.3', false)
+         assert.are.equal(P'/home/user/.luarocks/bin;/usr/local/bin;/usr/bin', result)
+      end)
 
-     it("does not change order of existing items of appended path", function()
-        local sys_path = '/usr/local/bin;/usr/bin'
-        local lr_path = '/home/user/.luarocks/bin;/usr/bin'
-        local path = sys_path .. ';' .. lr_path
+      it("does not change order of existing items of appended path", function()
+         local sys_path = P'/usr/local/bin;/usr/bin'
+         local lr_path = P'/home/user/.luarocks/bin;/usr/bin'
+         local path = sys_path .. ';' .. lr_path
 
-        local result = core_util.cleanup_path(path, ';', '5.3', true)
-        assert.are.equal('/usr/local/bin;/usr/bin;/home/user/.luarocks/bin', result)
-     end)
+         local result = core_util.cleanup_path(path, ';', '5.3', true)
+         assert.are.equal(P'/usr/local/bin;/usr/bin;/home/user/.luarocks/bin', result)
+      end)
 
-     it("rewrites versions that do not match the provided version", function()
-        local expected = 'a/b/lua/5.3/?.lua;a/b/c/lua/5.3/?.lua'
-        local result = core_util.cleanup_path('a/b/lua/5.2/?.lua;a/b/c/lua/5.3/?.lua', ';', '5.3')
-        assert.are.equal(expected, result)
-     end)
+      it("rewrites versions that do not match the provided version", function()
+         local expected = P'a/b/lua/5.3/?.lua;a/b/c/lua/5.3/?.lua'
+         local result = core_util.cleanup_path(P'a/b/lua/5.2/?.lua;a/b/c/lua/5.3/?.lua', ';', '5.3')
+         assert.are.equal(expected, result)
+      end)
 
-     it("does not rewrite versions for which the provided version is a substring", function()
-        local expected = 'a/b/lua/5.3/?.lua;a/b/c/lua/5.3.4/?.lua'
-        local result = core_util.cleanup_path('a/b/lua/5.2/?.lua;a/b/c/lua/5.3.4/?.lua', ';', '5.3')
-        assert.are.equal(expected, result)
-     end)
+      it("does not rewrite versions for which the provided version is a substring", function()
+         local expected = P'a/b/lua/5.3/?.lua;a/b/c/lua/5.3.4/?.lua'
+         local result = core_util.cleanup_path(P'a/b/lua/5.2/?.lua;a/b/c/lua/5.3.4/?.lua', ';', '5.3')
+         assert.are.equal(expected, result)
+      end)
    end)
 end)

@@ -133,11 +133,11 @@ function win32.absolute_name(pathname, relative_to)
    local drive, root, rest = split_root(pathname)
    if root:match("[\\/]$") then
       -- It's an absolute path already. Ensure is not quoted.
-      return drive .. root .. rest
+      return dir.normalize(drive .. root .. rest)
    else
       -- It's a relative path, join it with base path.
       -- This drops drive letter from paths like "C:foo".
-      return relative_to .. "/" .. rest
+      return dir.path(relative_to, rest)
    end
 end
 
@@ -237,7 +237,7 @@ function win32.copy_binary(filename, dest)
    dest = dir.dir_name(dest)
    if base:match(exe_pattern) then
       base = base:gsub(exe_pattern, ".lua")
-      local helpname = dest.."/"..base
+      local helpname = dest.."\\"..base
       local helper = io.open(helpname, "w")
       if not helper then
          return nil, "Could not open "..helpname.." for writing."
@@ -329,23 +329,6 @@ function win32.is_writable(file)
       if fh then fh:close() end
    end
    return result
-end
-
---- Create a temporary directory.
--- @param name_pattern string: name pattern to use for avoiding conflicts
--- when creating temporary directory.
--- @return string or (nil, string): name of temporary directory or (nil, error message) on failure.
-function win32.make_temp_dir(name_pattern)
-   assert(type(name_pattern) == "string")
-   name_pattern = dir.normalize(name_pattern)
-
-   local temp_dir = os.getenv("TMP") .. "/luarocks_" .. name_pattern:gsub("/", "_") .. "-" .. tostring(math.floor(math.random() * 10000))
-   local ok, err = fs.make_dir(temp_dir)
-   if ok then
-      return temp_dir
-   else
-      return nil, err
-   end
 end
 
 function win32.tmpname()

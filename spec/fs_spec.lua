@@ -11,6 +11,7 @@ local posix_ok = pcall(require, "posix")
 local testing_paths = test_env.testing_paths
 local get_tmp_path = test_env.get_tmp_path
 local write_file = test_env.write_file
+local P = test_env.P
 
 -- A chdir that works in both full and minimal mode, setting
 -- both the real process current dir and the LuaRocks internal stack in minimal mode
@@ -92,33 +93,33 @@ describe("luarocks.fs #unit", function()
    describe("fs.absolute_name", function()
       it("unchanged if already absolute", function()
          if is_win then
-            assert.are.same("c:\\foo\\bar", fs.absolute_name("\"c:\\foo\\bar\""))
-            assert.are.same("c:\\foo\\bar", fs.absolute_name("c:\\foo\\bar"))
-            assert.are.same("d:\\foo\\bar", fs.absolute_name("d:\\foo\\bar"))
-            assert.are.same("\\foo\\bar", fs.absolute_name("\\foo\\bar"))
+            assert.are.same(P"c:\\foo\\bar", fs.absolute_name("\"c:\\foo\\bar\""))
+            assert.are.same(P"c:\\foo\\bar", fs.absolute_name("c:\\foo\\bar"))
+            assert.are.same(P"d:\\foo\\bar", fs.absolute_name("d:\\foo\\bar"))
+            assert.are.same(P"\\foo\\bar", fs.absolute_name("\\foo\\bar"))
          else
-            assert.are.same("/foo/bar", fs.absolute_name("/foo/bar"))
+            assert.are.same(P"/foo/bar", fs.absolute_name("/foo/bar"))
          end
       end)
 
       it("converts to absolute if relative", function()
          local cur = fs.current_dir()
          if is_win then
-            assert.are.same(cur .. "/foo\\bar", fs.absolute_name("\"foo\\bar\""))
-            assert.are.same(cur .. "/foo\\bar", fs.absolute_name("foo\\bar"))
+            assert.are.same(P(cur .. "/foo\\bar"), fs.absolute_name("\"foo\\bar\""))
+            assert.are.same(P(cur .. "/foo\\bar"), fs.absolute_name("foo\\bar"))
          else
-            assert.are.same(cur .. "/foo/bar", fs.absolute_name("foo/bar"))
+            assert.are.same(P(cur .. "/foo/bar"), fs.absolute_name("foo/bar"))
          end
       end)
 
       it("converts a relative to specified base if given", function()
          if is_win then
-            assert.are.same("c:\\bla/foo\\bar", fs.absolute_name("\"foo\\bar\"", "c:\\bla"))
-            assert.are.same("c:\\bla/foo\\bar", fs.absolute_name("foo\\bar", "c:\\bla"))
-            assert.are.same("c:\\bla/foo\\bar", fs.absolute_name("foo\\bar", "c:\\bla\\"))
+            assert.are.same(P"c:\\bla/foo\\bar", fs.absolute_name("\"foo\\bar\"", "c:\\bla"))
+            assert.are.same(P"c:\\bla/foo\\bar", fs.absolute_name("foo/bar", "c:\\bla"))
+            assert.are.same(P"c:\\bla/foo\\bar", fs.absolute_name("foo\\bar", "c:\\bla\\"))
          else
-            assert.are.same("/bla/foo/bar", fs.absolute_name("foo/bar", "/bla"))
-            assert.are.same("/bla/foo/bar", fs.absolute_name("foo/bar", "/bla/"))
+            assert.are.same(P"/bla/foo/bar", fs.absolute_name("foo/bar", "/bla"))
+            assert.are.same(P"/bla/foo/bar", fs.absolute_name("foo/bar", "/bla/"))
          end
       end)
    end)
@@ -619,9 +620,9 @@ describe("luarocks.fs #unit", function()
          assert.truthy(fs.change_dir_to_root())
          if is_win then
             local curr_dir = fs.current_dir()
-            assert.truthy(curr_dir == "C:\\" or curr_dir == "/")
+            assert.truthy(curr_dir == "C:\\" or curr_dir == P"/")
          else
-            assert.same("/", fs.current_dir())
+            assert.same(P"/", fs.current_dir())
          end
       end)
 

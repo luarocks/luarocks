@@ -133,7 +133,7 @@ function fetch.fetch_url(url, filename, cache, mirroring)
 
    local protocol, pathname = dir.split_url(url)
    if protocol == "file" then
-      local fullname = dir.normalize(fs.absolute_name(pathname))
+      local fullname = fs.absolute_name(pathname)
       if not fs.exists(fullname) then
          local hint = (not pathname:match("^/"))
                       and (" - note that given path in rockspec is not absolute: " .. url)
@@ -141,7 +141,7 @@ function fetch.fetch_url(url, filename, cache, mirroring)
          return nil, "Local file not found: " .. fullname .. hint
       end
       filename = filename or dir.base_name(pathname)
-      local dstname = dir.normalize(fs.absolute_name(dir.path(".", filename)))
+      local dstname = fs.absolute_name(dir.path(".", filename))
       local ok, err
       if fullname == dstname then
          ok = true
