@@ -30,9 +30,9 @@ local function gitignore_path(pwd, wrapper_dir, filename)
    local norm_cur = dir.normalize(fs.absolute_name(pwd))
    local norm_file = dir.normalize(fs.absolute_name(dir.path(wrapper_dir, filename)))
    if norm_file:sub(1, #norm_cur) == norm_cur then
-      return norm_file:sub(#norm_cur)
+      return norm_file:sub(#norm_cur + 2)
    else
-      return "/" .. filename
+      return filename
    end
 end
 
