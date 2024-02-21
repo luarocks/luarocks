@@ -115,22 +115,6 @@ describe("LuaRocks config tests #integration", function()
             assert.is_false(run.luarocks_bool("config --system-config"))
          end)
 
-         it("outputs the path of the system config", function()
-            lfs.mkdir(testing_paths.testing_lrprefix)
-            lfs.mkdir(testing_paths.testing_lrprefix .. "/etc/")
-            lfs.mkdir(scdir)
-
-            local sysconfig = io.open(configfile, "w+")
-            sysconfig:write(" ")
-            sysconfig:close()
-            finally(function()
-               os.remove(configfile)
-            end)
-
-            local output = run.luarocks("config --system-config")
-            assert.are.same(configfile, output)
-         end)
-
          it("fails if system config is invalid", function()
             lfs.mkdir(testing_paths.testing_lrprefix)
             lfs.mkdir(testing_paths.testing_lrprefix .. "/etc/")

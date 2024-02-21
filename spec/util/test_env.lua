@@ -715,6 +715,7 @@ local function create_paths(luaversion_full)
    testing_paths.util_dir = base_dir .. "/spec/util"
    testing_paths.testrun_dir = base_dir .. "/testrun"
    testing_paths.src_dir = base_dir .. "/src"
+   testing_paths.spec_dir = base_dir .. "/spec"
    testing_paths.testing_lrprefix = testing_paths.testrun_dir .. "/testing_lrprefix-" .. luaversion_full
    testing_paths.testing_tree = testing_paths.testrun_dir .. "/testing-" .. luaversion_full
    testing_paths.testing_tree_copy = testing_paths.testrun_dir .. "/testing_copy-" .. luaversion_full
@@ -770,6 +771,7 @@ function test_env.setup_specs(extra_rocks)
 
       -- preload before meddling with package.path
       require("spec.util.git_repo")
+      require("spec.util.quick")
 
       package.path = test_env.env_variables.LUA_PATH
       package.cpath = test_env.env_variables.LUA_CPATH
@@ -1104,5 +1106,6 @@ test_env.env_variables = create_env(test_env.testing_paths)
 test_env.run = make_run_functions()
 test_env.exists = exists
 test_env.V = V
+test_env.Q = Q
 
 return test_env

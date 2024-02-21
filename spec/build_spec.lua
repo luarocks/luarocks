@@ -49,45 +49,7 @@ describe("LuaRocks build #integration", function()
       test_env.setup_specs(extra_rocks)
    end)
 
-   describe("basic testing set", function()
-      it("invalid", function()
-         assert.is_false(run.luarocks_bool("build invalid"))
-      end)
-
-      it("with no arguments behaves as luarocks make", function()
-         test_env.run_in_tmp(function(tmpdir)
-            write_file("c_module-1.0-1.rockspec", [[
-               package = "c_module"
-               version = "1.0-1"
-               source = {
-                  url = "http://example.com/c_module"
-               }
-               build = {
-                  type = "builtin",
-                  modules = {
-                     c_module = { "c_module.c" }
-                  }
-               }
-            ]], finally)
-            write_file("c_module.c", c_module_source, finally)
-
-            assert.is_true(run.luarocks_bool("build"))
-            assert.truthy(lfs.attributes(tmpdir .. "/c_module." .. test_env.lib_extension))
-         end, finally)
-      end)
-   end)
-
    describe("building with flags", function()
-      it("fails if it doesn't have the permissions to access the specified tree #unix", function()
-         assert.is_false(run.luarocks_bool("build --tree=/usr " .. testing_paths.fixtures_dir .. "/a_rock-1.0.1-rockspec"))
-         assert.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
-      end)
-
-      it("fails if it doesn't have the permissions to access the specified tree's parent #unix", function()
-         assert.is_false(run.luarocks_bool("build --tree=/usr/invalid " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec"))
-         assert.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
-      end)
-
       it("verbose", function()
          test_env.run_in_tmp(function(tmpdir)
             write_file("test-1.0-1.rockspec", [[
@@ -429,7 +391,7 @@ describe("LuaRocks build #integration", function()
             package = "a_rock"
             version = "1.0-1"
             source = {
-               url = "file://]] .. testing_paths.fixtures_dir .. [[/a_rock.lua"
+               url = "file://]] .. testing_paths.fixtures_dir:gsub("\\", "/") .. [[/a_rock.lua"
             }
             description = {
                summary = "An example rockspec",
