@@ -54,8 +54,8 @@ jobs:
     - name: Integration Test
       run: |
         eval $(luarocks path)
-        busted -o htest --exclude-tags=ssh,gpg,git,unit --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci"
-        busted -o htest --exclude-tags=ssh,gpg,git,unit --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci,env=full"
+        busted -o htest --exclude-tags=ssh,gpg,git,unit,quick --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci"
+        busted -o htest --exclude-tags=ssh,gpg,git,unit,quick --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci,env=full"
 
     - name: Coverage
       run: |
