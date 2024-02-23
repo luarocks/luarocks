@@ -611,19 +611,37 @@ function cfg.init(detected, warning)
 
    -- Use detected values as defaults, overridable via config files or CLI args
 
-   cfg.lua_version = detected.lua_version or hardcoded.LUA_VERSION or _VERSION:sub(5)
+   local hardcoded_lua = hardcoded.LUA
+   local hardcoded_lua_dir = hardcoded.LUA_DIR
+   local hardcoded_lua_bindir = hardcoded.LUA_BINDIR
+   local hardcoded_lua_incdir = hardcoded.LUA_INCDIR
+   local hardcoded_lua_libdir = hardcoded.LUA_LIBDIR
+   local hardcoded_lua_version = hardcoded.LUA_VERSION or _VERSION:sub(5)
+
+   -- if --lua-version or --lua-dir are passed from the CLI,
+   -- don't use the hardcoded paths at all
+   if detected.given_lua_version or detected.given_lua_dir then
+      hardcoded_lua = nil
+      hardcoded_lua_dir = nil
+      hardcoded_lua_bindir = nil
+      hardcoded_lua_incdir = nil
+      hardcoded_lua_libdir = nil
+      hardcoded_lua_version = nil
+   end
+
+   cfg.lua_version = detected.lua_version or hardcoded_lua_version
    cfg.project_dir = (not hardcoded.FORCE_CONFIG) and detected.project_dir
 
    do
-      local lua = detected.lua or hardcoded.LUA
-      local lua_bindir = detected.lua_bindir or hardcoded.LUA_BINDIR
-      local lua_dir = detected.lua_dir or hardcoded.LUA_DIR
+      local lua = detected.lua or hardcoded_lua
+      local lua_dir = detected.lua_dir or hardcoded_lua_dir
+      local lua_bindir = detected.lua_bindir or hardcoded_lua_bindir
       cfg.variables = {
          LUA = lua,
          LUA_DIR = lua_dir,
          LUA_BINDIR = lua_bindir,
-         LUA_LIBDIR = hardcoded.LUA_LIBDIR,
-         LUA_INCDIR = hardcoded.LUA_INCDIR,
+         LUA_LIBDIR = hardcoded_lua_libdir,
+         LUA_INCDIR = hardcoded_lua_incdir,
       }
    end
 
