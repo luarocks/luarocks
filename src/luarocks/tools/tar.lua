@@ -42,6 +42,11 @@ end
 
 local function checksum_header(block)
    local sum = 256
+
+   if block:byte(1) == 0 then
+      return 0
+   end
+
    for i = 1,148 do
       local b = block:byte(i) or 0
       sum = sum + b
@@ -50,6 +55,7 @@ local function checksum_header(block)
       local b = block:byte(i) or 0
       sum = sum + b
    end
+
    return sum
 end
 
@@ -75,14 +81,17 @@ local function read_header_block(block)
    header.devmajor = octal_to_number(nullterm(block:sub(330,337)))
    header.devminor = octal_to_number(nullterm(block:sub(338,345)))
    header.prefix = block:sub(346,500)
+
    -- if header.magic ~= "ustar " and header.magic ~= "ustar\0" then
    --    return false, ("Invalid header magic %6x"):format(bestring_to_number(header.magic))
    -- end
    -- if header.version ~= "00" and header.version ~= " \0" then
    --    return false, "Unknown version "..header.version
    -- end
-   if checksum_header(block) ~= header.chksum then
-      return false, "Failed header checksum"
+   if header.typeflag == "unknown" then
+      if checksum_header(block) ~= header.chksum then
+         return false, "Failed header checksum"
+      end
    end
    return header
 end
@@ -101,12 +110,13 @@ function tar.untar(filename, destdir)
       local block
       repeat
          block = tar_handle:read(blocksize)
-      until (not block) or checksum_header(block) > 256
+      until (not block) or block:byte(1) > 0
       if not block then break end
       if #block < blocksize then
          ok, err = nil, "Invalid block size -- corrupted file?"
          break
       end
+
       local header
       header, err = read_header_block(block)
       if not header then
@@ -114,7 +124,14 @@ function tar.untar(filename, destdir)
          break
       end
 
-      local file_data = tar_handle:read(math.ceil(header.size / blocksize) * blocksize):sub(1,header.size)
+      local file_data = ""
+      if header.size > 0 then
+         local nread = math.ceil(header.size / blocksize) * blocksize
+         file_data = tar_handle:read(header.size)
+         if nread > header.size then
+            tar_handle:seek("cur", nread - header.size)
+         end
+      end
 
       if header.typeflag == "long name" then
          long_name = nullterm(file_data)
