@@ -2,14 +2,13 @@ local test_env = require("spec.util.test_env")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 
-test_env.setup_specs()
-
 describe("luarocks external commands #integration", function()
-   setup(function()
+   lazy_setup(function()
+      test_env.setup_specs()
       test_env.mock_server_init()
    end)
 
-   teardown(function()
+   lazy_teardown(function()
       test_env.mock_server_done()
    end)
 

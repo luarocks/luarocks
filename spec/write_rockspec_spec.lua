@@ -5,7 +5,7 @@ local run = test_env.run
 
 describe("luarocks write_rockspec tests #integration", function()
 
-   before_each(function()
+   lazy_setup(function()
       test_env.setup_specs()
    end)
 
@@ -20,7 +20,7 @@ describe("luarocks write_rockspec tests #integration", function()
    describe("from #git #unix", function()
       local git
 
-      setup(function()
+      lazy_setup(function()
          git = git_repo.start()
       end)
 
@@ -79,10 +79,11 @@ describe("luarocks write_rockspec tests #integration", function()
 
    describe("from tarball #mock", function()
 
-      setup(function()
+      lazy_setup(function()
+         test_env.setup_specs(nil, "mock")
          test_env.mock_server_init()
       end)
-      teardown(function()
+      lazy_teardown(function()
          test_env.mock_server_done()
       end)
 

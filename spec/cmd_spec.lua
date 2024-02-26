@@ -2,11 +2,9 @@ local test_env = require("spec.util.test_env")
 local lfs = require("lfs")
 local run = test_env.run
 
-test_env.unload_luarocks()
-
 describe("LuaRocks command line #integration", function()
 
-   setup(function()
+   lazy_setup(function()
       test_env.setup_specs()
    end)
 

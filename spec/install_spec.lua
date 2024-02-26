@@ -7,8 +7,6 @@ local write_file = test_env.write_file
 local git_repo = require("spec.util.git_repo")
 local V = test_env.V
 
-test_env.unload_luarocks()
-
 local extra_rocks = {
    "/cprint-${CPRINT}.src.rock",
    "/cprint-${CPRINT}.rockspec",
@@ -244,15 +242,15 @@ describe("luarocks install #integration", function()
                   test = "test.lua"
                }
             }
-         ]], finally)
-         write_file("test.lua", "return {}", finally)
+         ]])
+         write_file("test.lua", "return {}")
          write_file("luarocks.lock", [[
             return {
                dependencies = {
                   ["a_rock"] = "1.0-1",
                }
             }
-         ]], finally)
+         ]])
 
          assert.is_true(run.luarocks_bool("make --pack-binary-rock --server=" .. testing_paths.fixtures_dir .. "/a_repo test-1.0-1.rockspec"))
          assert.is_true(os.remove("luarocks.lock"))
@@ -268,17 +266,17 @@ describe("luarocks install #integration", function()
          assert.is.truthy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/test/1.0-1/luarocks.lock"))
          assert.is.truthy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))
          assert.is.falsy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/a_rock/2.0-1"))
-      end)
+      end, finally)
    end)
 
    describe("#unix install runs build from #git", function()
       local git
 
-      setup(function()
+      lazy_setup(function()
          git = git_repo.start()
       end)
 
-      teardown(function()
+      lazy_teardown(function()
          if git then
             git:stop()
          end

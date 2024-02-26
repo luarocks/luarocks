@@ -4,8 +4,6 @@ local run = test_env.run
 local testing_paths = test_env.testing_paths
 local write_file = test_env.write_file
 
-test_env.unload_luarocks()
-
 local extra_rocks = {
    "/luassert-1.7.0-1.src.rock",
    "/luasocket-${LUASOCKET}.src.rock",
@@ -64,11 +62,12 @@ describe("luarocks pack #integration", function()
 
    describe("#mock", function()
 
-      setup(function()
+      lazy_setup(function()
+         test_env.setup_specs(extra_rocks, "mock")
          test_env.mock_server_init()
       end)
 
-      teardown(function()
+      lazy_teardown(function()
          test_env.mock_server_done()
       end)
 

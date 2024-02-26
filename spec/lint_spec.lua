@@ -2,8 +2,6 @@ local test_env = require("spec.util.test_env")
 local run = test_env.run
 local get_tmp_path = test_env.get_tmp_path
 local write_file = test_env.write_file
-
-test_env.unload_luarocks()
 local lfs = require("lfs")
 
 local extra_rocks = {

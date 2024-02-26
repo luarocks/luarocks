@@ -7,13 +7,11 @@ local write_file = test_env.write_file
 local get_tmp_path = test_env.get_tmp_path
 local hardcoded
 
-test_env.unload_luarocks()
-
 describe("LuaRocks config tests #integration", function()
 
-   setup(function()
+   lazy_setup(function()
       test_env.setup_specs()
-      test_env.unload_luarocks() -- need to be required here, because hardcoded is created after first loading of specs
+      -- needs to be required here, because hardcoded is created after first loading of specs
       hardcoded = require("luarocks.core.hardcoded")
    end)
 

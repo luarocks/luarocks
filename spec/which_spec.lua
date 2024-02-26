@@ -2,17 +2,14 @@ local test_env = require("spec.util.test_env")
 local run = test_env.run
 local P = test_env.P
 
-test_env.unload_luarocks()
-
 local extra_rocks = {
    "/say-1.2-1.src.rock",
 }
 
 describe("luarocks which #integration", function()
 
-   setup(function()
+   lazy_setup(function()
       test_env.setup_specs(extra_rocks)
-      test_env.unload_luarocks() -- need to be required here, because hardcoded is created after first loading of specs
    end)
 
    it("fails on missing arguments", function()

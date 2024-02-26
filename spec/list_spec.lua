@@ -3,8 +3,6 @@ local V = test_env.V
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 
-test_env.unload_luarocks()
-
 local extra_rocks = {
    "/say-1.0-1.src.rock",
    "/say-1.2-1.src.rock"

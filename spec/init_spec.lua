@@ -6,11 +6,9 @@ local is_win = test_env.TEST_TARGET_OS == "windows"
 local write_file = test_env.write_file
 local lfs = require("lfs")
 
-test_env.unload_luarocks()
-
 describe("luarocks init #integration", function()
 
-   setup(function()
+   lazy_setup(function()
       test_env.setup_specs()
    end)
 

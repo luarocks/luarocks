@@ -809,52 +809,6 @@ local function get_luarocks_platform(variables)
    return execute_output(cmd, false, variables)
 end
 
---- Function for initial setup of environment, variables, md5sums for spec files
-function test_env.setup_specs(extra_rocks)
-   local testrun_dir = test_env.testing_paths.testrun_dir
-   local variables = test_env.env_variables
-
-   -- if global variable about successful creation of testing environment doesn't exist, build environment
-   if not test_env.setup_done then
-      if test_env.CI then
-         if not exists(os.getenv("HOME"), ".ssh/id_rsa.pub") then
-            execute_bool("ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa")
-            execute_bool("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
-            execute_bool("chmod og-wx ~/.ssh/authorized_keys")
-            execute_bool("ssh-keyscan localhost >> ~/.ssh/known_hosts")
-         end
-      end
-
-      test_env.main()
-
-      -- preload before meddling with package.path
-      require("spec.util.git_repo")
-      require("spec.util.quick")
-
-      package.path = variables.LUA_PATH
-      package.cpath = variables.LUA_CPATH
-
-      test_env.platform = get_luarocks_platform(test_env.env_variables)
-      test_env.wrapper_extension = test_env.TEST_TARGET_OS == "windows" and ".bat" or ""
-      test_env.md5sums = create_md5sums(test_env.testing_paths)
-      test_env.setup_done = true
-      title("RUNNING TESTS")
-   end
-
-   if extra_rocks then
-      local make_manifest = download_rocks(extra_rocks, test_env.testing_paths.testing_server)
-      if make_manifest then
-         test_env.run.luarocks_admin_nocov("make_manifest " .. test_env.testing_paths.testing_server)
-      end
-   end
-
-   if test_env.RESET_ENV then
-      reset_environment(test_env.testing_paths, test_env.md5sums, variables)
-   end
-
-   lfs.chdir(testrun_dir)
-end
-
 --- Test if required rock is installed and if not, install it.
 -- Return `true` if the rock is already installed or has been installed successfully,
 -- `false` if installation failed.
@@ -1024,10 +978,14 @@ local function setup_luarocks()
 end
 
 local function mock_api_call(path)
-   test_env.execute(C(tool("wget"), "--quiet --timeout=5 --tries=1 localhost:8080" .. path))
+   return test_env.execute(C(tool("wget"), "--timeout=0.1 --quiet --tries=10 http://localhost:8080" .. path))
 end
 
 function test_env.mock_server_init()
+   if not test_env.mock_prepared then
+      error("need to setup_specs with with_mock set to true")
+   end
+
    local testing_paths = test_env.testing_paths
    assert(test_env.need_rock("restserver-xavante"))
 
@@ -1043,14 +1001,13 @@ function test_env.mock_server_init()
 
    os.execute(test_env.execute_helper(bg_cmd, true, test_env.env_variables))
 
-   for _ = 1, 10 do
+   for _ = 1, 100 do
       if mock_api_call("/api/tool_version") then
          break
       end
-
       os.execute(test_env.TEST_TARGET_OS == "windows"
-                 and "timeout 1 > NUL"
-                 or  "sleep 1")
+                 and "ping 192.0.2.0 -n 1 -w 250 > NUL"
+                 or  "sleep 0.1")
    end
 
 end
@@ -1070,6 +1027,10 @@ local function find_binary_rock(src_rock, dirname)
 end
 
 local function prepare_mock_server_binary_rocks()
+   if test_env.mock_prepared then
+      return
+   end
+
    local testing_paths = test_env.testing_paths
 
    local rocks = {
@@ -1106,6 +1067,8 @@ local function prepare_mock_server_binary_rocks()
    if make_manifest then
       test_env.run.luarocks_admin_nocov(C("make_manifest", Q(testing_paths.testing_server)))
    end
+
+   test_env.mock_prepared = true
 end
 
 ---
@@ -1169,8 +1132,58 @@ function test_env.main()
    download_rocks(urls, testing_paths.testing_server)
 
    build_environment(rocks, env_vars)
+end
 
-   prepare_mock_server_binary_rocks()
+--- Function for initial setup of environment, variables, md5sums for spec files
+function test_env.setup_specs(extra_rocks, use_mock)
+   test_env.unload_luarocks()
+
+   local testrun_dir = test_env.testing_paths.testrun_dir
+   local variables = test_env.env_variables
+
+   -- if global variable about successful creation of testing environment doesn't exist, build environment
+   if not test_env.setup_done then
+      if test_env.CI then
+         if not exists(os.getenv("HOME"), ".ssh/id_rsa.pub") then
+            execute_bool("ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa")
+            execute_bool("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
+            execute_bool("chmod og-wx ~/.ssh/authorized_keys")
+            execute_bool("ssh-keyscan localhost >> ~/.ssh/known_hosts")
+         end
+      end
+
+      test_env.main()
+
+      -- preload before meddling with package.path
+      require("spec.util.git_repo")
+      require("spec.util.quick")
+
+      package.path = variables.LUA_PATH
+      package.cpath = variables.LUA_CPATH
+
+      test_env.platform = get_luarocks_platform(test_env.env_variables)
+      test_env.wrapper_extension = test_env.TEST_TARGET_OS == "windows" and ".bat" or ""
+      test_env.md5sums = create_md5sums(test_env.testing_paths)
+      test_env.setup_done = true
+      title("RUNNING TESTS")
+   end
+
+   if use_mock == "mock" then
+      prepare_mock_server_binary_rocks()
+   end
+
+   if extra_rocks then
+      local make_manifest = download_rocks(extra_rocks, test_env.testing_paths.testing_server)
+      if make_manifest then
+         test_env.run.luarocks_admin_nocov("make_manifest " .. test_env.testing_paths.testing_server)
+      end
+   end
+
+   if test_env.RESET_ENV then
+      reset_environment(test_env.testing_paths, test_env.md5sums, variables)
+   end
+
+   lfs.chdir(testrun_dir)
 end
 
 test_env.set_lua_version()

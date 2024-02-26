@@ -6,9 +6,6 @@ local testing_paths = test_env.testing_paths
 local write_file = test_env.write_file
 local P = test_env.P
 
-test_env.unload_luarocks()
-
-test_env.unload_luarocks()
 test_env.setup_specs()
 local cfg = require("luarocks.core.cfg")
 local deps = require("luarocks.deps")

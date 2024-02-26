@@ -5,7 +5,7 @@
 
 Test suite for LuaRocks project with Busted unit testing framework(http://olivinelabs.com/busted/).
 
-* Contains unit & integration tests
+* Contains unit and integration tests
 * Easy setup for your purpose on command line or from configuration file
 
 ## Dependencies

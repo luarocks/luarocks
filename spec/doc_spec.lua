@@ -2,8 +2,6 @@ local test_env = require("spec.util.test_env")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 
-test_env.unload_luarocks()
-
 describe("luarocks doc #integration", function()
    before_each(function()
       test_env.setup_specs()
@@ -129,7 +127,7 @@ describe("luarocks doc #integration", function()
       end)
 
       it("with --local", function()
-         assert.is_true(run.luarocks_bool("install --server=" .. testing_paths.fixtures_dir .. "/a_repo a_rock"))
+         assert.is_true(run.luarocks_bool("install --local --server=" .. testing_paths.fixtures_dir .. "/a_repo a_rock"))
          assert.is_true(run.luarocks_bool("doc --server=" .. testing_paths.fixtures_dir .. "/a_repo a_rock --local"))
       end)
 
