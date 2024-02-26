@@ -2,8 +2,6 @@ local test_env = require("spec.util.test_env")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 
-test_env.unload_luarocks()
-
 local extra_rocks = {
    "/say-1.0-1.src.rock",
 }

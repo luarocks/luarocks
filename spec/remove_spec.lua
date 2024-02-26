@@ -6,8 +6,6 @@ local env_variables = test_env.env_variables
 local V = test_env.V
 local P = test_env.P
 
-test_env.unload_luarocks()
-
 local extra_rocks = {
    "/abelhas-1.1-1.src.rock",
    "/copas-${COPAS}.src.rock",

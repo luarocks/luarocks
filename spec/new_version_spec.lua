@@ -3,8 +3,6 @@ local lfs = require("lfs")
 local run = test_env.run
 local testing_paths = test_env.testing_paths
 
-test_env.unload_luarocks()
-
 local extra_rocks = {
    "/abelhas-1.1-1.rockspec",
    "/lpeg-${LPEG}.rockspec"
@@ -12,7 +10,7 @@ local extra_rocks = {
 
 describe("luarocks new_version #integration", function()
 
-   setup(function()
+   lazy_setup(function()
       test_env.setup_specs(extra_rocks)
    end)
 
@@ -69,10 +67,11 @@ describe("luarocks new_version #integration", function()
    end)
 
    describe("remote tests #mock", function()
-      setup(function()
+      lazy_setup(function()
+         test_env.setup_specs(extra_rocks, "mock")
          test_env.mock_server_init()
       end)
-      teardown(function()
+      lazy_teardown(function()
          test_env.mock_server_done()
       end)
       it("with remote spec", function()

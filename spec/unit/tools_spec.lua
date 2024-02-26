@@ -3,7 +3,6 @@ local get_tmp_path = test_env.get_tmp_path
 local testing_paths = test_env.testing_paths
 local write_file = test_env.write_file
 
-test_env.unload_luarocks()
 local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 local patch = require("luarocks.tools.patch")

@@ -6,9 +6,7 @@ local testing_paths = test_env.testing_paths
 local write_file = test_env.write_file
 local git_repo = require("spec.util.git_repo")
 
-test_env.unload_luarocks()
-local cfg = require("luarocks.core.cfg")
-local fs = require("luarocks.fs")
+local cfg, fs
 
 local extra_rocks = {
    "/lmathx-20120430.51-1.src.rock",
@@ -40,13 +38,12 @@ local c_module_source = [[
 ]]
 
 describe("LuaRocks build #integration", function()
-   lazy_setup(function()
-      cfg.init()
-      fs.init()
-   end)
-
    before_each(function()
       test_env.setup_specs(extra_rocks)
+      cfg = require("luarocks.core.cfg")
+      fs = require("luarocks.fs")
+      cfg.init()
+      fs.init()
    end)
 
    describe("building with flags", function()
@@ -154,7 +151,7 @@ describe("LuaRocks build #integration", function()
 
             assert.is_true(run.luarocks_bool("build test-1.0-1.rockspec --deps-mode=none"))
             assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/test/1.0-1/test-1.0-1.rockspec"))
-         end)
+         end, finally)
       end)
 
       it("supports --pin #pinning", function()
@@ -459,6 +456,7 @@ describe("LuaRocks build #integration", function()
 
    describe("#mock external dependencies", function()
       lazy_setup(function()
+         test_env.setup_specs(nil, "mock")
          test_env.mock_server_init()
       end)
 

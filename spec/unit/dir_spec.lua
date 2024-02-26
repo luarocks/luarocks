@@ -2,7 +2,6 @@ local test_env = require("spec.util.test_env")
 local testing_paths = test_env.testing_paths
 local P = test_env.P
 
-test_env.unload_luarocks()
 test_env.setup_specs()
 local dir = require("luarocks.dir")
 

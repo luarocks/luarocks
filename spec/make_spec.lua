@@ -5,8 +5,6 @@ local testing_paths = test_env.testing_paths
 local env_variables = test_env.env_variables
 local write_file = test_env.write_file
 
-test_env.unload_luarocks()
-
 local extra_rocks = {
    "/luasocket-${LUASOCKET}.src.rock",
    "/luasocket-${LUASOCKET}.rockspec",
@@ -156,8 +154,8 @@ describe("luarocks make #integration", function()
                   test = "test.lua"
                }
             }
-         ]], finally)
-         write_file("test.lua", "return {}", finally)
+         ]])
+         write_file("test.lua", "return {}")
 
          assert.is_true(run.luarocks_bool("make --server=" .. testing_paths.fixtures_dir .. "/a_repo --pin --tree=lua_modules"))
          assert.is.truthy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/test/1.0-1/test-1.0-1.rockspec"))
@@ -171,7 +169,7 @@ describe("luarocks make #integration", function()
                ["lua"] = test_env.lua_version .. "-1",
             }
          }, lockdata)
-      end)
+      end, finally)
    end)
 
    it("respects luarocks.lock when present #pinning", function()
@@ -191,15 +189,15 @@ describe("luarocks make #integration", function()
                   test = "test.lua"
                }
             }
-         ]], finally)
-         write_file("test.lua", "return {}", finally)
+         ]])
+         write_file("test.lua", "return {}")
          write_file("luarocks.lock", [[
             return {
                dependencies = {
                   ["a_rock"] = "1.0-1",
                }
             }
-         ]], finally)
+         ]])
 
          print(run.luarocks("make --server=" .. testing_paths.fixtures_dir .. "/a_repo --tree=lua_modules"))
          assert.is.truthy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/test/2.0-1/test-2.0-1.rockspec"))
@@ -212,7 +210,7 @@ describe("luarocks make #integration", function()
                ["a_rock"] = "1.0-1",
             }
          }, lockdata)
-      end)
+      end, finally)
    end)
 
    it("overrides luarocks.lock with --pin #pinning", function()
@@ -232,15 +230,15 @@ describe("luarocks make #integration", function()
                   test = "test.lua"
                }
             }
-         ]], finally)
-         write_file("test.lua", "return {}", finally)
+         ]])
+         write_file("test.lua", "return {}")
          write_file("luarocks.lock", [[
             return {
                dependencies = {
                   ["a_rock"] = "1.0-1",
                }
             }
-         ]], finally)
+         ]])
 
          print(run.luarocks("make --server=" .. testing_paths.fixtures_dir .. "/a_repo --tree=lua_modules --pin"))
          assert.is.truthy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/test/2.0-1/test-2.0-1.rockspec"))
@@ -254,7 +252,7 @@ describe("luarocks make #integration", function()
                ["lua"] = test_env.lua_version .. "-1",
             }
          }, lockdata)
-      end)
+      end, finally)
    end)
 
    describe("#ddt upgrading rockspecs with double deploy types", function()

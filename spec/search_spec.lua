@@ -1,8 +1,6 @@
 local test_env = require("spec.util.test_env")
 local run = test_env.run
 
-test_env.unload_luarocks()
-
 local extra_rocks = {
 "/lzlib-0.4.1.53-1.src.rock"
 }

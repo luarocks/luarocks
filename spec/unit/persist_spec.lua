@@ -1,7 +1,6 @@
 local test_env = require("spec.util.test_env")
 local testing_paths = test_env.testing_paths
 
-test_env.unload_luarocks()
 local persist = require("luarocks.persist")
 
 describe("luarocks.persist #unit", function()
