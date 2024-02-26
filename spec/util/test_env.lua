@@ -193,10 +193,25 @@ function test_env.run_in_tmp(f, finally)
    lfs.mkdir(tmpdir)
    lfs.chdir(tmpdir)
 
+   if not finally then
+      error("run_in_tmp needs a finally argument")
+   end
+
+   -- for unit tests, so that current dir known by luarocks.fs (when running with non-lfs)
+   -- is synchronized with actual lfs (system) current dir
+   local fs = require("luarocks.fs")
+   if not fs.change_dir then
+      local cfg = require("luarocks.core.cfg")
+      cfg.init()
+      fs.init()
+   end
+   fs.change_dir(tmpdir)
+
    if finally then
       finally(function()
          lfs.chdir(olddir)
          lfs.rmdir(tmpdir)
+         fs.change_dir(olddir)
       end)
    end
 
