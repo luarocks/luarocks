@@ -429,7 +429,7 @@ function quick.compile(filename, env)
             end
          end
       end
-      write([=[ end) ]=])
+      write([=[ end, finally) ]=])
       write([=[ end ]=])
 
       local program = table.concat(code, "\n")

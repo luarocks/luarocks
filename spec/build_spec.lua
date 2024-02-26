@@ -64,8 +64,8 @@ describe("LuaRocks build #integration", function()
                      test = "test.lua"
                   }
                }
-            ]], finally)
-            write_file("test.lua", "return {}", finally)
+            ]])
+            write_file("test.lua", "return {}")
 
             assert.is_true(run.luarocks_bool("build --verbose test-1.0-1.rockspec"))
             assert.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/test/1.0-1/test-1.0-1.rockspec"))
@@ -119,8 +119,8 @@ describe("LuaRocks build #integration", function()
                      test = "test.lua"
                   }
                }
-            ]], finally)
-            write_file("test.lua", "return {}", finally)
+            ]])
+            write_file("test.lua", "return {}")
 
             if test_env.TEST_TARGET_OS == "windows" then
                assert.is_false(run.luarocks_bool("build test-1.0-1.rockspec")) -- Error: This rockspec does not support windows platforms
@@ -149,8 +149,8 @@ describe("LuaRocks build #integration", function()
                      test = "test.lua"
                   }
                }
-            ]], finally)
-            write_file("test.lua", "return {}", finally)
+            ]])
+            write_file("test.lua", "return {}")
 
             assert.is_true(run.luarocks_bool("build test-1.0-1.rockspec --deps-mode=none"))
             assert.is.truthy(lfs.attributes(testing_paths.testing_sys_rocks .. "/test/1.0-1/test-1.0-1.rockspec"))
@@ -174,8 +174,8 @@ describe("LuaRocks build #integration", function()
                      test = "test.lua"
                   }
                }
-            ]], finally)
-            write_file("test.lua", "return {}", finally)
+            ]])
+            write_file("test.lua", "return {}")
 
             assert.is_true(run.luarocks_bool("build --server=" .. testing_paths.fixtures_dir .. "/a_repo test-1.0-1.rockspec --pin --tree=lua_modules"))
             assert.is.truthy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/test/1.0-1/test-1.0-1.rockspec"))
@@ -189,7 +189,7 @@ describe("LuaRocks build #integration", function()
                   ["lua"] = test_env.lua_version .. "-1",
                }
             }, lockdata)
-         end)
+         end, finally)
       end)
 
       it("supports --pin --only-deps #pinning", function()
@@ -209,8 +209,8 @@ describe("LuaRocks build #integration", function()
                      test = "test.lua"
                   }
                }
-            ]], finally)
-            write_file("test.lua", "return {}", finally)
+            ]])
+            write_file("test.lua", "return {}")
 
             assert.is_true(run.luarocks_bool("build --server=" .. testing_paths.fixtures_dir .. "/a_repo test-1.0-1.rockspec --pin --only-deps --tree=lua_modules"))
             assert.is.falsy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/test/1.0-1/test-1.0-1.rockspec"))
@@ -225,7 +225,7 @@ describe("LuaRocks build #integration", function()
                   ["lua"] = test_env.lua_version .. "-1",
                }
             }, lockdata)
-         end)
+         end, finally)
       end)
 
       it("lmathx deps partial match", function()
@@ -316,8 +316,8 @@ describe("LuaRocks build #integration", function()
                      test = "test.lua"
                   }
                }
-            ]], finally)
-            write_file("test.lua", "return {}", finally)
+            ]])
+            write_file("test.lua", "return {}")
 
             assert.is.truthy(run.luarocks_bool("build --server=" .. testing_paths.fixtures_dir .. "/a_repo test-1.0-1.rockspec --only-deps"))
             assert.is.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/test/1.0-1/test-1.0-1.rockspec"))
@@ -342,8 +342,8 @@ describe("LuaRocks build #integration", function()
                      test = "test.lua"
                   }
                }
-            ]], finally)
-            write_file("test.lua", "return {}", finally)
+            ]])
+            write_file("test.lua", "return {}")
 
             assert.is.truthy(run.luarocks_bool("pack test-1.0-1.rockspec"))
             assert.is.truthy(lfs.attributes("test-1.0-1.src.rock"))
@@ -489,7 +489,7 @@ describe("LuaRocks build #integration", function()
                      build = "build.lua"
                   }
                }
-            ]], finally)
+            ]])
             assert.is_false(run.luarocks_bool("build missing_external-0.1-1.rockspec INEXISTENT_INCDIR=\"/invalid/dir\""))
          end, finally)
       end)
