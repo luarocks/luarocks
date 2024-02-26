@@ -48,12 +48,11 @@ do
    end
 end
 
+local current_dir_with_cache
 do
    local cache_pwd
-   --- Obtain current directory.
-   -- Uses the module's internal directory stack.
-   -- @return string: the absolute pathname of the current directory.
-   function tools.current_dir()
+
+   current_dir_with_cache = function()
       local current = cache_pwd
       if not current then
          local pipe = io.popen(fs.quiet_stderr(vars.PWD))
@@ -65,6 +64,13 @@ do
          current = fs.absolute_name(directory, current)
       end
       return current, cache_pwd
+   end
+
+   --- Obtain current directory.
+   -- Uses the module's internal directory stack.
+   -- @return string: the absolute pathname of the current directory.
+   function tools.current_dir()
+      return (current_dir_with_cache()) -- drop second return
    end
 end
 
@@ -107,7 +113,7 @@ end
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
 function tools.execute_string(cmd)
-   local current, cache_pwd = fs.current_dir()
+   local current, cache_pwd = current_dir_with_cache()
    if not current then return false end
    if current ~= cache_pwd then
       cmd = fs.command_at(current, cmd)
