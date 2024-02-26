@@ -1163,6 +1163,7 @@ if USE_MINGW then
 end
 f:write("}\n")
 f:write("verbose = false   -- set to 'true' to enable verbose output\n")
+f:write("fs_use_modules = false   -- prevent LuaRocks itself from using installed modules and blocking their files from removal \n")
 f:close()
 
 print(S"Created LuaRocks config file: $CONFIG_FILE")
