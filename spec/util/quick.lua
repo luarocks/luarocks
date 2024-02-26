@@ -46,6 +46,7 @@ local function parse(filename)
    local tests = {}
 
    local cur_line = 0
+   local cur_suite = ""
    local cur_test
    local cur_op
    local cur_block
@@ -54,7 +55,7 @@ local function parse(filename)
 
    local function start_test(arg)
       cur_test = {
-         name = arg,
+         name = cur_suite .. arg,
          ops = {},
       }
       cur_op = nil
@@ -137,6 +138,8 @@ local function parse(filename)
          local cmd, arg = parse_cmd(line)
          if cmd == "TEST" then
             start_test(arg)
+         elseif cmd == "SUITE" then
+            cur_suite = arg .. ": "
          elseif cmd then
             fail("expected TEST, got " .. cmd)
          elseif is_blank(line) then
@@ -175,12 +178,14 @@ local function parse(filename)
             cur_op = {
                op = "EXISTS",
                file = dir.normalize(arg),
+               line = cur_line,
             }
             table.insert(cur_test.ops, cur_op)
          elseif cmd == "NOT_EXISTS" then
             cur_op = {
                op = "NOT_EXISTS",
                file = dir.normalize(arg),
+               line = cur_line,
             }
             table.insert(cur_test.ops, cur_op)
          elseif cmd == "MKDIR" then
@@ -271,12 +276,30 @@ function quick.compile(filename, env)
          table.insert(code, table.concat({...}))
       end
 
+      write(([=[  ]=]))
+      write(([=[ -- **************************************** ]=]))
+      write(([=[ -- %s ]=]):format(t.name))
+      write(([=[ -- **************************************** ]=]))
+      write(([=[  ]=]))
+
       write([=[ local test_env = require("spec.util.test_env") ]=])
       write([=[ local lfs = require("lfs") ]=])
       write([=[ local fs = require("lfs") ]=])
       write([=[ local dir_sep = package.config:sub(1, 1) ]=])
       write([=[ local luarocks_cmd = test_env.execute_helper(test_env.Q(test_env.testing_paths.lua) .. " " .. test_env.testing_paths.src_dir .. "/bin/luarocks", false, test_env.env_variables):sub(1, -5) ]=])
       write([=[ local luarocks_admin_cmd = test_env.execute_helper(test_env.Q(test_env.testing_paths.lua) .. " " .. test_env.testing_paths.src_dir .. "/bin/luarocks-admin", false, test_env.env_variables):sub(1, -5) ]=])
+
+      write([=[ local function make_dir(dirname) ]=])
+      write([=[    local bits = {} ]=])
+      write([=[    if dirname:sub(1, 1) == dir_sep then bits[1] = "" end ]=])
+      write([=[    local ok, err ]=])
+      write([=[    for p in dirname:gmatch("[^" .. dir_sep .. "]+") do ]=])
+      write([=[       table.insert(bits, p) ]=])
+      write([=[       ok, err = lfs.mkdir(table.concat(bits, dir_sep)) ]=])
+      write([=[    end ]=])
+      write([=[    local exists = (lfs.attributes(dirname) or {}).mode == "directory" ]=])
+      write([=[    return exists, (not exists) and err ]=])
+      write([=[ end ]=])
 
       write(([=[ local function error_message(line, msg, input) ]=]))
       write(([=[    local out = {"\n\n", %q, ":", line, ": ", msg} ]=]):format(filename))
@@ -302,27 +325,25 @@ function quick.compile(filename, env)
       write([=[       return (s:gsub("%%{url%(tmpdir%)}", (tmpdir:gsub("\\", "/")))         ]=])
       write([=[                :gsub("%%{tmpdir}",        (tmpdir:gsub("[\\/]", dir_sep)))) ]=])
       write([=[    end ]=])
+      write([=[ local ok, err ]=])
       for _, op in ipairs(t.ops) do
          if op.op == "FILE" then
+            if op.name:match("[\\/]") then
+               write(([=[ make_dir(%q) ]=]):format(dir.dir_name(op.name)))
+            end
             write(([=[ test_env.write_file(handle_tmpdir(%q), handle_tmpdir([=====[ ]=]):format(op.name))
             for _, line in ipairs(op.data) do
                write(line)
             end
             write([=[ ]=====]), finally) ]=])
          elseif op.op == "EXISTS" then
-            write(([=[ assert.truthy(lfs.attributes(%q)) ]=]):format(op.file))
+            write(([=[ ok, err = lfs.attributes(%q) ]=]):format(op.file))
+            write(([=[ assert.truthy(ok, error_message(%d, "EXISTS failed: " .. %q .. " - " .. (err or "") )) ]=]):format(op.line, op.file))
          elseif op.op == "NOT_EXISTS" then
-            write(([=[ assert.falsy(lfs.attributes(%q)) ]=]):format(op.file))
+            write(([=[ assert.falsy(lfs.attributes(%q), error_message(%d, "NOT_EXISTS failed: " .. %q .. " exists" )) ]=]):format(op.file, op.line, op.file))
          elseif op.op == "MKDIR" then
-            local bits = {}
             op.file = native_slash(op.file)
-            if op.file:sub(1, 1) == dir_sep then bits[1] = "" end
-            write([=[ local ok, err ]=])
-            for p in op.file:gmatch("[^" .. dir_sep .. "]+") do
-               table.insert(bits, p)
-               local d = table.concat(bits, dir_sep)
-               write(([=[ ok, err = lfs.mkdir(%q) ]=]):format(d, d))
-            end
+            write(([=[ ok, err = make_dir(%q) ]=]):format(op.file))
             write(([=[ assert.truthy((lfs.attributes(%q) or {}).mode == "directory", error_message(%d, "MKDIR failed: " .. %q .. " - " .. (err or "") )) ]=]):format(op.file, op.line, op.file))
          elseif op.op == "RUN" then
             local cmd_helper = cmd_helpers[op.program] or op.program
@@ -411,7 +432,7 @@ function quick.compile(filename, env)
       write([=[ end ]=])
 
       local program = table.concat(code, "\n")
-      local chunk = assert(load(program, "@" .. filename .. ": test " .. tn, "t", env or _ENV))
+      local chunk = assert(load(program, "@" .. filename .. ":[TEST " .. tn .. "]", "t", env or _ENV))
       if env and setfenv then
          setfenv(chunk, env)
       end
