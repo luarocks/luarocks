@@ -455,6 +455,7 @@ local function main()
          LUA_DIR = LUA_DIR,
          LIBFLAG = "-static",
          PWD = "pwd",
+         MKDIR = "mkdir",
       },
       platforms = if_platform("windows", { "windows", "win32", "mingw32" }),
       external_deps_dirs = if_platform("windows", { CROSSCOMPILER_SYSROOT, fs.current_dir() .. "/windows-deps-" .. TRIPLET }),
@@ -462,11 +463,11 @@ local function main()
 
    local dependencies = {
       md5 = "md5",
-      luasec = "./binary/luasec-1.0.2-1.rockspec",
+      luasec = "./binary/luasec-1.3.2-1.rockspec",
       ["lua-zlib"] = "./binary/lua-zlib-1.2-0.rockspec",
       ["lua-bz2"] = "./binary/lua-bz2-0.2.1-1.rockspec",
       luaposix = if_platform("unix", "./binary/luaposix-35.1-1.rockspec"),
-      luasocket = "luasocket",
+      luasocket = "./binary/luasocket-3.1.0-1.rockspec",
       luafilesystem = "luafilesystem",
    }
 

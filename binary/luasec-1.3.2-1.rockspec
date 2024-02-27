@@ -1,8 +1,8 @@
 package = "LuaSec"
-version = "1.0.2-1"
+version = "1.3.2-1"
 source = {
-  url = "git://github.com/brunoos/luasec",
-  tag = "v1.0.2",
+  url = "git+https://github.com/brunoos/luasec",
+  tag = "v1.3.2",
 }
 description = {
    summary = "A binding for OpenSSL library to provide TLS/SSL communication over LuaSocket.",
@@ -89,27 +89,10 @@ build = {
                   "src/options.c", "src/config.c", "src/ec.c",
                   "src/x509.c", "src/context.c", "src/ssl.c",
                   "src/luasocket/buffer.c", "src/luasocket/io.c",
-                  "src/luasocket/wsocket.c", "src/luasocket/timeout.c"
-               }
-            }
+                  "src/luasocket/timeout.c", "src/luasocket/wsocket.c"
+               },
+            },
          },
-         patches = {
-["lowercase-winsock-h.diff"] = [[
-diff --git a/src/ssl.c b/src/ssl.c
-index 95109c4..e5defa8 100644
---- a/src/ssl.c
-+++ b/src/ssl.c
-@@ -11,7 +11,7 @@
- #include <string.h>
-
- #if defined(WIN32)
--#include <Winsock2.h>
-+#include <winsock2.h>
- #endif
-
- #include <openssl/ssl.h>
-]]
-         }
-      }
+      },
    }
 }
