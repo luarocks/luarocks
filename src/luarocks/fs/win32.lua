@@ -349,7 +349,7 @@ function win32.is_superuser()
 end
 
 function win32.export_cmd(var, val)
-   return ("SET %s=%s"):format(var, val)
+   return ("SET %s"):format(fs.Q(var.."="..val))
 end
 
 function win32.system_cache_dir()
