@@ -54,7 +54,11 @@ local function detect_sysconfdir()
    if not debug then
       return
    end
-   local src = dir.normalize(debug.getinfo(1, "S"))
+   local src = debug.getinfo(1, "S").source
+   if not src then
+      return
+   end
+   src = dir.normalize(src)
    if src:sub(1, 1) == "@" then
       src = src:sub(2)
    end
