@@ -468,7 +468,6 @@ local function main()
       luaposix = if_platform("unix", "./binary/luaposix-35.1-1.rockspec"),
       luasocket = "luasocket",
       luafilesystem = "luafilesystem",
-      dkjson = "dkjson",
    }
 
    fs.make_dir(LUA_MODULES)
