@@ -21,7 +21,7 @@ vars.LUA_DIR = nil
 vars.LUA_BINDIR = nil
 vars.LUA_INCDIR = nil
 vars.LUA_LIBDIR = nil
-vars.LUA_LIBNAME = nil
+vars.LUALIB = nil
 vars.LUA_VERSION = "5.1"
 vars.LUA_SHORTV = nil   -- "51"
 vars.LUA_RUNTIME = nil
@@ -353,7 +353,7 @@ local function look_for_link_libraries(directory)
 			print("    checking for " .. full_name)
 			if exists(full_name) then
 				vars.LUA_LIBDIR = dir
-				vars.LUA_LIBNAME = name
+				vars.LUALIB = name
 				print("       Found " .. name)
 				return true
 			end
@@ -869,7 +869,7 @@ if INSTALL_LUA then
 	vars.LUA_BINDIR = vars.BINDIR
 	vars.LUA_LIBDIR = vars.LIBDIR
 	vars.LUA_INCDIR = vars.INCDIR
-	vars.LUA_LIBNAME = "lua5.1.lib"
+	vars.LUALIB = "lua5.1.lib"
 	vars.LUA_RUNTIME = "MSVCR80"
 	vars.UNAME_M = "x86"
 else
@@ -929,7 +929,7 @@ Lua interpreter : $LUA
     libraries   : $LUA_LIBDIR
     includes    : $LUA_INCDIR
     architecture: $UNAME_M
-    binary link : $LUA_LIBNAME with runtime $LUA_RUNTIME.dll
+    binary link : $LUALIB with runtime $LUA_RUNTIME.dll
 ]])
 
 if USE_MINGW then
