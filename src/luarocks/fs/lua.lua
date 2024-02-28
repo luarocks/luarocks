@@ -9,6 +9,7 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
+local vers = require("luarocks.core.vers")
 
 local pack = table.pack or function(...) return { n = select("#", ...), ... } end
 
@@ -732,6 +733,11 @@ if socket_ok then
 local ltn12 = require("ltn12")
 local luasec_ok, https = pcall(require, "ssl.https")
 
+if luasec_ok and not vers.compare_versions(https._VERSION, "1.0.3") then
+   luasec_ok = false
+   https = nil
+end
+
 local redirect_protocols = {
    http = http,
    https = luasec_ok and https,
@@ -796,7 +802,7 @@ local function request(url, method, http, loop_control)  -- luacheck: ignore 431
             loop_control[url] = true
             return request(location, method, redirect_protocols[protocol], loop_control)
          else
-            return nil, "URL redirected to unsupported protocol - install luasec to get HTTPS support.", "https"
+            return nil, "URL redirected to unsupported protocol - install luasec >= 1.1 to get HTTPS support.", "https"
          end
       end
       return nil, err
@@ -946,7 +952,7 @@ function fs_lua.download(url, filename, cache)
          return nil, err
       end
       if not downloader_warning then
-         util.warning("falling back to "..downloader.." - install luasec to get native HTTPS support")
+         util.warning("falling back to "..downloader.." - install luasec >= 1.1 to get native HTTPS support")
          downloader_warning = true
       end
       return fs.use_downloader(url, filename, cache)
