@@ -291,6 +291,14 @@ end
 
 if lfs_ok then
 
+function fs_lua.file_age(filename)
+   local attr = lfs.attributes(filename)
+   if attr and attr.change then
+      return os.difftime(os.time(), attr.change)
+   end
+   return math.huge
+end
+
 function fs_lua.lock_access(dirname, force)
    fs.make_dir(dirname)
    if force then
@@ -667,6 +675,10 @@ function fs_lua.exists(file)
    assert(file)
    -- check if file exists by attempting to open it
    return util.exists(fs.absolute_name(file))
+end
+
+function fs_lua.file_age(_)
+   return math.huge
 end
 
 end
