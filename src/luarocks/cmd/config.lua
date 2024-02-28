@@ -243,11 +243,59 @@ local function get_scope(args)
           or "user"
 end
 
+local function report_on_lua_incdir_config(value, lua_version)
+   local variables = {
+      ["LUA_DIR"] = cfg.variables.LUA_DIR,
+      ["LUA_BINDIR"] = cfg.variables.LUA_BINDIR,
+      ["LUA_INCDIR"] = value,
+      ["LUA_LIBDIR"] = cfg.variables.LUA_LIBDIR,
+      ["LUA"] = cfg.variables.LUA,
+   }
+
+   local ok, err = deps.check_lua_incdir(variables, lua_version)
+   if not ok then
+      util.printerr()
+      util.warning((err:gsub(" You can use.*", "")))
+   end
+   return ok
+end
+
+local function report_on_lua_libdir_config(value, lua_version)
+   local variables = {
+      ["LUA_DIR"] = cfg.variables.LUA_DIR,
+      ["LUA_BINDIR"] = cfg.variables.LUA_BINDIR,
+      ["LUA_INCDIR"] = cfg.variables.LUA_INCDIR,
+      ["LUA_LIBDIR"] = value,
+      ["LUA"] = cfg.variables.LUA,
+   }
+
+   local ok, err, _, err_files = deps.check_lua_libdir(variables, lua_version)
+   if not ok then
+      util.printerr()
+      util.warning((err:gsub(" You can use.*", "")))
+      util.printerr("Tried:")
+      for _, l in pairs(err_files) do
+         for _, d in ipairs(l) do
+            util.printerr("\t" .. d)
+         end
+      end
+   end
+   return ok
+end
+
+local function warn_bad_c_config()
+   util.printerr()
+   util.printerr("LuaRocks may not work correctly when building C modules using this configuration.")
+   util.printerr()
+end
+
 --- Driver function for "config" command.
 -- @return boolean: True if succeeded, nil on errors.
 function config_cmd.command(args)
-   deps.check_lua_incdir(cfg.variables, args.lua_version or cfg.lua_version)
-   deps.check_lua_libdir(cfg.variables, args.lua_version or cfg.lua_version)
+   local lua_version = args.lua_version or cfg.lua_version
+
+   deps.check_lua_incdir(cfg.variables, lua_version)
+   deps.check_lua_libdir(cfg.variables, lua_version)
 
    -- deprecated flags
    if args.lua_incdir then
@@ -312,13 +360,43 @@ function config_cmd.command(args)
          local prefix = dir.dir_name(cfg.config_files[scope].file)
          persist.save_default_lua_version(prefix, args.lua_version)
       end
-      return write_entries(keys, scope, args.unset)
+      local ok, err = write_entries(keys, scope, args.unset)
+      if ok then
+         local inc_ok = report_on_lua_incdir_config(cfg.variables.LUA_INCDIR, lua_version)
+         local lib_ok = ok and report_on_lua_libdir_config(cfg.variables.LUA_LIBDIR, lua_version)
+         if not (inc_ok and lib_ok) then
+            warn_bad_c_config()
+         end
+      end
+
+      return ok, err
    end
 
    if args.key then
+      if args.key:match("^[A-Z]") then
+         args.key = "variables." .. args.key
+      end
+
       if args.value or args.unset then
          local scope = get_scope(args)
-         return write_entries({ [args.key] = args.value or args.unset }, scope, args.unset)
+
+         local ok, err = write_entries({ [args.key] = args.value or args.unset }, scope, args.unset)
+
+         if ok then
+            if args.key == "variables.LUA_INCDIR" then
+               local ok = report_on_lua_incdir_config(args.value, lua_version)
+               if not ok then
+                  warn_bad_c_config()
+               end
+            elseif args.key == "variables.LUA_LIBDIR" then
+               local ok = report_on_lua_libdir_config(args.value, lua_version)
+               if not ok then
+                  warn_bad_c_config()
+               end
+            end
+         end
+
+         return ok, err
       else
          return print_entry(args.key, cfg, args.json)
       end

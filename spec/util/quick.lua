@@ -347,7 +347,7 @@ function quick.compile(filename, env)
             write(([=[ ok, err = make_dir(%q) ]=]):format(op.file))
             write(([=[ assert.truthy((lfs.attributes(%q) or {}).mode == "directory", error_message(%d, "MKDIR failed: " .. %q .. " - " .. (err or "") )) ]=]):format(op.file, op.line, op.file))
          elseif op.op == "RUN" then
-            local cmd_helper = cmd_helpers[op.program] or op.program
+            local cmd_helper = cmd_helpers[op.program] or ("%q"):format(op.program)
             local redirs = " 1>stdout.txt 2>stderr.txt "
             write(([=[ local ok, _, code = os.execute(%s .. " " .. %q .. %q) ]=]):format(cmd_helper, op.args, redirs))
             write([=[ if type(ok) == "number" then code = (ok >= 256 and ok / 256 or ok) end ]=])

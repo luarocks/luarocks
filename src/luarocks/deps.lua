@@ -703,10 +703,10 @@ local function lua_h_exists(d, luaver)
       if data:match("LUA_VERSION_NUM%s*" .. tostring(luanum)) then
          return d
       end
-      return nil, "Lua header found at " .. d .. " does not match Lua version " .. luaver .. ". You may want to override this by configuring LUA_INCDIR.", "dependency", 2
+      return nil, "Lua header lua.h found at " .. d .. " does not match Lua version " .. luaver .. ". You can use `luarocks config variables.LUA_INCDIR <path>` to set the correct location.", "dependency", 2
    end
 
-   return nil, "Failed finding Lua header files (searched at " .. d .. "). You may need to install them or configure LUA_INCDIR.", "dependency", 1
+   return nil, "Failed finding Lua header lua.h (searched at " .. d .. "). You may need to install Lua development headers. You can use `luarocks config variables.LUA_INCDIR <path>` to set the correct location.", "dependency", 1
 end
 
 local function find_lua_incdir(prefix, luaver, luajitver)
@@ -793,7 +793,7 @@ function deps.check_lua_libdir(vars)
    end
    local cache = {}
    local save_LUA_INCDIR = vars.LUA_INCDIR
-   local ok = check_external_dependency("LUA", { library = libnames }, vars, "build", cache)
+   local ok, _, _, errfiles = check_external_dependency("LUA", { library = libnames }, vars, "build", cache)
    vars.LUA_INCDIR = save_LUA_INCDIR
    local err
    if ok then
@@ -806,7 +806,7 @@ function deps.check_lua_libdir(vars)
             ok = txt:match("Lua " .. cfg.lua_version, 1, true)
                  or txt:match("lua" .. (cfg.lua_version:gsub("%.", "")), 1, true)
             if not ok then
-               err = "Lua library at " .. filename .. " does not match Lua version " .. cfg.lua_version .. ". You may want to override this by configuring LUA_LIBDIR."
+               err = "Lua library at " .. filename .. " does not match Lua version " .. cfg.lua_version .. ". You can use `luarocks config variables.LUA_LIBDIR <path>` to set the correct location."
             end
          end
 
@@ -819,8 +819,8 @@ function deps.check_lua_libdir(vars)
       vars.LUA_LIBDIR_OK = true
       return true
    else
-      err = err or "Failed finding Lua library. You may need to configure LUA_LIBDIR."
-      return nil, err, "dependency"
+      err = err or "Failed finding the Lua library. You can use `luarocks config variables.LUA_LIBDIR <path>` to set the correct location."
+      return nil, err, "dependency", errfiles
    end
 end
 
