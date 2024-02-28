@@ -25,7 +25,8 @@ function make.cmd_options(parser)
       "rock after building a new one. This behavior can be made permanent by "..
       "setting keep_other_versions=true in the configuration file.")
    parser:flag("--force", "If --keep is not specified, force removal of "..
-      "previously installed versions if it would break dependencies.")
+      "previously installed versions if it would break dependencies. "..
+      "If rock is already installed, reinstall it anyway.")
    parser:flag("--force-fast", "Like --force, but performs a forced removal "..
       "without reporting dependency issues.")
    parser:flag("--verify", "Verify signature of the rockspec or src.rock being "..

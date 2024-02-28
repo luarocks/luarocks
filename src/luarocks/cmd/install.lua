@@ -28,7 +28,8 @@ function install.add_to_parser(parser)
       "rock after building a new one. This behavior can be made permanent by "..
       "setting keep_other_versions=true in the configuration file.")
    cmd:flag("--force", "If --keep is not specified, force removal of "..
-      "previously installed versions if it would break dependencies.")
+      "previously installed versions if it would break dependencies. "..
+      "If rock is already installed, reinstall it anyway.")
    cmd:flag("--force-fast", "Like --force, but performs a forced removal "..
       "without reporting dependency issues.")
    cmd:flag("--only-deps --deps-only", "Install only the dependencies of the rock.")
@@ -84,6 +85,11 @@ function install.install_binary_rock(rock_file, opts)
       return nil, "Incompatible architecture "..arch, "arch"
    end
    if repos.is_installed(name, version) then
+      if (not opts.force) and (not opts.force_fast) then
+         util.printout(name .. " " .. version .. " is already installed in " .. path.root_dir(cfg.root_dir))
+         util.printout("Use --force to reinstall.")
+         return name, version
+      end
       repos.delete_version(name, version, opts.deps_mode)
    end
 
