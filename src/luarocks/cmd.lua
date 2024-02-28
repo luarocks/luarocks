@@ -337,8 +337,8 @@ local lua_example = package.config:sub(1, 1) == "\\"
                     and "<d:\\path\\lua.exe>"
                     or  "</path/lua>"
 
-local function show_status(file, status)
-   return (file and file .. " " or "") .. (status and "(ok)" or "(not found)")
+local function show_status(file, status, err)
+   return (file and file .. " " or "") .. (status and "(ok)" or ("(" .. (err or "not found") ..")"))
 end
 
 local function use_to_fix_location(key, what)
@@ -363,15 +363,15 @@ local function get_config_text(cfg)  -- luacheck: ignore 431
    if cfg.luajit_version then
       buf = buf.."      LuaJIT     : "..cfg.luajit_version.."\n"
    end
-   buf = buf.."      LUA        : "..show_status(cfg.variables.LUA, lua_ok).."\n"
+   buf = buf.."      LUA        : "..show_status(cfg.variables.LUA, lua_ok, "interpreter not found").."\n"
    if not lua_ok then
       buf = buf .. use_to_fix_location("variables.LUA", lua_example)
    end
-   buf = buf.."      LUA_INCDIR : "..show_status(cfg.variables.LUA_INCDIR, incdir_ok).."\n"
+   buf = buf.."      LUA_INCDIR : "..show_status(cfg.variables.LUA_INCDIR, incdir_ok, "lua.h not found").."\n"
    if lua_ok and not incdir_ok then
       buf = buf .. use_to_fix_location("variables.LUA_INCDIR")
    end
-   buf = buf.."      LUA_LIBDIR : "..show_status(cfg.variables.LUA_LIBDIR, libdir_ok).."\n"
+   buf = buf.."      LUA_LIBDIR : "..show_status(cfg.variables.LUA_LIBDIR, libdir_ok, "Lua library itself not found").."\n"
    if lua_ok and not libdir_ok then
       buf = buf .. use_to_fix_location("variables.LUA_LIBDIR")
    end

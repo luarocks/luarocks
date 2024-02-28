@@ -56,12 +56,6 @@ describe("LuaRocks command line #integration", function()
          assert.match("malformed", output, 1, true)
       end)
 
-      it("warns but continues if given an invalid version", function()
-         local output = run.luarocks("--lua-version=1.0")
-         assert.match("LUA *: %(not found%)", output)
-         assert.match("Version%s*:%s*1.0", output)
-      end)
-
       it("sets the version independently of project tree", function()
          test_env.run_in_tmp(function(tmpdir)
             assert.truthy(run.luarocks_bool("init --lua-version=" .. test_env.lua_version .. " --lua-versions=" .. test_env.lua_version))

@@ -207,13 +207,16 @@ function test_env.run_in_tmp(f, finally)
    end
    fs.change_dir(tmpdir)
 
-   if finally then
-      finally(function()
-         lfs.chdir(olddir)
-         lfs.rmdir(tmpdir)
-         fs.change_dir(olddir)
-      end)
-   end
+   local lr_config = test_env.env_variables.LUAROCKS_CONFIG
+
+   test_env.copy(lr_config, lr_config .. ".bak")
+
+   finally(function()
+      test_env.copy(lr_config .. ".bak", lr_config)
+      lfs.chdir(olddir)
+      lfs.rmdir(tmpdir)
+      fs.change_dir(olddir)
+   end)
 
    f(tmpdir)
 end
