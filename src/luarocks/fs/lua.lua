@@ -301,8 +301,16 @@ end
 
 function fs_lua.lock_access(dirname, force)
    fs.make_dir(dirname)
+   local lockfile = dir.path(dirname, "lockfile.lfs")
+
+   -- drop stale lock, older than 1 hour
+   local age = fs.file_age(lockfile)
+   if age > 3600 and age < math.huge then
+      force = true
+   end
+
    if force then
-      os.remove(dir.path(dirname, "lockfile.lfs"))
+      os.remove(lockfile)
    end
    return lfs.lock_dir(dirname)
 end
