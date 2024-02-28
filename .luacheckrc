@@ -25,6 +25,10 @@ ignore = {
    "143/table.unpack",
 }
 
+exclude_files = {
+   "src/luarocks/vendor/**/*.lua",
+}
+
 include_files = {
    "src/luarocks/**/*.lua"
 }

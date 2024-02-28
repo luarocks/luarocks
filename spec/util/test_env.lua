@@ -906,6 +906,9 @@ local function create_configs()
       return {
          statsfile = "%{statsfile}",
          reportfile = "%{reportfile}",
+         exclude = {
+            "src%/luarocks%/vendor.+$",
+         },
          modules = {
             ["luarocks"] = "%{luarocks_path}",
             ["luarocks-admin"] = "%{luarocks_admin_path}",
