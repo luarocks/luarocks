@@ -83,8 +83,15 @@ RUN: luarocks build --tree=/usr ./a_rock-1.0.1-rockspec
 EXIT: 4
 STDERR:
 --------------------------------------------------------------------------------
-requires exclusive access
-use --force-lock
+requires exclusive write access
+--------------------------------------------------------------------------------
+
+We show the OS permission denied error, so we don't show the --force-lock
+message.
+
+NOT_STDERR:
+--------------------------------------------------------------------------------
+try --force-lock
 --------------------------------------------------------------------------------
 
 NOT_EXISTS: %{testing_sys_rocks}/a_rock/1.0-1/a_rock-1.0-1.rockspec
@@ -93,8 +100,15 @@ RUN: luarocks build --tree=/usr ./a_rock-1.0.1-rockspec --force-lock
 EXIT: 4
 STDERR:
 --------------------------------------------------------------------------------
-requires exclusive access
-failed to force the lock
+requires exclusive write access
+--------------------------------------------------------------------------------
+
+We show the OS permission denied error, so we don't show the --force-lock
+message.
+
+NOT_STDERR:
+--------------------------------------------------------------------------------
+try --force-lock
 --------------------------------------------------------------------------------
 
 NOT_EXISTS: %{testing_sys_rocks}/a_rock/1.0-1/a_rock-1.0-1.rockspec
@@ -108,8 +122,15 @@ RUN: luarocks build --tree=/usr/invalid ./a_rock-1.0.1-rockspec
 EXIT: 4
 STDERR:
 --------------------------------------------------------------------------------
-requires exclusive access
-use --force-lock
+requires exclusive write access
+--------------------------------------------------------------------------------
+
+We show the OS permission denied error, so we don't show the --force-lock
+message.
+
+NOT_STDERR:
+--------------------------------------------------------------------------------
+try --force-lock
 --------------------------------------------------------------------------------
 
 NOT_EXISTS: %{testing_sys_rocks}/a_rock/1.0-1/a_rock-1.0-1.rockspec
@@ -118,7 +139,7 @@ RUN: luarocks build --tree=/usr/invalid ./a_rock-1.0.1-rockspec --force-lock
 EXIT: 4
 STDERR:
 --------------------------------------------------------------------------------
-requires exclusive access
+requires exclusive write access
 failed to force the lock
 --------------------------------------------------------------------------------
 

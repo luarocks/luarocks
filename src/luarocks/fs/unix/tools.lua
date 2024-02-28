@@ -319,7 +319,10 @@ function tools.is_superuser()
 end
 
 function tools.lock_access(dirname, force)
-   fs.make_dir(dirname)
+   local ok, err = fs.make_dir(dirname)
+   if not ok then
+      return nil, err
+   end
 
    local tempfile = dir.path(dirname, ".lock.tmp." .. tostring(math.random(100000000)))
 

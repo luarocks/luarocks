@@ -732,12 +732,15 @@ function cmd.run_command(description, commands, external_namespace, ...)
    if cmd_mod.needs_lock and cmd_mod.needs_lock(args) then
       lock, err = fs.lock_access(path.root_dir(cfg.root_dir), args.force_lock)
       if not lock then
-         local try_force = args.force_lock
-                           and (" - failed to force the lock" .. (err and ": " .. err or ""))
-                           or  " - use --force-lock to overwrite the lock"
+         err = args.force_lock
+               and ("failed to force the lock" .. (err and ": " .. err or ""))
+               or  (err and err ~= "File exists")
+                   and err
+                   or  "try --force-lock to overwrite the lock"
+
          die("command '" .. args.command .. "' " ..
-             "requires exclusive access to " .. path.root_dir(cfg.root_dir) ..
-             try_force, cmd.errorcodes.LOCK)
+             "requires exclusive write access to " .. path.root_dir(cfg.root_dir) .. " - " ..
+             err, cmd.errorcodes.LOCK)
       end
    end
 
