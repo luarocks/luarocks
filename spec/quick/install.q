@@ -373,3 +373,45 @@ RUN: luarocks install myrock-1.0-2.all.rock --no-doc
 
 EXISTS:     %{testing_sys_tree}/share/lua/%{LUA_VERSION}/sailor/blank-app/.htaccess
 NOT_EXISTS: %{testing_sys_tree}/share/lua/%{LUA_VERSION}/sailor/blank-app/.htaccess~
+
+
+
+================================================================================
+TEST: do not reinstall when already installed
+
+FILE: myrock-1.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "myrock"
+version = "1.0-1"
+source = {
+   url = "file://%{url(tmpdir)}/rock.lua"
+}
+build = {
+   modules = { rock = "rock.lua" }
+}
+--------------------------------------------------------------------------------
+
+FILE: rock.lua
+--------------------------------------------------------------------------------
+return "hello"
+--------------------------------------------------------------------------------
+
+RUN: luarocks build myrock-1.0-1.rockspec
+RUN: luarocks pack myrock
+RUN: luarocks remove myrock
+
+RUN: luarocks install ./myrock-1.0-1.all.rock
+
+RUN: luarocks show myrock
+STDOUT:
+--------------------------------------------------------------------------------
+myrock 1.0
+--------------------------------------------------------------------------------
+
+RUN: luarocks install ./myrock-1.0-1.all.rock
+STDOUT:
+--------------------------------------------------------------------------------
+myrock 1.0-1 is already installed
+Use --force to reinstall
+--------------------------------------------------------------------------------

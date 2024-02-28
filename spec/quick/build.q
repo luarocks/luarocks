@@ -120,3 +120,43 @@ failed to force the lock
 --------------------------------------------------------------------------------
 
 NOT_EXISTS: %{testing_sys_rocks}/a_rock/1.0-1/a_rock-1.0-1.rockspec
+
+
+
+================================================================================
+TEST: luarocks build: do not rebuild when already installed
+
+FILE: a_rock-1.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "a_rock"
+version = "1.0-1"
+source = {
+   url = "file://%{url(%{fixtures_dir})}/a_rock.lua"
+}
+description = {
+   summary = "An example rockspec",
+}
+dependencies = {
+   "lua >= 5.1"
+}
+build = {
+   modules = {
+      build = "a_rock.lua"
+   },
+}
+--------------------------------------------------------------------------------
+RUN: luarocks build a_rock-1.0-1.rockspec
+
+RUN: luarocks show a_rock
+STDOUT:
+--------------------------------------------------------------------------------
+a_rock 1.0
+--------------------------------------------------------------------------------
+
+RUN: luarocks build a_rock-1.0-1.rockspec
+STDOUT:
+--------------------------------------------------------------------------------
+a_rock 1.0-1 is already installed
+Use --force to reinstall
+--------------------------------------------------------------------------------

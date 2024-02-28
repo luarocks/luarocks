@@ -16,6 +16,7 @@ local writer = require("luarocks.manif.writer")
 local search = require("luarocks.search")
 local make = require("luarocks.cmd.make")
 local cmd = require("luarocks.cmd")
+local repos = require("luarocks.repos")
 
 function cmd_build.add_to_parser(parser)
    local cmd = parser:command("build", "Build and install a rock, compiling its C parts if any.\n"..  -- luacheck: ignore 431
@@ -93,6 +94,15 @@ local function do_build(name, namespace, version, opts)
       end
    end
 
+   name, version = path.parse_name(url)
+   if name and repos.is_installed(name, version) then
+      if (not opts.force) and (not opts.force_fast) then
+         util.printout(name .. " " .. version .. " is already installed in " .. path.root_dir(cfg.root_dir))
+         util.printout("Use --force to reinstall.")
+         return name, version, "skip"
+      end
+   end
+
    if url:match("%.rockspec$") then
       local rockspec, err = fetch.load_rockspec(url, nil, opts.verify)
       if not rockspec then
@@ -151,9 +161,12 @@ function cmd_build.command(args)
       return nil, err, cmd.errorcodes.PERMISSIONDENIED
    end
 
-   local name, version = do_build(args.rock, args.namespace, args.version, opts)
+   local name, version, skip = do_build(args.rock, args.namespace, args.version, opts)
    if not name then
       return nil, version
+   end
+   if skip == "skip" then
+      return name, version
    end
 
    if args.no_doc then

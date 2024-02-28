@@ -1161,6 +1161,9 @@ end
 function fs_lua.check_command_permissions(args)
    local ok = true
    local err = ""
+   if args._command_permissions_checked then
+      return true
+   end
    for _, directory in ipairs { cfg.rocks_dir, cfg.deploy_lua_dir, cfg.deploy_bin_dir, cfg.deploy_lua_dir } do
       if fs.exists(directory) then
          if not fs.is_writable(directory) then
@@ -1185,6 +1188,7 @@ function fs_lua.check_command_permissions(args)
       end
    end
    if ok then
+      args._command_permissions_checked = true
       return true
    else
       if args["local"] or cfg.local_by_default then
