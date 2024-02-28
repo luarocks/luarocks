@@ -7,7 +7,7 @@ local global_module_name = 'json'
 
 David Kolf's JSON module for Lua 5.1 - 5.4
 
-Version 2.6
+Version 2.7
 
 
 For the documentation see the corresponding readme.txt or visit
@@ -17,7 +17,7 @@ You can contact the author by sending an e-mail to 'david' at the
 domain 'dkolf.de'.
 
 
-Copyright (C) 2010-2021 David Heiko Kolf
+Copyright (C) 2010-2024 David Heiko Kolf
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -42,8 +42,8 @@ SOFTWARE.
 --]==]
 
 -- global dependencies:
-local pairs, type, tostring, tonumber, getmetatable, setmetatable =
-      pairs, type, tostring, tonumber, getmetatable, setmetatable
+local pairs, type, tostring, tonumber, getmetatable, setmetatable, rawset =
+      pairs, type, tostring, tonumber, getmetatable, setmetatable, rawset
 local error, require, pcall, select = error, require, pcall, select
 local floor, huge = math.floor, math.huge
 local strrep, gsub, strsub, strbyte, strchar, strfind, strlen, strformat =
@@ -52,7 +52,7 @@ local strrep, gsub, strsub, strbyte, strchar, strfind, strlen, strformat =
 local strmatch = string.match
 local concat = table.concat
 
-local json = { version = "dkjson 2.6" }
+local json = { version = "dkjson 2.7" }
 
 local jsonlpeg = {}
 
@@ -63,8 +63,8 @@ if register_global_module_table then
     _G[global_module_name] = json
   end
 end
--- blocking globals in Lua 5.2 and later
-local _ENV = nil  -- luacheck: ignore 211
+
+local _ENV = nil -- blocking globals in Lua 5.2 and later
 
 pcall (function()
   -- Enable access to blocked metatables.
@@ -328,6 +328,7 @@ encode2 = function (value, indent, level, buffer, buflen, tables, globalorder, s
           if v ~= nil then
             used[k] = true
             buflen, msg = addpair (k, v, prev, indent, level, buffer, buflen, tables, globalorder, state)
+            if not buflen then return nil, msg end
             prev = true -- add a seperator before the next element
           end
         end
@@ -510,7 +511,7 @@ end
 local scanvalue -- forward declaration
 
 local function scantable (what, closechar, str, startpos, nullval, objectmeta, arraymeta)
-
+  local len = strlen (str)
   local tbl, n = {}, 0
   local pos = startpos + 1
   if what == 'object' then
@@ -606,7 +607,7 @@ end
 function json.use_lpeg ()
   local g = require ("lpeg")
 
-  if g.version() == "0.11" then
+  if type(g.version) == 'function' and g.version() == "0.11" then
     error "due to a bug in LPeg 0.11, it cannot be used for JSON matching"
   end
 
