@@ -532,12 +532,12 @@ end
 -- @return md5sum string: md5sum of directory
 local function hash_environment(path)
    if test_env.TEST_TARGET_OS == "linux" then
-      return execute_output(C("cd", path, "&& find . -printf \"%s %p\n\" | md5sum"))
+      return execute_output(C("cd", path, "&& find . -printf \"%s %p;\" | md5sum"))
    elseif test_env.TEST_TARGET_OS == "osx" then
       return execute_output(C("find", path, "-type f -exec stat -f \"%z %N\" {} \\; | md5"))
    elseif test_env.TEST_TARGET_OS == "windows" then
       return execute_output(
-         "\"" .. C(tool("find"), Q(path), "-printf", "\"%s %p\"") .. "\"" ..
+         "\"" .. C(tool("find"), Q(path), "-printf", "%s:%p:") .. "\"" ..
          " > temp_sum.txt && certUtil -hashfile temp_sum.txt && del temp_sum.txt")
    end
 end
