@@ -60,11 +60,10 @@ describe("luarocks fetch #unit", function()
 
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
-      runner.tick = true
    end)
 
-   teardown(function()
-      runner.shutdown()
+   lazy_teardown(function()
+      runner.save_stats()
    end)
 
 

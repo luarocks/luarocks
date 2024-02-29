@@ -21,4 +21,4 @@ require("luarocks.fetch.hg")
 require("luarocks.fetch.sscm")
 require("luarocks.fetch.svn")
 
-runner.shutdown()
+runner.save_stats()

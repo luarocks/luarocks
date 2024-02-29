@@ -1,12 +1,9 @@
 local test_env = require("spec.util.test_env")
 local run = test_env.run
 
+test_env.setup_specs()
+
 describe("luarocks.loader", function()
-
-   before_each(function()
-      test_env.setup_specs()
-   end)
-
    describe("#unit", function()
       it("starts", function()
          assert(run.lua_bool([[-e "require 'luarocks.loader'; print(package.loaded['luarocks.loaded'])"]]))

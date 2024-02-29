@@ -19,11 +19,10 @@ describe("LuaRocks test #unit", function()
       fs.init()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
-      runner.tick = true
    end)
 
    lazy_teardown(function()
-      runner.shutdown()
+      runner.save_stats()
    end)
 
    local tmpdir
