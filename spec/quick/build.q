@@ -1,4 +1,7 @@
-TEST: luarocks build: fails when given invalid argument
+SUITE: luarocks build
+
+================================================================================
+TEST: fails when given invalid argument
 RUN: luarocks build aoesuthaoeusahtoeustnaou --only-server=localhost
 EXIT: 1
 STDERR:
@@ -9,7 +12,7 @@ Could not find a result named aoesuthaoeusahtoeustnaou
 
 
 ================================================================================
-TEST: luarocks build: with no arguments behaves as luarocks make
+TEST: with no arguments behaves as luarocks make
 
 FILE: c_module-1.0-1.rockspec
 --------------------------------------------------------------------------------
@@ -43,7 +46,7 @@ EXISTS: c_module.%{lib_extension}
 
 
 ================================================================================
-TEST: luarocks build: defaults to builtin type
+TEST: defaults to builtin type
 
 FILE: a_rock-1.0-1.rockspec
 --------------------------------------------------------------------------------
@@ -74,7 +77,7 @@ a_rock 1.0
 
 
 ================================================================================
-TEST: luarocks build: fails if no permissions to access the specified tree #unix
+TEST: fails if no permissions to access the specified tree #unix
 
 RUN: luarocks build --tree=/usr ./a_rock-1.0.1-rockspec
 EXIT: 4
@@ -99,7 +102,7 @@ NOT_EXISTS: %{testing_sys_rocks}/a_rock/1.0-1/a_rock-1.0-1.rockspec
 
 
 ================================================================================
-TEST: luarocks build: fails if no permissions to access the parent #unix
+TEST: fails if no permissions to access the parent #unix
 
 RUN: luarocks build --tree=/usr/invalid ./a_rock-1.0.1-rockspec
 EXIT: 4
@@ -159,4 +162,94 @@ STDOUT:
 --------------------------------------------------------------------------------
 a_rock 1.0-1 is already installed
 Use --force to reinstall
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+TEST: supports --pin #pinning
+
+FILE: test-1.0-1.rockspec
+--------------------------------------------------------------------------------
+package = "test"
+version = "1.0-1"
+source = {
+   url = "file://%{url(tmpdir)}/test.lua"
+}
+dependencies = {
+   "a_rock >= 0.8"
+}
+build = {
+   type = "builtin",
+   modules = {
+      test = "test.lua"
+   }
+}
+--------------------------------------------------------------------------------
+
+FILE: test.lua
+--------------------------------------------------------------------------------
+return {}
+--------------------------------------------------------------------------------
+
+RUN: luarocks build --only-server=%{fixtures_dir}/a_repo test-1.0-1.rockspec --pin --tree=lua_modules
+
+EXISTS: ./lua_modules/lib/luarocks/rocks-%{lua_version}/test/1.0-1/test-1.0-1.rockspec
+EXISTS: ./lua_modules/lib/luarocks/rocks-%{lua_version}/a_rock/2.0-1/a_rock-2.0-1.rockspec
+
+EXISTS: ./lua_modules/lib/luarocks/rocks-%{lua_version}/test/1.0-1/luarocks.lock
+
+FILE_CONTENTS: ./lua_modules/lib/luarocks/rocks-%{lua_version}/test/1.0-1/luarocks.lock
+--------------------------------------------------------------------------------
+return {
+   dependencies = {
+      a_rock = "2.0-1",
+      lua = "%{lua_version}-1"
+   }
+}
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+TEST: supports --pin --only-deps #pinning
+
+FILE: test-1.0-1.rockspec
+--------------------------------------------------------------------------------
+package = "test"
+version = "1.0-1"
+source = {
+   url = "file://%{url(tmpdir)}/test.lua"
+}
+dependencies = {
+   "a_rock >= 0.8"
+}
+build = {
+   type = "builtin",
+   modules = {
+      test = "test.lua"
+   }
+}
+--------------------------------------------------------------------------------
+
+FILE: test.lua
+--------------------------------------------------------------------------------
+return {}
+--------------------------------------------------------------------------------
+
+RUN: luarocks build --only-server=%{fixtures_dir}/a_repo test-1.0-1.rockspec --pin --only-deps --tree=lua_modules
+
+NOT_EXISTS: ./lua_modules/lib/luarocks/rocks-%{lua_version}/test/1.0-1/test-1.0-1.rockspec
+EXISTS: ./lua_modules/lib/luarocks/rocks-%{lua_version}/a_rock/2.0-1/a_rock-2.0-1.rockspec
+
+EXISTS: ./luarocks.lock
+
+FILE_CONTENTS: ./luarocks.lock
+--------------------------------------------------------------------------------
+return {
+   dependencies = {
+      a_rock = "2.0-1",
+      lua = "%{lua_version}-1"
+   }
+}
 --------------------------------------------------------------------------------

@@ -20,7 +20,7 @@ describe("luarocks fetch #unit", function()
 
    local runner
 
-   setup(function()
+   lazy_setup(function()
       cfg.init()
       fs.init()
 

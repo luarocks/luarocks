@@ -142,7 +142,7 @@ describe("LuaRocks config tests #integration", function()
 
       it("can read as JSON", function()
          local output = run.luarocks("config rocks_trees --json")
-         assert.match('^%["', output)
+         assert.match('^%[{', output)
       end)
 
       it("reads an array -> hash config key", function()

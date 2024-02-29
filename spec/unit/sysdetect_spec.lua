@@ -4,9 +4,13 @@ local lfs = require("lfs")
 
 describe("luarocks.core.sysdetect #unix #unit", function()
 
-   setup(function()
-      os.execute("[ -e binary-samples ] || git clone --depth=1 https://github.com/hishamhm/binary-samples")
-      os.execute("cd binary-samples && git pull")
+   lazy_setup(function()
+      os.execute([=[
+         [ -e binary-samples ] || {
+            git clone --depth=1 https://github.com/hishamhm/binary-samples
+            ( cd binary-samples && git pull )
+         }
+      ]=])
    end)
 
    local files = {
