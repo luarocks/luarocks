@@ -193,6 +193,11 @@ function cmd_build.command(args)
    return name, version
 end
 
-cmd_build.needs_lock = true
+cmd_build.needs_lock = function(args)
+   if args.pack_binary_rock then
+      return false
+   end
+   return true
+end
 
 return cmd_build

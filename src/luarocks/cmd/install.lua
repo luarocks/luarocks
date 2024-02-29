@@ -261,6 +261,11 @@ function install.command(args)
    end
 end
 
-install.needs_lock = true
+install.needs_lock = function(args)
+   if args.pack_binary_rock then
+      return false
+   end
+   return true
+end
 
 return install

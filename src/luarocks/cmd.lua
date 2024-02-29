@@ -729,7 +729,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
    local cmd_mod = cmd_modules[args.command]
 
    local lock
-   if cmd_mod.needs_lock then
+   if cmd_mod.needs_lock and cmd_mod.needs_lock(args) then
       lock, err = fs.lock_access(path.root_dir(cfg.root_dir), args.force_lock)
       if not lock then
          local try_force = args.force_lock

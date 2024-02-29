@@ -156,6 +156,11 @@ function make.command(args)
    end
 end
 
-make.needs_lock = true
+make.needs_lock = function(args)
+   if args.pack_binary_rock then
+      return false
+   end
+   return true
+end
 
 return make

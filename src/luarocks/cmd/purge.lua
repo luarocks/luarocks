@@ -73,6 +73,6 @@ function purge.command(args)
    return writer.make_manifest(cfg.rocks_dir, "one")
 end
 
-purge.needs_lock = true
+purge.needs_lock = function() return true end
 
 return purge
