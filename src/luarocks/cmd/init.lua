@@ -212,6 +212,6 @@ function init.command(args)
    return true
 end
 
-init.needs_lock = true
+init.needs_lock = function() return true end
 
 return init
