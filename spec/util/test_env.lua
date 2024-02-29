@@ -720,7 +720,13 @@ local function create_testing_paths(suffix)
    paths.fixtures_repo_dir = dir_path(base_dir, "spec", "fixtures", "a_repo")
    paths.gpg_dir           = dir_path(base_dir, "spec", "fixtures", "gpg")
 
-   local testrun_dir = dir_path(base_dir, "testrun")
+   local testrun_dir
+   if test_env.TEST_TARGET_OS == "windows" then
+      testrun_dir = dir_path(base_dir, "test run")
+   else
+      testrun_dir = dir_path(base_dir, "testrun")
+   end
+
    paths.testrun_dir           = testrun_dir
    paths.testing_lrprefix      = dir_path(testrun_dir, "testing_lrprefix-" .. suffix)
    paths.testing_tree          = dir_path(testrun_dir, "testing-" .. suffix)
