@@ -1,6 +1,7 @@
 version: 3.0.0.{build}-test
 
 shallow_clone: true
+skip_branch_with_pr: true
 
 matrix:
   fast_finish: true
