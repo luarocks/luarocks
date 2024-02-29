@@ -6,7 +6,7 @@ local fun = require("luarocks.fun")
 describe("luarocks.fun #unit", function()
    local runner
 
-   setup(function()
+   lazy_setup(function()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
    end)

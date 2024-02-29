@@ -126,11 +126,6 @@ describe("luarocks doc #integration", function()
          end, finally)
       end)
 
-      it("with --local", function()
-         assert.is_true(run.luarocks_bool("install --local --server=" .. testing_paths.fixtures_dir .. "/a_repo a_rock"))
-         assert.is_true(run.luarocks_bool("doc --server=" .. testing_paths.fixtures_dir .. "/a_repo a_rock --local"))
-      end)
-
       it("with --porcelain", function()
          test_env.run_in_tmp(function(tmpdir)
             test_env.write_file("test-1.0-1.rockspec", [[

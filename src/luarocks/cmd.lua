@@ -63,6 +63,19 @@ do
       cfg.deploy_lib_dir = cfg.deploy_lib_dir:gsub("/+$", "")
    end
 
+   local function set_named_tree(args, name)
+      for _, tree in ipairs(cfg.rocks_trees) do
+         if type(tree) == "table" and name == tree.name then
+            if not tree.root then
+               return nil, "Configuration error: tree '"..tree.name.."' has no 'root' field."
+            end
+            replace_tree(args, tree.root, tree)
+            return true
+         end
+      end
+      return false
+   end
+
    process_tree_args = function(args, project_dir)
 
       if args.global then
@@ -70,17 +83,7 @@ do
       end
 
       if args.tree then
-         local named = false
-         for _, tree in ipairs(cfg.rocks_trees) do
-            if type(tree) == "table" and args.tree == tree.name then
-               if not tree.root then
-                  return nil, "Configuration error: tree '"..tree.name.."' has no 'root' field."
-               end
-               replace_tree(args, tree.root, tree)
-               named = true
-               break
-            end
-         end
+         local named = set_named_tree(args, args.tree)
          if not named then
             local root_dir = fs.absolute_name(args.tree)
             replace_tree(args, root_dir)
@@ -94,7 +97,7 @@ do
                "You are running as a superuser, which is intended for system-wide operation.\n"..
                "To force using the superuser's home, use --tree explicitly."
          else
-            replace_tree(args, cfg.home_tree)
+            set_named_tree(args, "user")
          end
       elseif args.project_tree then
          local tree = args.project_tree
@@ -102,9 +105,7 @@ do
          manif.load_rocks_tree_manifests()
          path.use_tree(tree)
       elseif cfg.local_by_default then
-         if cfg.home_tree then
-            replace_tree(args, cfg.home_tree)
-         end
+         set_named_tree(args, "user")
       elseif project_dir then
          local project_tree = project_dir .. "/lua_modules"
          table.insert(cfg.rocks_trees, 1, { name = "project", root = project_tree } )

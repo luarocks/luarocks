@@ -159,6 +159,16 @@ local function parse(filename)
             cur_block = cur_op
             cur_block_name = "FILE"
             table.insert(stack, "block start")
+         elseif cmd == "FILE_CONTENTS" then
+            cur_op = {
+               op = "FILE_CONTENTS",
+               name = arg,
+               data = {},
+            }
+            table.insert(cur_test.ops, cur_op)
+            cur_block = cur_op
+            cur_block_name = "FILE_CONTENTS"
+            table.insert(stack, "block start")
          elseif cmd == "RUN" then
             local program, args = arg:match("([^ ]+)%s*(.*)$")
             if not program then
@@ -191,6 +201,20 @@ local function parse(filename)
          elseif cmd == "MKDIR" then
             cur_op = {
                op = "MKDIR",
+               file = dir.normalize(arg),
+               line = cur_line,
+            }
+            table.insert(cur_test.ops, cur_op)
+         elseif cmd == "RMDIR" then
+            cur_op = {
+               op = "RMDIR",
+               file = dir.normalize(arg),
+               line = cur_line,
+            }
+            table.insert(cur_test.ops, cur_op)
+         elseif cmd == "RM" then
+            cur_op = {
+               op = "RM",
                file = dir.normalize(arg),
                line = cur_line,
             }
@@ -346,6 +370,28 @@ function quick.compile(filename, env)
             op.file = native_slash(op.file)
             write(([=[ ok, err = make_dir(%q) ]=]):format(op.file))
             write(([=[ assert.truthy((lfs.attributes(%q) or {}).mode == "directory", error_message(%d, "MKDIR failed: " .. %q .. " - " .. (err or "") )) ]=]):format(op.file, op.line, op.file))
+         elseif op.op == "RMDIR" then
+            op.file = native_slash(op.file)
+            write(([=[ ok, err = test_env.remove_dir(%q) ]=]):format(op.file))
+            write(([=[ assert.falsy((lfs.attributes(%q) or {}).mode == "directory", error_message(%d, "MKDIR failed: " .. %q .. " - " .. (err or "") )) ]=]):format(op.file, op.line, op.file))
+         elseif op.op == "RM" then
+            op.file = native_slash(op.file)
+            write(([=[ ok, err = os.remove(%q) ]=]):format(op.file))
+            write(([=[ assert.falsy((lfs.attributes(%q) or {}).mode == "file", error_message(%d, "RM failed: " .. %q .. " - " .. (err or "") )) ]=]):format(op.file, op.line, op.file))
+         elseif op.op == "FILE_CONTENTS" then
+            write(([=[ do ]=]))
+            write(([=[ local fd_file = assert(io.open(%q, "rb")) ]=]):format(op.name))
+            write(([=[ local file_data = fd_file:read("*a") ]=]))
+            write(([=[ fd_file:close() ]=]))
+            write([=[ local block_at = 1 ]=])
+            write([=[ local s, e, line ]=])
+            for i, line in ipairs(op.data) do
+               write(([=[ line = %q ]=]):format(line))
+               write(([=[ s, e = string.find(file_data, line, 1, true) ]=]))
+               write(([=[ assert(s, error_message(%d, "FILE_CONTENTS %s did not match: " .. line, file_data)) ]=]):format(op.start + i, op.name))
+               write(([=[ block_at = e + 1 ]=]):format(i))
+            end
+            write([=[ end ]=])
          elseif op.op == "RUN" then
             local cmd_helper = cmd_helpers[op.program] or ("%q"):format(op.program)
             local redirs = " 1>stdout.txt 2>stderr.txt "

@@ -415,3 +415,63 @@ STDOUT:
 myrock 1.0-1 is already installed
 Use --force to reinstall
 --------------------------------------------------------------------------------
+
+
+
+================================================================================
+TEST: installation rolls back on failure
+
+FILE: myrock-1.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "myrock"
+version = "1.0-1"
+source = {
+   url = "file://%{url(tmpdir)}/rock.lua"
+}
+build = {
+   modules = {
+      ["folder.rock"] = "rock.lua",
+      ["xyz"] = "xyz.lua",
+   },
+}
+--------------------------------------------------------------------------------
+
+FILE: rock.lua
+--------------------------------------------------------------------------------
+return {}
+--------------------------------------------------------------------------------
+
+FILE: xyz.lua
+--------------------------------------------------------------------------------
+return {}
+--------------------------------------------------------------------------------
+
+RUN: luarocks make --pack-binary-rock ./myrock-1.0-1.rockspec
+
+FILE: %{testing_sys_tree}/share/lua/%{lua_version}/folder
+--------------------------------------------------------------------------------
+a file where a folder should be
+--------------------------------------------------------------------------------
+
+Try to install and fail because the file is in the folder's spot:
+
+RUN: luarocks install ./myrock-1.0-1.all.rock
+EXIT: 1
+
+EXISTS: %{testing_sys_tree}/share/lua/%{lua_version}/folder
+
+No leftovers from the failed installation:
+
+NOT_EXISTS: %{testing_sys_tree}/share/lua/%{lua_version}/xyz.lua
+
+Now we remove the file...
+
+RM: %{testing_sys_tree}/share/lua/%{lua_version}/folder
+
+Try again and succeed:
+
+RUN: luarocks install ./myrock-1.0-1.all.rock
+
+EXISTS: %{testing_sys_tree}/share/lua/%{lua_version}/folder/rock.lua
+EXISTS: %{testing_sys_tree}/share/lua/%{lua_version}/xyz.lua

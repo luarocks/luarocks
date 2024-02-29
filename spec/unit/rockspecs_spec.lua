@@ -6,7 +6,7 @@ local lfs = require("lfs")
 
 describe("luarocks.rockspecs #unit", function()
 
-   setup(function()
+   lazy_setup(function()
       cfg.init()
    end)
 

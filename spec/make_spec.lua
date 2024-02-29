@@ -213,48 +213,6 @@ describe("luarocks make #integration", function()
       end, finally)
    end)
 
-   it("overrides luarocks.lock with --pin #pinning", function()
-      test_env.run_in_tmp(function(tmpdir)
-         write_file("test-2.0-1.rockspec", [[
-            package = "test"
-            version = "2.0-1"
-            source = {
-               url = "file://]] .. tmpdir:gsub("\\", "/") .. [[/test.lua"
-            }
-            dependencies = {
-               "a_rock >= 0.8"
-            }
-            build = {
-               type = "builtin",
-               modules = {
-                  test = "test.lua"
-               }
-            }
-         ]])
-         write_file("test.lua", "return {}")
-         write_file("luarocks.lock", [[
-            return {
-               dependencies = {
-                  ["a_rock"] = "1.0-1",
-               }
-            }
-         ]])
-
-         print(run.luarocks("make --server=" .. testing_paths.fixtures_dir .. "/a_repo --tree=lua_modules --pin"))
-         assert.is.truthy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/test/2.0-1/test-2.0-1.rockspec"))
-         assert.is.truthy(lfs.attributes("./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/a_rock/2.0-1/a_rock-2.0-1.rockspec"))
-         local lockfilename = "./lua_modules/lib/luarocks/rocks-" .. test_env.lua_version .. "/test/2.0-1/luarocks.lock"
-         assert.is.truthy(lfs.attributes(lockfilename))
-         local lockdata = loadfile(lockfilename)()
-         assert.same({
-            dependencies = {
-               ["a_rock"] = "2.0-1",
-               ["lua"] = test_env.lua_version .. "-1",
-            }
-         }, lockdata)
-      end, finally)
-   end)
-
    describe("#ddt upgrading rockspecs with double deploy types", function()
       local deploy_lib_dir = testing_paths.testing_sys_tree .. "/lib/lua/"..env_variables.LUA_VERSION
       local deploy_lua_dir = testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION

@@ -142,41 +142,6 @@ describe("luarocks install #integration", function()
          assert.is_true(os.remove("luasocket-${LUASOCKET}." .. test_env.platform .. ".rock"))
       end)
 
-      it("installation rolls back on failure", function()
-         if test_env.TYPE_TEST_ENV ~= "full" then
-            assert.is_true(run.luarocks_bool("build --pack-binary-rock luasocket ${LUASOCKET}"))
-            local luadir = testing_paths.testing_sys_tree .. "/share/lua/"..env_variables.LUA_VERSION
-            lfs.mkdir(luadir)
-
-            run.luarocks_bool("remove " .. "luasocket")
-
-            -- create a file where a folder should be
-            local fd = io.open(luadir .. "/socket", "w")
-            fd:write("\n")
-            fd:close()
-
-            -- try to install and fail
-            assert.is_false(run.luarocks_bool("install " .. "luasocket-${LUASOCKET}." .. test_env.platform .. ".rock"))
-
-            -- file is still there
-            assert.is.truthy(lfs.attributes(luadir .. "/socket"))
-            -- no left overs from failed installation
-            assert.is.falsy(lfs.attributes(luadir .. "/mime.lua"))
-
-            -- remove file
-            assert.is_true(os.remove(luadir .. "/socket"))
-
-            -- try again and succeed
-            assert.is_true(run.luarocks_bool("install " .. "luasocket-${LUASOCKET}." .. test_env.platform .. ".rock"))
-
-            -- files installed successfully
-            assert.is.truthy(lfs.attributes(luadir .. "/socket/ftp.lua"))
-            assert.is.truthy(lfs.attributes(luadir .. "/mime.lua"))
-
-            assert.is_true(os.remove("luasocket-${LUASOCKET}." .. test_env.platform .. ".rock"))
-         end
-      end)
-
       it("binary rock of cprint", function()
          assert.is_true(run.luarocks_bool("build --pack-binary-rock cprint"))
          assert.is_true(run.luarocks_bool("install cprint-${CPRINT}." .. test_env.platform .. ".rock"))

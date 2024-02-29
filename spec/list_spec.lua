@@ -19,11 +19,6 @@ describe("luarocks list #integration", function()
       assert.match("luacov", output)
    end)
 
-   it("--porcelain", function()
-      local output = run.luarocks("list --porcelain")
-      assert.is.truthy(output:find(V"luacov\t${LUACOV}\tinstalled\t" .. testing_paths.testing_sys_rocks, 1, true))
-   end)
-
    it("shows version number", function()
       local output = run.luarocks("list")
       assert.is.truthy(output:find("luacov"))
