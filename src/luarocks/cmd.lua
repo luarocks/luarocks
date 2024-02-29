@@ -735,7 +735,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
                            and (" - failed to force the lock" .. (err and ": " .. err or ""))
                            or  " - use --force-lock to overwrite the lock"
          die("command '" .. args.command .. "' " ..
-             "requires exclusive access to " .. cfg.root_dir ..
+             "requires exclusive access to " .. path.root_dir(cfg.root_dir) ..
              try_force, cmd.errorcodes.LOCK)
       end
    end
