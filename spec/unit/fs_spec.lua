@@ -63,16 +63,15 @@ describe("luarocks.fs #unit", function()
 
    local runner
 
-   setup(function()
+   lazy_setup(function()
       cfg.init()
       fs.init()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
-      runner.tick = true
    end)
 
-   teardown(function()
-      runner.shutdown()
+   lazy_teardown(function()
+      runner.save_stats()
    end)
 
    describe("fs.Q", function()

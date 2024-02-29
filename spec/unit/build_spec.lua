@@ -32,7 +32,6 @@ describe("LuaRocks build #unit", function()
    lazy_setup(function()
       runner = require("luacov.runner")
       runner.init(testing_paths.testrun_dir .. "/luacov.config")
-      runner.tick = true
       cfg.init()
       fs.init()
       deps.check_lua_incdir(cfg.variables)
@@ -40,7 +39,7 @@ describe("LuaRocks build #unit", function()
    end)
 
    lazy_teardown(function()
-      runner.shutdown()
+      runner.save_stats()
    end)
 
    describe("build.builtin", function()
