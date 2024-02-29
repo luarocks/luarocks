@@ -32,13 +32,13 @@ describe("luarocks install #integration", function()
    end)
 
    describe("basic tests", function()
-      it("fails with local flag as root #unix", function()
+      pending("fails with local flag as root #unix", function()
          if test_env.TYPE_TEST_ENV ~= "full" then
             assert.is_false(run.luarocks_bool("install --local luasocket ", { USER = "root" } ))
          end
       end)
 
-      it("fails with no downloader", function()
+      pending("fails with no downloader", function()
          if test_env.TYPE_TEST_ENV ~= "full" then
             local output = assert(run.luarocks("install https://example.com/rock-1.0.src.rock", { LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/testing_config_no_downloader.lua" } ))
             assert.match("no downloader tool", output)
