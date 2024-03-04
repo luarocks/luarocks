@@ -338,7 +338,7 @@ function tools.lock_access(dirname, force)
 
    fd:close()
 
-   local lockfile = dir.path(dirname, "lockfile.luarocks")
+   local lockfile = dir.path(dirname, "lockfile.lfs")
 
    local force_flag = force and " -f" or ""
 

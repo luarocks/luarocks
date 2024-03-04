@@ -13,7 +13,6 @@ local remove = require("luarocks.remove")
 local search = require("luarocks.search")
 local queries = require("luarocks.queries")
 local cfg = require("luarocks.core.cfg")
-local cmd = require("luarocks.cmd")
 
 function install.add_to_parser(parser)
    local cmd = parser:command("install", "Install a rock.", util.see_also())  -- luacheck: ignore 431
@@ -226,9 +225,6 @@ end
 -- @return boolean or (nil, string, exitcode): True if installation was
 -- successful, nil and an error message otherwise. exitcode is optionally returned.
 function install.command(args)
-   local ok, err = fs.check_command_permissions(args)
-   if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
-
    if args.rock:match("%.rockspec$") or args.rock:match("%.src%.rock$") then
       local build = require("luarocks.cmd.build")
       return build.command(args)

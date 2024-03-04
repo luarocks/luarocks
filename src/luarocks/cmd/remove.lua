@@ -6,13 +6,11 @@ local cmd_remove = {}
 local remove = require("luarocks.remove")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
-local fs = require("luarocks.fs")
 local search = require("luarocks.search")
 local path = require("luarocks.path")
 local deps = require("luarocks.deps")
 local writer = require("luarocks.manif.writer")
 local queries = require("luarocks.queries")
-local cmd = require("luarocks.cmd")
 
 function cmd_remove.add_to_parser(parser)
    -- luacheck: push ignore 431
@@ -43,9 +41,6 @@ function cmd_remove.command(args)
    local name = args.rock
    local deps_mode = deps.get_deps_mode(args)
 
-   local ok, err = fs.check_command_permissions(args)
-   if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
-
    local rock_type = name:match("%.(rock)$") or name:match("%.(rockspec)$")
    local version = args.version
    local filename = name
@@ -63,7 +58,7 @@ function cmd_remove.command(args)
       return nil, "Could not find rock '"..rock.."' in "..path.rocks_tree_to_string(cfg.root_dir)
    end
 
-   ok, err = remove.remove_search_results(results, name, deps_mode, args.force, args.force_fast)
+   local ok, err = remove.remove_search_results(results, name, deps_mode, args.force, args.force_fast)
    if not ok then
       return nil, err
    end

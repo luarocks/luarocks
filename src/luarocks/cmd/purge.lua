@@ -4,7 +4,6 @@
 local purge = {}
 
 local util = require("luarocks.util")
-local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local search = require("luarocks.search")
 local vers = require("luarocks.core.vers")
@@ -13,7 +12,6 @@ local writer = require("luarocks.manif.writer")
 local cfg = require("luarocks.core.cfg")
 local remove = require("luarocks.remove")
 local queries = require("luarocks.queries")
-local cmd = require("luarocks.cmd")
 
 function purge.add_to_parser(parser)
    -- luacheck: push ignore 431
@@ -38,9 +36,6 @@ end
 
 function purge.command(args)
    local tree = args.tree
-
-   local ok, err = fs.check_command_permissions(args)
-   if not ok then return nil, err, cmd.errorcodes.PERMISSIONDENIED end
 
    local results = {}
    search.local_manifest_search(results, path.rocks_dir(tree), queries.all())

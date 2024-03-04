@@ -730,6 +730,11 @@ function cmd.run_command(description, commands, external_namespace, ...)
 
    local lock
    if cmd_mod.needs_lock and cmd_mod.needs_lock(args) then
+      local ok, err = fs.check_command_permissions(args)
+      if not ok then
+         die(err, cmd.errorcodes.PERMISSIONDENIED)
+      end
+
       lock, err = fs.lock_access(path.root_dir(cfg.root_dir), args.force_lock)
       if not lock then
          err = args.force_lock
