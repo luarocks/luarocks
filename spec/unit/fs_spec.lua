@@ -1541,4 +1541,55 @@ describe("luarocks.fs #unit", function()
       end)
    end)
 
+   describe("fs.execute_env", function()
+      local tmpname
+      local tmplua
+      local LUA = "lua"
+
+      local function readfile(pathname)
+         local file = assert(io.open(pathname, "rb"))
+         local data = file:read "*a"
+         file:close()
+         return data
+      end
+
+      lazy_setup(function()
+         tmpname = os.tmpname()
+
+         tmplua = os.tmpname()
+         local f = assert(io.open(tmplua, 'wb'))
+         f:write [[
+            local out = io.open((...), 'wb')
+            out:write(os.getenv 'FOO')
+            out:close()
+         ]]
+         f:close()
+         LUA = test_env.testing_paths.lua
+      end)
+
+      after_each(function()
+         os.remove(tmpname)
+      end)
+
+      lazy_teardown(function()
+         os.remove(tmpname)
+      end)
+
+      it("passes variables w/o spaces correctly", function()
+         fs.execute_env({
+            FOO = "BAR",
+         }, LUA, tmplua, tmpname)
+         local data = readfile(tmpname)
+         assert.same("BAR", data)
+      end)
+
+      it("passes variables w/ spaces correctly", function()
+         fs.execute_env({
+            FOO = "BAR with spaces",
+         }, LUA, tmplua, tmpname)
+         local data = readfile(tmpname)
+         assert.same("BAR with spaces", data)
+      end)
+   end)
+
 end)

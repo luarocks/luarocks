@@ -118,6 +118,16 @@ os.rename = function(a, b) -- luacheck: ignore
    return os_rename(V(a), V(b))
 end
 
+-- Monkeypatch incorrect tmpname's on some Lua distributions for Windows
+local os_tmpname = os.tmpname
+os.tmpname = function() -- luacheck:ignore
+   local name = os_tmpname()
+   if name:sub(1, 1) == '\\' then
+      name = os.getenv "TEMP"..name
+   end
+   return name
+end
+
 local lfs_chdir = lfs.chdir
 lfs.chdir = function(d) -- luacheck: ignore
    return lfs_chdir(V(d))
