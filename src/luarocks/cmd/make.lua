@@ -157,7 +157,7 @@ function make.command(args)
 end
 
 make.needs_lock = function(args)
-   if args.pack_binary_rock then
+   if args.pack_binary_rock or args.no_install then
       return false
    end
    return true
