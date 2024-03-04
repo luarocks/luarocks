@@ -15,7 +15,6 @@ local build = require("luarocks.build")
 local writer = require("luarocks.manif.writer")
 local search = require("luarocks.search")
 local make = require("luarocks.cmd.make")
-local cmd = require("luarocks.cmd")
 local repos = require("luarocks.repos")
 
 function cmd_build.add_to_parser(parser)
@@ -154,11 +153,6 @@ function cmd_build.command(args)
          end
          return name, version
       end)
-   end
-
-   local ok, err = fs.check_command_permissions(args)
-   if not ok then
-      return nil, err, cmd.errorcodes.PERMISSIONDENIED
    end
 
    local name, version, skip = do_build(args.rock, args.namespace, args.version, opts)

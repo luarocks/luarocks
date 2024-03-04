@@ -79,28 +79,16 @@ a_rock 1.0
 ================================================================================
 TEST: fails if no permissions to access the specified tree #unix
 
-RUN: luarocks build --tree=/usr ./a_rock-1.0.1-rockspec
-EXIT: 4
+RUN: luarocks build --tree=/usr ./a_rock-1.0-1.rockspec
+EXIT: 2
 STDERR:
 --------------------------------------------------------------------------------
-requires exclusive write access
---------------------------------------------------------------------------------
+You may want to run as a privileged user,
+or use --local to install into your local tree
+or run 'luarocks config local_by_default true' to make --local the default.
 
-We show the OS permission denied error, so we don't show the --force-lock
-message.
-
-NOT_STDERR:
---------------------------------------------------------------------------------
-try --force-lock
---------------------------------------------------------------------------------
-
-NOT_EXISTS: %{testing_sys_rocks}/a_rock/1.0-1/a_rock-1.0-1.rockspec
-
-RUN: luarocks build --tree=/usr ./a_rock-1.0.1-rockspec --force-lock
-EXIT: 4
-STDERR:
---------------------------------------------------------------------------------
-requires exclusive write access
+(You may need to configure your Lua package paths
+to use the local tree, see 'luarocks path --help')
 --------------------------------------------------------------------------------
 
 We show the OS permission denied error, so we don't show the --force-lock
@@ -116,13 +104,63 @@ NOT_EXISTS: %{testing_sys_rocks}/a_rock/1.0-1/a_rock-1.0-1.rockspec
 
 
 ================================================================================
-TEST: fails if no permissions to access the parent #unix
+TEST: fails if tree is locked, --force-lock overrides #unix
 
-RUN: luarocks build --tree=/usr/invalid ./a_rock-1.0.1-rockspec
+FILE: a_rock-1.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "a_rock"
+version = "1.0-1"
+source = {
+   url = "file://%{url(%{fixtures_dir})}/a_rock.lua"
+}
+description = {
+   summary = "An example rockspec",
+}
+dependencies = {
+   "lua >= 5.1"
+}
+build = {
+   modules = {
+      build = "a_rock.lua"
+   },
+}
+--------------------------------------------------------------------------------
+
+FILE: %{testing_tree}/lockfile.lfs
+--------------------------------------------------------------------------------
+dummy lock file for testing
+--------------------------------------------------------------------------------
+
+RUN: luarocks build --tree=%{testing_tree} ./a_rock-1.0-1.rockspec
 EXIT: 4
 STDERR:
 --------------------------------------------------------------------------------
 requires exclusive write access
+try --force-lock
+--------------------------------------------------------------------------------
+
+RUN: luarocks build --tree=%{testing_tree} ./a_rock-1.0-1.rockspec --force-lock
+EXIT: 0
+
+
+
+================================================================================
+TEST: fails if no permissions to access the parent #unix
+
+RUN: luarocks build --tree=/usr/invalid ./a_rock-1.0-1.rockspec
+EXIT: 2
+STDERR:
+--------------------------------------------------------------------------------
+Error: /usr/invalid/lib/luarocks/rocks-%{lua_version} does not exist
+and your user does not have write permissions in /usr
+
+You may want to run as a privileged user,
+or use --local to install into your local tree
+or run 'luarocks config local_by_default true' to make --local the default.
+
+(You may need to configure your Lua package paths
+to use the local tree, see 'luarocks path --help')
 --------------------------------------------------------------------------------
 
 We show the OS permission denied error, so we don't show the --force-lock
@@ -131,16 +169,6 @@ message.
 NOT_STDERR:
 --------------------------------------------------------------------------------
 try --force-lock
---------------------------------------------------------------------------------
-
-NOT_EXISTS: %{testing_sys_rocks}/a_rock/1.0-1/a_rock-1.0-1.rockspec
-
-RUN: luarocks build --tree=/usr/invalid ./a_rock-1.0.1-rockspec --force-lock
-EXIT: 4
-STDERR:
---------------------------------------------------------------------------------
-requires exclusive write access
-failed to force the lock
 --------------------------------------------------------------------------------
 
 NOT_EXISTS: %{testing_sys_rocks}/a_rock/1.0-1/a_rock-1.0-1.rockspec
