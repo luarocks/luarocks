@@ -15,7 +15,8 @@ of LuaRocks, formatted as shell commands to update LUA_PATH and LUA_CPATH.
 On Unix systems, you may run:
   eval `luarocks path`
 And on Windows:
-  luarocks path > "%temp%\_lrp.bat" && call "%temp%\_lrp.bat" && del "%temp%\_lrp.bat"]],
+  luarocks path > "%temp%\_lrp.bat"
+  call "%temp%\_lrp.bat" && del "%temp%\_lrp.bat"]],
   util.see_also())
       :summary("Return the currently configured package path.")
 
