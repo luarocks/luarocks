@@ -1173,6 +1173,27 @@ function fs_lua.move(src, dest, perms)
    return true
 end
 
+local function get_local_tree()
+   for _, tree in ipairs(cfg.rocks_trees) do
+      if type(tree) == "table" and tree.name == "user" then
+         return fs.absolute_name(tree.root)
+      end
+   end
+end
+
+local function is_local_tree_in_env(local_tree)
+   local lua_path
+   if _VERSION == "Lua 5.1" then
+      lua_path = os.getenv("LUA_PATH")
+   else
+      lua_path = os.getenv("LUA_PATH_" .. _VERSION:sub(5):gsub("%.", "_"))
+                 or os.getenv("LUA_PATH")
+   end
+   if lua_path and lua_path:match(local_tree, 1, true) then
+      return true
+   end
+end
+
 --- Check if user has write permissions for the command.
 -- Assumes the configuration variables under cfg have been previously set up.
 -- @param args table: the args table passed to run() drivers.
@@ -1202,7 +1223,7 @@ function fs_lua.check_command_permissions(args)
          until parent == root or fs.exists(parent)
          if not fs.is_writable(parent) then
             ok = false
-            err = directory.." does not exist and your user does not have write permissions in " .. parent
+            err = directory.." does not exist\nand your user does not have write permissions in " .. parent
             break
          end
       end
@@ -1212,9 +1233,20 @@ function fs_lua.check_command_permissions(args)
       return true
    else
       if args["local"] or cfg.local_by_default then
-         err = err .. " \n-- please check your permissions."
+         err = err .. "\n\nPlease check your permissions.\n"
       else
-         err = err .. " \n-- you may want to run as a privileged user or use your local tree with --local."
+         local local_tree = get_local_tree()
+         if local_tree then
+            err = err .. "\n\nYou may want to run as a privileged user,"
+                      .. "\nor use --local to install into your local tree at " .. local_tree
+                      .. "\nor run 'luarocks config local_by_default true' to make --local the default.\n"
+
+            if not is_local_tree_in_env(local_tree) then
+               err = err .. "\n(You may need to configure your Lua package paths\nto use the local tree, see 'luarocks path --help')\n"
+            end
+         else
+            err = err .. "\n\nYou may want to run as a privileged user.\n"
+         end
       end
       return nil, err
    end
