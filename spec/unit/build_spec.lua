@@ -128,15 +128,15 @@ describe("LuaRocks build #unit", function()
 
             local modules = build_builtin.autodetect_modules(libs, incdirs, libdirs)
             assert.same(modules, {
-               module1 = location .. "/module1.lua",
+               module1 = P(location .. "/module1.lua"),
                ["dir1.module2"] = {
-                  sources = location .. "/dir1/module2.c",
+                  sources = P(location .. "/dir1/module2.c"),
                   libraries = libs,
                   incdirs = incdirs,
                   libdirs = libdirs
                },
                my_module = {
-                  sources = location .. "/dir1/dir2/module3.c",
+                  sources = P(location .. "/dir1/dir2/module3.c"),
                   libraries = libs,
                   incdirs = incdirs,
                   libdirs = libdirs

@@ -8,6 +8,7 @@ local builtin = {}
 builtin.skip_lua_inc_lib_check = true
 
 local unpack = unpack or table.unpack
+local dir_sep = package.config:sub(1, 1)
 
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
@@ -59,7 +60,7 @@ do
       for _, parent in ipairs({"src", "lua", "lib"}) do
          if fs.is_dir(parent) then
             fs.change_dir(parent)
-            prefix = parent.."/"
+            prefix = parent .. dir_sep
             break
          end
       end
@@ -69,7 +70,7 @@ do
          if not skiplist[base] then
             local luamod = file:match("(.*)%.lua$")
             if luamod then
-               modules[path.path_to_module(file)] = prefix..file
+               modules[path.path_to_module(file)] = prefix .. file
             else
                local cmod = file:match("(.*)%.c$")
                if cmod then
@@ -89,7 +90,7 @@ do
          fs.pop_dir()
       end
 
-      local bindir = (fs.is_dir("src/bin") and "src/bin")
+      local bindir = (fs.is_dir(dir.path("src", "bin")) and dir.path("src", "bin"))
                   or (fs.is_dir("bin") and "bin")
       if bindir then
          install = { bin = {} }

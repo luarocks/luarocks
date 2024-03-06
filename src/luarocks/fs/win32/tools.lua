@@ -10,6 +10,8 @@ local cfg = require("luarocks.core.cfg")
 
 local vars = setmetatable({}, { __index = function(_,k) return cfg.variables[k] end })
 
+local dir_sep = package.config:sub(1, 1)
+
 --- Adds prefix to command to make it run from a directory.
 -- @param directory string: Path to a directory.
 -- @param cmd string: A command-line string.
@@ -132,7 +134,7 @@ function tools.find(at)
       local first_two = file:sub(1,2)
       if first_two == ".\\" or first_two == "./" then file=file:sub(3) end
       if file ~= "." then
-         table.insert(result, (file:gsub("\\", "/")))
+         table.insert(result, (file:gsub("[\\/]", dir_sep)))
       end
    end
    pipe:close()
