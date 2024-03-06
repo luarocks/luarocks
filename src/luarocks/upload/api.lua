@@ -8,6 +8,7 @@ local util = require("luarocks.util")
 local persist = require("luarocks.persist")
 local multipart = require("luarocks.upload.multipart")
 local json = require("luarocks.vendor.dkjson")
+local dir_sep = package.config:sub(1, 1)
 
 local Api = {}
 
@@ -15,7 +16,7 @@ local function upload_config_file()
    if not cfg.config_files.user.file then
       return nil
    end
-   return (cfg.config_files.user.file:gsub("/[^/]+$", "/upload_config.lua"))
+   return (cfg.config_files.user.file:gsub("[\\/][^\\/]+$", dir_sep .. "upload_config.lua"))
 end
 
 function Api:load_config()

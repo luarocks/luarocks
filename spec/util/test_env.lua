@@ -527,7 +527,7 @@ end
 function test_env.write_file(pathname, str, finally)
    pathname = V(pathname)
 
-   local file = assert(io.open(pathname, "w"))
+   local file = assert(io.open(pathname, "wb"))
    file:write(str)
    file:close()
    if finally then
