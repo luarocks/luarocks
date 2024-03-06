@@ -11,7 +11,7 @@ return {
    luafilesystem_old = "1.6.3-2",
    luaposix = "35.1-1",
    luasocket = "3.0.0-1",
-   luasec = "1.2.0-1",
+   luasec = "1.3.2-1",
    lxsh = "0.8.6-2",
    timerwheel = "0.2.0-2", -- dependency for copas
 }
