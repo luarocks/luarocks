@@ -93,7 +93,7 @@ rockspec_format = "3.0"
 package = "myrock"
 version = "1.0-1"
 source = {
-   url = "file://%{url(tmpdir)}/rock.lua"
+   url = "file://%{url(%{tmpdir})}/rock.lua"
 }
 build = {
    modules = { rock = "rock.lua" }
@@ -106,7 +106,7 @@ rockspec_format = "3.0"
 package = "myrock"
 version = "2.0-1"
 source = {
-   url = "file://%{url(tmpdir)}/rock.lua"
+   url = "file://%{url(%{tmpdir})}/rock.lua"
 }
 build = {
    modules = { rock = "rock.lua" }
@@ -151,7 +151,7 @@ rockspec_format = "3.0"
 package = "myrock"
 version = "1.0-1"
 source = {
-   url = "file://%{url(tmpdir)}/c_module.c"
+   url = "file://%{url(%{tmpdir})}/c_module.c"
 }
 build = {
    modules = {
@@ -166,7 +166,7 @@ rockspec_format = "3.0"
 package = "myrock"
 version = "2.0-1"
 source = {
-   url = "file://%{url(tmpdir)}/c_module.c"
+   url = "file://%{url(%{tmpdir})}/c_module.c"
 }
 build = {
    modules = {
@@ -220,7 +220,7 @@ rockspec_format = "3.0"
 package = "myrock"
 version = "1.0-1"
 source = {
-   url = "file://%{url(tmpdir)}/rock.lua"
+   url = "file://%{url(%{tmpdir})}/rock.lua"
 }
 build = {
    modules = { rock = "rock.lua" },
@@ -385,7 +385,7 @@ rockspec_format = "3.0"
 package = "myrock"
 version = "1.0-1"
 source = {
-   url = "file://%{url(tmpdir)}/rock.lua"
+   url = "file://%{url(%{tmpdir})}/rock.lua"
 }
 build = {
    modules = { rock = "rock.lua" }
@@ -427,7 +427,7 @@ rockspec_format = "3.0"
 package = "myrock"
 version = "1.0-1"
 source = {
-   url = "file://%{url(tmpdir)}/rock.lua"
+   url = "file://%{url(%{tmpdir})}/rock.lua"
 }
 build = {
    modules = {
