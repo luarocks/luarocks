@@ -103,8 +103,8 @@ local function parse(filename)
          local value
          if var == "tmpdir" then
             value = "%{tmpdir}"
-         elseif var == "url(tmpdir)" then
-            value = "%{url(tmpdir)}"
+         elseif var == "url(%{tmpdir})" then
+            value = "%{url(%{tmpdir})}"
          elseif fn == "url" then
             value = expand_vars(fnarg)
             value = value:gsub("\\", "/")
@@ -187,35 +187,35 @@ local function parse(filename)
          elseif cmd == "EXISTS" then
             cur_op = {
                op = "EXISTS",
-               file = dir.normalize(arg),
+               name = dir.normalize(arg),
                line = cur_line,
             }
             table.insert(cur_test.ops, cur_op)
          elseif cmd == "NOT_EXISTS" then
             cur_op = {
                op = "NOT_EXISTS",
-               file = dir.normalize(arg),
+               name = dir.normalize(arg),
                line = cur_line,
             }
             table.insert(cur_test.ops, cur_op)
          elseif cmd == "MKDIR" then
             cur_op = {
                op = "MKDIR",
-               file = dir.normalize(arg),
+               name = dir.normalize(arg),
                line = cur_line,
             }
             table.insert(cur_test.ops, cur_op)
          elseif cmd == "RMDIR" then
             cur_op = {
                op = "RMDIR",
-               file = dir.normalize(arg),
+               name = dir.normalize(arg),
                line = cur_line,
             }
             table.insert(cur_test.ops, cur_op)
          elseif cmd == "RM" then
             cur_op = {
                op = "RM",
-               file = dir.normalize(arg),
+               name = dir.normalize(arg),
                line = cur_line,
             }
             table.insert(cur_test.ops, cur_op)
@@ -347,40 +347,41 @@ function quick.compile(filename, env)
       write([=[ return function() ]=])
       write([=[ test_env.run_in_tmp(function(tmpdir) ]=])
       write([=[    local function handle_tmpdir(s) ]=])
-      write([=[       return (s:gsub("%%{url%(tmpdir%)}", (tmpdir:gsub("\\", "/")))         ]=])
+      write([=[       return (s:gsub("%%{url%(%%{tmpdir}%)}", (tmpdir:gsub("\\", "/")))         ]=])
       write([=[                :gsub("%%{tmpdir}",        (tmpdir:gsub("[\\/]", dir_sep)))) ]=])
       write([=[    end ]=])
       write([=[ local ok, err ]=])
       for _, op in ipairs(t.ops) do
+         if op.name then
+            op.name = native_slash(op.name)
+            write(([=[ local name = handle_tmpdir(%q) ]=]):format(op.name))
+         end
          if op.op == "FILE" then
             if op.name:match("[\\/]") then
-               write(([=[ make_dir(%q) ]=]):format(dir.dir_name(op.name)))
+               write(([=[ make_dir(handle_tmpdir(%q)) ]=]):format(dir.dir_name(op.name)))
             end
-            write(([=[ test_env.write_file(handle_tmpdir(%q), handle_tmpdir([=====[ ]=]):format(op.name))
+            write([=[ test_env.write_file(name, handle_tmpdir([=====[ ]=])
             for _, line in ipairs(op.data) do
                write(line)
             end
             write([=[ ]=====]), finally) ]=])
          elseif op.op == "EXISTS" then
-            write(([=[ ok, err = lfs.attributes(%q) ]=]):format(op.file))
-            write(([=[ assert.truthy(ok, error_message(%d, "EXISTS failed: " .. %q .. " - " .. (err or "") )) ]=]):format(op.line, op.file))
+            write(([=[ ok, err = lfs.attributes(name) ]=]))
+            write(([=[ assert.truthy(ok, error_message(%d, "EXISTS failed: " .. name .. " - " .. (err or "") )) ]=]):format(op.line))
          elseif op.op == "NOT_EXISTS" then
-            write(([=[ assert.falsy(lfs.attributes(%q), error_message(%d, "NOT_EXISTS failed: " .. %q .. " exists" )) ]=]):format(op.file, op.line, op.file))
+            write(([=[ assert.falsy(lfs.attributes(name), error_message(%d, "NOT_EXISTS failed: " .. name .. " exists" )) ]=]):format(op.line))
          elseif op.op == "MKDIR" then
-            op.file = native_slash(op.file)
-            write(([=[ ok, err = make_dir(%q) ]=]):format(op.file))
-            write(([=[ assert.truthy((lfs.attributes(%q) or {}).mode == "directory", error_message(%d, "MKDIR failed: " .. %q .. " - " .. (err or "") )) ]=]):format(op.file, op.line, op.file))
+            write(([=[ ok, err = make_dir(name) ]=]))
+            write(([=[ assert.truthy((lfs.attributes(name) or {}).mode == "directory", error_message(%d, "MKDIR failed: " .. name .. " - " .. (err or "") )) ]=]):format(op.line))
          elseif op.op == "RMDIR" then
-            op.file = native_slash(op.file)
-            write(([=[ ok, err = test_env.remove_dir(%q) ]=]):format(op.file))
-            write(([=[ assert.falsy((lfs.attributes(%q) or {}).mode == "directory", error_message(%d, "MKDIR failed: " .. %q .. " - " .. (err or "") )) ]=]):format(op.file, op.line, op.file))
+            write(([=[ ok, err = test_env.remove_dir(name) ]=]))
+            write(([=[ assert.falsy((lfs.attributes(name) or {}).mode == "directory", error_message(%d, "MKDIR failed: " .. name .. " - " .. (err or "") )) ]=]):format(op.line))
          elseif op.op == "RM" then
-            op.file = native_slash(op.file)
-            write(([=[ ok, err = os.remove(%q) ]=]):format(op.file))
-            write(([=[ assert.falsy((lfs.attributes(%q) or {}).mode == "file", error_message(%d, "RM failed: " .. %q .. " - " .. (err or "") )) ]=]):format(op.file, op.line, op.file))
+            write(([=[ ok, err = os.remove(name) ]=]))
+            write(([=[ assert.falsy((lfs.attributes(name) or {}).mode == "file", error_message(%d, "RM failed: " .. name .. " - " .. (err or "") )) ]=]):format(op.line))
          elseif op.op == "FILE_CONTENTS" then
             write(([=[ do ]=]))
-            write(([=[ local fd_file = assert(io.open(%q, "rb")) ]=]):format(op.name))
+            write(([=[ local fd_file = assert(io.open(name, "rb")) ]=]))
             write(([=[ local file_data = fd_file:read("*a") ]=]))
             write(([=[ fd_file:close() ]=]))
             write([=[ local block_at = 1 ]=])
@@ -388,7 +389,7 @@ function quick.compile(filename, env)
             for i, line in ipairs(op.data) do
                write(([=[ line = %q ]=]):format(line))
                write(([=[ s, e = string.find(file_data, line, 1, true) ]=]))
-               write(([=[ assert(s, error_message(%d, "FILE_CONTENTS %s did not match: " .. line, file_data)) ]=]):format(op.start + i, op.name))
+               write(([=[ assert(s, error_message(%d, "FILE_CONTENTS " .. name .. " did not match: " .. line, file_data)) ]=]):format(op.start + i))
                write(([=[ block_at = e + 1 ]=]):format(i))
             end
             write([=[ end ]=])

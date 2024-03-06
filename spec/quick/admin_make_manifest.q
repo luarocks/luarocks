@@ -8,7 +8,7 @@ FILE: test-1.0-1.rockspec
 package = "test"
 version = "1.0-1"
 source = {
-   url = "file://%{url(tmpdir)}/test.lua"
+   url = "file://%{url(%{tmpdir})}/test.lua"
 }
 build = {
    type = "builtin",

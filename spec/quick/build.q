@@ -223,7 +223,7 @@ FILE: test-1.0-1.rockspec
 package = "test"
 version = "1.0-1"
 source = {
-   url = "file://%{url(tmpdir)}/test.lua"
+   url = "file://%{url(%{tmpdir})}/test.lua"
 }
 dependencies = {
    "a_rock >= 0.8"
@@ -268,7 +268,7 @@ FILE: test-1.0-1.rockspec
 package = "test"
 version = "1.0-1"
 source = {
-   url = "file://%{url(tmpdir)}/test.lua"
+   url = "file://%{url(%{tmpdir})}/test.lua"
 }
 dependencies = {
    "a_rock >= 0.8"
