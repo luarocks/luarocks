@@ -267,7 +267,7 @@ function writer.make_rock_manifest(name, version)
       local walk = tree
       local last
       local last_name
-      for filename in file:gmatch("[^/]+") do
+      for filename in file:gmatch("[^\\/]+") do
          local next = walk[filename]
          if not next then
             next = {}

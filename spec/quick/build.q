@@ -302,3 +302,50 @@ return {
    }
 }
 --------------------------------------------------------------------------------
+
+
+
+================================================================================
+TEST: installs bin entries correctly
+
+FILE: test-1.0-1.rockspec
+--------------------------------------------------------------------------------
+package = "test"
+version = "1.0-1"
+source = {
+   url = "file://%{url(%{fixtures_dir})}/an_upstream_tarball-0.1.tar.gz",
+   dir = "an_upstream_tarball-0.1",
+}
+build = {
+   type = "builtin",
+   modules = {
+      my_module = "src/my_module.lua"
+   },
+   install = {
+      bin = {
+         "src/my_module.lua"
+      }
+   }
+}
+--------------------------------------------------------------------------------
+
+RUN: luarocks build test-1.0-1.rockspec --tree=lua_modules
+
+RM: %{fixtures_dir}/bin/something.lua
+
+EXISTS: ./lua_modules/lib/luarocks/rocks-%{lua_version}/test/1.0-1/test-1.0-1.rockspec
+
+FILE_CONTENTS: ./lua_modules/lib/luarocks/rocks-%{lua_version}/test/1.0-1/rock_manifest
+--------------------------------------------------------------------------------
+rock_manifest = {
+   bin = {
+      ["my_module.lua"] = "25884dbf5be7114791018a48199d4c04"
+   },
+   lua = {
+      ["my_module.lua"] = "25884dbf5be7114791018a48199d4c04"
+   },
+   ["test-1.0-1.rockspec"] =
+}
+--------------------------------------------------------------------------------
+
+EXISTS: ./lua_modules/bin/my_module.lua%{wrapper_extension}
