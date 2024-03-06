@@ -22,6 +22,7 @@ environment:
     COMPILER: "vs"
     FILES: ""
     EXCLUDE: "integration,quick"
+    TESTTYPE: "unit"
   - LUAV: "5.4"
     LUAT: "lua"
     COMPILER: "vs"
@@ -38,6 +39,7 @@ environment:
     COMPILER: "vs"
     FILES: ""
     EXCLUDE: "integration,quick"
+    TESTTYPE: "unit"
   - LUAV: "2.1"
     LUAT: "luajit"
     COMPILER: "vs"
@@ -63,6 +65,16 @@ before_build:
   - IF NOT EXIST lua_install-%LUAV%\bin\activate.bat ( pip install hererocks )
   - IF NOT EXIST lua_install-%LUAV%\bin\activate.bat ( hererocks lua_install-%LUAV% --%LUAT% %LUAV% --luarocks latest --target=%COMPILER% )
   - call lua_install-%LUAV%\bin\activate
+  - nuget install bzip2 -OutputDirectory deps\bzip2
+  - nuget install zlib -OutputDirectory deps\zlib
+  - mkdir c:\external\include
+  - mkdir c:\external\lib
+  - copy deps\bzip2\bzip2.1.0.6.11\build\native\include\bzlib.h c:\external\include
+  - copy deps\bzip2\bzip2.1.0.6.11\build\native\lib\v110\win32\Debug\dynamic\cdecl\libbz2.lib c:\external\lib\bz2.lib
+  - copy deps\bzip2\bzip2.redist.1.0.6.11\build\native\bin\v110\win32\Debug\dynamic\cdecl\libbz2.dll c:\external\lib\bz2.dll
+  - copy deps\zlib\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\include\*.h c:\external\include
+  - copy deps\zlib\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\lib\native\v120\windesktop\msvcstl\dyn\rt-dyn\Win32\MinSizeRel\zlib.dll c:\external\lib\z.dll
+  - copy deps\zlib\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\lib\native\v120\windesktop\msvcstl\dyn\rt-dyn\Win32\MinSizeRel\zlib.lib c:\external\lib\z.lib
 
 build_script:
   - IF NOT EXIST lua_install-%LUAV%\bin\busted.bat ( luarocks install busted 1> NUL 2> NUL )
@@ -71,6 +83,7 @@ build_script:
 
 test_script:
   - busted -o htest -v --lpath=.//?.lua --exclude-tags=ssh,unix,%EXCLUDE% -Xhelper lua_dir=%CD%\lua_install-%LUAV%,appveyor,%COMPILER% %FILES%
+  - IF "%TESTTYPE%"=="unit" ( busted -o htest -v --lpath=.//?.lua --exclude-tags=ssh,unix,%EXCLUDE% -Xhelper lua_dir=%CD%\lua_install-%LUAV%,appveyor,%COMPILER%,env=full %FILES% )
 
 after_test:
   - pip install codecov
