@@ -472,7 +472,8 @@ function fs_lua.copy(src, dest, perms)
    while true do
       local block = src_h:read(8192)
       if not block then break end
-      dest_h:write(block)
+      local ok, err = dest_h:write(block)
+      if not ok then return nil, err end
    end
    src_h:close()
    dest_h:close()
@@ -484,10 +485,14 @@ function fs_lua.copy(src, dest, perms)
    if fullattrs and posix_ok then
       return posix.chmod(dest, fullattrs)
    else
-      if not perms then
-         perms = fullattrs:match("x") and "exec" or "read"
+      if cfg.is_platform("unix") then
+         if not perms then
+            perms = fullattrs:match("x") and "exec" or "read"
+         end
+         return fs.set_permissions(dest, perms, "all")
+      else
+         return true
       end
-      return fs.set_permissions(dest, perms, "all")
    end
 end
 
