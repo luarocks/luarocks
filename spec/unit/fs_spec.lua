@@ -1063,9 +1063,9 @@ describe("luarocks.fs #unit", function()
          end
          assert.same(count, 3)
          assert.is_not.same(contents[tmpdir], true)
-         assert.same(contents["intfile1"], true)
-         assert.same(contents["intdir"], true)
-         assert.same(contents["intdir/intfile2"], true)
+         assert.same(contents[P"intfile1"], true)
+         assert.same(contents[P"intdir"], true)
+         assert.same(contents[P"intdir/intfile2"], true)
       end)
 
       it("uses the current working directory if the argument is nil", function()
