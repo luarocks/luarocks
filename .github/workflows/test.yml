@@ -82,3 +82,19 @@ jobs:
         ./makedist dev
         ./smoke_test.sh luarocks-dev.tar.gz
 
+  ##############################################################################
+  BinaryBuild:
+    runs-on: "ubuntu-latest"
+    steps:
+    - uses: actions/checkout@master
+
+    - uses: leafo/gh-actions-lua@v8.0.0
+      with:
+        luaVersion: "5.4"
+
+    - name: Binary Build Smoke Test
+      run: |
+        ./configure
+        ./makedist dev
+        ./smoke_test.sh luarocks-dev.tar.gz binary
+
