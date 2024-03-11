@@ -7,12 +7,31 @@ mkdir smoketestdir
 cp "$tarball" smoketestdir
 cd smoketestdir
 
+tar zxvpf "$(basename "$tarball")"
+cd "$(basename "$tarball" .tar.gz)"
+
+if [ "$2" = "binary" ]
+then
+   ./configure --prefix=foobar
+   make binary
+   make install-binary
+   cd foobar
+   bin/luarocks
+   bin/luarocks install inspect
+   bin/luarocks show inspect
+   (
+      eval $(bin/luarocks path)
+      lua -e 'print(assert(require("inspect")(_G)))'
+   )
+   cd ..
+   rm -rf foobar
+   exit 0
+fi
+
 ################################################################################
 # test installation with make install
 ################################################################################
 
-tar zxvpf "$(basename "$tarball")"
-cd "$(basename "$tarball" .tar.gz)"
 ./configure --prefix=foobar
 make
 make install
@@ -79,22 +98,6 @@ rm -rf foorock
 rm -rf foorock2
 
 ################################################################################
-
-if [ "$2" = "binary" ]
-then
-   make binary
-   make install-binary
-   cd foobar
-   bin/luarocks
-   bin/luarocks install inspect
-   bin/luarocks show inspect
-   (
-      eval $(bin/luarocks path)
-      lua -e 'print(assert(require("inspect")(_G)))'
-   )
-   cd ..
-   rm -rf foobar
-fi
 
 if [ "$3" = "windows" ]
 then
