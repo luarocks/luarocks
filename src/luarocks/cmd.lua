@@ -79,10 +79,11 @@ do
    process_tree_args = function(args, project_dir)
 
       if args.global then
-         cfg.local_by_default = false
-      end
-
-      if args.tree then
+         local ok, err = set_named_tree(args, "system")
+         if not ok then
+            return nil, err
+         end
+      elseif args.tree then
          local named = set_named_tree(args, args.tree)
          if not named then
             local root_dir = fs.absolute_name(args.tree)
@@ -97,7 +98,10 @@ do
                "You are running as a superuser, which is intended for system-wide operation.\n"..
                "To force using the superuser's home, use --tree explicitly."
          else
-            set_named_tree(args, "user")
+            local ok, err = set_named_tree(args, "user")
+            if not ok then
+               return nil, err
+            end
          end
       elseif args.project_tree then
          local tree = args.project_tree
@@ -105,7 +109,10 @@ do
          manif.load_rocks_tree_manifests()
          path.use_tree(tree)
       elseif cfg.local_by_default then
-         set_named_tree(args, "user")
+         local ok, err = set_named_tree(args, "user")
+         if not ok then
+            return nil, err
+         end
       elseif project_dir then
          local project_tree = project_dir .. "/lua_modules"
          table.insert(cfg.rocks_trees, 1, { name = "project", root = project_tree } )
