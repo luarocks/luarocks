@@ -134,7 +134,7 @@ uninstall:
 # ----------------------------------------
 
 install-binary: binary install-config
-	mkdir -p "$(buildbinarydir)"
+	mkdir -p '$(DESTDIR)$(bindir)/'
 	$(INSTALL) "$(buildbinarydir)/luarocks.exe" "$(DESTDIR)$(bindir)/luarocks"
 	$(INSTALL) "$(buildbinarydir)/luarocks-admin.exe" "$(DESTDIR)$(bindir)/luarocks-admin"
 	mkdir -p '$(DESTDIR)$(luadir)/luarocks/core'
