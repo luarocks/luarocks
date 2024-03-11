@@ -15,11 +15,6 @@ tar zxvpf "$(basename "$tarball")"
 cd "$(basename "$tarball" .tar.gz)"
 ./configure --prefix=foobar
 make
-./luarocks --verbose
-./luarocks --verbose install inspect
-./luarocks --verbose show inspect
-./lua -e 'print(assert(require("inspect")(_G)))'
-./luarocks --verbose remove inspect
 make install
 cd foobar
 bin/luarocks --verbose
