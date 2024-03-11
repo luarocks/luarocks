@@ -23,7 +23,7 @@ all: build
 # Base build
 # ----------------------------------------
 
-build: luarocks luarocks-admin $(builddir)/luarocks $(builddir)/luarocks-admin
+build: config.unix $(builddir)/config-$(LUA_VERSION).lua $(builddir)/luarocks $(builddir)/luarocks-admin
 
 config.unix:
 	@echo Please run the "./configure" script before building.
