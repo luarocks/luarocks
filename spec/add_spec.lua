@@ -4,7 +4,6 @@ local testing_paths = test_env.testing_paths
 
 local extra_rocks = {
    "/luasocket-${LUASOCKET}.src.rock",
-   "/luasocket-${LUASOCKET}.rockspec"
 }
 
 describe("LuaRocks add tests #integration", function()

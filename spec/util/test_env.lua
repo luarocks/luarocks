@@ -1080,7 +1080,6 @@ function test_env.main()
    if test_env.TYPE_TEST_ENV == "full" then
       table.insert(urls, "/luafilesystem-${LUAFILESYSTEM}.src.rock")
       table.insert(urls, "/luasocket-${LUASOCKET}.src.rock")
-      table.insert(urls, "/luasocket-${LUASOCKET}.rockspec")
       table.insert(urls, "/luasec-${LUASEC}.src.rock")
       table.insert(urls, "/md5-1.2-1.src.rock")
       table.insert(urls, "/manifests/hisham/lua-zlib-1.2-0.src.rock")
@@ -1099,9 +1098,7 @@ function test_env.main()
    end
 
    -- luacov is needed for both minimal or full environment
-   table.insert(urls, "/luacov-${LUACOV}.rockspec")
    table.insert(urls, "/luacov-${LUACOV}.src.rock")
-   table.insert(urls, "/cluacov-${CLUACOV}.rockspec")
    table.insert(urls, "/cluacov-${CLUACOV}.src.rock")
    table.insert(rocks, "luacov")
    table.insert(rocks, "cluacov")
