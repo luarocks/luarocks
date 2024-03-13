@@ -245,6 +245,8 @@ local function parse(filename)
             block_start_arg("STDOUT", cur_op, "stdout")
          elseif cmd == "NOT_STDOUT" then
             block_start_arg("NOT_STDOUT", cur_op, "not_stdout")
+         elseif cmd == "PENDING" then
+            bool_arg("PENDING", cur_test, "pending", arg)
          elseif cmd == "TEST" then
             table.remove(stack)
             start_test(arg)

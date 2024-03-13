@@ -12,7 +12,9 @@ describe("quick tests: #quick", function()
       if f:match("%.q$") then
          local tests = quick.compile(spec_quick .. "/" .. f, getfenv and getfenv() or _ENV)
          for _, t in ipairs(tests) do
-            it(t.name, t.fn)
+            if not t.pending then
+               it(t.name, t.fn)
+            end
          end
       end
    end
