@@ -1,3 +1,38 @@
+## What's new in LuaRocks 3.11.0
+
+* Features:
+  * `luarocks build` and `luarocks install` no longer rebuild
+    or reinstall if the version is already installed
+    (`--force` overrides).
+  * More aggressive caching of the manifest file (does not
+    hit `luarocks.org` again if the cached manifest is younger
+    than 10 seconds).
+  * Drops stale lock files (older than 1 hour).
+  * More informative error reports on bad configurations of
+    Lua paths (`LUA_INCDIR`, `LUA_LIBDIR`).
+  * Better error messages when lacking permissions.
+  * Bumps vendored dkjson dependency to 2.7.
+  * `--verbose` output now prints the LuaRocks configuration,
+    for more informative bug reports.
+* Fixes:
+  * Passing `--global` always LuaRocks target the system tree.
+  * Does not crash if `root_dir` is a table.
+  * Does not try to lock rocks trees when using `--pack-binary-rock`
+    or `--no-install`.
+  * Checks permissions ahead of trying to lock trees,
+    to provide better error messages.
+  * Avoids LuaSec version mismatch by refusing to use LuaSec
+    versions below 1.1.
+  * Does not set up a "project environment" when running
+    `make` on the LuaRocks sources.
+  * Windows:
+    * Avoid excessive calls to `icacls`, resulting in
+      performance improvements.
+    * Parses slashes correctly when reading a rock's `rock_manifest`.
+    * Fix setting of environment variables.
+    * install.bat sets LUALIB.
+    * Improved help for `luarocks path`.
+
 ## What's new in LuaRocks 3.10.0
 
 * Features:
