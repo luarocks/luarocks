@@ -3,6 +3,7 @@
 local config_cmd = {}
 
 local persist = require("luarocks.persist")
+local config = require("luarocks.config")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local deps = require("luarocks.deps")
@@ -82,28 +83,6 @@ local function config_file(conf)
    end
 end
 
-local cfg_skip = {
-   errorcodes = true,
-   flags = true,
-   platforms = true,
-   root_dir = true,
-   upload_servers = true,
-}
-
-local function should_skip(k, v)
-   return type(v) == "function" or cfg_skip[k]
-end
-
-local function cleanup(tbl)
-   local copy = {}
-   for k, v in pairs(tbl) do
-      if not should_skip(k, v) then
-         copy[k] = v
-      end
-   end
-   return copy
-end
-
 local function traverse_varstring(var, tbl, fn, missing_parent)
    local k, r = var:match("^%[([0-9]+)%]%.(.*)$")
    if k then
@@ -147,7 +126,7 @@ local function print_entry(var, tbl, is_json)
       end
       local val = t[k]
 
-      if not should_skip(var, val) then
+      if not config.should_skip(var, val) then
          if is_json then
             return print_json(val)
          elseif type(val) == "string" then
@@ -402,12 +381,10 @@ function config_cmd.command(args)
       end
    end
 
-   local cleancfg = cleanup(cfg)
-
    if args.json then
-      return print_json(cleancfg)
+      return print_json(config.get_config_for_display(cfg))
    else
-      print(persist.save_from_table_to_string(cleancfg))
+      print(config.to_string(cfg))
       return true
    end
 end
