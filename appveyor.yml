@@ -1,4 +1,4 @@
-version: 3.0.0.{build}-test
+version: 3.11.0.{build}-test
 
 shallow_clone: true
 skip_branch_with_pr: true
@@ -7,7 +7,7 @@ matrix:
   fast_finish: true
 
 environment:
-  LUAROCKS_VER: 3.0.0
+  LUAROCKS_VER: 3.11.0
 
   matrix:
   # quick tests
