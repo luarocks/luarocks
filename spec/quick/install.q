@@ -475,3 +475,214 @@ RUN: luarocks install ./myrock-1.0-1.all.rock
 
 EXISTS: %{testing_sys_tree}/share/lua/%{lua_version}/folder/rock.lua
 EXISTS: %{testing_sys_tree}/share/lua/%{lua_version}/xyz.lua
+
+
+
+================================================================================
+TEST: new install functionality based on #552: break dependencies warning
+
+FILE: myrock-1.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "myrock"
+version = "1.0-1"
+source = {
+   url = "file://%{url(%{tmpdir})}/rock.lua"
+}
+build = {
+   modules = { rock = "rock.lua" }
+}
+--------------------------------------------------------------------------------
+
+FILE: myrock-2.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "myrock"
+version = "2.0-1"
+source = {
+   url = "file://%{url(%{tmpdir})}/rock.lua"
+}
+build = {
+   modules = { rock = "rock.lua" }
+}
+--------------------------------------------------------------------------------
+
+FILE: hasdep-1.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "hasdep"
+version = "1.0-1"
+source = {
+   url = "file://%{url(%{tmpdir})}/hasdep.lua"
+}
+dependencies = {
+   "myrock >= 2.0",
+}
+build = {
+   modules = { hasdep = "hasdep.lua" }
+}
+--------------------------------------------------------------------------------
+
+FILE: rock.lua
+--------------------------------------------------------------------------------
+return "hello"
+--------------------------------------------------------------------------------
+
+FILE: hasdep.lua
+--------------------------------------------------------------------------------
+return "hasdep"
+--------------------------------------------------------------------------------
+
+RUN: luarocks build myrock-2.0-1.rockspec
+RUN: luarocks build hasdep-1.0-1.rockspec
+RUN: luarocks build myrock-1.0-1.rockspec
+
+STDERR:
+--------------------------------------------------------------------------------
+Will not remove myrock 2.0
+Removing it would break dependencies for
+hasdep 1.0
+--------------------------------------------------------------------------------
+
+EXISTS: %{testing_sys_rocks}/myrock/1.0-1
+EXISTS: %{testing_sys_rocks}/myrock/2.0-1
+
+
+
+================================================================================
+TEST: new install functionality based on #552: break dependencies with --force
+
+FILE: myrock-1.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "myrock"
+version = "1.0-1"
+source = {
+   url = "file://%{url(%{tmpdir})}/rock.lua"
+}
+build = {
+   modules = { rock = "rock.lua" }
+}
+--------------------------------------------------------------------------------
+
+FILE: myrock-2.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "myrock"
+version = "2.0-1"
+source = {
+   url = "file://%{url(%{tmpdir})}/rock.lua"
+}
+build = {
+   modules = { rock = "rock.lua" }
+}
+--------------------------------------------------------------------------------
+
+FILE: hasdep-1.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "hasdep"
+version = "1.0-1"
+source = {
+   url = "file://%{url(%{tmpdir})}/hasdep.lua"
+}
+dependencies = {
+   "myrock >= 2.0",
+}
+build = {
+   modules = { hasdep = "hasdep.lua" }
+}
+--------------------------------------------------------------------------------
+
+FILE: rock.lua
+--------------------------------------------------------------------------------
+return "hello"
+--------------------------------------------------------------------------------
+
+FILE: hasdep.lua
+--------------------------------------------------------------------------------
+return "hasdep"
+--------------------------------------------------------------------------------
+
+RUN: luarocks build myrock-2.0-1.rockspec
+RUN: luarocks build hasdep-1.0-1.rockspec
+RUN: luarocks build myrock-1.0-1.rockspec --force
+
+STDERR:
+--------------------------------------------------------------------------------
+The following packages may be broken by this forced removal
+hasdep 1.0
+--------------------------------------------------------------------------------
+
+NOT_EXISTS: %{testing_sys_rocks}/myrock/2.0-1
+EXISTS: %{testing_sys_rocks}/myrock/1.0-1
+
+
+
+================================================================================
+TEST: new install functionality based on #552: break dependencies with --force-fast
+
+FILE: myrock-1.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "myrock"
+version = "1.0-1"
+source = {
+   url = "file://%{url(%{tmpdir})}/rock.lua"
+}
+build = {
+   modules = { rock = "rock.lua" }
+}
+--------------------------------------------------------------------------------
+
+FILE: myrock-2.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "myrock"
+version = "2.0-1"
+source = {
+   url = "file://%{url(%{tmpdir})}/rock.lua"
+}
+build = {
+   modules = { rock = "rock.lua" }
+}
+--------------------------------------------------------------------------------
+
+FILE: hasdep-1.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "hasdep"
+version = "1.0-1"
+source = {
+   url = "file://%{url(%{tmpdir})}/hasdep.lua"
+}
+dependencies = {
+   "myrock >= 2.0",
+}
+build = {
+   modules = { hasdep = "hasdep.lua" }
+}
+--------------------------------------------------------------------------------
+
+FILE: rock.lua
+--------------------------------------------------------------------------------
+return "hello"
+--------------------------------------------------------------------------------
+
+FILE: hasdep.lua
+--------------------------------------------------------------------------------
+return "hasdep"
+--------------------------------------------------------------------------------
+
+RUN: luarocks build myrock-2.0-1.rockspec
+RUN: luarocks build hasdep-1.0-1.rockspec
+RUN: luarocks build myrock-1.0-1.rockspec --force-fast
+
+NOT_STDERR:
+--------------------------------------------------------------------------------
+The following packages may be broken by this forced removal
+hasdep 1.0
+--------------------------------------------------------------------------------
+
+NOT_EXISTS: %{testing_sys_rocks}/myrock/2.0-1
+EXISTS: %{testing_sys_rocks}/myrock/1.0-1

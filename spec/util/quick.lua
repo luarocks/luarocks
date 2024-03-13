@@ -468,7 +468,7 @@ function quick.compile(filename, env)
                for i, line in ipairs(op.not_stderr.data) do
                   write(([=[ line = %q ]=]):format(line))
                   write(([=[ s = string.find(stderr_data, line, block_at, true) ]=]))
-                  write(([=[ assert(not s, error_message(%d, "NOT_STDERR did match unwanted output: " .. line, stderr_data)) ]=]):format(op.stderr.start + i))
+                  write(([=[ assert(not s, error_message(%d, "NOT_STDERR did match unwanted output: " .. line, stderr_data)) ]=]):format(op.not_stderr.start + i))
                end
                write([=[ end ]=])
             end
