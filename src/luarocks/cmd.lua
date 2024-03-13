@@ -3,6 +3,7 @@
 local cmd = {}
 
 local manif = require("luarocks.manif")
+local config = require("luarocks.config")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 local cfg = require("luarocks.core.cfg")
@@ -679,6 +680,11 @@ function cmd.run_command(description, commands, external_namespace, ...)
 
    if args.verbose then
       cfg.verbose = true
+      print(("-"):rep(79))
+      print("Current configuration:")
+      print(("-"):rep(79))
+      print(config.to_string(cfg))
+      print(("-"):rep(79))
       fs.verbose()
    end
 
