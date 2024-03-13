@@ -19,7 +19,7 @@ local extra_rocks = {
 
 describe("luarocks test #integration", function()
 
-   before_each(function()
+   lazy_setup(function()
       test_env.setup_specs(extra_rocks)
    end)
 
@@ -34,21 +34,6 @@ describe("luarocks test #integration", function()
    end)
 
    describe("busted backend", function()
-
-      lazy_setup(function()
-         -- Try to cache rocks from the host system to speed up test
-         for _, r in ipairs(extra_rocks) do
-            r = test_env.V(r)
-            local n, v = r:match("^/(.*)%-([^%-]+)%-%d+%.[^%-]+$")
-            os.execute("luarocks pack " .. n .. " " .. v)
-         end
-         if test_env.TEST_TARGET_OS == "windows" then
-            os.execute("move *.rock " .. testing_paths.testing_server)
-         else
-            os.execute("mv *.rock " .. testing_paths.testing_server)
-         end
-         test_env.run.luarocks_admin_nocov("make_manifest " .. testing_paths.testing_server)
-      end)
 
       it("with rockspec, installing busted", function()
          finally(function()

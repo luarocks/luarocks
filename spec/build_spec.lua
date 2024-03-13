@@ -21,8 +21,6 @@ local extra_rocks = {
    "/luasocket-${LUASOCKET}.src.rock",
    "/luasocket-${LUASOCKET}.rockspec",
    "spec/fixtures/a_rock-1.0-1.src.rock",
-   "/busted-2.0.0-1.rockspec",
-   "/busted-2.0.rc13-0.rockspec",
 }
 
 local c_module_source = [[
