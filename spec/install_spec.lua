@@ -9,13 +9,10 @@ local V = test_env.V
 
 local extra_rocks = {
    "/cprint-${CPRINT}.src.rock",
-   "/cprint-${CPRINT}.rockspec",
    "/lpeg-${LPEG}.src.rock",
    "/luassert-1.7.0-1.src.rock",
    "/luasocket-${LUASOCKET}.src.rock",
-   "/luasocket-${LUASOCKET}.rockspec",
    "/lxsh-${LXSH}.src.rock",
-   "/lxsh-${LXSH}.rockspec",
    "/say-1.2-1.src.rock",
    "/say-1.0-1.src.rock",
    "/luafilesystem-${LUAFILESYSTEM}.src.rock",

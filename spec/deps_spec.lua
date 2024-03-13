@@ -5,9 +5,7 @@ local testing_paths = test_env.testing_paths
 
 local extra_rocks = {
    "/lxsh-${LXSH}.src.rock",
-   "/lxsh-${LXSH}.rockspec",
    "/luasocket-${LUASOCKET}.src.rock",
-   "/luasocket-${LUASOCKET}.rockspec",
    "/lpeg-${LPEG}.src.rock",
 }
 

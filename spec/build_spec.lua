@@ -15,11 +15,9 @@ local extra_rocks = {
    "/lmathx-20120430.52-1.rockspec",
    "/lmathx-20150505-1.src.rock",
    "/lmathx-20150505-1.rockspec",
-   "/lpeg-1.0.0-1.rockspec",
    "/lpeg-1.0.0-1.src.rock",
    "/luafilesystem-${LUAFILESYSTEM}.src.rock",
    "/luasocket-${LUASOCKET}.src.rock",
-   "/luasocket-${LUASOCKET}.rockspec",
    "spec/fixtures/a_rock-1.0-1.src.rock",
 }
 

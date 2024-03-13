@@ -5,15 +5,15 @@ local testing_paths = test_env.testing_paths
 local write_file = test_env.write_file
 
 local extra_rocks = {
-   "/busted-2.0.0-1.rockspec",
+   "/busted-2.2.0-1.src.rock",
    "/lua_cliargs-3.0-1.src.rock",
    "/luafilesystem-${LUAFILESYSTEM}.src.rock",
    "/luasystem-0.2.1-0.src.rock",
    "/dkjson-${DKJSON}.src.rock",
-   "/say-1.3-1.rockspec",
-   "/luassert-1.8.0-0.rockspec",
-   "/lua-term-0.7-1.rockspec",
-   "/penlight-1.5.4-1.rockspec",
+   "/say-1.4.1-3.src.rock",
+   "/luassert-1.9.0-1.src.rock",
+   "/penlight-1.13.1-1.src.rock",
+   "/lua-term-0.8-1.rockspec",
    "/mediator_lua-1.1.2-0.rockspec",
 }
 
