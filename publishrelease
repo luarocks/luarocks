@@ -5,7 +5,7 @@
    echo "example...: $0 3.1.1"
    echo
    echo "Before running this, make sure the packages were built:"
-   echo "   makedist 3.1.1 binary sign"
+   echo "   makedist 3.1.1 /opt/lua54/ binary sign"
    echo "And the tag was merged:"
    echo "   mergerelease 3.1.1"
    echo
@@ -55,7 +55,7 @@ function confirm() {
    echo "****************************************"
    git status
    echo "****************************************"
-   
+
    echo "Everything looks all right? (y/n)"
    echo "(Answering y will commit and push)"
    read

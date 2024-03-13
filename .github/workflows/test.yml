@@ -79,7 +79,7 @@ jobs:
     - name: Smoke Test
       run: |
         ./configure
-        ./makedist dev
+        ./makedist dev $(dirname $(dirname $(which lua)))
         ./smoke_test.sh luarocks-dev.tar.gz
 
   ##############################################################################
@@ -95,6 +95,6 @@ jobs:
     - name: Binary Build Smoke Test
       run: |
         ./configure
-        ./makedist dev
+        ./makedist dev $(dirname $(dirname $(which lua)))
         ./smoke_test.sh luarocks-dev.tar.gz binary
 
