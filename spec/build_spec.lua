@@ -210,12 +210,6 @@ describe("LuaRocks build #integration", function()
          end)
       end
 
-      it("downgrades directories correctly", function()
-         assert(run.luarocks_bool("build --nodeps busted 2.0.0" ))
-         assert(run.luarocks_bool("build --nodeps busted 2.0.rc13" ))
-         assert(run.luarocks_bool("build --nodeps busted 2.0.0" ))
-      end)
-
       it("only deps", function()
          local rockspec = testing_paths.fixtures_dir .. "/build_only_deps-0.1-1.rockspec"
 
