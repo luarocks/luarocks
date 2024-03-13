@@ -349,3 +349,49 @@ rock_manifest = {
 --------------------------------------------------------------------------------
 
 EXISTS: ./lua_modules/bin/my_module.lua%{wrapper_extension}
+
+
+
+================================================================================
+TEST: downgrades directories correctly
+
+FILE: mytest-1.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "mytest"
+version = "1.0-1"
+source = {
+   url = "file://%{url(%{fixtures_dir})}/an_upstream_tarball-0.1.tar.gz",
+   dir = "an_upstream_tarball-0.1",
+}
+build = {
+   modules = {
+      ["parent.child.my_module"] = "src/my_module.lua"
+   },
+}
+--------------------------------------------------------------------------------
+
+FILE: mytest-2.0-1.rockspec
+--------------------------------------------------------------------------------
+rockspec_format = "3.0"
+package = "mytest"
+version = "2.0-1"
+source = {
+   url = "file://%{url(%{fixtures_dir})}/an_upstream_tarball-0.1.tar.gz",
+   dir = "an_upstream_tarball-0.1",
+}
+build = {
+   modules = {
+      ["parent.child.my_module"] = "src/my_module.lua"
+   },
+}
+--------------------------------------------------------------------------------
+
+RUN: luarocks build ./mytest-2.0-1.rockspec
+EXISTS: %{testing_sys_tree}/share/lua/%{lua_version}/parent/child/my_module.lua
+
+RUN: luarocks build ./mytest-1.0-1.rockspec
+EXISTS: %{testing_sys_tree}/share/lua/%{lua_version}/parent/child/my_module.lua
+
+RUN: luarocks build ./mytest-2.0-1.rockspec
+EXISTS: %{testing_sys_tree}/share/lua/%{lua_version}/parent/child/my_module.lua
