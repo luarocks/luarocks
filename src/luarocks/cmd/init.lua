@@ -46,13 +46,15 @@ local function write_gitignore(entries)
    end
 
    fd = io.open(".gitignore", gitignore and "a" or "w")
-   for _, entry in ipairs(entries) do
-      entry = "/" .. entry
-      if not gitignore:find("\n"..entry.."\n", 1, true) then
-         fd:write(entry.."\n")
+   if fd then
+      for _, entry in ipairs(entries) do
+         entry = "/" .. entry
+         if not gitignore:find("\n"..entry.."\n", 1, true) then
+            fd:write(entry.."\n")
+         end
       end
+      fd:close()
    end
-   fd:close()
 end
 
 local function inject_tree(tree)
