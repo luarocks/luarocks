@@ -284,6 +284,25 @@ local function parse(filename)
    return tests
 end
 
+local function check_output(write, block, block_name, data_var)
+   if block then
+      local is_positive = not block_name:match("NOT")
+      local err_msg = is_positive and "did not match" or "did match unwanted output"
+
+      write([=[ do ]=])
+      write([=[ local block_at = 1 ]=])
+      write([=[ local s, e, line, ok ]=])
+      for i, line in ipairs(block.data) do
+         write(([=[ line = %q ]=]):format(line))
+         write(([=[ s, e = string.find(%s, line, block_at, true) ]=]):format(data_var))
+         write(is_positive and ([=[ ok = s; if e then block_at = e + 1 end ]=]):format(i)
+                           or  ([=[ ok = not s ]=]))
+         write(([=[ assert(ok, error_message(%d, "%s %s: " .. line, %s)) ]=]):format(block.start + i, block_name, err_msg, data_var))
+      end
+      write([=[ end ]=])
+   end
+end
+
 function quick.compile(filename, env)
    local tests = parse(filename)
 
@@ -425,53 +444,11 @@ function quick.compile(filename, env)
                write([=[ print() ]=])
             end
 
-            if op.stdout then
-               write([=[ do ]=])
-               write([=[ local block_at = 1 ]=])
-               write([=[ local s, e, line ]=])
-               for i, line in ipairs(op.stdout.data) do
-                  write(([=[ line = %q ]=]):format(line))
-                  write(([=[ s, e = string.find(stdout_data, line, 1, true) ]=]))
-                  write(([=[ assert(s, error_message(%d, "STDOUT did not match: " .. line, stdout_data)) ]=]):format(op.stdout.start + i))
-                  write(([=[ block_at = e + 1 ]=]):format(i))
-               end
-               write([=[ end ]=])
-            end
+            check_output(write, op.stdout, "STDOUT", "stdout_data")
+            check_output(write, op.stderr, "STDERR", "stderr_data")
 
-            if op.not_stdout then
-               write([=[ do ]=])
-               write([=[ local line ]=])
-               for i, line in ipairs(op.not_stdout.data) do
-                  write(([=[ line = %q ]=]):format(line))
-                  write(([=[ s = string.find(stdout_data, line, 1, true) ]=]))
-                  write(([=[ assert(not s, error_message(%d, "NOT_STDOUT did match unwanted output: " .. line, stdout_data)) ]=]):format(op.stdout.start + i))
-               end
-               write([=[ end ]=])
-            end
-
-            if op.stderr then
-               write([=[ do ]=])
-               write([=[ local block_at = 1 ]=])
-               write([=[ local s, e, line ]=])
-               for i, line in ipairs(op.stderr.data) do
-                  write(([=[ line = %q ]=]):format(line))
-                  write(([=[ s, e = string.find(stderr_data, line, block_at, true) ]=]))
-                  write(([=[ assert(s, error_message(%d, "STDERR did not match: " .. line, stderr_data)) ]=]):format(op.stderr.start + i))
-                  write(([=[ block_at = e + 1 ]=]):format(i))
-               end
-               write([=[ end ]=])
-            end
-
-            if op.not_stderr then
-               write([=[ do ]=])
-               write([=[ local line ]=])
-               for i, line in ipairs(op.not_stderr.data) do
-                  write(([=[ line = %q ]=]):format(line))
-                  write(([=[ s = string.find(stderr_data, line, block_at, true) ]=]))
-                  write(([=[ assert(not s, error_message(%d, "NOT_STDERR did match unwanted output: " .. line, stderr_data)) ]=]):format(op.not_stderr.start + i))
-               end
-               write([=[ end ]=])
-            end
+            check_output(write, op.not_stdout, "NOT_STDOUT", "stdout_data")
+            check_output(write, op.not_stderr, "NOT_STDERR", "stderr_data")
 
             if op.exit then
                write(([=[ assert.same(%d, code, error_message(%d, "EXIT did not match: " .. %d, stderr_data)) ]=]):format(op.exit, op.exit_line, op.exit))
