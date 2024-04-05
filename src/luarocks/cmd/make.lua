@@ -106,6 +106,7 @@ function make.command(args)
       verify = not not args.verify,
       check_lua_versions = not not args.check_lua_versions,
       pin = not not args.pin,
+      rebuild = true,
       no_install = not not args.no_install
    })
 
