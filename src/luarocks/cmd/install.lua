@@ -84,7 +84,7 @@ function install.install_binary_rock(rock_file, opts)
       return nil, "Incompatible architecture "..arch, "arch"
    end
    if repos.is_installed(name, version) then
-      if (not opts.force) and (not opts.force_fast) then
+      if not (opts.force or opts.force_fast) then
          util.printout(name .. " " .. version .. " is already installed in " .. path.root_dir(cfg.root_dir))
          util.printout("Use --force to reinstall.")
          return name, version

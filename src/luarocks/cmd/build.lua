@@ -95,7 +95,7 @@ local function do_build(name, namespace, version, opts)
 
    name, version = path.parse_name(url)
    if name and repos.is_installed(name, version) then
-      if (not opts.force) and (not opts.force_fast) then
+      if not opts.rebuild then
          util.printout(name .. " " .. version .. " is already installed in " .. path.root_dir(cfg.root_dir))
          util.printout("Use --force to reinstall.")
          return name, version, "skip"
@@ -138,6 +138,7 @@ function cmd_build.command(args)
       verify = not not args.verify,
       check_lua_versions = not not args.check_lua_versions,
       pin = not not args.pin,
+      rebuild = not not (args.force or args.force_fast),
       no_install = false
    })
 

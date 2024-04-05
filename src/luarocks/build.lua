@@ -24,6 +24,7 @@ build.opts = util.opts_table("build.opts", {
    verify = "boolean",
    check_lua_versions = "boolean",
    pin = "boolean",
+   rebuild = "boolean",
    no_install = "boolean"
 })
 
