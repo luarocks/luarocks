@@ -1,3 +1,4 @@
+MAKEFLAGS += --jobs=1
 
 -include config.unix
 
