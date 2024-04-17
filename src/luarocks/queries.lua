@@ -160,6 +160,8 @@ do
          return nil, "failed to extract dependency name from '"..depstr.."'"
       end
 
+      ns_name = ns_name:lower()
+
       local constraints, err = parse_constraints(rest)
       if not constraints then
          return nil, err
