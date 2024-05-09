@@ -62,15 +62,20 @@ function fetch.fetch_caching(url, mirroring)
    end
 
    local file, err, errcode, from_cache = fetch.fetch_url(url, cachefile, true, mirroring)
+   if not file then
+      fs.unlock_access(lock)
+      return nil, err or "Failed downloading "..url, errcode
+   end
 
-   local fd = io.open(checkfile, "wb")
+   local fd, err = io.open(checkfile, "wb")
+   if err then
+      fs.unlock_access(lock)
+      return nil, err
+   end
    fd:write("!")
    fd:close()
 
    fs.unlock_access(lock)
-   if not file then
-      return nil, err or "Failed downloading "..url, errcode
-   end
    return file, nil, nil, from_cache
 end
 
