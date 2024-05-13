@@ -634,6 +634,14 @@ local function get_possible_lua_directories()
 	return directories
 end
 
+local function strip_bin(bindir)
+	bindir = bindir:gsub("[/\\]*$", "")
+	if bindir:upper():match("[/\\]BIN") then
+		bindir = bindir:sub(1, -5):gsub("[/\\]*$", "")
+	end
+	return bindir
+end
+
 local function look_for_lua_install ()
 	print("Looking for Lua interpreter")
 	if vars.LUA_BINDIR and vars.LUA_LIBDIR and vars.LUA_INCDIR then
@@ -643,6 +651,7 @@ local function look_for_lua_install ()
 		then
 			if get_runtime() then
 				print("Runtime check completed.")
+				vars.LUA_DIR = vars.LUA_PREFIX or strip_bin(vars.LUA_BINDIR)
 				return true
 			end
 		end
