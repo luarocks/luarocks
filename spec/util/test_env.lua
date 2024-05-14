@@ -391,8 +391,19 @@ function test_env.set_args()
          elseif system == "Darwin" then
             test_env.TEST_TARGET_OS = "osx"
             if test_env.CI then
-               test_env.OPENSSL_INCDIR = "/usr/local/opt/openssl/include"
-               test_env.OPENSSL_LIBDIR = "/usr/local/opt/openssl/lib"
+               if exists("/opt/homebrew/opt/openssl@3/include") then
+                  test_env.OPENSSL_INCDIR = "/opt/homebrew/opt/openssl@3/include"
+                  test_env.OPENSSL_LIBDIR = "/opt/homebrew/opt/openssl@3/lib"
+               elseif exists("/opt/homebrew/opt/openssl@1.1/include") then
+                  test_env.OPENSSL_INCDIR = "/opt/homebrew/opt/openssl@1.1/include"
+                  test_env.OPENSSL_LIBDIR = "/opt/homebrew/opt/openssl@1.1/lib"
+               elseif exists("/opt/homebrew/opt/openssl/include") then
+                  test_env.OPENSSL_INCDIR = "/opt/homebrew/opt/openssl/include"
+                  test_env.OPENSSL_LIBDIR = "/opt/homebrew/opt/openssl/lib"
+               else
+                  test_env.OPENSSL_INCDIR = "/usr/local/opt/openssl/include"
+                  test_env.OPENSSL_LIBDIR = "/usr/local/opt/openssl/lib"
+               end
             end
          end
       end

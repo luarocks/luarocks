@@ -39,6 +39,10 @@ jobs:
 
     - uses: leafo/gh-actions-luarocks@v4.0.0
 
+    - name: 'Setup macOS deps'
+      if: ${{ contains(matrix.os, 'macos') }}
+      run: brew install openssl
+
     - name: Prep
       run: |
         luarocks install busted
