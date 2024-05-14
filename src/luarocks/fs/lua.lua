@@ -1070,17 +1070,9 @@ do
 end
 
 function fs_lua.set_permissions(filename, mode, scope)
-   local perms
-   if mode == "read" and scope == "user" then
-      perms = fs._unix_moderate_permissions("600")
-   elseif mode == "exec" and scope == "user" then
-      perms = fs._unix_moderate_permissions("700")
-   elseif mode == "read" and scope == "all" then
-      perms = fs._unix_moderate_permissions("644")
-   elseif mode == "exec" and scope == "all" then
-      perms = fs._unix_moderate_permissions("755")
-   else
-      return false, "Invalid permission " .. mode .. " for " .. scope
+   local perms, err = fs._unix_mode_scope_to_perms(mode, scope)
+   if err then
+      return false, err
    end
 
    -- LuaPosix (as of 5.1.15) does not support octal notation...
