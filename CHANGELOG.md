@@ -1,3 +1,15 @@
+## What's new in LuaRocks 3.11.1
+
+* Fixes:
+  * normalize namespace names to lowercase when performing
+    dependency resolution, to match CLI behavior
+  * `luarocks build`: ensure `--force` works
+  * `luarocks init`: check if we can create .gitignore
+  * Unix: honor umask correctly
+  * Fix error when failing to open cached files
+  * Fix behavior of luarocks.lock file when dealing
+    with dependencies
+
 ## What's new in LuaRocks 3.11.0
 
 * Features:
