@@ -2,6 +2,7 @@
 -- Installs binary rocks.
 local install = {}
 
+local dir = require("luarocks.dir")
 local path = require("luarocks.path")
 local repos = require("luarocks.repos")
 local fetch = require("luarocks.fetch")
@@ -124,7 +125,10 @@ function install.install_binary_rock(rock_file, opts)
    end
 
    if deps_mode ~= "none" then
-      ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", deps_mode, opts.verify, install_dir)
+      local deplock_dir = fs.exists(dir.path(".", "luarocks.lock"))
+                          and "."
+                          or install_dir
+      ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", deps_mode, opts.verify, deplock_dir)
       if err then return nil, err, errcode end
    end
 
