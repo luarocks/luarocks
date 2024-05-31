@@ -253,7 +253,7 @@ local function report_on_lua_libdir_config(value, lua_version)
       util.printerr()
       util.warning((err:gsub(" You can use.*", "")))
       util.printerr("Tried:")
-      for _, l in pairs(err_files) do
+      for _, l in pairs(err_files or {}) do
          for _, d in ipairs(l) do
             util.printerr("\t" .. d)
          end
