@@ -18,7 +18,10 @@ version=$1
 shift
 
 lua54dir=$1
-shift
+shift || {
+   echo "Second argument must be the Lua 5.4 prefix."
+   exit 1
+}
 
 if ! [ -d "$lua54dir" ]
 then
