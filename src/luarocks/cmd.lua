@@ -109,16 +109,16 @@ do
          table.insert(cfg.rocks_trees, 1, { name = "project", root = tree } )
          manif.load_rocks_tree_manifests()
          path.use_tree(tree)
-      elseif cfg.local_by_default then
-         local ok, err = set_named_tree(args, "user")
-         if not ok then
-            return nil, err
-         end
       elseif project_dir then
          local project_tree = project_dir .. "/lua_modules"
          table.insert(cfg.rocks_trees, 1, { name = "project", root = project_tree } )
          manif.load_rocks_tree_manifests()
          path.use_tree(project_tree)
+      elseif cfg.local_by_default then
+         local ok, err = set_named_tree(args, "user")
+         if not ok then
+            return nil, err
+         end
       else
          local trees = cfg.rocks_trees
          path.use_tree(trees[#trees])
