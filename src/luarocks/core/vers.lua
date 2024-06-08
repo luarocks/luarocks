@@ -1,28 +1,34 @@
-
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string
 local vers = {}
 
 local util = require("luarocks.core.util")
 local require = nil
---------------------------------------------------------------------------------
+
 
 local deltas = {
-   dev =    120000000,
-   scm =    110000000,
-   cvs =    100000000,
-   rc =    -1000,
-   pre =   -10000,
-   beta =  -100000,
-   alpha = -1000000
+   dev = 120000000,
+   scm = 110000000,
+   cvs = 100000000,
+   rc = -1000,
+   pre = -10000,
+   beta = -100000,
+   alpha = -1000000,
 }
 
+
+
+
+
+
+
 local version_mt = {
-   --- Equality comparison for versions.
-   -- All version numbers must be equal.
-   -- If both versions have revision numbers, they must be equal;
-   -- otherwise the revision number is ignored.
-   -- @param v1 table: version table to compare.
-   -- @param v2 table: version table to compare.
-   -- @return boolean: true if they are considered equivalent.
+
+
+
+
+
+
+
    __eq = function(v1, v2)
       if #v1 ~= #v2 then
          return false
@@ -37,13 +43,13 @@ local version_mt = {
       end
       return true
    end,
-   --- Size comparison for versions.
-   -- All version numbers are compared.
-   -- If both versions have revision numbers, they are compared;
-   -- otherwise the revision number is ignored.
-   -- @param v1 table: version table to compare.
-   -- @param v2 table: version table to compare.
-   -- @return boolean: true if v1 is considered lower than v2.
+
+
+
+
+
+
+
    __lt = function(v1, v2)
       for i = 1, math.max(#v1, #v2) do
          local v1i, v2i = v1[i] or 0, v2[i] or 0
@@ -56,15 +62,15 @@ local version_mt = {
       end
       return false
    end,
-   -- @param v1 table: version table to compare.
-   -- @param v2 table: version table to compare.
-   -- @return boolean: true if v1 is considered lower than or equal to v2.
+
+
+
    __le = function(v1, v2)
-       return not (v2 < v1) -- luacheck: ignore
+      return not (v2 < v1)
    end,
-   --- Return version as a string.
-   -- @param v The version table.
-   -- @return The string representation.
+
+
+
    __tostring = function(v)
       return v.string
    end,
@@ -72,20 +78,20 @@ local version_mt = {
 
 local version_cache = {}
 setmetatable(version_cache, {
-   __mode = "kv"
+   __mode = "kv",
 })
 
---- Parse a version string, converting to table format.
--- A version table contains all components of the version string
--- converted to numeric format, stored in the array part of the table.
--- If the version contains a revision, it is stored numerically
--- in the 'revision' field. The original string representation of
--- the string is preserved in the 'string' field.
--- Returned version tables use a metatable
--- allowing later comparison through relational operators.
--- @param vstring string: A version number in string format.
--- @return table or nil: A version table or nil
--- if the input string contains invalid characters.
+
+
+
+
+
+
+
+
+
+
+
 function vers.parse_version(vstring)
    if not vstring then return nil end
    assert(type(vstring) == "string")
@@ -99,29 +105,29 @@ function vers.parse_version(vstring)
    local i = 1
 
    local function add_token(number)
-      version[i] = version[i] and version[i] + number/100000 or number
+      version[i] = version[i] and version[i] + number / 100000 or number
       i = i + 1
    end
 
-   -- trim leading and trailing spaces
+
    local v = vstring:match("^%s*(.*)%s*$")
    version.string = v
-   -- store revision separately if any
+
    local main, revision = v:match("(.*)%-(%d+)$")
    if revision then
       v = main
       version.revision = tonumber(revision)
    end
    while #v > 0 do
-      -- extract a number
+
       local token, rest = v:match("^(%d+)[%.%-%_]*(.*)")
       if token then
          add_token(tonumber(token))
       else
-         -- extract a word
+
          token, rest = v:match("^(%a+)[%.%-%_]*(.*)")
          if not token then
-            util.warning("version number '"..v.."' could not be parsed.")
+            util.warning("version number '" .. v .. "' could not be parsed.")
             version[i] = 0
             break
          end
@@ -134,10 +140,10 @@ function vers.parse_version(vstring)
    return version
 end
 
---- Utility function to compare version numbers given as strings.
--- @param a string: one version.
--- @param b string: another version.
--- @return boolean: True if a > b.
+
+
+
+
 function vers.compare_versions(a, b)
    if a == b then
       return false
@@ -145,24 +151,24 @@ function vers.compare_versions(a, b)
    return vers.parse_version(a) > vers.parse_version(b)
 end
 
---- A more lenient check for equivalence between versions.
--- This returns true if the requested components of a version
--- match and ignore the ones that were not given. For example,
--- when requesting "2", then "2", "2.1", "2.3.5-9"... all match.
--- When requesting "2.1", then "2.1", "2.1.3" match, but "2.2"
--- doesn't.
--- @param version string or table: Version to be tested; may be
--- in string format or already parsed into a table.
--- @param requested string or table: Version requested; may be
--- in string format or already parsed into a table.
--- @return boolean: True if the tested version matches the requested
--- version, false otherwise.
-local function partial_match(version, requested)
-   assert(type(version) == "string" or type(version) == "table")
-   assert(type(requested) == "string" or type(version) == "table")
 
-   if type(version) ~= "table" then version = vers.parse_version(version) end
-   if type(requested) ~= "table" then requested = vers.parse_version(requested) end
+
+
+
+
+
+
+
+
+
+
+
+local function partial_match(version_for_parse, requested_for_parce)
+   assert(type(version_for_parse) == "string" or type(version_for_parse) == "table")
+   assert(type(requested_for_parce) == "string" or type(requested_for_parce) == "table")
+
+   if type(version_for_parse) ~= "table" then local version = vers.parse_version(version_for_parse) end
+   if type(requested_for_parce) ~= "table" then local requested = vers.parse_version(requested_for_parce) end
    if not version or not requested then return false end
 
    for i, ri in ipairs(requested) do
@@ -175,11 +181,11 @@ local function partial_match(version, requested)
    return true
 end
 
---- Check if a version satisfies a set of constraints.
--- @param version table: A version in table format
--- @param constraints table: An array of constraints in table format.
--- @return boolean: True if version satisfies all constraints,
--- false otherwise.
+
+
+
+
+
 function vers.match_constraints(version, constraints)
    assert(type(version) == "table")
    assert(type(constraints) == "table")
@@ -191,10 +197,10 @@ function vers.match_constraints(version, constraints)
       end
       local constr_version, constr_op = constr.version, constr.op
       setmetatable(constr_version, version_mt)
-      if     constr_op == "==" then ok = version == constr_version
+      if constr_op == "==" then ok = version == constr_version
       elseif constr_op == "~=" then ok = version ~= constr_version
-      elseif constr_op == ">"  then ok = version >  constr_version
-      elseif constr_op == "<"  then ok = version <  constr_version
+      elseif constr_op == ">" then ok = version > constr_version
+      elseif constr_op == "<" then ok = version < constr_version
       elseif constr_op == ">=" then ok = version >= constr_version
       elseif constr_op == "<=" then ok = version <= constr_version
       elseif constr_op == "~>" then ok = partial_match(version, constr_version)

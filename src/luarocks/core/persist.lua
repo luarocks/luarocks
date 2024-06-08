@@ -1,58 +1,56 @@
-
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local load = _tl_compat and _tl_compat.load or load; local pcall = _tl_compat and _tl_compat.pcall or pcall; local string = _tl_compat and _tl_compat.string or string
 local persist = {}
 
-local require = nil
---------------------------------------------------------------------------------
 
---- Load and run a Lua file in an environment.
--- @param filename string: the name of the file.
--- @param env table: the environment table.
--- @return (true, any) or (nil, string, string): true and the return value
--- of the file, or nil, an error message and an error code ("open", "load"
--- or "run") in case of errors.
+
+
+
+
+
+
 function persist.run_file(filename, env)
-   local fd, err = io.open(filename)
+   local fd, open_err = io.open(filename)
    if not fd then
-      return nil, err, "open"
+      return nil, open_err, "open"
    end
-   local str, err = fd:read("*a")
+   local str, read_err = fd:read("*a")
    fd:close()
    if not str then
-      return nil, err, "open"
+      return nil, read_err, "open"
    end
    str = str:gsub("^#![^\n]*\n", "")
-   local chunk, ran
-   if _VERSION == "Lua 5.1" then -- Lua 5.1
+   local chunk, ran, err
+   if _VERSION == "Lua 5.1" then
       chunk, err = loadstring(str, filename)
       if chunk then
          setfenv(chunk, env)
          ran, err = pcall(chunk)
       end
-   else -- Lua 5.2
+   else
       chunk, err = load(str, filename, "t", env)
       if chunk then
          ran, err = pcall(chunk)
       end
    end
    if not chunk then
-      return nil, "Error loading file: "..err, "load"
+      return nil, "Error loading file: " .. tostring(err), "load"
    end
    if not ran then
-      return nil, "Error running file: "..err, "run"
+      return nil, "Error running file: " .. tostring(err), "run"
    end
    return true, err
 end
 
---- Load a Lua file containing assignments, storing them in a table.
--- The global environment is not propagated to the loaded file.
--- @param filename string: the name of the file.
--- @param tbl table or nil: if given, this table is used to store
--- loaded values.
--- @return (table, table) or (nil, string, string): a table with the file's assignments
--- as fields and set of undefined globals accessed in file,
--- or nil, an error message and an error code ("open"; couldn't open the file,
--- "load"; compile-time error, or "run"; run-time error)
--- in case of errors.
+
+
+
+
+
+
+
+
+
+
 function persist.load_into_table(filename, tbl)
    assert(type(filename) == "string")
    assert(type(tbl) == "table" or not tbl)
@@ -60,9 +58,9 @@ function persist.load_into_table(filename, tbl)
    local result = tbl or {}
    local globals = {}
    local globals_mt = {
-      __index = function(t, k)
+      __index = function(_, k)
          globals[k] = true
-      end
+      end,
    }
    local save_mt = getmetatable(result)
    setmetatable(result, globals_mt)
@@ -78,4 +76,3 @@ function persist.load_into_table(filename, tbl)
 end
 
 return persist
-

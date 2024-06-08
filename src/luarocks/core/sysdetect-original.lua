@@ -1,65 +1,15 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local os = _tl_compat and _tl_compat.os or os; local package = _tl_compat and _tl_compat.package or package; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
-
-
-
-
+-- Detect the operating system and architecture without forking a subprocess.
+--
+-- We are not going for exhaustive list of every historical system here,
+-- but aiming to cover every platform where LuaRocks is known to run.
+-- If your system is not detected, patches are welcome!
 
 local sysdetect = {}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 local function hex(s)
-   return (s:gsub("$(..)", function(x)
+   return s:gsub("$(..)", function(x)
       return string.char(tonumber(x, 16))
-   end))
+   end)
 end
 
 local function read_int8(fd)
@@ -74,15 +24,18 @@ local function read_int8(fd)
    return s:byte()
 end
 
+local LITTLE = 1
+-- local BIG = 2
+
 local function bytes2number(s, endian)
    local r = 0
-   if endian == "little" then
+   if endian == LITTLE then
       for i = #s, 1, -1 do
-         r = r * 256 + s:byte(i, i)
+         r = r*256 + s:byte(i,i)
       end
    else
       for i = 1, #s do
-         r = r * 256 + s:byte(i, i)
+         r = r*256 + s:byte(i,i)
       end
    end
    return r
@@ -93,62 +46,20 @@ local function read(fd, bytes, endian)
       return nil
    end
    local s = fd:read(bytes)
-   if not s then
-      fd:close()
+   if not s
+      then fd:close()
       return nil
    end
    return bytes2number(s, endian)
 end
 
 local function read_int32le(fd)
-   return read(fd, 4, "little")
+   return read(fd, 4, LITTLE)
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-local endians = {
-   [0x01] = "little",
-   [0x02] = "big",
-}
+--------------------------------------------------------------------------------
+-- @section ELF
+--------------------------------------------------------------------------------
 
 local e_osabi = {
    [0x00] = "sysv",
@@ -186,12 +97,11 @@ local e_machines = {
 local SHT_NOTE = 7
 
 local function read_elf_section_headers(fd, hdr)
-   local endian = endians[hdr.endian]
+   local endian = hdr.endian
    local word = hdr.word
 
    local strtab_offset
    local sections = {}
-   local secarray = {}
    for i = 0, hdr.e_shnum - 1 do
       fd:seek("set", hdr.e_shoff + (i * hdr.e_shentsize))
       local section = {}
@@ -213,10 +123,10 @@ local function read_elf_section_headers(fd, hdr)
       elseif i == hdr.e_shstrndx then
          strtab_offset = section.sh_offset
       end
-      table.insert(secarray, section)
+      table.insert(sections, section)
    end
    if strtab_offset then
-      for _, section in ipairs(secarray) do
+      for _, section in ipairs(sections) do
          fd:seek("set", strtab_offset + section.sh_name_off)
          section.name = fd:read(32):gsub("%z.*", "")
          sections[section.name] = section
@@ -227,24 +137,24 @@ end
 
 local function detect_elf_system(fd, hdr, sections)
    local system = e_osabi[hdr.osabi]
-   local endian = endians[hdr.endian]
+   local endian = hdr.endian
 
    if system == "sysv" then
       local abitag = sections[".note.ABI-tag"]
       if abitag then
-         if abitag.namedata == "GNU" and abitag.type == 1 and
-            abitag.descdata:sub(0, 4) == "\0\0\0\0" then
+         if abitag.namedata == "GNU" and abitag.type == 1
+           and abitag.descdata:sub(0, 4) == "\0\0\0\0" then
             return "linux"
          end
-      elseif sections[".SUNW_version"] or
-         sections[".SUNW_signature"] then
+      elseif sections[".SUNW_version"]
+        or sections[".SUNW_signature"] then
          return "solaris"
       elseif sections[".note.netbsd.ident"] then
          return "netbsd"
       elseif sections[".note.openbsd.ident"] then
          return "openbsd"
       elseif sections[".note.tag"] and
-         sections[".note.tag"].namedata == "DragonFly" then
+             sections[".note.tag"].namedata == "DragonFly" then
          return "dragonfly"
       end
 
@@ -256,7 +166,7 @@ local function detect_elf_system(fd, hdr, sections)
          local idx = 0
          for _ = 0, gnu_version_r.sh_info - 1 do
             fd:seek("set", gnu_version_r.sh_offset + idx)
-            assert(read(fd, 2, endian))
+            assert(read(fd, 2, endian)) -- vn_version
             local vn_cnt = read(fd, 2, endian)
             local vn_file = read(fd, 4, endian)
             local vn_next = read(fd, 2, endian)
@@ -301,12 +211,12 @@ local function read_elf_header(fd)
       return nil
    end
 
-   local endian = endians[hdr.endian]
+   local endian = hdr.endian
    fd:seek("set", 0x10)
    hdr.e_type = read(fd, 2, endian)
    local machine = read(fd, 2, endian)
    local processor = e_machines[machine] or "unknown"
-   if endian == "little" and processor == "ppc64" then
+   if endian == 1 and processor == "ppc64" then
       processor = "ppc64le"
    end
 
@@ -342,9 +252,9 @@ local function detect_elf(fd)
    return system, processor
 end
 
-
-
-
+--------------------------------------------------------------------------------
+-- @section Mach Objects (Apple)
+--------------------------------------------------------------------------------
 
 local mach_l64 = {
    [7] = "x86_64",
@@ -370,7 +280,7 @@ local function detect_mach(magic, fd)
    end
 
    if magic == hex("$CA$FE$BA$BE") then
-
+      -- fat binary, go for the first one
       fd:seek("set", 0x12)
       local offs = read_int8(fd)
       if not offs then
@@ -394,32 +304,32 @@ local function detect_mach(magic, fd)
    end
 end
 
-
-
-
+--------------------------------------------------------------------------------
+-- @section PE (Windows)
+--------------------------------------------------------------------------------
 
 local pe_machine = {
-   [0x8664] = "x86_64",
-   [0x01c0] = "arm",
-   [0x01c4] = "armv7l",
-   [0xaa64] = "arm64",
-   [0x014c] = "x86",
+    [0x8664] = "x86_64",
+    [0x01c0] = "arm",
+    [0x01c4] = "armv7l",
+    [0xaa64] = "arm64",
+    [0x014c] = "x86",
 }
 
 local function detect_pe(fd)
-   fd:seek("set", 60)
-   local peoffset = read_int32le(fd)
+   fd:seek("set", 60)                 -- position of PE header position
+   local peoffset = read_int32le(fd)  -- read position of PE header
    if not peoffset then
       return nil
    end
    local system = "windows"
-   fd:seek("set", peoffset + 4)
-   local machine = read(fd, 2, "little")
+   fd:seek("set", peoffset + 4)       -- move to position of Machine section
+   local machine = read(fd, 2, LITTLE)
    local processor = pe_machine[machine]
 
-   local rdata_pos_s = fd:read(736):match(".rdata%z%z............(....)")
-   if rdata_pos_s then
-      local rdata_pos = bytes2number(rdata_pos_s, "little")
+   local rdata_pos = fd:read(736):match(".rdata%z%z............(....)")
+   if rdata_pos then
+      rdata_pos = bytes2number(rdata_pos, LITTLE)
       fd:seek("set", rdata_pos)
       local data = fd:read(512)
       if data:match("cygwin") or data:match("cyggcc") then
@@ -430,9 +340,9 @@ local function detect_pe(fd)
    return system, processor or "unknown"
 end
 
-
-
-
+--------------------------------------------------------------------------------
+-- @section API
+--------------------------------------------------------------------------------
 
 function sysdetect.detect_file(file)
    assert(type(file) == "string")
@@ -454,7 +364,7 @@ local cache_system
 local cache_processor
 
 function sysdetect.detect(input_file)
-   local dirsep = package.config:sub(1, 1)
+   local dirsep = package.config:sub(1,1)
    local files
 
    if input_file then
@@ -467,18 +377,18 @@ function sysdetect.detect(input_file)
       local PATHsep
       local interp = arg and arg[-1]
       if dirsep == "/" then
-
+         -- Unix
          files = {
-            "/bin/sh",
-            "/proc/self/exe",
+            "/bin/sh", -- Unix: well-known POSIX path
+            "/proc/self/exe", -- Linux: this should always have a working binary
          }
          PATHsep = ":"
       else
-
+         -- Windows
          local systemroot = os.getenv("SystemRoot")
          files = {
-            systemroot .. "\\system32\\notepad.exe",
-            systemroot .. "\\explorer.exe",
+            systemroot .. "\\system32\\notepad.exe", -- well-known Windows path
+            systemroot .. "\\explorer.exe", -- well-known Windows path
          }
          if interp and not interp:lower():match("exe$") then
             interp = interp .. ".exe"
@@ -487,10 +397,10 @@ function sysdetect.detect(input_file)
       end
       if interp then
          if interp:match(dirsep) then
-
+            -- interpreter path is absolute
             table.insert(files, 1, interp)
          else
-            for d in (os.getenv("PATH") or ""):gmatch("[^" .. PATHsep .. "]+") do
+            for d in (os.getenv("PATH") or ""):gmatch("[^"..PATHsep.."]+") do
                table.insert(files, d .. dirsep .. interp)
             end
          end
