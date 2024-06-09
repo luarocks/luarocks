@@ -62,7 +62,6 @@ local type Config = record --!
    os_getenv: any
    rocks_trees: any
    rocks_servers: any
-   check_certificates: any
    dump_env: function()
 end
 
@@ -219,8 +218,8 @@ local function make_defaults(lua_version: string, target_cpu: string, platforms:
       link_lua_explicitly = false,
 
       external_deps_dirs = {}, --?
-      external_deps_patterns: {string} = {}, --?
-      runtime_external_deps_patterns: {string} = {}, --?
+      external_deps_patterns = {}, --?
+      runtime_external_deps_patterns = {}, --?
 
       export_path_separator = "", --?
       wrapper_suffix = "", --?
@@ -245,8 +244,8 @@ local function make_defaults(lua_version: string, target_cpu: string, platforms:
       connection_timeout = 30,  -- 0 = no timeout
 
       makefile = "", --?
-      local_cache = "", --? "" | {""}
-      web_browser = "", --? "" | {""}
+      local_cache = "" , --?
+      web_browser = "", --?
       cmake_generator = "", --?
       gcc_rpath = false, --?
 
@@ -306,8 +305,6 @@ local function make_defaults(lua_version: string, target_cpu: string, platforms:
          LDFLAGS = "", --?
          LIBFLAG = "", --?
          TEST = "", --?
-         LIB_EXTENSION = "", --?
-         OBJ_EXTENSION = "", --?
       },
 
       external_deps_subdirs = {
@@ -588,7 +585,7 @@ local function make_defaults(lua_version: string, target_cpu: string, platforms:
    return defaults
 end
 
-local function use_defaults(cfg: Config, defaults: Config) --!
+local function use_defaults(cfg, defaults)
 
    -- Populate variables with values from their 'defaults' counterparts
    -- if they were not already set by user.
@@ -626,7 +623,7 @@ local cfg = {}
 --   when using per-project environments, as created with `luarocks init`)
 -- @param warning a logging function for warnings that takes a string
 -- @return true on success; nil and an error message on failure.
-function cfg.init(detected: {any: any}, warning: function(string)): nil, string, string --!
+function cfg.init(detected, warning)
    detected = detected or {}
 
    local exit_ok = true
@@ -733,22 +730,22 @@ function cfg.init(detected: {any: any}, warning: function(string)): nil, string,
    -- Let's load the config files.
    ----------------------------------------
 
-   local sys_config_file: string --?
-   local home_config_file: string
-   local project_config_file: string
+   local sys_config_file
+   local home_config_file
+   local project_config_file
 
    local config_file_name = "config-"..cfg.lua_version..".lua"
 
    do
       local sysconfdir = os.getenv("LUAROCKS_SYSCONFDIR") or hardcoded.SYSCONFDIR
       if platforms.windows and not platforms.msys2_mingw_w64 then
-         cfg.home = os.getenv("APPDATA") or "c:" --!
-         cfg.home_tree = dir.path(cfg.home, "luarocks") --!
-         cfg.sysconfdir = sysconfdir or dir.path((os.getenv("PROGRAMFILES") or "c:"), "luarocks") --!
+         cfg.home = os.getenv("APPDATA") or "c:"
+         cfg.home_tree = dir.path(cfg.home, "luarocks")
+         cfg.sysconfdir = sysconfdir or dir.path((os.getenv("PROGRAMFILES") or "c:"), "luarocks")
       else
-         cfg.home = os.getenv("HOME") or "" --!
-         cfg.home_tree = dir.path(cfg.home, ".luarocks") --!
-         cfg.sysconfdir = sysconfdir or detect_sysconfdir() or "/etc/luarocks" --!
+         cfg.home = os.getenv("HOME") or ""
+         cfg.home_tree = dir.path(cfg.home, ".luarocks")
+         cfg.sysconfdir = sysconfdir or detect_sysconfdir() or "/etc/luarocks"
       end
    end
 
@@ -760,8 +757,8 @@ function cfg.init(detected: {any: any}, warning: function(string)): nil, string,
    end
 
    -- Load user configuration file (if allowed)
-   local home_config_ok: boolean
-   local project_config_ok: boolean
+   local home_config_ok
+   local project_config_ok
    if not hardcoded.FORCE_CONFIG then
       local env_var   = "LUAROCKS_CONFIG_" .. cfg.lua_version:gsub("%.", "_")
       local env_value = os.getenv(env_var)
@@ -898,8 +895,8 @@ function cfg.init(detected: {any: any}, warning: function(string)): nil, string,
    ----------------------------------------
 
    do
-      local function make_paths_from_tree(tree: {any: string}): string, string, string
-         local lua_path, lib_path, bin_path: string, string, string
+      local function make_paths_from_tree(tree)
+         local lua_path, lib_path, bin_path
          if type(tree) == "string" then
             lua_path = dir.path(tree, cfg.lua_modules_path)
             lib_path = dir.path(tree, cfg.lib_modules_path)
@@ -940,15 +937,15 @@ function cfg.init(detected: {any: any}, warning: function(string)): nil, string,
    --- Check if platform was detected
    -- @param name string: The platform name to check.
    -- @return boolean: true if LuaRocks is currently running on queried platform.
-   function cfg.is_platform(name: string): boolean
+   function cfg.is_platform(name)
       assert(type(name) == "string")
       return platforms[name]
    end
 
    -- @param direction (optional) "least-specific-first" (default) or "most-specific-first"
-   function cfg.each_platform(direction: string): function(): string
+   function cfg.each_platform(direction)
       direction = direction or "least-specific-first"
-      local i, delta: integer, integer
+      local i, delta
       if direction == "least-specific-first" then
          i = 0
          delta = 1
@@ -957,7 +954,7 @@ function cfg.init(detected: {any: any}, warning: function(string)): nil, string,
          delta = -1
       end
       return function()
-         local p: string
+         local p
          repeat
             i = i + delta
             p = platform_order[i]
@@ -966,7 +963,7 @@ function cfg.init(detected: {any: any}, warning: function(string)): nil, string,
       end
    end
 
-   function cfg.print_platforms(): string
+   function cfg.print_platforms()
       local platform_keys = {}
       for k,_ in pairs(platforms) do
          table.insert(platform_keys, k)
