@@ -1,5 +1,16 @@
 
-local util = {}
+local record util
+   popen_read: function(cmd: string, spec: string): string --? util.popen_read
+   show_table: function(t: {any:any}, tname: string, top_indent: string): string 
+   deep_merge: function(dst: {integer: any}, src: {integer: any})
+   deep_merge_under: function(dst: {integer: any}, src: {integer: any})
+   cleanup_path: function(list: string, sep: string, lua_version: string, keep_first: boolean): string 
+   split_string: function(str: string, delim: string, maxNb: number): {string} 
+   keys: function(tbl: {any:any}): {any} 
+   printerr: function(...: string | number)
+   warning: function(msg: string)
+   sortedpairs: function(tbl: {any: any}, sort_function: function<any>(any, any): boolean | {any:any} | nil): function 
+end
 
 local require = nil --!
 --------------------------------------------------------------------------------

@@ -1,5 +1,11 @@
+-- local dir = {} --!
 
-local dir = {} --!
+local record dir
+   unquote: function(c: string): string --! dir.unquote
+   path: function(...: string): string
+   split_url: function(url: string): string, string
+   normalize: function(name: string): string
+end
 
 local require = nil --!
 --------------------------------------------------------------------------------
