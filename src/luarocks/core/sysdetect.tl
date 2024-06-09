@@ -46,12 +46,26 @@ local record sysdetect
       "cygwin"
       "macosx"
    end
+
+   hex: function(s: string): string --?
+   read_int8: function(fd: FILE): integer
+   bytes2number: function(s: string, endian: Endian): integer
+   read: function(fd: FILE, bytes: integer, endian: Endian): integer
+   read_int32le: function(fd: FILE): integer
+   read_elf_section_headers: function(fd: FILE, hdr: ElfHeader): {string: ElfSection}
+   detect_elf_system: function(fd: FILE, hdr: ElfHeader, sections: {string:ElfSection}): System
+   read_elf_header: function(fd: FILE): ElfHeader, Processor
+   detect_elf: function(fd: FILE): System, Processor
+   detect_mach: function(magic: string, fd: FILE): System, Processor
+   detect_pe: function(fd: FILE): System, Processor
+   detect_file: function(file: string): System, Processor --? systemdetect.detect_file?
+   detect: function(input_file: string): System, Processor
 end
 
 local type System = sysdetect.System --? ?
 local type Processor = sysdetect.Processor --? ?
 
-local enum Endian
+local enum Endian --? in the registry and a line for type ?
    "little"
    "big"
 end

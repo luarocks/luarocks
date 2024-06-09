@@ -1,5 +1,8 @@
 
-local persist = {}
+local record persist
+   run_file: function(filename: string, env: {string:any}): boolean, any | nil, string, string
+   load_into_table: function(filename: string, tbl: {string:any}) : table, table | nil, string, string
+end
 
 local require = nil --!
 --------------------------------------------------------------------------------

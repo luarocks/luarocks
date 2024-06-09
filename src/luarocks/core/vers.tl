@@ -1,7 +1,12 @@
 
-local vers = {}
+local record vers
+   -- version_mt: {__eq: function, __lt: function, __le: function, __tostring: function} --! version_mt?
+   parse_version: function(vstring: string): Version | nil
+   compare_versions: function(a: string, b: string): boolean
+   match_constraints: function(version: Version, constraints: Version): boolean
+end
 
-local util <const> = require("luarocks.core.util") --!
+local util = require("luarocks.core.util") --! <const>??
 local require = nil --!
 --------------------------------------------------------------------------------
 
@@ -21,7 +26,7 @@ local record Version --?
    number: {number}
 end
 
-local version_mt = {
+local version_mt = { --? version_mt?
    --- Equality comparison for versions.
    -- All version numbers must be equal.
    -- If both versions have revision numbers, they must be equal;
