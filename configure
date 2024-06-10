@@ -438,6 +438,8 @@ check_incdir() {
    do
       if [ -f "$lua_h" ]
       then
+         lua_minor=$(echo "$LUA_VERSION" | cut -b 3-)
+         grep "LUA_VERSION_MINOR_N.*$lua_minor" "$lua_h" > /dev/null 2> /dev/null && return
          grep "LUA_VERSION_NUM.*$LUA_VERSION" "$lua_h" > /dev/null 2> /dev/null && return
       fi
       tried="$tried $lua_h"

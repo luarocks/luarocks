@@ -703,6 +703,9 @@ local function lua_h_exists(d, luaver)
       if data:match("LUA_VERSION_NUM%s*" .. tostring(luanum)) then
          return d
       end
+      if data:match("LUA_VERSION_MINOR_N%s*" .. tostring(minor)) then
+         return d
+      end
       return nil, "Lua header lua.h found at " .. d .. " does not match Lua version " .. luaver .. ". You can use `luarocks config variables.LUA_INCDIR <path>` to set the correct location.", "dependency", 2
    end
 
