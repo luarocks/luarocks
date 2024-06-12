@@ -1,10 +1,7 @@
 
 local record persist
-   run_file: function(filename: string, env: {string:any}): boolean, any | nil, string, string
-   load_into_table: function(filename: string, tbl: {string:any}) : table, table | nil, string, string
 end
 
-local require = nil --!
 --------------------------------------------------------------------------------
 
 --- Load and run a Lua file in an environment.
@@ -13,7 +10,7 @@ local require = nil --!
 -- @return (true, any) or (nil, string, string): true and the return value
 -- of the file, or nil, an error message and an error code ("open", "load"
 -- or "run") in case of errors.
-function persist.run_file(filename: string, env: {string:any}): boolean, any | nil, string, string
+function persist.run_file(filename: string, env: {string:any}): boolean, any | string, string
    local fd, open_err: FILE, any = io.open(filename)
    if not fd then
       return nil, open_err, "open"
@@ -25,23 +22,15 @@ function persist.run_file(filename: string, env: {string:any}): boolean, any | n
    end
    str = str:gsub("^#![^\n]*\n", "")
    local chunk, ran, err: function(any):(any), boolean, any
-   if _VERSION == "Lua 5.1" then -- Lua 5.1
-      chunk, err = loadstring(str, filename) --!
-      if chunk then
-         setfenv(chunk, env) --!
-         ran, err = pcall(chunk)
-      end
-   else -- Lua 5.2
-      chunk, err = load(str, filename, "t", env)
-      if chunk then
-         ran, err = pcall(chunk)
-      end
+   chunk, err = load(str, filename, "t", env)
+   if chunk then
+      ran, err = pcall(chunk)
    end
    if not chunk then
-      return nil, "Error loading file: "..tostring(err), "load" --? tostring
+      return nil, "Error loading file: "..tostring(err), "load"
    end
    if not ran then
-      return nil, "Error running file: "..tostring(err), "run" --? tostring
+      return nil, "Error running file: "..tostring(err), "run"
    end
    return true, err
 end
@@ -56,12 +45,10 @@ end
 -- or nil, an error message and an error code ("open"; couldn't open the file,
 -- "load"; compile-time error, or "run"; run-time error)
 -- in case of errors.
-function persist.load_into_table(filename: string, tbl: {string:any}) : table, table | nil, string, string
-   assert(type(filename) == "string") --? needed
-   assert(type(tbl) == "table" or not tbl) --? needed
+function persist.load_into_table(filename: string, tbl: {string:any}) : table, table | string, string
 
    local result: {string:any} = tbl or {}
-   local globals: table = {} --? {string:boolean}
+   local globals = {}
    local globals_mt = {
       __index = function(_, k: string)
          globals[k] = true
@@ -70,12 +57,12 @@ function persist.load_into_table(filename: string, tbl: {string:any}) : table, t
    local save_mt = getmetatable(result)
    setmetatable(result, globals_mt)
 
-   local ok, err, errcode = persist.run_file(filename, result) --? boolean, string, string
+   local ok, err, errcode = persist.run_file(filename, result)
 
    setmetatable(result, save_mt)
 
    if not ok then
-      return nil, err, errcode --! table | nil????
+      return nil, tostring(err), errcode 
    end
    return result, globals
 end
