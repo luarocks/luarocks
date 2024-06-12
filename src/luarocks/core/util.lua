@@ -1,7 +1,7 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local debug = _tl_compat and _tl_compat.debug or debug; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local os = _tl_compat and _tl_compat.os or os; local package = _tl_compat and _tl_compat.package or package; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local debug = _tl_compat and _tl_compat.debug or debug; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local os = _tl_compat and _tl_compat.os or os; local package = _tl_compat and _tl_compat.package or package; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
 local util = {}
 
-local require = nil
+
 
 
 local dir_sep = package.config:sub(1, 1)
@@ -80,7 +80,7 @@ function util.show_table(t, tname, top_indent)
 
       cart = cart .. indent .. field
 
-      if type(value) ~= "table" then
+      if not (type(value) == "table") then
          cart = cart .. " = " .. basic_serialize(value) .. ";\n"
       else
          if saved[value] then
@@ -156,6 +156,34 @@ end
 
 
 
+function util.split_string(str, delim, maxNb)
+
+   if string.find(str, delim) == nil then
+      return { str }
+   end
+   if maxNb == nil or maxNb < 1 then
+      maxNb = 0
+   end
+   local result = {}
+   local pat = "(.-)" .. delim .. "()"
+   local nb = 0
+   local lastPos
+   for part, pos in string.gmatch(str, pat) do
+      nb = nb + 1
+      result[nb] = part
+      lastPos = tonumber(pos)
+      if nb == maxNb then break end
+   end
+
+   if nb ~= maxNb then
+      result[nb + 1] = string.sub(str, lastPos)
+   end
+   return result
+end
+
+
+
+
 
 
 
@@ -164,8 +192,6 @@ end
 
 
 function util.cleanup_path(list, sep, lua_version, keep_first)
-   assert(type(list) == "string")
-   assert(type(sep) == "string")
 
    list = list:gsub(dir_sep, "/")
 
@@ -196,33 +222,6 @@ function util.cleanup_path(list, sep, lua_version, keep_first)
    end
 
    return (table.concat(final, sep):gsub("/", dir_sep))
-end
-
-
-
-function util.split_string(str, delim, maxNb)
-
-   if string.find(str, delim) == nil then
-      return { str }
-   end
-   if maxNb == nil or maxNb < 1 then
-      maxNb = 0
-   end
-   local result = {}
-   local pat = "(.-)" .. delim .. "()"
-   local nb = 0
-   local lastPos
-   for part, pos in string.gmatch(str, pat) do
-      nb = nb + 1
-      result[nb] = part
-      lastPos = pos
-      if nb == maxNb then break end
-   end
-
-   if nb ~= maxNb then
-      result[nb + 1] = string.sub(str, lastPos)
-   end
-   return result
 end
 
 
@@ -278,7 +277,7 @@ function util.sortedpairs(tbl, sort_function)
    local keys = util.keys(tbl)
    local sub_orders = {}
 
-   if type(sort_function) == "function" then
+   if (type(sort_function) == "function") and (type(sort_function) == "function") then
       table.sort(keys, sort_function)
    else
       local order = sort_function

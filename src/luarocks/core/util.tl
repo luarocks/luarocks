@@ -1,18 +1,7 @@
 
 local record util
-   popen_read: function(cmd: string, spec: string): string --? util.popen_read
-   show_table: function(t: {any:any}, tname: string, top_indent: string): string 
-   deep_merge: function(dst: {integer: any}, src: {integer: any})
-   deep_merge_under: function(dst: {integer: any}, src: {integer: any})
-   cleanup_path: function(list: string, sep: string, lua_version: string, keep_first: boolean): string 
-   split_string: function(str: string, delim: string, maxNb: number): {string} 
-   keys: function(tbl: {any:any}): {any} 
-   printerr: function(...: string | number)
-   warning: function(msg: string)
-   sortedpairs: function(tbl: {any: any}, sort_function: function<any>(any, any): boolean | {any:any} | nil): function 
 end
 
-local require = nil --!
 --------------------------------------------------------------------------------
 
 local dir_sep = package.config:sub(1, 1)
@@ -84,14 +73,14 @@ function util.show_table(t: {any:any}, tname: string, top_indent: string): strin
       end
    end
 
-   local function add_to_cart (value: {any:any}, name: string, indent: string, saved: {any: string}, field: string) --? <A,B> value: {A:B}
+   local function add_to_cart (value: any | {any:any}, name: string, indent: string, saved: {any: string}, field: string)
       indent = indent or ""
       saved = saved or {}
       field = field or name
 
       cart = cart .. indent .. field
 
-      if type(value) ~= "table" then --? 1
+      if not value is {any: any} then
          cart = cart .. " = " .. basic_serialize(value) .. ";\n"
       else
          if saved[value] then
@@ -99,7 +88,7 @@ function util.show_table(t: {any:any}, tname: string, top_indent: string): strin
             autoref = autoref ..  name .. " = " .. saved[value] .. ";\n"
          else
             saved[value] = name
-            if is_empty_table(value) then --? 1
+            if is_empty_table(value) then
                cart = cart .. " = {};\n"
             else
                cart = cart .. " = {\n"
@@ -108,7 +97,7 @@ function util.show_table(t: {any:any}, tname: string, top_indent: string): strin
                   local fname = ("%s[%s]"):format(name, k)
                   field = ("[%s]"):format(k)
                   -- three spaces between levels
-                  add_to_cart(v, fname, indent .. "   ", saved, field) --!
+                  add_to_cart(v, fname, indent .. "   ", saved, field)
                end
                cart = cart .. indent .. "};\n"
             end
@@ -129,14 +118,14 @@ end
 -- (i.e. if an key from src already exists in dst, replace it).
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.
-function util.deep_merge(dst: {integer: any}, src: {integer: any}) --? {integer: {any:any}}, {integer: {any:any}}
+function util.deep_merge(dst: {any: any}, src: {any: any})
    for k, v in pairs(src) do
-      if type(v) == "table" then
+      if v is table then
          if dst[k] == nil then
             dst[k] = {}
          end
-         if type(dst[k]) == "table" then
-            util.deep_merge(dst[k], v) --!
+         if dst[k] is {any: any} then --! "is" unavailable for table
+            util.deep_merge(dst[k], v)
          else
             dst[k] = v
          end
@@ -150,63 +139,19 @@ end
 -- (i.e. if an key from src already exists in dst, do not replace it).
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.
-function util.deep_merge_under(dst: {integer: any}, src: {integer: any}) --? {integer: {any:any}}, {integer: {any:any}}
+function util.deep_merge_under(dst: {any: any}, src: {any: any})
    for k, v in pairs(src) do
       if type(v) == "table" then
          if dst[k] == nil then
             dst[k] = {}
          end
-         if type(dst[k]) == "table" then
+         if dst[k] is {any: any} then --! "is" unavailable for table
             util.deep_merge_under(dst[k], v)
          end
       elseif dst[k] == nil then
          dst[k] = v
       end
    end
-end
-
---- Clean up a path-style string ($PATH, $LUA_PATH/package.path, etc.),
--- removing repeated entries and making sure only the relevant
--- Lua version is used.
--- Example: given ("a;b;c;a;b;d", ";"), returns "a;b;c;d".
--- @param list string: A path string (from $PATH or package.path)
--- @param sep string: The separator
--- @param lua_version (optional) string: The Lua version to use.
--- @param keep_first (optional) if true, keep first occurrence in case
--- of duplicates; otherwise keep last occurrence. The default is false.
-function util.cleanup_path(list: string, sep: string, lua_version: string, keep_first: boolean): string
-   assert(type(list) == "string") --?
-   assert(type(sep) == "string") --?
-
-   list = list:gsub(dir_sep, "/")
-
-   local parts = util.split_string(list, sep) --!
-   local final, entries = {}, {}
-   local start, stop, step: number, number, number
-
-   if keep_first then
-      start, stop, step = 1, #parts, 1
-   else
-      start, stop, step = #parts, 1, -1
-   end
-
-   for i = start, stop, step do
-      local part = parts[i]:gsub("//", "/")
-      if lua_version then
-         part = part:gsub("/lua/([%d.]+)/", function(part_version)
-            if part_version:sub(1, #lua_version) ~= lua_version then --!
-               return "/lua/"..lua_version.."/" --!
-            end
-         end)
-      end
-      if not entries[part] then
-         local at = keep_first and #final+1 or 1
-         table.insert(final, at, part)
-         entries[part] = true
-      end
-   end
-
-   return (table.concat(final, sep):gsub("/", dir_sep)) --!
 end
 
 -- from http://lua-users.org/wiki/SplitJoin
@@ -222,11 +167,11 @@ function util.split_string(str: string, delim: string, maxNb: number): {string}
    local result = {}
    local pat = "(.-)" .. delim .. "()"
    local nb = 0
-   local lastPos: any
-   for part, pos in string.gmatch(str, pat) do --! pos: number or string
+   local lastPos: number
+   for part, pos in string.gmatch(str, pat) do
       nb = nb + 1
       result[nb] = part
-      lastPos = pos --! number or string
+      lastPos = tonumber(pos)
       if nb == maxNb then break end
    end
    -- Handle the last field
@@ -234,6 +179,49 @@ function util.split_string(str: string, delim: string, maxNb: number): {string}
       result[nb + 1] = string.sub(str, lastPos)
    end
    return result
+end
+
+
+--- Clean up a path-style string ($PATH, $LUA_PATH/package.path, etc.),
+-- removing repeated entries and making sure only the relevant
+-- Lua version is used.
+-- Example: given ("a;b;c;a;b;d", ";"), returns "a;b;c;d".
+-- @param list string: A path string (from $PATH or package.path)
+-- @param sep string: The separator
+-- @param lua_version (optional) string: The Lua version to use.
+-- @param keep_first (optional) if true, keep first occurrence in case
+-- of duplicates; otherwise keep last occurrence. The default is false.
+function util.cleanup_path(list: string, sep: string, lua_version: string, keep_first: boolean): string
+
+   list = list:gsub(dir_sep, "/")
+
+   local parts = util.split_string(list, sep)
+   local final, entries = {}, {}
+   local start, stop, step: integer, integer, integer
+
+   if keep_first then
+      start, stop, step = 1, #parts, 1
+   else
+      start, stop, step = #parts, 1, -1
+   end
+
+   for i = start, stop, step do
+      local part = parts[i]:gsub("//", "/")
+      if lua_version then
+         part = part:gsub("/lua/([%d.]+)/", function(part_version: string): string
+            if part_version:sub(1, #lua_version) ~= lua_version then
+               return "/lua/"..lua_version.."/"
+            end
+         end)
+      end
+      if not entries[part] then
+         local at = keep_first and #final+1 or 1
+         table.insert(final, at, part)
+         entries[part] = true
+      end
+   end
+
+   return (table.concat(final, sep):gsub("/", dir_sep))
 end
 
 --- Return an array of keys of a table.
@@ -284,24 +272,24 @@ end
 -- for that key, which is returned by the iterator as the third value after the key
 -- and the value.
 -- @return function: the iterator function.
-function util.sortedpairs(tbl: {any: any}, sort_function: function<any>(any, any): boolean | {any:any} | nil): function --? function<A>(A, A): boolean | {any:integer} | nil
+function util.sortedpairs(tbl: {any: any}, sort_function: function | {any} | nil): function(): any, any, any --! (function(any, any): boolean) | {any} | nil NOT function(any, any): (boolean | {any:any} | nil)
    sort_function = sort_function or default_sort
    local keys = util.keys(tbl)
    local sub_orders = {}
 
-   if type(sort_function) == "function" then
-      table.sort(keys, sort_function) --!
+   if (sort_function is function ) and (sort_function is function():boolean) then --? How to enforce boolean output?
+      table.sort(keys, sort_function)
    else
       local order = sort_function
       local ordered_keys = {}
       local all_keys = keys
       keys = {}
 
-      for _, order_entry in ipairs(order) do --!
-         local key, sub_order: any, any --!
-         if type(order_entry) == "table" then
-            key = order_entry[1] --!
-            sub_order = order_entry[2] --!
+      for _, order_entry in ipairs(order) do
+         local key, sub_order: any, any
+         if order_entry is {any: any} then
+            key = order_entry[1]
+            sub_order = order_entry[2]
          else
             key = order_entry
          end
@@ -322,10 +310,10 @@ function util.sortedpairs(tbl: {any: any}, sort_function: function<any>(any, any
    end
 
    local i = 1
-   return function()
+   return function(): any, any, any
       local key = keys[i]
       i = i + 1
-      return key, tbl[key], sub_orders[key] --!
+      return key, tbl[key], sub_orders[key]
    end
 end
 

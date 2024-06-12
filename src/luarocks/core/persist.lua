@@ -1,5 +1,7 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local load = _tl_compat and _tl_compat.load or load; local pcall = _tl_compat and _tl_compat.pcall or pcall; local string = _tl_compat and _tl_compat.string or string
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local io = _tl_compat and _tl_compat.io or io; local load = _tl_compat and _tl_compat.load or load; local pcall = _tl_compat and _tl_compat.pcall or pcall; local string = _tl_compat and _tl_compat.string or string
 local persist = {}
+
+
 
 
 
@@ -20,17 +22,9 @@ function persist.run_file(filename, env)
    end
    str = str:gsub("^#![^\n]*\n", "")
    local chunk, ran, err
-   if _VERSION == "Lua 5.1" then
-      chunk, err = loadstring(str, filename)
-      if chunk then
-         setfenv(chunk, env)
-         ran, err = pcall(chunk)
-      end
-   else
-      chunk, err = load(str, filename, "t", env)
-      if chunk then
-         ran, err = pcall(chunk)
-      end
+   chunk, err = load(str, filename, "t", env)
+   if chunk then
+      ran, err = pcall(chunk)
    end
    if not chunk then
       return nil, "Error loading file: " .. tostring(err), "load"
@@ -52,8 +46,6 @@ end
 
 
 function persist.load_into_table(filename, tbl)
-   assert(type(filename) == "string")
-   assert(type(tbl) == "table" or not tbl)
 
    local result = tbl or {}
    local globals = {}
@@ -70,7 +62,7 @@ function persist.load_into_table(filename, tbl)
    setmetatable(result, save_mt)
 
    if not ok then
-      return nil, err, errcode
+      return nil, tostring(err), errcode
    end
    return result, globals
 end
