@@ -3,17 +3,8 @@ local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 th
 local path = {}
 
 
-
-
-
-
-
-
-
-
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.core.dir")
-local require = nil
 
 local dir_sep = package.config:sub(1, 1)
 
@@ -25,8 +16,7 @@ function path.rocks_dir(tree)
    if type(tree) == "string" then
       return dir.path(tree, cfg.rocks_subdir)
    end
-   assert(type(tree) == "table")
-   return tree.rocks_dir or dir.path(tree.root, cfg.rocks_subdir)
+   return tostring(tree.rocks_dir) or dir.path(tree.root, cfg.rocks_subdir)
 end
 
 
@@ -36,9 +26,7 @@ end
 
 
 function path.versioned_name(file, prefix, name, version)
-   assert(type(file) == "string")
-   assert(type(name) == "string" and not name:match(dir_sep))
-   assert(type(version) == "string")
+   assert(name:match(dir_sep))
 
    local rest = file:sub(#prefix + 1):gsub("^" .. dir_sep .. "*", "")
    local name_version = (name .. "_" .. version):gsub("%-", "_"):gsub("%.", "_")
@@ -86,7 +74,7 @@ function path.deploy_lua_dir(tree)
       return dir.path(tree, cfg.lua_modules_path)
    else
       assert(type(tree) == "table")
-      return tree.lua_dir or dir.path(tree.root, cfg.lua_modules_path)
+      return tostring(tree.lua_dir) or dir.path(tree.root, cfg.lua_modules_path)
    end
 end
 
@@ -95,7 +83,7 @@ function path.deploy_lib_dir(tree)
       return dir.path(tree, cfg.lib_modules_path)
    else
       assert(type(tree) == "table")
-      return tree.lib_dir or dir.path(tree.root, cfg.lib_modules_path)
+      return tostring(tree.lib_dir) or dir.path(tree.root, cfg.lib_modules_path)
    end
 end
 
@@ -129,8 +117,7 @@ function path.rocks_tree_to_string(tree)
    if type(tree) == "string" then
       return tree
    else
-      assert(type(tree) == "table")
-      return tree.root
+      return tostring(tree.root)
    end
 end
 

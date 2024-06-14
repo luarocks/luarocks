@@ -1,8 +1,8 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string
 local vers = {}
 
+
 local util = require("luarocks.core.util")
-local require = nil
 
 
 local deltas = {
@@ -14,6 +14,7 @@ local deltas = {
    beta = -100000,
    alpha = -1000000,
 }
+
 
 
 
@@ -94,7 +95,6 @@ setmetatable(version_cache, {
 
 function vers.parse_version(vstring)
    if not vstring then return nil end
-   assert(type(vstring) == "string")
 
    local cached = version_cache[vstring]
    if cached then
@@ -164,12 +164,12 @@ end
 
 
 local function partial_match(version_for_parse, requested_for_parce)
-   assert(type(version_for_parse) == "string" or type(version_for_parse) == "table")
-   assert(type(requested_for_parce) == "string" or type(requested_for_parce) == "table")
 
-   if type(version_for_parse) ~= "table" then local version = vers.parse_version(version_for_parse) end
-   if type(requested_for_parce) ~= "table" then local requested = vers.parse_version(requested_for_parce) end
-   if not version or not requested then return false end
+   local version, requested
+
+   if not (type(version_for_parse) == "table") then version = vers.parse_version(version_for_parse) end
+   if not (type(requested_for_parce) == "table") then requested = vers.parse_version(requested_for_parce) end
+   if not (type(version) == "table") or not (type(requested) == "table") then return false end
 
    for i, ri in ipairs(requested) do
       local vi = version[i] or 0
@@ -187,8 +187,6 @@ end
 
 
 function vers.match_constraints(version, constraints)
-   assert(type(version) == "table")
-   assert(type(constraints) == "table")
    local ok = true
    setmetatable(version, version_mt)
    for _, constr in pairs(constraints) do

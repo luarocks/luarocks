@@ -1,13 +1,8 @@
 
 local record vers
-   -- version_mt: {__eq: function, __lt: function, __le: function, __tostring: function} --! version_mt?
-   parse_version: function(vstring: string): Version | nil
-   compare_versions: function(a: string, b: string): boolean
-   match_constraints: function(version: Version, constraints: Version): boolean
 end
 
-local util = require("luarocks.core.util") --! <const>??
-local require = nil --!
+local util = require("luarocks.core.util") --! 
 --------------------------------------------------------------------------------
 
 local deltas = {
@@ -20,13 +15,14 @@ local deltas = {
    alpha = -1000000
 }
 
-local record Version --?
+local record Version
+   {number} -- next version of Teal: "is {number}"
+
    string: string
    revision: number
-   number: {number}
 end
 
-local version_mt = { --? version_mt?
+local version_mt = { --? anything to do here
    --- Equality comparison for versions.
    -- All version numbers must be equal.
    -- If both versions have revision numbers, they must be equal;
@@ -71,7 +67,7 @@ local version_mt = { --? version_mt?
    -- @param v2 table: version table to compare.
    -- @return boolean: true if v1 is considered lower than or equal to v2.
    __le = function(v1: Version, v2: Version): boolean
-       return not (v2 < v1) -- luacheck: ignore
+       return not (v2 < v1) -- luacheck: ignore --!
    end,
    --- Return version as a string.
    -- @param v The version table.
@@ -98,8 +94,7 @@ setmetatable(version_cache, {
 -- @return table or nil: A version table or nil
 -- if the input string contains invalid characters.
 function vers.parse_version(vstring: string): Version | nil
-   if not vstring then return nil end --?
-   assert(type(vstring) == "string") --?
+   if not vstring then return nil end --? needed?
 
    local cached = version_cache[vstring]
    if cached then
@@ -110,7 +105,7 @@ function vers.parse_version(vstring: string): Version | nil
    local i = 1
 
    local function add_token(number: number)
-      version[i] = version[i] and version[i] + number/100000 or number --?
+      version[i] = version[i] and version[i] + number/100000 or number
       i = i + 1
    end
 
@@ -153,7 +148,7 @@ function vers.compare_versions(a: string, b: string): boolean
    if a == b then
       return false
    end
-   return vers.parse_version(a) > vers.parse_version(b)
+   return vers.parse_version(a) > vers.parse_version(b) --!
 end
 
 --- A more lenient check for equivalence between versions.
@@ -169,14 +164,14 @@ end
 -- @return boolean: True if the tested version matches the requested
 -- version, false otherwise.
 local function partial_match(version_for_parse: string | table, requested_for_parce: string | table): boolean
-   assert(type(version_for_parse) == "string" or type(version_for_parse) == "table")
-   assert(type(requested_for_parce) == "string" or type(requested_for_parce) == "table") --! the lines were:    assert(type(version) == "string" or type(version) == "table"); assert(type(requested) == "string" or type(version) == "table")
 
-   if type(version_for_parse) ~= "table" then local version = vers.parse_version(version_for_parse) end --? if type(version) ~= "table" then version = vers.parse_version(version) end
-   if type(requested_for_parce) ~= "table" then local requested = vers.parse_version(requested_for_parce) end --? if type(requested) ~= "table" then requested = vers.parse_version(requested) end
-   if not version or not requested then return false end
+   local version, requested: Version, Version
 
-   for i, ri in ipairs(requested) do --! I am lost here
+   if not version_for_parse is {any: any} then version = vers.parse_version(version_for_parse) end
+   if not requested_for_parce is {any: any} then requested = vers.parse_version(requested_for_parce) end
+   if not version is Version or not requested is Version then return false end --? needed?
+
+   for i, ri in ipairs(requested) do
       local vi = version[i] or 0
       if ri ~= vi then return false end
    end
@@ -191,24 +186,22 @@ end
 -- @param constraints table: An array of constraints in table format.
 -- @return boolean: True if version satisfies all constraints,
 -- false otherwise.
-function vers.match_constraints(version: Version, constraints: Version): boolean
-   assert(type(version) == "table")
-   assert(type(constraints) == "table")
+function vers.match_constraints(version: Version, constraints: {any: {any: Version | string}}): boolean
    local ok = true
    setmetatable(version, version_mt)
    for _, constr in pairs(constraints) do
-      if type(constr.version) == "string" then
+      if constr.version is string then --!
          constr.version = vers.parse_version(constr.version)
       end
-      local constr_version, constr_op = constr.version, constr.op --! op??
+      local constr_version, constr_op = constr.version, constr.op
       setmetatable(constr_version, version_mt)
       if     constr_op == "==" then ok = version == constr_version
       elseif constr_op == "~=" then ok = version ~= constr_version
-      elseif constr_op == ">"  then ok = version >  constr_version
-      elseif constr_op == "<"  then ok = version <  constr_version
-      elseif constr_op == ">=" then ok = version >= constr_version
-      elseif constr_op == "<=" then ok = version <= constr_version
-      elseif constr_op == "~>" then ok = partial_match(version, constr_version)
+      elseif constr_op == ">"  then ok = version >  constr_version --!
+      elseif constr_op == "<"  then ok = version <  constr_version 
+      elseif constr_op == ">=" then ok = version >= constr_version 
+      elseif constr_op == "<=" then ok = version <= constr_version 
+      elseif constr_op == "~>" then ok = partial_match(version, constr_version) --!
       end
       if not ok then break end
    end

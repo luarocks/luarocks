@@ -1,16 +1,8 @@
--- local dir = {} --!
-
 local record dir
-   unquote: function(c: string): string --! dir.unquote
-   path: function(...: string): string
-   split_url: function(url: string): string, string
-   normalize: function(name: string): string
 end
-
-local require = nil --!
 --------------------------------------------------------------------------------
 
-local dir_sep = package.config:sub(1, 1) --!
+local dir_sep = package.config:sub(1, 1)
 
 local function unquote(c: string): string
    local first, last = c:sub(1,1), c:sub(-1)
@@ -38,7 +30,7 @@ function dir.path(...: string): string
    for i, c in ipairs(t) do
       t[i] = unquote(c)
    end
-   return dir.normalize(table.concat(t, "/")) --!
+   return dir.normalize(table.concat(t, "/")) --! normalize(tconcat(t, "/")
 end
 
 --- Split protocol and path from an URL or local pathname.

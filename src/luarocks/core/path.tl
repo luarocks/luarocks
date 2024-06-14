@@ -1,32 +1,22 @@
 
 --- Core LuaRocks-specific path handling functions.
 local record path
-   rocks_dir: function(tree: string | {any: any}): string --? string or table?
-   versioned_name: function(file: string, prefix: string, name: string, version: string): string
-   path_to_module: function(file: string): string
-   deploy_lua_dir: function(tree: string | {any: any}): string --? string or table?
-   deploy_lib_dir: function(tree: string | {any: any}): string --? string or table?
-   which_i: function(file_name: string, name: string, version: string, tree: string, i: number): string
-   rocks_tree_to_string: function(tree: string | {any: any}): string --? string or table?
-   map_trees: function(deps_mode: string, fn: function, ...: string): {any}
 end
 
 local cfg = require("luarocks.core.cfg") --!
 local dir = require("luarocks.core.dir")
-local require = nil --!
 
 local dir_sep = package.config:sub(1, 1)
 --------------------------------------------------------------------------------
 
-function path.rocks_dir(tree: string | {any: any}): string --? string or table?
+function path.rocks_dir(tree: string | {any: any}): string
    if tree == nil then
       tree = cfg.root_dir
    end
-   if type(tree) == "string" then
+   if tree is string then
       return dir.path(tree, cfg.rocks_subdir)
    end
-   assert(type(tree) == "table") --? needed
-   return tree.rocks_dir or dir.path(tree.root, cfg.rocks_subdir) --!
+   return tostring(tree.rocks_dir) or dir.path(tree.root, cfg.rocks_subdir)
 end
 
 --- Produce a versioned version of a filename.
@@ -36,9 +26,7 @@ end
 -- @param version string: Rock version
 -- @return string: a pathname with the same directory parts and a versioned basename.
 function path.versioned_name(file: string, prefix: string, name: string, version: string): string
-   assert(type(file) == "string") --? needed
-   assert(type(name) == "string" and not name:match(dir_sep))
-   assert(type(version) == "string")
+   assert(name:match(dir_sep)) --!
 
    local rest = file:sub(#prefix+1):gsub("^" .. dir_sep .. "*", "")
    local name_version = (name.."_"..version):gsub("%-", "_"):gsub("%.", "_")
@@ -81,21 +69,21 @@ function path.path_to_module(file: string): string
    return name
 end
 
-function path.deploy_lua_dir(tree: string | {any: any}): string --? string or table?
-   if type(tree) == "string" then
+function path.deploy_lua_dir(tree: string | {any: any}): string
+   if tree is string then
       return dir.path(tree, cfg.lua_modules_path)
    else
       assert(type(tree) == "table")
-      return tree.lua_dir or dir.path(tree.root, cfg.lua_modules_path)
+      return tostring(tree.lua_dir) or dir.path(tree.root, cfg.lua_modules_path) --?
    end
 end
 
-function path.deploy_lib_dir(tree: string | {any: any}): string --? string or table?
-   if type(tree) == "string" then
+function path.deploy_lib_dir(tree: string | {any: any}): string
+   if tree is string then
       return dir.path(tree, cfg.lib_modules_path)
    else
       assert(type(tree) == "table")
-      return tree.lib_dir or dir.path(tree.root, cfg.lib_modules_path)
+      return tostring(tree.lib_dir) or dir.path(tree.root, cfg.lib_modules_path)
    end
 end
 
@@ -125,12 +113,11 @@ function path.which_i(file_name: string, name: string, version: string, tree: st
    return file_name
 end
 
-function path.rocks_tree_to_string(tree: string | {any: any}): string --? string or table?
-   if type(tree) == "string" then
+function path.rocks_tree_to_string(tree: string | {any: any}): string
+   if tree is string then
       return tree
    else
-      assert(type(tree) == "table")
-      return tree.root
+      return tostring(tree.root) --?
    end
 end
 
@@ -141,7 +128,7 @@ end
 -- @param fn function: function to be applied, with the tree dir (string) as the first
 -- argument and the remaining varargs of map_trees as the following arguments.
 -- @return a table with all results of invocations of fn collected.
-function path.map_trees(deps_mode: string, fn: function, ...: string): {any} --? ... string
+function path.map_trees(deps_mode: string, fn: function, ...: string): {any}
    local result = {}
    local current = cfg.root_dir or cfg.rocks_trees[1]
    if deps_mode == "one" then
@@ -151,7 +138,7 @@ function path.map_trees(deps_mode: string, fn: function, ...: string): {any} --?
       if deps_mode == "all" then
          use = true
       end
-      for _, tree in ipairs(cfg.rocks_trees or {}) do --!
+      for _, tree in ipairs(cfg.rocks_trees or {}) do --! no mention of rocks_trees in the cfg file
          if dir.normalize(path.rocks_tree_to_string(tree)) == dir.normalize(path.rocks_tree_to_string(current)) then --!
             use = true
          end

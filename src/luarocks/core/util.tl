@@ -6,6 +6,8 @@ end
 
 local dir_sep = package.config:sub(1, 1)
 
+local type CompFn = function(a: any, b: any): boolean
+
 --- Run a process and read a its output.
 -- Equivalent to io.popen(cmd):read("*l"), except that it
 -- closes the fd right away.
@@ -118,13 +120,14 @@ end
 -- (i.e. if an key from src already exists in dst, replace it).
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.
-function util.deep_merge(dst: {any: any}, src: {any: any})
+function util.deep_merge(dst: {any: any}, src: {any: any}) --! {any: any} | {any: {any: any}}
    for k, v in pairs(src) do
-      if v is table then
-         if dst[k] == nil then
+      if v is {any: any} then
+         local dstk: any | {any: any} = dst[k] --?
+         if dstk == nil then
             dst[k] = {}
          end
-         if dst[k] is {any: any} then --! "is" unavailable for table
+         if dstk is {any: any} then --! "is" unavailable for table
             util.deep_merge(dst[k], v)
          else
             dst[k] = v
@@ -139,7 +142,7 @@ end
 -- (i.e. if an key from src already exists in dst, do not replace it).
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.
-function util.deep_merge_under(dst: {any: any}, src: {any: any})
+function util.deep_merge_under(dst: {any: any}, src: {any: any}) --! same as above
    for k, v in pairs(src) do
       if type(v) == "table" then
          if dst[k] == nil then
@@ -272,12 +275,15 @@ end
 -- for that key, which is returned by the iterator as the third value after the key
 -- and the value.
 -- @return function: the iterator function.
-function util.sortedpairs(tbl: {any: any}, sort_function: function | {any} | nil): function(): any, any, any --! (function(any, any): boolean) | {any} | nil NOT function(any, any): (boolean | {any:any} | nil)
-   sort_function = sort_function or default_sort
+function util.sortedpairs(tbl: {any: any}, sort_function: CompFn | {any} | nil): function(): any, any, any
+   -- sort_function = sort_function or default_sort --?
+   if not sort_function then
+      sort_function = default_sort
+   end
    local keys = util.keys(tbl)
    local sub_orders = {}
 
-   if (sort_function is function ) and (sort_function is function():boolean) then --? How to enforce boolean output?
+   if sort_function is CompFn then
       table.sort(keys, sort_function)
    else
       local order = sort_function
