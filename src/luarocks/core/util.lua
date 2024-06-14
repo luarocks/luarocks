@@ -13,6 +13,8 @@ local dir_sep = package.config:sub(1, 1)
 
 
 
+
+
 function util.popen_read(cmd, spec)
    local tmpfile = (dir_sep == "\\") and
    (os.getenv("TMP") .. "/luarocks-" .. tostring(math.floor(math.random() * 10000))) or
@@ -121,10 +123,11 @@ end
 function util.deep_merge(dst, src)
    for k, v in pairs(src) do
       if type(v) == "table" then
-         if dst[k] == nil then
+         local dstk = dst[k]
+         if dstk == nil then
             dst[k] = {}
          end
-         if type(dst[k]) == "table" then
+         if type(dstk) == "table" then
             util.deep_merge(dst[k], v)
          else
             dst[k] = v
@@ -273,11 +276,14 @@ end
 
 
 function util.sortedpairs(tbl, sort_function)
-   sort_function = sort_function or default_sort
+
+   if not sort_function then
+      sort_function = default_sort
+   end
    local keys = util.keys(tbl)
    local sub_orders = {}
 
-   if (type(sort_function) == "function") and (type(sort_function) == "function") then
+   if type(sort_function) == "function" then
       table.sort(keys, sort_function)
    else
       local order = sort_function

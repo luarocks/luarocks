@@ -1,6 +1,7 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local table = _tl_compat and _tl_compat.table or table
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local table = _tl_compat and _tl_compat.table or table
 
 local manif = {}
+
 
 local persist = require("luarocks.core.persist")
 local cfg = require("luarocks.core.cfg")
@@ -8,7 +9,6 @@ local dir = require("luarocks.core.dir")
 local util = require("luarocks.core.util")
 local vers = require("luarocks.core.vers")
 local path = require("luarocks.core.path")
-local require = nil
 
 
 
@@ -43,7 +43,7 @@ end
 
 function manif.manifest_loader(file, repo_url, lua_version)
    local manifest, err, errcode = persist.load_into_table(file)
-   if not manifest then
+   if not (type(manifest) == "table") then
       return nil, "Failed loading manifest for " .. repo_url .. ": " .. err, errcode
    end
    manif.cache_manifest(repo_url, lua_version, manifest)
@@ -56,7 +56,6 @@ end
 
 
 function manif.fast_load_local_manifest(repo_url)
-   assert(type(repo_url) == "string")
 
    local cached_manifest = manif.get_cached_manifest(repo_url)
    if cached_manifest then
