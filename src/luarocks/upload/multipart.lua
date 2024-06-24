@@ -70,7 +70,7 @@ function multipart.encode(params)
       local buffer = { 'Content-Disposition: form-data; name="' .. k .. '"' }
       local content
       if type(v) == "table" and v.__class == File then
-         buffer[1] = buffer[1] .. ('; filename="' .. v.fname:gsub(".*/", "") .. '"')
+         buffer[1] = buffer[1] .. ('; filename="' .. v.fname:gsub(".*[/\\]", "") .. '"')
          table.insert(buffer, "Content-type: " .. v:mime())
          content = v:content()
       else
