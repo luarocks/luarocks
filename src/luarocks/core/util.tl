@@ -6,7 +6,7 @@ end
 
 local dir_sep = package.config:sub(1, 1)
 
-local type CompFn = function(a: any, b: any): boolean
+local type CompFn = function(any, any): boolean
 
 --- Run a process and read a its output.
 -- Equivalent to io.popen(cmd):read("*l"), except that it
@@ -120,15 +120,16 @@ end
 -- (i.e. if an key from src already exists in dst, replace it).
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.
-function util.deep_merge(dst: {any: any}, src: {any: any}) --! {any: any} | {any: {any: any}}
+function util.deep_merge(dst: {any: any}, src: {any: any})
    for k, v in pairs(src) do
       if v is {any: any} then
-         local dstk: any | {any: any} = dst[k] --?
+         local dstk: any | {any: any} = dst[k]
          if dstk == nil then
             dst[k] = {}
+            dstk = dst[k]
          end
-         if dstk is {any: any} then --! "is" unavailable for table
-            util.deep_merge(dst[k], v)
+         if dstk is {any: any} then
+            util.deep_merge(dstk, v)
          else
             dst[k] = v
          end
@@ -142,14 +143,16 @@ end
 -- (i.e. if an key from src already exists in dst, do not replace it).
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.
-function util.deep_merge_under(dst: {any: any}, src: {any: any}) --! same as above
+function util.deep_merge_under(dst: {any: any}, src: {any: any})
    for k, v in pairs(src) do
-      if type(v) == "table" then
-         if dst[k] == nil then
+      if v is {any: any} then
+         local dstk: any | {any: any} = dst[k]
+         if dstk == nil then
             dst[k] = {}
+            dstk = dst[k]
          end
-         if dst[k] is {any: any} then --! "is" unavailable for table
-            util.deep_merge_under(dst[k], v)
+         if dstk is {any: any} then
+            util.deep_merge_under(dstk, v)
          end
       elseif dst[k] == nil then
          dst[k] = v

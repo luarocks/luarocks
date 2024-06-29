@@ -3,7 +3,7 @@
 local record path
 end
 
-local cfg = require("luarocks.core.cfg") --!
+local cfg = require("luarocks.core.cfg") --? cannot index key ... in boolean 'cfg' of type boolean
 local dir = require("luarocks.core.dir")
 
 local dir_sep = package.config:sub(1, 1)
@@ -16,7 +16,7 @@ function path.rocks_dir(tree: string | {any: any}): string
    if tree is string then
       return dir.path(tree, cfg.rocks_subdir)
    end
-   return tostring(tree.rocks_dir) or dir.path(tree.root, cfg.rocks_subdir)
+   return tostring(tree.rocks_dir) or dir.path(tree.root, cfg.rocks_subdir) --? tostring(tree.root)
 end
 
 --- Produce a versioned version of a filename.
@@ -74,7 +74,7 @@ function path.deploy_lua_dir(tree: string | {any: any}): string
       return dir.path(tree, cfg.lua_modules_path)
    else
       assert(type(tree) == "table")
-      return tostring(tree.lua_dir) or dir.path(tree.root, cfg.lua_modules_path) --?
+      return tostring(tree.lua_dir) or dir.path(tree.root, cfg.lua_modules_path) --? tostring(tree.root)
    end
 end
 
@@ -83,7 +83,7 @@ function path.deploy_lib_dir(tree: string | {any: any}): string
       return dir.path(tree, cfg.lib_modules_path)
    else
       assert(type(tree) == "table")
-      return tostring(tree.lib_dir) or dir.path(tree.root, cfg.lib_modules_path)
+      return tostring(tree.lib_dir) or dir.path(tree.root, cfg.lib_modules_path) --? tostring(tree.root)
    end
 end
 
