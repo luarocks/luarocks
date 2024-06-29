@@ -13,26 +13,6 @@ local function unquote(c: string): string
    return c
 end
 
---- Describe a path in a cross-platform way.
--- Use this function to avoid platform-specific directory
--- separators in other modules. Removes trailing slashes from
--- each component given, to avoid repeated separators.
--- Separators inside strings are kept, to handle URLs containing
--- protocols.
--- @param ... strings representing directories
--- @return string: a string with a platform-specific representation
--- of the path.
-function dir.path(...: string): string
-   local t = {...}
-   while t[1] == "" do
-      table.remove(t, 1)
-   end
-   for i, c in ipairs(t) do
-      t[i] = unquote(c)
-   end
-   return dir.normalize(table.concat(t, "/")) --! normalize(tconcat(t, "/")
-end
-
 --- Split protocol and path from an URL or local pathname.
 -- URLs should be in the "protocol://path" format.
 -- For local pathnames, "file" is returned as the protocol.
@@ -90,6 +70,27 @@ function dir.normalize(name: string): string
       pathname = pathname:gsub("/", dir_sep)
    end
    return pathname
+end
+
+
+--- Describe a path in a cross-platform way.
+-- Use this function to avoid platform-specific directory
+-- separators in other modules. Removes trailing slashes from
+-- each component given, to avoid repeated separators.
+-- Separators inside strings are kept, to handle URLs containing
+-- protocols.
+-- @param ... strings representing directories
+-- @return string: a string with a platform-specific representation
+-- of the path.
+function dir.path(...: string): string
+   local t = {...}
+   while t[1] == "" do
+      table.remove(t, 1)
+   end
+   for i, c in ipairs(t) do
+      t[i] = unquote(c)
+   end
+   return dir.normalize(table.concat(t, "/"))
 end
 
 return dir
