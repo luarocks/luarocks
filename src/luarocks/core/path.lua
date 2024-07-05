@@ -28,7 +28,7 @@ end
 
 
 function path.versioned_name(file, prefix, name, version)
-   assert(name:match(dir_sep))
+   assert(not name:match(dir_sep))
 
    local rest = file:sub(#prefix + 1):gsub("^" .. dir_sep .. "*", "")
    local name_version = (name .. "_" .. version):gsub("%-", "_"):gsub("%.", "_")
