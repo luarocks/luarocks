@@ -28,7 +28,7 @@ end
 -- @param version string: Rock version
 -- @return string: a pathname with the same directory parts and a versioned basename.
 function path.versioned_name(file: string, prefix: string, name: string, version: string): string
-   assert(name:match(dir_sep)) --!
+   assert(not name:match(dir_sep)) --!
 
    local rest = file:sub(#prefix+1):gsub("^" .. dir_sep .. "*", "")
    local name_version = (name.."_"..version):gsub("%-", "_"):gsub("%.", "_")
@@ -85,7 +85,7 @@ function path.deploy_lib_dir(tree: string | Tree): string
       return dir.path(tree, cfg.lib_modules_path)
    else
       assert(type(tree) == "table")
-      return tostring(tree.lib_dir) or dir.path(tree.root, cfg.lib_modules_path)
+      return tree.lib_dir or dir.path(tree.root, cfg.lib_modules_path)
    end
 end
 
@@ -119,7 +119,7 @@ function path.rocks_tree_to_string(tree: string | Tree): string
    if tree is string then
       return tree
    else
-      return tostring(tree.root)
+      return tree.root
    end
 end
 

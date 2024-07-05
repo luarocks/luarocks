@@ -3,31 +3,22 @@
 local record manif
 end
 
-local record Command
-   name: string
-   version: string
-end
-
-local record Lua_version
-   major: integer
-   minor: integer
-   string: string
-end
+local persist = require("luarocks.core.persist") --!
+local cfg = require("luarocks.core.cfg")
+local dir = require("luarocks.core.dir")
+local util = require("luarocks.core.util")
+local vers = require("luarocks.core.vers")
+local path = require("luarocks.core.path")
+--------------------------------------------------------------------------------
 
 local record Constraints
    op: string
-   lua_version: {Lua_version}
+   version: {vers.Version}
 end
 
 local record DependencyVersion
-   version: string
    constraints: {Constraints}
    name: string
-end
-
-local record Dependency
-   name: string
-   version: {DependencyVersion} --! multiple versions in the same dependency
 end
 
 local record Module
@@ -48,19 +39,12 @@ end
 
 local record Manifest --!
    arch: string --! only for repository
-   commands: {Command}
-   dependencies: {Dependency}
+   commands: {string:{string}}
+   dependencies: {string: {string: DependencyVersion}}
    modules: {Module}
    repository: {Repository} --! no repository for repositoyry
 end
-
-local persist = require("luarocks.core.persist") --!
-local cfg = require("luarocks.core.cfg")
-local dir = require("luarocks.core.dir")
-local util = require("luarocks.core.util")
-local vers = require("luarocks.core.vers")
-local path = require("luarocks.core.path")
---------------------------------------------------------------------------------
+ 
 
 -- Table with repository identifiers as keys and tables mapping
 -- Lua versions to cached loaded manifests as values.

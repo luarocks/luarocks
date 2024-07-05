@@ -1,4 +1,12 @@
 local record vers
+   record Version
+      {number} -- next version of Teal: "is {number}"
+      string: string
+      revision: number
+      metamethod __eq: function(Version, Version): boolean
+      metamethod __lt: function(Version, Version): boolean
+      metamethod __le: function(Version, Version): boolean
+   end
 end
 
 local util = require("luarocks.core.util")
@@ -14,14 +22,7 @@ local deltas: {string: integer} = {
    alpha = -1000000
 }
 
-local record Version
-   {number} -- next version of Teal: "is {number}"
-   string: string
-   revision: number
-   metamethod __eq: function(Version, Version): boolean
-   metamethod __lt: function(Version, Version): boolean
-   metamethod __le: function(Version, Version): boolean
-end
+local type Version = vers.Version
 
 local version_mt: metatable<Version> = {
    --- Equality comparison for versions.
