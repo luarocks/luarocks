@@ -1,5 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string
-local vers = {}
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local vers = {}
 
 
 local util = require("luarocks.core.util")
@@ -14,6 +13,8 @@ local deltas = {
    beta = -100000,
    alpha = -1000000,
 }
+
+
 
 
 
@@ -148,7 +149,7 @@ function vers.compare_versions(a, b)
    if a == b then
       return false
    end
-   return vers.parse_version(a) > vers.parse_version(b)
+   return vers.parse_version(b) < vers.parse_version(a)
 end
 
 
@@ -167,8 +168,10 @@ local function partial_match(version_for_parse, requested_for_parce)
 
    local version, requested
 
-   if not (type(version_for_parse) == "table") then version = vers.parse_version(version_for_parse) end
-   if not (type(requested_for_parce) == "table") then requested = vers.parse_version(requested_for_parce) end
+   if not (type(version_for_parse) == "table") then version = vers.parse_version(version_for_parse)
+   else version = version_for_parse end
+   if not (type(requested_for_parce) == "table") then requested = vers.parse_version(requested_for_parce)
+   else requested = requested_for_parce end
    if not (type(version) == "table") or not (type(requested) == "table") then return false end
 
    for i, ri in ipairs(requested) do
@@ -190,18 +193,22 @@ function vers.match_constraints(version, constraints)
    local ok = true
    setmetatable(version, version_mt)
    for _, constr in pairs(constraints) do
-      if type(constr.version) == "string" then
-         constr.version = vers.parse_version(constr.version)
-      end
       local constr_version, constr_op = constr.version, constr.op
-      setmetatable(constr_version, version_mt)
-      if constr_op == "==" then ok = version == constr_version
-      elseif constr_op == "~=" then ok = version ~= constr_version
-      elseif constr_op == ">" then ok = version > constr_version
-      elseif constr_op == "<" then ok = version < constr_version
-      elseif constr_op == ">=" then ok = version >= constr_version
-      elseif constr_op == "<=" then ok = version <= constr_version
-      elseif constr_op == "~>" then ok = partial_match(version, constr_version)
+      local cv
+      if type(constr_version) == "string" then
+         cv = vers.parse_version(constr_version)
+         constr.version = cv
+      else
+         cv = constr_version
+      end
+      setmetatable(cv, version_mt)
+      if constr_op == "==" then ok = version == cv
+      elseif constr_op == "~=" then ok = version ~= cv
+      elseif constr_op == ">" then ok = cv < version
+      elseif constr_op == "<" then ok = version < cv
+      elseif constr_op == ">=" then ok = cv <= version
+      elseif constr_op == "<=" then ok = version <= cv
+      elseif constr_op == "~>" then ok = partial_match(version, cv)
       end
       if not ok then break end
    end

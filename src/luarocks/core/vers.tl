@@ -4,7 +4,7 @@ end
 local util = require("luarocks.core.util")
 --------------------------------------------------------------------------------
 
-local deltas: {string: integer} = { --?1
+local deltas: {string: integer} = {
    dev =    120000000,
    scm =    110000000,
    cvs =    100000000,
@@ -23,7 +23,7 @@ local record Version
    metamethod __le: function(Version, Version): boolean
 end
 
-local version_mt: metatable<Version> = { --? anything to do here
+local version_mt: metatable<Version> = {
    --- Equality comparison for versions.
    -- All version numbers must be equal.
    -- If both versions have revision numbers, they must be equal;
@@ -132,7 +132,7 @@ function vers.parse_version(vstring: string): Version
             version[i] = 0
             break
          end
-         version[i] = deltas[token] or (token:byte() / 1000) --?1
+         version[i] = deltas[token] or (token:byte() / 1000)
       end
       v = rest
    end
@@ -168,8 +168,10 @@ local function partial_match(version_for_parse: string | Version, requested_for_
 
    local version, requested: Version, Version
 
-   if not version_for_parse is Version then version = vers.parse_version(version_for_parse) end
-   if not requested_for_parce is Version then requested = vers.parse_version(requested_for_parce) end
+   if not version_for_parse is Version then version = vers.parse_version(version_for_parse)
+   else version = version_for_parse end
+   if not requested_for_parce is Version then requested = vers.parse_version(requested_for_parce)
+   else requested = requested_for_parce end
    if not version is Version or not requested is Version then return false end
 
    for i, ri in ipairs(requested) do

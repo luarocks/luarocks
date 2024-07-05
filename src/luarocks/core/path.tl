@@ -3,20 +3,22 @@
 local record path
 end
 
-local cfg = require("luarocks.core.cfg") --? cannot index key ... in boolean 'cfg' of type boolean
+local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.core.dir")
+
+local type Tree = cfg.Tree
 
 local dir_sep = package.config:sub(1, 1)
 --------------------------------------------------------------------------------
 
-function path.rocks_dir(tree: string | {any: any}): string
+function path.rocks_dir(tree: string | Tree): string
    if tree == nil then
       tree = cfg.root_dir
    end
    if tree is string then
       return dir.path(tree, cfg.rocks_subdir)
    end
-   return tostring(tree.rocks_dir) or dir.path(tree.root, cfg.rocks_subdir) --? tostring(tree.root)
+   return tree.rocks_dir or dir.path(tree.root, cfg.rocks_subdir)
 end
 
 --- Produce a versioned version of a filename.
@@ -69,21 +71,21 @@ function path.path_to_module(file: string): string
    return name
 end
 
-function path.deploy_lua_dir(tree: string | {any: any}): string
+function path.deploy_lua_dir(tree: string | Tree): string
    if tree is string then
       return dir.path(tree, cfg.lua_modules_path)
    else
       assert(type(tree) == "table")
-      return tostring(tree.lua_dir) or dir.path(tree.root, cfg.lua_modules_path) --? tostring(tree.root)
+      return tree.lua_dir or dir.path(tree.root, cfg.lua_modules_path) 
    end
 end
 
-function path.deploy_lib_dir(tree: string | {any: any}): string
+function path.deploy_lib_dir(tree: string | Tree): string
    if tree is string then
       return dir.path(tree, cfg.lib_modules_path)
    else
       assert(type(tree) == "table")
-      return tostring(tree.lib_dir) or dir.path(tree.root, cfg.lib_modules_path) --? tostring(tree.root)
+      return tostring(tree.lib_dir) or dir.path(tree.root, cfg.lib_modules_path)
    end
 end
 
@@ -113,11 +115,11 @@ function path.which_i(file_name: string, name: string, version: string, tree: st
    return file_name
 end
 
-function path.rocks_tree_to_string(tree: string | {any: any}): string
+function path.rocks_tree_to_string(tree: string | Tree): string
    if tree is string then
       return tree
    else
-      return tostring(tree.root) --?
+      return tostring(tree.root)
    end
 end
 
@@ -138,8 +140,8 @@ function path.map_trees(deps_mode: string, fn: function, ...: string): {any}
       if deps_mode == "all" then
          use = true
       end
-      for _, tree in ipairs(cfg.rocks_trees or {}) do --! no mention of rocks_trees in the cfg file
-         if dir.normalize(path.rocks_tree_to_string(tree)) == dir.normalize(path.rocks_tree_to_string(current)) then --!
+      for _, tree in ipairs(cfg.rocks_trees or {}) do
+         if dir.normalize(path.rocks_tree_to_string(tree)) == dir.normalize(path.rocks_tree_to_string(current)) then
             use = true
          end
          if use then

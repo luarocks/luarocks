@@ -126,9 +126,10 @@ function util.deep_merge(dst, src)
          local dstk = dst[k]
          if dstk == nil then
             dst[k] = {}
+            dstk = dst[k]
          end
          if type(dstk) == "table" then
-            util.deep_merge(dst[k], v)
+            util.deep_merge(dstk, v)
          else
             dst[k] = v
          end
@@ -145,11 +146,13 @@ end
 function util.deep_merge_under(dst, src)
    for k, v in pairs(src) do
       if type(v) == "table" then
-         if dst[k] == nil then
+         local dstk = dst[k]
+         if dstk == nil then
             dst[k] = {}
+            dstk = dst[k]
          end
-         if type(dst[k]) == "table" then
-            util.deep_merge_under(dst[k], v)
+         if type(dstk) == "table" then
+            util.deep_merge_under(dstk, v)
          end
       elseif dst[k] == nil then
          dst[k] = v

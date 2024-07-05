@@ -6,6 +6,8 @@ local path = {}
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.core.dir")
 
+
+
 local dir_sep = package.config:sub(1, 1)
 
 
@@ -16,7 +18,7 @@ function path.rocks_dir(tree)
    if type(tree) == "string" then
       return dir.path(tree, cfg.rocks_subdir)
    end
-   return tostring(tree.rocks_dir) or dir.path(tree.root, cfg.rocks_subdir)
+   return tree.rocks_dir or dir.path(tree.root, cfg.rocks_subdir)
 end
 
 
@@ -74,7 +76,7 @@ function path.deploy_lua_dir(tree)
       return dir.path(tree, cfg.lua_modules_path)
    else
       assert(type(tree) == "table")
-      return tostring(tree.lua_dir) or dir.path(tree.root, cfg.lua_modules_path)
+      return tree.lua_dir or dir.path(tree.root, cfg.lua_modules_path)
    end
 end
 

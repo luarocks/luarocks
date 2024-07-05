@@ -18,26 +18,6 @@ end
 
 
 
-
-
-
-
-function dir.path(...)
-   local t = { ... }
-   while t[1] == "" do
-      table.remove(t, 1)
-   end
-   for i, c in ipairs(t) do
-      t[i] = unquote(c)
-   end
-   return dir.normalize(table.concat(t, "/"))
-end
-
-
-
-
-
-
 function dir.split_url(url)
    assert(type(url) == "string")
 
@@ -90,6 +70,27 @@ function dir.normalize(name)
       pathname = pathname:gsub("/", dir_sep)
    end
    return pathname
+end
+
+
+
+
+
+
+
+
+
+
+
+function dir.path(...)
+   local t = { ... }
+   while t[1] == "" do
+      table.remove(t, 1)
+   end
+   for i, c in ipairs(t) do
+      t[i] = unquote(c)
+   end
+   return dir.normalize(table.concat(t, "/"))
 end
 
 return dir

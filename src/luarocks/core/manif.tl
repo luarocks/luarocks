@@ -3,6 +3,57 @@
 local record manif
 end
 
+local record Command
+   name: string
+   version: string
+end
+
+local record Lua_version
+   major: integer
+   minor: integer
+   string: string
+end
+
+local record Constraints
+   op: string
+   lua_version: {Lua_version}
+end
+
+local record DependencyVersion
+   version: string
+   constraints: {Constraints}
+   name: string
+end
+
+local record Dependency
+   name: string
+   version: {DependencyVersion} --! multiple versions in the same dependency
+end
+
+local record Module
+   name: string --! ["tl.tl"] = {"tl/0.15.3-1"}
+   name_version: string --! or file location
+end
+
+local record RepositoryVersion
+   version: string
+   manifests: {Manifest}
+end
+
+local record Repository
+   name: string
+   version: {RepositoryVersion} --! multiple versions in the same repository
+
+end
+
+local record Manifest --!
+   arch: string --! only for repository
+   commands: {Command}
+   dependencies: {Dependency}
+   modules: {Module}
+   repository: {Repository} --! no repository for repositoyry
+end
+
 local persist = require("luarocks.core.persist") --!
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.core.dir")
