@@ -5,6 +5,7 @@ local cmd_build = {}
 
 local pack = require("luarocks.pack")
 local path = require("luarocks.path")
+local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
@@ -52,6 +53,8 @@ local function build_rock(rock_filename, opts)
    assert(type(rock_filename) == "string")
    assert(opts:type() == "build.opts")
 
+   local cwd = fs.absolute_name(dir.path("."))
+
    local ok, err, errcode
 
    local unpack_dir
@@ -71,7 +74,7 @@ local function build_rock(rock_filename, opts)
       return nil, err, errcode
    end
 
-   ok, err, errcode = build.build_rockspec(rockspec, opts)
+   ok, err, errcode = build.build_rockspec(rockspec, opts, cwd)
 
    fs.pop_dir()
    return ok, err, errcode
@@ -103,11 +106,12 @@ local function do_build(name, namespace, version, opts)
    end
 
    if url:match("%.rockspec$") then
+      local cwd = fs.absolute_name(dir.path("."))
       local rockspec, err = fetch.load_rockspec(url, nil, opts.verify)
       if not rockspec then
          return nil, err
       end
-      return build.build_rockspec(rockspec, opts)
+      return build.build_rockspec(rockspec, opts, cwd)
    end
 
    if url:match("%.src%.rock$") then

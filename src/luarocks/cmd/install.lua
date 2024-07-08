@@ -177,7 +177,10 @@ function install.install_binary_rock_deps(rock_file, opts)
       return nil, "Failed loading rockspec for installed package: "..err, errcode
    end
 
-   ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify, install_dir)
+   local deplock_dir = fs.exists(dir.path(".", "luarocks.lock"))
+                        and "."
+                        or install_dir
+   ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify, deplock_dir)
    if err then return nil, err, errcode end
 
    util.printout()
