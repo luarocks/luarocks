@@ -1,4 +1,9 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local vers = {Version = {}, }
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local string = _tl_compat and _tl_compat.string or string; local vers = {Version = {}, Constraints = {}, }
+
+
+
+
+
 
 
 
@@ -21,6 +26,7 @@ local deltas = {
    beta = -100000,
    alpha = -1000000,
 }
+
 
 
 
@@ -193,7 +199,7 @@ end
 function vers.match_constraints(version, constraints)
    local ok = true
    setmetatable(version, version_mt)
-   for _, constr in pairs(constraints) do
+   for _, constr in ipairs(constraints) do
       local constr_version, constr_op = constr.version, constr.op
       local cv
       if type(constr_version) == "string" then

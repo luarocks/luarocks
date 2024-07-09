@@ -279,7 +279,6 @@ end
 
 
 function util.sortedpairs(tbl, sort_function)
-
    if not sort_function then
       sort_function = default_sort
    end

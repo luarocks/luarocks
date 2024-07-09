@@ -279,7 +279,6 @@ end
 -- and the value.
 -- @return function: the iterator function.
 function util.sortedpairs(tbl: {any: any}, sort_function: CompFn | {any} | nil): function(): any, any, any
-   -- sort_function = sort_function or default_sort --?
    if not sort_function then
       sort_function = default_sort
    end

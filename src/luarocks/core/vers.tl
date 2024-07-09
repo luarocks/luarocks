@@ -7,6 +7,11 @@ local record vers
       metamethod __lt: function(Version, Version): boolean
       metamethod __le: function(Version, Version): boolean
    end
+
+   record Constraints
+      op: string
+      version: Version | string
+   end
 end
 
 local util = require("luarocks.core.util")
@@ -23,6 +28,7 @@ local deltas: {string: integer} = {
 }
 
 local type Version = vers.Version
+local type Constraints = vers.Constraints
 
 local version_mt: metatable<Version> = {
    --- Equality comparison for versions.
@@ -190,10 +196,10 @@ end
 -- @param constraints table: An array of constraints in table format.
 -- @return boolean: True if version satisfies all constraints,
 -- false otherwise.
-function vers.match_constraints(version: Version, constraints: {any: {any: Version | string}}): boolean
+function vers.match_constraints(version: Version, constraints: {Constraints}): boolean --!
    local ok = true
    setmetatable(version, version_mt)
-   for _, constr in pairs(constraints) do
+   for _, constr in ipairs(constraints) do
       local constr_version, constr_op = constr.version, constr.op
       local cv: Version
       if constr_version is string then
