@@ -196,7 +196,7 @@ end
 -- @param constraints table: An array of constraints in table format.
 -- @return boolean: True if version satisfies all constraints,
 -- false otherwise.
-function vers.match_constraints(version: Version, constraints: {Constraints}): boolean --!
+function vers.match_constraints(version: Version, constraints: {Constraints}): boolean
    local ok = true
    setmetatable(version, version_mt)
    for _, constr in ipairs(constraints) do

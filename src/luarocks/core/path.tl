@@ -28,7 +28,7 @@ end
 -- @param version string: Rock version
 -- @return string: a pathname with the same directory parts and a versioned basename.
 function path.versioned_name(file: string, prefix: string, name: string, version: string): string
-   assert(not name:match(dir_sep)) --!
+   assert(not name:match(dir_sep))
 
    local rest = file:sub(#prefix+1):gsub("^" .. dir_sep .. "*", "")
    local name_version = (name.."_"..version):gsub("%-", "_"):gsub("%.", "_")
