@@ -20,8 +20,6 @@ util.printerr = core.printerr
 util.warning = core.warning
 util.keys = core.keys
 
-local unpack = unpack or table.unpack --!
-local pack = table.pack or function(...) return { n = select("#", ...), ... } end --!
 
 local scheduled_functions: {integer: {string: any}} = {} --? infered from line 48-51
 
@@ -35,7 +33,7 @@ local scheduled_functions: {integer: {string: any}} = {} --? infered from line 4
 function util.schedule_function(f: function(), ...:any): {string:any}
    assert(type(f) == "function")
 
-   local item = { fn = f, args = pack(...) }
+   local item = { fn = f, args = table.pack(...) }
    table.insert(scheduled_functions, item)
    return item
 end
@@ -65,7 +63,7 @@ function util.run_scheduled_functions()
    end
    for i = #scheduled_functions, 1, -1 do
       local item = scheduled_functions[i]
-      item.fn(unpack(item.args, 1, item.args.n))
+      item.fn(table.unpack(item.args, 1, item.args.n))
    end
 end
 

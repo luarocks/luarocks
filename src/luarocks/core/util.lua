@@ -295,11 +295,12 @@ function util.sortedpairs(tbl, sort_function)
 
       for _, order_entry in ipairs(order) do
          local key, sub_order
-         if type(order_entry) == "table" then
+
+         if not (type(order_entry) == "table") then
+            key = order_entry
+         else
             key = order_entry[1]
             sub_order = order_entry[2]
-         else
-            key = order_entry
          end
 
          if tbl[key] then

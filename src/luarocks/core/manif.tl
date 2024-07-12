@@ -1,9 +1,17 @@
+local persist = require("luarocks.core.persist")
+local cfg = require("luarocks.core.cfg")
+local dir = require("luarocks.core.dir")
+local util = require("luarocks.core.util")
+local vers = require("luarocks.core.vers")
+local path = require("luarocks.core.path")
+
+local type Constraints = vers.Constraints
 
 --- Core functions for querying manifest files.
 local record manif
    
    record DependencyVersion
-      constraints: {Constraints} --? vers.Constraints
+      constraints: {Constraints}
       name: string
    end
    
@@ -21,15 +29,8 @@ local record manif
    end
 end
 
-local persist = require("luarocks.core.persist") --!
-local cfg = require("luarocks.core.cfg")
-local dir = require("luarocks.core.dir")
-local util = require("luarocks.core.util")
-local vers = require("luarocks.core.vers")
-local path = require("luarocks.core.path")
 --------------------------------------------------------------------------------
  
-local type Constraints = vers.Constraints
 local type DependencyVersion = manif.DependencyVersion
 local type Manifest = manif.Manifest
 local type Tree_manifest = manif.Tree_manifest
@@ -38,7 +39,7 @@ local type Tree_manifest = manif.Tree_manifest
 
 -- Table with repository identifiers as keys and tables mapping
 -- Lua versions to cached loaded manifests as values.
-local manifest_cache: Manifest= {} --?
+local manifest_cache: Manifest = {}
 
 --- Cache a loaded manifest.
 -- @param repo_url string: The repository identifier.
@@ -56,7 +57,7 @@ end
 -- @return table or nil: loaded manifest or nil if cache is empty.
 function manif.get_cached_manifest(repo_url: string, lua_version: string): Manifest
    lua_version = lua_version or cfg.lua_version
-   return manifest_cache.repository[repo_url] and manifest_cache.repository[repo_url][lua_version] --!
+   return manifest_cache.repository[repo_url] and manifest_cache.repository[repo_url][lua_version]
 end
 
 --- Back-end function that actually loads the manifest
@@ -66,13 +67,14 @@ end
 -- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
 -- @return table or (nil, string, string): the manifest or nil,
 -- error message and error code ("open", "load", "run").
-function manif.manifest_loader(file: string, repo_url: string, lua_version: string): Manifest | nil, string, string
+function manif.manifest_loader(file: string, repo_url: string, lua_version: string): Manifest, string, string
    local manifest, err, errcode: {any: any}, {any: any} | string, string = persist.load_into_table(file)
-   if not manifest is Manifest then --! Manifest != {any:any}
-      return nil, "Failed loading manifest for "..repo_url..": "..err, errcode
+   if err is string then
+      return nil, "Failed loading manifest for "..repo_url..": " ..err, errcode
    end
-   manif.cache_manifest(repo_url, lua_version, manifest)
-   return manifest, err, errcode
+   
+   manif.cache_manifest(repo_url, lua_version, manifest as Manifest) -- No runtime check if manifest is actually a Manifest!
+   return manifest as Manifest
 end
 
 --- Load a local manifest describing a repository.
@@ -93,7 +95,7 @@ end
 
 function manif.load_rocks_tree_manifests(deps_mode: string): {Tree_manifest}
    local trees = {}
-   path.map_trees(deps_mode, function(tree: cfg.Tree) --! tree: cfg.Tree
+   path.map_trees(deps_mode, function(tree: cfg.Tree)
       local manifest= manif.fast_load_local_manifest(path.rocks_dir(tree))
       if manifest then
          local tree_manifest: Tree_manifest = {tree=tree, manifest=manifest}
@@ -124,7 +126,7 @@ function manif.scan_dependencies(name: string, version: string, tree_manifests: 
                local entries = t.manifest.repository[pkg]
                if entries then
                   for ver, _ in util.sortedpairs(entries, vers.compare_versions) do
-                     if (not constraints) or vers.match_constraints(vers.parse_version(ver), constraints) then --!
+                     if (not constraints) or vers.match_constraints(vers.parse_version(ver), constraints) then
                         manif.scan_dependencies(pkg, ver, tree_manifests, dest)
                      end
                   end

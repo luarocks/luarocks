@@ -233,7 +233,7 @@ end
 --- Return an array of keys of a table.
 -- @param tbl table: The input table.
 -- @return table: The array of keys.
-function util.keys(tbl: {any:any}): {any}
+function util.keys<K, V>(tbl: {K: V}): {K}
    local ks = {}
    for k,_ in pairs(tbl) do
       table.insert(ks, k)
@@ -278,12 +278,12 @@ end
 -- for that key, which is returned by the iterator as the third value after the key
 -- and the value.
 -- @return function: the iterator function.
-function util.sortedpairs(tbl: {any: any}, sort_function: CompFn | {any} | nil): function(): any, any, any
+function util.sortedpairs<K, V, S>(tbl: {K: V}, sort_function: CompFn | {K | {K, S}}): function(): K, V, S
    if not sort_function then
       sort_function = default_sort
    end
    local keys = util.keys(tbl)
-   local sub_orders = {}
+   local sub_orders: {K: S} = {}
 
    if sort_function is CompFn then
       table.sort(keys, sort_function)
@@ -294,12 +294,13 @@ function util.sortedpairs(tbl: {any: any}, sort_function: CompFn | {any} | nil):
       keys = {}
 
       for _, order_entry in ipairs(order) do
-         local key, sub_order: any, any
-         if order_entry is {any: any} then
+         local key, sub_order: K, S
+
+         if not order_entry is {K, S} then --TEAL BUG
+            key = order_entry as K
+         else
             key = order_entry[1]
             sub_order = order_entry[2]
-         else
-            key = order_entry
          end
 
          if tbl[key] then
@@ -318,7 +319,7 @@ function util.sortedpairs(tbl: {any: any}, sort_function: CompFn | {any} | nil):
    end
 
    local i = 1
-   return function(): any, any, any
+   return function(): K, V, S
       local key = keys[i]
       i = i + 1
       return key, tbl[key], sub_orders[key]

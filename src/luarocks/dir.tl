@@ -1,11 +1,14 @@
 
 --- Generic utilities for handling pathnames.
 local record dir
+   path: function(...: string): string
+   split_url: function(string): string, string
+   normalize: function(string): string
 end
 
 local core = require("luarocks.core.dir")
 
-dir.path = core.path --!
+dir.path = core.path
 dir.split_url = core.split_url
 dir.normalize = core.normalize
 
@@ -47,7 +50,7 @@ end
 
 --- Returns true if protocol does not require additional tools.
 -- @param protocol The protocol name
-function dir.is_basic_protocol(protocol: string): boolean --? extra type (enum)
+function dir.is_basic_protocol(protocol: string): boolean
    return protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file"
 end
 
