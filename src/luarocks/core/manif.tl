@@ -49,8 +49,8 @@ local manifest_cache: Manifest = {}
 -- @param manifest table: the manifest to be cached.
 function manif.cache_manifest(repo_url: string, lua_version: string, manifest: Manifest)
    lua_version = lua_version or cfg.lua_version
-   manifest_cache[repo_url] = manifest_cache[repo_url] or {}
-   manifest_cache[repo_url][lua_version] = manifest
+   manifest_cache.repository[repo_url] = manifest_cache.repository[repo_url] or {}
+   manifest_cache.repository[repo_url][lua_version] = manifest
 end
 
 --- Attempt to get cached loaded manifest.
@@ -59,7 +59,7 @@ end
 -- @return table or nil: loaded manifest or nil if cache is empty.
 function manif.get_cached_manifest(repo_url: string, lua_version: string): Manifest
    lua_version = lua_version or cfg.lua_version
-   return manifest_cache[repo_url] and manifest_cache[repo_url][lua_version]
+   return manifest_cache.repository[repo_url] and manifest_cache.repository[repo_url][lua_version]
 end
 
 --- Back-end function that actually loads the manifest
@@ -84,7 +84,7 @@ end
 -- @param repo_url string: URL or pathname for the repository.
 -- @return table or (nil, string, string): A table representing the manifest,
 -- or nil followed by an error message and an error code, see manifest_loader.
-function manif.fast_load_local_manifest(repo_url: string): Manifest | nil, string, string 
+function manif.fast_load_local_manifest(repo_url: string): Manifest, string | {any: any}, string 
    assert(type(repo_url) == "string")
 
    local cached_manifest = manif.get_cached_manifest(repo_url)
