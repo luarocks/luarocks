@@ -71,12 +71,12 @@ end
 -- error message and error code ("open", "load", "run").
 function manif.manifest_loader(file: string, repo_url: string, lua_version: string): Manifest, string, string
    local manifest, err, errcode: {any: any}, {any: any} | string, string = persist.load_into_table(file)
-   if err is string then
-      return nil, "Failed loading manifest for "..repo_url..": " ..err, errcode
+   if not manifest then
+      return nil, "Failed loading manifest for "..repo_url..": " ..tostring(err), errcode
    end
    
    manif.cache_manifest(repo_url, lua_version, manifest as Manifest) -- No runtime check if manifest is actually a Manifest!
-   return manifest as Manifest
+   return manifest as Manifest, nil, nil
 end
 
 --- Load a local manifest describing a repository.
@@ -85,6 +85,7 @@ end
 -- @return table or (nil, string, string): A table representing the manifest,
 -- or nil followed by an error message and an error code, see manifest_loader.
 function manif.fast_load_local_manifest(repo_url: string): Manifest | nil, string, string 
+   assert(type(repo_url) == "string")
 
    local cached_manifest = manif.get_cached_manifest(repo_url)
    if cached_manifest then
@@ -100,8 +101,7 @@ function manif.load_rocks_tree_manifests(deps_mode: string): {Tree_manifest}
    path.map_trees(deps_mode, function(tree: cfg.Tree)
       local manifest= manif.fast_load_local_manifest(path.rocks_dir(tree))
       if manifest then
-         local tree_manifest: Tree_manifest = {tree=tree, manifest=manifest}
-         table.insert(trees, tree_manifest)
+         table.insert(trees, {tree=tree, manifest=manifest})
       end
    end)
    return trees
