@@ -1,6 +1,10 @@
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local package = _tl_compat and _tl_compat.package or package; local string = _tl_compat and _tl_compat.string or string
 
---- Generic utilities for handling pathnames.
 local dir = {}
+
+
+
+
 
 local core = require("luarocks.core.dir")
 
@@ -10,50 +14,50 @@ dir.normalize = core.normalize
 
 local dir_sep = package.config:sub(1, 1)
 
---- Strip the path off a path+filename.
--- @param pathname string: A path+name, such as "/a/b/c"
--- or "\a\b\c".
--- @return string: The filename without its path, such as "c".
+
+
+
+
 function dir.base_name(pathname)
    assert(type(pathname) == "string")
 
    local b
-   b = pathname:gsub("[/\\]", "/") -- canonicalize to forward slashes
-   b = b:gsub("/*$", "")           -- drop trailing slashes
-   b = b:match(".*[/\\]([^/\\]*)") -- match last component
-   b = b or pathname               -- fallback to original if no slashes
+   b = pathname:gsub("[/\\]", "/")
+   b = b:gsub("/*$", "")
+   b = b:match(".*[/\\]([^/\\]*)")
+   b = b or pathname
 
    return b
 end
 
---- Strip the name off a path+filename.
--- @param pathname string: A path+name, such as "/a/b/c".
--- @return string: The filename without its path, such as "/a/b".
--- For entries such as "/a/b/", "/a" is returned. If there are
--- no directory separators in input, "" is returned.
+
+
+
+
+
 function dir.dir_name(pathname)
    assert(type(pathname) == "string")
 
    local d
-   d = pathname:gsub("[/\\]", "/") -- canonicalize to forward slashes
-   d = d:gsub("/*$", "")           -- drop trailing slashes
-   d = d:match("(.*)[/]+[^/]*")    -- match all components but the last
-   d = d or ""                     -- switch to "" if there's no match
-   d = d:gsub("/", dir_sep)        -- decanonicalize to native slashes
+   d = pathname:gsub("[/\\]", "/")
+   d = d:gsub("/*$", "")
+   d = d:match("(.*)[/]+[^/]*")
+   d = d or ""
+   d = d:gsub("/", dir_sep)
 
    return d
 end
 
---- Returns true if protocol does not require additional tools.
--- @param protocol The protocol name
+
+
 function dir.is_basic_protocol(protocol)
    return protocol == "http" or protocol == "https" or protocol == "ftp" or protocol == "file"
 end
 
 function dir.deduce_base_dir(url)
-   -- for extensions like foo.tar.gz, "gz" is stripped first
+
    local known_exts = {}
-   for _, ext in ipairs{"zip", "git", "tgz", "tar", "gz", "bz2"} do
+   for _, ext in ipairs({ "zip", "git", "tgz", "tar", "gz", "bz2" }) do
       known_exts[ext] = ""
    end
    local base = dir.base_name(url)
