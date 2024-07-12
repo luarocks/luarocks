@@ -49,8 +49,8 @@ local manifest_cache = {}
 
 function manif.cache_manifest(repo_url, lua_version, manifest)
    lua_version = lua_version or cfg.lua_version
-   manifest_cache.repository[repo_url] = manifest_cache.repository[repo_url] or {}
-   manifest_cache.repository[repo_url][lua_version] = manifest
+   manifest_cache[repo_url] = manifest_cache[repo_url] or {}
+   manifest_cache[repo_url][lua_version] = manifest
 end
 
 
@@ -59,7 +59,7 @@ end
 
 function manif.get_cached_manifest(repo_url, lua_version)
    lua_version = lua_version or cfg.lua_version
-   return manifest_cache.repository[repo_url] and manifest_cache.repository[repo_url][lua_version]
+   return manifest_cache[repo_url] and manifest_cache[repo_url][lua_version]
 end
 
 
