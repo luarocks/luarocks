@@ -69,14 +69,14 @@ end
 -- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
 -- @return table or (nil, string, string): the manifest or nil,
 -- error message and error code ("open", "load", "run").
-function manif.manifest_loader(file: string, repo_url: string, lua_version: string): Manifest, string, string
+function manif.manifest_loader(file: string, repo_url: string, lua_version: string): Manifest, string | {any: any}, string
    local manifest, err, errcode: {any: any}, {any: any} | string, string = persist.load_into_table(file)
-   if not manifest then
-      return nil, "Failed loading manifest for "..repo_url..": " ..tostring(err), errcode
+   if not manifest and err is string then
+      return nil, "Failed loading manifest for "..repo_url..": " .. err, errcode
    end
    
    manif.cache_manifest(repo_url, lua_version, manifest as Manifest) -- No runtime check if manifest is actually a Manifest!
-   return manifest as Manifest, nil, nil
+   return manifest as Manifest, err, errcode
 end
 
 --- Load a local manifest describing a repository.

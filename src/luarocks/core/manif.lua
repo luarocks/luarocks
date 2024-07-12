@@ -1,6 +1,4 @@
-
---- Core functions for querying manifest files.
-local manif = {}
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local table = _tl_compat and _tl_compat.table or table
 
 local persist = require("luarocks.core.persist")
 local cfg = require("luarocks.core.cfg")
@@ -8,53 +6,84 @@ local dir = require("luarocks.core.dir")
 local util = require("luarocks.core.util")
 local vers = require("luarocks.core.vers")
 local path = require("luarocks.core.path")
-local require = nil
---------------------------------------------------------------------------------
 
--- Table with repository identifiers as keys and tables mapping
--- Lua versions to cached loaded manifests as values.
+
+
+
+local manif = {DependencyVersion = {}, Manifest = {}, Tree_manifest = {}, }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 local manifest_cache = {}
 
---- Cache a loaded manifest.
--- @param repo_url string: The repository identifier.
--- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
--- @param manifest table: the manifest to be cached.
+
+
+
+
 function manif.cache_manifest(repo_url, lua_version, manifest)
    lua_version = lua_version or cfg.lua_version
    manifest_cache[repo_url] = manifest_cache[repo_url] or {}
    manifest_cache[repo_url][lua_version] = manifest
 end
 
---- Attempt to get cached loaded manifest.
--- @param repo_url string: The repository identifier.
--- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
--- @return table or nil: loaded manifest or nil if cache is empty.
+
+
+
+
 function manif.get_cached_manifest(repo_url, lua_version)
    lua_version = lua_version or cfg.lua_version
    return manifest_cache[repo_url] and manifest_cache[repo_url][lua_version]
 end
 
---- Back-end function that actually loads the manifest
--- and stores it in the manifest cache.
--- @param file string: The local filename of the manifest file.
--- @param repo_url string: The repository identifier.
--- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
--- @return table or (nil, string, string): the manifest or nil,
--- error message and error code ("open", "load", "run").
+
+
+
+
+
+
+
 function manif.manifest_loader(file, repo_url, lua_version)
    local manifest, err, errcode = persist.load_into_table(file)
-   if not manifest then
-      return nil, "Failed loading manifest for "..repo_url..": "..err, errcode
+   if not manifest and type(err) == "string" then
+      return nil, "Failed loading manifest for " .. repo_url .. ": " .. err, errcode
    end
+
    manif.cache_manifest(repo_url, lua_version, manifest)
    return manifest, err, errcode
 end
 
---- Load a local manifest describing a repository.
--- This is used by the luarocks.loader only.
--- @param repo_url string: URL or pathname for the repository.
--- @return table or (nil, string, string): A table representing the manifest,
--- or nil followed by an error message and an error code, see manifest_loader.
+
+
+
+
+
 function manif.fast_load_local_manifest(repo_url)
    assert(type(repo_url) == "string")
 
@@ -64,15 +93,15 @@ function manif.fast_load_local_manifest(repo_url)
    end
 
    local pathname = dir.path(repo_url, "manifest")
-   return manif.manifest_loader(pathname, repo_url, nil, true)
+   return manif.manifest_loader(pathname, repo_url, nil)
 end
 
 function manif.load_rocks_tree_manifests(deps_mode)
    local trees = {}
    path.map_trees(deps_mode, function(tree)
-      local manifest, err = manif.fast_load_local_manifest(path.rocks_dir(tree))
+      local manifest = manif.fast_load_local_manifest(path.rocks_dir(tree))
       if manifest then
-         table.insert(trees, {tree=tree, manifest=manifest})
+         table.insert(trees, { tree = tree, manifest = manifest })
       end
    end)
    return trees
