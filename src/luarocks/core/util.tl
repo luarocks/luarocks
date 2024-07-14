@@ -1,12 +1,13 @@
 
 local record util
+   type CompFn = function(any, any): boolean
 end
 
 --------------------------------------------------------------------------------
 
 local dir_sep = package.config:sub(1, 1)
 
-local type CompFn = function(any, any): boolean
+local type CompFn = util.CompFn
 
 --- Run a process and read a its output.
 -- Equivalent to io.popen(cmd):read("*l"), except that it

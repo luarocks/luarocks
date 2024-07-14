@@ -4,46 +4,57 @@
 -- inside specific functions) to avoid interdependencies,
 -- as this is used in the bootstrapping stage of luarocks.core.cfg.
 
-local record util
-end
-
 local core = require("luarocks.core.util")
 
-util.cleanup_path = core.cleanup_path --!
-util.split_string = core.split_string
-util.sortedpairs = core.sortedpairs
-util.deep_merge = core.deep_merge
-util.deep_merge_under = core.deep_merge_under
-util.popen_read = core.popen_read
-util.show_table = core.show_table
-util.printerr = core.printerr
-util.warning = core.warning
-util.keys = core.keys
+local type CompFn = core.CompFn
 
+local record util
+   cleanup_path: function(string, string, string, boolean): string
+   split_string: function(string, string, number): {string}
+   sortedpairs: function<K, V, S>({K : V}, CompFn | {K | {K, S}}): function(): K, V, S
+   deep_merge: function({any : any}, {any : any})
+   deep_merge_under: function({any : any}, {any : any})
+   popen_read: function(string, string): string
+   show_table: function({any : any}, string, string): string
+   printerr: function(...: string | number)
+   warning: function(string)
+   keys: function<K, V>({K : V}): {K}
 
-local scheduled_functions: {integer: {string: any}} = {} --? infered from line 48-51
+   record Fn
+      fn: function(...: any)
+      args: {any: any}
+   end
+
+   record Rockspec
+      name: string
+      version: string --?
+   end
+end
+
+local type Fn = util.Fn
+local type Rockspec = util.Rockspec
+
+local scheduled_functions: {Fn} = {} --? infered from line 48-51
 
 --- Schedule a function to be executed upon program termination.
 -- This is useful for actions such as deleting temporary directories
 -- or failure rollbacks.
 -- @param f function: Function to be executed.
 -- @param ... arguments to be passed to function.
--- @return table: A token representing the scheduled execution, --? table -> map
+-- @return table: A token representing the scheduled execution,
 -- which can be used to remove the item later from the list.
-function util.schedule_function(f: function(), ...:any): {string:any}
-   assert(type(f) == "function")
-
-   local item = { fn = f, args = table.pack(...) }
+function util.schedule_function(f: function(...: any), ...:any): Fn
+   local item: Fn = { fn = f, args = table.pack(...) }
    table.insert(scheduled_functions, item)
    return item
 end
 
 --- Unschedule a function.
 -- This is useful for cancelling a rollback of a completed operation.
--- @param item table: The token representing the scheduled function that was --? table -> map
+-- @param item table: The token representing the scheduled function that was
 -- returned from the schedule_function call.
-function util.remove_scheduled_function(item: {string: any})
-   for k, v in pairs(scheduled_functions) do
+function util.remove_scheduled_function(item: Fn)
+   for k, v in ipairs(scheduled_functions) do --? ipairs
       if v == item then
          table.remove(scheduled_functions, k)
          return
@@ -63,7 +74,7 @@ function util.run_scheduled_functions()
    end
    for i = #scheduled_functions, 1, -1 do
       local item = scheduled_functions[i]
-      item.fn(table.unpack(item.args, 1, item.args.n))
+      item.fn(table.unpack(item.args, 1, item.args.n)) --! here a list and onn line 52 we produse a record
    end
 end
 
@@ -72,7 +83,7 @@ end
 -- so it does not include beginning- and end-of-string markers (^$)
 -- @param s string: The input string
 -- @return string: The equivalent pattern
-function util.matchquote(s)
+function util.matchquote(s: string): string
    return (s:gsub("[?%-+*%[%].%%()$^]","%%%1"))
 end
 
@@ -88,7 +99,7 @@ local var_format_pattern = "%$%((%a[%a%d_]+)%)"
 -- @param needed_set: a set where keys are the names of
 -- needed variables.
 -- @param msg string: the warning message to display.
-function util.warn_if_not_used(var_defs, needed_set, msg)
+function util.warn_if_not_used(var_defs: {string: string}, needed_set: {string: string}, msg: string)
    local seen = {}
    for _, val in pairs(var_defs) do
       for used in val:gmatch(var_format_pattern) do
@@ -105,7 +116,7 @@ end
 -- Output any entries that might remain in $(XYZ) format,
 -- warning the user that substitutions have failed.
 -- @param line string: the input string
-local function warn_failed_matches(line)
+local function warn_failed_matches(line: string): boolean
    local any_failed = false
    if line:match(var_format_pattern) then
       for unmatched in line:gmatch(var_format_pattern) do
@@ -124,9 +135,7 @@ end
 -- @param tbl table: Table to have its string values modified.
 -- @param vars table: Table containing string-string key-value pairs
 -- representing variables to replace in the strings values of tbl.
-function util.variable_substitutions(tbl, vars)
-   assert(type(tbl) == "table")
-   assert(type(vars) == "table")
+function util.variable_substitutions(tbl: {string: string}, vars: {string: string})
 
    local updated = {}
    for k, v in pairs(tbl) do
@@ -142,24 +151,24 @@ function util.variable_substitutions(tbl, vars)
    end
 end
 
-function util.lua_versions(sort)
+function util.lua_versions(sort: string): function(): string
    local versions = { "5.1", "5.2", "5.3", "5.4" }
    local i = 0
    if sort == "descending" then
       i = #versions + 1
-      return function()
+      return function(): string
          i = i - 1
          return versions[i]
       end
    else
-      return function()
+      return function(): string
          i = i + 1
          return versions[i]
       end
    end
 end
 
-function util.lua_path_variables()
+function util.lua_path_variables(): string, string
    local cfg = require("luarocks.core.cfg")
    local lpath_var = "LUA_PATH"
    local lcpath_var = "LUA_CPATH"
@@ -176,17 +185,17 @@ function util.lua_path_variables()
    return lpath_var, lcpath_var
 end
 
-function util.starts_with(s, prefix)
+function util.starts_with(s: string, prefix: string): boolean
    return s:sub(1,#prefix) == prefix
 end
 
 --- Print a line to standard output
-function util.printout(...)
+function util.printout(...: string)
    io.stdout:write(table.concat({...},"\t"))
    io.stdout:write("\n")
 end
 
-function util.title(msg, porcelain, underline)
+function util.title(msg: string, porcelain: boolean, underline: string)
    if porcelain then return end
    util.printout()
    util.printout(msg)
@@ -194,7 +203,7 @@ function util.title(msg, porcelain, underline)
    util.printout()
 end
 
-function util.this_program(default)
+function util.this_program(default: string): string
    local i = 1
    local last, cur = default, default
    while i do
@@ -216,11 +225,11 @@ function util.this_program(default)
    return prog
 end
 
-function util.format_rock_name(name, namespace, version)
+function util.format_rock_name(name: string, namespace: string, version: string): string
    return (namespace and namespace.."/" or "")..name..(version and " "..version or "")
 end
 
-function util.deps_mode_option(parser, program)
+function util.deps_mode_option(parser: {string: any}, program: string) --? type of parser
    local cfg = require("luarocks.core.cfg")
 
    parser:option("--deps-mode", "How to handle dependencies. Four modes are supported:\n"..
@@ -238,11 +247,11 @@ function util.deps_mode_option(parser, program)
    parser:flag("--nodeps"):hidden(true)
 end
 
-function util.see_help(command, program)
+function util.see_help(command: string, program: string): string
    return "See '"..util.this_program(program or "luarocks")..' help'..(command and " "..command or "").."'."
 end
 
-function util.see_also(text)
+function util.see_also(text: string): string
    local see_also = "See also:\n"
    if text then
       see_also = see_also..text.."\n"
@@ -250,7 +259,7 @@ function util.see_also(text)
    return see_also.."   '"..util.this_program("luarocks").." help' for general options and configuration."
 end
 
-function util.announce_install(rockspec)
+function util.announce_install(rockspec: Rockspec)
    local cfg = require("luarocks.core.cfg")
    local path = require("luarocks.path")
 
@@ -269,7 +278,7 @@ end
 -- @param unnamed_paths table: An array of rockspec paths that don't contain rock
 -- name and version in regular format.
 -- @param subdir string: path to subdirectory.
-local function collect_rockspecs(versions, paths, unnamed_paths, subdir)
+local function collect_rockspecs(versions: {string: vers.Version}, paths: {string: string}, unnamed_paths: {string}, subdir: string) --! fs stuff
    local fs = require("luarocks.fs")
    local dir = require("luarocks.dir")
    local path = require("luarocks.path")
@@ -277,7 +286,7 @@ local function collect_rockspecs(versions, paths, unnamed_paths, subdir)
 
    if fs.is_dir(subdir) then
       for file in fs.dir(subdir) do
-         file = dir.path(subdir, file)
+         file = dir.path(subdir, file) -- path: function(...: string): string
 
          if file:match("rockspec$") and fs.is_file(file) then
             local rock, version = path.parse_name(file)

@@ -9,6 +9,7 @@ local record cfg
    lib_modules_path: string
    rocks_trees: {string| Tree}
    lua_version: string
+   deps_mode: string
    record Tree
       root: string
       rocks_dir: string
