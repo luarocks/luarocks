@@ -25,14 +25,57 @@ local record util
       args: {any: any}
    end
 
-   record Rockspec
-      name: string
-      version: string --?
+   record Source
+      url: string
+   end
+
+   record Description
+      summary: string
+      detailed: string
+      homepage: string
+      issues_url: string
+      maintainer: string
+      license: string
+   end
+
+   record Test
+      type: string
+      platforms: {{string: any}}
+   end
+
+   record Rockspec -- luarocks-dev-1.rockspec
+      rockspec_format: string
+      name: string --? package
+      version: string
+      source: {Source}
+      description: Description
+      test_dependencies: {string}
+      test: Test
+   end
+
+   record Parser --?
+      option: function(Parser, ...: string): Parser
+      argname: function(Parser, string): Parser
+      choices: function(Parser, {string}): Parser
+      flag: function(Parser, string): Parser
+      hidden: function(Parser, boolean): Parser
    end
 end
 
+util.cleanup_path = core.cleanup_path
+util.split_string = core.split_string
+util.sortedpairs = core.sortedpairs
+util.deep_merge = core.deep_merge
+util.deep_merge_under = core.deep_merge_under
+util.popen_read = core.popen_read
+util.show_table = core.show_table
+util.printerr = core.printerr
+util.warning = core.warning
+util.keys = core.keys
+
 local type Fn = util.Fn
 local type Rockspec = util.Rockspec
+local type Parser = util.Parser
 
 local scheduled_functions: {Fn} = {} --? infered from line 48-51
 
@@ -229,7 +272,7 @@ function util.format_rock_name(name: string, namespace: string, version: string)
    return (namespace and namespace.."/" or "")..name..(version and " "..version or "")
 end
 
-function util.deps_mode_option(parser: {string: any}, program: string) --? type of parser
+function util.deps_mode_option(parser: Parser, program: string)
    local cfg = require("luarocks.core.cfg")
 
    parser:option("--deps-mode", "How to handle dependencies. Four modes are supported:\n"..
@@ -286,7 +329,7 @@ local function collect_rockspecs(versions: {string: vers.Version}, paths: {strin
 
    if fs.is_dir(subdir) then
       for file in fs.dir(subdir) do
-         file = dir.path(subdir, file) -- path: function(...: string): string
+         file = dir.path(subdir, file)
 
          if file:match("rockspec$") and fs.is_file(file) then
             local rock, version = path.parse_name(file)

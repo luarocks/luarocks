@@ -6,8 +6,10 @@ local record fs
    change_dir_to_root: function
    record FsTable
    end
-
-   --...
+   -- util
+   is_dir: function(dir: string): boolean
+   dir: function(dir: string): function(): string --? right iterator
+   is_file: function(file: string): boolean
 end
 
 return fs
