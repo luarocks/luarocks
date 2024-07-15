@@ -21,6 +21,16 @@ local record cfg
       lua_dir: string
       lib_dir: string
    end
+   -- util
+   record cache
+      luajit_version_checked: boolean
+      luajit_version: string
+      rocks_provided: {Rockspec} --! import? or move?
+   end
+   record variables
+      LUA: string
+   end
+   rocks_provided: {Rockspec}
 end
 
 return cfg

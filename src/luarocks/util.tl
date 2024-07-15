@@ -51,6 +51,7 @@ local record util
       description: Description
       test_dependencies: {string}
       test: Test
+      format_is_at_least: function(Rockspec, string): boolean
    end
 
    record Parser --?
@@ -62,16 +63,16 @@ local record util
    end
 end
 
-util.cleanup_path = core.cleanup_path
-util.split_string = core.split_string
-util.sortedpairs = core.sortedpairs
-util.deep_merge = core.deep_merge
-util.deep_merge_under = core.deep_merge_under
-util.popen_read = core.popen_read
-util.show_table = core.show_table
-util.printerr = core.printerr
-util.warning = core.warning
-util.keys = core.keys
+-- util.cleanup_path = core.cleanup_path --tlcheck acting funny
+-- util.split_string = core.split_string
+-- util.sortedpairs = core.sortedpairs
+-- util.deep_merge = core.deep_merge
+-- util.deep_merge_under = core.deep_merge_under
+-- util.popen_read = core.popen_read
+-- util.show_table = core.show_table
+-- util.printerr = core.printerr
+-- util.warning = core.warning
+-- util.keys = core.keys
 
 local type Fn = util.Fn
 local type Rockspec = util.Rockspec
@@ -349,7 +350,7 @@ end
 
 --- Get default rockspec name for commands that take optional rockspec name.
 -- @return string or (nil, string): path to the rockspec or nil and error message.
-function util.get_default_rockspec()
+function util.get_default_rockspec(): string, string
    local versions, paths, unnamed_paths = {}, {}, {}
    -- Look for rockspecs in some common locations.
    collect_rockspecs(versions, paths, unnamed_paths, ".")
@@ -391,14 +392,14 @@ end
 -- Quote Lua string, analogous to fs.Q.
 -- @param s A string, such as "hello"
 -- @return string: A quoted string, such as '"hello"'
-function util.LQ(s)
+function util.LQ(s: string): string
    return ("%q"):format(s)
 end
 
 -- Split name and namespace of a package name.
 -- @param ns_name a name that may be in "namespace/name" format
 -- @return string, string? - name and optionally a namespace
-function util.split_namespace(ns_name)
+function util.split_namespace(ns_name: string): string, string
    local p1, p2 = ns_name:match("^([^/]+)/([^/]+)$")
    if p1 then
       return p2, p1
@@ -407,10 +408,7 @@ function util.split_namespace(ns_name)
 end
 
 --- Argparse action callback for namespaced rock arguments.
-function util.namespaced_name_action(args, target, ns_name)
-   assert(type(args) == "table")
-   assert(type(target) == "string")
-   assert(type(ns_name) == "string" or not ns_name)
+function util.namespaced_name_action(args: {any: any}, target: string, ns_name: string) --? Fn.args
 
    if not ns_name then
       return
@@ -427,10 +425,10 @@ function util.namespaced_name_action(args, target, ns_name)
    end
 end
 
-function util.deep_copy(tbl)
-   local copy = {}
+function util.deep_copy(tbl: {any: any}): {any: any}
+   local copy: {any: any} = {}
    for k, v in pairs(tbl) do
-      if type(v) == "table" then
+      if v is {any: any} then
          copy[k] = util.deep_copy(v)
       else
          copy[k] = v
@@ -442,8 +440,8 @@ end
 -- A portable version of fs.exists that can be used at early startup,
 -- before the platform has been determined and luarocks.fs has been
 -- initialized.
-function util.exists(file)
-   local fd, _, code = io.open(file, "r")
+function util.exists(file: string): boolean
+   local fd, _, code = io.open(file, "r") --! both tl.tl and the lua docs say that the method gives 2 returns: (FILE and string)
    if code == 13 then
       -- code 13 means "Permission denied" on both Unix and Windows
       -- io.open on folders always fails with code 13 on Windows
@@ -456,19 +454,33 @@ function util.exists(file)
    return false
 end
 
+function util.lua_is_wrapper(interp: string): boolean, string
+   local fd, err = io.open(interp, "r")
+   if not fd then
+      return nil, err
+   end
+   local data: string
+   data, err = fd:read(1000)
+   fd:close()
+   if not data then
+      return nil, err
+   end
+   return not not data:match("LUAROCKS_SYSCONFDIR") --! not not?!?! string to true?
+end
+
 do
-   local function Q(pathname)
+   local function Q(pathname: string): string
       if pathname:match("^.:") then
          return pathname:sub(1, 2) .. '"' .. pathname:sub(3) .. '"'
       end
       return '"' .. pathname .. '"'
    end
 
-   function util.check_lua_version(lua, luaver)
+   function util.check_lua_version(lua:string, luaver: string): string
       if not util.exists(lua) then
          return nil
       end
-      local lv, err = util.popen_read(Q(lua) .. ' -e "io.write(_VERSION:sub(5))"')
+      local lv = util.popen_read(Q(lua) .. ' -e "io.write(_VERSION:sub(5))"')
       if lv == "" then
          return nil
       end
@@ -478,7 +490,7 @@ do
       return lv
    end
 
-   function util.get_luajit_version()
+   function util.get_luajit_version(): string --? cfg.cache.luajit_version no context
       local cfg = require("luarocks.core.cfg")
       if cfg.cache.luajit_version_checked then
          return cfg.cache.luajit_version
@@ -489,7 +501,7 @@ do
          return nil
       end
 
-      local ljv
+      local ljv: string --? above a string?
       if cfg.lua_version == "5.1" then
          -- Ignores extra version info for custom builds, e.g. "LuaJIT 2.1.0-beta3 some-other-version-info"
          ljv = util.popen_read(Q(cfg.variables.LUA) .. ' -e "io.write(tostring(jit and jit.version:gsub([[^%S+ (%S+).*]], [[%1]])))"')
@@ -501,11 +513,18 @@ do
       return ljv
    end
 
-   local find_lua_bindir
+   local find_lua_bindir: function(prefix: string, luaver: string, verbose: string): string, string, string
    do
       local exe_suffix = (package.config:sub(1, 1) == "\\" and ".exe" or "")
 
-      local function insert_lua_variants(names, luaver)
+      local record names_record
+         names_hash: {string: string}
+         names_array: {string}
+      end
+
+      local type HashArrayRecord = names_record
+
+      local function insert_lua_variants(names: HashArrayRecord, luaver: string) --! atempt 1 bellow comented, this is atempt 2, original in the util-original file
          local variants = {
             "lua" .. luaver .. exe_suffix,
             "lua" .. luaver:gsub("%.", "") .. exe_suffix,
@@ -513,13 +532,27 @@ do
             "lua-" .. luaver:gsub("%.", "") .. exe_suffix,
          }
          for _, name in ipairs(variants) do
-            names[name] = luaver
-            table.insert(names, name)
+            names.names_hash[name] = luaver --! this wants indexing by string --! names is never used as a hesh
+            table.insert(names.names_array, name) --! this wants indexing by integer
          end
       end
 
-      find_lua_bindir = function(prefix, luaver, verbose)
-         local names = {}
+      -- local function insert_lua_variants(names: {string}, luaver: string)
+      --    local variants = {
+      --       "lua" .. luaver .. exe_suffix,
+      --       "lua" .. luaver:gsub("%.", "") .. exe_suffix,
+      --       "lua-" .. luaver .. exe_suffix,
+      --       "lua-" .. luaver:gsub("%.", "") .. exe_suffix,
+      --    }
+      --    local names_length = #names
+      --    for i, name in ipairs(variants) do
+      --       names[name] = luaver --! this wants indexing by string
+      --       names[i + names_length] = name
+      --    end
+      -- end
+
+      find_lua_bindir = function(prefix: string, luaver: string, verbose: string): string, string, string
+         local names: HashArrayRecord = {}
          if luaver then
             insert_lua_variants(names, luaver)
          else
@@ -528,14 +561,14 @@ do
             end
          end
          if luaver == "5.1" or not luaver then
-            table.insert(names, "luajit" .. exe_suffix)
+            table.insert(names.names_array, "luajit" .. exe_suffix)
          end
-         table.insert(names, "lua" .. exe_suffix)
+         table.insert(names.names_array, "lua" .. exe_suffix)
 
          local tried = {}
          local dir_sep = package.config:sub(1, 1)
          for _, d in ipairs({ prefix .. dir_sep .. "bin", prefix }) do
-            for _, name in ipairs(names) do
+            for _, name in ipairs(names.names_array) do
                local lua = d .. dir_sep .. name
                local is_wrapper, err = util.lua_is_wrapper(lua)
                if is_wrapper == false then
@@ -558,14 +591,14 @@ do
       end
    end
 
-   function util.find_lua(prefix, luaver, verbose)
-      local lua, bindir
+   function util.find_lua(prefix: string, luaver: string, verbose: string): {string: string}, string
+      local lua, bindir: string, string
       lua, bindir, luaver = find_lua_bindir(prefix, luaver, verbose)
       if not lua then
          return nil, bindir
       end
 
-      return {
+      return { --? {string: string}
          lua_version = luaver,
          lua = lua,
          lua_dir = prefix,
@@ -574,29 +607,16 @@ do
    end
 end
 
-function util.lua_is_wrapper(interp)
-   local fd, err = io.open(interp, "r")
-   if not fd then
-      return nil, err
-   end
-   local data, err = fd:read(1000)
-   fd:close()
-   if not data then
-      return nil, err
-   end
-   return not not data:match("LUAROCKS_SYSCONFDIR")
-end
-
-function util.opts_table(type_name, valid_opts)
-   local opts_mt = {}
+function util.opts_table(type_name: string, valid_opts: {string: string})
+   local opts_mt: metatable<string> = {} --Option??
 
    opts_mt.__index = opts_mt
 
-   function opts_mt.type()
+   function opts_mt.type(): string
       return type_name
    end
 
-   return function(opts)
+   return function(opts: {string: string})
       for k, v in pairs(opts) do
          local tv = type(v)
          if not valid_opts[k] then
@@ -624,10 +644,10 @@ end
 -- @return a table with rock names as keys and versions and values,
 -- specifying modules that are already provided by the VM (including
 -- "lua" for the Lua version and, for format 3.0+, "luajit" if detected).
-function util.get_rocks_provided(rockspec)
+function util.get_rocks_provided(rockspec: Rockspec): {Rockspec}
    local cfg = require("luarocks.core.cfg")
 
-   if not rockspec and cfg.cache.rocks_provided then
+   if not rockspec and cfg.cache.rocks_provided then --rocks_provided: Rockspec
       return cfg.cache.rocks_provided
    end
 
@@ -660,13 +680,13 @@ function util.get_rocks_provided(rockspec)
    end
 
    if not rockspec then
-      cfg.cache.rocks_provided = rocks_provided
+      cfg.cache.rocks_provided = rocks_provided --!
    end
 
    return rocks_provided
 end
 
-function util.remove_doc_dir(name, version)
+function util.remove_doc_dir(name: string, version: string)
    local path = require("luarocks.path")
    local fs = require("luarocks.fs")
    local dir = require("luarocks.dir")
