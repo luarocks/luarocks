@@ -6,7 +6,7 @@
 local cfg = require("luarocks.core.cfg")
 local core = require("luarocks.core.path")
 local dir = require("luarocks.dir")
--- local util = require("luarocks.util") --! crashes teal
+local util = require("luarocks.core.util")
 
 local type Tree = cfg.Tree
 
@@ -28,6 +28,14 @@ path.deploy_lib_dir = core.deploy_lib_dir
 path.map_trees = core.map_trees
 path.rocks_tree_to_string = core.rocks_tree_to_string
 
+function path.root_dir(tree: string | Tree): string
+   if tree is string then
+      return tree
+   else
+      return tree.root
+   end
+end
+
 --- Infer rockspec filename from a rock filename.
 -- @param rock_name string: Pathname of a rock file.
 -- @return string: Filename of the rockspec, without path.
@@ -37,16 +45,7 @@ function path.rockspec_name_from_rock(rock_name: string): string
 end
 
 function path.root_from_rocks_dir(rocks_dir: string): string
-   return "" --! temp
-   -- return rocks_dir:match("(.*)" .. util.matchquote(cfg.rocks_subdir) .. ".*$") --! only depends here on util
-end
-
-function path.root_dir(tree: string | Tree): string
-   if tree is string then
-      return tree
-   else
-      return tree.root
-   end
+   return rocks_dir:match("(.*)" .. util.matchquote(cfg.rocks_subdir) .. ".*$")
 end
 
 function path.deploy_bin_dir(tree: string | Tree): string

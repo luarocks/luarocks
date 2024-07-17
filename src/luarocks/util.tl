@@ -19,6 +19,7 @@ local record util
    printerr: function(...: string | number)
    warning: function(string)
    keys: function<K, V>({K : V}): {K}
+   matchquote: function(string): string
 
    record Fn
       fn: function(...: any)
@@ -63,16 +64,17 @@ local record util
    end
 end
 
--- util.cleanup_path = core.cleanup_path --tlcheck acting funny
--- util.split_string = core.split_string
--- util.sortedpairs = core.sortedpairs
--- util.deep_merge = core.deep_merge
--- util.deep_merge_under = core.deep_merge_under
--- util.popen_read = core.popen_read
--- util.show_table = core.show_table
--- util.printerr = core.printerr
--- util.warning = core.warning
--- util.keys = core.keys
+util.cleanup_path = core.cleanup_path --tlcheck acting funny
+util.split_string = core.split_string
+util.sortedpairs = core.sortedpairs
+util.deep_merge = core.deep_merge
+util.deep_merge_under = core.deep_merge_under
+util.popen_read = core.popen_read
+util.show_table = core.show_table
+util.printerr = core.printerr
+util.warning = core.warning
+util.keys = core.keys
+util.matchquote = core.matchquote
 
 local type Fn = util.Fn
 local type Rockspec = util.Rockspec
@@ -120,15 +122,6 @@ function util.run_scheduled_functions()
       local item = scheduled_functions[i]
       item.fn(table.unpack(item.args, 1, item.args.n)) --! here a list and onn line 52 we produse a record
    end
-end
-
---- Produce a Lua pattern that matches precisely the given string
--- (this is suitable to be concatenating to other patterns,
--- so it does not include beginning- and end-of-string markers (^$)
--- @param s string: The input string
--- @return string: The equivalent pattern
-function util.matchquote(s: string): string
-   return (s:gsub("[?%-+*%[%].%%()$^]","%%%1"))
 end
 
 local var_format_pattern = "%$%((%a[%a%d_]+)%)"
@@ -305,7 +298,7 @@ end
 
 function util.announce_install(rockspec: Rockspec)
    local cfg = require("luarocks.core.cfg")
-   local path = require("luarocks.path")
+   local path = require("luarocks.core.path") --TEAL BUG?
 
    local suffix = ""
    if rockspec.description and rockspec.description.license then

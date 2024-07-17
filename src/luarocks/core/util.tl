@@ -117,6 +117,15 @@ function util.show_table(t: {any:any}, tname: string, top_indent: string): strin
    return cart .. autoref
 end
 
+--- Produce a Lua pattern that matches precisely the given string
+-- (this is suitable to be concatenating to other patterns,
+-- so it does not include beginning- and end-of-string markers (^$)
+-- @param s string: The input string
+-- @return string: The equivalent pattern
+function util.matchquote(s: string): string
+   return (s:gsub("[?%-+*%[%].%%()$^]","%%%1"))
+end
+
 --- Merges contents of src on top of dst's contents
 -- (i.e. if an key from src already exists in dst, replace it).
 -- @param dst Destination table, which will receive src's contents.
