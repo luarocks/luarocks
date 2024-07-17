@@ -66,7 +66,7 @@ end
 
 util.cleanup_path = core.cleanup_path --tlcheck acting funny
 util.split_string = core.split_string
-util.sortedpairs = core.sortedpairs
+-- util.sortedpairs = core.sortedpairs
 util.deep_merge = core.deep_merge
 util.deep_merge_under = core.deep_merge_under
 util.popen_read = core.popen_read
