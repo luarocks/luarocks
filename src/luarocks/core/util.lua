@@ -4,6 +4,7 @@ local util = {}
 
 
 
+
 local dir_sep = package.config:sub(1, 1)
 
 
@@ -114,6 +115,15 @@ function util.show_table(t, tname, top_indent)
    cart, autoref = "", ""
    add_to_cart(t, tname, top_indent)
    return cart .. autoref
+end
+
+
+
+
+
+
+function util.matchquote(s)
+   return (s:gsub("[?%-+*%[%].%%()$^]", "%%%1"))
 end
 
 
