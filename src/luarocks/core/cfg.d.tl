@@ -22,10 +22,39 @@ local record cfg
       lib_dir: string
    end
    -- util
+   record Source
+      url: string
+   end
+
+   record Description
+      summary: string
+      detailed: string
+      homepage: string
+      issues_url: string
+      maintainer: string
+      license: string
+   end
+
+   record Test
+      type: string
+      platforms: {{string: any}}
+   end
+
+   record Rockspec --? luarocks-dev-1.rockspec
+      rockspec_format: string
+      name: string --? package
+      version: string
+      source: {Source}
+      description: Description
+      test_dependencies: {string}
+      test: Test
+      format_is_at_least: function(Rockspec, string): boolean
+   end
+   
    record cache
       luajit_version_checked: boolean
       luajit_version: string
-      rocks_provided: {Rockspec} --! import? or move?
+      rocks_provided: {Rockspec}
    end
    record variables
       LUA: string

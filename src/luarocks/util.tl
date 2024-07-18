@@ -5,6 +5,7 @@
 -- as this is used in the bootstrapping stage of luarocks.core.cfg.
 
 local core = require("luarocks.core.util")
+local cfg = require("luarocks.core.cfg")
 
 local type CompFn = core.CompFn
 
@@ -24,35 +25,6 @@ local record util
    record Fn
       fn: function(...: any)
       args: {any: any}
-   end
-
-   record Source
-      url: string
-   end
-
-   record Description
-      summary: string
-      detailed: string
-      homepage: string
-      issues_url: string
-      maintainer: string
-      license: string
-   end
-
-   record Test
-      type: string
-      platforms: {{string: any}}
-   end
-
-   record Rockspec -- luarocks-dev-1.rockspec
-      rockspec_format: string
-      name: string --? package
-      version: string
-      source: {Source}
-      description: Description
-      test_dependencies: {string}
-      test: Test
-      format_is_at_least: function(Rockspec, string): boolean
    end
 
    record Parser --?
@@ -77,7 +49,7 @@ util.keys = core.keys
 util.matchquote = core.matchquote
 
 local type Fn = util.Fn
-local type Rockspec = util.Rockspec
+local type Rockspec = cfg.Rockspec
 local type Parser = util.Parser
 
 local scheduled_functions: {Fn} = {} --? infered from line 48-51
@@ -206,7 +178,6 @@ function util.lua_versions(sort: string): function(): string
 end
 
 function util.lua_path_variables(): string, string
-   local cfg = require("luarocks.core.cfg")
    local lpath_var = "LUA_PATH"
    local lcpath_var = "LUA_CPATH"
 
@@ -267,7 +238,6 @@ function util.format_rock_name(name: string, namespace: string, version: string)
 end
 
 function util.deps_mode_option(parser: Parser, program: string)
-   local cfg = require("luarocks.core.cfg")
 
    parser:option("--deps-mode", "How to handle dependencies. Four modes are supported:\n"..
       "* all - use all trees from the rocks_trees list for finding dependencies\n"..
@@ -297,7 +267,6 @@ function util.see_also(text: string): string
 end
 
 function util.announce_install(rockspec: Rockspec)
-   local cfg = require("luarocks.core.cfg")
    local path = require("luarocks.core.path") --TEAL BUG?
 
    local suffix = ""
@@ -484,8 +453,7 @@ do
    end
 
    function util.get_luajit_version(): string --? cfg.cache.luajit_version no context
-      local cfg = require("luarocks.core.cfg")
-      if cfg.cache.luajit_version_checked then
+         if cfg.cache.luajit_version_checked then
          return cfg.cache.luajit_version
       end
       cfg.cache.luajit_version_checked = true
@@ -638,7 +606,6 @@ end
 -- specifying modules that are already provided by the VM (including
 -- "lua" for the Lua version and, for format 3.0+, "luajit" if detected).
 function util.get_rocks_provided(rockspec: Rockspec): {Rockspec}
-   local cfg = require("luarocks.core.cfg")
 
    if not rockspec and cfg.cache.rocks_provided then --rocks_provided: Rockspec
       return cfg.cache.rocks_provided
