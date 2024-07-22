@@ -15,7 +15,7 @@ local record util
    sortedpairs: function<K, V, S>({K : V}, CompFn | {K | {K, S}}): function(): K, V, S
    deep_merge: function({any : any}, {any : any})
    deep_merge_under: function({any : any}, {any : any})
-   popen_read: function(string, string): string
+   popen_read: function(string, ?string): string
    show_table: function({any : any}, string, string): string
    printerr: function(...: string | number)
    warning: function(string)
@@ -24,7 +24,7 @@ local record util
 
    record Fn
       fn: function(...: any)
-      args: {any: any}
+      args: table.PackTable<any>
    end
 
    record Parser --?
@@ -34,6 +34,7 @@ local record util
       flag: function(Parser, string): Parser
       hidden: function(Parser, boolean): Parser
    end
+
 end
 
 util.cleanup_path = core.cleanup_path --tlcheck acting funny
@@ -92,7 +93,7 @@ function util.run_scheduled_functions()
    end
    for i = #scheduled_functions, 1, -1 do
       local item = scheduled_functions[i]
-      item.fn(table.unpack(item.args, 1, item.args.n)) --! here a list and onn line 52 we produse a record
+      item.fn(table.unpack(item.args, 1, item.args.n))
    end
 end
 
@@ -148,7 +149,7 @@ function util.variable_substitutions(tbl: {string: string}, vars: {string: strin
 
    local updated = {}
    for k, v in pairs(tbl) do
-      if type(v) == "string" then
+      if v is string then
          updated[k] = v:gsub(var_format_pattern, vars)
          if warn_failed_matches(updated[k]) then
             updated[k] = updated[k]:gsub(var_format_pattern, "")
@@ -284,7 +285,7 @@ end
 -- @param unnamed_paths table: An array of rockspec paths that don't contain rock
 -- name and version in regular format.
 -- @param subdir string: path to subdirectory.
-local function collect_rockspecs(versions: {string: vers.Version}, paths: {string: string}, unnamed_paths: {string}, subdir: string) --! fs stuff
+local function collect_rockspecs(versions: {string: string}, paths: {string: string}, unnamed_paths: {string}, subdir: string) --! fs stuff
    local fs = require("luarocks.fs")
    local dir = require("luarocks.dir")
    local path = require("luarocks.path")
@@ -509,6 +510,19 @@ do
       --    for i, name in ipairs(variants) do
       --       names[name] = luaver --! this wants indexing by string
       --       names[i + names_length] = name
+      --    end
+      -- end
+
+      -- local function insert_lua_variants(names, luaver)
+      --    local variants = {
+      --       "lua" .. luaver .. exe_suffix,
+      --       "lua" .. luaver:gsub("%.", "") .. exe_suffix,
+      --       "lua-" .. luaver .. exe_suffix,
+      --       "lua-" .. luaver:gsub("%.", "") .. exe_suffix,
+      --    }
+      --    for _, name in ipairs(variants) do
+      --       names[name] = luaver
+      --       table.insert(names, name)
       --    end
       -- end
 

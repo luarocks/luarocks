@@ -171,7 +171,7 @@ end
 -- @param file_name string: pathname of a rock or rockspec
 -- @return (string, string, string) or nil: name, version and arch
 -- or nil if name could not be parsed
-function path.parse_name(file_name: string): string
+function path.parse_name(file_name: string): string, string, string
    if file_name:match("%.rock$") then
       return dir.base_name(file_name):match("(.*)-([^-]+-%d+)%.([^.]+)%.rock$")
    else

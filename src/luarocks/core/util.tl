@@ -16,7 +16,7 @@ local type CompFn = util.CompFn
 -- @param spec string: "*l" by default, to read a single line.
 -- May be used to read more, passing, for instance, "*a".
 -- @return string: the output of the program.
-function util.popen_read(cmd: string, spec: string): string
+function util.popen_read(cmd: string, spec?: string): string
    local tmpfile: string = (dir_sep == "\\")
                    and (os.getenv("TMP") .. "/luarocks-" .. tostring(math.floor(math.random() * 10000)))
                    or os.tmpname()
