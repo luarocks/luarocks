@@ -57,7 +57,7 @@ end
 -- @param repo_url string: The repository identifier.
 -- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
 -- @return table or nil: loaded manifest or nil if cache is empty.
-function manif.get_cached_manifest(repo_url: string, lua_version: string): Manifest
+function manif.get_cached_manifest(repo_url: string, lua_version?: string): Manifest
    lua_version = lua_version or cfg.lua_version
    return manifest_cache[repo_url] and manifest_cache[repo_url][lua_version]
 end

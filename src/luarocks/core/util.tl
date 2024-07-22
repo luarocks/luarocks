@@ -1,13 +1,18 @@
 
 local record util
-   type CompFn = function(any, any): boolean
+   record Ordering<K>
+      {K}
+      
+      sub_orders: {K: Ordering<K>}
+   end
 end
 
 --------------------------------------------------------------------------------
 
 local dir_sep = package.config:sub(1, 1)
 
-local type CompFn = util.CompFn
+local type SortBy<K> = table.SortFunction<K> | util.Ordering<K>
+
 
 --- Run a process and read a its output.
 -- Equivalent to io.popen(cmd):read("*l"), except that it
@@ -57,7 +62,7 @@ function util.show_table(t: {any:any}, tname: string, top_indent: string): strin
 
    local function basic_serialize(o: any): string
       local so = tostring(o)
-      if type(o) == "function" then
+      if o is function then
          local info = debug and debug.getinfo(o, "S")
          if not info then
             return ("%q"):format(so)
@@ -76,7 +81,7 @@ function util.show_table(t: {any:any}, tname: string, top_indent: string): strin
       end
    end
 
-   local function add_to_cart (value: any | {any:any}, name: string, indent: string, saved: {any: string}, field: string)
+   local function add_to_cart (value: any | {any:any}, name: string, indent: string, saved?: {any: string}, field?: string)
       indent = indent or ""
       saved = saved or {}
       field = field or name
@@ -172,7 +177,7 @@ end
 
 -- from http://lua-users.org/wiki/SplitJoin
 -- by Philippe Lhoste
-function util.split_string(str: string, delim: string, maxNb: number): {string}
+function util.split_string(str: string, delim: string, maxNb?: number): {string}
    -- Eliminate bad cases...
    if string.find(str, delim) == nil then
       return { str }
@@ -183,11 +188,11 @@ function util.split_string(str: string, delim: string, maxNb: number): {string}
    local result = {}
    local pat = "(.-)" .. delim .. "()"
    local nb = 0
-   local lastPos: number
+   local lastPos: integer
    for part, pos in string.gmatch(str, pat) do
       nb = nb + 1
       result[nb] = part
-      lastPos = tonumber(pos)
+      lastPos = math.tointeger(pos)
       if nb == maxNb then break end
    end
    -- Handle the last field
@@ -288,51 +293,46 @@ end
 -- for that key, which is returned by the iterator as the third value after the key
 -- and the value.
 -- @return function: the iterator function.
-function util.sortedpairs<K, V, S>(tbl: {K: V}, sort_function: CompFn | {K | {K, S}}): function(): K, V, S
-   if not sort_function then
-      sort_function = default_sort
-   end
+function util.sortedpairs<K, V>(tbl: {K: V}, sort_by?: SortBy<K>): function(): K, V, util.Ordering<K>
    local keys = util.keys(tbl)
-   local sub_orders: {K: S} = {}
+   local sub_orders: {K: util.Ordering<K>} = nil
 
-   if sort_function is CompFn then
-      table.sort(keys, sort_function)
+   if sort_by == nil then
+      table.sort(keys, default_sort)
+   elseif sort_by is table.SortFunction<K> then
+      table.sort(keys, sort_by)
    else
-      local order = sort_function
-      local ordered_keys = {}
-      local all_keys = keys
-      keys = {}
+      -- sort_by is Ordering<K>
+      
+      sub_orders = sort_by.sub_orders
 
-      for _, order_entry in ipairs(order) do
-         local key, sub_order: K, S
-
-         if not order_entry is {K, S} then --TEAL BUG
-            key = order_entry as K
-         else
-            key = order_entry[1]
-            sub_order = order_entry[2]
-         end
-
+      local seen_ordered_key: {K: boolean} = {}
+      
+      local my_ordered_keys: {K} = {}
+      
+      for _, key in ipairs(sort_by) do
          if tbl[key] then
-            ordered_keys[key] = true
-            sub_orders[key] = sub_order
-            table.insert(keys, key)
+            seen_ordered_key[key] = true
+            table.insert(my_ordered_keys, key)
          end
       end
 
-      table.sort(all_keys, default_sort)
-      for _, key in ipairs(all_keys) do
-         if not ordered_keys[key] then
-            table.insert(keys, key)
+      table.sort(keys, default_sort)
+
+      for _, key in ipairs(keys) do
+         if not seen_ordered_key[key] then
+            table.insert(my_ordered_keys, key)
          end
       end
+      
+      keys = my_ordered_keys
    end
-
+   
    local i = 1
-   return function(): K, V, S
+   return function(): K, V, util.Ordering<K>
       local key = keys[i]
       i = i + 1
-      return key, tbl[key], sub_orders[key]
+      return key, tbl[key], sub_orders and sub_orders[key]
    end
 end
 

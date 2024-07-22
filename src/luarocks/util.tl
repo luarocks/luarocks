@@ -7,12 +7,12 @@
 local core = require("luarocks.core.util")
 local cfg = require("luarocks.core.cfg")
 
-local type CompFn = core.CompFn
+local type SortBy<K> = table.SortFunction<K> | core.Ordering<K>
 
 local record util
    cleanup_path: function(string, string, string, boolean): string
    split_string: function(string, string, number): {string}
-   sortedpairs: function<K, V, S>({K : V}, CompFn | {K | {K, S}}): function(): K, V, S
+   sortedpairs: function<K, V>(tbl: {K: V}, sort_by: SortBy<K>): function(): K, V, core.Ordering<K>
    deep_merge: function({any : any}, {any : any})
    deep_merge_under: function({any : any}, {any : any})
    popen_read: function(string, ?string): string
@@ -27,19 +27,18 @@ local record util
       args: table.PackTable<any>
    end
 
-   record Parser --?
+   record Parser
       option: function(Parser, ...: string): Parser
       argname: function(Parser, string): Parser
       choices: function(Parser, {string}): Parser
       flag: function(Parser, string): Parser
       hidden: function(Parser, boolean): Parser
    end
-
 end
 
-util.cleanup_path = core.cleanup_path --tlcheck acting funny
+util.cleanup_path = core.cleanup_path
 util.split_string = core.split_string
--- util.sortedpairs = core.sortedpairs
+util.sortedpairs = core.sortedpairs
 util.deep_merge = core.deep_merge
 util.deep_merge_under = core.deep_merge_under
 util.popen_read = core.popen_read
@@ -52,6 +51,7 @@ util.matchquote = core.matchquote
 local type Fn = util.Fn
 local type Rockspec = cfg.Rockspec
 local type Parser = util.Parser
+
 
 local scheduled_functions: {Fn} = {} --? infered from line 48-51
 
@@ -290,7 +290,6 @@ local function collect_rockspecs(versions: {string: string}, paths: {string: str
    local dir = require("luarocks.dir")
    local path = require("luarocks.path")
    local vers = require("luarocks.core.vers")
-
    if fs.is_dir(subdir) then
       for file in fs.dir(subdir) do
          file = dir.path(subdir, file)

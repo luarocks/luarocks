@@ -21,7 +21,7 @@ function persist.run_file(filename: string, env: {string:any}): boolean, any | s
       return nil, read_err, "open"
    end
    str = str:gsub("^#![^\n]*\n", "")
-   local chunk, ran, err: function(any):(any), boolean, any
+   local chunk, ran, err: function(...: any):(any), boolean, any
    chunk, err = load(str, filename, "t", env)
    if chunk then
       ran, err = pcall(chunk)
@@ -45,7 +45,7 @@ end
 -- or nil, an error message and an error code ("open"; couldn't open the file,
 -- "load"; compile-time error, or "run"; run-time error)
 -- in case of errors.
-function persist.load_into_table(filename: string, tbl: {string:any}) : {any: any}, {any: any} | string, string
+function persist.load_into_table(filename: string, tbl?: {string:any}) : {any: any}, {any: any} | string, string
 
    local result: {string:any} = tbl or {}
    local globals = {}

@@ -3,10 +3,11 @@
 -- saving tables into files.
 local record persist
    run_file: function(string, {string:any}): boolean, any | string, string
-   load_into_table: function(string, {string:any}) : {any: any}, {any: any} | string, string
+   load_into_table: function(string, ?{string:any}) : {any: any}, {any: any} | string, string
 end
 
 local core = require("luarocks.core.persist")
+local coreutil = require("luarocks.core.util")
 local util = require("luarocks.util")
 local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
@@ -14,7 +15,13 @@ local fs = require("luarocks.fs")
 persist.run_file = core.run_file
 persist.load_into_table = core.load_into_table
 
-local write_table: function(out, tbl: {number | string: number| string}, level: integer, field_order: {(number | string): any})
+local type SortBy<K> = table.SortFunction<K> | coreutil.Ordering<K>
+
+local interface Writer
+   write: function(self: Writer, data: string)
+end
+
+local write_table: function(out: Writer, tbl: {number | string: number| string}, level: integer, field_order: SortBy<number | string>)
 
 --- Write a value as Lua code.
 -- This function handles only numbers and strings, invoking write_table
@@ -24,8 +31,8 @@ local write_table: function(out, tbl: {number | string: number| string}, level: 
 -- @param level number: the indentation level
 -- @param sub_order table: optional prioritization table
 -- @see write_table
-function persist.write_value(out, v: any, level: integer, sub_order) --! out type
-   if v is {any: any} then
+function persist.write_value(out: Writer, v: any, level: integer, sub_order?: SortBy<number | string>)
+   if v is {number | string: number | string} then
       level = level or 0
       write_table(out, v, level + 1, sub_order)
    elseif v is string then
@@ -79,7 +86,7 @@ do
    end
 end
 
-local function write_table_key_assignment(out, k: string | number, level: integer)
+local function write_table_key_assignment(out: Writer, k: string | number, level: integer)
    if k is string and is_valid_plain_key(k) then
       out:write(k)
    else
@@ -98,7 +105,7 @@ end
 -- @param tbl table: the table to be written.
 -- @param level number: the indentation level
 -- @param field_order table: optional prioritization table
-write_table = function(out, tbl: {number | string: number| string}, level: integer, field_order: {(number | string): any}) --? suborrder type?
+write_table = function(out: Writer, tbl: {number | string: number| string}, level: integer, field_order: SortBy<number | string>)
    out:write("{")
    local sep = "\n"
    local indentation = "   "
@@ -137,9 +144,9 @@ end
 -- @param tbl table: the table to be written.
 -- @param field_order table: optional prioritization table
 -- @return true if successful; nil and error message if failed.
-local function write_table_as_assignments(out, tbl, field_order)
+local function write_table_as_assignments(out: Writer, tbl: {number | string: number| string}, field_order: SortBy<number | string>): boolean, string
    for k, v, sub_order in util.sortedpairs(tbl, field_order) do
-      if not is_valid_plain_key(k) then
+      if not is_valid_plain_key(k) then --? tostring
          return nil, "cannot store '"..tostring(k).."' as a plain key."
       end
       out:write(k.." = ")
@@ -152,9 +159,9 @@ end
 --- Write a table using Lua table syntax to a writer object.
 -- @param out table or userdata: a writer object supporting :write() method.
 -- @param tbl table: the table to be written.
-local function write_table_as_table(out, tbl)
+local function write_table_as_table(out: Writer, tbl: {number | string: number| string})
    out:write("return {\n")
-   for k, v, sub_order in util.sortedpairs(tbl) do
+   for k, v, sub_order in util.sortedpairs(tbl) do --! that has the right inputs and outputs yet it throws an error
       out:write("   ")
       write_table_key_assignment(out, k, 1)
       persist.write_value(out, v, 1, sub_order)
@@ -170,8 +177,8 @@ end
 -- @param tbl table: the table containing the data to be written
 -- @param field_order table: an optional array indicating the order of top-level fields.
 -- @return persisted data as string; or nil and an error message
-function persist.save_from_table_to_string(tbl, field_order)
-   local out = {buffer = {}}
+function persist.save_from_table_to_string(tbl: {number | string: number| string}, field_order: SortBy<number | string>): string
+   local out: Writer = {buffer = {}} --!
    function out:write(data) table.insert(self.buffer, data) end
    local ok, err = write_table_as_assignments(out, tbl, field_order)
    if not ok then
