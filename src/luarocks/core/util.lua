@@ -1,11 +1,16 @@
 local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local debug = _tl_compat and _tl_compat.debug or debug; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local os = _tl_compat and _tl_compat.os or os; local package = _tl_compat and _tl_compat.package or package; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
-local util = {}
+local util = {Ordering = {}, }
+
+
+
+
 
 
 
 
 
 local dir_sep = package.config:sub(1, 1)
+
 
 
 
@@ -187,7 +192,7 @@ function util.split_string(str, delim, maxNb)
    for part, pos in string.gmatch(str, pat) do
       nb = nb + 1
       result[nb] = part
-      lastPos = tonumber(pos)
+      lastPos = math.tointeger(pos)
       if nb == maxNb then break end
    end
 
@@ -288,51 +293,46 @@ end
 
 
 
-function util.sortedpairs(tbl, sort_function)
-   if not sort_function then
-      sort_function = default_sort
-   end
+function util.sortedpairs(tbl, sort_by)
    local keys = util.keys(tbl)
-   local sub_orders = {}
+   local sub_orders = nil
 
-   if type(sort_function) == "function" then
-      table.sort(keys, sort_function)
+   if sort_by == nil then
+      table.sort(keys, default_sort)
+   elseif type(sort_by) == "function" then
+      table.sort(keys, sort_by)
    else
-      local order = sort_function
-      local ordered_keys = {}
-      local all_keys = keys
-      keys = {}
 
-      for _, order_entry in ipairs(order) do
-         local key, sub_order
 
-         if not (type(order_entry) == "table") then
-            key = order_entry
-         else
-            key = order_entry[1]
-            sub_order = order_entry[2]
-         end
+      sub_orders = sort_by.sub_orders
 
+      local seen_ordered_key = {}
+
+      local my_ordered_keys = {}
+
+      for _, key in ipairs(sort_by) do
          if tbl[key] then
-            ordered_keys[key] = true
-            sub_orders[key] = sub_order
-            table.insert(keys, key)
+            seen_ordered_key[key] = true
+            table.insert(my_ordered_keys, key)
          end
       end
 
-      table.sort(all_keys, default_sort)
-      for _, key in ipairs(all_keys) do
-         if not ordered_keys[key] then
-            table.insert(keys, key)
+      table.sort(keys, default_sort)
+
+      for _, key in ipairs(keys) do
+         if not seen_ordered_key[key] then
+            table.insert(my_ordered_keys, key)
          end
       end
+
+      keys = my_ordered_keys
    end
 
    local i = 1
    return function()
       local key = keys[i]
       i = i + 1
-      return key, tbl[key], sub_orders[key]
+      return key, tbl[key], sub_orders and sub_orders[key]
    end
 end
 
