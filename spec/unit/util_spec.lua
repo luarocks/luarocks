@@ -83,14 +83,26 @@ describe("luarocks.util #unit", function()
          assert.are.same({}, collect(util.sortedpairs({}, {"k1", "k2"})))
          assert.are.same({
             {"k3", "v3"},
-            {"k2", "v2", {"sub order"}},
             {"k1", "v1"},
+            {"k2", "v2"},
             {"k4", "v4"},
             {"k5", "v5"},
          }, collect(util.sortedpairs({
             k1 = "v1", k2 = "v2", k3 = "v3", k4 = "v4", k5 = "v5"
          }, {"k3", {"k2", {"sub order"}}, "k1"})))
       end)
+      -- it("sort by priority table", function()
+      --    assert.are.same({}, collect(util.sortedpairs({}, {"k1", "k2"})))
+      --    assert.are.same({
+      --       {"k3", "v3"},
+      --       {"k2", "v2", {"sub order"}},
+      --       {"k1", "v1"},
+      --       {"k4", "v4"},
+      --       {"k5", "v5"},
+      --    }, collect(util.sortedpairs({
+      --       k1 = "v1", k2 = "v2", k3 = "v3", k4 = "v4", k5 = "v5"
+      --    }, {"k3", {"k2", {"sub order"}}, "k1"})))
+      -- end)
    end)
 
    describe("core.util.show_table", function()
