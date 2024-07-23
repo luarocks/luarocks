@@ -135,35 +135,35 @@ local rockspec_formats, versions = type_check.declare_schemas({
    }
 })
 
-type_rockspec.order = {"rockspec_format", "package", "version",
-   { "source", { "url", "tag", "branch", "md5" } },
-   { "description", {"summary", "detailed", "homepage", "license" } },
-   "supported_platforms", "dependencies", "build_dependencies", "external_dependencies",
-   { "build", {"type", "modules", "copy_directories", "platforms"} },
-   "test_dependencies", { "test", {"type"} },
-   "hooks"}
+-- type_rockspec.order = {"rockspec_format", "package", "version",
+--    { "source", { "url", "tag", "branch", "md5" } },
+--    { "description", {"summary", "detailed", "homepage", "license" } },
+--    "supported_platforms", "dependencies", "build_dependencies", "external_dependencies",
+--    { "build", {"type", "modules", "copy_directories", "platforms"} },
+--    "test_dependencies", { "test", {"type"} },
+--    "hooks"}
 
--- type_rockspec.order = {
---    "rockspec_format",
---    "package",
---    "version",
---    "source",
---    "description",
---    "supported_platforms",
---    "dependencies",
---    "build_dependencies",
---    "external_dependencies",
---    "build",
---    "test_dependencies",
---    "test",
---    "hooks",
---    sub_orders = {
---       ["source"] = { "url", "tag", "branch", "md5" },
---       ["description"] = {"summary", "detailed", "homepage", "license" },
---       ["build"] = { "type", "modules", "copy_directories", "platforms" },
---       ["test"] = { "type" }
---    }
--- }
+type_rockspec.order = {
+   "rockspec_format",
+   "package",
+   "version",
+   "source",
+   "description",
+   "supported_platforms",
+   "dependencies",
+   "build_dependencies",
+   "external_dependencies",
+   "build",
+   "test_dependencies",
+   "test",
+   "hooks",
+   sub_orders = {
+      ["source"] = { "url", "tag", "branch", "md5" },
+      ["description"] = {"summary", "detailed", "homepage", "license" },
+      ["build"] = { "type", "modules", "copy_directories", "platforms" },
+      ["test"] = { "type" }
+   }
+}
 
 local function check_rockspec_using_version(rockspec, globals, version)
    local schema = rockspec_formats[version]
