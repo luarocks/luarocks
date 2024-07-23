@@ -192,7 +192,7 @@ function util.split_string(str: string, delim: string, maxNb?: number): {string}
    for part, pos in string.gmatch(str, pat) do
       nb = nb + 1
       result[nb] = part
-      lastPos = math.tointeger(tonumber(pos))
+      lastPos = tonumber(pos) as integer
       if nb == maxNb then break end
    end
    -- Handle the last field
