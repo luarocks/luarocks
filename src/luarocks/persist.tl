@@ -174,7 +174,7 @@ end
 -- @param tbl table: the table containing the data to be written
 -- @param field_order table: an optional array indicating the order of top-level fields.
 -- @return persisted data as string; or nil and an error message
-function persist.save_from_table_to_string(tbl: {number | string: number | string}, field_order: util.SortBy<number | string>): string, string --? optional
+function persist.save_from_table_to_string(tbl: {number | string: number | string}, field_order: util.SortBy<number | string>): string, string
    local out: Writer = {buffer = {}} --!
    function out:write(data: string) table.insert(self.buffer, data) end
    local ok, err = write_table_as_assignments(out, tbl, field_order)

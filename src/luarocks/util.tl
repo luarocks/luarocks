@@ -53,7 +53,7 @@ local type Rockspec = cfg.Rockspec
 local type Parser = util.Parser
 
 
-local scheduled_functions: {Fn} = {} --? infered from line 48-51
+local scheduled_functions: {Fn} = {}
 
 --- Schedule a function to be executed upon program termination.
 -- This is useful for actions such as deleting temporary directories
@@ -73,7 +73,7 @@ end
 -- @param item table: The token representing the scheduled function that was
 -- returned from the schedule_function call.
 function util.remove_scheduled_function(item: Fn)
-   for k, v in ipairs(scheduled_functions) do --? ipairs
+   for k, v in ipairs(scheduled_functions) do
       if v == item then
          table.remove(scheduled_functions, k)
          return
@@ -150,7 +150,7 @@ function util.variable_substitutions(tbl: {string: any}, vars: {string: string})
    local updated: {string: string} = {}
    for k, v in pairs(tbl) do
       if v is string then
-         updated[k] = string.gsub(v, var_format_pattern, vars) --! table 100% (there is an assert in src/luarocks/util.lua)
+         updated[k] = string.gsub(v, var_format_pattern, vars)
          if warn_failed_matches(updated[k]) then
             updated[k] = updated[k]:gsub(var_format_pattern, "")
          end
@@ -285,7 +285,7 @@ end
 -- @param unnamed_paths table: An array of rockspec paths that don't contain rock
 -- name and version in regular format.
 -- @param subdir string: path to subdirectory.
-local function collect_rockspecs(versions: {string: string}, paths: {string: string}, unnamed_paths: {string}, subdir: string) --! fs stuff
+local function collect_rockspecs(versions: {string: string}, paths: {string: string}, unnamed_paths: {string}, subdir: string)
    local fs = require("luarocks.fs")
    local dir = require("luarocks.dir")
    local path = require("luarocks.path")
@@ -343,7 +343,7 @@ function util.get_default_rockspec(): string, string
 
       if rock then
          -- If there are rockspecs for multiple rocks it's ambiguous.
-         if next(versions, rock) ~= nil then --! why expect boolean
+         if next(versions, rock) ~= nil then
             return nil, "Please specify which rockspec file to use."
          else
             return paths[rock]
@@ -373,7 +373,7 @@ function util.split_namespace(ns_name: string): string, string
 end
 
 --- Argparse action callback for namespaced rock arguments.
-function util.namespaced_name_action(args: {any: any}, target: string, ns_name: string) --? Fn.args
+function util.namespaced_name_action(args: {any: any}, target: string, ns_name: string)
 
    if not ns_name then
       return
@@ -406,7 +406,7 @@ end
 -- before the platform has been determined and luarocks.fs has been
 -- initialized.
 function util.exists(file: string): boolean
-   local fd, _, code = io.open(file, "r") --! both tl.tl and the lua docs say that the method gives 2 returns: (FILE and string)
+   local fd, _, code = io.open(file, "r")
    if code == 13 then
       -- code 13 means "Permission denied" on both Unix and Windows
       -- io.open on folders always fails with code 13 on Windows
@@ -430,7 +430,7 @@ function util.lua_is_wrapper(interp: string): boolean, string
    if not data then
       return nil, err
    end
-   return not not data:match("LUAROCKS_SYSCONFDIR") --! not not ->? string to true?
+   return not not data:match("LUAROCKS_SYSCONFDIR")
 end
 
 do
@@ -455,7 +455,7 @@ do
       return lv
    end
 
-   function util.get_luajit_version(): string --? cfg.cache.luajit_version no context
+   function util.get_luajit_version(): string
          if cfg.cache.luajit_version_checked then
          return cfg.cache.luajit_version
       end
@@ -465,7 +465,7 @@ do
          return nil
       end
 
-      local ljv: string --? above a string?
+      local ljv: string
       if cfg.lua_version == "5.1" then
          -- Ignores extra version info for custom builds, e.g. "LuaJIT 2.1.0-beta3 some-other-version-info"
          ljv = util.popen_read(Q(cfg.variables.LUA) .. ' -e "io.write(tostring(jit and jit.version:gsub([[^%S+ (%S+).*]], [[%1]])))"')
@@ -540,7 +540,7 @@ do
          return nil, bindir
       end
 
-      return { --? {string: string}
+      return {
          lua_version = luaver,
          lua = lua,
          lua_dir = prefix,
@@ -623,7 +623,7 @@ function util.get_rocks_provided(rockspec: Rockspec): {string: string}
    end
 
    if not rockspec then
-      cfg.cache.rocks_provided = rocks_provided --!
+      cfg.cache.rocks_provided = rocks_provided
    end
 
    return rocks_provided
