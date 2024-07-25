@@ -54,8 +54,9 @@ local record cfg
    record cache
       luajit_version_checked: boolean
       luajit_version: string
-      rocks_provided: {Rockspec}
+      rocks_provided: {string: string} --? right type? infered from  
    end
+
    record variables
       LUA: string
    end

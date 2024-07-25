@@ -5,14 +5,13 @@ local record util
       
       sub_orders: {K: Ordering<K>}
    end
+
+   type SortBy<K> = table.SortFunction<K> | util.Ordering<K>
 end
 
 --------------------------------------------------------------------------------
 
 local dir_sep = package.config:sub(1, 1)
-
-local type SortBy<K> = table.SortFunction<K> | util.Ordering<K>
-
 
 --- Run a process and read a its output.
 -- Equivalent to io.popen(cmd):read("*l"), except that it
@@ -293,7 +292,7 @@ end
 -- for that key, which is returned by the iterator as the third value after the key
 -- and the value.
 -- @return function: the iterator function.
-function util.sortedpairs<K, V>(tbl: {K: V}, sort_by?: SortBy<K>): function(): K, V, util.Ordering<K>
+function util.sortedpairs<K, V>(tbl: {K: V}, sort_by?: util.SortBy<K>): function(): K, V, util.Ordering<K>
    local keys = util.keys(tbl)
    local sub_orders: {K: util.Ordering<K>} = nil
 

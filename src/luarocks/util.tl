@@ -7,12 +7,10 @@
 local core = require("luarocks.core.util")
 local cfg = require("luarocks.core.cfg")
 
-local type SortBy<K> = table.SortFunction<K> | core.Ordering<K>
-
 local record util
    cleanup_path: function(string, string, string, boolean): string
    split_string: function(string, string, number): {string}
-   sortedpairs: function<K, V>(tbl: {K: V}, sort_by: SortBy<K>): function(): K, V, core.Ordering<K>
+   sortedpairs: function<K, V>(tbl: {K: V}, sort_by: core.SortBy<K>): function(): K, V, core.Ordering<K>
    deep_merge: function({any : any}, {any : any})
    deep_merge_under: function({any : any}, {any : any})
    popen_read: function(string, ?string): string
@@ -21,6 +19,8 @@ local record util
    warning: function(string)
    keys: function<K, V>({K : V}): {K}
    matchquote: function(string): string
+
+   type SortBy = core.SortBy
 
    record Fn
       fn: function(...: any)
@@ -145,12 +145,12 @@ end
 -- @param tbl table: Table to have its string values modified.
 -- @param vars table: Table containing string-string key-value pairs
 -- representing variables to replace in the strings values of tbl.
-function util.variable_substitutions(tbl: {string: string}, vars: {string: string})
+function util.variable_substitutions(tbl: {string: any}, vars: {string: string})
 
-   local updated = {}
+   local updated: {string: string} = {}
    for k, v in pairs(tbl) do
       if v is string then
-         updated[k] = v:gsub(var_format_pattern, vars)
+         updated[k] = string.gsub(v, var_format_pattern, vars) --! table 100% (there is an assert in src/luarocks/util.lua)
          if warn_failed_matches(updated[k]) then
             updated[k] = updated[k]:gsub(var_format_pattern, "")
          end
@@ -268,7 +268,7 @@ function util.see_also(text: string): string
 end
 
 function util.announce_install(rockspec: Rockspec)
-   local path = require("luarocks.core.path") --TEAL BUG?
+   local path = require("luarocks.path") --TEAL BUG?
 
    local suffix = ""
    if rockspec.description and rockspec.description.license then
@@ -313,7 +313,10 @@ end
 --- Get default rockspec name for commands that take optional rockspec name.
 -- @return string or (nil, string): path to the rockspec or nil and error message.
 function util.get_default_rockspec(): string, string
-   local versions, paths, unnamed_paths = {}, {}, {}
+
+   local versions: {string: string} = {}
+   local paths: {string: string} = {}
+   local unnamed_paths: {string} = {}
    -- Look for rockspecs in some common locations.
    collect_rockspecs(versions, paths, unnamed_paths, ".")
    collect_rockspecs(versions, paths, unnamed_paths, "rockspec")
@@ -340,7 +343,7 @@ function util.get_default_rockspec(): string, string
 
       if rock then
          -- If there are rockspecs for multiple rocks it's ambiguous.
-         if next(versions, rock) then
+         if next(versions, rock) ~= nil then --! why expect boolean
             return nil, "Please specify which rockspec file to use."
          else
             return paths[rock]
@@ -427,7 +430,7 @@ function util.lua_is_wrapper(interp: string): boolean, string
    if not data then
       return nil, err
    end
-   return not not data:match("LUAROCKS_SYSCONFDIR") --! not not?!?! string to true?
+   return not not data:match("LUAROCKS_SYSCONFDIR") --! not not ->? string to true?
 end
 
 do
@@ -478,14 +481,7 @@ do
    do
       local exe_suffix = (package.config:sub(1, 1) == "\\" and ".exe" or "")
 
-      local record names_record
-         names_hash: {string: string}
-         names_array: {string}
-      end
-
-      local type HashArrayRecord = names_record
-
-      local function insert_lua_variants(names: HashArrayRecord, luaver: string) --! atempt 1 bellow comented, this is atempt 2, original in the util-original file
+      local function insert_lua_variants(names: {string}, luaver: string)
          local variants = {
             "lua" .. luaver .. exe_suffix,
             "lua" .. luaver:gsub("%.", "") .. exe_suffix,
@@ -493,40 +489,12 @@ do
             "lua-" .. luaver:gsub("%.", "") .. exe_suffix,
          }
          for _, name in ipairs(variants) do
-            names.names_hash[name] = luaver --! this wants indexing by string --! names is never used as a hesh
-            table.insert(names.names_array, name) --! this wants indexing by integer
+            table.insert(names, name)
          end
       end
 
-      -- local function insert_lua_variants(names: {string}, luaver: string)
-      --    local variants = {
-      --       "lua" .. luaver .. exe_suffix,
-      --       "lua" .. luaver:gsub("%.", "") .. exe_suffix,
-      --       "lua-" .. luaver .. exe_suffix,
-      --       "lua-" .. luaver:gsub("%.", "") .. exe_suffix,
-      --    }
-      --    local names_length = #names
-      --    for i, name in ipairs(variants) do
-      --       names[name] = luaver --! this wants indexing by string
-      --       names[i + names_length] = name
-      --    end
-      -- end
-
-      -- local function insert_lua_variants(names, luaver)
-      --    local variants = {
-      --       "lua" .. luaver .. exe_suffix,
-      --       "lua" .. luaver:gsub("%.", "") .. exe_suffix,
-      --       "lua-" .. luaver .. exe_suffix,
-      --       "lua-" .. luaver:gsub("%.", "") .. exe_suffix,
-      --    }
-      --    for _, name in ipairs(variants) do
-      --       names[name] = luaver
-      --       table.insert(names, name)
-      --    end
-      -- end
-
       find_lua_bindir = function(prefix: string, luaver: string, verbose: string): string, string, string
-         local names: HashArrayRecord = {}
+         local names: {string} = {}
          if luaver then
             insert_lua_variants(names, luaver)
          else
@@ -535,14 +503,14 @@ do
             end
          end
          if luaver == "5.1" or not luaver then
-            table.insert(names.names_array, "luajit" .. exe_suffix)
+            table.insert(names, "luajit" .. exe_suffix)
          end
-         table.insert(names.names_array, "lua" .. exe_suffix)
+         table.insert(names, "lua" .. exe_suffix)
 
          local tried = {}
          local dir_sep = package.config:sub(1, 1)
          for _, d in ipairs({ prefix .. dir_sep .. "bin", prefix }) do
-            for _, name in ipairs(names.names_array) do
+            for _, name in ipairs(names) do
                local lua = d .. dir_sep .. name
                local is_wrapper, err = util.lua_is_wrapper(lua)
                if is_wrapper == false then
@@ -581,16 +549,18 @@ do
    end
 end
 
-function util.opts_table(type_name: string, valid_opts: {string: string})
-   local opts_mt: metatable<string> = {} --Option??
+function util.opts_table(type_name: string, valid_opts: {string: string}): function({string : string}): {string : string}
+   local opts_mt: metatable<{string : string}> = {
+      -- type: function(): string --!
+   }
 
    opts_mt.__index = opts_mt
 
-   function opts_mt.type(): string
+   function opts_mt.type(): string --!
       return type_name
    end
 
-   return function(opts: {string: string})
+   return function(opts: {string: string}): {string: string}
       for k, v in pairs(opts) do
          local tv = type(v)
          if not valid_opts[k] then
@@ -618,9 +588,9 @@ end
 -- @return a table with rock names as keys and versions and values,
 -- specifying modules that are already provided by the VM (including
 -- "lua" for the Lua version and, for format 3.0+, "luajit" if detected).
-function util.get_rocks_provided(rockspec: Rockspec): {Rockspec}
+function util.get_rocks_provided(rockspec: Rockspec): {string: string}
 
-   if not rockspec and cfg.cache.rocks_provided then --rocks_provided: Rockspec
+   if not rockspec and cfg.cache.rocks_provided then
       return cfg.cache.rocks_provided
    end
 

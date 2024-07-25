@@ -72,7 +72,7 @@ end
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
-function path.install_dir(name: string, version: string, tree: string | Tree): string
+function path.install_dir(name: string, version: string, tree?: string | Tree): string
    assert(not name:match("/"))
    return dir.path(path.rocks_dir(tree), name, version)
 end
