@@ -548,38 +548,6 @@ do
       }
    end
 end
-
-function util.opts_table(type_name: string, valid_opts: {string: string}): function({string : string}): {string : string}
-   local opts_mt: metatable<{string : string}> = {
-      -- type: function(): string --!
-   }
-
-   opts_mt.__index = opts_mt
-
-   function opts_mt.type(): string --!
-      return type_name
-   end
-
-   return function(opts: {string: string}): {string: string}
-      for k, v in pairs(opts) do
-         local tv = type(v)
-         if not valid_opts[k] then
-            error("invalid option: "..k)
-         end
-         local vo, optional = valid_opts[k]:match("^(.-)(%??)$")
-         if not (tv == vo or (optional == "?" and tv == nil)) then
-            error("invalid type option: "..k.." - got "..tv..", expected "..vo)
-         end
-      end
-      for k, v in pairs(valid_opts) do
-         if (not v:find("?", 1, true)) and opts[k] == nil then
-            error("missing option: "..k)
-         end
-      end
-      return setmetatable(opts, opts_mt)
-   end
-end
-
 --- Return a table of modules that are already provided by the VM, which
 -- can be specified as dependencies without having to install an actual rock.
 -- @param rockspec (optional) a rockspec table, so that rockspec format

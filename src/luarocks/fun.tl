@@ -1,0 +1,148 @@
+
+--- A set of basic functional utilities
+local record fun
+end
+
+function fun.concat(xs: {any}, ys: {any}): {any} --? not generic becuse lua suports differnt types in one array
+   local rs = {}
+   local n = #xs
+   for i = 1, n do
+      rs[i] = xs[i]
+   end
+   for i = 1, #ys do
+      rs[i + n] = ys[i]
+   end
+   return rs
+end
+
+function fun.contains(xs: {any}, v: any): boolean --? same logic as above fine?
+   for _, x in ipairs(xs) do
+      if v == x then
+         return true
+      end
+   end
+   return false
+end
+
+function fun.map<K, V>(xs: {K}, f: function(K): V): {V} --? right
+   local rs = {}
+   for i = 1, #xs do
+      rs[i] = f(xs[i])
+   end
+   return rs
+end
+
+function fun.filter<K>(xs: {K}, f: function): {K}
+   local rs = {}
+   for i = 1, #xs do
+      local v = xs[i]
+      if f(v) then
+         rs[#rs+1] = v
+      end
+   end
+   return rs
+end
+
+function fun.traverse<K, V>(t: {K}, f: function(K): V): {V} --? right or {any} | any
+   return fun.map(t, function(x: K): V
+      -- return x is table and fun.traverse(x, f) or f(x) --? 
+      if x is {any} then
+         fun.traverse(x, f)
+      else
+         f(x)
+      end
+   end)
+end
+
+function fun.reverse_in(t: {any}): {any}
+   for i = 1, math.floor(#t/2) do
+      local m, n = i, #t - i + 1
+      local a, b = t[m], t[n]
+      t[m] = b
+      t[n] = a
+   end
+   return t
+end
+
+function fun.sort_in<K>(t: {K}, f: table.SortFunction<K>): {K}
+   table.sort(t, f)
+   return t
+end
+
+function fun.flip<K, V, S>(f: function(K, V): S): function(V, K): S
+   return function(a: V, b: K): S
+      return f(b, a)
+   end
+end
+
+function fun.find(xs: function | {any}, f: function): any
+   if xs is function then
+      for v in xs do
+         local x = f(v)
+         if x then
+            return x
+         end
+      end
+   elseif xs is {any} then
+      for _, v in ipairs(xs) do
+         local x = f(v)
+         if x then
+            return x
+         end
+      end
+   end
+end
+
+function fun.partial<K>(f: (function(...: any): K), ...: any): (function(...: any): K)
+   local n = select("#", ...)
+   if n == 1 then
+      local a = ...
+      return function(...): K
+         return f(a, ...)
+      end
+   elseif n == 2 then
+      local a, b = ...
+      return function(...): K
+         return f(a, b, ...)
+      end
+   else
+      local pargs = { n = n, ... }
+      return function(...): K
+         local m = select("#", ...)
+         local fargs = { ... }
+         local args = {}
+         for i = 1, n do
+            args[i] = pargs[i]
+         end
+         for i = 1, m do
+            args[i+n] = fargs[i]
+         end
+         return f(table.unpack(args, 1, n+m))
+      end
+   end
+end
+
+function fun.memoize(fn)
+   local memory = setmetatable({}, { __mode = "k" })
+   local errors = setmetatable({}, { __mode = "k" })
+   local NIL = {}
+   return function(arg)
+      if memory[arg] then
+         if memory[arg] == NIL then
+            return nil, errors[arg]
+         end
+         return memory[arg]
+      end
+      local ret1, ret2 = fn(arg)
+      if ret1 ~= nil then
+         memory[arg] = ret1
+      else
+         memory[arg] = NIL
+         errors[arg] = ret2
+      end
+      return ret1, ret2
+   end
+end
+
+return fun
+--? look for wrong/missing generics usage

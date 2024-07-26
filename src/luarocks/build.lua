@@ -14,7 +14,7 @@ local repos = require("luarocks.repos")
 local writer = require("luarocks.manif.writer")
 local deplocks = require("luarocks.deplocks")
 
-build.opts = util.opts_table("build.opts", {
+build.opts = util.opts_table("build.opts", { --WORK
    need_to_fetch = "boolean",
    minimal_mode = "boolean",
    deps_mode = "string",

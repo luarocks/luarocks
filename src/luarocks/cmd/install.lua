@@ -54,7 +54,7 @@ function install.add_to_parser(parser)
    parser:flag("--sign"):hidden(true)
 end
 
-install.opts = util.opts_table("install.opts", {
+install.opts = util.opts_table("install.opts", { --WORK
    namespace = "string?",
    keep = "boolean",
    force = "boolean",
