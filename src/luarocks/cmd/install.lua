@@ -54,7 +54,7 @@ function install.add_to_parser(parser)
    parser:flag("--sign"):hidden(true)
 end
 
-install.opts = util.opts_table("install.opts", { --WORK
+install.opts = util.opts_table("install.opts", { --WORK util.opts_table doesn't exist. Make a record
    namespace = "string?",
    keep = "boolean",
    force = "boolean",

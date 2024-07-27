@@ -548,6 +548,7 @@ do
       }
    end
 end
+
 --- Return a table of modules that are already provided by the VM, which
 -- can be specified as dependencies without having to install an actual rock.
 -- @param rockspec (optional) a rockspec table, so that rockspec format
