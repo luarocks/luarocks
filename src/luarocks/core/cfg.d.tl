@@ -59,6 +59,7 @@ local record cfg
 
    record variables
       LUA: string
+      GPG: string
    end
    rocks_provided: {Rockspec}
 end

@@ -14,6 +14,9 @@ local record fs
    current_dir: function(): string
    list_dir: function(string): {string}
    delete: function(string)
+   -- signing
+   is_tool_available: function(string, string): string, string
+   execute: function(...: string): boolean --? boolean? src/luarocks/signing.tl: 27
 end
 
 return fs
