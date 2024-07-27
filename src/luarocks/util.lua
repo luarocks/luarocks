@@ -63,7 +63,9 @@ local scheduled_functions = {}
 
 
 function util.schedule_function(f, ...)
-   local item = { fn = f, args = table.pack(...) }
+   local pack = table.pack or function(...) return { n = select("#", ...), ... } end --TEST
+
+   local item = { fn = f, args = pack(...) }
    table.insert(scheduled_functions, item)
    return item
 end
