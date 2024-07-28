@@ -1,5 +1,7 @@
 
-local type_check = {}
+local record type_check
+   MAGIC_PLATFORMS: integer
+end
 
 local cfg = require("luarocks.core.cfg")
 local fun = require("luarocks.fun")
@@ -12,7 +14,7 @@ local vers = require("luarocks.core.vers")
 type_check.MAGIC_PLATFORMS = 0xEBABEFAC
 
 do
-   local function fill_in_version(tbl, version)
+   local function fill_in_version(tbl, version?)
       for _, v in pairs(tbl) do
          if v is table then
             if v._version == nil then
@@ -30,7 +32,7 @@ do
                _any = util.deep_copy(tbl)
             }
             tbl[k]._any[k] = nil
-         elseif type(v) == "table" then
+         elseif v is table then
             expand_magic_platforms(v)
          end
       end
@@ -41,7 +43,7 @@ do
    -- and the value is a schema specification. Schema versions are considered
    -- incremental: version "2.0" only needs to specify what's new/changed from
    -- version "1.0".
-   function type_check.declare_schemas(inputs)
+   function type_check.declare_schemas(inputs: {string: any}): {any: any} {any} --?
       local schemas = {}
       local parent_version
 
@@ -66,7 +68,7 @@ end
 
 --------------------------------------------------------------------------------
 
-local function check_version(version, typetbl, context)
+local function check_version(version: string, typetbl, context: string)
    local typetbl_version = typetbl._version or "1.0"
    if vers.compare_versions(typetbl_version, version) then
       if context == "" then
@@ -84,7 +86,7 @@ end
 -- only their types. Tables are type checked recursively.
 -- @param version string: The version of the item.
 -- @param item any: The object being checked.
--- @param typetbl any: The type-checking table for the object.
+-- @param typetbl any: The type-ch`ecking table for the object.
 -- @param context string: A string indicating the "context" where the
 -- error occurred (the full table path), for error messages.
 -- @return boolean or (nil, string): true if type checking
