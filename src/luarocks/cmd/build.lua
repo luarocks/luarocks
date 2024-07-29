@@ -51,7 +51,6 @@ end
 -- or false and an error message and an optional error code.
 local function build_rock(rock_filename, opts)
    assert(type(rock_filename) == "string")
-   assert(opts:type() == "build.opts")
 
    local cwd = fs.absolute_name(dir.path("."))
 
@@ -84,7 +83,6 @@ local function do_build(name, namespace, version, opts)
    assert(type(name) == "string")
    assert(type(namespace) == "string" or not namespace)
    assert(version == nil or type(version) == "string")
-   assert(opts:type() == "build.opts")
 
    local url, err
    if name:match("%.rockspec$") or name:match("%.rock$") then
@@ -132,7 +130,7 @@ function cmd_build.command(args)
       return make.command(args)
    end
 
-   local opts = build.opts({
+   local opts = {
       need_to_fetch = true,
       minimal_mode = false,
       deps_mode = deps.get_deps_mode(args),
@@ -144,7 +142,7 @@ function cmd_build.command(args)
       pin = not not args.pin,
       rebuild = not not (args.force or args.force_fast),
       no_install = false
-   })
+   }
 
    if args.sign and not args.pack_binary_rock then
       return nil, "In the build command, --sign is meant to be used only with --pack-binary-rock"

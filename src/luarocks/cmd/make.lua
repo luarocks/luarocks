@@ -99,7 +99,7 @@ function make.command(args)
    local name, namespace = util.split_namespace(rockspec.name)
    namespace = namespace or args.namespace
 
-   local opts = build.opts({
+   local opts = {
       need_to_fetch = false,
       minimal_mode = true,
       deps_mode = deps.get_deps_mode(args),
@@ -111,7 +111,7 @@ function make.command(args)
       pin = not not args.pin,
       rebuild = true,
       no_install = not not args.no_install
-   })
+   }
 
    if args.sign and not args.pack_binary_rock then
       return nil, "In the make command, --sign is meant to be used only with --pack-binary-rock"
