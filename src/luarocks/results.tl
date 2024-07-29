@@ -1,5 +1,4 @@
 local record results
-
 end
 
 local vers = require("luarocks.core.vers")

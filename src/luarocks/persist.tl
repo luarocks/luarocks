@@ -16,6 +16,7 @@ persist.load_into_table = core.load_into_table
 
 local interface Writer
    write: function(self: Writer, data: string)
+   buffer: {number | string}
 end
 
 local write_table: function(out: Writer, tbl: {number | string: number| string}, level: integer, field_order: util.SortBy<number | string>)
@@ -175,7 +176,7 @@ end
 -- @param field_order table: an optional array indicating the order of top-level fields.
 -- @return persisted data as string; or nil and an error message
 function persist.save_from_table_to_string(tbl: {number | string: number | string}, field_order: util.SortBy<number | string>): string, string
-   local out: Writer = {buffer = {}} --!
+   local out: Writer = {buffer = {}}
    function out:write(data: string) table.insert(self.buffer, data) end
    local ok, err = write_table_as_assignments(out, tbl, field_order)
    if not ok then
@@ -193,14 +194,14 @@ end
 -- @param field_order table: an optional array indicating the order of top-level fields.
 -- @return boolean or (nil, string): true if successful, or nil and a
 -- message in case of errors.
-function persist.save_from_table(filename: string, tbl: {number | string : number | string}, field_order: util.SortBy<number | string>)
+function persist.save_from_table(filename: string, tbl: {number | string : number | string}, field_order: util.SortBy<number | string>): boolean, string
    local prefix = dir.dir_name(filename)
    fs.make_dir(prefix)
    local out = io.open(filename, "w")
    if not out then
       return nil, "Cannot create file at "..filename
    end
-   local ok, err = write_table_as_assignments(out, tbl, field_order)
+   local ok, err = write_table_as_assignments(out, tbl, field_order) --! interface problems
    out:close()
    if not ok then
       return nil, err
@@ -216,32 +217,32 @@ end
 -- @param tbl table: the table containing the data to be written
 -- @return boolean or (nil, string): true if successful, or nil and a
 -- message in case of errors.
-function persist.save_as_module(filename, tbl)
+function persist.save_as_module(filename: string, tbl: {number | string : number | string}): boolean, string
    local out = io.open(filename, "w")
    if not out then
       return nil, "Cannot create file at "..filename
    end
-   write_table_as_table(out, tbl)
+   write_table_as_table(out, tbl) --! interface problems
    out:close()
    return true
 end
 
-function persist.load_config_file_if_basic(filename, cfg)
+function persist.load_config_file_if_basic(filename: string, cfg): boolean | {number | string : number | string}, string --! cfg type
    local env = {
       home = cfg.home
    }
-   local result, err, errcode = persist.load_into_table(filename, env)
+   local result, _, errcode = persist.load_into_table(filename, env)
    if errcode == "load" or errcode == "run" then
       -- bad config file or depends on env, so error out
       return nil, "Could not read existing config file " .. filename
    end
 
-   local tbl
+   local tbl: {number | string : number | string}
    if errcode == "open" then
       -- could not open, maybe file does not exist
       tbl = {}
    else
-      tbl = result
+      tbl = result --! strongger definition --? make the load into table generic
       tbl.home = nil
    end
 

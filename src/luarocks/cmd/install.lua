@@ -54,15 +54,6 @@ function install.add_to_parser(parser)
    parser:flag("--sign"):hidden(true)
 end
 
-install.opts = util.opts_table("install.opts", { --WORK util.opts_table doesn't exist. Make a record
-   namespace = "string?",
-   keep = "boolean",
-   force = "boolean",
-   force_fast = "boolean",
-   no_doc = "boolean",
-   deps_mode = "string",
-   verify = "boolean",
-})
 
 --- Install a binary rock.
 -- @param rock_file string: local or remote filename of a rock.
@@ -71,7 +62,6 @@ install.opts = util.opts_table("install.opts", { --WORK util.opts_table doesn't 
 -- installed rock if succeeded or nil and an error message followed by an error code.
 function install.install_binary_rock(rock_file, opts)
    assert(type(rock_file) == "string")
-   assert(opts:type() == "install.opts")
 
    local namespace = opts.namespace
    local deps_mode = opts.deps_mode
@@ -156,7 +146,6 @@ end
 -- followed by an error code.
 function install.install_binary_rock_deps(rock_file, opts)
    assert(type(rock_file) == "string")
-   assert(opts:type() == "install.opts")
 
    local name, version, arch = path.parse_name(rock_file)
    if not name then
@@ -190,7 +179,6 @@ function install.install_binary_rock_deps(rock_file, opts)
 end
 
 local function install_rock_file_deps(filename, opts)
-   assert(opts:type() == "install.opts")
 
    local name, version = install.install_binary_rock_deps(filename, opts)
    if not name then return nil, version end
@@ -201,7 +189,6 @@ end
 
 local function install_rock_file(filename, opts)
    assert(type(filename) == "string")
-   assert(opts:type() == "install.opts")
 
    local name, version = install.install_binary_rock(filename, opts)
    if not name then return nil, version end
@@ -237,7 +224,7 @@ function install.command(args)
       return build.command(args)
    elseif args.rock:match("%.rock$") then
       local deps_mode = deps.get_deps_mode(args)
-      local opts = install.opts({
+      local opts = {
          namespace = args.namespace,
          keep = not not args.keep,
          force = not not args.force,
@@ -245,7 +232,7 @@ function install.command(args)
          no_doc = not not args.no_doc,
          deps_mode = deps_mode,
          verify = not not args.verify,
-      })
+      }
       if args.only_deps then
          return install_rock_file_deps(args.rock, opts)
       else

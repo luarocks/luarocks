@@ -14,20 +14,6 @@ local repos = require("luarocks.repos")
 local writer = require("luarocks.manif.writer")
 local deplocks = require("luarocks.deplocks")
 
-build.opts = util.opts_table("build.opts", { --WORK
-   need_to_fetch = "boolean",
-   minimal_mode = "boolean",
-   deps_mode = "string",
-   build_only_deps = "boolean",
-   namespace = "string?",
-   branch = "string?",
-   verify = "boolean",
-   check_lua_versions = "boolean",
-   pin = "boolean",
-   rebuild = "boolean",
-   no_install = "boolean"
-})
-
 do
    --- Write to the current directory the contents of a table,
    -- where each key is a file name and its value is the file content.
@@ -390,8 +376,6 @@ end
 -- installed rock if succeeded or nil and an error message followed by an error code.
 function build.build_rockspec(rockspec, opts, cwd)
    assert(rockspec:type() == "rockspec")
-   assert(opts:type() == "build.opts")
-   assert(type(cwd) == "string" or type(cwd) == nil)
 
    cwd = cwd or dir.path(".")
 
