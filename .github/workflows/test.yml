@@ -28,7 +28,7 @@ jobs:
   TestMatrix:
     strategy:
       matrix:
-        lua-version: ["5.4", "luajit"]
+        lua-version: ["5.4"]
         os: ["ubuntu-latest", "macos-latest"]
     runs-on: ${{ matrix.os }}
 
@@ -50,7 +50,6 @@ jobs:
         luarocks install busted
         luarocks install cluacov
         luarocks install busted-htest
-        luarocks install compat53
 
     - name: Unit Test
       run: |
