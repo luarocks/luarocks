@@ -50,6 +50,7 @@ jobs:
         luarocks install busted
         luarocks install cluacov
         luarocks install busted-htest
+        luarocks install compat53
 
     - name: Unit Test
       run: |
