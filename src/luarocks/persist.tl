@@ -4,6 +4,9 @@
 local record persist
    run_file: function(string, {string:any}): boolean, any | string, string
    load_into_table: function(string, ?{string:any}) : {any: any}, {any: any} | string, string
+
+   type PersistableTable = { string | number : string | number | boolean | PersistableTable }
+
 end
 
 local core = require("luarocks.core.persist")
@@ -13,7 +16,7 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 
 local type Config = cfg
-local type PersistableTable = { string | number : string | number | boolean | PersistableTable }
+local type PersistableTable = persist.PersistableTable
 
 persist.run_file = core.run_file
 persist.load_into_table = core.load_into_table
@@ -179,7 +182,7 @@ end
 -- @param tbl table: the table containing the data to be written
 -- @param sort_by table: an optional array indicating the order of top-level fields.
 -- @return persisted data as string; or nil and an error message
-function persist.save_from_table_to_string(tbl: PersistableTable, sort_by: util.SortBy<number | string>): string, string
+function persist.save_from_table_to_string(tbl: PersistableTable, sort_by?: util.SortBy<number | string>): string, string
    local out: Writer = {buffer = {}}
    function out:write(data: string) table.insert(self.buffer, data) end
    local ok, err = write_table_as_assignments(out, tbl, sort_by)
