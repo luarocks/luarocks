@@ -62,6 +62,8 @@ local record cfg
       GPG: string
    end
    rocks_provided: {Rockspec}
+   -- persist
+   home: string
 end
 
 return cfg

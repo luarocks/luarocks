@@ -10,7 +10,7 @@ local cfg = require("luarocks.core.cfg")
 local record util
    cleanup_path: function(string, string, string, boolean): string
    split_string: function(string, string, number): {string}
-   sortedpairs: function<K, V>(tbl: {K: V}, sort_by: core.SortBy<K>): function(): K, V, core.Ordering<K>
+   sortedpairs: function<K, V>(tbl: {K: V}, sort_by?: core.SortBy<K>): function(): K, V, core.Ordering<K>
    deep_merge: function({any : any}, {any : any})
    deep_merge_under: function({any : any}, {any : any})
    popen_read: function(string, ?string): string

@@ -12,6 +12,7 @@ function fun.concat(xs: {any}, ys: {any}): {any} --? not generic becuse lua supo
    for i = 1, #ys do
       rs[i + n] = ys[i]
    end
+   
    return rs
 end
 

@@ -63,8 +63,6 @@ local scheduled_functions = {}
 
 
 function util.schedule_function(f, ...)
-   -- local pack = table.pack or function(...) return { n = select("#", ...), ... } end --! FOR TESTS TO PASS
-
    local item = { fn = f, args = table.pack(...) }
    table.insert(scheduled_functions, item)
    return item
@@ -550,6 +548,12 @@ do
       }
    end
 end
+
+
+
+
+
+
 
 
 

@@ -9,7 +9,7 @@ local record fs
    -- util
    is_dir: function(dir: string): boolean
    dir: function(dir: string): function(): string --? right iterator
-   make_dir: function
+   make_dir: function(string): boolean, string
    is_file: function(file: string): boolean
    current_dir: function(): string
    list_dir: function(string): {string}
