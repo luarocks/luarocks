@@ -8,7 +8,7 @@ local record fs
    end
    -- util
    is_dir: function(dir: string): boolean
-   dir: function(dir: string): function(): string --? right iterator
+   dir: function(dir: string): function(): string
    make_dir: function(string): boolean, string
    is_file: function(file: string): boolean
    current_dir: function(): string
