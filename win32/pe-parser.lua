@@ -5,7 +5,7 @@
 -- case of 64 bit fields (bit/flag fields). Pointer arithmetic is still done numerically, so for
 -- very large files this could lead to undefined results. Use with care!
 --
--- Version 0.4, [copyright (c) 2013-2015 Thijs Schreijer](http://www.thijsschreijer.nl)
+-- Version 0.5, [copyright (c) 2013-2018 Thijs Schreijer](http://www.thijsschreijer.nl)
 -- @name pe-parser
 -- @class module
 
@@ -16,7 +16,7 @@ local M = {}
 -- For flag fields the name is extended with `_flags`.
 -- @usage -- lookup descriptive name for the myobj.Magic value
 -- local desc = pe.const.Magic(myobj.Magic)
--- 
+--
 -- -- get list of flag names, indexed by flag values, for the Characteristics field
 -- local flag_list = pe.const.Characteristics_flags
 M.const = {
@@ -100,7 +100,7 @@ M.const = {
       ["800"] = "IMAGE_SCN_LNK_REMOVE",
       ["1000"] = "IMAGE_SCN_LNK_COMDAT",
       ["8000"] = "IMAGE_SCN_GPREL",
-      ["20000"] = "IMAGE_SCN_MEM_PURGEABLE",
+      ["10000"] = "IMAGE_SCN_MEM_PURGEABLE",
       ["20000"] = "IMAGE_SCN_MEM_16BIT",
       ["40000"] = "IMAGE_SCN_MEM_LOCKED",
       ["80000"] = "IMAGE_SCN_MEM_PRELOAD",
@@ -128,7 +128,7 @@ M.const = {
       ["80000000"] = "IMAGE_SCN_MEM_WRITE",
     },
   },
-  
+
 }
 
 
@@ -143,7 +143,7 @@ function M.toHex(IN, len)
         IN,D=math.floor(IN/B),math.fmod(IN,B)+1
         OUT=string.sub(K,D,D)..OUT
     end
-    len = len or string.len(OUT)
+    len = len or #OUT
     if len<1 then len = 1 end
     return (string.rep("0",len) .. OUT):sub(-len,-1)
 end
@@ -193,8 +193,8 @@ local function get_list(list, f, add_to)
   local r = add_to or {}
   for i, t in ipairs(list) do
     assert(r[t.name] == nil, "Value for '"..t.name.."' already set")
-    local val,err = f:read(t.size)  -- read specified size in bytes
-    val = val or "\0"    
+    local val = f:read(t.size)  -- read specified size in bytes
+    val = val or "\0"
     if t.is_str then   -- entry is marked as a string value, read as such
       for i = 1, #val do
         if val:sub(i,i) == "\0" then
@@ -248,25 +248,25 @@ end
 -- local obj = pe.parse("c:\lua\lua.exe")
 -- obj:dump()
 M.parse = function(target)
-  
-  local list = {    -- list of known architectures
-    [332]   = "x86",       -- IMAGE_FILE_MACHINE_I386
-    [512]   = "x86_64",    -- IMAGE_FILE_MACHINE_IA64
-    [34404] = "x86_64",    -- IMAGE_FILE_MACHINE_AMD64
-  }
-  
+
+  -- local list = {    -- list of known architectures
+  --   [332]   = "x86",       -- IMAGE_FILE_MACHINE_I386
+  --   [512]   = "x86_64",    -- IMAGE_FILE_MACHINE_IA64
+  --   [34404] = "x86_64",    -- IMAGE_FILE_MACHINE_AMD64
+  -- }
+
   local f, err = io.open(target, "rb")
   if not f then return nil, err end
-  
+
   local MZ = f:read(2)
   if MZ ~= "MZ" then
     f:close()
     return nil, "Not a valid image"
   end
-  
+
   f:seek("set", 60)                    -- position of PE header position
   local peoffset = get_int(f:read(4))  -- read position of PE header
-  
+
   f:seek("set", peoffset)              -- move to position of PE header
   local out = get_list({
         { size = 4,
@@ -287,14 +287,14 @@ M.parse = function(target)
         { size = 2,
           name = "Characteristics"},
       }, f)
-  
+
   if out.PEheader ~= "PE" then
     f:close()
     return nil, "Invalid PE header"
   end
   out.PEheader = nil  -- remove it, has no value
   out.dump = M.dump  -- export dump function as a method
-  
+
   if M.toDec(out.SizeOfOptionalHeader) > 0 then
     -- parse optional header; standard
     get_list({
@@ -388,7 +388,7 @@ M.parse = function(target)
       if out.DataDirectory[name] then out.DataDirectory[name].name = name end
     end
   end
-  
+
   -- parse section table
   for i = 1, M.toDec(out.NumberOfSections) do
     out.Sections = out.Sections or {}
@@ -416,9 +416,9 @@ M.parse = function(target)
           name = "Characteristics"},
       }, f)
   end
-  -- we now have section data, so add RVA conversion method
+  -- we now have section data, so add RVA convertion method
   out.get_fileoffset = M.get_fileoffset
-  
+
   -- get the import table
   f:seek("set", out:get_fileoffset(out.DataDirectory.ImportTable.VirtualAddress))
   local done = false
@@ -450,7 +450,7 @@ M.parse = function(target)
     f:seek("set", out:get_fileoffset(dll.NameRVA))
     dll.Name = readstring(f)
   end
-  
+
   f:close()
   return out
 end
@@ -467,10 +467,10 @@ end
 M.dump = function(obj)
   local l = 0
   for k,v in pairs(obj) do if #k > l then l = #k end end
-  
+
   for k,v in pairs(obj) do
     if (M.const[k] and type(v)=="string") then
-      -- look up named value    
+      -- look up named value
       print(k..string.rep(" ", l - #k + 1)..": "..M.const[k][v])
     elseif M.const[k.."_flags"] then
       -- flags should be listed
@@ -486,14 +486,14 @@ M.dump = function(obj)
       end
     end
   end
-  
+
   if obj.DataDirectory then
     print("DataDirectory (RVA, size):")
     for i, v in ipairs(obj.DataDirectory) do
       print("   Entry "..M.toHex(i-1).." "..pad(v.VirtualAddress,8,"0").." "..pad(v.Size,8,"0").." "..v.name)
     end
   end
-  
+
   if obj.Sections then
     print("Sections:")
     print("idx name     RVA      VSize    Offset   RawSize")
@@ -501,7 +501,7 @@ M.dump = function(obj)
       print("  "..i.." "..v.Name.. string.rep(" ",9-#v.Name)..pad(v.VirtualAddress,8,"0").." "..pad(v.VirtualSize,8,"0").." "..pad(v.PointerToRawData,8,"0").." "..pad(v.SizeOfRawData,8,"0"))
     end
   end
-  
+
   print("Imports:")
   for i, dll in ipairs(obj.DataDirectory.ImportTable) do
     print("   "..dll.Name)
@@ -515,7 +515,7 @@ end
 -- used (it will only look for the dlls in the same directory).
 -- @param infile binary file to check
 -- @return msvcrt name (uppercase, without extension) + file where the reference was found, or nil + error
-function M.msvcrt(infile) 
+function M.msvcrt(infile)
   local path, file = infile:match("(.+)\\(.+)$")
   if not path then
     path = ""
@@ -525,44 +525,39 @@ function M.msvcrt(infile)
   end
   local obj, err = M.parse(path..file)
   if not obj then return obj, err end
-  
+
   for i, dll in ipairs(obj.DataDirectory.ImportTable) do
     dll = dll.Name:upper()
-	  local result = dll:match('(MSVCR%d*D?)%.DLL')
-	  if not result then
-	    result = dll:match('(MSVCRTD?)%.DLL')
-	  end
-	  if not result then
-	    result = dll:match('(VCRUNTIME%d*D?)%.DLL')
-	  end
+    local result = dll:match('(MSVCR%d*D?)%.DLL')
+    if not result then
+      result = dll:match('(MSVCRTD?)%.DLL')
+    end
+    if not result then
+      result = dll:match('(VCRUNTIME%d*D?)%.DLL')
+    end
+    if not result then
+      result = dll:match('(UCRTBASED?)%.DLL')
+    end
+    if not result then
+      -- api-ms-win-crt-xxx also indicate the universal runtime
+      result = dll:match('(API%-MS%-WIN%-CRT%-RUNTIME%-)')
+      if result then
+        result = "UCRTBASE"
+      end
+    end
     -- success, found it return name + binary where it was found
     if result then return result, infile end
   end
-  
+
   -- not found, so traverse all imported dll's
   for i, dll in ipairs(obj.DataDirectory.ImportTable) do
     local rt, ref = M.msvcrt(path..dll.Name)
-    if rt then 
+    if rt then
       return rt, ref  -- found it
     end
   end
 
   return nil, "No msvcrt found"
-end
-
-function M.get_architecture(program)
-   -- detect processor arch interpreter was compiled for
-   local proc = (M.parse(program) or {}).Machine
-   if not proc then
-      return nil, "Could not detect processor architecture used in "..program
-   end
-   proc = M.const.Machine[proc]  -- collect name from constant value
-   if proc == "IMAGE_FILE_MACHINE_I386" then
-      proc = "x86"
-   else
-      proc = "x86_64"
-   end
-   return proc
 end
 
 return M
