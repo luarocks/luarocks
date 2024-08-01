@@ -44,13 +44,13 @@ function fun.filter<K>(xs: {K}, f: function): {K}
    return rs
 end
 
-function fun.traverse<K, V>(t: {K}, f: function(K): V): {V} --? right or {any} | any
-   return fun.map(t, function(x: K): V
+function fun.traverse<K, V>(t: {K}, f: function(K): V): {V} | V --? right or {any} | any
+   return fun.map(t, function(x: K): {V} | V
       -- return x is table and fun.traverse(x, f) or f(x) --? 
       if x is {any} then
-         fun.traverse(x, f)
+         return fun.traverse(x, f)
       else
-         f(x)
+         return f(x)
       end
    end)
 end

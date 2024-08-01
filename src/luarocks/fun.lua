@@ -48,9 +48,9 @@ function fun.traverse(t, f)
    return fun.map(t, function(x)
 
       if type(x) == "table" then
-         fun.traverse(x, f)
+         return fun.traverse(x, f)
       else
-         f(x)
+         return f(x)
       end
    end)
 end
