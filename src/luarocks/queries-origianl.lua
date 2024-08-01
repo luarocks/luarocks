@@ -1,33 +1,20 @@
 
-local record queries
-   record Query
-      name: string
-      namespace: string
-      constraints: {vers.Constraint}
-      substring: boolean
-      arch: {string: boolean}
-   end
-end
+local queries = {}
 
 local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 
--- local type Config = cfg
+local query_mt = {}
 
-local type Query = queries.Query
-local type Constraint = vers.Constraint
+query_mt.__index = query_mt
 
-local query_mt: metatable<Query> = {}
-
-query_mt.__index = queries.Query
-
-function queries.Query.type(): string  --? remove later
+function query_mt.type()
    return "query"
 end
 
 -- Fallback default value for the `arch` field, if not explicitly set.
-queries.Query.arch = {
+query_mt.arch = {
    src = true,
    all = true,
    rockspec = true,
@@ -36,14 +23,14 @@ queries.Query.arch = {
 }
 
 -- Fallback default value for the `substring` field, if not explicitly set.
-queries.Query.substring = false
+query_mt.substring = false
 
 --- Convert the arch field of a query table to table format.
 -- @param input string, table or nil
-local function arch_to_table(input: string | {string: boolean}): {string: boolean} 
-   if input is {string: boolean} then
+local function arch_to_table(input)
+   if type(input) == "table" then
       return input
-   elseif input is string then
+   elseif type(input) == "string" then
       local arch = {}
       for a in input:gmatch("[%w_-]+") do
          arch[a] = true
@@ -61,16 +48,17 @@ end
 -- @param arch string?: a string with pipe-separated accepted arch values
 -- @param operator string?: operator for version matching (default is "==")
 -- @return table: A query in table format
-function queries.new(name: string, namespace?: string, version?: string, substring?: boolean, arch?: string, operator?: string): Query
-   -- assert(type(namespace) == "string" or not namespace) --! optional parameters?
-   -- assert(type(version) == "string" or not version)
-   -- assert(type(substring) == "boolean" or not substring)
-   -- assert(type(arch) == "string" or not arch)
-   -- assert(type(operator) == "string" or not operator)
+function queries.new(name, namespace, version, substring, arch, operator)
+   assert(type(name) == "string")
+   assert(type(namespace) == "string" or not namespace)
+   assert(type(version) == "string" or not version)
+   assert(type(substring) == "boolean" or not substring)
+   assert(type(arch) == "string" or not arch)
+   assert(type(operator) == "string" or not operator)
 
    operator = operator or "=="
 
-   local self: Query = {
+   local self = {
       name = name,
       namespace = namespace,
       constraints = {},
@@ -81,24 +69,24 @@ function queries.new(name: string, namespace?: string, version?: string, substri
       table.insert(self.constraints, { op = operator, version = vers.parse_version(version)})
    end
 
-   queries.Query.arch[cfg.arch] = true
+   query_mt.arch[cfg.arch] = true
    return setmetatable(self, query_mt)
 end
 
 -- Query for all packages
 -- @param arch string (optional)
-function queries.all(arch?: string): Query
-   -- assert(type(arch) == "string" or not arch) --! optional
+function queries.all(arch)
+   assert(type(arch) == "string" or not arch)
 
    return queries.new("", nil, nil, true, arch)
 end
 
 do
-   local parse_constraints: function(string): {Constraint}, string
+   local parse_constraints
    do
-      local parse_constraint: function(string): Constraint, string
+      local parse_constraint
       do
-         local operators: {string: string} = {
+         local operators = {
             ["=="] = "==",
             ["~="] = "~=",
             [">"] = ">",
@@ -120,18 +108,19 @@ do
          -- @return (table, string) or nil: A table representing the same
          -- constraints and the string with the unused input, or nil if the
          -- input string is invalid.
-         parse_constraint = function(input: string): {string: any}, string
+         parse_constraint = function(input)
+            assert(type(input) == "string")
 
-            local no_upgrade, op, versionstr, rest = input:match("^(@?)([<>=~!]*)%s*([%w%.%_%-]+)[%s,]*(.*)")
+            local no_upgrade, op, version, rest = input:match("^(@?)([<>=~!]*)%s*([%w%.%_%-]+)[%s,]*(.*)")
             local _op = operators[op]
-            local version = vers.parse_version(versionstr)
+            version = vers.parse_version(version)
             if not _op then
                return nil, "Encountered bad constraint operator: '"..tostring(op).."' in '"..input.."'"
             end
             if not version then
                return nil, "Could not parse version from constraint: '"..input.."'"
             end
-            return { op = _op, version = version, no_upgrade = no_upgrade=="@" and true or nil }, rest --? false instead of nil
+            return { op = _op, version = version, no_upgrade = no_upgrade=="@" and true or nil }, rest
          end
       end
 
@@ -143,10 +132,10 @@ do
       -- @param input string: A list of constraints in string format.
       -- @return table or nil: A table representing the same constraints,
       -- or nil if the input string is invalid.
-      parse_constraints = function(input: string): {Constraint}, string
+      parse_constraints = function(input)
+         assert(type(input) == "string")
 
-         local constraints, oinput = {}, input
-         local constraint: Constraint
+         local constraints, oinput, constraint = {}, input
          while #input > 0 do
             constraint, input = parse_constraint(input)
             if constraint then
@@ -163,7 +152,8 @@ do
    -- @param depstr string: A dependency in string format
    -- as entered in rockspec files.
    -- @return table: A query in table format, or nil and an error message in case of errors.
-   function queries.from_dep_string(depstr: string): Query, string
+   function queries.from_dep_string(depstr)
+      assert(type(depstr) == "string")
 
       local ns_name, rest = depstr:match("^%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)")
       if not ns_name then
@@ -185,13 +175,13 @@ do
          constraints = constraints,
       }
 
-      queries.Query.arch[cfg.arch] = true
+      query_mt.arch[cfg.arch] = true
       return setmetatable(self, query_mt)
    end
 end
 
-function queries.from_persisted_table(tbl: Query): Query
-   queries.Query.arch[cfg.arch] = true
+function queries.from_persisted_table(tbl)
+   query_mt.arch[cfg.arch] = true
    return setmetatable(tbl, query_mt)
 end
 
@@ -199,8 +189,7 @@ end
 -- Includes namespace, name and version, but not arch or constraints.
 -- @param query table: a query table
 -- @return string: a result such as `my_user/my_rock 1.0` or `my_rock`.
-function query_mt.__tostring(self: Query): string
-   -- function query_mt:__tostring(): string
+function query_mt:__tostring()
    local out = {}
    if self.namespace then
       table.insert(out, self.namespace)
@@ -211,14 +200,7 @@ function query_mt.__tostring(self: Query): string
    if #self.constraints > 0 then
       local pretty = {}
       for _, c in ipairs(self.constraints) do
-         local cv = c.version
-         -- local v = cv is vers.Version and cv.string or cv --TEAL BUG
-         local v: string
-         if cv is vers.Version then
-            v = cv.string
-         else 
-            v = cv
-         end
+         local v = c.version.string
          if c.op == "==" then
             table.insert(pretty, v)
          else

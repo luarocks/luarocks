@@ -1,32 +1,45 @@
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
+local queries = {Query = {}, }
 
-local queries = {}
+
+
+
+
+
+
+
 
 local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 
+
+
+
+
+
 local query_mt = {}
 
-query_mt.__index = query_mt
+query_mt.__index = queries.Query
 
-function query_mt.type()
+function queries.Query.type()
    return "query"
 end
 
--- Fallback default value for the `arch` field, if not explicitly set.
-query_mt.arch = {
+
+queries.Query.arch = {
    src = true,
    all = true,
    rockspec = true,
    installed = true,
-   -- [cfg.arch] = true, -- this is set later
+
 }
 
--- Fallback default value for the `substring` field, if not explicitly set.
-query_mt.substring = false
 
---- Convert the arch field of a query table to table format.
--- @param input string, table or nil
+queries.Query.substring = false
+
+
+
 local function arch_to_table(input)
    if type(input) == "table" then
       return input
@@ -39,22 +52,21 @@ local function arch_to_table(input)
    end
 end
 
---- Prepare a query in dependency table format.
--- @param name string: the package name.
--- @param namespace string?: the package namespace.
--- @param version string?: the package version.
--- @param substring boolean?: match substrings of the name
--- (default is false, match full name)
--- @param arch string?: a string with pipe-separated accepted arch values
--- @param operator string?: operator for version matching (default is "==")
--- @return table: A query in table format
+
+
+
+
+
+
+
+
+
 function queries.new(name, namespace, version, substring, arch, operator)
-   assert(type(name) == "string")
-   assert(type(namespace) == "string" or not namespace)
-   assert(type(version) == "string" or not version)
-   assert(type(substring) == "boolean" or not substring)
-   assert(type(arch) == "string" or not arch)
-   assert(type(operator) == "string" or not operator)
+
+
+
+
+
 
    operator = operator or "=="
 
@@ -66,17 +78,17 @@ function queries.new(name, namespace, version, substring, arch, operator)
       arch = arch_to_table(arch),
    }
    if version then
-      table.insert(self.constraints, { op = operator, version = vers.parse_version(version)})
+      table.insert(self.constraints, { op = operator, version = vers.parse_version(version) })
    end
 
-   query_mt.arch[cfg.arch] = true
+   queries.Query.arch[cfg.arch] = true
    return setmetatable(self, query_mt)
 end
 
--- Query for all packages
--- @param arch string (optional)
+
+
 function queries.all(arch)
-   assert(type(arch) == "string" or not arch)
+
 
    return queries.new("", nil, nil, true, arch)
 end
@@ -94,70 +106,68 @@ do
             [">="] = ">=",
             ["<="] = "<=",
             ["~>"] = "~>",
-            -- plus some convenience translations
+
             [""] = "==",
             ["="] = "==",
-            ["!="] = "~="
+            ["!="] = "~=",
          }
 
-         --- Consumes a constraint from a string, converting it to table format.
-         -- For example, a string ">= 1.0, > 2.0" is converted to a table in the
-         -- format {op = ">=", version={1,0}} and the rest, "> 2.0", is returned
-         -- back to the caller.
-         -- @param input string: A list of constraints in string format.
-         -- @return (table, string) or nil: A table representing the same
-         -- constraints and the string with the unused input, or nil if the
-         -- input string is invalid.
-         parse_constraint = function(input)
-            assert(type(input) == "string")
 
-            local no_upgrade, op, version, rest = input:match("^(@?)([<>=~!]*)%s*([%w%.%_%-]+)[%s,]*(.*)")
+
+
+
+
+
+
+
+         parse_constraint = function(input)
+
+            local no_upgrade, op, versionstr, rest = input:match("^(@?)([<>=~!]*)%s*([%w%.%_%-]+)[%s,]*(.*)")
             local _op = operators[op]
-            version = vers.parse_version(version)
+            local version = vers.parse_version(versionstr)
             if not _op then
-               return nil, "Encountered bad constraint operator: '"..tostring(op).."' in '"..input.."'"
+               return nil, "Encountered bad constraint operator: '" .. tostring(op) .. "' in '" .. input .. "'"
             end
             if not version then
-               return nil, "Could not parse version from constraint: '"..input.."'"
+               return nil, "Could not parse version from constraint: '" .. input .. "'"
             end
-            return { op = _op, version = version, no_upgrade = no_upgrade=="@" and true or nil }, rest
+            return { op = _op, version = version, no_upgrade = no_upgrade == "@" and true or nil }, rest
          end
       end
 
-      --- Convert a list of constraints from string to table format.
-      -- For example, a string ">= 1.0, < 2.0" is converted to a table in the format
-      -- {{op = ">=", version={1,0}}, {op = "<", version={2,0}}}.
-      -- Version tables use a metatable allowing later comparison through
-      -- relational operators.
-      -- @param input string: A list of constraints in string format.
-      -- @return table or nil: A table representing the same constraints,
-      -- or nil if the input string is invalid.
-      parse_constraints = function(input)
-         assert(type(input) == "string")
 
-         local constraints, oinput, constraint = {}, input
+
+
+
+
+
+
+
+      parse_constraints = function(input)
+
+         local constraints, oinput = {}, input
+         local constraint
          while #input > 0 do
             constraint, input = parse_constraint(input)
             if constraint then
                table.insert(constraints, constraint)
             else
-               return nil, "Failed to parse constraint '"..tostring(oinput).."' with error: ".. input
+               return nil, "Failed to parse constraint '" .. tostring(oinput) .. "' with error: " .. input
             end
          end
          return constraints
       end
    end
 
-   --- Prepare a query in dependency table format.
-   -- @param depstr string: A dependency in string format
-   -- as entered in rockspec files.
-   -- @return table: A query in table format, or nil and an error message in case of errors.
+
+
+
+
    function queries.from_dep_string(depstr)
-      assert(type(depstr) == "string")
 
       local ns_name, rest = depstr:match("^%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)")
       if not ns_name then
-         return nil, "failed to extract dependency name from '"..depstr.."'"
+         return nil, "failed to extract dependency name from '" .. depstr .. "'"
       end
 
       ns_name = ns_name:lower()
@@ -175,21 +185,22 @@ do
          constraints = constraints,
       }
 
-      query_mt.arch[cfg.arch] = true
+      queries.Query.arch[cfg.arch] = true
       return setmetatable(self, query_mt)
    end
 end
 
 function queries.from_persisted_table(tbl)
-   query_mt.arch[cfg.arch] = true
+   queries.Query.arch[cfg.arch] = true
    return setmetatable(tbl, query_mt)
 end
 
---- Build a string representation of a query package name.
--- Includes namespace, name and version, but not arch or constraints.
--- @param query table: a query table
--- @return string: a result such as `my_user/my_rock 1.0` or `my_rock`.
-function query_mt:__tostring()
+
+
+
+
+function query_mt.__tostring(self)
+
    local out = {}
    if self.namespace then
       table.insert(out, self.namespace)
@@ -200,7 +211,14 @@ function query_mt:__tostring()
    if #self.constraints > 0 then
       local pretty = {}
       for _, c in ipairs(self.constraints) do
-         local v = c.version.string
+         local cv = c.version
+
+         local v
+         if type(cv) == "table" then
+            v = cv.string
+         else
+            v = cv
+         end
          if c.op == "==" then
             table.insert(pretty, v)
          else
