@@ -1,22 +1,34 @@
-local results = {}
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local string = _tl_compat and _tl_compat.string or string; local results = {Results = {}, }
+
+
+
+
+
+
+
+
 
 local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
+local queries = require("luarocks.queries")
+
+
+
 
 local result_mt = {}
 
-result_mt.__index = result_mt
+result_mt.__index = results.Results
 
-function result_mt.type()
+function results.Results.type()
    return "result"
 end
 
 function results.new(name, version, repo, arch, namespace)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
-   assert(type(repo) == "string")
-   assert(type(arch) == "string" or not arch)
-   assert(type(namespace) == "string" or not namespace)
+
+   assert(not name:match("/"))
+
+
+
 
    if not namespace then
       name, namespace = util.split_namespace(name)
@@ -33,13 +45,13 @@ function results.new(name, version, repo, arch, namespace)
    return setmetatable(self, result_mt)
 end
 
---- Test the name field of a query.
--- If query has a boolean field substring set to true,
--- then substring match is performed; otherwise, exact string
--- comparison is done.
--- @param query table: A query in dependency table format.
--- @param name string: A package name.
--- @return boolean: True if names match, false otherwise.
+
+
+
+
+
+
+
 local function match_name(query, name)
    if query.substring then
       return name:find(query.name, 0, true) and true or false
@@ -48,15 +60,14 @@ local function match_name(query, name)
    end
 end
 
---- Returns true if the result satisfies a given query.
--- @param query: a query.
--- @return boolean.
-function result_mt:satisfies(query)
-   assert(query:type() == "query")
-   return match_name(query, self.name)
-      and (query.arch[self.arch] or query.arch["any"])
-      and ((not query.namespace) or (query.namespace == self.namespace))
-      and vers.match_constraints(vers.parse_version(self.version), query.constraints)
+
+
+
+function results.Results:satisfies(query)
+   return match_name(query, self.name) and
+   (query.arch[self.arch] or query.arch["any"]) and
+   ((not query.namespace) or (query.namespace == self.namespace)) and
+   (vers.match_constraints(vers.parse_version(self.version), query.constraints))
 end
 
 return results
