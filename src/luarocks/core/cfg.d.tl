@@ -22,10 +22,6 @@ local record cfg
       lib_dir: string
    end
    -- util
-   record Source
-      url: string
-   end
-
    record Description
       summary: string
       detailed: string
@@ -44,11 +40,19 @@ local record cfg
       rockspec_format: string
       name: string --? package
       version: string
-      source: {Source}
+      record source
+         url: string
+         module: string
+         pathname: string
+         tag: string
+      end
       description: Description
       test_dependencies: {string}
       test: Test
       format_is_at_least: function(Rockspec, string): boolean
+      record variables
+         CVS: string
+      end
    end
    
    record cache
@@ -66,6 +70,12 @@ local record cfg
    home: string
    -- queries
    arch: string
+   -- api
+   record config_files
+      record user
+         file: string
+      end
+   end
 end
 
 return cfg
