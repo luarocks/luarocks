@@ -1,10 +1,17 @@
 
 local record multipart
+   record TableMap<K, V>
+      map: {K: V}
+      array: {V}
+   end
 end
+
+local type TableMap = multipart.TableMap
 
 local record File
    mimetype: string --! TEMP
    fname: string
+   mime: function(File): string --! TEMP
 end
 
 -- socket.url.escape(s) from LuaSocket 3.0rc1 --?
@@ -14,13 +21,13 @@ function multipart.url_escape(s: string): string
    end))
 end
 
-function File:mime()
+function File.mime(self: File): string --! TEMP
    if not self.mimetype then
-      local mimetypes_ok, mimetypes = pcall(require, "mimetypes")
+      local mimetypes_ok, mimetypes = pcall(require, "luarocks.upload.mimetypes")  --! TEMP
       if mimetypes_ok then
-         self.mimetype = mimetypes.guess(self.fname)
+         self.mimetype = mimetypes.guess(self.fname) --! TEMP
       end
-      self.mimetype = self.mimetype or "application/octet-stream"
+      self.mimetype = self.mimetype or "application/octet-stream" --! TEMP
    end
    return self.mimetype
 end
@@ -35,7 +42,7 @@ function File:content(): string, string
    return data
 end
 
-local function rand_string(len): string
+local function rand_string(len: integer): string
    local shuffled: {integer} = {}
    for i = 1, len do
       local r = math.random(97, 122)
@@ -55,22 +62,22 @@ end
 --   {key2, value2},
 --   key3: value3
 -- }
-function multipart.encode(params: ) --? arain a table that is indexed by string and number
-   local tuples = { }
-   for i = 1, #params do
-      tuples[i] = params[i]
+function multipart.encode(params: TableMap<string, string>): string, string --! Table map type
+   local tuples = {} --! type
+   for i = 1, #params.array do
+      tuples[i] = params.array[i]
    end
-   for k,v in pairs(params) do
+   for k,v in pairs(params.map) do
       if k is string then
          table.insert(tuples, {k, v})
       end
    end
-   local chunks = {}
+   local chunks: {string} = {}
    for _, tuple in ipairs(tuples) do
       local k,v = table.unpack(tuple)
       k = multipart.url_escape(k)
-      local buffer = { 'Content-Disposition: form-data; name="' .. k .. '"' }
-      local content
+      local buffer: {string} = { 'Content-Disposition: form-data; name="' .. k .. '"' }
+      local content: string
       if type(v) == "table" and v.__class == File then
          buffer[1] = buffer[1] .. ('; filename="' .. v.fname:gsub(".*[/\\]", "") .. '"')
          table.insert(buffer, "Content-type: " .. v:mime())
@@ -82,7 +89,7 @@ function multipart.encode(params: ) --? arain a table that is indexed by string 
       table.insert(buffer, content)
       table.insert(chunks, table.concat(buffer, "\r\n"))
    end
-   local boundary
+   local boundary: string
    while not boundary do
       boundary = "Boundary" .. rand_string(16)
       for _, chunk in ipairs(chunks) do
