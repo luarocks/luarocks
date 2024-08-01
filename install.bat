@@ -344,7 +344,7 @@ local function look_for_link_libraries(directory)
 	if vars.LUA_LIBDIR then
 		directories = {vars.LUA_LIBDIR}
 	else
-		directories = {directory, directory .. "\\lib", directory .. "\\bin"}
+		directories = {directory, directory .. "\\bin", directory .. "\\lib"}
 	end
 
 	for _, dir in ipairs(directories) do
