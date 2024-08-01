@@ -9,6 +9,7 @@
 /*.tar.gz
 /*.zip
 /src/*.*
+!/src/*.d.tl
 /prefix-*
 /dev_*
 /gh-pages
