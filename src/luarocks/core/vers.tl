@@ -8,9 +8,10 @@ local record vers
       metamethod __le: function(Version, Version): boolean
    end
 
-   record Constraints
+   record Constraint
       op: string
       version: Version | string
+      no_upgrade: boolean
    end
 end
 
@@ -28,7 +29,7 @@ local deltas: {string: integer} = {
 }
 
 local type Version = vers.Version
-local type Constraints = vers.Constraints
+local type Constraint = vers.Constraint
 
 local version_mt: metatable<Version> = {
    --- Equality comparison for versions.
@@ -196,7 +197,7 @@ end
 -- @param constraints table: An array of constraints in table format.
 -- @return boolean: True if version satisfies all constraints,
 -- false otherwise.
-function vers.match_constraints(version: Version, constraints: {Constraints}): boolean
+function vers.match_constraints(version: Version, constraints: {Constraint}): boolean
    local ok = true
    setmetatable(version, version_mt)
    for _, constr in ipairs(constraints) do

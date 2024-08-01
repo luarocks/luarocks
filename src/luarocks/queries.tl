@@ -200,7 +200,6 @@ end
 -- @param query table: a query table
 -- @return string: a result such as `my_user/my_rock 1.0` or `my_rock`.
 function query_mt.__tostring(self: Query): string
-   -- function query_mt:__tostring(): string
    local out = {}
    if self.namespace then
       table.insert(out, self.namespace)
