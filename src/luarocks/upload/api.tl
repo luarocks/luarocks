@@ -90,9 +90,9 @@ function Api:method(...)
    return res
 end
 
-function Api.raw_method(self: Api, path, ...) --! path, ... type
+function Api.raw_method(self: Api, path: string, ...) --! path, ... type
    self:check_version()
-   local url = tostring(self.config.server) .. "/api/" .. tostring(cfg.upload.api_version) .. "/" .. tostring(self.config.key) .. "/" .. tostring(path)
+   local url = tostring(self.config.server) .. "/api/" .. tostring(cfg.upload.api_version) .. "/" .. tostring(self.config.key) .. "/" .. path
    return self:request(url, ...)
 end
 

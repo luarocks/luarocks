@@ -105,12 +105,12 @@ function multipart.encode(params: TableMap<string, string>): string, string --! 
                         "\r\n", "--", boundary, "--", "\r\n" }), boundary
 end
 
-function multipart.new_file(fname, mime)
-   local self = {}
+function multipart.new_file(fname: string, mime: string): File --! TEMP
+   local self: File = {}
    setmetatable(self, { __index = File })
-   self.__class = File
+   self.__class = File --!
    self.fname = fname
-   self.mimetype = mime
+   self.mimetype = mime --TEMP
    return self
 end
 

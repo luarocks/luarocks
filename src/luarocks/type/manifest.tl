@@ -1,4 +1,5 @@
-local type_manifest = {}
+local record type_manifest
+end
 
 local type_check = require("luarocks.type_check")
 
