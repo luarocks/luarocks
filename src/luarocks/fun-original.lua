@@ -1,7 +1,8 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local table = _tl_compat and _tl_compat.table or table; local _tl_table_unpack = unpack or table.unpack
 
+--- A set of basic functional utilities
 local fun = {}
 
+local unpack = table.unpack or unpack
 
 function fun.concat(xs, ys)
    local rs = {}
@@ -12,7 +13,6 @@ function fun.concat(xs, ys)
    for i = 1, #ys do
       rs[i + n] = ys[i]
    end
-
    return rs
 end
 
@@ -38,7 +38,7 @@ function fun.filter(xs, f)
    for i = 1, #xs do
       local v = xs[i]
       if f(v) then
-         rs[#rs + 1] = v
+         rs[#rs+1] = v
       end
    end
    return rs
@@ -46,17 +46,12 @@ end
 
 function fun.traverse(t, f)
    return fun.map(t, function(x)
-
-      if type(x) == "table" then
-         fun.traverse(x, f)
-      else
-         f(x)
-      end
+      return type(x) == "table" and fun.traverse(x, f) or f(x)
    end)
 end
 
 function fun.reverse_in(t)
-   for i = 1, math.floor(#t / 2) do
+   for i = 1, math.floor(#t/2) do
       local m, n = i, #t - i + 1
       local a, b = t[m], t[n]
       t[m] = b
@@ -116,9 +111,9 @@ function fun.partial(f, ...)
             args[i] = pargs[i]
          end
          for i = 1, m do
-            args[i + n] = fargs[i]
+            args[i+n] = fargs[i]
          end
-         return f(_tl_table_unpack(args, 1, n + m))
+         return f(unpack(args, 1, n+m))
       end
    end
 end
@@ -127,19 +122,19 @@ function fun.memoize(fn)
    local memory = setmetatable({}, { __mode = "k" })
    local errors = setmetatable({}, { __mode = "k" })
    local NIL = {}
-   return function(a)
-      if memory[a] then
-         if memory[a] == NIL then
-            return nil, errors[a]
+   return function(arg)
+      if memory[arg] then
+         if memory[arg] == NIL then
+            return nil, errors[arg]
          end
-         return memory[a]
+         return memory[arg]
       end
-      local ret1, ret2 = fn(a)
+      local ret1, ret2 = fn(arg)
       if ret1 ~= nil then
-         memory[a] = ret1
+         memory[arg] = ret1
       else
-         memory[a] = NIL
-         errors[a] = ret2
+         memory[arg] = NIL
+         errors[arg] = ret2
       end
       return ret1, ret2
    end

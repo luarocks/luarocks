@@ -43,7 +43,7 @@ do
    -- and the value is a schema specification. Schema versions are considered
    -- incremental: version "2.0" only needs to specify what's new/changed from
    -- version "1.0".
-   function type_check.declare_schemas(inputs: {string: any}): {any: any} {any} --?
+   function type_check.declare_schemas(inputs: {string: any}): {any: any}, {any} --?
       local schemas = {}
       local parent_version
 

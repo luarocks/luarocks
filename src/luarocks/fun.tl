@@ -123,23 +123,23 @@ function fun.partial<K>(f: (function(...: any): K), ...: any): (function(...: an
    end
 end
 
-function fun.memoize(fn)
-   local memory = setmetatable({}, { __mode = "k" })
-   local errors = setmetatable({}, { __mode = "k" })
-   local NIL = {}
-   return function(arg)
-      if memory[arg] then
-         if memory[arg] == NIL then
-            return nil, errors[arg]
+function fun.memoize<A, B, C>(fn: (function(A):B, C)): (function(A):B, C)
+   local memory: {A: B} = setmetatable({}, { __mode = "k" })
+   local errors: {A: C} = setmetatable({}, { __mode = "k" })
+   local NIL: B = {} as B
+   return function(a: A): B, C
+      if memory[a] then
+         if memory[a] == NIL then
+            return nil, errors[a]
          end
-         return memory[arg]
+         return memory[a]
       end
-      local ret1, ret2 = fn(arg)
+      local ret1, ret2 = fn(a)
       if ret1 ~= nil then
-         memory[arg] = ret1
+         memory[a] = ret1
       else
-         memory[arg] = NIL
-         errors[arg] = ret2
+         memory[a] = NIL
+         errors[a] = ret2
       end
       return ret1, ret2
    end

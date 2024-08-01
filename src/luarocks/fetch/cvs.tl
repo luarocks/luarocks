@@ -17,7 +17,7 @@ local type Rockspec = cfg.Rockspec
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function cvs.get_sources(rockspec: Rockspec, extract, dest_dir?: string): string, string --? extract not needed
+function cvs.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string --? extract not needed
    local cvs_cmd = rockspec.variables.CVS
    local ok, err_msg = fs.is_tool_available(cvs_cmd, "CVS")
    if not ok then
