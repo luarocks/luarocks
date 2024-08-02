@@ -1,6 +1,13 @@
 local record api
+   record Configuration
+      key: string
+      server: string
+      version: string
+   end
+
    record Api
-      config: PersistableTable
+      request: function(Api, string, ?Parameters, ?Parameters): {string : any}, string
+      config: Configuration
       debug: boolean
       _server_tool_version: string
    end
@@ -25,7 +32,8 @@ local dir_sep = package.config:sub(1, 1)
 local type Parameters = multipart.Parameters
 local type Api = api.Api
 local type Args = api.Args
-local type PersistableTable = persist.PersistableTable
+local type Configuration = api.Configuration
+local type File = multipart.File
 
 local function upload_config_file(): string
    if not cfg.config_files.user.file then
@@ -34,75 +42,11 @@ local function upload_config_file(): string
    return (cfg.config_files.user.file:gsub("[\\/][^\\/]+$", dir_sep .. "upload_config.lua"))
 end
 
-function api.Api:load_config(): {any: any}
+function api.Api:load_config(): Configuration
    local upload_conf = upload_config_file()
    if not upload_conf then return nil end
-   local config = persist.load_into_table(upload_conf)
+   local config = persist.load_into_table(upload_conf) as Configuration
    return config
-end
-
-function api.Api:save_config(): nil, string --! nil?
-   -- Test configuration before saving it.
-   local res, err = self:raw_method("status")
-   if not res then
-      return nil, err
-   end
-   if res.errors then
-      util.printerr("Server says: " .. tostring(res.errors[1]))
-      return
-   end
-   local upload_conf = upload_config_file()
-   if not upload_conf then return nil end
-   local ok, err = fs.make_dir(dir.dir_name(upload_conf))
-   if not ok then
-      return nil, err
-   end
-   persist.save_from_table(upload_conf, self.config)
-   fs.set_permissions(upload_conf, "read", "user")
-end
-
-function api.Api:check_version(): boolean, string
-   if not self._server_tool_version then
-      local tool_version = cfg.upload.tool_version
-      local res, err = self:request(tostring(self.config.server) .. "/api/tool_version", {
-        current = tool_version
-      })
-      if not res then
-         return nil, err
-      end
-      if not res.version then
-         return nil, "failed to fetch tool version"
-      end
-      self._server_tool_version = res.version
-      if res.force_update then
-         return nil, "Your upload client is too out of date to continue, please upgrade LuaRocks."
-      end
-      if res.version ~= tool_version then
-         util.warning("your LuaRocks is out of date, consider upgrading.")
-      end
-   end
-   return true
-end
-
-function api.Api:method(...): {string : any}, string
-   local res, err = self:raw_method(...)
-   if not res then
-      return nil, err
-   end
-   if res.errors then
-      if res.errors[1] == "Invalid key" then
-         return nil, res.errors[1] .. " (use the --api-key flag to change)"
-      end
-      local msg = table.concat(res.errors, ", ")
-      return nil, "API Failed: " .. msg
-   end
-   return res
-end
-
-function api.Api:raw_method(path: string, ...: Parameters): {string : any}, string
-   self:check_version()
-   local url = tostring(self.config.server) .. "/api/" .. tostring(cfg.upload.api_version) .. "/" .. tostring(self.config.key) .. "/" .. path
-   return self:request(url, ...)
 end
 
 local function encode_query_string(t: Parameters, sep?: string): string
@@ -111,12 +55,27 @@ local function encode_query_string(t: Parameters, sep?: string): string
    end
    local i = 0
    local buf: {string} = { }
-   for k, v in pairs(t.map) do --! pairs problem for Parameters
+   -- for _, v in ipairs(t) do --! pairs problem for Parameters
+   --    local ks, vs: string, string
+   --    local vf = v[2]
+   --    if vf is File then
+   --       ks, vs = v[1], vf:content()
+   --    else
+   --       ks, vs = v[1], vf
+   --    end
+   --    buf[i + 1] = multipart.url_escape(ks)
+   --    buf[i + 2] = "="
+   --    buf[i + 3] = multipart.url_escape(vs)
+   --    buf[i + 4] = sep
+   --    i = i + 4
+   -- end
+   for k, v in pairs(t) do --! pairs problem for Parameters
       local ks, vs: string, string
-      if k is number and v is table then
-         ks, vs = v[1], v[2]
+      local vf = v
+      if vf is File then
+         ks, vs = k, vf:content()
       else
-         ks, vs = k, v
+         ks, vs = k, vf
       end
       buf[i + 1] = multipart.url_escape(ks)
       buf[i + 2] = "="
@@ -136,7 +95,7 @@ end
 local ltn12_ok, ltn12 = pcall(require, "ltn12")
 if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
 
-   function api.Api:request(url: string, params?: Parameters, post_params?: Parameters): {string : any}, string
+   api.Api.request = function(self: Api, url: string, params?: Parameters, post_params?: Parameters): {string : any}, string
       local vars = cfg.variables
 
       if fs.which_tool("downloader") == "wget" then
@@ -149,7 +108,7 @@ if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
       if not self.config.key then
          return nil, "Must have API key before performing any actions."
       end
-      if params and next(params) then --!
+      if params and next(params) ~= nil then --! TEAL BUG #768
          url = url .. ("?" .. encode_query_string(params))
       end
       local method = "GET"
@@ -159,9 +118,11 @@ if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
          method = "POST"
          local curl_cmd = vars.CURL.." "..vars.CURLNOCERTFLAG.." -f -L --silent --user-agent \""..cfg.user_agent.." via curl\" "
          for k,v in pairs(post_params) do
-            local var = v
-            if v is {string: (string | File)} then --!
+            local var: string
+            if v is File then
                var = "@"..v.fname
+            else
+               var = v
             end
             curl_cmd = curl_cmd .. "--form \""..k.."="..var.."\" "
          end
@@ -199,12 +160,13 @@ else -- use LuaSocket and LuaSec
 
    local warned_luasec = false
 
-   function api.Api:request(url: string, params?: Parameters, post_params?: Parameters): {string : any}, string
+   api.Api.request = function(self: Api, url: string, params?: Parameters, post_params?: Parameters): {string : any}, string
       local server = tostring(self.config.server)
-      local http_ok, http: boolean
+      local type Http = require("socket.http")
+      local http_ok, http: boolean, Http
       local via = "luasocket"
       if server:match("^https://") then
-         http_ok, http = pcall(require, "ssl.https") --! a lot of new files in the src dir
+         http_ok, http = pcall(require, "ssl.https") as (boolean, Http)
          if http_ok then
             via = "luasec"
          else
@@ -227,14 +189,14 @@ else -- use LuaSocket and LuaSec
          return nil, "Must have API key before performing any actions."
       end
       local body: string
-      local headers: {string: string | integer} = {}
-      if params and next(params) then --!
+      local headers: {string: string} = {}
+      if params and next(params) ~= nil then -- TEAL BUG
          url = url .. ("?" .. encode_query_string(params))
       end
       if post_params then
          local boundary: string
          body, boundary = multipart.encode(post_params)
-         headers["Content-length"] = #body
+         headers["Content-length"] = tostring(#body)
          headers["Content-type"] = "multipart/form-data; boundary=" .. tostring(boundary)
       end
       local method = post_params and "POST" or "GET"
@@ -261,6 +223,72 @@ else -- use LuaSocket and LuaSec
 
 end
 
+function api.Api:check_version(): boolean, string
+   if not self._server_tool_version then
+      local tool_version = cfg.upload.tool_version
+      local res, err = self:request(tostring(self.config.server) .. "/api/tool_version", {
+        current = tool_version
+      })
+      if not res then
+         return nil, err
+      end
+      if not res.version then
+         return nil, "failed to fetch tool version"
+      end
+      self._server_tool_version = tostring(res.version)
+      if res.force_update then
+         return nil, "Your upload client is too out of date to continue, please upgrade LuaRocks."
+      end
+      if res.version ~= tool_version then
+         util.warning("your LuaRocks is out of date, consider upgrading.")
+      end
+   end
+   return true
+end
+
+function api.Api:raw_method(path: string, ...: Parameters): {string : any}, string
+   self:check_version()
+   local url = tostring(self.config.server) .. "/api/" .. tostring(cfg.upload.api_version) .. "/" .. tostring(self.config.key) .. "/" .. path
+   return self:request(url, ...)
+end
+
+function api.Api:method(path: string, ...: Parameters): {string : any}, string
+   local res, err = self:raw_method(path, ...)
+   if not res then
+      return nil, err
+   end
+   local reserrors = res.errors
+   if reserrors is {string} then --! not checking the contents
+      if reserrors[1] == "Invalid key" then
+         return nil, reserrors[1] .. " (use the --api-key flag to change)"
+      end
+      local msg = table.concat(reserrors, ", ")
+      return nil, "API Failed: " .. msg
+   end
+   return res
+end
+
+function api.Api:save_config(): boolean, string --! nil?
+   -- Test configuration before saving it.
+   local res, errraw = self:raw_method("status")
+   if not res then
+      return nil, errraw
+   end
+   local reserrors = res.errors
+   if reserrors is {string} then
+      return nil, ("Server error: " .. tostring(reserrors[1]))
+   end
+   local upload_conf = upload_config_file()
+   if not upload_conf then return nil end
+   local ok, errmake = fs.make_dir(dir.dir_name(upload_conf))
+   if not ok then
+      return nil, errmake
+   end
+   persist.save_from_table(upload_conf, self.config as persist.PersistableTable)
+   fs.set_permissions(upload_conf, "read", "user")
+   return true
+end
+
 function api.new(args: Args): Api, string
    local self: Api = {}
    setmetatable(self, { __index = Api })
@@ -275,7 +303,10 @@ function api.new(args: Args): Api, string
                   "and then pass it through the --api-key=<key> flag."
    end
    if args.api_key then
-      self:save_config()
+      local ok, err = self:save_config()
+      if not ok then
+         return nil, err
+      end
    end
    return self
 end
