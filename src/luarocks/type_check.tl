@@ -14,7 +14,7 @@ local vers = require("luarocks.core.vers")
 type_check.MAGIC_PLATFORMS = 0xEBABEFAC
 
 do
-   local function fill_in_version(tbl, version?)
+   local function fill_in_version(tbl: {any: any}, version?: string) --! tighter bound? --? What is filled if no version is provided
       for _, v in pairs(tbl) do
          if v is table then
             if v._version == nil then
@@ -25,9 +25,9 @@ do
       end
    end
 
-   local function expand_magic_platforms(tbl)
+   local function expand_magic_platforms(tbl: {any: any}) --! tbl type
       for k,v in pairs(tbl) do
-         if v == type_check.MAGIC_PLATFORMS then
+         if v == type_check.MAGIC_PLATFORMS then --! v is int, next line it is not
             tbl[k] = {
                _any = util.deep_copy(tbl)
             }
@@ -43,9 +43,9 @@ do
    -- and the value is a schema specification. Schema versions are considered
    -- incremental: version "2.0" only needs to specify what's new/changed from
    -- version "1.0".
-   function type_check.declare_schemas(inputs: {string: any}): {any: any}, {any} --?
-      local schemas = {}
-      local parent_version
+   function type_check.declare_schemas(inputs: {string: {any: any}}): {string : {any : any}}, {string} --! schema type: {string: {any: any}}
+      local schemas: {string: {any: any}} = {}
+      local parent_version: string
 
       local versions = fun.reverse_in(fun.sort_in(util.keys(inputs), vers.compare_versions))
 
@@ -68,7 +68,7 @@ end
 
 --------------------------------------------------------------------------------
 
-local function check_version(version: string, typetbl, context: string)
+local function check_version(version: string, typetbl: {string: string}, context: string): boolean, string --! typetbl
    local typetbl_version = typetbl._version or "1.0"
    if vers.compare_versions(typetbl_version, version) then
       if context == "" then
@@ -79,6 +79,8 @@ local function check_version(version: string, typetbl, context: string)
    end
    return true
 end
+
+
 
 --- Type check an object.
 -- The object is compared against an archetypical value
@@ -92,8 +94,7 @@ end
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
 -- @see type_check_table
-local function type_check_item(version, item, typetbl, context)
-   assert(type(version) == "string")
+local function type_check_item(version: string, item: any, typetbl: {string: string}, context: string): boolean, string --! typetbl
 
    if typetbl._version and typetbl._version ~= "1.0" then
       local ok, err = check_version(version, typetbl, context)
@@ -115,9 +116,9 @@ local function type_check_item(version, item, typetbl, context)
       end
       local pattern = typetbl._pattern
       if pattern then
-         if not item:match("^"..pattern.."$") then
+         if not item:match("^"..pattern.."$") then --! cast or tostring
             local what = typetbl._name or ("'"..pattern.."'")
-            return nil, "Type mismatch on field "..context..": invalid value '"..item.."' does not match " .. what
+            return nil, "Type mismatch on field "..context..": invalid value '"..item.."' does not match " .. what --! cast or tostring
          end
       end
    elseif expected_type == "table" then
@@ -132,10 +133,10 @@ local function type_check_item(version, item, typetbl, context)
    return true
 end
 
-local function mkfield(context, field)
+local function mkfield(context: string, field: any): string
    if context == "" then
       return tostring(field)
-   elseif type(field) == "string" then
+   elseif field is string then
       return context.."."..field
    else
       return context.."["..tostring(field).."]"
@@ -164,10 +165,7 @@ end
 -- to be used by error messages.
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
-function type_check.type_check_table(version, tbl, typetbl, context)
-   assert(type(version) == "string")
-   assert(type(tbl) == "table")
-   assert(type(typetbl) == "table")
+function type_check.type_check_table(version: string, tbl: {any: any}, typetbl: {string: string}, context: string): boolean, string --! tbl and typetbl types
 
    local ok, err = check_version(version, typetbl, context)
    if not ok then
@@ -188,7 +186,7 @@ function type_check.type_check_table(version, tbl, typetbl, context)
       end
    end
    for k, v in pairs(typetbl) do
-      if k:sub(1,1) ~= "_" and v._mandatory then
+      if k:sub(1,1) ~= "_" and v._mandatory then --!
          if not tbl[k] then
             return nil, "Mandatory field "..mkfield(context, k).." is missing."
          end
@@ -197,7 +195,7 @@ function type_check.type_check_table(version, tbl, typetbl, context)
    return true
 end
 
-function type_check.check_undeclared_globals(globals, typetbl)
+function type_check.check_undeclared_globals(globals: {string: any}, typetbl: {string: string}): boolean, string --! tbl and typetbl types
    local undeclared = {}
    for glob, _ in pairs(globals) do
       if not (typetbl[glob] or typetbl["MUST_"..glob]) then

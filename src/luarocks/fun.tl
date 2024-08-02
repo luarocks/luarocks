@@ -3,7 +3,7 @@
 local record fun
 end
 
-function fun.concat(xs: {any}, ys: {any}): {any} --? not generic becuse lua suports differnt types in one array
+function fun.concat<K>(xs: {K}, ys: {K}): {K}
    local rs = {}
    local n = #xs
    for i = 1, n do
@@ -16,7 +16,7 @@ function fun.concat(xs: {any}, ys: {any}): {any} --? not generic becuse lua supo
    return rs
 end
 
-function fun.contains(xs: {any}, v: any): boolean --? same logic as above fine?
+function fun.contains<K>(xs: {K}, v: K): boolean --? same logic as above fine?
    for _, x in ipairs(xs) do
       if v == x then
          return true
@@ -55,7 +55,7 @@ function fun.traverse<K, V>(t: {K}, f: function(K): V): {V} | V --? right or {an
    end)
 end
 
-function fun.reverse_in(t: {any}): {any}
+function fun.reverse_in<K>(t: {K}): {K}
    for i = 1, math.floor(#t/2) do
       local m, n = i, #t - i + 1
       local a, b = t[m], t[n]
