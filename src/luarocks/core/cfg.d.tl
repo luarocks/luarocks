@@ -83,6 +83,10 @@ local record cfg
    -- api
    user_agent: string
    connection_timeout: number
+   record upload
+      server: string
+      version: string
+   end
 end
 
 return cfg

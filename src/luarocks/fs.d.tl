@@ -26,6 +26,7 @@ local record fs
    execute_string: function(string): boolean
    Q: function(string): string
    download: function(string, string): boolean, string
+   set_permissions: function(string, string, string)
 end
 
 return fs

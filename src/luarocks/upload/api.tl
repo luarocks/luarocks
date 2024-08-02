@@ -1,5 +1,16 @@
 local record api
+   record Api
+      config: PersistableTable
+      debug: boolean
+      _server_tool_version: string
+   end
 
+   record Args
+      server: string
+      temp_key: string
+      api_key: string
+      debug: boolean
+   end
 end
 
 local cfg = require("luarocks.core.cfg")
@@ -11,16 +22,10 @@ local multipart = require("luarocks.upload.multipart")
 local json = require("luarocks.vendor.dkjson")
 local dir_sep = package.config:sub(1, 1)
 
-local record Api
-   raw_method: function(Api, string)
-   record config
-      server: any --! why to string
-      key: string
-   end
-   debug: boolean
-end
-
 local type Parameters = multipart.Parameters
+local type Api = api.Api
+local type Args = api.Args
+local type PersistableTable = persist.PersistableTable
 
 local function upload_config_file(): string
    if not cfg.config_files.user.file then
@@ -29,14 +34,14 @@ local function upload_config_file(): string
    return (cfg.config_files.user.file:gsub("[\\/][^\\/]+$", dir_sep .. "upload_config.lua"))
 end
 
-function Api:load_config(): {any: any} --? tighter bound?
+function api.Api:load_config(): {any: any}
    local upload_conf = upload_config_file()
    if not upload_conf then return nil end
    local config = persist.load_into_table(upload_conf)
    return config
 end
 
-function Api:save_config(): nil, string --! nil?
+function api.Api:save_config(): nil, string --! nil?
    -- Test configuration before saving it.
    local res, err = self:raw_method("status")
    if not res then
@@ -56,7 +61,7 @@ function Api:save_config(): nil, string --! nil?
    fs.set_permissions(upload_conf, "read", "user")
 end
 
-function Api:check_version()
+function api.Api:check_version(): boolean, string
    if not self._server_tool_version then
       local tool_version = cfg.upload.tool_version
       local res, err = self:request(tostring(self.config.server) .. "/api/tool_version", {
@@ -79,7 +84,7 @@ function Api:check_version()
    return true
 end
 
-function Api:method(...)
+function api.Api:method(...): {string : any}, string
    local res, err = self:raw_method(...)
    if not res then
       return nil, err
@@ -94,7 +99,7 @@ function Api:method(...)
    return res
 end
 
-function Api:raw_method(path: string, ...) --! path, ... type
+function api.Api:raw_method(path: string, ...: Parameters): {string : any}, string
    self:check_version()
    local url = tostring(self.config.server) .. "/api/" .. tostring(cfg.upload.api_version) .. "/" .. tostring(self.config.key) .. "/" .. path
    return self:request(url, ...)
@@ -107,12 +112,15 @@ local function encode_query_string(t: Parameters, sep?: string): string
    local i = 0
    local buf: {string} = { }
    for k, v in pairs(t.map) do --! pairs problem for Parameters
-      if k is number and v is {string} then
-         k, v = v[1], v[2]
+      local ks, vs: string, string
+      if k is number and v is table then
+         ks, vs = v[1], v[2]
+      else
+         ks, vs = k, v
       end
-      buf[i + 1] = multipart.url_escape(k as string) --! cast
+      buf[i + 1] = multipart.url_escape(ks)
       buf[i + 2] = "="
-      buf[i + 3] = multipart.url_escape(v as string) --! cast
+      buf[i + 3] = multipart.url_escape(vs)
       buf[i + 4] = sep
       i = i + 4
    end
@@ -121,14 +129,14 @@ local function encode_query_string(t: Parameters, sep?: string): string
 end
 
 local function redact_api_url(url: any): string
-   url = tostring(url)
-   return ((url as string):gsub(".*/api/[^/]+/[^/]+", "")) or "" --! cast
+   local urls = tostring(url)
+   return (urls:gsub(".*/api/[^/]+/[^/]+", "")) or ""
 end
 
 local ltn12_ok, ltn12 = pcall(require, "ltn12")
 if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
 
-   function Api:request(url: string, params?: Parameters, post_params?: Parameters): {string : any}, string
+   function api.Api:request(url: string, params?: Parameters, post_params?: Parameters): {string : any}, string
       local vars = cfg.variables
 
       if fs.which_tool("downloader") == "wget" then
@@ -152,10 +160,10 @@ if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
          local curl_cmd = vars.CURL.." "..vars.CURLNOCERTFLAG.." -f -L --silent --user-agent \""..cfg.user_agent.." via curl\" "
          for k,v in pairs(post_params) do
             local var = v
-            if v is {string: string} then
+            if v is {string: (string | File)} then --!
                var = "@"..v.fname
             end
-            curl_cmd = curl_cmd .. "--form \""..k.."="..var as string.."\" " --! cast
+            curl_cmd = curl_cmd .. "--form \""..k.."="..var.."\" "
          end
          if cfg.connection_timeout and cfg.connection_timeout > 0 then
          curl_cmd = curl_cmd .. "--connect-timeout "..tonumber(cfg.connection_timeout).." "
@@ -191,9 +199,9 @@ else -- use LuaSocket and LuaSec
 
    local warned_luasec = false
 
-   function Api:request(url: string, params?: Parameters, post_params?: Parameters): {string : any}, string
+   function api.Api:request(url: string, params?: Parameters, post_params?: Parameters): {string : any}, string
       local server = tostring(self.config.server)
-      local http_ok, http: boolean, any
+      local http_ok, http: boolean
       local via = "luasocket"
       if server:match("^https://") then
          http_ok, http = pcall(require, "ssl.https") --! a lot of new files in the src dir
@@ -244,7 +252,7 @@ else -- use LuaSocket and LuaSec
       if self.debug then
          util.printout(tostring(status))
       end
-      local pok, ret, err = pcall(json.decode, table.concat(out))
+      local pok, ret = pcall(json.decode, table.concat(out))
       if pok and ret then
          return ret
       end
@@ -253,8 +261,8 @@ else -- use LuaSocket and LuaSec
 
 end
 
-function api.new(args): Api
-   local self = {}
+function api.new(args: Args): Api, string
+   local self: Api = {}
    setmetatable(self, { __index = Api })
    self.config = self:load_config() or {}
    self.config.server = args.server or self.config.server or cfg.upload.server

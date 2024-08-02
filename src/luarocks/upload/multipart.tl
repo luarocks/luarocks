@@ -1,8 +1,8 @@
 
 local record multipart
    record Parameters
-      {{string, string | File}}
-      map: {string: string | File}
+      {{string, (string | File)}}
+      map: {string: (string | File)}
    end
 end
 

@@ -201,7 +201,7 @@ end
 -- @param sort_by table: an optional array indicating the order of top-level fields.
 -- @return boolean or (nil, string): true if successful, or nil and a
 -- message in case of errors.
-function persist.save_from_table(filename: string, tbl: PersistableTable, sort_by: util.SortBy<number | string>): boolean, string
+function persist.save_from_table(filename: string, tbl: PersistableTable, sort_by?: util.SortBy<number | string>): boolean, string
    local prefix = dir.dir_name(filename)
    fs.make_dir(prefix)
    local out = io.open(filename, "w")
