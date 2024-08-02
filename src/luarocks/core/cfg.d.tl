@@ -64,6 +64,8 @@ local record cfg
    record variables
       LUA: string
       GPG: string
+      CURL: string
+      CURLNOCERTFLAG: string
    end
    rocks_provided: {Rockspec}
    -- persist
@@ -76,6 +78,11 @@ local record cfg
          file: string
       end
    end
+   -- type_check
+   accept_unknown_fields: boolean
+   -- api
+   user_agent: string
+   connection_timeout: number
 end
 
 return cfg

@@ -20,6 +20,12 @@ local record fs
    make_temp_dir: function(string): string, string
    change_dir: function(string): boolean, string
    pop_dir: function(): boolean
+   -- api
+   which_tool: function(string): string
+   tmpname: function(): string
+   execute_string: function(string): boolean
+   Q: function(string): string
+   download: function(string, string): boolean, string
 end
 
 return fs
