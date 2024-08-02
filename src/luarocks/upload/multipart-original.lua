@@ -1,31 +1,20 @@
 
-local record multipart
-   -- record Parameters
-   --    {{string, (string | File)}}
-   --    map: {string: (string | File)}
-   -- end
-   type Parameters = {string: (string | File)}
+local multipart = {}
 
-   record File
-      mimetype: string
-      fname: string
-      mime: function(File): string
-   end
-end
+local File = {}
 
-local type Parameters = multipart.Parameters
-local type File = multipart.File
+local unpack = unpack or table.unpack
 
--- socket.url.escape(s) from LuaSocket 3.0rc1 --?
-function multipart.url_escape(s: string): string
-   return (string.gsub(s, "([^A-Za-z0-9_])", function(c: string): string
+-- socket.url.escape(s) from LuaSocket 3.0rc1
+function multipart.url_escape(s)
+   return (string.gsub(s, "([^A-Za-z0-9_])", function(c)
       return string.format("%%%02x", string.byte(c))
    end))
 end
 
-function multipart.File:mime(): string
+function File:mime()
    if not self.mimetype then
-      local mimetypes_ok, mimetypes = pcall(require, "mimetypes") 
+      local mimetypes_ok, mimetypes = pcall(require, "mimetypes")
       if mimetypes_ok then
          self.mimetype = mimetypes.guess(self.fname)
       end
@@ -34,7 +23,7 @@ function multipart.File:mime(): string
    return self.mimetype
 end
 
-function multipart.File:content(): string, string
+function File:content()
    local fd = io.open(self.fname, "rb")
    if not fd then
       return nil, "Failed to open file: "..self.fname
@@ -44,16 +33,16 @@ function multipart.File:content(): string, string
    return data
 end
 
-local function rand_string(len: integer): string
-   local shuffled: {integer} = {}
+local function rand_string(len)
+   local shuffled = {}
    for i = 1, len do
       local r = math.random(97, 122)
       if math.random() >= 0.5 then
         r = r - 32
       end
-      shuffled[i as integer] = r  --! cast because math.tointeger returns an integer?
+      shuffled[i] = r
    end
-   return string.char(table.unpack(shuffled))
+   return string.char(unpack(shuffled))
 end
 
 -- multipart encodes params
@@ -64,20 +53,23 @@ end
 --   {key2, value2},
 --   key3: value3
 -- }
-function multipart.encode(params: Parameters): string, string --! Table map type
-   local tuples: {{string, string | File}} = {} --! type
+function multipart.encode(params)
+   local tuples = { }
+   for i = 1, #params do
+      tuples[i] = params[i]
+   end
    for k,v in pairs(params) do
-      if k is string then
+      if type(k) == "string" then
          table.insert(tuples, {k, v})
       end
    end
-   local chunks: {string} = {}
+   local chunks = {}
    for _, tuple in ipairs(tuples) do
-      local k,v = table.unpack(tuple)
+      local k,v = unpack(tuple)
       k = multipart.url_escape(k)
-      local buffer: {string} = { 'Content-Disposition: form-data; name="' .. k .. '"' }
-      local content: string
-      if v is File then
+      local buffer = { 'Content-Disposition: form-data; name="' .. k .. '"' }
+      local content
+      if type(v) == "table" and v.__class == File then
          buffer[1] = buffer[1] .. ('; filename="' .. v.fname:gsub(".*[/\\]", "") .. '"')
          table.insert(buffer, "Content-type: " .. v:mime())
          content = v:content()
@@ -88,7 +80,7 @@ function multipart.encode(params: Parameters): string, string --! Table map type
       table.insert(buffer, content)
       table.insert(chunks, table.concat(buffer, "\r\n"))
    end
-   local boundary: string
+   local boundary
    while not boundary do
       boundary = "Boundary" .. rand_string(16)
       for _, chunk in ipairs(chunks) do
@@ -104,13 +96,12 @@ function multipart.encode(params: Parameters): string, string --! Table map type
                         "\r\n", "--", boundary, "--", "\r\n" }), boundary
 end
 
-function multipart.new_file(fname: string, mime: string): File
-   local self: File = {}
-
+function multipart.new_file(fname, mime)
+   local self = {}
    setmetatable(self, { __index = File })
-
+   self.__class = File
    self.fname = fname
-   self.mimetype = mime 
+   self.mimetype = mime
    return self
 end
 
