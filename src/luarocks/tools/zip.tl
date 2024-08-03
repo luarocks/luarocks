@@ -1,7 +1,8 @@
 
 --- A Lua implementation of .zip and .gz file compression and decompression,
 -- using only lzlib or lua-lzib.
-local zip = {}
+local record zip
+end
 
 local zlib = require("zlib")
 local fs = require("luarocks.fs")

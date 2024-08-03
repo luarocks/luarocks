@@ -29,6 +29,8 @@ local record fs
    set_permissions: function(string, string, string)
    -- patch
    absolute_name: function(string, ?string): string
+   -- tar
+   set_time: function(string, number)
 end
 
 return fs
