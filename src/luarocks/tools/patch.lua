@@ -583,35 +583,34 @@ end
 local function patch_file(source, target, epoch, hunks, strip, create_delete)
    local create_file = false
    if create_delete then
-      local is_src_epoch = epoch and #hunks == 1 and hunks[1].startsrc == 0 and hunks[1].linessrc == 0
-      if is_src_epoch or source == "/dev/null" then
-         info(string.format("will create %s", target))
-         create_file = true
-      end
+     local is_src_epoch = epoch and #hunks == 1 and hunks[1].startsrc == 0 and hunks[1].linessrc == 0
+     if is_src_epoch or source == "/dev/null" then
+       info(format("will create %s", target))
+       create_file = true
+     end
    end
    if create_file then
-      return write_new_file(fs.absolute_name(strip_dirs(target, strip)), hunks[1])
+     return write_new_file(fs.absolute_name(strip_dirs(target, strip)), hunks[1])
    end
    source = strip_dirs(source, strip)
    local f2patch = source
    if not exists(f2patch) then
-      f2patch = strip_dirs(target, strip)
-      f2patch = fs.absolute_name(f2patch)
-      if not exists(f2patch) then
-         warning(string.format("source/target file does not exist\n--- %s\n+++ %s",
-         source, f2patch))
-         return false
-      end
+     f2patch = strip_dirs(target, strip)
+     f2patch = fs.absolute_name(f2patch)
+     if not exists(f2patch) then  --FIX:if f2patch nil
+       warning(format("source/target file does not exist\n--- %s\n+++ %s",
+               source, f2patch))
+       return false
+     end
    end
-
-   if not isfile() then
-      warning(string.format("not a file - %s", f2patch))
-      return false
+   if not isfile(f2patch) then
+     warning(format("not a file - %s", f2patch))
+     return false
    end
-
+ 
    source = f2patch
-
-
+ 
+   -- validate before patching
    local file = load_file(source)
    local hunkno = 1
    local hunk = hunks[hunkno]
@@ -620,128 +619,128 @@ local function patch_file(source, target, epoch, hunks, strip, create_delete)
    local canpatch = false
    local hunklineno
    if not file then
-      return nil, "failed reading file " .. source
+     return nil, "failed reading file " .. source
    end
-
+ 
    if create_delete then
-      if epoch and #hunks == 1 and hunks[1].starttgt == 0 and hunks[1].linestgt == 0 then
-         local ok = os.remove(source)
-         if not ok then
-            return false
-         end
-         info(string.format("successfully removed %s", source))
-         return true
-      end
-   end
-
-   find_hunks(file, hunks)
-
-   local function process_line(line, lineno)
-      if not hunk or lineno < hunk.startsrc then
+     if epoch and #hunks == 1 and hunks[1].starttgt == 0 and hunks[1].linestgt == 0 then
+       local ok = os.remove(source)
+       if not ok then
          return false
-      end
-      if lineno == hunk.startsrc then
-         hunkfind = {}
-         for _, x in ipairs(hunk.text) do
-            if x:sub(1, 1) == ' ' or x:sub(1, 1) == '-' then
-               hunkfind[#hunkfind + 1] = endlstrip(x:sub(2))
-            end
-         end
-         hunklineno = 1
-
-
-      end
-
-      if lineno < hunk.startsrc + #hunkfind - 1 then
-         if endlstrip(line) == hunkfind[hunklineno] then
-            hunklineno = hunklineno + 1
-         else
-            debug(string.format("hunk no.%d doesn't match source file %s",
-            hunkno, source))
-
-            hunkno = hunkno + 1
-            if hunkno <= #hunks then
-               hunk = hunks[hunkno]
-               return false
-            else
-               return true
-            end
-         end
-      end
-
-      if lineno == hunk.startsrc + #hunkfind - 1 then
-         debug(string.format("file %s hunk no.%d -- is ready to be patched",
-         source, hunkno))
-         hunkno = hunkno + 1
-         validhunks = validhunks + 1
-         if hunkno <= #hunks then
-            hunk = hunks[hunkno]
-         else
-            if validhunks == #hunks then
-
-               canpatch = true
-               return true
-            end
-         end
-      end
-      return false
+       end
+       info(format("successfully removed %s", source))
+       return true
+     end
    end
-
+ 
+   find_hunks(file, hunks)
+ 
+   local function process_line(line, lineno)
+     if not hunk or lineno < hunk.startsrc then
+       return false
+     end
+     if lineno == hunk.startsrc then
+       hunkfind = {}
+       for _,x in ipairs(hunk.text) do
+         if x:sub(1,1) == ' ' or x:sub(1,1) == '-' then
+           hunkfind[#hunkfind+1] = endlstrip(x:sub(2))
+         end
+       end
+       hunklineno = 1
+ 
+       -- todo \ No newline at end of file
+     end
+     -- check hunks in source file
+     if lineno < hunk.startsrc + #hunkfind - 1 then
+       if endlstrip(line) == hunkfind[hunklineno] then
+         hunklineno = hunklineno + 1
+       else
+         debug(format("hunk no.%d doesn't match source file %s",
+                      hunkno, source))
+         -- file may be already patched, but check other hunks anyway
+         hunkno = hunkno + 1
+         if hunkno <= #hunks then
+           hunk = hunks[hunkno]
+           return false
+         else
+           return true
+         end
+       end
+     end
+     -- check if processed line is the last line
+     if lineno == hunk.startsrc + #hunkfind - 1 then
+       debug(format("file %s hunk no.%d -- is ready to be patched",
+                    source, hunkno))
+       hunkno = hunkno + 1
+       validhunks = validhunks + 1
+       if hunkno <= #hunks then
+         hunk = hunks[hunkno]
+       else
+         if validhunks == #hunks then
+           -- patch file
+           canpatch = true
+           return true
+         end
+       end
+     end
+     return false
+   end
+ 
    local done = false
    for lineno, line in ipairs(file) do
-      done = process_line(line, lineno)
-      if done then
-         break
-      end
+     done = process_line(line, lineno)
+     if done then
+       break
+     end
    end
    if not done then
-      if hunkno <= #hunks and not create_file then
-         warning(string.format("premature end of source file %s at hunk %d",
-         source, hunkno))
-         return false
-      end
+     if hunkno <= #hunks and not create_file then
+       warning(format("premature end of source file %s at hunk %d",
+                      source, hunkno))
+       return false
+     end
    end
    if validhunks < #hunks then
-      if check_patched(file, hunks) then
-         warning(string.format("already patched  %s", source))
-      elseif not create_file then
-         warning(string.format("source file is different - %s", source))
-         return false
-      end
+     if check_patched(file, hunks) then
+       warning(format("already patched  %s", source))
+     elseif not create_file then
+       warning(format("source file is different - %s", source))
+       return false
+     end
    end
    if not canpatch then
-      return true
+     return true
    end
    local backupname = source .. ".orig"
    if exists(backupname) then
-      warning(string.format("can't backup original file to %s - aborting",
-      backupname))
-      return false
+     warning(format("can't backup original file to %s - aborting",
+                    backupname))
+     return false
    end
    local ok = os.rename(source, backupname)
    if not ok then
-      warning(string.format("failed backing up %s when patching", source))
-      return false
+     warning(format("failed backing up %s when patching", source))
+     return false
    end
    patch_hunks(backupname, source, hunks)
-   info(string.format("successfully patched %s", source))
+   info(format("successfully patched %s", source))
    os.remove(backupname)
    return true
-end
+ end
 
 function patch.apply_patch(the_patch, strip, create_delete)
    local all_ok = true
    local total = #the_patch.source
    for fileno, source in ipairs(the_patch.source) do
-     local target = the_patch.target[fileno]
-     local hunks = the_patch.hunks[fileno]
-     local epoch = the_patch.epoch[fileno]
-     info(format("processing %d/%d:\t %s", fileno, total, source))
-     local ok = patch_file(source, target, epoch, hunks, strip, create_delete)
-     all_ok = all_ok and ok
+      local target = the_patch.target[fileno]
+      local hunks = the_patch.hunks[fileno]
+      local epoch = the_patch.epoch[fileno]
+      info(string.format("processing %d/%d:\t %s", fileno, total, source))
+      local ok = patch_file(tostring(source), tostring(target), epoch, hunks, strip, create_delete)
+      all_ok = all_ok and ok
    end
-   -- todo: check for premature eof
+
    return all_ok
- end
+end
 
 return patch
