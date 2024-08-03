@@ -733,15 +733,15 @@ function patch.apply_patch(the_patch, strip, create_delete)
    local all_ok = true
    local total = #the_patch.source
    for fileno, source in ipairs(the_patch.source) do
-      local target = the_patch.target[fileno]
-      local hunks = the_patch.hunks[fileno]
-      local epoch = the_patch.epoch[fileno]
-      info(string.format("processing %d/%d:\t %s", fileno, total, source))
-      local ok = patch_file(tostring(source), tostring(target), epoch, hunks, strip, create_delete)
-      all_ok = all_ok and ok
+     local target = the_patch.target[fileno]
+     local hunks = the_patch.hunks[fileno]
+     local epoch = the_patch.epoch[fileno]
+     info(format("processing %d/%d:\t %s", fileno, total, source))
+     local ok = patch_file(source, target, epoch, hunks, strip, create_delete)
+     all_ok = all_ok and ok
    end
-
+   -- todo: check for premature eof
    return all_ok
-end
+ end
 
 return patch
