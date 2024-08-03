@@ -89,6 +89,9 @@ local record cfg
       tool_version: string
       api_version: string
    end
+   -- loader
+   init: function(): boolean, string, string
+   init_package_paths: function
 end
 
 return cfg

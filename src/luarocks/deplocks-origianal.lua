@@ -5,8 +5,6 @@ local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local persist = require("luarocks.persist")
 
-
-
 local deptable = {}
 local deptable_mode = "start"
 local deplock_abs_filename
@@ -38,14 +36,14 @@ function deplocks.load(root_rock_name, dirname)
    deptable_mode = "locked"
 
    local filename = dir.path(dirname, "luarocks.lock")
-   local _, result, errcode = persist.run_file(filename, {})
+   local ok, result, errcode = persist.run_file(filename, {})
    if errcode == "load" or errcode == "run" then
-
+      -- bad config file or depends on env, so error out
       return nil, nil, "Could not read existing lockfile " .. filename
    end
 
    if errcode == "open" then
-
+      -- could not open, maybe file does not exist
       return true, nil
    end
 
@@ -67,7 +65,7 @@ function deplocks.add(depskey, name, version)
       deptable[depskey] = dk
    end
 
-   if type(dk) == "table" and not dk[name] then
+   if not dk[name] then
       dk[name] = version
    end
 end
@@ -89,7 +87,7 @@ function deplocks.write_file()
    return persist.save_as_module(deplock_abs_filename, deptable)
 end
 
-
+-- a table-like interface to deplocks
 function deplocks.proxy(depskey)
    return setmetatable({}, {
       __index = function(_, k)

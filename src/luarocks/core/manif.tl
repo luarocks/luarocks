@@ -7,13 +7,13 @@ local util = require("luarocks.core.util")
 local vers = require("luarocks.core.vers")
 local path = require("luarocks.core.path")
 
-local type Constraints = vers.Constraints
+local type Constraint = vers.Constraint
 
 --- Core functions for querying manifest files.
 local record manif
    
    record DependencyVersion
-      constraints: {Constraints}
+      constraints: {Constraint}
       name: string
    end
    
@@ -96,7 +96,7 @@ function manif.fast_load_local_manifest(repo_url: string): Manifest, string | {a
    return manif.manifest_loader(pathname, repo_url, nil)
 end
 
-function manif.load_rocks_tree_manifests(deps_mode: string): {Tree_manifest}
+function manif.load_rocks_tree_manifests(deps_mode?: string): {Tree_manifest}
    local trees = {}
    path.map_trees(deps_mode, function(tree: cfg.Tree)
       local manifest= manif.fast_load_local_manifest(path.rocks_dir(tree))
