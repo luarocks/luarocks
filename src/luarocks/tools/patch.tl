@@ -31,8 +31,8 @@ local record patch
     close: function(File): boolean
   end
   record Files
-    source: {string | number} --!
-    target: {string | number}
+    source: {string} --!
+    target: {string}
     epoch: {boolean}
     hunks: {{Hunk}}
     fileends: {Lineends}
@@ -737,7 +737,7 @@ function patch.apply_patch(the_patch: Files, strip: integer, create_delete: bool
     local hunks = the_patch.hunks[fileno]
     local epoch = the_patch.epoch[fileno]
     info(string.format("processing %d/%d:\t %s", fileno, total, source))
-    local ok = patch_file(tostring(source), tostring(target), epoch, hunks, strip, create_delete)
+    local ok = patch_file(source, target, epoch, hunks, strip, create_delete)
     all_ok = all_ok and ok
   end
   -- todo: check for premature eof
