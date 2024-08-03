@@ -31,6 +31,10 @@ local record fs
    absolute_name: function(string, ?string): string
    -- tar
    set_time: function(string, number)
+   set_time: function(string, os.DateTable)
+   -- zip
+   find: function(string): {string}
+   filter_file: function(function, string, string): boolean, string
 end
 
 return fs

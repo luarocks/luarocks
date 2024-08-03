@@ -1,70 +1,24 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local os = _tl_compat and _tl_compat.os or os; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
 
-
-local zip = {ZipHandle = {}, LocalFileHeader = {}, Zip = {}, }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+--- A Lua implementation of .zip and .gz file compression and decompression,
+-- using only lzlib or lua-lzib.
+local zip = {}
 
 local zlib = require("zlib")
 local fs = require("luarocks.fs")
 local fun = require("luarocks.fun")
 local dir = require("luarocks.dir")
 
-
-
-
+local pack = table.pack or function(...) return { n = select("#", ...), ... } end
 
 local function shr(n, m)
-   return math.floor(n / 2 ^ m)
+   return math.floor(n / 2^m)
 end
 
 local function shl(n, m)
-   return (n * 2 ^ m)
+   return n * 2^m
 end
-
 local function lowbits(n, m)
-   return (n % 2 ^ m)
+   return n % 2^m
 end
 
 local function mode_to_windowbits(mode)
@@ -77,12 +31,10 @@ local function mode_to_windowbits(mode)
    end
 end
 
-
-
-local zlib_compress
-local zlib_uncompress
-local zlib_crc32
-if zlib._VERSION:match("^lua%-zlib") then
+-- zlib module can be provided by both lzlib and lua-lzib packages.
+-- Create a compatibility layer.
+local zlib_compress, zlib_uncompress, zlib_crc32
+if zlib._VERSION:match "^lua%-zlib" then
    function zlib_compress(data, mode)
       return (zlib.deflate(6, mode_to_windowbits(mode))(data, "finish"))
    end
@@ -94,7 +46,7 @@ if zlib._VERSION:match("^lua%-zlib") then
    function zlib_crc32(data)
       return zlib.crc32()(data)
    end
-elseif zlib._VERSION:match("^lzlib") then
+elseif zlib._VERSION:match "^lzlib" then
    function zlib_compress(data, mode)
       return zlib.compress(data, -1, nil, mode_to_windowbits(mode))
    end
@@ -124,20 +76,20 @@ local function lestring_to_number(str)
    local n = 0
    local bytes = { string.byte(str, 1, #str) }
    for b = 1, #str do
-      n = n + shl(bytes[b], (b - 1) * 8)
+      n = n + shl(bytes[b], (b-1)*8)
    end
    return math.floor(n)
 end
 
-local LOCAL_FILE_HEADER_SIGNATURE = number_to_lestring(0x04034b50, 4)
-local DATA_DESCRIPTOR_SIGNATURE = number_to_lestring(0x08074b50, 4)
-local CENTRAL_DIRECTORY_SIGNATURE = number_to_lestring(0x02014b50, 4)
+local LOCAL_FILE_HEADER_SIGNATURE  = number_to_lestring(0x04034b50, 4)
+local DATA_DESCRIPTOR_SIGNATURE    = number_to_lestring(0x08074b50, 4)
+local CENTRAL_DIRECTORY_SIGNATURE  = number_to_lestring(0x02014b50, 4)
 local END_OF_CENTRAL_DIR_SIGNATURE = number_to_lestring(0x06054b50, 4)
 
-
-
-
-
+--- Begin a new file to be stored inside the zipfile.
+-- @param self handle of the zipfile being written.
+-- @param filename filenome of the file to be added to the zipfile.
+-- @return true if succeeded, nil in case of failure.
 local function zipwriter_open_new_file_in_zip(self, filename)
    if self.in_open_file then
       self:close_file_in_zip()
@@ -145,20 +97,20 @@ local function zipwriter_open_new_file_in_zip(self, filename)
    end
    local lfh = {}
    self.local_file_header = lfh
-   lfh.last_mod_file_time = 0
-   lfh.last_mod_file_date = 0
+   lfh.last_mod_file_time = 0 -- TODO
+   lfh.last_mod_file_date = 0 -- TODO
    lfh.file_name_length = #filename
    lfh.extra_field_length = 0
    lfh.file_name = filename:gsub("\\", "/")
-   lfh.external_attr = shl(493, 16)
+   lfh.external_attr = shl(493, 16) -- TODO proper permissions
    self.in_open_file = true
    return true
 end
 
-
-
-
-
+--- Write data to the file currently being stored in the zipfile.
+-- @param self handle of the zipfile being written.
+-- @param data string containing full contents of the file.
+-- @return true if succeeded, nil in case of failure.
 local function zipwriter_write_file_in_zip(self, data)
    if not self.in_open_file then
       return nil
@@ -172,23 +124,23 @@ local function zipwriter_write_file_in_zip(self, data)
    return true
 end
 
-
-
-
+--- Complete the writing of a file stored in the zipfile.
+-- @param self handle of the zipfile being written.
+-- @return true if succeeded, nil in case of failure.
 local function zipwriter_close_file_in_zip(self)
-   local zh = self.ZipHandle
+   local zh = self.ziphandle
 
    if not self.in_open_file then
       return nil
    end
 
-
+   -- Local file header
    local lfh = self.local_file_header
    lfh.offset = zh:seek()
    zh:write(LOCAL_FILE_HEADER_SIGNATURE)
-   zh:write(number_to_lestring(20, 2))
-   zh:write(number_to_lestring(4, 2))
-   zh:write(number_to_lestring(8, 2))
+   zh:write(number_to_lestring(20, 2)) -- version needed to extract: 2.0
+   zh:write(number_to_lestring(4, 2)) -- general purpose bit flag
+   zh:write(number_to_lestring(8, 2)) -- compression method: deflate
    zh:write(number_to_lestring(lfh.last_mod_file_time, 2))
    zh:write(number_to_lestring(lfh.last_mod_file_date, 2))
    zh:write(number_to_lestring(lfh.crc32, 4))
@@ -198,10 +150,10 @@ local function zipwriter_close_file_in_zip(self)
    zh:write(number_to_lestring(lfh.extra_field_length, 2))
    zh:write(lfh.file_name)
 
-
+   -- File data
    zh:write(self.data)
 
-
+   -- Data descriptor
    zh:write(DATA_DESCRIPTOR_SIGNATURE)
    zh:write(number_to_lestring(lfh.crc32, 4))
    zh:write(number_to_lestring(lfh.compressed_size, 4))
@@ -213,29 +165,29 @@ local function zipwriter_close_file_in_zip(self)
    return true
 end
 
-
-
+-- @return boolean or (boolean, string): true on success,
+-- false and an error message on failure.
 local function zipwriter_add(self, file)
    local fin
    local ok, err = self:open_new_file_in_zip(file)
    if not ok then
-      err = "error in opening " .. file .. " in zipfile"
+      err = "error in opening "..file.." in zipfile"
    else
       fin = io.open(fs.absolute_name(file), "rb")
       if not fin then
          ok = false
-         err = "error opening " .. file .. " for reading"
+         err = "error opening "..file.." for reading"
       end
    end
    if ok then
       local data = fin:read("*a")
       if not data then
-         err = "error reading " .. file
+         err = "error reading "..file
          ok = false
       else
          ok = self:write_file_in_zip(data)
          if not ok then
-            err = "error in writing " .. file .. " in the zipfile"
+            err = "error in writing "..file.." in the zipfile"
          end
       end
    end
@@ -245,28 +197,28 @@ local function zipwriter_add(self, file)
    if ok then
       ok = self:close_file_in_zip()
       if not ok then
-         err = "error in writing " .. file .. " in the zipfile"
+         err = "error in writing "..file.." in the zipfile"
       end
    end
    return ok == true, err
 end
 
-
-
-
+--- Complete the writing of the zipfile.
+-- @param self handle of the zipfile being written.
+-- @return true if succeeded, nil in case of failure.
 local function zipwriter_close(self)
-   local zh = self.ZipHandle
+   local zh = self.ziphandle
 
    local central_directory_offset = zh:seek()
 
    local size_of_central_directory = 0
-
+   -- Central directory structure
    for _, lfh in ipairs(self.files) do
-      zh:write(CENTRAL_DIRECTORY_SIGNATURE)
-      zh:write(number_to_lestring(3, 2))
-      zh:write(number_to_lestring(20, 2))
-      zh:write(number_to_lestring(0, 2))
-      zh:write(number_to_lestring(8, 2))
+      zh:write(CENTRAL_DIRECTORY_SIGNATURE) -- signature
+      zh:write(number_to_lestring(3, 2)) -- version made by: UNIX
+      zh:write(number_to_lestring(20, 2)) -- version needed to extract: 2.0
+      zh:write(number_to_lestring(0, 2)) -- general purpose bit flag
+      zh:write(number_to_lestring(8, 2)) -- compression method: deflate
       zh:write(number_to_lestring(lfh.last_mod_file_time, 2))
       zh:write(number_to_lestring(lfh.last_mod_file_date, 2))
       zh:write(number_to_lestring(lfh.crc32, 4))
@@ -274,38 +226,38 @@ local function zipwriter_close(self)
       zh:write(number_to_lestring(lfh.uncompressed_size, 4))
       zh:write(number_to_lestring(lfh.file_name_length, 2))
       zh:write(number_to_lestring(lfh.extra_field_length, 2))
-      zh:write(number_to_lestring(0, 2))
-      zh:write(number_to_lestring(0, 2))
-      zh:write(number_to_lestring(0, 2))
-      zh:write(number_to_lestring(lfh.external_attr, 4))
-      zh:write(number_to_lestring(lfh.offset, 4))
+      zh:write(number_to_lestring(0, 2)) -- file comment length
+      zh:write(number_to_lestring(0, 2)) -- disk number start
+      zh:write(number_to_lestring(0, 2)) -- internal file attributes
+      zh:write(number_to_lestring(lfh.external_attr, 4)) -- external file attributes
+      zh:write(number_to_lestring(lfh.offset, 4)) -- relative offset of local header
       zh:write(lfh.file_name)
       size_of_central_directory = size_of_central_directory + 46 + lfh.file_name_length
    end
 
-
-   zh:write(END_OF_CENTRAL_DIR_SIGNATURE)
-   zh:write(number_to_lestring(0, 2))
-   zh:write(number_to_lestring(0, 2))
-   zh:write(number_to_lestring(#self.files, 2))
-   zh:write(number_to_lestring(#self.files, 2))
+   -- End of central directory record
+   zh:write(END_OF_CENTRAL_DIR_SIGNATURE) -- signature
+   zh:write(number_to_lestring(0, 2)) -- number of this disk
+   zh:write(number_to_lestring(0, 2)) -- number of disk with start of central directory
+   zh:write(number_to_lestring(#self.files, 2)) -- total number of entries in the central dir on this disk
+   zh:write(number_to_lestring(#self.files, 2)) -- total number of entries in the central dir
    zh:write(number_to_lestring(size_of_central_directory, 4))
    zh:write(number_to_lestring(central_directory_offset, 4))
-   zh:write(number_to_lestring(0, 2))
+   zh:write(number_to_lestring(0, 2)) -- zip file comment length
    zh:close()
 
    return true
 end
 
-
-
-
+--- Return a zip handle open for writing.
+-- @param name filename of the zipfile to be created.
+-- @return a zip handle, or nil in case of error.
 function zip.new_zipwriter(name)
 
    local zw = {}
 
-   zw.ZipHandle = io.open(fs.absolute_name(name), "wb")
-   if not zw.ZipHandle then
+   zw.ziphandle = io.open(fs.absolute_name(name), "wb")
+   if not zw.ziphandle then
       return nil
    end
    zw.files = {}
@@ -320,24 +272,24 @@ function zip.new_zipwriter(name)
    return zw
 end
 
-
-
-
-
-
-
+--- Compress files in a .zip archive.
+-- @param zipfile string: pathname of .zip archive to be created.
+-- @param ... Filenames to be stored in the archive are given as
+-- additional arguments.
+-- @return boolean or (boolean, string): true on success,
+-- false and an error message on failure.
 function zip.zip(zipfile, ...)
    local zw = zip.new_zipwriter(zipfile)
    if not zw then
-      return nil, "error opening " .. zipfile
+      return nil, "error opening "..zipfile
    end
 
-   local args = table.pack(...)
+   local args = pack(...)
    local ok, err
-   for i = 1, args.n do
+   for i=1, args.n do
       local file = args[i]
       if fs.is_dir(file) then
-         for _, entry in ipairs(fs.find(file)) do
+         for _, entry in pairs(fs.find(file)) do
             local fullname = dir.path(file, entry)
             if fs.is_file(fullname) then
                ok, err = zw:add(fullname)
@@ -377,8 +329,8 @@ local function read_file_in_zip(zh, cdr)
       return nil, "failed reading Local File Header signature"
    end
 
-
-
+   -- Skip over the rest of the zip file header. See
+   -- zipwriter_close_file_in_zip for the format.
    zh:seek("cur", 22)
    local file_name_length = lestring_to_number(zh:read(2))
    local extra_field_length = lestring_to_number(zh:read(2))
@@ -407,9 +359,9 @@ local function read_file_in_zip(zh, cdr)
 end
 
 local function process_end_of_central_dir(zh)
-   local at, errend = zh:seek("end", -22)
+   local at, err = zh:seek("end", -22)
    if not at then
-      return nil, errend
+      return nil, err
    end
 
    while true do
@@ -418,21 +370,21 @@ local function process_end_of_central_dir(zh)
          break
       end
       at = at - 1
-      local at1 = zh:seek("set", at)
+      local at1, err = zh:seek("set", at)
       if at1 ~= at then
          return nil, "Could not find End of Central Directory signature"
       end
    end
 
-
-
-
-
+   -- number of this disk (2 bytes)
+   -- number of the disk with the start of the central directory (2 bytes)
+   -- total number of entries in the central directory on this disk (2 bytes)
+   -- total number of entries in the central directory (2 bytes)
    zh:seek("cur", 6)
 
    local central_directory_entries = lestring_to_number(zh:read(2))
 
-
+   -- central directory size (4 bytes)
    zh:seek("cur", 4)
 
    local central_directory_offset = lestring_to_number(zh:read(4))
@@ -477,54 +429,54 @@ local function process_central_dir(zh, cd_entries)
    return files
 end
 
-
-
-
-
+--- Uncompress files from a .zip archive.
+-- @param zipfile string: pathname of .zip archive to be created.
+-- @return boolean or (boolean, string): true on success,
+-- false and an error message on failure.
 function zip.unzip(zipfile)
    zipfile = fs.absolute_name(zipfile)
-   local zh, erropen = io.open(zipfile, "rb")
+   local zh, err = io.open(zipfile, "rb")
    if not zh then
-      return nil, erropen
+      return nil, err
    end
 
    local cd_entries, cd_offset = process_end_of_central_dir(zh)
-   if type(cd_offset) == "string" then
+   if not cd_entries then
       return nil, cd_offset
    end
 
-   local okseek, errseek = zh:seek("set", cd_offset)
-   if not okseek then
-      return nil, errseek
+   local ok, err = zh:seek("set", cd_offset)
+   if not ok then
+      return nil, err
    end
 
-   local files, errproc = process_central_dir(zh, cd_entries)
+   local files, err = process_central_dir(zh, cd_entries)
    if not files then
-      return nil, errproc
+      return nil, err
    end
 
    for _, cdr in ipairs(files) do
       local file = cdr.file_name
       if file:sub(#file) == "/" then
-         local okmake, errmake = fs.make_dir(dir.path(fs.current_dir(), file))
-         if not okmake then
-            return nil, errmake
+         local ok, err = fs.make_dir(dir.path(fs.current_dir(), file))
+         if not ok then
+            return nil, err
          end
       else
          local base = dir.dir_name(file)
          if base ~= "" then
             base = dir.path(fs.current_dir(), base)
             if not fs.is_dir(base) then
-               local okmake, errmake = fs.make_dir(base)
-               if not okmake then
-                  return nil, errmake
+               local ok, err = fs.make_dir(base)
+               if not ok then
+                  return nil, err
                end
             end
          end
 
-         local okseek2, errseek2 = zh:seek("set", cdr.offset)
-         if not okseek2 then
-            return nil, errseek2
+         local ok, err = zh:seek("set", cdr.offset)
+         if not ok then
+            return nil, err
          end
 
          local contents, err = read_file_in_zip(zh, cdr)
@@ -532,10 +484,10 @@ function zip.unzip(zipfile)
             return nil, err
          end
          local pathname = dir.path(fs.current_dir(), file)
-         local wf, erropen2 = io.open(pathname, "wb")
+         local wf, err = io.open(pathname, "wb")
          if not wf then
             zh:close()
-            return nil, erropen2
+            return nil, err
          end
          wf:write(contents)
          wf:close()
@@ -553,6 +505,8 @@ function zip.unzip(zipfile)
 end
 
 function zip.gzip(input_filename, output_filename)
+   assert(type(input_filename) == "string")
+   assert(output_filename == nil or type(output_filename) == "string")
 
    if not output_filename then
       output_filename = input_filename .. ".gz"
