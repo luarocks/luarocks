@@ -10,15 +10,15 @@
 
 local record patch
   record Lineends
-    lf: number
-    crlf: number
-    cr: number
+    lf: integer
+    crlf: integer
+    cr: integer
   end
   record Hunk
-    startsrc: number
-    linessrc: number
-    starttgt: number
-    linestgt: number
+    startsrc: integer
+    linessrc: integer
+    starttgt: integer
+    linestgt: integer
     invalid: boolean
     text: {string}
   end
@@ -368,10 +368,10 @@ function patch.read_patch(filename: string, data: string): Files, boolean
         end
         state = 'header'
       else
-        hunkinfo.startsrc = tonumber(m1)
-        hunkinfo.linessrc = tonumber(tonumber(m2) or 1) --!
-        hunkinfo.starttgt = tonumber(m3)
-        hunkinfo.linestgt = tonumber(tonumber(m4) or 1)
+        hunkinfo.startsrc = math.tointeger(m1)
+        hunkinfo.linessrc = math.tointeger(math.tointeger(m2) or 1) --!
+        hunkinfo.starttgt = math.tointeger(m3)
+        hunkinfo.linestgt = math.tointeger(math.tointeger(m4) or 1)
         hunkinfo.invalid = false
         hunkinfo.text = {}
 
@@ -402,7 +402,7 @@ function patch.read_patch(filename: string, data: string): Files, boolean
   return files, all_ok
 end
 
-local function find_hunk(file: {string}, h: Hunk, hno: number): boolean
+local function find_hunk(file: {string}, h: Hunk, hno: integer): boolean
   for fuzz=0,2 do
     local lineno = h.startsrc
     for i=0,#file do
@@ -412,7 +412,7 @@ local function find_hunk(file: {string}, h: Hunk, hno: number): boolean
         if l > fuzz then
           -- todo: \ No newline at the end of file
           if startswith(hline, " ") or startswith(hline, "-") then
-            local line = file[lineno as integer] --! cast
+            local line = file[lineno] --! cast
             lineno = lineno + 1
             if not line or #line == 0 then
               found = false
@@ -636,7 +636,7 @@ local function patch_file(source: string, target: string, epoch: boolean, hunks:
 
   find_hunks(file, hunks)
 
-  local function process_line(line: string, lineno: number): boolean
+  local function process_line(line: string, lineno: integer): boolean
     if not hunk or lineno < hunk.startsrc then
       return false
     end

@@ -368,10 +368,10 @@ function patch.read_patch(filename, data)
             end
             state = 'header'
          else
-            hunkinfo.startsrc = tonumber(m1)
-            hunkinfo.linessrc = tonumber(tonumber(m2) or 1)
-            hunkinfo.starttgt = tonumber(m3)
-            hunkinfo.linestgt = tonumber(tonumber(m4) or 1)
+            hunkinfo.startsrc = math.tointeger(m1)
+            hunkinfo.linessrc = math.tointeger(math.tointeger(m2) or 1)
+            hunkinfo.starttgt = math.tointeger(m3)
+            hunkinfo.linestgt = math.tointeger(math.tointeger(m4) or 1)
             hunkinfo.invalid = false
             hunkinfo.text = {}
 
