@@ -16,7 +16,7 @@ function fun.concat<K>(xs: {K}, ys: {K}): {K}
    return rs
 end
 
-function fun.contains<K>(xs: {K}, v: K): boolean --? same logic as above fine?
+function fun.contains<K>(xs: {K}, v: any): boolean --? same logic as above fine?
    for _, x in ipairs(xs) do
       if v == x then
          return true

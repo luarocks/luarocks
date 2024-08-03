@@ -27,6 +27,8 @@ local record fs
    Q: function(string): string
    download: function(string, string): boolean, string
    set_permissions: function(string, string, string)
+   -- patch
+   absolute_name: function(string, ?string): string
 end
 
 return fs
