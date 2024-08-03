@@ -86,6 +86,8 @@ local record cfg
    record upload
       server: string
       version: string
+      tool_version: string
+      api_version: string
    end
 end
 

@@ -1,6 +1,7 @@
 
 local record type_check
    MAGIC_PLATFORMS: integer
+   type_check_table: function(version: string, tbl: {any: any}, typetbl: {string: string}, context: string): boolean, string --! tbl and typetbl types)
 end
 
 local cfg = require("luarocks.core.cfg")
