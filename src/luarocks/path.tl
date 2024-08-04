@@ -116,7 +116,7 @@ end
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
-function path.lib_dir(name: string, version: string, tree: string | Tree): string
+function path.lib_dir(name: string, version: string, tree?: string | Tree): string
    assert(not name:match("/"))
    return dir.path(path.rocks_dir(tree), name, version, "lib")
 end
@@ -127,7 +127,7 @@ end
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
-function path.lua_dir(name: string, version: string, tree: string | Tree): string
+function path.lua_dir(name: string, version: string, tree?: string | Tree): string
    assert(not name:match("/"))
    return dir.path(path.rocks_dir(tree), name, version, "lua")
 end
@@ -138,7 +138,7 @@ end
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
-function path.doc_dir(name: string, version: string, tree: string | Tree): string
+function path.doc_dir(name: string, version: string, tree?: string | Tree): string
    assert(not name:match("/"))
    return dir.path(path.rocks_dir(tree), name, version, "doc")
 end
@@ -149,7 +149,7 @@ end
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
-function path.conf_dir(name: string, version: string, tree: string | Tree): string
+function path.conf_dir(name: string, version: string, tree?: string | Tree): string
    assert(not name:match("/"))
    return dir.path(path.rocks_dir(tree), name, version, "conf")
 end
@@ -161,7 +161,7 @@ end
 -- @param tree string or nil: If given, specifies the local tree to use.
 -- @return string: The resulting path -- does not guarantee that
 -- the package (and by extension, the path) exists.
-function path.bin_dir(name: string, version: string, tree: string | Tree): string
+function path.bin_dir(name: string, version: string, tree?: string | Tree): string
    assert(not name:match("/"))
    return dir.path(path.rocks_dir(tree), name, version, "bin")
 end

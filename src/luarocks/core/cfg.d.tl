@@ -8,6 +8,7 @@ local record cfg
    rocks_subdir: string
    lua_modules_path: string
    lib_modules_path: string
+   aggressive_cache: boolean
    rocks_trees: {string| Tree}
    lua_version: string
    deps_mode: string
@@ -15,6 +16,7 @@ local record cfg
    deploy_lua_dir: string
    deploy_lib_dir: string
    lib_extension: string
+   local_cache: string
    record Tree
       root: string
       rocks_dir: string
@@ -29,30 +31,116 @@ local record cfg
       issues_url: string
       maintainer: string
       license: string
+      labels: any --!
+   end
+
+   record Variables
+      CVS: string
+      LUA: string
+      GPG: string
+      CURL: string
+      PREFIX: string
+      LUADIR: string
+      LIBDIR: string
+      CONFDIR: string
+      BINDIR: string
+      DOCDIR: string
+      CURLNOCERTFLAG: string
+   end
+
+   record Source
+      url: string
+      module: string
+      pathname: string
+      tag: string
+      md5: string
+      file: string
+      dir: string
+      branch: string
+      cvs_tag: string
+      cvs_module: string
+      protocol: string --! not in the rockspec definition but used
+      dir_set: boolean
+      platforms: any --!
    end
 
    record Test
       type: string
-      platforms: {{string: any}}
+      platforms: any --! {{string: any}}?
    end
 
-   record Rockspec --? luarocks-dev-1.rockspec
+   record Install
+      lua: any
+      lib: any
+      conf: any
+      bin: any
+   end
+
+   record Build
+      type: string
+      modules: string
+      copy_directories: string
+      platforms: any --!
+      install: Install
+   end
+
+   record Dependencie --!1 --? Query??
+      
+   end
+
+   record Dependencies
+      {Dependencie} --!1
+      platforms: any --!
+   end
+
+   record BuildDependencies
+      {Dependencie} --!1
+      platforms: any --!
+   end
+
+   record SupportedPlatforms
+   end
+
+   record ExternalDependencies
+      {Dependencie} --!1
+      platforms: any --!
+   end
+
+   record TestDependencies
+      {Dependencie} --!1
+      platforms: any --!
+   end
+
+   record Hooks
+      post_install: string
+      platforms: any --!
+   end
+
+   record Deploy
+      wrap_bin_scripts: boolean
+   end
+
+   record Rockspec
       rockspec_format: string
-      name: string --? package
+      name: string --! not in the rockspec definition but used
+      package: string
       version: string
-      record source
-         url: string
-         module: string
-         pathname: string
-         tag: string
-      end
+      local_abs_filename: string
+      rocks_provided: {string : string}
+      source: Source
       description: Description
-      test_dependencies: {string}
+      build: Build
+      dependencies: Dependencies
+      build_dependencies: BuildDependencies
+      test_dependencies: TestDependencies
+      supported_platforms: SupportedPlatforms
+      external_dependencies: ExternalDependencies
+      variables: Variables
+      hooks: Hooks
       test: Test
+      deploy: Deploy
+      type: function(): string
       format_is_at_least: function(Rockspec, string): boolean
-      record variables
-         CVS: string
-      end
    end
    
    record cache
@@ -61,12 +149,7 @@ local record cfg
       rocks_provided: {string: string} --? right type? infered from src/luarocks/util
    end
 
-   record variables
-      LUA: string
-      GPG: string
-      CURL: string
-      CURLNOCERTFLAG: string
-   end
+   variables: Variables
    rocks_provided: {Rockspec}
    -- persist
    home: string
@@ -92,6 +175,8 @@ local record cfg
    -- loader
    init: function(): boolean, string, string
    init_package_paths: function
+   -- rockspecs
+   each_platform: function(?string): (function():string)
 end
 
 return cfg

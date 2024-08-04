@@ -35,6 +35,9 @@ local record fs
    -- zip
    find: function(string): {string}
    filter_file: function(function, string, string): boolean, string
+   -- fetch
+   file_age: function(string): number
+   exists: function(string): boolean
 end
 
 return fs
