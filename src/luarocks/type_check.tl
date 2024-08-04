@@ -207,7 +207,7 @@ function type_check.type_check_table(version: string, tbl: {any: any}, typetbl: 
    return true
 end
 
-function type_check.check_undeclared_globals(globals: {string: any}, typetbl: {string: string}): boolean, string --! tbl and typetbl types
+function type_check.check_undeclared_globals(globals: {string: any}, typetbl: TableSchema): boolean, string --! tbl and typetbl types
    local undeclared = {}
    for glob, _ in pairs(globals) do
       if not (typetbl[glob] or typetbl["MUST_"..glob]) then
