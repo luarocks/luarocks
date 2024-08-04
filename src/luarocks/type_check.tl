@@ -191,6 +191,11 @@ function type_check.type_check_table(version: string, tbl: {any: any}, typetbl: 
       return nil, errcheck
    end
 
+   if not typetbl.fields then --! validation
+      -- if there are no fields, exit the checker
+      return true
+   end
+
    for k, v in pairs(tbl) do
       local t = typetbl.fields[tostring(k)] or typetbl._any --! tostring
       if t then
@@ -203,10 +208,6 @@ function type_check.type_check_table(version: string, tbl: {any: any}, typetbl: 
             return nil, "Unknown field "..tostring(k)
          end
       end
-   end
-
-   if not tbl.fields then --! validation
-      return true
    end
 
    for k, v in pairs(typetbl.fields) do

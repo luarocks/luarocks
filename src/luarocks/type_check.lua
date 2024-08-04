@@ -191,6 +191,11 @@ function type_check.type_check_table(version, tbl, typetbl, context)
       return nil, errcheck
    end
 
+   if not typetbl.fields then
+
+      return true
+   end
+
    for k, v in pairs(tbl) do
       local t = typetbl.fields[tostring(k)] or typetbl._any
       if t then
@@ -203,10 +208,6 @@ function type_check.type_check_table(version, tbl, typetbl, context)
             return nil, "Unknown field " .. tostring(k)
          end
       end
-   end
-
-   if not tbl.fields then
-      return true
    end
 
    for k, v in pairs(typetbl.fields) do
