@@ -206,7 +206,7 @@ function type_check.type_check_table(version: string, tbl: {any: any}, typetbl: 
    end
 
    if not tbl.fields then --! validation
-      return
+      return true
    end
 
    for k, v in pairs(typetbl.fields) do

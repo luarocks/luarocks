@@ -206,7 +206,7 @@ function type_check.type_check_table(version, tbl, typetbl, context)
    end
 
    if not tbl.fields then
-      return
+      return true
    end
 
    for k, v in pairs(typetbl.fields) do

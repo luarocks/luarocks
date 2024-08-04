@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local type_manifest = {}
+local type_manifest = {}
 
 
 local type_check = require("luarocks.type_check")
@@ -81,7 +81,6 @@ local manifest_formats = type_check.declare_schemas({
 
 
 function type_manifest.check(manifest, globals)
-   assert(type(manifest) == "table")
    local format = manifest_formats["3.0"]
    local ok, err = type_check.check_undeclared_globals(globals, format)
    if not ok then return nil, err end

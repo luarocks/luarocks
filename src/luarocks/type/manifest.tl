@@ -81,7 +81,6 @@ local manifest_formats = type_check.declare_schemas({
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
 function type_manifest.check(manifest: {any: any}, globals: {string: any}): boolean, string
-   assert(type(manifest) == "table")
    local format = manifest_formats["3.0"]
    local ok, err = type_check.check_undeclared_globals(globals, format)
    if not ok then return nil, err end
