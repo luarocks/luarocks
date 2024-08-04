@@ -1,4 +1,5 @@
 local record type_rockspec
+
 end
 
 local type_check = require("luarocks.type_check")
