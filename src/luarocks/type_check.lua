@@ -30,6 +30,10 @@ type_check.MAGIC_PLATFORMS = {}
 
 do
    local function fill_in_version(tbl, version)
+      if not tbl.fields then
+         return
+      end
+
       for _, v in pairs(tbl.fields) do
          if type(v) == "table" then
             if v._version == nil then
