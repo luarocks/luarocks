@@ -30,7 +30,7 @@ type_check.MAGIC_PLATFORMS = {}
 
 do
    local function fill_in_version(tbl: TableSchema, version?: string)
-      if tbl.fields then
+      if not tbl.fields then
          return
       end
 
