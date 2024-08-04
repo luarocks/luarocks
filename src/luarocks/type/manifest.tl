@@ -5,55 +5,65 @@ local type_check = require("luarocks.type_check")
 
 local manifest_formats = type_check.declare_schemas({
    ["3.0"] = {
-      repository = {
-         _mandatory = true,
-         -- packages
-         _any = {
-            -- versions
+      fields = {
+         repository = {
+            _mandatory = true,
+            -- packages
             _any = {
-               -- items
+               -- versions
                _any = {
-                  arch = { _type = "string", _mandatory = true },
-                  modules = { _any = { _type = "string" } },
-                  commands = { _any = { _type = "string" } },
-                  dependencies = { _any = { _type = "string" } },
-                  -- TODO: to be extended with more metadata.
+                  -- items
+                  _any = {
+                     fields = {
+                        arch = { _type = "string", _mandatory = true },
+                        modules = { _any = { _type = "string" } },
+                        commands = { _any = { _type = "string" } },
+                        dependencies = { _any = { _type = "string" } },
+                        -- TODO: to be extended with more metadata.
+                     }
+                  }
                }
             }
-         }
-      },
-      modules = {
-         _mandatory = true,
-         -- modules
-         _any = {
-            -- providers
-            _any = { _type = "string" }
-         }
-      },
-      commands = {
-         _mandatory = true,
-         -- modules
-         _any = {
-            -- commands
-            _any = { _type = "string" }
-         }
-      },
-      dependencies = {
-         -- each module
-         _any = {
-            -- each version
+         },
+         modules = {
+            _mandatory = true,
+            -- modules
             _any = {
-               -- each dependency
+               -- providers
+               _any = { _type = "string" }
+            }
+         },
+         commands = {
+            _mandatory = true,
+            -- modules
+            _any = {
+               -- commands
+               _any = { _type = "string" }
+            }
+         },
+         dependencies = {
+            -- each module
+            _any = {
+               -- each version
                _any = {
-                  name = { _type = "string" },
-                  namespace = { _type = "string" },
-                  constraints = {
-                     _any = {
-                        no_upgrade = { _type = "boolean" },
-                        op = { _type = "string" },
-                        version = {
-                           string = { _type = "string" },
-                           _any = { _type = "number" },
+                  -- each dependency
+                  _any = {
+                     fields = {
+                        name = { _type = "string" },
+                        namespace = { _type = "string" },
+                        constraints = {
+                           _any = {
+                              fields = {
+                                 no_upgrade = { _type = "boolean" },
+                                 op = { _type = "string" },
+                                 version = {
+                                    fields = {
+                                       string = { _type = "string" },
+                                    },
+                                    _any = { _type = "number" },
+                                 }
+                              }
+                           }
                         }
                      }
                   }
@@ -70,7 +80,7 @@ local manifest_formats = type_check.declare_schemas({
 -- mismatches.
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
-function type_manifest.check(manifest, globals)
+function type_manifest.check(manifest: {any: any}, globals: {string: any}): boolean, string
    assert(type(manifest) == "table")
    local format = manifest_formats["3.0"]
    local ok, err = type_check.check_undeclared_globals(globals, format)

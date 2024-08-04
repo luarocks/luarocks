@@ -1,74 +1,85 @@
-local type_manifest = {}
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local type_manifest = {}
+
 
 local type_check = require("luarocks.type_check")
 
 local manifest_formats = type_check.declare_schemas({
    ["3.0"] = {
-      repository = {
-         _mandatory = true,
-         -- packages
-         _any = {
-            -- versions
+      fields = {
+         repository = {
+            _mandatory = true,
+
             _any = {
-               -- items
+
                _any = {
-                  arch = { _type = "string", _mandatory = true },
-                  modules = { _any = { _type = "string" } },
-                  commands = { _any = { _type = "string" } },
-                  dependencies = { _any = { _type = "string" } },
-                  -- TODO: to be extended with more metadata.
-               }
-            }
-         }
-      },
-      modules = {
-         _mandatory = true,
-         -- modules
-         _any = {
-            -- providers
-            _any = { _type = "string" }
-         }
-      },
-      commands = {
-         _mandatory = true,
-         -- modules
-         _any = {
-            -- commands
-            _any = { _type = "string" }
-         }
-      },
-      dependencies = {
-         -- each module
-         _any = {
-            -- each version
+
+                  _any = {
+                     fields = {
+                        arch = { _type = "string", _mandatory = true },
+                        modules = { _any = { _type = "string" } },
+                        commands = { _any = { _type = "string" } },
+                        dependencies = { _any = { _type = "string" } },
+
+                     },
+                  },
+               },
+            },
+         },
+         modules = {
+            _mandatory = true,
+
             _any = {
-               -- each dependency
+
+               _any = { _type = "string" },
+            },
+         },
+         commands = {
+            _mandatory = true,
+
+            _any = {
+
+               _any = { _type = "string" },
+            },
+         },
+         dependencies = {
+
+            _any = {
+
                _any = {
-                  name = { _type = "string" },
-                  namespace = { _type = "string" },
-                  constraints = {
-                     _any = {
-                        no_upgrade = { _type = "boolean" },
-                        op = { _type = "string" },
-                        version = {
-                           string = { _type = "string" },
-                           _any = { _type = "number" },
-                        }
-                     }
-                  }
-               }
-            }
-         }
-      }
-   }
+
+                  _any = {
+                     fields = {
+                        name = { _type = "string" },
+                        namespace = { _type = "string" },
+                        constraints = {
+                           _any = {
+                              fields = {
+                                 no_upgrade = { _type = "boolean" },
+                                 op = { _type = "string" },
+                                 version = {
+                                    fields = {
+                                       string = { _type = "string" },
+                                    },
+                                    _any = { _type = "number" },
+                                 },
+                              },
+                           },
+                        },
+                     },
+                  },
+               },
+            },
+         },
+      },
+   },
 })
 
---- Type check a manifest table.
--- Verify the correctness of elements from a
--- manifest table, reporting on unknown fields and type
--- mismatches.
--- @return boolean or (nil, string): true if type checking
--- succeeded, or nil and an error message if it failed.
+
+
+
+
+
+
 function type_manifest.check(manifest, globals)
    assert(type(manifest) == "table")
    local format = manifest_formats["3.0"]

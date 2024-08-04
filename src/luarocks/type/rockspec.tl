@@ -1,144 +1,14 @@
 local record type_rockspec
    order: util.Ordering<string>
+   rockspec_format: string
 end
 
 local type_check = require("luarocks.type_check")
 local util = require("luarocks.core.util") --!
 
-local type TableSchema = type_check.TableSchema
+-- local type TableSchema = type_check.TableSchema
 
 type_rockspec.rockspec_format = "3.0"
-
--- Syntax for type-checking tables:
---
--- A type-checking table describes typing data for a value.
--- Any key starting with an underscore has a special meaning:
--- _type (string) is the Lua type of the value. Default is "table".
--- _mandatory (boolean) indicates if the value is a mandatory key in its container table. Default is false.
--- For "string" types only:
---    _pattern (string) is the string-matching pattern, valid for string types only. Default is ".*".
--- For "table" types only:
---    _any (table) is the type-checking table for unspecified keys, recursively checked.
---    _more (boolean) indicates that the table accepts unspecified keys and does not type-check them.
---    Any other string keys that don't start with an underscore represent known keys and are type-checking tables, recursively checked.
-
--- local rockspec_formats, versions = type_check.declare_schemas({
---    ["1.0"] = {
---       rockspec_format = { _type = "string" },
---       package = { _type = "string", _mandatory = true },
---       version = { _type = "string", _pattern = "[%w.]+-[%d]+", _mandatory = true },
---       description = {
---          summary = { _type = "string" },
---          detailed = { _type = "string" },
---          homepage = { _type = "string" },
---          license = { _type = "string" },
---          maintainer = { _type = "string" },
---       },
---       dependencies = {
---          platforms = type_check.MAGIC_PLATFORMS,
---          _any = {
---             _type = "string",
---             _name = "a valid dependency string",
---             _pattern = "%s*([a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
---          },
---       },
---       supported_platforms = {
---          _any = { _type = "string" },
---       },
---       external_dependencies = {
---          platforms = type_check.MAGIC_PLATFORMS,
---          _any = {
---             program = { _type = "string" },
---             header = { _type = "string" },
---             library = { _type = "string" },
---          }
---       },
---       source = {
---          _mandatory = true,
---          platforms = type_check.MAGIC_PLATFORMS,
---          url = { _type = "string", _mandatory = true },
---          md5 = { _type = "string" },
---          file = { _type = "string" },
---          dir = { _type = "string" },
---          tag = { _type = "string" },
---          branch = { _type = "string" },
---          module = { _type = "string" },
---          cvs_tag = { _type = "string" },
---          cvs_module = { _type = "string" },
---       },
---       build = {
---          platforms = type_check.MAGIC_PLATFORMS,
---          type = { _type = "string" },
---          install = {
---             lua = {
---                _more = true
---             },
---             lib = {
---                _more = true
---             },
---             conf = {
---                _more = true
---             },
---             bin = {
---                _more = true
---             }
---          },
---          copy_directories = {
---             _any = { _type = "string" },
---          },
---          _more = true,
---          _mandatory = true
---       },
---       hooks = {
---          platforms = type_check.MAGIC_PLATFORMS,
---          post_install = { _type = "string" },
---       },
---    },
-
---    ["1.1"] = {
---       deploy = {
---          wrap_bin_scripts = { _type = "boolean" },
---       }
---    },
-
---    ["3.0"] = {
---       description = {
---          labels = {
---             _any = { _type = "string" }
---          },
---          issues_url = { _type = "string" },
---       },
---       dependencies = {
---          _any = {
---             _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
---          },
---       },
---       build_dependencies = {
---          platforms = type_check.MAGIC_PLATFORMS,
---          _any = {
---             _type = "string",
---             _name = "a valid dependency string",
---             _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
---          },
---       },
---       test_dependencies = {
---          platforms = type_check.MAGIC_PLATFORMS,
---          _any = {
---             _type = "string",
---             _name = "a valid dependency string",
---             _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
---          },
---       },
---       build = {
---          _mandatory = false,
---       },
---       test = {
---          platforms = type_check.MAGIC_PLATFORMS,
---          type = { _type = "string" },
---          _more = true,
---       },
---    }
--- })
 
 local rockspec_formats, versions = type_check.declare_schemas({
    ["1.0"] = {
@@ -344,7 +214,7 @@ end
 -- succeeded, or nil and an error message if it failed.
 function type_rockspec.check(rockspec: {any: any}, globals: {string: any}): boolean, string
 
-   local version = rockspec.rockspec_format or "1.0"
+   local version: string = tostring(rockspec.rockspec_format) or "1.0" --! tostring
    local ok, err = check_rockspec_using_version(rockspec, globals, version)
    if ok then
       return true
@@ -360,7 +230,7 @@ function type_rockspec.check(rockspec: {any: any}, globals: {string: any}): bool
             found = true
          end
       else
-         local v_ok, v_err = check_rockspec_using_version(rockspec, globals, v)
+         local v_ok = check_rockspec_using_version(rockspec, globals, v)
          if v_ok then
             return nil, err .. " (using rockspec format " .. version .. " -- " ..
                [[adding 'rockspec_format = "]] .. v .. [["' to the rockspec ]] ..
