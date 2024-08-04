@@ -30,6 +30,7 @@ type_check.MAGIC_PLATFORMS = {}
 
 do
    local function fill_in_version(tbl, version)
+
       if not tbl.fields then
          return
       end
@@ -203,6 +204,11 @@ function type_check.type_check_table(version, tbl, typetbl, context)
          end
       end
    end
+
+   if not tbl.fields then
+      return
+   end
+
    for k, v in pairs(typetbl.fields) do
       if k:sub(1, 1) ~= "_" and v._mandatory then
          if not tbl[k] then

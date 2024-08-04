@@ -30,7 +30,8 @@ type_check.MAGIC_PLATFORMS = {}
 
 do
    local function fill_in_version(tbl: TableSchema, version?: string)
-      if not tbl.fields then
+
+      if not tbl.fields then --! validation
          return
       end
 
@@ -203,6 +204,11 @@ function type_check.type_check_table(version: string, tbl: {any: any}, typetbl: 
          end
       end
    end
+
+   if not tbl.fields then --! validation
+      return
+   end
+
    for k, v in pairs(typetbl.fields) do
       if k:sub(1,1) ~= "_" and v._mandatory then
          if not tbl[k] then
