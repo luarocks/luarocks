@@ -8,11 +8,11 @@ local record fs
    end
    -- util
    is_dir: function(dir: string): boolean
-   dir: function(dir: string): function(): string
+   dir: function(dir?: string): function(): string
    make_dir: function(string): boolean, string
    is_file: function(file: string): boolean
    current_dir: function(): string
-   list_dir: function(string): {string}
+   list_dir: function(?string): {string}
    delete: function(string)
    -- signing
    is_tool_available: function(string, string): string, string
@@ -25,7 +25,7 @@ local record fs
    tmpname: function(): string
    execute_string: function(string): boolean
    Q: function(string): string
-   download: function(string, string): boolean, string
+   download: function(string, string, ?boolean): boolean, string, string
    set_permissions: function(string, string, string)
    -- patch
    absolute_name: function(string, ?string): string
@@ -38,6 +38,15 @@ local record fs
    -- fetch
    file_age: function(string): number
    exists: function(string): boolean
+   record Lock
+      free: function()
+   end
+   lock_access: function(string, ?boolean): Lock, string --!
+   unlock_access: function(Lock)
+   copy: function(string, string, ?string): boolean, string
+   unpack_archive: function(string): boolean, string
+   unzip: function(string): boolean, string
+   check_md5: function(string, string): boolean, string
 end
 
 return fs

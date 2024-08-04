@@ -60,18 +60,17 @@ local function platform_overrides(tbl?: {any: any})
    tbl.platforms = nil
 end
 
-local function convert_dependencies(rockspec: {string: any}, key: string): boolean, string
-   local deps: {Dependencie} = rockspec[key] as {Dependencie}
-   if deps then
-      for i = 1, #deps do
-         local parsed, err = queries.from_dep_string(deps[i])
+local function convert_dependencies(rockspec: {string: {string}}, key: string): boolean, string
+   if rockspec[key] then
+      for i = 1, #rockspec[key] do
+         local parsed, err = queries.from_dep_string(rockspec[key][i])
          if not parsed then
-            return nil, "Parse error processing dependency '"..deps[i].."': "..tostring(err)
+            return nil, "Parse error processing dependency '"..rockspec[key][i].."': "..tostring(err)
          end
-         deps[i] = parsed
+         rockspec[key][i] = parsed
       end
    else
-      deps = {}
+      rockspec[key] = {}
    end
    return true
 end

@@ -17,6 +17,7 @@ local record cfg
    deploy_lib_dir: string
    lib_extension: string
    local_cache: string
+   only_sources_from: string
    record Tree
       root: string
       rocks_dir: string
@@ -139,7 +140,7 @@ local record cfg
       hooks: Hooks
       test: Test
       deploy: Deploy
-      type: function(): string
+      type: function(Rockspec): string
       format_is_at_least: function(Rockspec, string): boolean
    end
    
@@ -177,6 +178,8 @@ local record cfg
    init_package_paths: function
    -- rockspecs
    each_platform: function(?string): (function():string)
+   -- fetch
+   rocks_servers: {{string}}
 end
 
 return cfg

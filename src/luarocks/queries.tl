@@ -13,8 +13,6 @@ local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 
--- local type Config = cfg
-
 local type Query = queries.Query
 local type Constraint = vers.Constraint
 
