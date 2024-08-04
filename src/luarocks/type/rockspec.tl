@@ -227,7 +227,7 @@ end
 -- succeeded, or nil and an error message if it failed.
 function type_rockspec.check(rockspec: {any: any}, globals: {string: any}): boolean, string
 
-   local version: string = tostring(rockspec.rockspec_format) or "1.0" --! tostring
+   local version: string = rockspec.rockspec_format as string or "1.0" --! tostring
    local ok, err = check_rockspec_using_version(rockspec, globals, version)
    if ok then
       return true

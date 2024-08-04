@@ -10,6 +10,19 @@ local util = require("luarocks.core.util")
 
 type_rockspec.rockspec_format = "3.0"
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 local rockspec_formats, versions = type_check.declare_schemas({
    ["1.0"] = {
       fields = {
@@ -214,7 +227,7 @@ end
 
 function type_rockspec.check(rockspec, globals)
 
-   local version = tostring(rockspec.rockspec_format) or "1.0"
+   local version = rockspec.rockspec_format or "1.0"
    local ok, err = check_rockspec_using_version(rockspec, globals, version)
    if ok then
       return true
