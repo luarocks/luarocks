@@ -31,9 +31,11 @@ type_check.MAGIC_PLATFORMS = {}
 do
    local function fill_in_version(tbl: TableSchema, version?: string)
       for _, v in pairs(tbl.fields) do
-         if v._version == nil then
-            v._version = version
-         fill_in_version(v)
+         if v is TableSchema then
+            if v._version == nil then
+               v._version = version
+            end
+            fill_in_version(v)
          end
       end
    end
