@@ -31,9 +31,9 @@ type_check.MAGIC_PLATFORMS = {}
 do
    local function fill_in_version(tbl, version)
 
-
-
-
+      if not tbl.fields then
+         return
+      end
 
       for _, v in pairs(tbl.fields) do
          if type(v) == "table" then
@@ -191,10 +191,10 @@ function type_check.type_check_table(version, tbl, typetbl, context)
       return nil, errcheck
    end
 
+   if not typetbl.fields then
 
-
-
-
+      return true
+   end
 
    for k, v in pairs(tbl) do
       local t = typetbl.fields[tostring(k)] or typetbl._any
