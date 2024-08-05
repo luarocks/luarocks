@@ -13,6 +13,8 @@ local pack = require("luarocks.pack")
 local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
 local writer = require("luarocks.manif.writer")
+local dir = require("luarocks.dir")
+local fs = require("luarocks.fs")
 
 function make.cmd_options(parser)
    parser:flag("--no-install", "Do not install the rock.")
@@ -88,6 +90,7 @@ function make.command(args)
       return nil, "Invalid argument: 'make' takes a rockspec as a parameter. "..util.see_help("make")
    end
 
+   local cwd = fs.absolute_name(dir.path("."))
    local rockspec, err, errcode = fetch.load_rockspec(rockspec_filename)
    if not rockspec then
       return nil, err
@@ -115,17 +118,17 @@ function make.command(args)
    end
 
    if args.no_install then
-      return build.build_rockspec(rockspec, opts)
+      return build.build_rockspec(rockspec, opts, cwd)
    elseif args.pack_binary_rock then
       return pack.pack_binary_rock(name, namespace, rockspec.version, args.sign, function()
-         local name, version = build.build_rockspec(rockspec, opts)  -- luacheck: ignore 431
+         local name, version = build.build_rockspec(rockspec, opts, cwd)  -- luacheck: ignore 431
          if name and args.no_doc then
             util.remove_doc_dir(name, version)
          end
          return name, version
       end)
    else
-      local ok, err = build.build_rockspec(rockspec, opts)
+      local ok, err = build.build_rockspec(rockspec, opts, cwd)
       if not ok then return nil, err end
       local name, version = ok, err  -- luacheck: ignore 421
 

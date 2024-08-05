@@ -104,7 +104,7 @@ local function check_macosx_deployment_target(rockspec)
    return true
 end
 
-local function process_dependencies(rockspec, opts)
+local function process_dependencies(rockspec, opts, cwd)
    if not opts.build_only_deps then
       local ok, err, errcode = deps.check_external_deps(rockspec, "build")
       if err then
@@ -115,6 +115,8 @@ local function process_dependencies(rockspec, opts)
    if opts.deps_mode == "none" then
       return true
    end
+
+   local deplock_dir = fs.exists(dir.path(cwd, "luarocks.lock")) and cwd or nil
 
    if not opts.build_only_deps then
       if next(rockspec.build_dependencies) then
@@ -136,7 +138,7 @@ local function process_dependencies(rockspec, opts)
             path.use_tree(cfg.root_dir)
          end
 
-         local ok, err, errcode = deps.fulfill_dependencies(rockspec, "build_dependencies", "all", opts.verify)
+         local ok, err, errcode = deps.fulfill_dependencies(rockspec, "build_dependencies", "all", opts.verify, deplock_dir)
 
          path.add_to_package_paths(cfg.root_dir)
 
@@ -155,7 +157,7 @@ local function process_dependencies(rockspec, opts)
       end
    end
 
-   return deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify)
+   return deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify, deplock_dir)
 end
 
 local function fetch_and_change_to_source_dir(rockspec, opts)
@@ -381,12 +383,17 @@ local function write_rock_dir_files(rockspec, opts)
 end
 
 --- Build and install a rock given a rockspec.
+-- @param rockspec rockspec: the rockspec to build
 -- @param opts table: build options table
+-- @param cwd string or nil: The current working directory
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function build.build_rockspec(rockspec, opts)
+function build.build_rockspec(rockspec, opts, cwd)
    assert(rockspec:type() == "rockspec")
    assert(opts:type() == "build.opts")
+   assert(type(cwd) == "string" or type(cwd) == nil)
+
+   cwd = cwd or dir.path(".")
 
    if not rockspec.build then
       if rockspec:format_is_at_least("3.0") then
@@ -413,7 +420,7 @@ function build.build_rockspec(rockspec, opts)
       deplocks.init(rockspec.name, ".")
    end
 
-   ok, err = process_dependencies(rockspec, opts)
+   ok, err = process_dependencies(rockspec, opts, cwd)
    if not ok then return nil, err end
 
    local name, version = rockspec.name, rockspec.version
