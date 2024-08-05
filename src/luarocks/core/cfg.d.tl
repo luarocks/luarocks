@@ -41,7 +41,9 @@ local record cfg
       LUA: string
       GPG: string
       GIT: string
+      SVN: string
       CURL: string
+      SSCM: string
       PREFIX: string
       LUADIR: string
       LIBDIR: string
