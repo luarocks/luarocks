@@ -24,7 +24,6 @@ local record cfg
       lua_dir: string
       lib_dir: string
    end
-   -- util
    record Description
       summary: string
       detailed: string
