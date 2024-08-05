@@ -563,7 +563,7 @@ end
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
 function fetch.fetch_sources(rockspec: Rockspec, extract: string, dest_dir?: string): string, string, string, string, string
-   assert(rockspec:type() == "rockspec")
+   assert(rockspec:type() == "rockspec") --!
 
    -- auto-convert git://github.com URLs to use git+https
    -- see https://github.blog/2021-09-01-improving-git-protocol-security-github/
@@ -575,6 +575,7 @@ function fetch.fetch_sources(rockspec: Rockspec, extract: string, dest_dir?: str
 
    local protocol = rockspec.source.protocol
    local ok, err, proto: boolean, string --! fetch
+
    if dir.is_basic_protocol(protocol) then
       proto = fetch
    else

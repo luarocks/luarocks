@@ -47,6 +47,8 @@ local record fs
    unpack_archive: function(string): boolean, string
    unzip: function(string): boolean, string
    check_md5: function(string, string): boolean, string
+   -- git
+   command_at: function(string, string, ?boolean): string
 end
 
 return fs

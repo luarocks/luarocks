@@ -39,6 +39,7 @@ local record cfg
       CVS: string
       LUA: string
       GPG: string
+      GIT: string
       CURL: string
       PREFIX: string
       LUADIR: string
@@ -62,6 +63,7 @@ local record cfg
       cvs_module: string
       protocol: string --! not in the rockspec definition but used
       dir_set: boolean
+      identifier: string
       platforms: any --!
    end
 

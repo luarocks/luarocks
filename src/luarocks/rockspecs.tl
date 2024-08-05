@@ -26,7 +26,7 @@ local rockspec_mt: metatable<Rockspec> = {}
 
 rockspec_mt.__index = cfg.Rockspec
 
-function cfg.Rockspec.type(): string
+function cfg.Rockspec:type(): string
    return "rockspec"
 end
 
