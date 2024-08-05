@@ -1,22 +1,20 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local table = _tl_compat and _tl_compat.table or table; local _tl_table_unpack = unpack or table.unpack
 
+--- Fetch back-end for retrieving sources from Subversion.
 local svn = {}
 
+local unpack = unpack or table.unpack
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
-local cfg = require("luarocks.core.cfg")
 
-local Rockspec = cfg.Rockspec
-
-
-
-
-
-
-
-
+--- Download sources for building a rock, using Subversion.
+-- @param rockspec table: The rockspec table
+-- @param extract boolean: Unused in this module (required for API purposes.)
+-- @param dest_dir string or nil: If set, will extract to the given directory.
+-- @return (string, string) or (nil, string): The absolute pathname of
+-- the fetched source tarball and the temporary directory created to
+-- store it; or nil and an error message.
 function svn.get_sources(rockspec, extract, dest_dir)
    assert(rockspec:type() == "rockspec")
    assert(type(dest_dir) == "string" or not dest_dir)
@@ -30,7 +28,7 @@ function svn.get_sources(rockspec, extract, dest_dir)
    local name_version = rockspec.name .. "-" .. rockspec.version
    local module = rockspec.source.module or dir.base_name(rockspec.source.url)
    local url = rockspec.source.url:gsub("^svn://", "")
-   local command = { svn_cmd, "checkout", url, module }
+   local command = {svn_cmd, "checkout", url, module}
    if rockspec.source.tag then
       table.insert(command, 5, "-r")
       table.insert(command, 6, rockspec.source.tag)
@@ -47,7 +45,7 @@ function svn.get_sources(rockspec, extract, dest_dir)
    end
    local ok, err = fs.change_dir(store_dir)
    if not ok then return nil, err end
-   if not fs.execute(_tl_table_unpack(command)) then
+   if not fs.execute(unpack(command)) then
       return nil, "Failed fetching files from Subversion."
    end
    ok, err = fs.change_dir(module)
