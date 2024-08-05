@@ -36,6 +36,7 @@ local record cfg
    end
 
    record Variables
+      HG: string
       CVS: string
       LUA: string
       GPG: string
