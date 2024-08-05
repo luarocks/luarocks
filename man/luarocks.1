@@ -1,0 +1,154 @@
+.Dd $Mdocdate: January 10 2023 $
+.Dt LUAROCKS 1
+.Os
+.Sh NAME
+.Nm luarocks
+.Nd manage Lua modules and packages
+.Sh SYNOPSIS
+.Nm luarocks
+.Bk -words
+.Op Fl h
+.Op Fl -version
+.Op Fl -server Ar server
+.Op Fl -only-server Ar server
+.Op Fl -only-sources Ar url
+.Op Fl -namespace Ar namespace
+.Op Fl -lua-dir Ar prefix
+.Op Fl -lua-version Ar version
+.Op Fl -tree Ar tree
+.Op Fl -local
+.Op Fl -global
+.Op Fl -no-project
+.Op Fl -dev
+.Op Fl -verbose
+.Op Fl -timeout Ar seconds
+.Ar command
+.Ek
+
+.Sh DESCRIPTION
+The
+.Nm
+utility manages Lua modules and packages downloaded from
+luarocks.org (or optionally, another server).
+.Pp
+The options are as follows:
+.Bl -tag -width keyword
+.It Fl h
+Show a help message and exit.
+.It Fl -version
+Show version information and exit.
+.It Fl -dev
+Enable the sub-repositories in rocks servers for rockspecs of in-development versions.
+.It Fl -server Ar server
+Fetch rocks/rockspecs from
+.Ar server
+(takes priority over config file).
+.It Fl -only-server Ar server
+Fetch rocks/rockspecs from
+.Ar server
+only (overrides any entries in the config file).
+.It Fl -only-sources Ar server
+Restrict downloads to paths matching
+.Ar url .
+.It Fl -namespace Ar namespace
+Set the used rocks server namespace to
+.Ar namespace .
+.It Fl -lua-dir Ar prefix
+Set the used Lua installation to
+.Ar prefix .
+.It Fl -lua-version Ar version
+Set the used Lua version to
+.Ar version .
+.It Fl -tree Ar tree
+Set the tree to operate on to
+.Ar tree .
+.It Fl -local
+Instead of using the system tree, use the tree in the user's home directory.
+.It Fl -global
+Use the system tree when local_by_default is set to true in the configuration file.
+.It Fl -no-project
+Do not use project tree even if running from a project folder.
+.It Fl -verbose
+Display verbose output of commands executed.
+.It Fl -timeout Ar seconds
+Set the timeout in seconds on network operations to
+.Ar seconds .
+0 means	no timeout (wait forever). The default is 30.
+.El
+
+.Pp
+The following commands are available:
+.Bl -tag -width keyword
+.It Xr luarocks-help 1
+Show help for commands.
+.It Xr luarocks-install 1
+Install a rock.
+.It Xr luarocks-build 1
+Build/compile a rock.
+.It Xr luarocks-download 1
+Download a specific rock file from a rocks server.
+.It Xr luarocks-remove 1
+Uninstall a rock.
+.It Xr luarocks-purge 1
+Remove all installed rocks from a tree.
+.It Xr luarocks-search 1
+Query the LuaRocks servers.
+.It Xr luarocks-list 1
+List all currently installed rocks.
+.It Xr luarocks-show 1
+Show information about an installed rock.
+.It Xr luarocks-doc 1
+Show documentation for an installed rock.
+.It Xr luarocks-init 1
+Initialize a directory for a Lua project using LuaRocks.
+.It Xr luarocks-make 1
+Compile a package in the current directory using a rockspec.
+.It Xr luarocks-lint 1
+Check the syntax of a rockspec.
+.It Xr luarocks-pack 1
+Create a rock, packing sources or binaries.
+.It Xr luarocks-unpack 1
+Unpack the contents of a rock.
+.It Xr luarocks-upload 1
+Upload a rockspec to the public rocks repository.
+.It Xr luarocks-test 1
+Run the test suite in the current directory.
+.It Xr luarocks-write_rockspec 1
+Write a template for a rockspec file.
+.It Xr luarocks-new_version 1
+Automatically write a rockspec for a new version of a rock.
+.It Xr luarocks-config 1
+Query information about the LuaRocks configuration.
+.It Xr luarocks-which 1
+Print which file corresponds to a given module name.
+.It Xr luarocks-path 1
+Return the currently configured package path.
+.It Xr luarocks-completion 1
+Output a shell completion script.
+.El
+
+.Sh EXIT STATUS
+.Pp
+The
+.Nm
+utility exits 0 on success, and >0 if an error occurs.
+
+.Sh EXAMPLES
+.Pp
+Search the LuaRocks servers for
+.Sq xml :
+.Pp
+.Dl $ luarocks search xml
+.Pp
+Install the
+.Sq luasocket
+rock into the local tree:
+.Pp
+.Dl $ luarocks install --local luasocket
+.Pp
+Show information about the
+.Sq luaposix
+rock:
+.Pp
+.Dl $ luarocks show luaposix
+.Pp
