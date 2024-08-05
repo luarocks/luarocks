@@ -6,9 +6,9 @@ end
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
-local cfg = require("luarocks.core.cfg") --!
 
-local Rockspec = cfg.Rockspec
+local type rockspec = require("luarocks.core.types.rockspec")
+local type Rockspec = rockspec.Rockspec
 
 --- Download sources for building a rock, using Subversion.
 -- @param rockspec table: The rockspec table
@@ -18,8 +18,6 @@ local Rockspec = cfg.Rockspec
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
 function svn.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string
-   assert(rockspec:type() == "rockspec")
-   assert(type(dest_dir) == "string" or not dest_dir)
 
    local svn_cmd = rockspec.variables.SVN
    local ok, err_msg = fs.is_tool_available(svn_cmd, "Subversion")

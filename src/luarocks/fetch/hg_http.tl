@@ -9,9 +9,9 @@ local record hg_http
 end
 
 local hg = require("luarocks.fetch.hg")
-local cfg = require("luarocks.core.cfg") --!
 
-local type Rockspec = cfg.Rockspec
+local type rockspec = require("luarocks.core.types.rockspec")
+local type Rockspec = rockspec.Rockspec
 
 --- Download sources for building a rock, using hg over http.
 -- @param rockspec table: The rockspec table

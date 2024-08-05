@@ -19,9 +19,11 @@ local util = require("luarocks.util")
 local queries = require("luarocks.queries")
 local type_manifest = require("luarocks.type.manifest")
 
+local type tree = require("luarocks.core.types.tree")
+local type Tree = tree.Tree
 local type Manifest = core.Manifest
 local type Tree_manifest = core.Tree_manifest
-local type Tree = cfg.Tree
+local type DependencyVersion = core.DependencyVersion --!
 
 manif.cache_manifest = core.cache_manifest
 manif.load_rocks_tree_manifests = core.load_rocks_tree_manifests
@@ -190,14 +192,13 @@ end
 -- or "all", to use all trees.
 -- @return table: An array of strings listing installed
 -- versions of a package, and a table indicating where they are found.
-function manif.get_versions(dep, deps_mode: string): {string}, {string: string | Tree}
-   -- assert(type(dep) == "table") --!
+function manif.get_versions(dep: DependencyVersion, deps_mode: string): {string}, {string: string | Tree}
 
    local name: string = dep.name
    local namespace: string = dep.namespace
 
    local version_set = {}
-   path.map_trees(deps_mode, function(tree)
+   path.map_trees(deps_mode, function(tree: string | Tree)
       local manifest = manif.load_manifest(path.rocks_dir(tree))
 
       if manifest and manifest.repository[name] then

@@ -13,7 +13,8 @@ local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 
 local type Lock = fs.Lock --!
-local type Rockspec = cfg.Rockspec
+local type rockspec = require("luarocks.core.types.rockspec")
+local type Rockspec = rockspec.Rockspec
 
 
 local function ensure_trailing_slash(url: string): string
@@ -517,7 +518,6 @@ end
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message and optional error code.
 function fetch.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string, string
-   -- assert(rockspec:type() == "rockspec") --!
 
    local url = rockspec.source.url
    local name = rockspec.name.."-"..rockspec.version
@@ -563,7 +563,6 @@ end
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
 function fetch.fetch_sources(rockspec: Rockspec, extract: string, dest_dir?: string): string, string, string, string, string
-   assert(rockspec:type() == "rockspec") --!
 
    -- auto-convert git://github.com URLs to use git+https
    -- see https://github.blog/2021-09-01-improving-git-protocol-security-github/

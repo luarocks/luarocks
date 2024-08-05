@@ -7,35 +7,20 @@ local util = require("luarocks.core.util")
 local vers = require("luarocks.core.vers")
 local path = require("luarocks.core.path")
 
-local type Constraint = vers.Constraint
+local type tree = require("luarocks.core.types.tree")
+local type Tree = tree.Tree
 
 --- Core functions for querying manifest files.
 local record manif
-   
-   record DependencyVersion
-      constraints: {Constraint}
-      name: string
-   end
-   
-   record Manifest
-      arch: string
-      commands: {string: {string}}
-      dependencies: {string: {string: {DependencyVersion}}}
-      modules: {string: {string}}
-      repository: {string: {string: Manifest}}
-   end
-   
-   record Tree_manifest
-      tree: cfg.Tree
-      manifest: Manifest
-   end
 end
 
 --------------------------------------------------------------------------------
- 
-local type DependencyVersion = manif.DependencyVersion
-local type Manifest = manif.Manifest
-local type Tree_manifest = manif.Tree_manifest
+local type query = require("luarocks.core.types.query")
+local type Query = query.Query
+
+local type manifest = require("luarocks.core.types.manifest")
+local type Manifest = manifest.Manifest
+local type Tree_manifest = manifest.Tree_manifest
 
 
 
@@ -98,7 +83,7 @@ end
 
 function manif.load_rocks_tree_manifests(deps_mode?: string): {Tree_manifest}
    local trees = {}
-   path.map_trees(deps_mode, function(tree: cfg.Tree)
+   path.map_trees(deps_mode, function(tree: Tree)
       local manifest= manif.fast_load_local_manifest(path.rocks_dir(tree))
       if manifest then
          table.insert(trees, {tree=tree, manifest=manifest})
@@ -116,7 +101,7 @@ function manif.scan_dependencies(name: string, version: string, tree_manifests: 
    for _, tree in ipairs(tree_manifests) do
       local manifest = tree.manifest
 
-      local pkgdeps: {DependencyVersion}
+      local pkgdeps: {Query}
       if manifest.dependencies and manifest.dependencies[name] then
          pkgdeps = manifest.dependencies[name][version]
       end

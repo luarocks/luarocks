@@ -1,15 +1,12 @@
 
 local record util
-   record Ordering<K>
-      {K}
-      
-      sub_orders: {K: Ordering<K>}
-   end
-
-   type SortBy<K> = table.SortFunction<K> | util.Ordering<K>
 end
 
 --------------------------------------------------------------------------------
+
+local type ordering = require("luarocks.core.types.ordering")
+local type Ordering<K> = ordering.Ordering<K>
+local type SortBy<K> = ordering.SortBy<K>
 
 local dir_sep = package.config:sub(1, 1)
 
@@ -292,9 +289,9 @@ end
 -- for that key, which is returned by the iterator as the third value after the key
 -- and the value.
 -- @return function: the iterator function.
-function util.sortedpairs<K, V>(tbl: {K: V}, sort_by?: util.SortBy<K>): function(): K, V, util.Ordering<K>
+function util.sortedpairs<K, V>(tbl: {K: V}, sort_by?: SortBy<K>): function(): K, V, Ordering<K>
    local keys = util.keys(tbl)
-   local sub_orders: {K: util.Ordering<K>} = nil
+   local sub_orders: {K: Ordering<K>} = nil
 
    if sort_by == nil then
       table.sort(keys, default_sort)
@@ -328,7 +325,7 @@ function util.sortedpairs<K, V>(tbl: {K: V}, sort_by?: util.SortBy<K>): function
    end
    
    local i = 1
-   return function(): K, V, util.Ordering<K>
+   return function(): K, V, Ordering<K>
       local key = keys[i]
       i = i + 1
       return key, tbl[key], sub_orders and sub_orders[key]

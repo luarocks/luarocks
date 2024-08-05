@@ -49,7 +49,8 @@ util.keys = core.keys
 util.matchquote = core.matchquote
 
 local type Fn = util.Fn
-local type Rockspec = cfg.Rockspec
+local type rockspec = require("luarocks.core.types.rockspec")
+local type Rockspec = rockspec.Rockspec
 local type Parser = util.Parser
 
 

@@ -1,7 +1,10 @@
 local record type_rockspec
-   order: util.Ordering<string>
+   order: Ordering<string>
    rockspec_format: string
 end
+
+local type ordering = require("luarocks.core.types.ordering")
+local type Ordering = ordering.Ordering
 
 local type_check = require("luarocks.type_check")
 local util = require("luarocks.core.util") --!

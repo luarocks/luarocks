@@ -1,31 +1,27 @@
 
 local record queries
-   record Query
-      name: string
-      namespace: string
-      constraints: {vers.Constraint}
-      substring: boolean
-      arch: {string: boolean}
-   end
 end
 
 local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 
-local type Query = queries.Query
-local type Constraint = vers.Constraint
+local type query = require("luarocks.core.types.query")
+local type version = require("luarocks.core.types.version")
+local type Query = query.Query
+local type Version = version.Version
+local type Constraint = version.Constraint
 
 local query_mt: metatable<Query> = {}
 
-query_mt.__index = queries.Query
+query_mt.__index = query.Query
 
-function queries.Query.type(): string  --? remove later
+function query.Query.type(): string  --? remove later
    return "query"
 end
 
 -- Fallback default value for the `arch` field, if not explicitly set.
-queries.Query.arch = {
+query.Query.arch = {
    src = true,
    all = true,
    rockspec = true,
@@ -34,7 +30,7 @@ queries.Query.arch = {
 }
 
 -- Fallback default value for the `substring` field, if not explicitly set.
-queries.Query.substring = false
+query.Query.substring = false
 
 --- Convert the arch field of a query table to table format.
 -- @param input string, table or nil
@@ -79,7 +75,7 @@ function queries.new(name: string, namespace?: string, version?: string, substri
       table.insert(self.constraints, { op = operator, version = vers.parse_version(version)})
    end
 
-   queries.Query.arch[cfg.arch] = true
+   query.Query.arch[cfg.arch] = true
    return setmetatable(self, query_mt)
 end
 
@@ -183,13 +179,13 @@ do
          constraints = constraints,
       }
 
-      queries.Query.arch[cfg.arch] = true
+      query.Query.arch[cfg.arch] = true
       return setmetatable(self, query_mt)
    end
 end
 
 function queries.from_persisted_table(tbl: Query): Query
-   queries.Query.arch[cfg.arch] = true
+   query.Query.arch[cfg.arch] = true
    return setmetatable(tbl, query_mt)
 end
 
@@ -209,9 +205,9 @@ function query_mt.__tostring(self: Query): string
       local pretty = {}
       for _, c in ipairs(self.constraints) do
          local cv = c.version
-         -- local v = cv is vers.Version and cv.string or cv --TEAL BUG
+         -- local v = cv is Version and cv.string or cv --TEAL BUG
          local v: string
-         if cv is vers.Version then
+         if cv is Version then
             v = cv.string
          else 
             v = cv

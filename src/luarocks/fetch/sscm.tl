@@ -5,9 +5,9 @@ end
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
-local cfg = require("luarocks.core.cfg") --!
 
-local Rockspec = cfg.Rockspec
+local type rockspec = require("luarocks.core.types.rockspec")
+local type Rockspec = rockspec.Rockspec
 
 --- Download sources via Surround SCM Server for building a rock.
 -- @param rockspec table: The rockspec table
@@ -17,8 +17,6 @@ local Rockspec = cfg.Rockspec
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
 function sscm.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string
-   assert(rockspec:type() == "rockspec")
-   assert(type(dest_dir) == "string" or not dest_dir)
 
    local sscm_cmd = rockspec.variables.SSCM
    local module = rockspec.source.module or dir.base_name(rockspec.source.url)

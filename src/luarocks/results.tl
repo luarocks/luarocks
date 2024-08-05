@@ -10,10 +10,10 @@ end
 
 local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
-local queries = require("luarocks.queries")
+local type query = require("luarocks.core.types.query")
 
 local type Results = results.Results
-local type Query = queries.Query
+local type Query = query.Query
 
 local result_mt: metatable<Results> = {}
 

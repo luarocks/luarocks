@@ -6,9 +6,9 @@ end
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
-local cfg = require("luarocks.core.cfg") --! import for Rockspec
 
-local type Rockspec = cfg.Rockspec
+local type rockspec = require("luarocks.core.types.rockspec")
+local type Rockspec = rockspec.Rockspec
 
 --- Download sources for building a rock, using CVS.
 -- @param rockspec table: The rockspec table

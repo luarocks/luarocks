@@ -9,9 +9,9 @@ local type_rockspec = require("luarocks.type.rockspec")
 local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
 
-local type Rockspec = cfg.Rockspec
-local type Variables = cfg.Variables
-local type Dependencie = cfg.Dependencie
+local type rockspec = require("luarocks.core.types.rockspec")
+local type Rockspec = rockspec.Rockspec
+local type Variables = rockspec.Variables
 
 local vendored_build_type_set: {string: boolean} = {
    ["builtin"] = true,
@@ -24,9 +24,9 @@ local vendored_build_type_set: {string: boolean} = {
 
 local rockspec_mt: metatable<Rockspec> = {}
 
-rockspec_mt.__index = cfg.Rockspec
+rockspec_mt.__index = rockspec.Rockspec
 
-function cfg.Rockspec:type(): string
+function rockspec.Rockspec.type(): string
    return "rockspec"
 end
 
@@ -103,7 +103,7 @@ function rockspecs.from_persisted_table(filename: string, rockspec: Rockspec, gl
    end
 
    if not quick then
-      local ok, err = type_rockspec.check(rockspec as {any: any}, globals or {})
+      local ok, err = type_rockspec.check(rockspec, globals or {})
       if not ok then
          return nil, err
       end
