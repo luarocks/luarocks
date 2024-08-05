@@ -311,6 +311,12 @@ function tools.is_superuser()
    return fs.current_user() == "root"
 end
 
+local lock_mt = {
+   __gc = function(lock)
+      fs.unlock_access(lock)
+   end
+}
+
 function tools.lock_access(dirname, force)
    local ok, err = fs.make_dir(dirname)
    if not ok then
@@ -336,10 +342,12 @@ function tools.lock_access(dirname, force)
    local force_flag = force and " -f" or ""
 
    if fs.execute(vars.LN .. force_flag, tempfile, lockfile) then
-      return {
+      local lock = {
          tempfile = tempfile,
          lockfile = lockfile,
       }
+      setmetatable(lock, lock_mt)
+      return lock
    else
       return nil, "File exists" -- same message as luafilesystem
    end
