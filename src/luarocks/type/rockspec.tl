@@ -6,8 +6,10 @@ end
 local type ordering = require("luarocks.core.types.ordering")
 local type Ordering = ordering.Ordering
 
+local type rockspec = require("luarocks.core.types.rockspec")
+local type Rockspec = rockspec.Rockspec
+
 local type_check = require("luarocks.type_check")
-local util = require("luarocks.core.util") --!
 
 -- local type TableSchema = type_check.TableSchema
 
@@ -206,14 +208,14 @@ type_rockspec.order = {
    }
 }
 
-local function check_rockspec_using_version(rockspec: {any: any}, globals: {string: any}, version: string): boolean, string
+local function check_rockspec_using_version(rockspec: Rockspec, globals: {string: any}, version: string): boolean, string
    local schema = rockspec_formats[version]
    if not schema then
       return nil, "unknown rockspec format " .. version
    end
    local ok, err = type_check.check_undeclared_globals(globals, schema)
    if ok then
-      ok, err = type_check.type_check_table(version, rockspec, schema, "")
+      ok, err = type_check.type_check_table(version, rockspec as {any: any}, schema, "")
    end
    if ok then
       return true
@@ -228,9 +230,9 @@ end
 -- mismatches.
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
-function type_rockspec.check(rockspec: {any: any}, globals: {string: any}): boolean, string
+function type_rockspec.check(rockspec: Rockspec, globals: {string: any}): boolean, string
 
-   local version: string = rockspec.rockspec_format as string or "1.0" --! tostring
+   local version: string = rockspec.rockspec_format as string or "1.0"
    local ok, err = check_rockspec_using_version(rockspec, globals, version)
    if ok then
       return true

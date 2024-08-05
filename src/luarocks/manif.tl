@@ -6,7 +6,17 @@ local record manif
    cache_manifest: function(string, string, Manifest)
    load_rocks_tree_manifests: function(? string): {Tree_manifest}
    scan_dependencies: function(string, string, {Tree_manifest}, {any : any})
+   rock_manifest_cache: {string: RockManifest}
+   
+   record RockManifest
+      type Entry = string | {string: Entry}
+      rock_manifest: {string: Entry}
+   end
+   
 end
+
+local type RockManifest = manif.RockManifest
+local type Entry = manif.RockManifest.Entry
 
 local core = require("luarocks.core.manif")
 local persist = require("luarocks.persist")
@@ -21,9 +31,11 @@ local type_manifest = require("luarocks.type.manifest")
 
 local type tree = require("luarocks.core.types.tree")
 local type Tree = tree.Tree
-local type Manifest = core.Manifest
-local type Tree_manifest = core.Tree_manifest
-local type DependencyVersion = core.DependencyVersion --!
+local type manifest = require("luarocks.core.types.manifest")
+local type Manifest = manifest.Manifest
+local type Tree_manifest = manifest.Tree_manifest
+local type query = require("luarocks.core.types.query")
+local type Query = query.Query
 
 manif.cache_manifest = core.cache_manifest
 manif.load_rocks_tree_manifests = core.load_rocks_tree_manifests
@@ -31,7 +43,7 @@ manif.scan_dependencies = core.scan_dependencies
 
 manif.rock_manifest_cache = {}
 
-local function check_manifest(repo_url: string, manifest: {any: any}, globals: {string: any}): Manifest, string, string
+local function check_manifest(repo_url: string, manifest: Manifest, globals: {string: any}): Manifest, string, string
    local ok, err = type_manifest.check(manifest, globals)
    if not ok then
       core.cache_manifest(repo_url, cfg.lua_version, nil)
@@ -60,7 +72,7 @@ do
    end
 end
 
-function manif.load_rock_manifest(name: string, version: string, root?: string | Tree)
+function manif.load_rock_manifest(name: string, version: string, root?: string | Tree): {string: Entry}, string
    assert(not name:match("/"))
 
    local name_version = name.."/"..version
@@ -68,7 +80,7 @@ function manif.load_rock_manifest(name: string, version: string, root?: string |
       return manif.rock_manifest_cache[name_version].rock_manifest
    end
    local pathname = path.rock_manifest_file(name, version, root)
-   local rock_manifest = persist.load_into_table(pathname)
+   local rock_manifest = persist.load_into_table(pathname) as RockManifest
    if not rock_manifest then
       return nil, "rock_manifest file not found for "..name.." "..version.." - not a LuaRocks tree?"
    end
@@ -192,7 +204,7 @@ end
 -- or "all", to use all trees.
 -- @return table: An array of strings listing installed
 -- versions of a package, and a table indicating where they are found.
-function manif.get_versions(dep: DependencyVersion, deps_mode: string): {string}, {string: string | Tree}
+function manif.get_versions(dep: Query, deps_mode: string): {string}, {string: string | Tree}
 
    local name: string = dep.name
    local namespace: string = dep.namespace

@@ -11,6 +11,12 @@ local vers = require("luarocks.core.vers")
 
 local type rockspec = require("luarocks.core.types.rockspec")
 local type Rockspec = rockspec.Rockspec
+
+-- local type Query = require("luarocks.core.types.query").Query --TEAL BUG #778
+
+local type query = require("luarocks.core.types.query")
+local type Query = query.Query
+
 local type Variables = rockspec.Variables
 
 local vendored_build_type_set: {string: boolean} = {
@@ -60,19 +66,19 @@ local function platform_overrides(tbl?: {any: any})
    tbl.platforms = nil
 end
 
-local function convert_dependencies(rockspec: {string: {string}}, key: string): boolean, string
-   if rockspec[key] then
-      for i = 1, #rockspec[key] do
-         local parsed, err = queries.from_dep_string(rockspec[key][i])
-         if not parsed then
-            return nil, "Parse error processing dependency '"..rockspec[key][i].."': "..tostring(err)
-         end
-         rockspec[key][i] = parsed
-      end
-   else
-      rockspec[key] = {}
+local function convert_dependencies(dependencies: {string}): {Query}, string
+   if not dependencies then
+      return {}
    end
-   return true
+   local qs: {Query} = {}
+   for i = 1, #dependencies do
+      local parsed, err = queries.from_dep_string(dependencies[i])
+      if not parsed then
+         return nil, "Parse error processing dependency '"..dependencies[i].."': "..tostring(err)
+      end
+      qs[i] = parsed
+   end
+   return qs
 end
 
 --- Set up path-related variables for a given rock.
@@ -147,11 +153,20 @@ function rockspecs.from_persisted_table(filename: string, rockspec: Rockspec, gl
 
    rockspec.rocks_provided = util.get_rocks_provided(rockspec)
 
-   for _, key in ipairs({"dependencies", "build_dependencies", "test_dependencies"}) do
-      local ok, err = convert_dependencies(rockspec, key)
-      if not ok then
-         return nil, err
-      end
+   local err: string
+   rockspec.dependencies.queries, err = convert_dependencies(rockspec.dependencies)
+   if err then
+      return nil, err
+   end
+
+   rockspec.build_dependencies.queries, err = convert_dependencies(rockspec.build_dependencies)
+   if err then
+      return nil, err
+   end
+
+   rockspec.test_dependencies.queries, err = convert_dependencies(rockspec.test_dependencies)
+   if err then
+      return nil, err
    end
 
    if rockspec.build
@@ -163,7 +178,7 @@ function rockspecs.from_persisted_table(filename: string, rockspec: Rockspec, gl
       end
 
       local found = false
-      for _, dep in ipairs(rockspec.build_dependencies) do
+      for _, dep in ipairs(rockspec.build_dependencies.queries) do
          if dep.name == build_pkg_name then
             found = true
             break
@@ -171,7 +186,11 @@ function rockspecs.from_persisted_table(filename: string, rockspec: Rockspec, gl
       end
 
       if not found then
-         table.insert(rockspec.build_dependencies, queries.from_dep_string(build_pkg_name))
+         local query, err = queries.from_dep_string(build_pkg_name)
+         if err then
+            return nil, "Invalid dependency in rockspec: " .. err
+         end
+         table.insert(rockspec.build_dependencies.queries, query)
       end
    end
 
