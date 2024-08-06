@@ -16,6 +16,7 @@ local deplocks = require("luarocks.deplocks")
 local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
 local type Build = r.Build
+local type Dependencies = r.Dependencies
 local type ExternalDependencies = r.ExternalDependencies
 local type Variables = r.Variables
 
@@ -193,16 +194,16 @@ function deps.report_missing_dependencies(name: string, version: string, depende
 
    local first_missing_dep = true
 
-   for _, dep in ipairs(dependencies) do
+   for _, depq in ipairs(dependencies) do
       local found, _: string, string | Tree
-      found, _, dep = match_dep(dep, get_versions)
+      found, _, depq = match_dep(depq, get_versions)
       if not found then
          if first_missing_dep then
             util.printout(("Missing dependencies for %s %s:"):format(name, version))
             first_missing_dep = false
          end
 
-         util.printout(("   %s (%s)"):format(tostring(dep), rock_status(dep, get_versions)))
+         util.printout(("   %s (%s)"):format(tostring(depq), rock_status(depq, get_versions)))
       end
    end
 end
@@ -307,12 +308,12 @@ function deps.fulfill_dependencies(rockspec: Rockspec, depskey: string, deps_mod
             dversionstr = dversion 
          end
          local dname, dnamespace = util.split_namespace(dnsnamestr)
-         local dep = queries.new(dname, dnamespace, dversionstr)
+         local depq = queries.new(dname, dnamespace, dversionstr)
 
          util.printout(("%s %s is pinned to %s (%s)"):format(
-            name, version, tostring(dep), rock_status(dep, get_versions)))
+            name, version, tostring(depq), rock_status(depq, get_versions)))
 
-         local okfullfill, errfullfill = deps.fulfill_dependency(dep, "none", rocks_provided, verify, depskey)
+         local okfullfill, errfullfill = deps.fulfill_dependency(depq, "none", rocks_provided, verify, depskey)
          if not okfullfill then
             return nil, errfullfill
          end
@@ -328,19 +329,19 @@ function deps.fulfill_dependencies(rockspec: Rockspec, depskey: string, deps_mod
       return nil, err
    end
 
-   deps.report_missing_dependencies(name, version, (rockspec as {string: {Query}})[depskey], deps_mode, rocks_provided)
+   deps.report_missing_dependencies(name, version, (rockspec as {string: Dependencies})[depskey].queries, deps_mode, rocks_provided)
 
    util.printout()
 
    local get_versions = prepare_get_versions(deps_mode, rocks_provided, depskey)
-   for _, dep in ipairs((rockspec as {string: {Query}})[depskey] as {Query}) do
+   for _, depq in ipairs((rockspec as {string: Dependencies})[depskey].queries) do
 
       util.printout(("%s %s depends on %s (%s)"):format(
-         name, version, tostring(dep), rock_status(dep, get_versions)))
+         name, version, tostring(depq), rock_status(depq, get_versions)))
 
-      local okfulfill, found_or_err, _ = deps.fulfill_dependency(dep, deps_mode, rocks_provided, verify, depskey)
+      local okfulfill, found_or_err, _ = deps.fulfill_dependency(depq, deps_mode, rocks_provided, verify, depskey)
       if okfulfill then
-         deplocks.add(depskey, dep.name, found_or_err)
+         deplocks.add(depskey, depq.name, found_or_err)
       else
          -- if no_upgrade then
          --    util.printerr("This version of "..name.." is designed for use with")
