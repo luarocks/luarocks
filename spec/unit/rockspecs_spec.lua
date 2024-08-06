@@ -28,7 +28,9 @@ describe("luarocks.rockspecs #unit", function()
 
       assert(rockspec == out)
       assert.same(rockspec.build_dependencies, {
-         { name = "luarocks-build-foo", constraints = {} },
+         queries = {
+            { name = "luarocks-build-foo", constraints = {} }
+         },
       })
    end)
 
@@ -53,9 +55,9 @@ describe("luarocks.rockspecs #unit", function()
 
       assert(rockspec == out)
 
-      assert.same(rockspec.build_dependencies, {
+      assert.same(rockspec.build_dependencies, { {"luarocks-build-cpp"}, queries = {
          { name = "luarocks-build-cpp", constraints = { { op = ">=", version = { string = "1.0", 1, 0 } } } },
-      })
+      }})
    end)
 
    it("does not add a build dependency for 'none' build type", function()
@@ -75,7 +77,7 @@ describe("luarocks.rockspecs #unit", function()
       local out = rockspecs.from_persisted_table(filename, rockspec, globals, quick)
 
       assert(rockspec == out)
-      assert.same(rockspec.build_dependencies, {})
+      assert.same(rockspec.build_dependencies, { queries = {}})
    end)
 
    it("does not add a build dependency for 'module' build type", function()
