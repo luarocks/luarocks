@@ -26,9 +26,9 @@ local type_manifest = require("luarocks.type.manifest")
 
 local type tree = require("luarocks.core.types.tree")
 local type Tree = tree.Tree
-local type manifest = require("luarocks.core.types.manifest")
-local type Manifest = manifest.Manifest
-local type Tree_manifest = manifest.Tree_manifest
+local type m = require("luarocks.core.types.manifest")
+local type Manifest = m.Manifest
+local type Tree_manifest = m  .Tree_manifest
 local type query = require("luarocks.core.types.query")
 local type Query = query.Query
 
@@ -167,7 +167,7 @@ end
 local function get_providers(item_type: string, item_name: string, repo: string | Tree): {string}
    local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
    local manifest = manif.load_manifest(rocks_dir)
-   return manifest and manifest[item_type .. "s"][item_name]
+   return manifest and (manifest as {string: {string: {string}}})[item_type .. "s"][item_name]
 end
 
 --- Given a name of a module or a command, figure out which rock name and version

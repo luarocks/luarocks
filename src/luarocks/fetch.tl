@@ -54,7 +54,7 @@ local function download_with_mirrors(url: string, filename: string, cache: boole
       end
       local name, _, _, from_cache = fs.download(try_url, filename, cache)
       if name then
-         return ok, name, from_cache
+         return name, nil, nil, from_cache
       else
          err = err .. name .. "\n"
       end
@@ -581,7 +581,7 @@ function fetch.fetch_sources(rockspec: Rockspec, extract: boolean, dest_dir?: st
    if dir.is_basic_protocol(protocol) then
       proto = fetch as Fetch
    else
-      ok, proto = pcall(require, "luarocks.fetch."..protocol:gsub("[+-]", "_")) as (boolean, Fetch)
+      ok, proto = pcall(require, ("luarocks.fetch."..protocol:gsub("[+-]", "_")) as string) as (boolean, Fetch)
       if not ok then
          return nil, "Unknown protocol "..protocol
       end
