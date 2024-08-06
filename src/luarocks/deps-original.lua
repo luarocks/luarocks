@@ -1,7 +1,6 @@
 
 --- High-level dependency related functions.
-local record deps
-end
+local deps = {}
 
 local cfg = require("luarocks.core.cfg")
 local manif = require("luarocks.manif")
@@ -12,32 +11,6 @@ local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
 local queries = require("luarocks.queries")
 local deplocks = require("luarocks.deplocks")
-
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
-local type Build = r.Build
-local type ExternalDependencies = r.ExternalDependencies
-local type Dependencies = r.Dependencies
-local type Variables = r.Variables
-
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
-
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
-
-local type v = require("luarocks.core.types.version")
-local type Version = v.Version
-
-local type p = require("luarocks.core.types.persist")
-local type PersistableTable = p.PersistableTable
-
-local type res = require("luarocks.core.types.result")
-local type Result = res.Result
-
-local type d = require("luarocks.core.types.dir")
-local type Dir = d.Dir
-local type Dirs = d.Dirs
 
 --- Generate a function that matches dep queries against the manifest,
 -- taking into account rocks_provided, the list of versions to skip,
@@ -56,10 +29,14 @@ local type Dirs = d.Dirs
 -- * map of versions to locations
 -- * version matched via lockfile if any
 -- * true if rock matched via rocks_provided
-local function prepare_get_versions(deps_mode: string, rocks_provided: {string : string}, depskey: string, skip_set?: {string: {string: boolean}}): function(Query): {string}, {string: string | Tree}, string | number | boolean | PersistableTable, boolean
+local function prepare_get_versions(deps_mode, rocks_provided, depskey, skip_set)
+   assert(type(deps_mode) == "string")
+   assert(type(rocks_provided) == "table")
+   assert(type(depskey) == "string")
+   assert(type(skip_set) == "table" or skip_set == nil)
 
-   return function(dep: Query): {string}, {string: string | Tree}, string | number | boolean | PersistableTable, boolean
-      local versions, locations: {string}, {string: string | Tree}
+   return function(dep)
+      local versions, locations
       local provided = rocks_provided[dep.name]
       if provided then
          -- Provided rocks have higher priority than manifest's rocks.
@@ -80,7 +57,7 @@ local function prepare_get_versions(deps_mode: string, rocks_provided: {string :
          end
       end
 
-      local lockversion = deplocks.get(depskey, dep.name) --! cast?
+      local lockversion = deplocks.get(depskey, dep.name)
 
       return versions, locations, lockversion, provided ~= nil
    end
@@ -98,13 +75,14 @@ end
 -- 2. nil
 -- 3. either 'dep' or an alternative query to be used
 -- 4. false
-local function match_dep(dep: Query, 
-   get_versions: function(Query): {string}, {string: string | Tree}, string, boolean): string, string | Tree, Query, boolean
+local function match_dep(dep, get_versions)
+   assert(type(dep) == "table")
+   assert(type(get_versions) == "function")
 
    local versions, locations, lockversion, provided = get_versions(dep)
 
-   local latest_version: Version
-   local latest_vstring: string
+   local latest_version
+   local latest_vstring
    for _, vstring in ipairs(versions) do
       local version = vers.parse_version(vstring)
       if vers.match_constraints(version, dep.constraints) then
@@ -127,17 +105,18 @@ local function match_dep(dep: Query,
    return latest_vstring, locations[latest_vstring], dep, provided
 end
 
-local function match_all_deps(dependencies: {Query}, 
-   get_versions: function(Query): {string}, {string: string | Tree}, string, boolean): {Query: Result}, {string: Query}, {string: Query}
+local function match_all_deps(dependencies, get_versions)
+   assert(type(dependencies) == "table")
+   assert(type(get_versions) == "function")
 
    local matched, missing, no_upgrade = {}, {}, {}
 
    for _, dep in ipairs(dependencies) do
-      local found, _, provided: string, string | Tree, boolean
+      local found, _, provided
       found, _, dep, provided = match_dep(dep, get_versions)
       if found then
          if not provided then
-            matched[dep] = {name = dep.name, version = found} as Result
+            matched[dep] = {name = dep.name, version = found}
          end
       else
          if dep.constraints[1] and dep.constraints[1].no_upgrade then
@@ -163,13 +142,20 @@ end
 -- parsed as tables; and a table of "no-upgrade" missing dependencies
 -- (to be used in plugin modules so that a plugin does not force upgrade of
 -- its parent application).
-function deps.match_deps(dependencies: {Query}, rocks_provided: {string: string}, deps_mode: string, skip_set?: {string: {string: boolean}}): {Query : Result}, {string : Query}, {string : Query}
+function deps.match_deps(dependencies, rocks_provided, deps_mode, skip_set)
+   assert(type(dependencies) == "table")
+   assert(type(rocks_provided) == "table")
+   assert(type(skip_set) == "table" or skip_set == nil)
+   assert(type(deps_mode) == "string")
 
    local get_versions = prepare_get_versions(deps_mode, rocks_provided, "dependencies", skip_set)
    return match_all_deps(dependencies, get_versions)
 end
 
-local function rock_status(dep: Query, get_versions: function(Query): {string}, {string : string | Tree}, string, boolean): string, string
+local function rock_status(dep, get_versions)
+   assert(dep:type() == "query")
+   assert(type(get_versions) == "function")
+
    local installed, _, _, provided = match_dep(dep, get_versions)
    local installation_type = provided and "provided by VM" or "installed"
    return installed and installed.." "..installation_type..": success" or "not installed"
@@ -184,7 +170,12 @@ end
 -- by this Lua implementation for the given dependency.
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
-function deps.report_missing_dependencies(name: string, version: string, dependencies: {Query}, deps_mode: string, rocks_provided: {string: string})
+function deps.report_missing_dependencies(name, version, dependencies, deps_mode, rocks_provided)
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+   assert(type(dependencies) == "table")
+   assert(type(deps_mode) == "string")
+   assert(type(rocks_provided) == "table")
 
    if deps_mode == "none" then
       return
@@ -195,7 +186,7 @@ function deps.report_missing_dependencies(name: string, version: string, depende
    local first_missing_dep = true
 
    for _, dep in ipairs(dependencies) do
-      local found, _: string, string | Tree
+      local found, _
       found, _, dep = match_dep(dep, get_versions)
       if not found then
          if first_missing_dep then
@@ -208,14 +199,19 @@ function deps.report_missing_dependencies(name: string, version: string, depende
    end
 end
 
-function deps.fulfill_dependency(dep: Query, deps_mode: string, rocks_provided: {string: string}, verify: boolean, depskey?: string): boolean, string, string | Tree
+function deps.fulfill_dependency(dep, deps_mode, rocks_provided, verify, depskey)
+   assert(dep:type() == "query")
+   assert(type(deps_mode) == "string" or deps_mode == nil)
+   assert(type(rocks_provided) == "table" or rocks_provided == nil)
+   assert(type(verify) == "boolean" or verify == nil)
+   assert(type(depskey) == "string")
 
    deps_mode = deps_mode or "all"
    rocks_provided = rocks_provided or {}
 
    local get_versions = prepare_get_versions(deps_mode, rocks_provided, depskey)
 
-   local found, where: string, string | Tree
+   local found, where
    found, where, dep = match_dep(dep, get_versions)
    if found then
       local tree_manifests = manif.load_rocks_tree_manifests(deps_mode)
@@ -244,17 +240,17 @@ function deps.fulfill_dependency(dep: Query, deps_mode: string, rocks_provided: 
 
    found, where = match_dep(dep, get_versions)
    if not found then
-       return nil, "Repository inconsistency detected (previously unfinished/corrupted installation?)"
+      return nil, "Repository inconsistency detected (previously unfinished/corrupted installation?)"
    end
    return true, found, where
 end
 
-local function check_supported_platforms(rockspec: Rockspec): boolean, string
-   if rockspec.supported_platforms and next(rockspec.supported_platforms) ~= nil then
+local function check_supported_platforms(rockspec)
+   if rockspec.supported_platforms and next(rockspec.supported_platforms) then
       local all_negative = true
       local supported = false
-      for _, plat in ipairs(rockspec.supported_platforms) do
-         local neg: string
+      for _, plat in pairs(rockspec.supported_platforms) do
+         local neg
          neg, plat = plat:match("^(!?)(.*)")
          if neg == "!" then
             if cfg.is_platform(plat) then
@@ -289,7 +285,13 @@ end
 -- @return boolean or (nil, string, [string]): True if no errors occurred, or
 -- nil and an error message if any test failed, followed by an optional
 -- error code.
-function deps.fulfill_dependencies(rockspec: Rockspec, depskey: string, deps_mode: string, verify?: boolean, deplock_dir?: string): boolean, string, string
+function deps.fulfill_dependencies(rockspec, depskey, deps_mode, verify, deplock_dir)
+   assert(type(rockspec) == "table")
+   assert(type(depskey) == "string")
+   assert(type(deps_mode) == "string")
+   assert(type(verify) == "boolean" or verify == nil)
+   assert(type(deplock_dir) == "string" or deplock_dir == nil)
+
    local name = rockspec.name
    local version = rockspec.version
    local rocks_provided = rockspec.rocks_provided
@@ -299,23 +301,16 @@ function deps.fulfill_dependencies(rockspec: Rockspec, depskey: string, deps_mod
       util.printout("Using dependencies pinned in lockfile: " .. filename)
 
       local get_versions = prepare_get_versions("none", rocks_provided, depskey)
-      local dnsnamestr, dversionstr: string, string
       for dnsname, dversion in deplocks.each(depskey) do
-         if dnsname is string then 
-            dnsnamestr = dnsname 
-         end
-         if dversion is string then 
-            dversionstr = dversion 
-         end
-         local dname, dnamespace = util.split_namespace(dnsnamestr)
-         local dep = queries.new(dname, dnamespace, dversionstr)
+         local dname, dnamespace = util.split_namespace(dnsname)
+         local dep = queries.new(dname, dnamespace, dversion)
 
          util.printout(("%s %s is pinned to %s (%s)"):format(
             name, version, tostring(dep), rock_status(dep, get_versions)))
 
-         local okfullfill, errfullfill = deps.fulfill_dependency(dep, "none", rocks_provided, verify, depskey)
-         if not okfullfill then
-            return nil, errfullfill
+         local ok, err = deps.fulfill_dependency(dep, "none", rocks_provided, verify, depskey)
+         if not ok then
+            return nil, err
          end
       end
       util.printout()
@@ -329,28 +324,28 @@ function deps.fulfill_dependencies(rockspec: Rockspec, depskey: string, deps_mod
       return nil, err
    end
 
-   deps.report_missing_dependencies(name, version, (rockspec as {string: {Query}})[depskey], deps_mode, rocks_provided)
+   deps.report_missing_dependencies(name, version, rockspec[depskey], deps_mode, rocks_provided)
 
    util.printout()
 
    local get_versions = prepare_get_versions(deps_mode, rocks_provided, depskey)
-   for _, dep in ipairs((rockspec as {string: {Query}})[depskey] as {Query}) do
+   for _, dep in ipairs(rockspec[depskey]) do
 
       util.printout(("%s %s depends on %s (%s)"):format(
          name, version, tostring(dep), rock_status(dep, get_versions)))
 
-      local ok, found_or_err, _ = deps.fulfill_dependency(dep, deps_mode, rocks_provided, verify, depskey)
+      local ok, found_or_err, _, no_upgrade = deps.fulfill_dependency(dep, deps_mode, rocks_provided, verify, depskey)
       if ok then
          deplocks.add(depskey, dep.name, found_or_err)
       else
-         -- if no_upgrade then
-         --    util.printerr("This version of "..name.." is designed for use with")
-         --    util.printerr(tostring(dep)..", but is configured to avoid upgrading it")
-         --    util.printerr("automatically. Please upgrade "..dep.name.." with")
-         --    util.printerr("   luarocks install "..dep.name)
-         --    util.printerr("or look for a suitable version of "..name.." with")
-         --    util.printerr("   luarocks search "..name)
-         -- end
+         if no_upgrade then
+            util.printerr("This version of "..name.." is designed for use with")
+            util.printerr(tostring(dep)..", but is configured to avoid upgrading it")
+            util.printerr("automatically. Please upgrade "..dep.name.." with")
+            util.printerr("   luarocks install "..dep.name)
+            util.printerr("or look for a suitable version of "..name.." with")
+            util.printerr("   luarocks search "..name)
+         end
          return nil, found_or_err
       end
    end
@@ -365,7 +360,7 @@ end
 -- @param file string: a filename
 -- @param pattern string: a pattern, where ? is to be matched by the filename.
 -- @return string The pattern, if found, or nil.
-local function deconstruct_pattern(file: string, pattern: string): string
+local function deconstruct_pattern(file, pattern)
    local depattern = "^"..(pattern:gsub("%.", "%%."):gsub("%*", ".*"):gsub("?", "(.*)")).."$"
    return (file:match(depattern))
 end
@@ -377,13 +372,13 @@ end
 -- @param array of string An array of patterns with "?" as the wildcard
 -- (e.g. {"?.so", "lib?.so"})
 -- @param files The array of constructed names
-local function add_all_patterns(file: string, patterns: {string}, files: {{integer, string}}): Dirs
+local function add_all_patterns(file, patterns, files)
    for _, pattern in ipairs(patterns) do
       table.insert(files, {#files + 1, (pattern:gsub("?", file))})
    end
 end
 
-local function get_external_deps_dirs(mode: string): Dirs
+local function get_external_deps_dirs(mode)
    local patterns = cfg.external_deps_patterns
    local subdirs = cfg.external_deps_subdirs
    if mode == "install" then
@@ -398,13 +393,13 @@ local function get_external_deps_dirs(mode: string): Dirs
    if mode == "install" then
       dirs.INCDIR = nil
    end
-   return dirs as Dirs
+   return dirs
 end
 
-local function resolve_prefix(prefix: string | {string: string}, dirs: Dirs): string
-   if prefix is string then
+local function resolve_prefix(prefix, dirs)
+   if type(prefix) == "string" then
       return prefix
-   elseif prefix is {string: string} then
+   elseif type(prefix) == "table" then
       if prefix.bin then
          dirs.BINDIR.subdir = prefix.bin
       end
@@ -420,7 +415,7 @@ local function resolve_prefix(prefix: string | {string: string}, dirs: Dirs): st
    end
 end
 
-local function add_patterns_for_file(files: {{integer, string}}, file: string, patterns: {string})
+local function add_patterns_for_file(files, file, patterns)
    -- If it doesn't look like it contains a filename extension
    if not (file:match("%.[a-z]+$") or file:match("%.[a-z]+%.")) then
       add_all_patterns(file, patterns, files)
@@ -435,45 +430,36 @@ local function add_patterns_for_file(files: {{integer, string}}, file: string, p
    end
 end
 
-local function check_external_dependency_at(
-   prefix: string,
-   name: string,
-   ext_files: {string: string | {string}},
-   vars: {string: string},
-   dirs: Dirs,
-   err_files: {string: {string}},
-   cache: {string: {string}}): boolean, string, string
-
+local function check_external_dependency_at(prefix, name, ext_files, vars, dirs, err_files, cache)
    local fs = require("luarocks.fs")
    cache = cache or {}
 
    for dirname, dirdata in util.sortedpairs(dirs) do
-      local paths: {string}
+      local paths
       local path_var_value = vars[name.."_"..dirname]
-      local dirdatastr = dirdata.subdir
       if path_var_value then
          paths = { path_var_value }
-      elseif dirdatastr is {string} then
+      elseif type(dirdata.subdir) == "table" then
          paths = {}
-         for i,v in ipairs(dirdatastr) do
+         for i,v in ipairs(dirdata.subdir) do
             paths[i] = dir.path(prefix, v)
          end
       else
-         paths = { dir.path(prefix, dirdatastr) }
+         paths = { dir.path(prefix, dirdata.subdir) }
       end
       local file_or_files = ext_files[dirdata.testfile]
       if file_or_files then
          local files = {}
-         if file_or_files is string then
+         if type(file_or_files) == "string" then
             add_patterns_for_file(files, file_or_files, dirdata.pattern)
-         elseif file_or_files is {string} then
+         elseif type(file_or_files) == "table" then
             for _, f in ipairs(file_or_files) do
                add_patterns_for_file(files, f, dirdata.pattern)
             end
          end
 
          local found = false
-         table.sort(files, function(a: {integer, string}, b: {integer, string}): boolean
+         table.sort(files, function(a, b)
             if (not a[2]:match("%*")) and b[2]:match("%*") then
                return true
             elseif a[2]:match("%*") and (not b[2]:match("%*")) then
@@ -490,7 +476,7 @@ local function check_external_dependency_at(
                f = f:gsub("%.[^.]+$", "."..cfg.external_lib_extension)
             end
 
-            local pattern: string
+            local pattern
             if f:match("%*") then
                pattern = "^" .. f:gsub("([-.+])", "%%%1"):gsub("%*", ".*") .. "$"
                f = "matching "..f
@@ -540,7 +526,7 @@ local function check_external_dependency_at(
       end
    end
 
-   for dirname, dirdata in pairs(dirs as {string: Dir}) do
+   for dirname, dirdata in pairs(dirs) do
       vars[name.."_"..dirname] = dirdata.dir
       vars[name.."_"..dirname.."_FILE"] = dirdata.file
    end
@@ -548,20 +534,15 @@ local function check_external_dependency_at(
    return true
 end
 
-local function check_external_dependency(
-   name: string,
-   ext_files: {string: string | {string}},
-   vars: {string: string},
-   mode: string,
-   cache?: {string : {string}}): boolean, string, string, {string : {string}}
-   local ok: boolean
-   local err_dirname: string
-   local err_testfile: string
-   local err_files: {string: {string}} = {program = {}, header = {}, library = {}}
+local function check_external_dependency(name, ext_files, vars, mode, cache)
+   local ok
+   local err_dirname
+   local err_testfile
+   local err_files = {program = {}, header = {}, library = {}}
 
    local dirs = get_external_deps_dirs(mode)
 
-   local prefixes: {string}
+   local prefixes
    if vars[name .. "_DIR"] then
       prefixes = { vars[name .. "_DIR"] }
    elseif vars.DEPS_DIR then
@@ -573,11 +554,11 @@ local function check_external_dependency(
    for _, prefix in ipairs(prefixes) do
       prefix = resolve_prefix(prefix, dirs)
       if cfg.is_platform("mingw32") and name == "LUA" then
-         dirs.LIBDIR.pattern = fun.filter(util.deep_copy(dirs.LIBDIR.pattern) as {string}, function(s: string): boolean
+         dirs.LIBDIR.pattern = fun.filter(util.deep_copy(dirs.LIBDIR.pattern), function(s)
             return not s:match("%.a$")
          end)
       elseif cfg.is_platform("windows") and name == "LUA" then
-         dirs.LIBDIR.pattern = fun.filter(util.deep_copy(dirs.LIBDIR.pattern) as {string}, function(s: string): boolean
+         dirs.LIBDIR.pattern = fun.filter(util.deep_copy(dirs.LIBDIR.pattern), function(s)
             return not s:match("%.dll$")
          end)
       end
@@ -590,22 +571,19 @@ local function check_external_dependency(
    return nil, err_dirname, err_testfile, err_files
 end
 
-function deps.autodetect_external_dependencies(build: Build): {string : {string : string}}
+function deps.autodetect_external_dependencies(build)
    -- only applies to the 'builtin' build type
    if not build or not build.modules then
       return nil
    end
 
-   local extdeps: {string: {string: string}} = {}
+   local extdeps = {}
    local any = false
    for _, data in pairs(build.modules) do
-      if data is {string : string | {string}} and data.libraries then
-         local libraries: {string}
-         local librariesstr: string | {string} = data.libraries
-         if librariesstr is string then
-            libraries = { librariesstr }
-         else 
-            libraries = librariesstr
+      if type(data) == "table" and data.libraries then
+         local libraries = data.libraries
+         if type(libraries) == "string" then
+            libraries = { libraries }
          end
          local incdirs = {}
          local libdirs = {}
@@ -640,17 +618,18 @@ end
 -- if "install" is given, do not scan for headers.
 -- @return boolean or (nil, string): True if no errors occurred, or
 -- nil and an error message if any test failed.
-function deps.check_external_deps(rockspec: Rockspec, mode: string): boolean, string, string
+function deps.check_external_deps(rockspec, mode)
+   assert(rockspec:type() == "rockspec")
 
    if not rockspec.external_dependencies then
-      rockspec.external_dependencies = deps.autodetect_external_dependencies(rockspec.build) as ExternalDependencies
+      rockspec.external_dependencies = deps.autodetect_external_dependencies(rockspec.build)
    end
    if not rockspec.external_dependencies then
       return true
    end
 
-   for name, ext_files in util.sortedpairs(rockspec.external_dependencies.queries) do
-      local ok, err_dirname, err_testfile, err_files = check_external_dependency(name, ext_files as {string : string | {string}}, rockspec.variables as {string: string}, mode)
+   for name, ext_files in util.sortedpairs(rockspec.external_dependencies) do
+      local ok, err_dirname, err_testfile, err_files = check_external_dependency(name, ext_files, rockspec.variables, mode)
       if not ok then
          local lines = {"Could not find "..err_testfile.." file for "..name}
 
@@ -678,10 +657,11 @@ end
 -- @param mdeps table: The manifest dependencies table.
 -- @param name string: Package name.
 -- @param version string: Package version.
-function deps.scan_deps(results: {string: string}, mdeps: {string: {string: Dependencies}}, name: string, version: string, deps_mode: string)
+function deps.scan_deps(results, mdeps, name, version, deps_mode)
    assert(type(results) == "table")
    assert(type(mdeps) == "table")
-   assert(not name:match("/"))
+   assert(type(name) == "string" and not name:match("/"))
+   assert(type(version) == "string")
 
    local fetch = require("luarocks.fetch")
 
@@ -691,9 +671,9 @@ function deps.scan_deps(results: {string: string}, mdeps: {string: {string: Depe
    if not mdeps[name] then mdeps[name] = {} end
    local mdn = mdeps[name]
    local dependencies = mdn[version]
-   local rocks_provided: {string : string}
+   local rocks_provided
    if not dependencies then
-      local rockspec = fetch.load_local_rockspec(path.rockspec_file(name, version), false)
+      local rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version), false)
       if not rockspec then
          return
       end
@@ -706,14 +686,14 @@ function deps.scan_deps(results: {string: string}, mdeps: {string: {string: Depe
 
    local get_versions = prepare_get_versions(deps_mode, rocks_provided, "dependencies")
 
-   local matched = match_all_deps(dependencies.queries, get_versions)
+   local matched = match_all_deps(dependencies, get_versions)
    results[name] = version
    for _, match in pairs(matched) do
       deps.scan_deps(results, mdeps, match.name, match.version, deps_mode)
    end
 end
 
-local function lua_h_exists(d: string, luaver: string): string, string, string, integer
+local function lua_h_exists(d, luaver)
    local major, minor = luaver:match("(%d+)%.(%d+)")
    local luanum = ("%s%02d"):format(major, tonumber(minor))
 
@@ -731,7 +711,7 @@ local function lua_h_exists(d: string, luaver: string): string, string, string, 
    return nil, "Failed finding Lua header lua.h (searched at " .. d .. "). You may need to install Lua development headers. You can use `luarocks config variables.LUA_INCDIR <path>` to set the correct location.", "dependency", 1
 end
 
-local function find_lua_incdir(prefix: string, luaver: string, luajitver: string): string, string
+local function find_lua_incdir(prefix, luaver, luajitver)
    luajitver = luajitver and luajitver:gsub("%-.*", "")
    local shortv = luaver:gsub("%.", "")
    local incdirs = {
@@ -744,7 +724,7 @@ local function find_lua_incdir(prefix: string, luaver: string, luajitver: string
       luajitver and (prefix .. "/include/luajit-" .. (luajitver:match("^(%d+%.%d+)") or "")),
    }
    local errprio = 0
-   local mainerr: string
+   local mainerr
    for _, d in ipairs(incdirs) do
       local ok, err, _, prio = lua_h_exists(d, luaver)
       if ok then
@@ -760,7 +740,7 @@ local function find_lua_incdir(prefix: string, luaver: string, luajitver: string
    return nil, mainerr
 end
 
-function deps.check_lua_incdir(vars: Variables): boolean | string, string, string
+function deps.check_lua_incdir(vars)
    if vars.LUA_INCDIR_OK == true
       then return true
    end
@@ -788,7 +768,7 @@ function deps.check_lua_incdir(vars: Variables): boolean | string, string, strin
    return nil, "Failed finding Lua headers; neither LUA_DIR or LUA_INCDIR are set. You may need to install them or configure LUA_INCDIR.", "dependency"
 end
 
-function deps.check_lua_libdir(vars: Variables): boolean, string, string, {string : {string}}
+function deps.check_lua_libdir(vars)
    if vars.LUA_LIBDIR_OK == true
       then return true
    end
@@ -815,9 +795,9 @@ function deps.check_lua_libdir(vars: Variables): boolean, string, string, {strin
    end
    local cache = {}
    local save_LUA_INCDIR = vars.LUA_INCDIR
-   local ok, _, _, errfiles = check_external_dependency("LUA", { library = libnames }, vars as {string: string}, "build", cache)
+   local ok, _, _, errfiles = check_external_dependency("LUA", { library = libnames }, vars, "build", cache)
    vars.LUA_INCDIR = save_LUA_INCDIR
-   local err: string
+   local err
    if ok then
       local filename = dir.path(vars.LUA_LIBDIR, vars.LUA_LIBDIR_FILE)
       local fd = io.open(filename, "r")
@@ -825,8 +805,8 @@ function deps.check_lua_libdir(vars: Variables): boolean, string, string, {strin
          if not vars.LUA_LIBDIR_FILE:match((cfg.lua_version:gsub("%.", "%%.?"))) then
             -- if filename isn't versioned, check file contents
             local txt = fd:read("*a")
-            ok = txt:match("Lua " .. cfg.lua_version, 1) -- removed last parameter since not needed (true)
-                 or txt:match("lua" .. (cfg.lua_version:gsub("%.", "")), 1)  -- removed last parameter since not needed (true)
+            ok = txt:match("Lua " .. cfg.lua_version, 1, true)
+                 or txt:match("lua" .. (cfg.lua_version:gsub("%.", "")), 1, true)
             if not ok then
                err = "Lua library at " .. filename .. " does not match Lua version " .. cfg.lua_version .. ". You can use `luarocks config variables.LUA_LIBDIR <path>` to set the correct location."
             end
@@ -846,7 +826,7 @@ function deps.check_lua_libdir(vars: Variables): boolean, string, string, {strin
    end
 end
 
-function deps.get_deps_mode(args: {string: string}): string
+function deps.get_deps_mode(args)
    return args.deps_mode or cfg.deps_mode
 end
 

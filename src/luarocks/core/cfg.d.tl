@@ -1,6 +1,7 @@
 local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
 local type Variables = r.Variables
+
 local type t = require("luarocks.core.types.tree")
 local type Tree = t.Tree
 
@@ -63,6 +64,15 @@ local record cfg
    rocks_servers: {{string} | string}
    -- search
    disabled_servers: {string: boolean}
+   -- deps
+   is_platform: function(string): boolean
+   print_platforms: function(): string
+   external_deps_patterns: {string: string}
+   external_deps_subdirs: {string: string}
+   runtime_external_deps_patterns: {string: string}
+   runtime_external_deps_subdirs: {string: string}
+   external_lib_extension: string
+   external_deps_dirs: {string}
 end
 
 return cfg

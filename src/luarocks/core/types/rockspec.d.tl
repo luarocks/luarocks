@@ -28,6 +28,13 @@ local record rockspec
         BINDIR: string
         DOCDIR: string
         CURLNOCERTFLAG: string
+        LUA_INCDIR_OK: boolean
+        LUA_INCDIR: string
+        LUA_DIR: string
+        LUA_LIBDIR_OK: boolean
+        LUA_LIBDIR: string
+        LUA_LIBDIR_FILE: string
+        LUALIB: string
     end
   
     record Source
@@ -60,7 +67,7 @@ local record rockspec
   
     record Build
         type: string
-        modules: string
+        modules: {string: {string: string | {string}}}
         copy_directories: string
         install: Install
     end
@@ -75,13 +82,10 @@ local record rockspec
         {string} 
         queries: {Query}
     end
-  
-    record SupportedPlatforms
-    end
-  
+
     record ExternalDependencies
         {string} 
-        queries: {Query}
+        queries: {string: Query}
     end
   
     record TestDependencies
@@ -111,7 +115,7 @@ local record rockspec
         dependencies: Dependencies
         build_dependencies: BuildDependencies
         test_dependencies: TestDependencies
-        supported_platforms: SupportedPlatforms
+        supported_platforms: {string}
         external_dependencies: ExternalDependencies
         variables: Variables
         hooks: Hooks
