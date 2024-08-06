@@ -125,10 +125,44 @@ local function match_dep(depq,
 
    return latest_vstring, locations[latest_vstring], depq, provided
 end
+local function printTable( t )
+ 
+   local printTable_cache = {}
 
+   local function sub_printTable( t, indent )
+
+       if ( printTable_cache[tostring(t)] ) then
+           print( indent .. "*" .. tostring(t) )
+       else
+           printTable_cache[tostring(t)] = true
+           if ( type( t ) == "table" ) then
+               for pos,val in pairs( t ) do
+                   if ( type(val) == "table" ) then
+                       print( indent .. "[" .. pos .. "] => " .. tostring( t ).. " {" )
+                       sub_printTable( val, indent .. string.rep( " ", string.len(pos)+8 ) )
+                       print( indent .. string.rep( " ", string.len(pos)+6 ) .. "}" )
+                   elseif ( type(val) == "string" ) then
+                       print( indent .. "[" .. pos .. '] => "' .. val .. '"' )
+                   else
+                       print( indent .. "[" .. pos .. "] => " .. tostring(val) )
+                   end
+               end
+           else
+               print( indent..tostring(t) )
+           end
+       end
+   end
+
+   if ( type(t) == "table" ) then
+       print( tostring(t) .. " {" )
+       sub_printTable( t, "  " )
+       print( "}" )
+   else
+       sub_printTable( t, "  " )
+   end
+end
 local function match_all_deps(dependencies,
    get_versions)
-
    local matched, missing, no_upgrade = {}, {}, {}
 
    for _, depq in ipairs(dependencies) do
@@ -142,6 +176,7 @@ local function match_all_deps(dependencies,
          if depq.constraints and depq.constraints[1] and depq.constraints[1].no_upgrade then
             no_upgrade[depq.name] = depq
          else
+            printTable(depq)
             missing[depq.name] = depq
          end
       end
