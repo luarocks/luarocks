@@ -97,16 +97,16 @@ end
 -- 2. nil
 -- 3. either 'dep' or an alternative query to be used
 -- 4. false
-local function match_dep(dep: Query, 
+local function match_dep(depq: Query, 
    get_versions: function(Query): {string}, {string: string | Tree}, string, boolean): string, string | Tree, Query, boolean
 
-   local versions, locations, lockversion, provided = get_versions(dep)
+   local versions, locations, lockversion, provided = get_versions(depq)
 
    local latest_version: Version
    local latest_vstring: string
    for _, vstring in ipairs(versions) do
       local version = vers.parse_version(vstring)
-      if vers.match_constraints(version, dep.constraints) then
+      if vers.match_constraints(version, depq.constraints) then
          if not latest_version or version > latest_version then
             latest_version = version
             latest_vstring = vstring
@@ -119,11 +119,11 @@ local function match_dep(dep: Query,
       if latest_vstring and latest_vstring ~= lockversion then
          latest_matching_msg = " (latest matching is " .. latest_vstring .. ")"
       end
-      util.printout("Forcing " .. dep.name .. " to pinned version " .. lockversion .. latest_matching_msg)
-      return nil, nil, queries.new(dep.name, dep.namespace, lockversion)
+      util.printout("Forcing " .. depq.name .. " to pinned version " .. lockversion .. latest_matching_msg)
+      return nil, nil, queries.new(depq.name, depq.namespace, lockversion)
    end
 
-   return latest_vstring, locations[latest_vstring], dep, provided
+   return latest_vstring, locations[latest_vstring], depq, provided
 end
 
 local function match_all_deps(dependencies: {Query}, 
@@ -131,18 +131,18 @@ local function match_all_deps(dependencies: {Query},
 
    local matched, missing, no_upgrade = {}, {}, {}
 
-   for _, dep in ipairs(dependencies) do
+   for _, depq in ipairs(dependencies) do
       local found, _, provided: string, string | Tree, boolean
-      found, _, dep, provided = match_dep(dep, get_versions)
+      found, _, depq, provided = match_dep(depq, get_versions)
       if found then
          if not provided then
-            matched[dep] = {name = dep.name, version = found} as Result
+            matched[depq] = {name = depq.name, version = found} as Result
          end
       else
-         if dep.constraints[1] and dep.constraints[1].no_upgrade then
-            no_upgrade[dep.name] = dep
+         if depq.constraints and depq.constraints[1] and depq.constraints[1].no_upgrade then
+            no_upgrade[depq.name] = depq
          else
-            missing[dep.name] = dep
+            missing[depq.name] = depq
          end
       end
    end
