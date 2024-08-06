@@ -706,7 +706,7 @@ function deps.scan_deps(results: {string: string}, mdeps: {string: {string: Depe
 
    local get_versions = prepare_get_versions(deps_mode, rocks_provided, "dependencies")
 
-   local matched = match_all_deps(dependencies.queries, get_versions)
+   local matched = match_all_deps(dependencies, get_versions)
    results[name] = version
    for _, match in pairs(matched) do
       deps.scan_deps(results, mdeps, match.name, match.version, deps_mode)
