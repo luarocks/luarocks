@@ -8,13 +8,13 @@ local core = require("luarocks.core.util")
 local cfg = require("luarocks.core.cfg")
 
 local type o = require("luarocks.core.types.ordering")
-local type Ordering = o.Ordering
+local type Ordering= o.Ordering
 local type SortBy = o.SortBy
 
 local record util
    cleanup_path: function(string, string, string, boolean): string
    split_string: function(string, string, number): {string}
-   sortedpairs: function<K, V>(tbl: {K: V}, sort_by?: SortBy): function(): K, V, Ordering
+   sortedpairs: function<K, V>(tbl: {K: V}, sort_by?: SortBy): function(): K, V, Ordering<K>
    deep_merge: function({any : any}, {any : any})
    deep_merge_under: function({any : any}, {any : any})
    popen_read: function(string, ?string): string
@@ -164,7 +164,7 @@ function util.variable_substitutions<K>(tbl: {K: string}, vars: {string: string}
    end
 end
 
-function util.lua_versions(sort: string): function(): string
+function util.lua_versions(sort?: string): function(): string
    local versions = { "5.1", "5.2", "5.3", "5.4" }
    local i = 0
    if sort == "descending" then
@@ -560,7 +560,7 @@ end
 -- @return a table with rock names as keys and versions and values,
 -- specifying modules that are already provided by the VM (including
 -- "lua" for the Lua version and, for format 3.0+, "luajit" if detected).
-function util.get_rocks_provided(rockspec: Rockspec): {string: string}
+function util.get_rocks_provided(rockspec?: Rockspec): {string: string}
 
    if not rockspec and cfg.cache.rocks_provided then
       return cfg.cache.rocks_provided

@@ -24,9 +24,9 @@ local function ensure_trailing_slash(url: string): string
    return (url:gsub("/*$", "/"))
 end
 
-local function is_url_relative_to_rocks_servers(url: string, servers: {{string}}): integer, string, {string}
+local function is_url_relative_to_rocks_servers(url: string, servers: {{string} | string}): integer, string, {string}
    for _, item in ipairs(servers) do
-      if type(item) == "table" then
+      if item is {string} then
          for i, s in ipairs(item) do
             local base = ensure_trailing_slash(s)
             if string.find(url, base, 1, true) == 1 then
@@ -37,7 +37,7 @@ local function is_url_relative_to_rocks_servers(url: string, servers: {{string}}
    end
 end
 
-local function download_with_mirrors(url: string, filename: string, cache: boolean, servers: {{string}}): string, string, string, boolean
+local function download_with_mirrors(url: string, filename: string, cache: boolean, servers: {{string} | string}): string, string, string, boolean
    local idx, rest, mirrors = is_url_relative_to_rocks_servers(url, servers)
 
    if not idx then
@@ -581,7 +581,7 @@ function fetch.fetch_sources(rockspec: Rockspec, extract: boolean, dest_dir?: st
    if dir.is_basic_protocol(protocol) then
       proto = fetch as Fetch
    else
-      ok, proto = pcall(require, ("luarocks.fetch."..protocol:gsub("[+-]", "_")) as string) as (boolean, Fetch)
+      ok, proto = pcall(require, "luarocks.fetch."..protocol:gsub("[+-]", "_")) as (boolean, Fetch)
       if not ok then
          return nil, "Unknown protocol "..protocol
       end

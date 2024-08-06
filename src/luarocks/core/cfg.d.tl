@@ -60,7 +60,9 @@ local record cfg
    -- rockspecs
    each_platform: function(?string): (function():string)
    -- fetch
-   rocks_servers: {{string}}
+   rocks_servers: {{string} | string}
+   -- search
+   disabled_servers: {string: boolean}
 end
 
 return cfg

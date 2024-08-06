@@ -25,6 +25,12 @@ local type Query = q.Query
 local type v = require("luarocks.core.types.version")
 local type Version = v.Version
 
+local type p = require("luarocks.core.types.persist")
+local type PersistableTable = p.PersistableTable
+
+local type r = require("luarocks.core.types.result")
+local type Result = r.Result
+
 --- Generate a function that matches dep queries against the manifest,
 -- taking into account rocks_provided, the list of versions to skip,
 -- and the lockfile.
@@ -42,9 +48,9 @@ local type Version = v.Version
 -- * map of versions to locations
 -- * version matched via lockfile if any
 -- * true if rock matched via rocks_provided
-local function prepare_get_versions(deps_mode: string, rocks_provided: {string : string}, depskey: string, skip_set?): function(Query): {string}, {string: string | Tree}, string, boolean
+local function prepare_get_versions(deps_mode: string, rocks_provided: {string : string}, depskey: string, skip_set?: {string: {string: boolean}}): function(Query): {string}, {string: string | Tree}, string | number | boolean | PersistableTable, boolean
 
-   return function(dep: Query): {string}, {string: string | Tree}, string, boolean
+   return function(dep: Query): {string}, {string: string | Tree}, string | number | boolean | PersistableTable, boolean
       local versions, locations: {string}, {string: string | Tree}
       local provided = rocks_provided[dep.name]
       if provided then
@@ -114,7 +120,7 @@ local function match_dep(dep: Query,
 end
 
 local function match_all_deps(dependencies: {Query}, 
-   get_versions: function(Query): {string}, {string: string | Tree}, string, boolean): {Query: any}, {string}, {string}
+   get_versions: function(Query): {string}, {string: string | Tree}, string, boolean): {Query: Result}, {string: Query}, {string: Query}
 
    local matched, missing, no_upgrade = {}, {}, {}
 
@@ -123,7 +129,7 @@ local function match_all_deps(dependencies: {Query},
       found, _, dep, provided = match_dep(dep, get_versions)
       if found then
          if not provided then
-            matched[dep] = {name = dep.name, version = found}
+            matched[dep] = {name = dep.name, version = found} as Result
          end
       else
          if dep.constraints[1] and dep.constraints[1].no_upgrade then
@@ -149,20 +155,13 @@ end
 -- parsed as tables; and a table of "no-upgrade" missing dependencies
 -- (to be used in plugin modules so that a plugin does not force upgrade of
 -- its parent application).
-function deps.match_deps(dependencies, rocks_provided, skip_set, deps_mode)
-   assert(type(dependencies) == "table")
-   assert(type(rocks_provided) == "table")
-   assert(type(skip_set) == "table" or skip_set == nil)
-   assert(type(deps_mode) == "string")
+function deps.match_deps(dependencies: {Query}, rocks_provided: {string: string}, deps_mode: string, skip_set?: {string: {string: boolean}}): {Query : Result}, {string : Query}, {string : Query}
 
    local get_versions = prepare_get_versions(deps_mode, rocks_provided, "dependencies", skip_set)
    return match_all_deps(dependencies, get_versions)
 end
 
-local function rock_status(dep, get_versions)
-   assert(dep:type() == "query")
-   assert(type(get_versions) == "function")
-
+local function rock_status(dep: Query, get_versions: function(Query): {string}, {string : string | Tree}, string, boolean): string, string
    local installed, _, _, provided = match_dep(dep, get_versions)
    local installation_type = provided and "provided by VM" or "installed"
    return installed and installed.." "..installation_type..": success" or "not installed"
@@ -177,12 +176,7 @@ end
 -- by this Lua implementation for the given dependency.
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
-function deps.report_missing_dependencies(name, version, dependencies, deps_mode, rocks_provided)
-   assert(type(name) == "string")
-   assert(type(version) == "string")
-   assert(type(dependencies) == "table")
-   assert(type(deps_mode) == "string")
-   assert(type(rocks_provided) == "table")
+function deps.report_missing_dependencies(name: string, version: string, dependencies: {Query}, deps_mode: string, rocks_provided: {string: string})
 
    if deps_mode == "none" then
       return
@@ -193,7 +187,7 @@ function deps.report_missing_dependencies(name, version, dependencies, deps_mode
    local first_missing_dep = true
 
    for _, dep in ipairs(dependencies) do
-      local found, _
+      local found, _: string, string | Tree
       found, _, dep = match_dep(dep, get_versions)
       if not found then
          if first_missing_dep then
@@ -206,19 +200,14 @@ function deps.report_missing_dependencies(name, version, dependencies, deps_mode
    end
 end
 
-function deps.fulfill_dependency(dep, deps_mode, rocks_provided, verify, depskey)
-   assert(dep:type() == "query")
-   assert(type(deps_mode) == "string" or deps_mode == nil)
-   assert(type(rocks_provided) == "table" or rocks_provided == nil)
-   assert(type(verify) == "boolean" or verify == nil)
-   assert(type(depskey) == "string")
+function deps.fulfill_dependency(dep: Query, deps_mode: string, rocks_provided: {string: string}, verify: boolean, depskey?: string): boolean, string, string | Tree
 
    deps_mode = deps_mode or "all"
    rocks_provided = rocks_provided or {}
 
    local get_versions = prepare_get_versions(deps_mode, rocks_provided, depskey)
 
-   local found, where
+   local found, where: string, string | Tree
    found, where, dep = match_dep(dep, get_versions)
    if found then
       local tree_manifests = manif.load_rocks_tree_manifests(deps_mode)

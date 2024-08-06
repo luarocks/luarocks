@@ -142,7 +142,7 @@ end
 -- parsed as tables; and a table of "no-upgrade" missing dependencies
 -- (to be used in plugin modules so that a plugin does not force upgrade of
 -- its parent application).
-function deps.match_deps(dependencies, rocks_provided, skip_set, deps_mode)
+function deps.match_deps(dependencies, rocks_provided, deps_mode, skip_set)
    assert(type(dependencies) == "table")
    assert(type(rocks_provided) == "table")
    assert(type(skip_set) == "table" or skip_set == nil)

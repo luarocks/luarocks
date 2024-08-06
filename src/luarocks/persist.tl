@@ -4,9 +4,6 @@
 local record persist
    run_file: function(string, {string:any}): boolean, any | string, string
    load_into_table: function(string, ?{string:any}) : {any: any}, {any: any} | string, string
-
-   type PersistableTable = { string | number : string | number | boolean | PersistableTable }
-
 end
 
 local core = require("luarocks.core.persist")
@@ -16,7 +13,12 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 
 local type Config = cfg
-local type PersistableTable = persist.PersistableTable
+
+local type o = require("luarocks.core.types.ordering")
+local type SortBy = o.SortBy
+
+local type p = require("luarocks.core.types.persist")
+local type PersistableTable = p.PersistableTable
 
 persist.run_file = core.run_file
 persist.load_into_table = core.load_into_table
@@ -26,7 +28,7 @@ local interface Writer
    buffer: {number | string}
 end
 
-local write_table: function(out: Writer, tbl: PersistableTable, level: integer, sort_by: util.SortBy<number | string>)
+local write_table: function(out: Writer, tbl: PersistableTable, level: integer, sort_by: SortBy<number | string>)
 
 --- Write a value as Lua code.
 -- This function handles only numbers and strings, invoking write_table
@@ -36,7 +38,7 @@ local write_table: function(out: Writer, tbl: PersistableTable, level: integer, 
 -- @param level number: the indentation level
 -- @param sub_order table: optional prioritization table
 -- @see write_table
-function persist.write_value(out: Writer, v: any, level: integer, sub_order?: util.SortBy<number | string>)
+function persist.write_value(out: Writer, v: any, level: integer, sub_order?: SortBy<number | string>)
    if v is PersistableTable then
       level = level or 0
       write_table(out, v, level + 1, sub_order)
@@ -110,7 +112,7 @@ end
 -- @param tbl table: the table to be written.
 -- @param level number: the indentation level
 -- @param sort_by table: optional prioritization table
-write_table = function(out: Writer, tbl: PersistableTable, level: integer, sort_by: util.SortBy<number | string>)
+write_table = function(out: Writer, tbl: PersistableTable, level: integer, sort_by: SortBy<number | string>)
    out:write("{")
    local sep = "\n"
    local indentation = "   "
@@ -149,7 +151,7 @@ end
 -- @param tbl table: the table to be written.
 -- @param sort_by table: optional prioritization table
 -- @return true if successful; nil and error message if failed.
-local function write_table_as_assignments(out: Writer, tbl: PersistableTable, sort_by: util.SortBy<number | string>): boolean, string
+local function write_table_as_assignments(out: Writer, tbl: PersistableTable, sort_by: SortBy<number | string>): boolean, string
    for k, v, sub_order in util.sortedpairs(tbl, sort_by) do
       if not (k is string and is_valid_plain_key(k)) then
          return nil, "cannot store '"..tostring(k).."' as a plain key."
@@ -182,7 +184,7 @@ end
 -- @param tbl table: the table containing the data to be written
 -- @param sort_by table: an optional array indicating the order of top-level fields.
 -- @return persisted data as string; or nil and an error message
-function persist.save_from_table_to_string(tbl: PersistableTable, sort_by?: util.SortBy<number | string>): string, string
+function persist.save_from_table_to_string(tbl: PersistableTable, sort_by?: SortBy<number | string>): string, string
    local out: Writer = {buffer = {}}
    function out:write(data: string) table.insert(self.buffer, data) end
    local ok, err = write_table_as_assignments(out, tbl, sort_by)
@@ -201,7 +203,7 @@ end
 -- @param sort_by table: an optional array indicating the order of top-level fields.
 -- @return boolean or (nil, string): true if successful, or nil and a
 -- message in case of errors.
-function persist.save_from_table(filename: string, tbl: PersistableTable, sort_by?: util.SortBy<number | string>): boolean, string
+function persist.save_from_table(filename: string, tbl: PersistableTable, sort_by?: SortBy<number | string>): boolean, string
    local prefix = dir.dir_name(filename)
    fs.make_dir(prefix)
    local out = io.open(filename, "w")

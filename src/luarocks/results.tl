@@ -1,11 +1,4 @@
 local record results
-   record Results --? name
-      name: string
-      version: string
-      namespace: string
-      arch: string
-      repo: string
-   end
 end
 
 local vers = require("luarocks.core.vers")
@@ -13,17 +6,18 @@ local util = require("luarocks.util")
 local type q = require("luarocks.core.types.query")
 local type Query = q.Query
 
-local type Results = results.Results
+local type r = require("luarocks.core.types.result")
+local type Result = r.Result
 
-local result_mt: metatable<Results> = {}
+local result_mt: metatable<Result> = {}
 
-result_mt.__index = results.Results
+result_mt.__index = r.Result
 
-function results.Results.type(): string --? remove later
+function r.Result.type(): string --? remove later
    return "result"
 end
 
-function results.new(name: string, version: string, repo: string, arch?: string, namespace?: string): Results, boolean
+function results.new(name: string, version: string, repo: string, arch?: string, namespace?: string): Result, boolean
 
    assert(not name:match("/"))
    -- assert(type(arch) == "string" or not arch) --! arch?: string
@@ -34,7 +28,7 @@ function results.new(name: string, version: string, repo: string, arch?: string,
       name, namespace = util.split_namespace(name)
    end
 
-   local self: Results = {
+   local self: Result = {
       name = name,
       version = version,
       namespace = namespace,
@@ -63,7 +57,7 @@ end
 --- Returns true if the result satisfies a given query.
 -- @param query: a query.
 -- @return boolean.
-function results.Results:satisfies(query: Query): boolean
+function r.Result:satisfies(query: Query): boolean
    return match_name(query, self.name)
       and (query.arch[self.arch] or query.arch["any"])
       and ((not query.namespace) or (query.namespace == self.namespace))

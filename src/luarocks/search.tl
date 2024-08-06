@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local search = {}
+local search = {}
 
 local dir = require("luarocks.dir")
 local path = require("luarocks.path")
@@ -9,24 +9,24 @@ local util = require("luarocks.util")
 local queries = require("luarocks.queries")
 local results = require("luarocks.results")
 
+local type r = require("luarocks.core.types.result")
+local type Result = r.Result
 
+local type q = require("luarocks.core.types.query")
+local type Query = q.Query
 
+local type v = require("luarocks.core.types.version")
+local type Version = v.Version
 
+local type t = require("luarocks.core.types.tree")
+local type Tree = t.Tree
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-function search.store_result(result_tree, result)
+--- Store a search result (a rock or rockspec) in the result tree.
+-- @param result_tree table: The result tree, where keys are package names and
+-- values are tables matching version strings to arrays of
+-- tables with fields "arch" and "repo".
+-- @param result table: A result.
+function search.store_result(result_tree: {string: {string: {Result}}}, result: Result)
    assert(type(result_tree) == "table")
 
    local name = result.name
@@ -38,35 +38,35 @@ function search.store_result(result_tree, result)
       arch = result.arch,
       repo = result.repo,
       namespace = result.namespace,
-   })
+   } as Result)
 end
 
-
-
-
-
-
-
-
-
-
-local function store_if_match(result_tree, result, query)
+--- Store a match in a result tree if version matches query.
+-- Name, version, arch and repository path are stored in a given
+-- table, optionally checking if version and arch (if given) match
+-- a query.
+-- @param result_tree table: The result tree, where keys are package names and
+-- values are tables matching version strings to arrays of
+-- tables with fields "arch" and "repo".
+-- @param result table: a result object.
+-- @param query table: a query object.
+local function store_if_match(result_tree: {string: {string: {Result}}}, result: Result, query: Query)
 
    if result:satisfies(query) then
       search.store_result(result_tree, result)
    end
 end
 
-
-
-
-
-
-
-
-
-
-function search.disk_search(repo, query, result_tree)
+--- Perform search on a local repository.
+-- @param repo string: The pathname of the local repository.
+-- @param query table: a query object.
+-- @param result_tree table or nil: If given, this table will store the
+-- result tree; if not given, a new table will be created.
+-- @return table: The result tree, where keys are package names and
+-- values are tables matching version strings to arrays of
+-- tables with fields "arch" and "repo".
+-- If a table was given in the "result_tree" parameter, that is the result value.
+function search.disk_search(repo: string, query: Query, result_tree: {string: {string: {Result}}}):  {string: {string: {Result}}}
 
    local fs = require("luarocks.fs")
 
@@ -94,19 +94,19 @@ function search.disk_search(repo, query, result_tree)
    return result_tree
 end
 
+--- Perform search on a rocks server or tree.
+-- @param result_tree table: The result tree, where keys are package names and
+-- values are tables matching version strings to arrays of
+-- tables with fields "arch" and "repo".
+-- @param repo string: The URL of a rocks server or
+-- the pathname of a rocks tree (as returned by path.rocks_dir()).
+-- @param query table: a query object.
+-- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
+-- @param is_local boolean
+-- @return true or, in case of errors, nil, an error message and an optional error code.
+local function manifest_search(result_tree: {string: {string: {Result}}}, repo: string, query: Query, lua_version: string, is_local: boolean): boolean, string, string
 
-
-
-
-
-
-
-
-
-
-local function manifest_search(result_tree, repo, query, lua_version, is_local)
-
-
+   -- FIXME do not add this in local repos
    if (not is_local) and query.namespace then
       repo = repo .. "/manifests/" .. query.namespace
    end
@@ -127,26 +127,26 @@ local function manifest_search(result_tree, repo, query, lua_version, is_local)
    return true
 end
 
-local function remote_manifest_search(result_tree, repo, query, lua_version)
+local function remote_manifest_search(result_tree: {string: {string: {Result}}}, repo: string, query: Query, lua_version?: string): boolean, string, string
    return manifest_search(result_tree, repo, query, lua_version, false)
 end
 
-function search.local_manifest_search(result_tree, repo, query, lua_version)
+function search.local_manifest_search(result_tree: {string: {string: {Result}}}, repo: string, query: Query, lua_version?: string): boolean, string, string
    return manifest_search(result_tree, repo, query, lua_version, true)
 end
 
-
-
-
-
-
-
-function search.search_repos(query, lua_version)
+--- Search on all configured rocks servers.
+-- @param query table: a query object.
+-- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
+-- @return table: A table where keys are package names
+-- and values are tables matching version strings to arrays of
+-- tables with fields "arch" and "repo".
+function search.search_repos(query: Query, lua_version?: string): {string : {string : {Result}}}
 
    local result_tree = {}
    local repo = {}
    for _, repostr in ipairs(cfg.rocks_servers) do
-      if type(repostr) == "string" then
+      if repostr is string then
          repo = { repostr }
       else
          repo = repostr
@@ -164,7 +164,7 @@ function search.search_repos(query, lua_version)
             if ok then
                break
             else
-               util.warning("Failed searching manifest: " .. err)
+               util.warning("Failed searching manifest: "..err)
                if errcode == "downloader" then
                   break
                end
@@ -172,7 +172,7 @@ function search.search_repos(query, lua_version)
          end
       end
    end
-
+   -- search through rocks in rocks_provided
    local provided_repo = "provided by VM or rocks_provided"
    for name, version in pairs(util.get_rocks_provided()) do
       local result = results.new(name, version, provided_repo, "installed")
@@ -181,13 +181,13 @@ function search.search_repos(query, lua_version)
    return result_tree
 end
 
-
-
-
-
-
-
-local function pick_latest_version(name, versions)
+--- Get the URL for the latest in a set of versions.
+-- @param name string: The package name to be used in the URL.
+-- @param versions table: An array of version informations, as stored
+-- in search result trees.
+-- @return string or nil: the URL for the latest version if one could
+-- be picked, or nil.
+local function pick_latest_version(name: string, versions: {string: {Result}}): string
    assert(not name:match("/"))
 
    local vtables = {}
@@ -200,8 +200,8 @@ local function pick_latest_version(name, versions)
    if items then
       local pick = 1
       for i, item in ipairs(items) do
-         if (item.arch == 'src' and items[pick].arch == 'rockspec') or
-            (item.arch ~= 'src' and item.arch ~= 'rockspec') then
+         if (item.arch == 'src' and items[pick].arch == 'rockspec')
+         or (item.arch ~= 'src' and item.arch ~= 'rockspec') then
             pick = i
          end
       end
@@ -210,10 +210,10 @@ local function pick_latest_version(name, versions)
    return nil
 end
 
-
-
-
-local function supported_lua_versions(query)
+-- Find out which other Lua versions provide rock versions matching a query,
+-- @param query table: a query object.
+-- @return table: array of Lua versions supported, in "5.x" format.
+local function supported_lua_versions(query: Query): {string}
    local result_tree = {}
 
    for lua_version in util.lua_versions() do
@@ -228,19 +228,19 @@ local function supported_lua_versions(query)
    return result_tree
 end
 
-
-
-
-
-
-function search.find_suitable_rock(query)
+--- Attempt to get a single URL for a given search for a rock.
+-- @param query table: a query object.
+-- @return string or (nil, string, string): URL for latest matching version
+-- of the rock if it was found, or nil followed by an error message
+-- and an error code.
+function search.find_suitable_rock(query: Query): string, string, string
 
    local rocks_provided = util.get_rocks_provided()
 
    if rocks_provided[query.name] ~= nil then
-
-      return nil, "Rock " .. query.name .. " " .. rocks_provided[query.name] ..
-      " is already provided by VM or via 'rocks_provided' in the config file.", "provided"
+      -- Do not install versions listed in rocks_provided.
+      return nil, "Rock "..query.name.." "..rocks_provided[query.name]..
+         " is already provided by VM or via 'rocks_provided' in the config file.", "provided"
    end
 
    local result_tree = search.search_repos(query)
@@ -248,53 +248,53 @@ function search.find_suitable_rock(query)
    if not first_rock then
       return nil, "No results matching query were found for Lua " .. cfg.lua_version .. ".", "notfound"
    elseif next(result_tree, first_rock) ~= nil then
-
+      -- Shouldn't happen as query must match only one package.
       return nil, "Several rocks matched query.", "manyfound"
    else
       return pick_latest_version(query.name, result_tree[first_rock])
    end
 end
 
-function search.find_rock_checking_lua_versions(query, check_lua_versions)
+function search.find_rock_checking_lua_versions(query: Query, check_lua_versions): string, string
    local url, err, errcode = search.find_suitable_rock(query)
    if url then
       return url
    end
 
    if errcode == "notfound" then
-      local add
+      local add: string
       if check_lua_versions then
          util.printout(query.name .. " not found for Lua " .. cfg.lua_version .. ".")
          util.printout("Checking if available for other Lua versions...")
 
-
+         -- Check if constraints are satisfiable with other Lua versions.
          local lua_versions = supported_lua_versions(query)
 
          if #lua_versions ~= 0 then
-
+            -- Build a nice message in "only Lua 5.x and 5.y but not 5.z." format
             for i, lua_version in ipairs(lua_versions) do
-               lua_versions[i] = "Lua " .. lua_version
+               lua_versions[i] = "Lua "..lua_version
             end
 
-            local versions_message = "only " .. table.concat(lua_versions, " and ") ..
-            " but not Lua " .. cfg.lua_version .. "."
+            local versions_message = "only "..table.concat(lua_versions, " and ")..
+               " but not Lua "..cfg.lua_version.."."
 
             if #query.constraints == 0 then
-               add = query.name .. " supports " .. versions_message
+               add = query.name.." supports "..versions_message
             elseif #query.constraints == 1 and query.constraints[1].op == "==" then
-               local queryversionstr
+               local queryversionstr: string
                local queryversion = query.constraints[1].version
-               if type(queryversion) == "table" then
+               if queryversion is Version then 
                   queryversionstr = queryversion.string
                else
                   queryversionstr = queryversion
                end
-               add = query.name .. " " .. queryversionstr .. " supports " .. versions_message
+               add = query.name.." "..queryversionstr.." supports "..versions_message
             else
-               add = "Matching " .. query.name .. " versions support " .. versions_message
+               add = "Matching "..query.name.." versions support "..versions_message
             end
          else
-            add = query.name .. " is not available for any Lua versions."
+            add = query.name.." is not available for any Lua versions."
          end
       else
          add = "To check if it is available for other Lua versions, use --check-lua-versions."
@@ -305,19 +305,19 @@ function search.find_rock_checking_lua_versions(query, check_lua_versions)
    return nil, err
 end
 
-function search.find_src_or_rockspec(name, namespace, version, check_lua_versions)
+function search.find_src_or_rockspec(name: string, namespace: string, version: string, check_lua_versions): string, string
    local query = queries.new(name, namespace, version, false, "src|rockspec")
    local url, err = search.find_rock_checking_lua_versions(query, check_lua_versions)
    if not url then
-      return nil, "Could not find a result named " .. tostring(query) .. ": " .. err
+      return nil, "Could not find a result named "..tostring(query)..": "..err
    end
    return url
 end
 
-
-
-
-function search.print_result_tree(result_tree, porcelain)
+--- Print a list of rocks/rockspecs on standard output.
+-- @param result_tree table: A result tree.
+-- @param porcelain boolean or nil: A flag to force machine-friendly output.
+function search.print_result_tree(result_tree: {string: {string: {Result}}}, porcelain?: boolean)
 
    if porcelain then
       for packagestr, versions in util.sortedpairs(result_tree) do
@@ -332,7 +332,7 @@ function search.print_result_tree(result_tree, porcelain)
    end
 
    for packagestr, versions in util.sortedpairs(result_tree) do
-      local namespaces = {}
+      local namespaces: {string: {string}} = {}
       for version, repos in util.sortedpairs(versions, vers.compare_versions) do
          for _, repo in ipairs(repos) do
             local key = repo.namespace or ""
@@ -340,7 +340,7 @@ function search.print_result_tree(result_tree, porcelain)
             namespaces[key] = list
 
             repo.repo = dir.normalize(repo.repo)
-            table.insert(list, "   " .. version .. " (" .. repo.arch .. ") - " .. path.root_dir(repo.repo))
+            table.insert(list, "   "..version.." ("..repo.arch..") - "..path.root_dir(repo.repo))
          end
       end
       for key, list in util.sortedpairs(namespaces) do
@@ -353,7 +353,7 @@ function search.print_result_tree(result_tree, porcelain)
    end
 end
 
-function search.pick_installed_rock(query, given_tree)
+function search.pick_installed_rock(query: Query, given_tree: string | Tree): string, string, string | Tree, string
 
    local result_tree = {}
    local tree_map = {}
@@ -367,11 +367,11 @@ function search.pick_installed_rock(query, given_tree)
       search.local_manifest_search(result_tree, rocks_dir, query)
    end
    if not next(result_tree) then
-      return nil, "cannot find package " .. tostring(query) .. "\nUse 'list' to find installed rocks."
+      return nil, "cannot find package "..tostring(query).."\nUse 'list' to find installed rocks."
    end
 
-   if not result_tree[query.name] and next(result_tree, next(result_tree)) ~= nil then
-      local out = { "multiple installed packages match the name '" .. tostring(query) .. "':\n\n" }
+   if not result_tree[query.name] and next(result_tree, next(result_tree) as string) ~= nil then
+      local out = { "multiple installed packages match the name '"..tostring(query).."':\n\n" }
       for name, _ in util.sortedpairs(result_tree) do
          table.insert(out, "   " .. name .. "\n")
       end
@@ -379,9 +379,9 @@ function search.pick_installed_rock(query, given_tree)
       return nil, table.concat(out)
    end
 
-   local repo_url
+   local repo_url: string
 
-   local name, versions
+   local name, versions: string, {string : {Result}}
    if result_tree[query.name] then
       name, versions = query.name, result_tree[query.name]
    else
@@ -396,3 +396,4 @@ function search.pick_installed_rock(query, given_tree)
 end
 
 return search
+

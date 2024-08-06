@@ -1,6 +1,6 @@
 local record ordering
     record Ordering<K>
-       is {K}
+       {K}
        sub_orders: {K: Ordering<K>}
     end
  
