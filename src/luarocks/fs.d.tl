@@ -25,7 +25,7 @@ local record fs
    tmpname: function(): string
    execute_string: function(string): boolean
    Q: function(string): string
-   download: function(string, string, ?boolean): boolean, string, boolean
+   download: function(string, string, ?boolean): string, string, string, boolean
    set_permissions: function(string, string, string)
    -- patch
    absolute_name: function(string, ?string): string

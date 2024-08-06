@@ -113,7 +113,7 @@ local function download_with_mirrors(url, filename, cache, servers)
       end
       local ok, name, from_cache = fs.download(try_url, filename, cache)
       if ok then
-         return ok, name, from_cache
+         return name, nil, nil, from_cache
       else
          err = err .. name .. "\n"
       end
@@ -172,14 +172,14 @@ function fetch.fetch_url(url, filename, cache, mirroring)
          return nil, "Failed copying local file " .. fullname .. " to " .. dstname .. ": " .. err
       end
    elseif dir.is_basic_protocol(protocol) then
-      local ok, name, from_cache
+      local name, err, err_code, from_cache
       if mirroring ~= "no_mirror" then
-         ok, name, from_cache = download_with_mirrors(url, filename, cache, cfg.rocks_servers)
+         name, err, err_code, from_cache = download_with_mirrors(url, filename, cache, cfg.rocks_servers)
       else
-         ok, name, from_cache = fs.download(url, filename, cache)
+         name, err, err_code, from_cache = fs.download(url, filename, cache)
       end
-      if not ok then
-         return nil, "Failed downloading "..url..(name and " - "..name or ""), from_cache
+      if not name then
+         return nil, "Failed downloading "..url..(err and " - "..err or ""), err_code
       end
       return name, nil, nil, from_cache
    else

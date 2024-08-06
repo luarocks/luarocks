@@ -37,7 +37,7 @@ local function is_url_relative_to_rocks_servers(url: string, servers: {{string}}
    end
 end
 
-local function download_with_mirrors(url: string, filename: string, cache: boolean, servers: {{string}}): boolean, string, string
+local function download_with_mirrors(url: string, filename: string, cache: boolean, servers: {{string}}): string, string, string, boolean
    local idx, rest, mirrors = is_url_relative_to_rocks_servers(url, servers)
 
    if not idx then
@@ -111,14 +111,14 @@ function fetch.fetch_url(url: string, filename?: string, cache?: boolean, mirror
          return nil, "Failed copying local file " .. fullname .. " to " .. dstname .. ": " .. err
       end
    elseif dir.is_basic_protocol(protocol) then
-      local ok, name, from_cache: boolean, string, string | boolean
+      local name, err, err_code, from_cache: string, string, string, boolean
       if mirroring ~= "no_mirror" then
-         ok, name, from_cache = download_with_mirrors(url, filename, cache, cfg.rocks_servers)
+         name, err, err_code, from_cache = download_with_mirrors(url, filename, cache, cfg.rocks_servers)
       else
-         ok, name, from_cache = fs.download(url, filename, cache)
+         name, err, err_code, from_cache = fs.download(url, filename, cache)
       end
-      if not ok then
-         return nil, "Failed downloading "..url..(name and " - "..name or ""), from_cache
+      if not name then
+         return nil, "Failed downloading "..url..(err and " - "..err or ""), err_code
       end
       return name, nil, nil, from_cache --! string or boolean
    else
