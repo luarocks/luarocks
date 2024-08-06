@@ -177,7 +177,7 @@ local function match_all_deps(dependencies,
             no_upgrade[depq.name] = depq
          else
             printTable(depq)
-            missing[depq.name] = depq
+            -- missing[depq.name] = depq
          end
       end
    end
