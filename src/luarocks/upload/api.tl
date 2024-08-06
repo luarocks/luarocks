@@ -35,6 +35,9 @@ local type Args = api.Args
 local type Configuration = api.Configuration
 local type File = multipart.File
 
+local type p = require("luarocks.core.types.persist")
+local type PersistableTable = p.PersistableTable
+
 local function upload_config_file(): string
    if not cfg.config_files.user.file then
       return nil
@@ -284,7 +287,7 @@ function api.Api:save_config(): boolean, string --! nil?
    if not ok then
       return nil, errmake
    end
-   persist.save_from_table(upload_conf, self.config as persist.PersistableTable)
+   persist.save_from_table(upload_conf, self.config as PersistableTable)
    fs.set_permissions(upload_conf, "read", "user")
    return true
 end

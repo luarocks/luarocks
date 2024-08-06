@@ -465,7 +465,7 @@ end
 
 local function check_patched(file: {string}, hunks: {Hunk}): boolean
   local lineno: integer = 1
-  local ok, err: boolean, string = pcall(function()
+  local _, err: boolean, string = pcall(function()
     if #file == 0 then
       error('nomatch', 0)
     end

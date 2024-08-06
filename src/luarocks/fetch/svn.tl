@@ -43,13 +43,13 @@ function svn.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string
    else
       store_dir = dest_dir
    end
-   local ok, err = fs.change_dir(store_dir)
-   if not ok then return nil, err end
+   local okchange, err = fs.change_dir(store_dir)
+   if not okchange then return nil, err end
    if not fs.execute(table.unpack(command)) then
       return nil, "Failed fetching files from Subversion."
    end
-   ok, err = fs.change_dir(module)
-   if not ok then return nil, err end
+   okchange, err = fs.change_dir(module)
+   if not okchange then return nil, err end
    for _, d in ipairs(fs.find(".")) do
       if dir.base_name(d) == ".svn" then
          fs.delete(dir.path(store_dir, module, d))

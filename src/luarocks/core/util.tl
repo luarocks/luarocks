@@ -4,9 +4,9 @@ end
 
 --------------------------------------------------------------------------------
 
-local type o = require("luarocks.core.types.ordering")
-local type Ordering = o.Ordering
-local type SortBy = o.SortBy
+local type ord = require("luarocks.core.types.ordering")
+local type Ordering = ord.Ordering
+local type SortBy = ord.SortBy
 
 local dir_sep = package.config:sub(1, 1)
 

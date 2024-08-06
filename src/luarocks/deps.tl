@@ -26,10 +26,11 @@ local type Tree = t.Tree
 local type q = require("luarocks.core.types.query")
 local type Query = q.Query
 
-local type Version = require("luarocks.core.types.version").Version
+local type ver = require("luarocks.core.types.version")
+local type Version = ver.Version
 
-local type p = require("luarocks.core.types.persist")
-local type PersistableTable = p.PersistableTable
+local type per = require("luarocks.core.types.persist")
+local type PersistableTable = per.PersistableTable
 
 local type res = require("luarocks.core.types.result")
 local type Result = res.Result

@@ -9,9 +9,9 @@ local cfg = require("luarocks.core.cfg")
 local type q = require("luarocks.core.types.query")
 local type Query = q.Query
 
-local type v = require("luarocks.core.types.version")
-local type Version = v.Version
-local type Constraint = v.Constraint
+local type ver = require("luarocks.core.types.version")
+local type Version = ver.Version
+local type Constraint = ver.Constraint
 
 local query_mt: metatable<Query> = {}
 

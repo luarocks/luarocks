@@ -2,9 +2,9 @@ local record vers
 end
 
 local util = require("luarocks.core.util")
-local type v = require("luarocks.core.types.version")
-local type Version = v.Version
-local type Constraint = v.Constraint
+local type ver = require("luarocks.core.types.version")
+local type Version = ver.Version
+local type Constraint = ver.Constraint
 --------------------------------------------------------------------------------
 
 local deltas: {string: integer} = {

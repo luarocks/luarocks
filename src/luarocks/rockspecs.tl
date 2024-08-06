@@ -1,3 +1,4 @@
+
 local record rockspecs
 end
 
@@ -183,8 +184,8 @@ function rockspecs.from_persisted_table(filename: string, rockspec: Rockspec, gl
       end
 
       if not found then
-         local query, err = queries.from_dep_string(build_pkg_name)
-         if err then
+         local query, errfromdep = queries.from_dep_string(build_pkg_name)
+         if errfromdep then
             return nil, "Invalid dependency in rockspec: " .. err
          end
          table.insert(rockspec.build_dependencies.queries, query)

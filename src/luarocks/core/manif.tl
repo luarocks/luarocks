@@ -12,8 +12,8 @@ local path = require("luarocks.core.path")
 
 --------------------------------------------------------------------------------
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type tr = require("luarocks.core.types.tree")
+local type Tree = tr.Tree
 
 local type q = require("luarocks.core.types.query")
 local type Query = q.Query
