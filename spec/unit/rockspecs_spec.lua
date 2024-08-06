@@ -55,7 +55,7 @@ describe("luarocks.rockspecs #unit", function()
 
       assert(rockspec == out)
 
-      assert.same(rockspec.build_dependencies, { {"luarocks-build-cpp"}, queries = {
+      assert.same(rockspec.build_dependencies, { "luarocks-build-cpp >= 1.0", queries = {
          { name = "luarocks-build-cpp", constraints = { { op = ">=", version = { string = "1.0", 1, 0 } } } },
       }})
    end)
@@ -97,7 +97,7 @@ describe("luarocks.rockspecs #unit", function()
       local out = rockspecs.from_persisted_table(filename, rockspec, globals, quick)
 
       assert(rockspec == out)
-      assert.same(rockspec.build_dependencies, {})
+      assert.same(rockspec.build_dependencies, { queries = {}})
    end)
 
    for d in lfs.dir(test_env.testing_paths.src_dir .. "/luarocks/build") do
@@ -120,7 +120,7 @@ describe("luarocks.rockspecs #unit", function()
             local out = rockspecs.from_persisted_table(filename, rockspec, globals, quick)
 
             assert(rockspec == out)
-            assert.same(rockspec.build_dependencies, {})
+            assert.same(rockspec.build_dependencies, { queries = {}})
          end)
       end
    end
