@@ -55,7 +55,6 @@ local deplocks = require("luarocks.deplocks")
 
 
 
-
 local function prepare_get_versions(deps_mode, rocks_provided, depskey, skip_set)
 
    return function(dep)
@@ -697,7 +696,7 @@ function deps.scan_deps(results, mdeps, name, version, deps_mode)
       if not rockspec then
          return
       end
-      dependencies = rockspec.dependencies
+      dependencies = rockspec.dependencies.queries
       rocks_provided = rockspec.rocks_provided
       mdn[version] = dependencies
    else

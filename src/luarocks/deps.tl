@@ -17,7 +17,6 @@ local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
 local type Build = r.Build
 local type ExternalDependencies = r.ExternalDependencies
-local type Dependencies = r.Dependencies
 local type Variables = r.Variables
 
 local type t = require("luarocks.core.types.tree")
@@ -678,7 +677,7 @@ end
 -- @param mdeps table: The manifest dependencies table.
 -- @param name string: Package name.
 -- @param version string: Package version.
-function deps.scan_deps(results: {string: string}, mdeps: {string: {string: Dependencies}}, name: string, version: string, deps_mode: string)
+function deps.scan_deps(results: {string: string}, mdeps: {string: {string: {Query}}}, name: string, version: string, deps_mode: string)
    assert(type(results) == "table")
    assert(type(mdeps) == "table")
    assert(not name:match("/"))
@@ -697,7 +696,7 @@ function deps.scan_deps(results: {string: string}, mdeps: {string: {string: Depe
       if not rockspec then
          return
       end
-      dependencies = rockspec.dependencies
+      dependencies = rockspec.dependencies.queries
       rocks_provided = rockspec.rocks_provided
       mdn[version] = dependencies
    else
