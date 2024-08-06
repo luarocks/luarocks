@@ -154,7 +154,7 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
    rockspec.build_dependencies = rockspec.build_dependencies or {}
    rockspec.test_dependencies = rockspec.test_dependencies or {}
    for _, d in ipairs({ rockspec.dependencies, rockspec.build_dependencies, rockspec.test_dependencies }) do
-      local ok, err = convert_dependencies(d)
+      local _, err = convert_dependencies(d)
       if err then
          return nil, err
       end
@@ -179,7 +179,7 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
       if not found then
          local query, errfromdep = queries.from_dep_string(build_pkg_name)
          if errfromdep then
-            return nil, "Invalid dependency in rockspec: " .. err
+            return nil, "Invalid dependency in rockspec: " .. errfromdep
          end
          table.insert(rockspec.build_dependencies.queries, query)
       end
