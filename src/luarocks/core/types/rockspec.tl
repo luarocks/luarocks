@@ -77,22 +77,12 @@ local record rockspec
         -- when converted:
         queries: {Query}
     end
-  
-    record BuildDependencies
-        {string} 
-        queries: {Query}
-    end
 
     record ExternalDependencies
         {string} 
         queries: {string: Query}
     end
-  
-    record TestDependencies
-        {string} 
-        queries: {Query}
-    end
-  
+
     record Hooks
         post_install: string
         
@@ -113,8 +103,8 @@ local record rockspec
         description: Description
         build: Build
         dependencies: Dependencies
-        build_dependencies: BuildDependencies
-        test_dependencies: TestDependencies
+        build_dependencies: Dependencies
+        test_dependencies: Dependencies
         supported_platforms: {string}
         external_dependencies: ExternalDependencies
         variables: Variables

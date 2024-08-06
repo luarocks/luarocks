@@ -11,6 +11,7 @@ local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
 
 local rock = require("luarocks.core.types.rockspec")
+local type Dependencies = rock.Dependencies
 local type Rockspec = rock.Rockspec
 local type Variables = rock.Variables
 
@@ -64,9 +65,9 @@ local function platform_overrides(tbl?: {any: any})
    tbl.platforms = nil
 end
 
-local function convert_dependencies(dependencies: {string}): {Query}, string
+local function convert_dependencies(dependencies: Dependencies): boolean, string
    if not dependencies then
-      return {}
+      return true
    end
    local qs: {Query} = {}
    for i = 1, #dependencies do
@@ -76,7 +77,8 @@ local function convert_dependencies(dependencies: {string}): {Query}, string
       end
       qs[i] = parsed
    end
-   return qs
+   dependencies.queries = qs
+   return true
 end
 
 --- Set up path-related variables for a given rock.
@@ -151,18 +153,17 @@ function rockspecs.from_persisted_table(filename: string, rockspec: Rockspec, gl
 
    rockspec.rocks_provided = util.get_rocks_provided(rockspec)
 
-   local err: string
-   rockspec.dependencies.queries, err = convert_dependencies(rockspec.dependencies)
+   local ok, err = convert_dependencies(rockspec.dependencies)
    if err then
       return nil, err
    end
 
-   rockspec.build_dependencies.queries, err = convert_dependencies(rockspec.build_dependencies)
+   ok, err = convert_dependencies(rockspec.build_dependencies)
    if err then
       return nil, err
    end
 
-   rockspec.test_dependencies.queries, err = convert_dependencies(rockspec.test_dependencies)
+   ok, err = convert_dependencies(rockspec.test_dependencies)
    if err then
       return nil, err
    end
