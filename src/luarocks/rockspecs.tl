@@ -10,9 +10,9 @@ local type_rockspec = require("luarocks.type.rockspec")
 local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
 
-local rockspec = require("luarocks.core.types.rockspec")
-local type Rockspec = rockspec.Rockspec
-local type Variables = rockspec.Variables
+local rock = require("luarocks.core.types.rockspec")
+local type Rockspec = rock.Rockspec
+local type Variables = rock.Variables
 
 local type q = require("luarocks.core.types.query")
 local type Query = q.Query
@@ -28,9 +28,9 @@ local vendored_build_type_set: {string: boolean} = {
 
 local rockspec_mt: metatable<Rockspec> = {}
 
-rockspec_mt.__index = rockspec.Rockspec
+rockspec_mt.__index = rock.Rockspec
 
-function rockspec.Rockspec.type(): string
+function rock.Rockspec.type(): string
    return "rockspec"
 end
 

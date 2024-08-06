@@ -10,7 +10,7 @@ local type_rockspec = require("luarocks.type.rockspec")
 local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
 
-local rockspec = require("luarocks.core.types.rockspec")
+local rock = require("luarocks.core.types.rockspec")
 
 
 
@@ -28,9 +28,9 @@ local vendored_build_type_set = {
 
 local rockspec_mt = {}
 
-rockspec_mt.__index = rockspec.Rockspec
+rockspec_mt.__index = rock.Rockspec
 
-function rockspec.Rockspec.type()
+function rock.Rockspec.type()
    return "rockspec"
 end
 
