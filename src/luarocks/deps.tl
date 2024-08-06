@@ -696,7 +696,7 @@ function deps.scan_deps(results: {string: string}, mdeps: {string: {string: {Que
       if not rockspec then
          return
       end
-      dependencies = rockspec.dependencies.queries
+      dependencies = rockspec.dependencies
       rocks_provided = rockspec.rocks_provided
       mdn[version] = dependencies
    else
