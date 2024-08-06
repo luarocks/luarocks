@@ -66,9 +66,6 @@ local function platform_overrides(tbl?: {any: any})
 end
 
 local function convert_dependencies(dependencies: Dependencies): boolean, string
-   if not dependencies then
-      return true
-   end
    local qs: {Query} = {}
    for i = 1, #dependencies do
       local parsed, err = queries.from_dep_string(dependencies[i])
@@ -153,19 +150,14 @@ function rockspecs.from_persisted_table(filename: string, rockspec: Rockspec, gl
 
    rockspec.rocks_provided = util.get_rocks_provided(rockspec)
 
-   local ok, err = convert_dependencies(rockspec.dependencies)
-   if err then
-      return nil, err
-   end
-
-   ok, err = convert_dependencies(rockspec.build_dependencies)
-   if err then
-      return nil, err
-   end
-
-   ok, err = convert_dependencies(rockspec.test_dependencies)
-   if err then
-      return nil, err
+   rockspec.dependencies = rockspec.dependencies or {}
+   rockspec.build_dependencies = rockspec.build_dependencies or {}
+   rockspec.test_dependencies = rockspec.test_dependencies or {}
+   for _, d in ipairs({rockspec.dependencies, rockspec.build_dependencies, rockspec.test_dependencies}) do
+      local ok, err = convert_dependencies(d)
+      if err then
+         return nil, err
+      end
    end
 
    if rockspec.build
