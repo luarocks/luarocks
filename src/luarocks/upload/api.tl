@@ -134,8 +134,8 @@ if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
             return nil, "API failure: " .. redact_api_url(url)
          end
       else
-         local ok, err = fs.download(url, tmpfile)
-         if not ok then
+         local name, err = fs.download(url, tmpfile)
+         if not name then
             return nil, "API failure: " .. tostring(err) .. " - " .. redact_api_url(url)
          end
       end
