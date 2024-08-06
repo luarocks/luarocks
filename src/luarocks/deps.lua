@@ -55,7 +55,6 @@ local deplocks = require("luarocks.deplocks")
 
 
 
-
 local function prepare_get_versions(deps_mode, rocks_provided, depskey, skip_set)
 
    return function(dep)
@@ -649,7 +648,7 @@ function deps.check_external_deps(rockspec, mode)
       return true
    end
 
-   for name, ext_files in util.sortedpairs(rockspec.external_dependencies.queries) do
+   for name, ext_files in util.sortedpairs(rockspec.external_dependencies) do
       local ok, err_dirname, err_testfile, err_files = check_external_dependency(name, ext_files, rockspec.variables, mode)
       if not ok then
          local lines = { "Could not find " .. err_testfile .. " file for " .. name }

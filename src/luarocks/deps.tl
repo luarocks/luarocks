@@ -17,7 +17,6 @@ local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
 local type Build = r.Build
 local type Dependencies = r.Dependencies
-local type ExternalDependencies = r.ExternalDependencies
 local type Variables = r.Variables
 
 local type t = require("luarocks.core.types.tree")
@@ -643,13 +642,13 @@ end
 function deps.check_external_deps(rockspec: Rockspec, mode: string): boolean, string, string
 
    if not rockspec.external_dependencies then
-      rockspec.external_dependencies = deps.autodetect_external_dependencies(rockspec.build) as ExternalDependencies
+      rockspec.external_dependencies = deps.autodetect_external_dependencies(rockspec.build) as {string: {string: string}}
    end
    if not rockspec.external_dependencies then
       return true
    end
 
-   for name, ext_files in util.sortedpairs(rockspec.external_dependencies.queries) do
+   for name, ext_files in util.sortedpairs(rockspec.external_dependencies) do
       local ok, err_dirname, err_testfile, err_files = check_external_dependency(name, ext_files as {string : string | {string}}, rockspec.variables as {string: string}, mode)
       if not ok then
          local lines = {"Could not find "..err_testfile.." file for "..name}
