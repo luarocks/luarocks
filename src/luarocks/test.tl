@@ -5,21 +5,25 @@ local fetch = require("luarocks.fetch")
 local deps = require("luarocks.deps")
 local util = require("luarocks.util")
 
+local type rockspec = require("luarocks.core.types.rockspec")
+local type Rockspec = rockspec.Rockspec
+local type Test = rockspec.Test
+
 local test_types = {
    "busted",
    "command",
 }
 
-local test_modules = {}
+local test_modules: {string | Test} = {}
 
 for _, test_type in ipairs(test_types) do
-   local mod = require("luarocks.test." .. test_type)
+   local mod: Test = require("luarocks.test." .. test_type)
    table.insert(test_modules, mod)
-   test_modules[test_type] = mod
+   test_modules[test_type] = mod --!
    test_modules[mod] = test_type
 end
 
-local function get_test_type(rockspec)
+local function get_test_type(rockspec: Rockspec): string, string
    if rockspec.test and rockspec.test.type then
       return rockspec.test.type
    end
@@ -34,27 +38,26 @@ local function get_test_type(rockspec)
 end
 
 -- Run test suite as configured in rockspec in the current directory.
-function test.run_test_suite(rockspec_arg, test_type, args, prepare)
-   local rockspec
-   if type(rockspec_arg) == "string" then
-      local err, errcode
+function test.run_test_suite(rockspec_arg: string | Rockspec, test_type: string, args, prepare): boolean, string, string
+   local rockspec: Rockspec
+   if rockspec_arg is string then
+      local err, errcode: string, string
       rockspec, err, errcode = fetch.load_rockspec(rockspec_arg)
       if err then
          return nil, err, errcode
       end
    else
-      assert(type(rockspec_arg) == "table")
       rockspec = rockspec_arg
    end
 
    if not test_type then
-      local err
-      test_type, err = get_test_type(rockspec, test_type)
+      local err: string
+      test_type, err = get_test_type(rockspec, test_type) --!
       if not test_type then
          return nil, err
       end
    end
-   assert(test_type)
+   assert(test_type) --!
 
    local all_deps = {
       "dependencies",
@@ -63,7 +66,7 @@ function test.run_test_suite(rockspec_arg, test_type, args, prepare)
    }
    for _, dep_kind in ipairs(all_deps) do
       if rockspec[dep_kind] and next(rockspec[dep_kind]) then
-         local ok, err, errcode = deps.fulfill_dependencies(rockspec, dep_kind, "all")
+         local _, err, errcode = deps.fulfill_dependencies(rockspec, dep_kind, "all")
          if err then
             return nil, err, errcode
          end

@@ -7,16 +7,11 @@ local record manif
    load_rocks_tree_manifests: function(? string): {Tree_manifest}
    scan_dependencies: function(string, string, {Tree_manifest}, {any : any})
    rock_manifest_cache: {string: RockManifest}
-   
-   record RockManifest
-      type Entry = string | {string: Entry}
-      rock_manifest: {string: Entry}
-   end
-   
 end
 
-local type RockManifest = manif.RockManifest
-local type Entry = manif.RockManifest.Entry
+local type rockmanifest = require("luarocks.core.types.rockmanifest")
+local type RockManifest = rockmanifest.RockManifest
+local type Entry = rockmanifest.RockManifest.Entry
 
 local core = require("luarocks.core.manif")
 local persist = require("luarocks.persist")
@@ -62,7 +57,7 @@ do
       if manifest.dependencies then
          for _, versions in pairs(manifest.dependencies) do
             for _, entries in pairs(versions) do
-               for k, v in pairs(entries) do
+               for k, v in ipairs(entries) do
                   entries[k] = queries.from_persisted_table(v)
                end
             end
@@ -156,7 +151,7 @@ function manif.load_manifest(repo_url: string, lua_version?: string, versioned_o
    end
 
    postprocess_dependencies(manifest)
-   return check_manifest(repo_url, manifest, err)
+   return check_manifest(repo_url, manifest, err as {string: any})
 end
 
 --- Get type and name of an item (a module or a command) provided by a file.
@@ -169,7 +164,7 @@ function manif.get_provided_item(deploy_type: string, file_path: string): string
    return item_type, item_name
 end
 
-local function get_providers(item_type: string, item_name: string, repo: string | Tree)
+local function get_providers(item_type: string, item_name: string, repo: string | Tree): {string}
    local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
    local manifest = manif.load_manifest(rocks_dir)
    return manifest and manifest[item_type .. "s"][item_name]
@@ -182,14 +177,14 @@ end
 -- @param root string or nil: A local root dir for a rocks tree. If not given, the default is used.
 -- @return (string, string) or nil: name and version of the provider rock or nil if there
 -- is no provider.
-function manif.get_current_provider(item_type: string, item_name: string, repo: string | Tree): string
+function manif.get_current_provider(item_type: string, item_name: string, repo: string | Tree): string, string
    local providers = get_providers(item_type, item_name, repo)
    if providers then
       return providers[1]:match("([^/]*)/([^/]*)")
    end
 end
 
-function manif.get_next_provider(item_type: string, item_name: string, repo: string | Tree): string
+function manif.get_next_provider(item_type: string, item_name: string, repo: string | Tree): string, string
    local providers = get_providers(item_type, item_name, repo)
    if providers and providers[2] then
       return providers[2]:match("([^/]*)/([^/]*)")

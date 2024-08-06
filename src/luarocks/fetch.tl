@@ -1,7 +1,9 @@
 
 --- Functions related to fetching and loading local and remote files.
 local record fetch
-
+   record Fetch
+      get_sources: function(Rockspec, boolean, ?string): string, string
+   end
 end
 
 local fs = require("luarocks.fs")
@@ -12,6 +14,7 @@ local persist = require("luarocks.persist")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 
+local type Fetch = fetch.Fetch
 local type Lock = fs.Lock --!
 local type rockspec = require("luarocks.core.types.rockspec")
 local type Rockspec = rockspec.Rockspec
@@ -471,7 +474,7 @@ end
 -- @param verify boolean: if true, download and verify signature for rockspec
 -- @return table or (nil, string, [string]): A table representing the rockspec
 -- or nil followed by an error message and optional error code.
-function fetch.load_rockspec(url: string, location: string, verify: boolean): Rockspec, string, string
+function fetch.load_rockspec(url: string, location?: string, verify?: boolean): Rockspec, string, string
 
    local name: string
    local basename = dir.base_name(url)
@@ -562,7 +565,7 @@ end
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function fetch.fetch_sources(rockspec: Rockspec, extract: string, dest_dir?: string): string, string, string, string, string
+function fetch.fetch_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string, string, string, string
 
    -- auto-convert git://github.com URLs to use git+https
    -- see https://github.blog/2021-09-01-improving-git-protocol-security-github/
@@ -573,12 +576,12 @@ function fetch.fetch_sources(rockspec: Rockspec, extract: string, dest_dir?: str
    end
 
    local protocol = rockspec.source.protocol
-   local ok, err, proto: boolean, string --! fetch
+   local ok, err, proto: boolean, string, Fetch
 
    if dir.is_basic_protocol(protocol) then
-      proto = fetch
+      proto = fetch as Fetch
    else
-      ok, proto = pcall(require, "luarocks.fetch."..protocol:gsub("[+-]", "_"))
+      ok, proto = pcall(require, "luarocks.fetch."..protocol:gsub("[+-]", "_")) as (boolean, Fetch)
       if not ok then
          return nil, "Unknown protocol "..protocol
       end

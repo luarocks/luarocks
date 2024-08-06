@@ -291,7 +291,7 @@ end
 -- @return boolean or (nil, string, [string]): True if no errors occurred, or
 -- nil and an error message if any test failed, followed by an optional
 -- error code.
-function deps.fulfill_dependencies(rockspec, depskey, deps_mode, verify, deplock_dir)
+function deps.fulfill_dependencies(rockspec: Rockspec, depskey: string, deps_mode: string, verify?: boolean, deplock_dir?: string): boolean, string, string
    assert(type(rockspec) == "table")
    assert(type(depskey) == "string")
    assert(type(deps_mode) == "string")

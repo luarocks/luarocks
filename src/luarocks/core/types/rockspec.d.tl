@@ -48,6 +48,7 @@ local record rockspec
   
     record Test
         type: string
+        flags: {string}
     end
   
     record Install

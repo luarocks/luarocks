@@ -7,10 +7,14 @@
 local core = require("luarocks.core.util")
 local cfg = require("luarocks.core.cfg")
 
+local type ordering = require("luarocks.core.types.ordering")
+local type Ordering = ordering.Ordering
+local type SortBy = ordering.SortBy
+
 local record util
    cleanup_path: function(string, string, string, boolean): string
    split_string: function(string, string, number): {string}
-   sortedpairs: function<K, V>(tbl: {K: V}, sort_by?: core.SortBy<K>): function(): K, V, core.Ordering<K>
+   sortedpairs: function<K, V>(tbl: {K: V}, sort_by?: SortBy): function(): K, V, Ordering
    deep_merge: function({any : any}, {any : any})
    deep_merge_under: function({any : any}, {any : any})
    popen_read: function(string, ?string): string
@@ -19,8 +23,6 @@ local record util
    warning: function(string)
    keys: function<K, V>({K : V}): {K}
    matchquote: function(string): string
-
-   type SortBy = core.SortBy
 
    record Fn
       fn: function(...: any)
@@ -146,9 +148,9 @@ end
 -- @param tbl table: Table to have its string values modified.
 -- @param vars table: Table containing string-string key-value pairs
 -- representing variables to replace in the strings values of tbl.
-function util.variable_substitutions(tbl: {string: any}, vars: {string: string})
+function util.variable_substitutions<K>(tbl: {K: string}, vars: {string: string})
 
-   local updated: {string: string} = {}
+   local updated: {K: string} = {}
    for k, v in pairs(tbl) do
       if v is string then
          updated[k] = string.gsub(v, var_format_pattern, vars)
