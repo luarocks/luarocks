@@ -1,8 +1,8 @@
-local type query = require("luarocks.core.types.query")
-local type Query = query.Query
+local type q = require("luarocks.core.types.query")
+local type Query = q.Query
 
-local type tree = require("luarocks.core.types.tree")
-local type Tree = tree.Tree
+local type t = require("luarocks.core.types.tree")
+local type Tree = t.Tree
 
 local record manifest
     record Manifest

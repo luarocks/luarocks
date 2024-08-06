@@ -13,16 +13,17 @@ local vers = require("luarocks.core.vers")
 local queries = require("luarocks.queries")
 local deplocks = require("luarocks.deplocks")
 
-local type rockspec = require("luarocks.core.types.rockspec")
-local type Rockspec = rockspec.Rockspec
+local type r = require("luarocks.core.types.rockspec")
+local type Rockspec = r.Rockspec
 
-local type tree = require("luarocks.core.types.tree")
-local type Tree = tree.Tree
+local type t = require("luarocks.core.types.tree")
+local type Tree = t.Tree
 
-local core = require("luarocks.core.manif")
-local type DependencyVersion = core.DependencyVersion
-local type version = require("luarocks.core.types.version")
-local type Version = version.Version
+local type q = require("luarocks.core.types.query")
+local type Query = q.Query
+
+local type v = require("luarocks.core.types.version")
+local type Version = v.Version
 
 --- Generate a function that matches dep queries against the manifest,
 -- taking into account rocks_provided, the list of versions to skip,
@@ -41,9 +42,9 @@ local type Version = version.Version
 -- * map of versions to locations
 -- * version matched via lockfile if any
 -- * true if rock matched via rocks_provided
-local function prepare_get_versions(deps_mode: string, rocks_provided: {string : string}, depskey: string, skip_set?): function(DependencyVersion): {string}, {string: string | Tree}, string, boolean
+local function prepare_get_versions(deps_mode: string, rocks_provided: {string : string}, depskey: string, skip_set?): function(Query): {string}, {string: string | Tree}, string, boolean
 
-   return function(dep: DependencyVersion): {string}, {string: string | Tree}, string, boolean
+   return function(dep: Query): {string}, {string: string | Tree}, string, boolean
       local versions, locations: {string}, {string: string | Tree}
       local provided = rocks_provided[dep.name]
       if provided then
@@ -83,8 +84,8 @@ end
 -- 2. nil
 -- 3. either 'dep' or an alternative query to be used
 -- 4. false
-local function match_dep(dep: DependencyVersion, 
-   get_versions: function(DependencyVersion): {string}, {string: string | Tree}, string, boolean): string, string | Tree, DependencyVersion, boolean
+local function match_dep(dep: Query, 
+   get_versions: function(Query): {string}, {string: string | Tree}, string, boolean): string, string | Tree, Query, boolean
 
    local versions, locations, lockversion, provided = get_versions(dep)
 
@@ -112,8 +113,8 @@ local function match_dep(dep: DependencyVersion,
    return latest_vstring, locations[latest_vstring], dep, provided
 end
 
-local function match_all_deps(dependencies: {DependencyVersion}, 
-   get_versions: function(DependencyVersion): {string}, {string: string | Tree}, string, boolean): {DependencyVersion: any}, {string}, {string}
+local function match_all_deps(dependencies: {Query}, 
+   get_versions: function(Query): {string}, {string: string | Tree}, string, boolean): {Query: any}, {string}, {string}
 
    local matched, missing, no_upgrade = {}, {}, {}
 

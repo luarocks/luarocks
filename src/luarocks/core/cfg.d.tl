@@ -1,8 +1,8 @@
-local type rockspec = require("luarocks.core.types.rockspec")
-local type Rockspec = rockspec.Rockspec
-local type Variables = rockspec.Variables
-local type tree = require("luarocks.core.types.tree")
-local type Tree = tree.Tree
+local type r = require("luarocks.core.types.rockspec")
+local type Rockspec = r.Rockspec
+local type Variables = r.Variables
+local type t = require("luarocks.core.types.tree")
+local type Tree = t.Tree
 
 local record cfg
    detect_sysconfdir: function(): string

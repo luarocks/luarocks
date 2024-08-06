@@ -5,9 +5,9 @@ local fetch = require("luarocks.fetch")
 local deps = require("luarocks.deps")
 local util = require("luarocks.util")
 
-local type rockspec = require("luarocks.core.types.rockspec")
-local type Rockspec = rockspec.Rockspec
-local type Test = rockspec.Test
+local type r = require("luarocks.core.types.rockspec")
+local type Rockspec = r.Rockspec
+local type Test = r.Test
 
 local test_types = {
    "busted",

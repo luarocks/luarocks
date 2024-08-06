@@ -3,11 +3,11 @@ local record type_rockspec
    rockspec_format: string
 end
 
-local type ordering = require("luarocks.core.types.ordering")
-local type Ordering = ordering.Ordering
+local type o = require("luarocks.core.types.ordering")
+local type Ordering = o.Ordering
 
-local type rockspec = require("luarocks.core.types.rockspec")
-local type Rockspec = rockspec.Rockspec
+local type r = require("luarocks.core.types.rockspec")
+local type Rockspec = r.Rockspec
 
 local type_check = require("luarocks.type_check")
 

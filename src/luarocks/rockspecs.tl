@@ -9,15 +9,12 @@ local type_rockspec = require("luarocks.type.rockspec")
 local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
 
-local type rockspec = require("luarocks.core.types.rockspec")
-local type Rockspec = rockspec.Rockspec
+local type r = require("luarocks.core.types.rockspec")
+local type Rockspec = r.Rockspec
+local type Variables = r.Variables
 
--- local type Query = require("luarocks.core.types.query").Query --TEAL BUG #778
-
-local type query = require("luarocks.core.types.query")
-local type Query = query.Query
-
-local type Variables = rockspec.Variables
+local type q = require("luarocks.core.types.query")
+local type Query = q.Query
 
 local vendored_build_type_set: {string: boolean} = {
    ["builtin"] = true,
@@ -30,9 +27,9 @@ local vendored_build_type_set: {string: boolean} = {
 
 local rockspec_mt: metatable<Rockspec> = {}
 
-rockspec_mt.__index = rockspec.Rockspec
+rockspec_mt.__index = r.Rockspec
 
-function rockspec.Rockspec.type(): string
+function r.Rockspec.type(): string
    return "rockspec"
 end
 

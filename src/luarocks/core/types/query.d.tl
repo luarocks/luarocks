@@ -1,5 +1,5 @@
-local type version = require("luarocks.core.types.version")
-local type Constraint = version.Constraint
+local type v = require("luarocks.core.types.version")
+local type Constraint = v.Constraint
 
 local record query
     record Query

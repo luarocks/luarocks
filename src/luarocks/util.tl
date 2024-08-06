@@ -7,9 +7,9 @@
 local core = require("luarocks.core.util")
 local cfg = require("luarocks.core.cfg")
 
-local type ordering = require("luarocks.core.types.ordering")
-local type Ordering = ordering.Ordering
-local type SortBy = ordering.SortBy
+local type o = require("luarocks.core.types.ordering")
+local type Ordering = o.Ordering
+local type SortBy = o.SortBy
 
 local record util
    cleanup_path: function(string, string, string, boolean): string
@@ -51,8 +51,8 @@ util.keys = core.keys
 util.matchquote = core.matchquote
 
 local type Fn = util.Fn
-local type rockspec = require("luarocks.core.types.rockspec")
-local type Rockspec = rockspec.Rockspec
+local type r = require("luarocks.core.types.rockspec")
+local type Rockspec = r.Rockspec
 local type Parser = util.Parser
 
 

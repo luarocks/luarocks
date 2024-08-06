@@ -1,4 +1,7 @@
 
+--- Core functions for querying manifest files.
+local record manif
+end
 
 local persist = require("luarocks.core.persist")
 local cfg = require("luarocks.core.cfg")
@@ -7,20 +10,17 @@ local util = require("luarocks.core.util")
 local vers = require("luarocks.core.vers")
 local path = require("luarocks.core.path")
 
-local type tree = require("luarocks.core.types.tree")
-local type Tree = tree.Tree
-
---- Core functions for querying manifest files.
-local record manif
-end
-
 --------------------------------------------------------------------------------
-local type query = require("luarocks.core.types.query")
-local type Query = query.Query
 
-local type manifest = require("luarocks.core.types.manifest")
-local type Manifest = manifest.Manifest
-local type Tree_manifest = manifest.Tree_manifest
+local type t = require("luarocks.core.types.tree")
+local type Tree = t.Tree
+
+local type q = require("luarocks.core.types.query")
+local type Query = q.Query
+
+local type m = require("luarocks.core.types.manifest")
+local type Manifest = m.Manifest
+local type Tree_manifest = m.Tree_manifest
 
 
 

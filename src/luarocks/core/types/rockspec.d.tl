@@ -1,5 +1,5 @@
-local type query = require("luarocks.core.types.query")
-local type Query = query.Query
+local type q = require("luarocks.core.types.query")
+local type Query = q.Query
 
 local record rockspec
     record Description
