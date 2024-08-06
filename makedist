@@ -207,3 +207,5 @@ then
       [ -e "$f" -a ! -e "$f.asc" ] && gpg --armor --output "$f.asc" --detach-sign "$f"
    done
 fi
+
+echo "Done makedist."

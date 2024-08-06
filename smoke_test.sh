@@ -2,6 +2,8 @@
 
 tarball="$1"
 
+
+
 rm -rf smoketestdir
 mkdir smoketestdir
 cp "$tarball" smoketestdir
@@ -29,7 +31,7 @@ then
 fi
 
 ################################################################################
-# test installation with make install
+echo test installation with make install
 ################################################################################
 
 ./configure --prefix=foobar
@@ -48,7 +50,7 @@ cd ..
 rm -rf foobar
 
 ################################################################################
-# test installation with make bootstrap
+echo test installation with make bootstrap
 ################################################################################
 
 ./configure --prefix=fooboot
@@ -71,7 +73,7 @@ cd ..
 rm -rf fooboot
 
 ################################################################################
-# test installation with luarocks install
+echo test installation with luarocks install
 ################################################################################
 
 ./configure --prefix=foorock
