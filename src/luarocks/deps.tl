@@ -26,18 +26,18 @@ local type Tree = t.Tree
 local type q = require("luarocks.core.types.query")
 local type Query = q.Query
 
-local type v = require("luarocks.core.types.version")
-local type Version = v.Version
+local type ver = require("luarocks.core.types.version")
+local type Version = ver.Version
 
-local type p = require("luarocks.core.types.persist")
-local type PersistableTable = p.PersistableTable
+local type per = require("luarocks.core.types.persist")
+local type PersistableTable = per.PersistableTable
 
 local type res = require("luarocks.core.types.result")
 local type Result = res.Result
 
-local type d = require("luarocks.core.types.dir")
-local type Dir = d.Dir
-local type Dirs = d.Dirs
+local type dr = require("luarocks.core.types.dir")
+local type Dir = dr.Dir
+local type Dirs = dr.Dirs
 
 --- Generate a function that matches dep queries against the manifest,
 -- taking into account rocks_provided, the list of versions to skip,
@@ -339,8 +339,8 @@ function deps.fulfill_dependencies(rockspec: Rockspec, depskey: string, deps_mod
       util.printout(("%s %s depends on %s (%s)"):format(
          name, version, tostring(dep), rock_status(dep, get_versions)))
 
-      local ok, found_or_err, _ = deps.fulfill_dependency(dep, deps_mode, rocks_provided, verify, depskey)
-      if ok then
+      local okfulfill, found_or_err, _ = deps.fulfill_dependency(dep, deps_mode, rocks_provided, verify, depskey)
+      if okfulfill then
          deplocks.add(depskey, dep.name, found_or_err)
       else
          -- if no_upgrade then
@@ -825,8 +825,8 @@ function deps.check_lua_libdir(vars: Variables): boolean, string, string, {strin
          if not vars.LUA_LIBDIR_FILE:match((cfg.lua_version:gsub("%.", "%%.?"))) then
             -- if filename isn't versioned, check file contents
             local txt = fd:read("*a")
-            ok = txt:match("Lua " .. cfg.lua_version, 1) -- removed last parameter since not needed (true)
-                 or txt:match("lua" .. (cfg.lua_version:gsub("%.", "")), 1)  -- removed last parameter since not needed (true)
+            ok = txt:find("Lua " .. cfg.lua_version, 1, true)
+                 or txt:find("lua" .. (cfg.lua_version:gsub("%.", "")), 1, true)
             if not ok then
                err = "Lua library at " .. filename .. " does not match Lua version " .. cfg.lua_version .. ". You can use `luarocks config variables.LUA_LIBDIR <path>` to set the correct location."
             end
