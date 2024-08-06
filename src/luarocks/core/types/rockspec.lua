@@ -1,17 +1,7 @@
 
 
 
-local rockspec = {Description = {}, Variables = {}, Source = {}, Test = {}, Install = {}, Build = {}, Dependencies = {}, BuildDependencies = {}, ExternalDependencies = {}, TestDependencies = {}, Hooks = {}, Deploy = {}, Rockspec = {}, }
-
-
-
-
-
-
-
-
-
-
+local rockspec = {Description = {}, Variables = {}, Source = {}, Test = {}, Install = {}, Build = {}, Dependencies = {}, ExternalDependencies = {}, Hooks = {}, Deploy = {}, Rockspec = {}, }
 
 
 

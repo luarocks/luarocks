@@ -17,6 +17,7 @@ local rock = require("luarocks.core.types.rockspec")
 
 
 
+
 local vendored_build_type_set = {
    ["builtin"] = true,
    ["cmake"] = true,
@@ -66,7 +67,7 @@ end
 
 local function convert_dependencies(dependencies)
    if not dependencies then
-      return {}
+      return true
    end
    local qs = {}
    for i = 1, #dependencies do
@@ -76,7 +77,8 @@ local function convert_dependencies(dependencies)
       end
       qs[i] = parsed
    end
-   return qs
+   dependencies.queries = qs
+   return true
 end
 
 
@@ -151,18 +153,17 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
 
    rockspec.rocks_provided = util.get_rocks_provided(rockspec)
 
-   local err
-   rockspec.dependencies.queries, err = convert_dependencies(rockspec.dependencies)
+   local ok, err = convert_dependencies(rockspec.dependencies)
    if err then
       return nil, err
    end
 
-   rockspec.build_dependencies.queries, err = convert_dependencies(rockspec.build_dependencies)
+   ok, err = convert_dependencies(rockspec.build_dependencies)
    if err then
       return nil, err
    end
 
-   rockspec.test_dependencies.queries, err = convert_dependencies(rockspec.test_dependencies)
+   ok, err = convert_dependencies(rockspec.test_dependencies)
    if err then
       return nil, err
    end
