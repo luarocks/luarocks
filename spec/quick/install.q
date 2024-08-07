@@ -536,7 +536,7 @@ return "hasdep"
 RUN: luarocks build myrock-2.0-1.rockspec
 RUN: luarocks build hasdep-1.0-1.rockspec
 RUN: luarocks build myrock-1.0-1.rockspec
-
+VERBOSE: true
 STDERR:
 --------------------------------------------------------------------------------
 Will not remove myrock 2.0
@@ -607,7 +607,7 @@ return "hasdep"
 RUN: luarocks build myrock-2.0-1.rockspec
 RUN: luarocks build hasdep-1.0-1.rockspec
 RUN: luarocks build myrock-1.0-1.rockspec --force
-
+VERBOSE: true
 STDERR:
 --------------------------------------------------------------------------------
 The following packages may be broken by this forced removal
