@@ -410,7 +410,7 @@ function quick.compile(filename, env)
             for i, line in ipairs(op.data) do
                write(([=[ line = %q ]=]):format(line))
                write(([=[ s, e = string.find(file_data, line, 1, true) ]=]))
-               write(([=[ assert(s, error_message(%d, "FILE_CONTENTS " .. name .. " did not 2match: " .. line, file_data)) ]=]):format(op.start + i))
+               write(([=[ assert(s, error_message(%d, "FILE_CONTENTS " .. name .. " did not match: " .. line, file_data)) ]=]):format(op.start + i))
                write(([=[ block_at = e + 1 ]=]):format(i))
             end
             write([=[ end ]=])
