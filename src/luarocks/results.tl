@@ -6,14 +6,14 @@ local util = require("luarocks.util")
 local type q = require("luarocks.core.types.query")
 local type Query = q.Query
 
-local type r = require("luarocks.core.types.result")
-local type Result = r.Result
+local type result = require("luarocks.core.types.result")
+local type Result = result.Result
 
 local result_mt: metatable<Result> = {}
 
-result_mt.__index = r.Result
+result_mt.__index = result.Result
 
-function r.Result.type(): string --? remove later
+function result.Result.type(): string --? remove later
    return "result"
 end
 
@@ -57,7 +57,7 @@ end
 --- Returns true if the result satisfies a given query.
 -- @param query: a query.
 -- @return boolean.
-function r.Result:satisfies(query: Query): boolean
+function result.Result:satisfies(query: Query): boolean
    return match_name(query, self.name)
       and (query.arch[self.arch] or query.arch["any"])
       and ((not query.namespace) or (query.namespace == self.namespace))

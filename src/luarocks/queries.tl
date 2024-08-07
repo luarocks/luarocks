@@ -6,8 +6,8 @@ local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
+local query = require("luarocks.core.types.query")
+local type Query = query.Query
 
 local type ver = require("luarocks.core.types.version")
 local type Version = ver.Version
@@ -15,14 +15,14 @@ local type Constraint = ver.Constraint
 
 local query_mt: metatable<Query> = {}
 
-query_mt.__index = q.Query
+query_mt.__index = query.Query
 
-function q.Query.type(): string  --? remove later
+function query.Query.type(): string  --? remove later
    return "query"
 end
 
 -- Fallback default value for the `arch` field, if not explicitly set.
-q.Query.arch = {
+query.Query.arch = {
    src = true,
    all = true,
    rockspec = true,
@@ -31,7 +31,7 @@ q.Query.arch = {
 }
 
 -- Fallback default value for the `substring` field, if not explicitly set.
-q.Query.substring = false
+query.Query.substring = false
 
 --- Convert the arch field of a query table to table format.
 -- @param input string, table or nil
@@ -76,7 +76,7 @@ function queries.new(name: string, namespace?: string, version?: string, substri
       table.insert(self.constraints, { op = operator, version = vers.parse_version(version)})
    end
 
-   q.Query.arch[cfg.arch] = true
+   query.Query.arch[cfg.arch] = true
    return setmetatable(self, query_mt)
 end
 
@@ -180,13 +180,13 @@ do
          constraints = constraints,
       }
 
-      q.Query.arch[cfg.arch] = true
+      query.Query.arch[cfg.arch] = true
       return setmetatable(self, query_mt)
    end
 end
 
 function queries.from_persisted_table(tbl: Query): Query
-   q.Query.arch[cfg.arch] = true
+   query.Query.arch[cfg.arch] = true
    return setmetatable(tbl, query_mt)
 end
 
