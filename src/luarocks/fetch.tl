@@ -581,9 +581,17 @@ function fetch.fetch_sources(rockspec: Rockspec, extract: boolean, dest_dir?: st
    if dir.is_basic_protocol(protocol) then
       proto = fetch as Fetch
    else
-      ok, proto = pcall(require, "luarocks.fetch."..protocol:gsub("[+-]", "_")) as (boolean, Fetch)
-      if not ok then
-         return nil, "Unknown protocol "..protocol
+      local protocolfilename = protocol:gsub("[+-]", "_")
+      if protocolfilename == "cvs" then
+         ok, proto = pcall(require, "luarocks.fetch.cvs") as (boolean, Fetch)
+         if not ok then
+            return nil, "Unknown protocol "..protocol
+         end
+      elseif protocolfilename == "cvs" then
+         ok, proto = pcall(require, "luarocks.fetch.cvs") as (boolean, Fetch)
+         if not ok then
+            return nil, "Unknown protocol "..protocol
+         end
       end
    end
 
