@@ -33,7 +33,7 @@ local function check_dependents(name, versions, deps_mode)
       for rock_version, _ in pairs(rock_versions) do
          local rockspec, err = fetch.load_rockspec(path.rockspec_file(rock_name, rock_version))
          if rockspec then
-            local _, missing = deps.match_deps(rockspec.dependencies, rockspec.rocks_provided, deps_mode, skip_set)
+            local _, missing = deps.match_deps(rockspec.dependencies.queries, rockspec.rocks_provided, deps_mode, skip_set)
             if missing[name] then
                table.insert(dependents, { name = rock_name, version = rock_version })
             end
