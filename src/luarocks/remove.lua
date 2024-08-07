@@ -10,6 +10,22 @@ local cfg = require("luarocks.core.cfg")
 local manif = require("luarocks.manif")
 local queries = require("luarocks.queries")
 
+
+function tprint (tbl, indent)
+   if not indent then indent = 0 end
+   for k, v in pairs(tbl) do
+     formatting = string.rep("  ", indent) .. k .. ": "
+     if type(v) == "table" then
+       print(formatting)
+       tprint(v, indent+1)
+     elseif type(v) == 'boolean' then
+       print(formatting .. tostring(v))      
+     else
+       print(formatting .. v)
+     end
+   end
+ end
+
 --- Obtain a list of packages that depend on the given set of packages
 -- (where all packages of the set are versions of one program).
 -- @param name string: the name of a program
@@ -32,6 +48,7 @@ local function check_dependents(name, versions, deps_mode)
    for rock_name, rock_versions in pairs(local_rocks) do
       for rock_version, _ in pairs(rock_versions) do
          local rockspec, err = fetch.load_rockspec(path.rockspec_file(rock_name, rock_version))
+         tprint(rockspec)
          if rockspec then
             local _, missing = deps.match_deps(rockspec.dependencies.queries, rockspec.rocks_provided, deps_mode, skip_set)
             if missing[name] then
