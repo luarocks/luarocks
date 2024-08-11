@@ -79,7 +79,7 @@ function deplocks.get(depskey: string, name: string): string | number | boolean 
       return nil
    end
 
-   return deptable[name]
+   return dk[name]
 end
 
 function deplocks.write_file(): boolean, string
