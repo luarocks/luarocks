@@ -141,7 +141,7 @@ local function match_all_deps(dependencies,
          if depq.constraints and depq.constraints[1] and depq.constraints[1].no_upgrade then
             no_upgrade[depq.name] = depq
          else
-            -- missing[depq.name] = depq
+            missing[depq.name] = depq
          end
       end
    end
