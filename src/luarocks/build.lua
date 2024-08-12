@@ -11,7 +11,7 @@ local deps = require("luarocks.deps")
 local cfg = require("luarocks.core.cfg")
 local vers = require("luarocks.core.vers")
 local repos = require("luarocks.repos")
-local writer = require("luarocks.manif.writer")
+local repo_writer = require("luarocks.repo_writer")
 local deplocks = require("luarocks.deplocks")
 
 do
@@ -349,25 +349,6 @@ do
    end
 end
 
-local function write_rock_dir_files(rockspec, opts)
-   local name, version = rockspec.name, rockspec.version
-
-   fs.copy(rockspec.local_abs_filename, path.rockspec_file(name, version), "read")
-
-   local deplock_file = deplocks.get_abs_filename(rockspec.name)
-   if deplock_file then
-      fs.copy(deplock_file, dir.path(path.install_dir(name, version), "luarocks.lock"), "read")
-   end
-
-   local ok, err = writer.make_rock_manifest(name, version)
-   if not ok then return nil, err end
-
-   ok, err = writer.make_namespace_file(name, version, opts.namespace)
-   if not ok then return nil, err end
-
-   return true
-end
-
 --- Build and install a rock given a rockspec.
 -- @param rockspec rockspec: the rockspec to build
 -- @param opts table: build options table
@@ -419,7 +400,7 @@ function build.build_rockspec(rockspec, opts, cwd)
    local rollback
    if not opts.no_install then
       if repos.is_installed(name, version) then
-         repos.delete_version(name, version, opts.deps_mode)
+         repo_writer.delete_version(name, version, opts.deps_mode)
       end
 
       dirs, err = prepare_install_dirs(name, version)
@@ -464,15 +445,19 @@ function build.build_rockspec(rockspec, opts, cwd)
       deplocks.write_file()
    end
 
-   ok, err = write_rock_dir_files(rockspec, opts)
-   if not ok then return nil, err end
+   fs.copy(rockspec.local_abs_filename, path.rockspec_file(name, version), "read")
 
-   ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), opts.deps_mode)
+   local deplock_file = deplocks.get_abs_filename(name)
+   if deplock_file then
+      fs.copy(deplock_file, dir.path(path.install_dir(name, version), "luarocks.lock"), "read")
+   end
+
+   ok, err = repo_writer.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), opts.deps_mode, opts.namespace)
    if not ok then return nil, err end
 
    util.remove_scheduled_function(rollback)
    rollback = util.schedule_function(function()
-      repos.delete_version(name, version, opts.deps_mode)
+      repo_writer.delete_version(name, version, opts.deps_mode)
    end)
 
    ok, err = repos.run_hook(rockspec, "post_install")

@@ -9,7 +9,7 @@ local fetch = require("luarocks.fetch")
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
 local deps = require("luarocks.deps")
-local writer = require("luarocks.manif.writer")
+local repo_writer = require("luarocks.repo_writer")
 local remove = require("luarocks.remove")
 local search = require("luarocks.search")
 local queries = require("luarocks.queries")
@@ -80,7 +80,7 @@ function install.install_binary_rock(rock_file, opts)
          util.printout("Use --force to reinstall.")
          return name, version
       end
-      repos.delete_version(name, version, opts.deps_mode)
+      repo_writer.delete_version(name, version, opts.deps_mode)
    end
 
    local install_dir = path.install_dir(name, version)
@@ -103,17 +103,6 @@ function install.install_binary_rock(rock_file, opts)
       if err then return nil, err, errcode end
    end
 
-   -- For compatibility with .rock files built with LuaRocks 1
-   if not fs.exists(path.rock_manifest_file(name, version)) then
-      ok, err = writer.make_rock_manifest(name, version)
-      if err then return nil, err end
-   end
-
-   if namespace then
-      ok, err = writer.make_namespace_file(name, version, namespace)
-      if err then return nil, err end
-   end
-
    if deps_mode ~= "none" then
       local deplock_dir = fs.exists(dir.path(".", "luarocks.lock"))
                           and "."
@@ -122,12 +111,12 @@ function install.install_binary_rock(rock_file, opts)
       if err then return nil, err, errcode end
    end
 
-   ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), deps_mode)
+   ok, err = repo_writer.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), deps_mode, namespace)
    if err then return nil, err end
 
    util.remove_scheduled_function(rollback)
    rollback = util.schedule_function(function()
-      repos.delete_version(name, version, deps_mode)
+      repo_writer.delete_version(name, version, deps_mode)
    end)
 
    ok, err = repos.run_hook(rockspec, "post_install")
@@ -183,7 +172,7 @@ local function install_rock_file_deps(filename, opts)
    local name, version = install.install_binary_rock_deps(filename, opts)
    if not name then return nil, version end
 
-   writer.check_dependencies(nil, opts.deps_mode)
+   deps.check_dependencies(nil, opts.deps_mode)
    return name, version
 end
 
@@ -206,7 +195,7 @@ local function install_rock_file(filename, opts)
       end
    end
 
-   writer.check_dependencies(nil, opts.deps_mode)
+   deps.check_dependencies(nil, opts.deps_mode)
    return name, version
 end
 

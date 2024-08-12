@@ -13,7 +13,6 @@ local deps = require("luarocks.deps")
 local remove = require("luarocks.remove")
 local cfg = require("luarocks.core.cfg")
 local build = require("luarocks.build")
-local writer = require("luarocks.manif.writer")
 local search = require("luarocks.search")
 local make = require("luarocks.cmd.make")
 local repos = require("luarocks.repos")
@@ -185,7 +184,7 @@ function cmd_build.command(args)
    end
 
    if opts.deps_mode ~= "none" then
-      writer.check_dependencies(nil, deps.get_deps_mode(args))
+      deps.check_dependencies(nil, deps.get_deps_mode(args))
    end
    return name, version
 end

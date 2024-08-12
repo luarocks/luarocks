@@ -9,7 +9,6 @@ local cfg = require("luarocks.core.cfg")
 local search = require("luarocks.search")
 local path = require("luarocks.path")
 local deps = require("luarocks.deps")
-local writer = require("luarocks.manif.writer")
 local queries = require("luarocks.queries")
 
 function cmd_remove.add_to_parser(parser)
@@ -63,7 +62,7 @@ function cmd_remove.command(args)
       return nil, err
    end
 
-   writer.check_dependencies(nil, deps.get_deps_mode(args))
+   deps.check_dependencies(nil, deps.get_deps_mode(args))
    return true
 end
 

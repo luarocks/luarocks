@@ -849,4 +849,33 @@ function deps.get_deps_mode(args)
    return args.deps_mode or cfg.deps_mode
 end
 
+
+
+
+
+
+
+function deps.check_dependencies(repo, deps_mode)
+   local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
+   assert(type(deps_mode) == "string")
+   if deps_mode == "none" then deps_mode = cfg.deps_mode end
+
+   local manifest = manif.load_manifest(rocks_dir)
+   if not manifest then
+      return
+   end
+
+   for name, versions in util.sortedpairs(manifest.repository) do
+      for version, version_entries in util.sortedpairs(versions, vers.compare_versions) do
+         for _, entry in ipairs(version_entries) do
+            if entry.arch == "installed" then
+               if manifest.dependencies[name] and manifest.dependencies[name][version] then
+                  deps.report_missing_dependencies(name, version, manifest.dependencies[name][version], deps_mode, util.get_rocks_provided())
+               end
+            end
+         end
+      end
+   end
+end
+
 return deps

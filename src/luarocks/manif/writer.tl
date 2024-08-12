@@ -467,33 +467,4 @@ function writer.remove_from_manifest(name, version, repo, deps_mode)
    return save_table(rocks_dir, "manifest", manifest)
 end
 
---- Report missing dependencies for all rocks installed in a repository.
--- @param repo string or nil: Pathname of a local repository. If not given,
--- the default local repository is used.
--- @param deps_mode string: Dependency mode: "one" for the current default tree,
--- "all" for all trees, "order" for all trees with priority >= the current default,
--- "none" for using the default dependency mode from the configuration.
-function writer.check_dependencies(repo, deps_mode)
-   local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
-   assert(type(deps_mode) == "string")
-   if deps_mode == "none" then deps_mode = cfg.deps_mode end
-
-   local manifest = manif.load_manifest(rocks_dir)
-   if not manifest then
-      return
-   end
-
-   for name, versions in util.sortedpairs(manifest.repository) do
-      for version, version_entries in util.sortedpairs(versions, vers.compare_versions) do
-         for _, entry in ipairs(version_entries) do
-            if entry.arch == "installed" then
-               if manifest.dependencies[name] and manifest.dependencies[name][version] then
-                  deps.report_missing_dependencies(name, version, manifest.dependencies[name][version], deps_mode, util.get_rocks_provided())
-               end
-            end
-         end
-      end
-   end
-end
-
 return writer

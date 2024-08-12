@@ -12,7 +12,6 @@ local fetch = require("luarocks.fetch")
 local pack = require("luarocks.pack")
 local remove = require("luarocks.remove")
 local deps = require("luarocks.deps")
-local writer = require("luarocks.manif.writer")
 local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
 
@@ -151,7 +150,7 @@ function make.command(args)
          end
       end
 
-      writer.check_dependencies(nil, deps.get_deps_mode(args))
+      deps.check_dependencies(nil, deps.get_deps_mode(args))
       return name, version
    end
 end

@@ -97,7 +97,7 @@ end
 -- 2. nil
 -- 3. either 'dep' or an alternative query to be used
 -- 4. false
-local function match_dep(depq: Query, 
+local function match_dep(depq: Query,
    get_versions: function(Query): {string}, {string: string | Tree}, string, boolean): string, string | Tree, Query, boolean
 
    local versions, locations, lockversion, provided = get_versions(depq)
@@ -126,7 +126,7 @@ local function match_dep(depq: Query,
    return latest_vstring, locations[latest_vstring], depq, provided
 end
 
-local function match_all_deps(dependencies: {Query}, 
+local function match_all_deps(dependencies: {Query},
    get_versions: function(Query): {string}, {string: string | Tree}, string, boolean): {Query: Result}, {string: Query}, {string: Query}
 
    local matched, missing, no_upgrade = {}, {}, {}
@@ -300,11 +300,11 @@ function deps.fulfill_dependencies(rockspec: Rockspec, depskey: string, deps_mod
       local get_versions = prepare_get_versions("none", rocks_provided, depskey)
       local dnsnamestr, dversionstr: string, string
       for dnsname, dversion in deplocks.each(depskey) do
-         if dnsname is string then 
-            dnsnamestr = dnsname 
+         if dnsname is string then
+            dnsnamestr = dnsname
          end
-         if dversion is string then 
-            dversionstr = dversion 
+         if dversion is string then
+            dversionstr = dversion
          end
          local dname, dnamespace = util.split_namespace(dnsnamestr)
          local depq = queries.new(dname, dnamespace, dversionstr)
@@ -603,7 +603,7 @@ function deps.autodetect_external_dependencies(build: Build): {string : {string 
          local librariesstr: string | {string} = data.libraries
          if librariesstr is string then
             libraries = { librariesstr }
-         else 
+         else
             libraries = librariesstr
          end
          local incdirs = {}
@@ -847,6 +847,35 @@ end
 
 function deps.get_deps_mode(args: {string: string}): string
    return args.deps_mode or cfg.deps_mode
+end
+
+--- Report missing dependencies for all rocks installed in a repository.
+-- @param repo string or nil: Pathname of a local repository. If not given,
+-- the default local repository is used.
+-- @param deps_mode string: Dependency mode: "one" for the current default tree,
+-- "all" for all trees, "order" for all trees with priority >= the current default,
+-- "none" for using the default dependency mode from the configuration.
+function deps.check_dependencies(repo: string, deps_mode: string)
+   local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
+   assert(type(deps_mode) == "string")
+   if deps_mode == "none" then deps_mode = cfg.deps_mode end
+
+   local manifest = manif.load_manifest(rocks_dir)
+   if not manifest then
+      return
+   end
+
+   for name, versions in util.sortedpairs(manifest.repository) do
+      for version, version_entries in util.sortedpairs(versions, vers.compare_versions) do
+         for _, entry in ipairs(version_entries) do
+            if entry.arch == "installed" then
+               if manifest.dependencies[name] and manifest.dependencies[name][version] then
+                  deps.report_missing_dependencies(name, version, manifest.dependencies[name][version], deps_mode, util.get_rocks_provided())
+               end
+            end
+         end
+      end
+   end
 end
 
 return deps

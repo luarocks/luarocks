@@ -7,8 +7,7 @@ local util = require("luarocks.util")
 local path = require("luarocks.path")
 local search = require("luarocks.search")
 local vers = require("luarocks.core.vers")
-local repos = require("luarocks.repos")
-local writer = require("luarocks.manif.writer")
+local repo_writer = require("luarocks.repo_writer")
 local cfg = require("luarocks.core.cfg")
 local remove = require("luarocks.remove")
 local queries = require("luarocks.queries")
@@ -58,14 +57,14 @@ function purge.command(args)
             break
          else
             util.printout("Removing "..package.." "..version.."...")
-            local ok, err = repos.delete_version(package, version, "none", true)
+            local ok, err = repo_writer.delete_version(package, version, "none", true)
             if not ok then
                util.printerr(err)
             end
          end
       end
    end
-   return writer.make_manifest(cfg.rocks_dir, "one")
+   return repo_writer.refresh_manifest(cfg.rocks_dir)
 end
 
 purge.needs_lock = function() return true end

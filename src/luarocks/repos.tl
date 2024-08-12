@@ -435,7 +435,7 @@ end
 -- @param deps_mode: string: Which trees to check dependencies for:
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
-function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
+function repos.deploy_local_files(name, version, wrap_bin_scripts, deps_mode)
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    assert(type(wrap_bin_scripts) == "boolean")
@@ -544,8 +544,7 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
       return nil, err
    end
 
-   local writer = require("luarocks.manif.writer")
-   return writer.add_to_manifest(name, version, nil, deps_mode)
+   return true
 end
 
 local function add_to_double_checks(double_checks, name, version)
@@ -580,7 +579,7 @@ end
 -- of another version that provides the same module that
 -- was deleted. This is used during 'purge', as every module
 -- will be eventually deleted.
-function repos.delete_version(name, version, deps_mode, quick)
+function repos.delete_local_version(name, version, deps_mode, quick)
    assert(type(name) == "string" and not name:match("/"))
    assert(type(version) == "string")
    assert(type(deps_mode) == "string")
@@ -588,11 +587,9 @@ function repos.delete_version(name, version, deps_mode, quick)
    local rock_manifest, load_err = manif.load_rock_manifest(name, version)
    if not rock_manifest then
       if not quick then
-         local writer = require("luarocks.manif.writer")
-         writer.remove_from_manifest(name, version, nil, deps_mode)
-         return nil, "rock_manifest file not found for "..name.." "..version.." - removed entry from the manifest"
+         return nil, "rock_manifest file not found for "..name.." "..version.." - removed entry from the manifest", "remove"
       end
-      return nil, load_err
+      return nil, load_err, "fail"
    end
 
    local repo = cfg.root_dir
@@ -675,7 +672,7 @@ function repos.delete_version(name, version, deps_mode, quick)
 
       local ok, err = double_check_all(double_checks, repo)
       if not ok then
-         return nil, err
+         return nil, err, "fail"
       end
    end
 
@@ -685,11 +682,10 @@ function repos.delete_version(name, version, deps_mode, quick)
    end
 
    if quick then
-      return true
+      return true, nil, "ok"
    end
 
-   local writer = require("luarocks.manif.writer")
-   return writer.remove_from_manifest(name, version, nil, deps_mode)
+   return true, nil, "remove"
 end
 
 return repos
