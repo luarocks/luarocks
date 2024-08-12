@@ -11,18 +11,6 @@ local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local vers = require("luarocks.core.vers")
 
-local unpack = unpack or table.unpack  -- luacheck: ignore 211
-
---- Get type and name of an item (a module or a command) provided by a file.
--- @param deploy_type string: rock manifest subtree the file comes from ("bin", "lua", or "lib").
--- @param file_path string: path to the file relatively to deploy_type subdirectory.
--- @return (string, string): item type ("module" or "command") and name.
-local function get_provided_item(deploy_type: string, file_path: string): string, string
-   local item_type = deploy_type == "bin" and "command" or "module"
-   local item_name = item_type == "command" and file_path or path.path_to_module(file_path)
-   return item_type, item_name
-end
-
 -- Tree of files installed by a package are stored
 -- in its rock manifest. Some of these files have to
 -- be deployed to locations where Lua can load them as
@@ -92,7 +80,7 @@ end
 local function store_package_data(result, rock_manifest, deploy_type)
    if rock_manifest[deploy_type] then
       repos.recurse_rock_manifest_entry(rock_manifest[deploy_type], function(file_path)
-         local _, item_name = get_provided_item(deploy_type, file_path)
+         local _, item_name = manif.get_provided_item(deploy_type, file_path)
          result[item_name] = file_path
          return true
       end)
@@ -244,7 +232,7 @@ local function get_deploy_paths(name, version, deploy_type, file_path, repo)
 end
 
 local function check_spot_if_available(name, version, deploy_type, file_path)
-   local item_type, item_name = get_provided_item(deploy_type, file_path)
+   local item_type, item_name = manif.get_provided_item(deploy_type, file_path)
    local cur_name, cur_version = manif.get_current_provider(item_type, item_name)
 
    -- older versions of LuaRocks (< 3) registered "foo.init" files as "foo"
