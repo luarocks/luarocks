@@ -17,7 +17,12 @@ local test_types = {
 local test_modules: {string | Test} = {}
 
 for _, test_type in ipairs(test_types) do
-   local mod: Test = require("luarocks.test." .. test_type)
+   local mod: Test
+   if test_type == "command" then
+      mod = require("luarocks.test.command")
+   elseif test_type == "busted" then
+      mod = require("luarocks.test.busted")
+   end
    table.insert(test_modules, mod)
    test_modules[test_type] = mod --!
    test_modules[mod] = test_type
@@ -65,7 +70,7 @@ function test.run_test_suite(rockspec_arg: string | Rockspec, test_type: string,
       "test_dependencies",
    }
    for _, dep_kind in ipairs(all_deps) do
-      if rockspec[dep_kind] and next(rockspec[dep_kind]) then
+      if rockspec[dep_kind] and next(rockspec[dep_kind]) then --! rockspec as {atring: any}
          local _, err, errcode = deps.fulfill_dependencies(rockspec, dep_kind, "all")
          if err then
             return nil, err, errcode
@@ -73,10 +78,17 @@ function test.run_test_suite(rockspec_arg: string | Rockspec, test_type: string,
       end
    end
 
-   local mod_name = "luarocks.test." .. test_type
-   local pok, test_mod = pcall(require, mod_name)
-   if not pok then
-      return nil, "failed loading test execution module " .. mod_name
+   local pok, test_mod: boolean --! Test type
+   if test_type == "command" then
+      pok, test_mod = pcall(require, "luarocks.test.command")
+      if not pok then
+         return nil, "failed loading test execution module luarocks.test.command"
+      end
+   elseif test_type == "busted" then
+      pok, test_mod = pcall(require, "luarocks.test.busted")
+      if not pok then
+         return nil, "failed loading test execution module luarocks.test.busted"
+      end
    end
 
    if prepare then
