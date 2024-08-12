@@ -16,7 +16,7 @@ local record fs
    delete: function(string)
    -- signing
    is_tool_available: function(string, string): string, string
-   execute: function(...: string): boolean --? boolean? src/luarocks/signing.tl: 27
+   execute: function(...: string): boolean, string, string
    make_temp_dir: function(string): string, string
    change_dir: function(string): boolean, string
    pop_dir: function(): boolean

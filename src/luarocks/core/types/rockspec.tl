@@ -55,6 +55,9 @@ local record rockspec
   
     record Test
         type: string
+        script: string
+        command: string
+        busted_executable: string
         flags: {string}
     end
   

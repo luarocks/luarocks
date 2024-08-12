@@ -1,21 +1,19 @@
 
-local record command
-end
+local command = {}
 
 local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Test = r.Test
+local unpack = table.unpack or unpack
 
-function command.detect_type(): boolean
+function command.detect_type()
    if fs.exists("test.lua") then
       return true
    end
    return false
 end
 
-function command.run_tests(test: Test, args: {string}): boolean, string --! Test type
+function command.run_tests(test, args)
    if not test then
       test = {
          script = "test.lua"
@@ -26,7 +24,7 @@ function command.run_tests(test: Test, args: {string}): boolean, string --! Test
       test.script = "test.lua"
    end
 
-   local ok: boolean
+   local ok
 
    if test.script then
       if type(test.script) ~= "string" then
@@ -36,12 +34,12 @@ function command.run_tests(test: Test, args: {string}): boolean, string --! Test
          return nil, "Test script " .. test.script .. " does not exist"
       end
       local lua = fs.Q(cfg.variables["LUA"])  -- get lua interpreter configured
-      ok = fs.execute(lua, test.script, table.unpack(args))
+      ok = fs.execute(lua, test.script, unpack(args))
    elseif test.command then
       if type(test.command) ~= "string" then
          return nil, "Malformed rockspec: 'command' expects a string"
       end
-      ok = fs.execute(test.command, table.unpack(args))
+      ok = fs.execute(test.command, unpack(args))
    end
 
    if ok then

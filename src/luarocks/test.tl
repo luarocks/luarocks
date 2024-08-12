@@ -9,15 +9,19 @@ local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
 local type Test = r.Test
 
+
+local type t = require("luarocks.core.types.testrunner")
+local type TestRunner = t.TestRunner
+
 local test_types = {
    "busted",
    "command",
 }
 
-local test_modules: {string | Test} = {}
+local test_modules: {string | TestRunner} = {}
 
 for _, test_type in ipairs(test_types) do
-   local mod: Test
+   local mod: TestRunner
    if test_type == "command" then
       mod = require("luarocks.test.command")
    elseif test_type == "busted" then

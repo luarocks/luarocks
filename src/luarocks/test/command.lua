@@ -1,10 +1,12 @@
-
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local table = _tl_compat and _tl_compat.table or table; local _tl_table_unpack = unpack or table.unpack
 local command = {}
+
 
 local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 
-local unpack = table.unpack or unpack
+
+
 
 function command.detect_type()
    if fs.exists("test.lua") then
@@ -16,7 +18,7 @@ end
 function command.run_tests(test, args)
    if not test then
       test = {
-         script = "test.lua"
+         script = "test.lua",
       }
    end
 
@@ -33,13 +35,13 @@ function command.run_tests(test, args)
       if not fs.exists(test.script) then
          return nil, "Test script " .. test.script .. " does not exist"
       end
-      local lua = fs.Q(cfg.variables["LUA"])  -- get lua interpreter configured
-      ok = fs.execute(lua, test.script, unpack(args))
+      local lua = fs.Q(cfg.variables["LUA"])
+      ok = fs.execute(lua, test.script, _tl_table_unpack(args))
    elseif test.command then
       if type(test.command) ~= "string" then
          return nil, "Malformed rockspec: 'command' expects a string"
       end
-      ok = fs.execute(test.command, unpack(args))
+      ok = fs.execute(test.command, _tl_table_unpack(args))
    end
 
    if ok then
