@@ -7,6 +7,7 @@ local persist = require("luarocks.persist")
 
 
 
+
 local deptable = {}
 local deptable_mode = "start"
 local deplock_abs_filename
@@ -77,8 +78,11 @@ function deplocks.get(depskey, name)
    if not dk then
       return nil
    end
-
-   return dk[name]
+   if type(dk) == "table" then
+      return dk[name]
+   else
+      return dk
+   end
 end
 
 function deplocks.write_file()

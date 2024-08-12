@@ -78,8 +78,11 @@ function deplocks.get(depskey: string, name: string): string | number | boolean 
    if not dk then
       return nil
    end
-
-   return dk[name]
+   if dk is PersistableTable then
+      return dk[name]
+   else
+      return dk
+   end
 end
 
 function deplocks.write_file(): boolean, string
