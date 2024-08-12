@@ -128,6 +128,7 @@ end
 
 local function match_all_deps(dependencies,
    get_versions)
+
    local matched, missing, no_upgrade = {}, {}, {}
 
    for _, depq in ipairs(dependencies) do
