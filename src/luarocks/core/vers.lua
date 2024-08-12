@@ -1,20 +1,10 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local string = _tl_compat and _tl_compat.string or string; local vers = {Version = {}, Constraints = {}, }
-
-
-
-
-
-
-
-
-
-
-
-
-
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local string = _tl_compat and _tl_compat.string or string; local vers = {}
 
 
 local util = require("luarocks.core.util")
+
+
+
 
 
 local deltas = {
@@ -26,9 +16,6 @@ local deltas = {
    beta = -100000,
    alpha = -1000000,
 }
-
-
-
 
 local version_mt = {
 
