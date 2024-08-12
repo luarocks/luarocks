@@ -1,17 +1,12 @@
 local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
-local queries = {Query = {}, }
-
-
-
-
-
-
-
+local queries = {}
 
 
 local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
+
+local query = require("luarocks.core.types.query")
 
 
 
@@ -20,14 +15,14 @@ local cfg = require("luarocks.core.cfg")
 
 local query_mt = {}
 
-query_mt.__index = queries.Query
+query_mt.__index = query.Query
 
-function queries.Query.type()
+function query.Query.type()
    return "query"
 end
 
 
-queries.Query.arch = {
+query.Query.arch = {
    src = true,
    all = true,
    rockspec = true,
@@ -36,7 +31,7 @@ queries.Query.arch = {
 }
 
 
-queries.Query.substring = false
+query.Query.substring = false
 
 
 
@@ -81,7 +76,7 @@ function queries.new(name, namespace, version, substring, arch, operator)
       table.insert(self.constraints, { op = operator, version = vers.parse_version(version) })
    end
 
-   queries.Query.arch[cfg.arch] = true
+   query.Query.arch[cfg.arch] = true
    return setmetatable(self, query_mt)
 end
 
@@ -185,13 +180,13 @@ do
          constraints = constraints,
       }
 
-      queries.Query.arch[cfg.arch] = true
+      query.Query.arch[cfg.arch] = true
       return setmetatable(self, query_mt)
    end
 end
 
 function queries.from_persisted_table(tbl)
-   queries.Query.arch[cfg.arch] = true
+   query.Query.arch[cfg.arch] = true
    return setmetatable(tbl, query_mt)
 end
 
@@ -200,7 +195,6 @@ end
 
 
 function query_mt.__tostring(self)
-
    local out = {}
    if self.namespace then
       table.insert(out, self.namespace)
