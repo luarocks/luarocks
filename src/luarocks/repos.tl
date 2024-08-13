@@ -450,8 +450,8 @@ function repos.deploy_local_files(name: string, version: string, wrap_bin_script
    if not rock_manifest then return nil, load_err end
 
    local repo = cfg.root_dir
-   local renames = {}
-   local installs = {}
+   local renames: {Op} = {}
+   local installs: {Op} = {}
 
    local function install_binary(source: string, target: string): boolean, string
       if wrap_bin_scripts and fs.is_lua(source) then
