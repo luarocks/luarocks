@@ -73,6 +73,9 @@ local record cfg
    runtime_external_deps_subdirs: {string: string}
    external_lib_extension: string
    external_deps_dirs: {string}
+   -- repos
+   hooks_enabled: boolean
+   wrap_bin_scripts: boolean
 end
 
 return cfg

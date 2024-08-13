@@ -49,6 +49,8 @@ local record fs
    check_md5: function(string, string): boolean, string
    -- git
    command_at: function(string, string, ?boolean): string
+   -- repos
+   is_actual_binary: function(string): boolean
 end
 
 return fs

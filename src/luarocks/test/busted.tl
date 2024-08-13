@@ -18,7 +18,7 @@ function busted.detect_type(): boolean
    return false
 end
 
-function busted.run_tests(test: Test, args: {string}): boolean, string --! Test type
+function busted.run_tests(test: Test, args: {string}): boolean, string
    if not test then
       test = {}
    end

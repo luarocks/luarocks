@@ -15,7 +15,7 @@ function command.detect_type(): boolean
    return false
 end
 
-function command.run_tests(test: Test, args: {string}): boolean, string --! Test type
+function command.run_tests(test: Test, args: {string}): boolean, string
    if not test then
       test = {
          script = "test.lua"

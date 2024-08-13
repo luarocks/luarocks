@@ -83,7 +83,7 @@ local record rockspec
 
     record Hooks
         post_install: string
-        
+        substituted_variables: boolean
     end
   
     record Deploy

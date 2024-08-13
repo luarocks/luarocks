@@ -11,6 +11,13 @@ local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local vers = require("luarocks.core.vers")
 
+local type rm = require("luarocks.core.types.rockmanifest")
+local type RockManifest = rm.RockManifest
+local type Entry = RockManifest.Entry
+
+local type r = require("luarocks.core.types.rockspec")
+local type Rockspec = r.Rockspec
+
 -- Tree of files installed by a package are stored
 -- in its rock manifest. Some of these files have to
 -- be deployed to locations where Lua can load them as
@@ -51,20 +58,20 @@ function repos.is_installed(name: string, version: string): boolean
    return fs.is_dir(path.install_dir(name, version))
 end
 
-function repos.recurse_rock_manifest_entry(entry, action): boolean,  string
+function repos.recurse_rock_manifest_entry(entry: Entry, action: (function(string): boolean, string)): boolean, string
    assert(type(action) == "function")
 
    if entry == nil then
       return true
    end
 
-   local function do_recurse_rock_manifest_entry(tree, parent_path)
+   local function do_recurse_rock_manifest_entry(tree: Entry, parent_path?: string): boolean, string
 
-      for file, sub in pairs(tree) do
+      for file, sub in pairs(tree as {string: any}) do --!
          local sub_path = (parent_path and (parent_path .. "/") or "") .. file
-         local ok, err  -- luacheck: ignore 231
+         local ok, err: boolean, string  -- luacheck: ignore 231
 
-         if type(sub) == "table" then
+         if sub is Entry then
             ok, err = do_recurse_rock_manifest_entry(sub, sub_path)
          else
             ok, err = action(sub_path)
@@ -77,9 +84,9 @@ function repos.recurse_rock_manifest_entry(entry, action): boolean,  string
    return do_recurse_rock_manifest_entry(entry)
 end
 
-local function store_package_data(result, rock_manifest, deploy_type)
+local function store_package_data(result: {string: string}, rock_manifest: {string : Entry}, deploy_type: string)
    if rock_manifest[deploy_type] then
-      repos.recurse_rock_manifest_entry(rock_manifest[deploy_type], function(file_path)
+      repos.recurse_rock_manifest_entry(rock_manifest[deploy_type], function(file_path: string): boolean, string
          local _, item_name = manif.get_provided_item(deploy_type, file_path)
          result[item_name] = file_path
          return true
@@ -96,9 +103,8 @@ end
 -- relative to "lib" or "lua" rock manifest subtree.
 -- If no modules are found or if package name or version
 -- are invalid, an empty table is returned.
-function repos.package_modules(name, version)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
+function repos.package_modules(name: string, version: string): {string: string}
+   assert(not name:match("/"))
 
    local result = {}
    local rock_manifest = manif.load_rock_manifest(name, version)
@@ -117,9 +123,8 @@ end
 -- relative to "bin" rock manifest subtree.
 -- If no commands are found or if package name or version
 -- are invalid, an empty table is returned.
-function repos.package_commands(name, version)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
+function repos.package_commands(name: string, version: string): {string: string}
+   assert(not name:match("/"))
 
    local result = {}
    local rock_manifest = manif.load_rock_manifest(name, version)
@@ -134,13 +139,16 @@ end
 -- @param version string: version of an installed rock
 -- @return boolean: returns true if rock contains platform-specific
 -- binary executables, or false if it is a pure-Lua rock.
-function repos.has_binaries(name, version)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
+function repos.has_binaries(name: string, version: string): boolean
+   assert(not name:match("/"))
 
-   local rock_manifest = manif.load_rock_manifest(name, version)
-   if rock_manifest and rock_manifest.bin then
-      for bin_name, md5 in pairs(rock_manifest.bin) do
+   local entries = manif.load_rock_manifest(name, version)
+   if not entries then
+      return false
+   end
+   local bin = entries["bin"]
+   if bin is {string:Entry} then
+      for bin_name, md5 in pairs(bin) do
          -- TODO verify that it is the same file. If it isn't, find the actual command.
          if fs.is_actual_binary(dir.path(cfg.deploy_bin_dir, bin_name)) then
             return true
@@ -150,9 +158,7 @@ function repos.has_binaries(name, version)
    return false
 end
 
-function repos.run_hook(rockspec, hook_name)
-   assert(rockspec:type() == "rockspec")
-   assert(type(hook_name) == "string")
+function repos.run_hook(rockspec: Rockspec, hook_name: string): boolean, string
 
    local hooks = rockspec.hooks
    if not hooks then
@@ -164,10 +170,10 @@ function repos.run_hook(rockspec, hook_name)
    end
 
    if not hooks.substituted_variables then
-      util.variable_substitutions(hooks, rockspec.variables)
+      util.variable_substitutions(hooks as {string: string}, rockspec.variables)
       hooks.substituted_variables = true
    end
-   local hook = hooks[hook_name]
+   local hook = (hooks as {string: string})[hook_name]
    if hook then
       util.printout(hook)
       if not fs.execute(hook) then
@@ -177,8 +183,7 @@ function repos.run_hook(rockspec, hook_name)
    return true
 end
 
-function repos.should_wrap_bin_scripts(rockspec)
-   assert(rockspec:type() == "rockspec")
+function repos.should_wrap_bin_scripts(rockspec: Rockspec): boolean
 
    if cfg.wrap_bin_scripts ~= nil then
       return cfg.wrap_bin_scripts
@@ -189,7 +194,7 @@ function repos.should_wrap_bin_scripts(rockspec)
    return true
 end
 
-local function find_suffixed(file, suffix)
+local function find_suffixed(file: string, suffix: string)
    local filenames = {file}
    if suffix and suffix ~= "" then
       table.insert(filenames, 1, file .. suffix)
