@@ -51,6 +51,11 @@ local record fs
    command_at: function(string, string, ?boolean): string
    -- repos
    is_actual_binary: function(string): boolean
+   remove_dir_tree_if_empty: function(string)
+   wrap_script: function(string, string, string, string, string): boolean, string
+   is_lua: function(string): boolean
+   copy_binary: function(string, string): boolean, string
+   move: function(string, string, string): boolean, string
 end
 
 return fs

@@ -76,6 +76,7 @@ local record cfg
    -- repos
    hooks_enabled: boolean
    wrap_bin_scripts: boolean
+   wrapper_suffix: string
 end
 
 return cfg

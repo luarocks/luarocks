@@ -177,7 +177,7 @@ end
 -- @param root string or nil: A local root dir for a rocks tree. If not given, the default is used.
 -- @return (string, string) or nil: name and version of the provider rock or nil if there
 -- is no provider.
-function manif.get_current_provider(item_type: string, item_name: string, repo: string | Tree): string, string
+function manif.get_current_provider(item_type: string, item_name: string, repo?: string | Tree): string, string
    local providers = get_providers(item_type, item_name, repo)
    if providers then
       return providers[1]:match("([^/]*)/([^/]*)")

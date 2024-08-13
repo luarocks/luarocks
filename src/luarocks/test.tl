@@ -13,7 +13,6 @@ local util = require("luarocks.util")
 local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
 local type Dependencies = r.Dependencies
-local type Test = r.Test
 
 local type t = require("luarocks.core.types.testrunner")
 local type TestRunner = t.TestRunner
@@ -68,7 +67,7 @@ function test.run_test_suite(rockspec_arg: string | Rockspec, test_type: string,
 
    if not test_type then
       local err: string
-      test_type, err = get_test_type(rockspec, test_type) --!
+      test_type, err = get_test_type(rockspec)
       if not test_type then
          return nil, err
       end
@@ -104,7 +103,7 @@ function test.run_test_suite(rockspec_arg: string | Rockspec, test_type: string,
 
    if prepare then
       if test_type == "busted" then
-         return test_mod.run_tests(rockspec_arg, {"--version"})
+         return test_mod.run_tests(rockspec.test, {"--version"})
       else
          return true
       end
