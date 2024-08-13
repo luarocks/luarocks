@@ -1,4 +1,9 @@
 local record test
+   record TestModules
+      {TestRunner}
+      typetomod: {string: TestRunner}
+      modtotype: {TestRunner: string}
+   end
 end
 
 local fetch = require("luarocks.fetch")
@@ -7,18 +12,20 @@ local util = require("luarocks.util")
 
 local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
+local type Dependencies = r.Dependencies
 local type Test = r.Test
-
 
 local type t = require("luarocks.core.types.testrunner")
 local type TestRunner = t.TestRunner
+
+local type TestModules = test.TestModules
 
 local test_types = {
    "busted",
    "command",
 }
 
-local test_modules: {string | TestRunner} = {}
+local test_modules: TestModules = {}
 
 for _, test_type in ipairs(test_types) do
    local mod: TestRunner
@@ -28,8 +35,8 @@ for _, test_type in ipairs(test_types) do
       mod = require("luarocks.test.busted")
    end
    table.insert(test_modules, mod)
-   test_modules[test_type] = mod --!
-   test_modules[mod] = test_type
+   test_modules.typetomod[test_type] = mod
+   test_modules.modtotype[mod] = test_type
 end
 
 local function get_test_type(rockspec: Rockspec): string, string
@@ -39,7 +46,7 @@ local function get_test_type(rockspec: Rockspec): string, string
 
    for _, test_module in ipairs(test_modules) do
       if test_module.detect_type() then
-         return test_modules[test_module]
+         return test_modules.modtotype[test_module]
       end
    end
 
@@ -47,7 +54,7 @@ local function get_test_type(rockspec: Rockspec): string, string
 end
 
 -- Run test suite as configured in rockspec in the current directory.
-function test.run_test_suite(rockspec_arg: string | Rockspec, test_type: string, args, prepare): boolean, string, string
+function test.run_test_suite(rockspec_arg: string | Rockspec, test_type: string, args: {string}, prepare: boolean): boolean, string, string
    local rockspec: Rockspec
    if rockspec_arg is string then
       local err, errcode: string, string
@@ -74,7 +81,7 @@ function test.run_test_suite(rockspec_arg: string | Rockspec, test_type: string,
       "test_dependencies",
    }
    for _, dep_kind in ipairs(all_deps) do
-      if rockspec[dep_kind] and next(rockspec[dep_kind]) then --! rockspec as {atring: any}
+      if (rockspec as {string: Dependencies})[dep_kind] and next((rockspec as {string: Dependencies})[dep_kind]) ~= nil then
          local _, err, errcode = deps.fulfill_dependencies(rockspec, dep_kind, "all")
          if err then
             return nil, err, errcode
@@ -82,7 +89,7 @@ function test.run_test_suite(rockspec_arg: string | Rockspec, test_type: string,
       end
    end
 
-   local pok, test_mod: boolean --! Test type
+   local pok, test_mod: boolean, TestRunner
    if test_type == "command" then
       pok, test_mod = pcall(require, "luarocks.test.command")
       if not pok then

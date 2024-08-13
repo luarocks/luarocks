@@ -760,7 +760,7 @@ local function find_lua_incdir(prefix, luaver, luajitver)
 end
 
 function deps.check_lua_incdir(vars)
-   if vars.LUA_INCDIR_OK == true then
+   if vars.LUA_INCDIR_OK == "ok" then
       return true
    end
 
@@ -769,7 +769,7 @@ function deps.check_lua_incdir(vars)
    if vars.LUA_INCDIR then
       local ok, err = lua_h_exists(vars.LUA_INCDIR, cfg.lua_version)
       if ok then
-         vars.LUA_INCDIR_OK = true
+         vars.LUA_INCDIR_OK = "ok"
       end
       return ok, err
    end
@@ -778,7 +778,7 @@ function deps.check_lua_incdir(vars)
       local d, err = find_lua_incdir(vars.LUA_DIR, cfg.lua_version, ljv)
       if d then
          vars.LUA_INCDIR = d
-         vars.LUA_INCDIR_OK = true
+         vars.LUA_INCDIR_OK = "ok"
          return true
       end
       return nil, err
@@ -788,7 +788,7 @@ function deps.check_lua_incdir(vars)
 end
 
 function deps.check_lua_libdir(vars)
-   if vars.LUA_LIBDIR_OK == true then
+   if vars.LUA_LIBDIR_OK == "ok" then
       return true
    end
 
@@ -796,7 +796,7 @@ function deps.check_lua_libdir(vars)
    local ljv = util.get_luajit_version()
 
    if vars.LUA_LIBDIR and vars.LUALIB and fs.exists(dir.path(vars.LUA_LIBDIR, vars.LUALIB)) then
-      vars.LUA_LIBDIR_OK = true
+      vars.LUA_LIBDIR_OK = "ok"
       return true
    end
 
@@ -837,7 +837,7 @@ function deps.check_lua_libdir(vars)
 
    if ok then
       vars.LUALIB = vars.LUA_LIBDIR_FILE
-      vars.LUA_LIBDIR_OK = true
+      vars.LUA_LIBDIR_OK = "ok"
       return true
    else
       err = err or "Failed finding the Lua library. You can use `luarocks config variables.LUA_LIBDIR <path>` to set the correct location."

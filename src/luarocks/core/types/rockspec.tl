@@ -28,10 +28,10 @@ local record rockspec
         BINDIR: string
         DOCDIR: string
         CURLNOCERTFLAG: string
-        LUA_INCDIR_OK: boolean
+        LUA_INCDIR_OK: string
         LUA_INCDIR: string
         LUA_DIR: string
-        LUA_LIBDIR_OK: boolean
+        LUA_LIBDIR_OK: string
         LUA_LIBDIR: string
         LUA_LIBDIR_FILE: string
         LUALIB: string

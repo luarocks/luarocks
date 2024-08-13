@@ -649,7 +649,7 @@ function deps.check_external_deps(rockspec: Rockspec, mode: string): boolean, st
    end
 
    for name, ext_files in util.sortedpairs(rockspec.external_dependencies) do
-      local ok, err_dirname, err_testfile, err_files = check_external_dependency(name, ext_files as {string : string | {string}}, rockspec.variables as {string: string}, mode)
+      local ok, err_dirname, err_testfile, err_files = check_external_dependency(name, ext_files as {string : string | {string}}, rockspec.variables, mode)
       if not ok then
          local lines = {"Could not find "..err_testfile.." file for "..name}
 
@@ -760,7 +760,7 @@ local function find_lua_incdir(prefix: string, luaver: string, luajitver: string
 end
 
 function deps.check_lua_incdir(vars: Variables): boolean | string, string, string
-   if vars.LUA_INCDIR_OK == true
+   if vars.LUA_INCDIR_OK == "ok"
       then return true
    end
 
@@ -769,7 +769,7 @@ function deps.check_lua_incdir(vars: Variables): boolean | string, string, strin
    if vars.LUA_INCDIR then
       local ok, err = lua_h_exists(vars.LUA_INCDIR, cfg.lua_version)
       if ok then
-         vars.LUA_INCDIR_OK = true
+         vars.LUA_INCDIR_OK = "ok"
       end
       return ok, err
    end
@@ -778,7 +778,7 @@ function deps.check_lua_incdir(vars: Variables): boolean | string, string, strin
       local d, err = find_lua_incdir(vars.LUA_DIR, cfg.lua_version, ljv)
       if d then
          vars.LUA_INCDIR = d
-         vars.LUA_INCDIR_OK = true
+         vars.LUA_INCDIR_OK = "ok"
          return true
       end
       return nil, err
@@ -788,7 +788,7 @@ function deps.check_lua_incdir(vars: Variables): boolean | string, string, strin
 end
 
 function deps.check_lua_libdir(vars: Variables): boolean, string, string, {string : {string}}
-   if vars.LUA_LIBDIR_OK == true
+   if vars.LUA_LIBDIR_OK == "ok" --! fix later
       then return true
    end
 
@@ -796,7 +796,7 @@ function deps.check_lua_libdir(vars: Variables): boolean, string, string, {strin
    local ljv = util.get_luajit_version()
 
    if vars.LUA_LIBDIR and vars.LUALIB and fs.exists(dir.path(vars.LUA_LIBDIR, vars.LUALIB)) then
-      vars.LUA_LIBDIR_OK = true
+      vars.LUA_LIBDIR_OK = "ok"
       return true
    end
 
@@ -814,7 +814,7 @@ function deps.check_lua_libdir(vars: Variables): boolean, string, string, {strin
    end
    local cache = {}
    local save_LUA_INCDIR = vars.LUA_INCDIR
-   local ok, _, _, errfiles = check_external_dependency("LUA", { library = libnames }, vars as {string: string}, "build", cache)
+   local ok, _, _, errfiles = check_external_dependency("LUA", { library = libnames }, vars, "build", cache)
    vars.LUA_INCDIR = save_LUA_INCDIR
    local err: string
    if ok then
@@ -837,7 +837,7 @@ function deps.check_lua_libdir(vars: Variables): boolean, string, string, {strin
 
    if ok then
       vars.LUALIB = vars.LUA_LIBDIR_FILE
-      vars.LUA_LIBDIR_OK = true
+      vars.LUA_LIBDIR_OK = "ok"
       return true
    else
       err = err or "Failed finding the Lua library. You can use `luarocks config variables.LUA_LIBDIR <path>` to set the correct location."
