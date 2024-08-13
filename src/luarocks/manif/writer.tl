@@ -16,6 +16,12 @@ local persist = require("luarocks.persist")
 local manif = require("luarocks.manif")
 local queries = require("luarocks.queries")
 
+local type m = require("luarocks.core.types.manifest")
+local type Manifest = m.Manifest
+
+local type r = require("luarocks.core.types.rockspec")
+local type Rockspec = r.Rockspec
+
 --- Update storage table to account for items provided by a package.
 -- @param storage table: a table storing items in the following format:
 -- keys are item names and values are arrays of packages providing each item,
@@ -23,15 +29,12 @@ local queries = require("luarocks.queries")
 -- @param items table: a table mapping item names to paths.
 -- @param name string: package name.
 -- @param version string: package version.
-local function store_package_items(storage, name, version, items)
-   assert(type(storage) == "table")
-   assert(type(items) == "table")
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
+local function store_package_items(storage: {string: {string}}, name: string, version: string, items: {string: string})
+   assert(not name:match("/"))
 
    local package_identifier = name.."/"..version
 
-   for item_name, path in pairs(items) do  -- luacheck: ignore 431
+   for item_name, _ in pairs(items) do  -- luacheck: ignore 431
       if not storage[item_name] then
          storage[item_name] = {}
       end
@@ -47,15 +50,12 @@ end
 -- @param items table: a table mapping item names to paths.
 -- @param name string: package name.
 -- @param version string: package version.
-local function remove_package_items(storage, name, version, items)
-   assert(type(storage) == "table")
-   assert(type(items) == "table")
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
+local function remove_package_items(storage: {string: {string}}, name: string, version: string, items: {string: string})
+   assert(not name:match("/"))
 
    local package_identifier = name.."/"..version
 
-   for item_name, path in pairs(items) do  -- luacheck: ignore 431
+   for item_name, _ in pairs(items) do  -- luacheck: ignore 431
       local key = item_name
       local all_identifiers = storage[key]
       if not all_identifiers then
@@ -88,7 +88,7 @@ end
 -- @param deps_mode string: Dependency mode: "one" for the current default tree,
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for no trees.
-local function update_dependencies(manifest, deps_mode)
+local function update_dependencies(manifest: Manifest, deps_mode: string)
    assert(type(manifest) == "table")
    assert(type(deps_mode) == "string")
 
@@ -118,10 +118,7 @@ end
 -- @param b string: Version to compare.
 -- @return boolean: The comparison result, according to the
 -- rule outlined above.
-local function sort_pkgs(a, b)
-   assert(type(a) == "string")
-   assert(type(b) == "string")
-
+local function sort_pkgs(a: string, b: string): boolean
    local na, va = a:match("(.*)/(.*)$")
    local nb, vb = b:match("(.*)/(.*)$")
 
@@ -131,15 +128,14 @@ end
 --- Sort items of a package matching table by version number (higher versions first).
 -- @param tbl table: the package matching table: keys should be strings
 -- and values arrays of strings with packages names in "name/version" format.
-local function sort_package_matching_table(tbl)
-   assert(type(tbl) == "table")
+local function sort_package_matching_table(tbl: {string: {string}})
 
-   if next(tbl) then
+   if next(tbl) ~= nil then
       for item, pkgs in pairs(tbl) do
          if #pkgs > 1 then
             table.sort(pkgs, sort_pkgs)
             -- Remove duplicates from the sorted array.
-            local prev = nil
+            local prev: string = nil
             local i = 1
             while pkgs[i] do
                local curr = pkgs[i]
@@ -161,26 +157,24 @@ end
 -- @param lua_version string or nil: filter by Lua version
 -- @param repodir string: directory of repository being scanned
 -- @param cache table: temporary rockspec cache table
-local function filter_by_lua_version(manifest, lua_version, repodir, cache)
-   assert(type(manifest) == "table")
-   assert(type(repodir) == "string")
-   assert((not cache) or type(cache) == "table")
+local function filter_by_lua_version(manifest: Manifest, lua_version_str: string, repodir: string, cache: {string: Rockspec})
 
    cache = cache or {}
-   lua_version = vers.parse_version(lua_version)
+   local lua_version = vers.parse_version(lua_version_str)
    for pkg, versions in pairs(manifest.repository) do
-      local to_remove = {}
+      local to_remove: {string} = {}
       for version, repositories in pairs(versions) do
          for _, repo in ipairs(repositories) do
             if repo.arch == "rockspec" then
                local pathname = dir.path(repodir, pkg.."-"..version..".rockspec")
-               local rockspec, err = cache[pathname]
+               local rockspec = cache[pathname]
+               local err: string
                if not rockspec then
                   rockspec, err = fetch.load_local_rockspec(pathname, true)
                end
                if rockspec then
                   cache[pathname] = rockspec
-                  for _, dep in ipairs(rockspec.dependencies) do
+                  for _, dep in ipairs(rockspec.dependencies.queries) do
                      if dep.name == "lua" then
                         if not vers.match_constraints(lua_version, dep.constraints) then
                            table.insert(to_remove, version)
@@ -194,7 +188,7 @@ local function filter_by_lua_version(manifest, lua_version, repodir, cache)
             end
          end
       end
-      if next(to_remove) then
+      if next(to_remove) ~= nil then
          for _, incompat in ipairs(to_remove) do
             versions[incompat] = nil
          end
