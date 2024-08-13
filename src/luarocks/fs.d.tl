@@ -56,6 +56,9 @@ local record fs
    is_lua: function(string): boolean
    copy_binary: function(string, string): boolean, string
    move: function(string, string, string): boolean, string
+   -- writer
+   replace_file: function(string, string): boolean, string
+   get_md5: function(string): string
 end
 
 return fs

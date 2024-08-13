@@ -66,7 +66,7 @@ end
 -- values are tables matching version strings to arrays of
 -- tables with fields "arch" and "repo".
 -- If a table was given in the "result_tree" parameter, that is the result value.
-function search.disk_search(repo: string, query: Query, result_tree: {string: {string: {Result}}}):  {string: {string: {Result}}}
+function search.disk_search(repo: string, query: Query, result_tree?: {string: {string: {Result}}}):  {string: {string: {Result}}}
 
    local fs = require("luarocks.fs")
 

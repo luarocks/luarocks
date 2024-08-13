@@ -77,6 +77,8 @@ local record cfg
    hooks_enabled: boolean
    wrap_bin_scripts: boolean
    wrapper_suffix: string
+   -- writer
+   no_manifest: boolean
 end
 
 return cfg

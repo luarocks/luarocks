@@ -1,4 +1,5 @@
-local repo_writer = {}
+local record repo_writer
+end
 
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
