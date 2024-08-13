@@ -1,9 +1,4 @@
 local record test
-   record TestModules
-      {TestRunner}
-      typetomod: {string: TestRunner}
-      modtotype: {TestRunner: string}
-   end
 end
 
 local fetch = require("luarocks.fetch")
@@ -17,14 +12,14 @@ local type Dependencies = r.Dependencies
 local type t = require("luarocks.core.types.testrunner")
 local type TestRunner = t.TestRunner
 
-local type TestModules = test.TestModules
-
 local test_types = {
    "busted",
    "command",
 }
 
-local test_modules: TestModules = {}
+local test_modules: {TestRunner} = {}
+local typetomod: {string: TestRunner} = {}
+local modtotype: {TestRunner: string} = {}
 
 for _, test_type in ipairs(test_types) do
    local mod: TestRunner
@@ -34,8 +29,8 @@ for _, test_type in ipairs(test_types) do
       mod = require("luarocks.test.busted")
    end
    table.insert(test_modules, mod)
-   test_modules.typetomod[test_type] = mod
-   test_modules.modtotype[mod] = test_type
+   typetomod[test_type] = mod
+   modtotype[mod] = test_type
 end
 
 local function get_test_type(rockspec: Rockspec): string, string
@@ -45,7 +40,7 @@ local function get_test_type(rockspec: Rockspec): string, string
 
    for _, test_module in ipairs(test_modules) do
       if test_module.detect_type() then
-         return test_modules.modtotype[test_module]
+         return modtotype[test_module]
       end
    end
 
