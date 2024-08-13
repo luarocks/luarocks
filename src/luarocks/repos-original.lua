@@ -1,20 +1,6 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local os = _tl_compat and _tl_compat.os or os; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
 
-local repos = {Op = {}, Paths = {}, }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+--- Functions for managing the repository on disk.
+local repos = {}
 
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
@@ -24,55 +10,45 @@ local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local vers = require("luarocks.core.vers")
 
+local unpack = unpack or table.unpack  -- luacheck: ignore 211
 
+-- Tree of files installed by a package are stored
+-- in its rock manifest. Some of these files have to
+-- be deployed to locations where Lua can load them as
+-- modules or where they can be used as commands.
+-- These files are characterised by pair
+-- (deploy_type, file_path), where deploy_type is the first
+-- component of the file path and file_path is the rest of the
+-- path. Only files with deploy_type in {"lua", "lib", "bin"}
+-- are deployed somewhere.
+-- Each deployed file provides an "item". An item is
+-- characterised by pair (item_type, item_name).
+-- item_type is "command" for files with deploy_type
+-- "bin" and "module" for deploy_type in {"lua", "lib"}.
+-- item_name is same as file_path for commands
+-- and is produced using path.path_to_module(file_path)
+-- for modules.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+--- Get all installed versions of a package.
+-- @param name string: a package name.
+-- @return table or nil: An array of strings listing installed
+-- versions of a package, or nil if none is available.
 local function get_installed_versions(name)
-   assert(not name:match("/"))
+   assert(type(name) == "string" and not name:match("/"))
 
    local dirs = fs.list_dir(path.versions_dir(name))
    return (dirs and #dirs > 0) and dirs or nil
 end
 
-
-
-
-
-
-
+--- Check if a package exists in a local repository.
+-- Version numbers are compared as exact string comparison.
+-- @param name string: name of package
+-- @param version string: package version in string format
+-- @return boolean: true if a package is installed,
+-- false otherwise.
 function repos.is_installed(name, version)
-   assert(not name:match("/"))
+   assert(type(name) == "string" and not name:match("/"))
+   assert(type(version) == "string")
 
    return fs.is_dir(path.install_dir(name, version))
 end
@@ -88,7 +64,7 @@ function repos.recurse_rock_manifest_entry(entry, action)
 
       for file, sub in pairs(tree) do
          local sub_path = (parent_path and (parent_path .. "/") or "") .. file
-         local ok, err
+         local ok, err  -- luacheck: ignore 231
 
          if type(sub) == "table" then
             ok, err = do_recurse_rock_manifest_entry(sub, sub_path)
@@ -113,17 +89,18 @@ local function store_package_data(result, rock_manifest, deploy_type)
    end
 end
 
-
-
-
-
-
-
-
-
-
+--- Obtain a table of modules within an installed package.
+-- @param name string: The package name; for example "luasocket"
+-- @param version string: The exact version number including revision;
+-- for example "2.0.1-1".
+-- @return table: A table of modules where keys are module names
+-- and values are file paths of files providing modules
+-- relative to "lib" or "lua" rock manifest subtree.
+-- If no modules are found or if package name or version
+-- are invalid, an empty table is returned.
 function repos.package_modules(name, version)
-   assert(not name:match("/"))
+   assert(type(name) == "string" and not name:match("/"))
+   assert(type(version) == "string")
 
    local result = {}
    local rock_manifest = manif.load_rock_manifest(name, version)
@@ -133,17 +110,18 @@ function repos.package_modules(name, version)
    return result
 end
 
-
-
-
-
-
-
-
-
-
+--- Obtain a table of command-line scripts within an installed package.
+-- @param name string: The package name; for example "luasocket"
+-- @param version string: The exact version number including revision;
+-- for example "2.0.1-1".
+-- @return table: A table of commands where keys and values are command names
+-- as strings - file paths of files providing commands
+-- relative to "bin" rock manifest subtree.
+-- If no commands are found or if package name or version
+-- are invalid, an empty table is returned.
 function repos.package_commands(name, version)
-   assert(not name:match("/"))
+   assert(type(name) == "string" and not name:match("/"))
+   assert(type(version) == "string")
 
    local result = {}
    local rock_manifest = manif.load_rock_manifest(name, version)
@@ -153,22 +131,19 @@ function repos.package_commands(name, version)
 end
 
 
-
-
-
-
-
+--- Check if a rock contains binary executables.
+-- @param name string: name of an installed rock
+-- @param version string: version of an installed rock
+-- @return boolean: returns true if rock contains platform-specific
+-- binary executables, or false if it is a pure-Lua rock.
 function repos.has_binaries(name, version)
-   assert(not name:match("/"))
+   assert(type(name) == "string" and not name:match("/"))
+   assert(type(version) == "string")
 
-   local entries = manif.load_rock_manifest(name, version)
-   if not entries then
-      return false
-   end
-   local bin = entries["bin"]
-   if type(bin) == "table" then
-      for bin_name, md5 in pairs(bin) do
-
+   local rock_manifest = manif.load_rock_manifest(name, version)
+   if rock_manifest and rock_manifest.bin then
+      for bin_name, md5 in pairs(rock_manifest.bin) do
+         -- TODO verify that it is the same file. If it isn't, find the actual command.
          if fs.is_actual_binary(dir.path(cfg.deploy_bin_dir, bin_name)) then
             return true
          end
@@ -178,6 +153,8 @@ function repos.has_binaries(name, version)
 end
 
 function repos.run_hook(rockspec, hook_name)
+   assert(rockspec:type() == "rockspec")
+   assert(type(hook_name) == "string")
 
    local hooks = rockspec.hooks
    if not hooks then
@@ -192,17 +169,18 @@ function repos.run_hook(rockspec, hook_name)
       util.variable_substitutions(hooks, rockspec.variables)
       hooks.substituted_variables = true
    end
-   local hook = (hooks)[hook_name]
+   local hook = hooks[hook_name]
    if hook then
       util.printout(hook)
       if not fs.execute(hook) then
-         return nil, "Failed running " .. hook_name .. " hook."
+         return nil, "Failed running "..hook_name.." hook."
       end
    end
    return true
 end
 
 function repos.should_wrap_bin_scripts(rockspec)
+   assert(rockspec:type() == "rockspec")
 
    if cfg.wrap_bin_scripts ~= nil then
       return cfg.wrap_bin_scripts
@@ -214,7 +192,7 @@ function repos.should_wrap_bin_scripts(rockspec)
 end
 
 local function find_suffixed(file, suffix)
-   local filenames = { file }
+   local filenames = {file}
    if suffix and suffix ~= "" then
       table.insert(filenames, 1, file .. suffix)
    end
@@ -236,16 +214,20 @@ local function check_suffix(filename, suffix)
    return suffixed_filename:sub(#filename + 1)
 end
 
-
-
-
-
-
+-- Files can be deployed using versioned and non-versioned names.
+-- Several items with same type and name can exist if they are
+-- provided by different packages or versions. In any case
+-- item from the newest version of lexicographically smallest package
+-- is deployed using non-versioned name and others use versioned names.
 
 local function get_deploy_paths(name, version, deploy_type, file_path, repo)
+   assert(type(name) == "string")
+   assert(type(version) == "string")
+   assert(type(deploy_type) == "string")
+   assert(type(file_path) == "string")
 
    repo = repo or cfg.root_dir
-   local deploy_dir = (path)["deploy_" .. deploy_type .. "_dir"](repo)
+   local deploy_dir = path["deploy_" .. deploy_type .. "_dir"](repo)
    local non_versioned = dir.path(deploy_dir, file_path)
    local versioned = path.versioned_name(non_versioned, deploy_dir, name, version)
    return { nv = non_versioned, v = versioned }
@@ -255,20 +237,20 @@ local function check_spot_if_available(name, version, deploy_type, file_path)
    local item_type, item_name = manif.get_provided_item(deploy_type, file_path)
    local cur_name, cur_version = manif.get_current_provider(item_type, item_name)
 
-
-
-
+   -- older versions of LuaRocks (< 3) registered "foo.init" files as "foo"
+   -- (which caused problems, so that behavior was changed). But look for that
+   -- in the manifest anyway for backward compatibility.
    if not cur_name and deploy_type == "lua" and item_name:match("%.init$") then
       cur_name, cur_version = manif.get_current_provider(item_type, (item_name:gsub("%.init$", "")))
    end
 
-   if (not cur_name) or
-      (name < cur_name) or
-      (name == cur_name and (version == cur_version or
-      vers.compare_versions(version, cur_version))) then
+   if (not cur_name)
+      or (name < cur_name)
+      or (name == cur_name and (version == cur_version
+                                or vers.compare_versions(version, cur_version))) then
       return "nv", cur_name, cur_version, item_name
    else
-
+      -- Existing version has priority, deploy new version using versioned name.
       return "v", cur_name, cur_version, item_name
    end
 end
@@ -281,10 +263,10 @@ local function backup_existing(should_backup, target)
    if fs.exists(target) then
       local backup = target
       repeat
-         backup = backup .. "~"
-      until not fs.exists(backup)
+         backup = backup.."~"
+      until not fs.exists(backup) -- Slight race condition here, but shouldn't be a problem.
 
-      util.warning(target .. " is not tracked by this installation of LuaRocks. Moving it to " .. backup)
+      util.warning(target.." is not tracked by this installation of LuaRocks. Moving it to "..backup)
       local move_ok, move_err = os.rename(target, backup)
       if not move_ok then
          return nil, move_err
@@ -406,17 +388,17 @@ local function rollback_ops(ops, op_fn, n)
    end
 end
 
-
+--- Double check that all files referenced in `rock_manifest` are installed in `repo`.
 function repos.check_everything_is_installed(name, version, rock_manifest, repo, accept_versioned)
    local missing = {}
    local suffix = cfg.wrapper_suffix or ""
-   for _, category in ipairs({ "bin", "lua", "lib" }) do
+   for _, category in ipairs({"bin", "lua", "lib"}) do
       if rock_manifest[category] then
          repos.recurse_rock_manifest_entry(rock_manifest[category], function(file_path)
             local paths = get_deploy_paths(name, version, category, file_path, repo)
             if category == "bin" then
-               if (fs.exists(paths.nv) or fs.exists(paths.nv .. suffix)) or
-                  (accept_versioned and (fs.exists(paths.v) or fs.exists(paths.v .. suffix))) then
+               if (fs.exists(paths.nv) or fs.exists(paths.nv .. suffix))
+               or (accept_versioned and (fs.exists(paths.v) or fs.exists(paths.v .. suffix))) then
                   return
                end
             else
@@ -430,21 +412,23 @@ function repos.check_everything_is_installed(name, version, rock_manifest, repo,
    end
    if #missing > 0 then
       return nil, "failed deploying files. " ..
-      "The following files were not installed:\n" ..
-      table.concat(missing, "\n")
+                  "The following files were not installed:\n" ..
+                  table.concat(missing, "\n")
    end
    return true
 end
 
-
-
-
-
-
-
-
+--- Deploy a package from the rocks subdirectory.
+-- @param name string: name of package
+-- @param version string: exact package version in string format
+-- @param wrap_bin_scripts bool: whether commands written in Lua should be wrapped.
+-- @param deps_mode: string: Which trees to check dependencies for:
+-- "one" for the current default tree, "all" for all trees,
+-- "order" for all trees with priority >= the current default, "none" for no trees.
 function repos.deploy_local_files(name, version, wrap_bin_scripts, deps_mode)
-   assert(not name:match("/"))
+   assert(type(name) == "string" and not name:match("/"))
+   assert(type(version) == "string")
+   assert(type(wrap_bin_scripts) == "boolean")
 
    local rock_manifest, load_err = manif.load_rock_manifest(name, version)
    if not rock_manifest then return nil, load_err end
@@ -569,29 +553,31 @@ local function double_check_all(double_checks, repo)
          end
       end
    end
-   if next(errs) ~= nil then
+   if next(errs) then
       return nil, table.concat(errs, "\n")
    end
    return true
 end
 
-
-
-
-
-
-
-
-
-
-
+--- Delete a package from the local repository.
+-- @param name string: name of package
+-- @param version string: exact package version in string format
+-- @param deps_mode: string: Which trees to check dependencies for:
+-- "one" for the current default tree, "all" for all trees,
+-- "order" for all trees with priority >= the current default, "none" for no trees.
+-- @param quick boolean: do not try to fix the versioned name
+-- of another version that provides the same module that
+-- was deleted. This is used during 'purge', as every module
+-- will be eventually deleted.
 function repos.delete_local_version(name, version, deps_mode, quick)
-   assert(not name:match("/"))
+   assert(type(name) == "string" and not name:match("/"))
+   assert(type(version) == "string")
+   assert(type(deps_mode) == "string")
 
    local rock_manifest, load_err = manif.load_rock_manifest(name, version)
    if not rock_manifest then
       if not quick then
-         return nil, "rock_manifest file not found for " .. name .. " " .. version .. " - removed entry from the manifest", "remove"
+         return nil, "rock_manifest file not found for "..name.." "..version.." - removed entry from the manifest", "remove"
       end
       return nil, load_err, "fail"
    end

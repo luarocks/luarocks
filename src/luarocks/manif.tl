@@ -184,7 +184,7 @@ function manif.get_current_provider(item_type: string, item_name: string, repo?:
    end
 end
 
-function manif.get_next_provider(item_type: string, item_name: string, repo: string | Tree): string, string
+function manif.get_next_provider(item_type: string, item_name: string, repo?: string | Tree): string, string
    local providers = get_providers(item_type, item_name, repo)
    if providers and providers[2] then
       return providers[2]:match("([^/]*)/([^/]*)")

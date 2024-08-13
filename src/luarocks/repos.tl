@@ -341,7 +341,7 @@ local function prepare_op_install(): function(Op): (boolean, string), function()
    return op_install, done_op_install
 end
 
-local function rollback_install(op: Op): boolean
+local function rollback_install(op: Op): boolean, string
    fs.delete(op.dst)
    if op.backup_file then
       os.rename(op.backup_file, op.dst)
@@ -553,13 +553,13 @@ function repos.deploy_local_files(name: string, version: string, wrap_bin_script
    return true
 end
 
-local function add_to_double_checks(double_checks, name, version)
+local function add_to_double_checks(double_checks: {string: {string: boolean}}, name: string, version: string)
    double_checks[name] = double_checks[name] or {}
    double_checks[name][version] = true
 end
 
-local function double_check_all(double_checks, repo)
-   local errs = {}
+local function double_check_all(double_checks: {string: {string: boolean}}, repo: string | Tree): boolean, string
+   local errs: {string} = {}
    for next_name, versions in pairs(double_checks) do
       for next_version in pairs(versions) do
          local rock_manifest, load_err = manif.load_rock_manifest(next_name, next_version)
@@ -569,7 +569,7 @@ local function double_check_all(double_checks, repo)
          end
       end
    end
-   if next(errs) then
+   if next(errs) ~= nil then
       return nil, table.concat(errs, "\n")
    end
    return true
@@ -585,10 +585,8 @@ end
 -- of another version that provides the same module that
 -- was deleted. This is used during 'purge', as every module
 -- will be eventually deleted.
-function repos.delete_local_version(name, version, deps_mode, quick)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
-   assert(type(deps_mode) == "string")
+function repos.delete_local_version(name: string, version: string, deps_mode: string, quick: boolean): boolean, string, string
+   assert(not name:match("/"))
 
    local rock_manifest, load_err = manif.load_rock_manifest(name, version)
    if not rock_manifest then
@@ -605,7 +603,7 @@ function repos.delete_local_version(name, version, deps_mode, quick)
    local double_checks = {}
 
    if rock_manifest.bin then
-      repos.recurse_rock_manifest_entry(rock_manifest.bin, function(file_path)
+      repos.recurse_rock_manifest_entry(rock_manifest.bin, function(file_path: string): boolean, string
          local paths = get_deploy_paths(name, version, "bin", file_path, repo)
          local mode, cur_name, cur_version, item_name = check_spot_if_available(name, version, "bin", file_path)
          if mode == "v" then
@@ -624,7 +622,7 @@ function repos.delete_local_version(name, version, deps_mode, quick)
    end
 
    if rock_manifest.lua then
-      repos.recurse_rock_manifest_entry(rock_manifest.lua, function(file_path)
+      repos.recurse_rock_manifest_entry(rock_manifest.lua, function(file_path: string): boolean, string
          local paths = get_deploy_paths(name, version, "lua", file_path, repo)
          local mode, cur_name, cur_version, item_name = check_spot_if_available(name, version, "lua", file_path)
          if mode == "v" then
@@ -645,7 +643,7 @@ function repos.delete_local_version(name, version, deps_mode, quick)
    end
 
    if rock_manifest.lib then
-      repos.recurse_rock_manifest_entry(rock_manifest.lib, function(file_path)
+      repos.recurse_rock_manifest_entry(rock_manifest.lib, function(file_path: string): boolean, string
          local paths = get_deploy_paths(name, version, "lib", file_path, repo)
          local mode, cur_name, cur_version, item_name = check_spot_if_available(name, version, "lib", file_path)
          if mode == "v" then
@@ -694,4 +692,4 @@ function repos.delete_local_version(name, version, deps_mode, quick)
    return true, nil, "remove"
 end
 
-return rep
+return repos
