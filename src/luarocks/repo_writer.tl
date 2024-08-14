@@ -6,8 +6,8 @@ local path = require("luarocks.path")
 local repos = require("luarocks.repos")
 local writer = require("luarocks.manif.writer")
 
-function repo_writer.deploy_files(name, version, wrap_bin_scripts, deps_mode, namespace)
-   local ok, err
+function repo_writer.deploy_files(name: string, version: string, wrap_bin_scripts: boolean, deps_mode: string, namespace: string): boolean, string
+   local ok, err: boolean, string
 
    if not fs.exists(path.rock_manifest_file(name, version)) then
       ok, err = writer.make_rock_manifest(name, version)
@@ -32,7 +32,7 @@ function repo_writer.deploy_files(name, version, wrap_bin_scripts, deps_mode, na
    return ok, err
 end
 
-function repo_writer.delete_version(name, version, deps_mode, quick)
+function repo_writer.delete_version(name: string, version: string, deps_mode: string, quick: boolean): boolean,  string
    local ok, err, op = repos.delete_local_version(name, version, deps_mode, quick)
 
    if op == "remove" then
@@ -45,7 +45,7 @@ function repo_writer.delete_version(name, version, deps_mode, quick)
    return ok, err
 end
 
-function repo_writer.refresh_manifest(rocks_dir)
+function repo_writer.refresh_manifest(rocks_dir: string): boolean, string
    return writer.make_manifest(rocks_dir, "one")
 end
 

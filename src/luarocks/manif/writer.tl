@@ -28,6 +28,10 @@ local type Result = res.Result
 local type p = require("luarocks.core.types.persist")
 local type PersistableTable = p.PersistableTable
 
+local type rm = require("luarocks.core.types.rockmanifest")
+local type RockManifest = rm.RockManifest
+local type Entry = rm.RockManifest.Entry
+
 --- Update storage table to account for items provided by a package.
 -- @param storage table: a table storing items in the following format:
 -- keys are item names and values are arrays of packages providing each item,
@@ -56,7 +60,7 @@ end
 -- @param items table: a table mapping item names to paths.
 -- @param name string: package name.
 -- @param version string: package version.
-local function remove_package_items(storage: {string: {string}}, name: string, version: string, items: {string: string})
+local function remove_package_items(storage: {string: {string}}, name: string, version: string, items: {string: {string}})
    assert(not name:match("/"))
 
    local package_identifier = name.."/"..version
@@ -95,8 +99,6 @@ end
 -- "all" for all trees, "order" for all trees with priority >= the current default,
 -- "none" for no trees.
 local function update_dependencies(manifest: Manifest, deps_mode: string)
-   assert(type(manifest) == "table")
-   assert(type(deps_mode) == "string")
 
    if not manifest.dependencies then manifest.dependencies = {} end
    local mdeps = manifest.dependencies
@@ -239,38 +241,6 @@ local function store_results(results: {string: {string: {Result}}}, manifest: Ma
    return true
 end
 
--- and here what would `entrytable` be, since it can either be a `Manifest` or ...
--- ```
--- local function store_results(results: {string: {string: {Result}}}, manifest: Manifest): boolean
-
---    for name, versions in pairs(results) do
---       local pkgtable = manifest.repository[name] or {}
---       for version, entries in pairs(versions) do
---          local versiontable = {}
---          for _, entry in ipairs(entries) do
---             local entrytable: Manifest = {}
---             entrytable.arch = entry.arch
---             if entry.arch == "installed" then
---                local rock_manifest, err = manif.load_rock_manifest(name, version)
---                if not rock_manifest then return nil, err end
-
---                entrytable.modules = repos.package_modules(name, version)
---                store_package_items(manifest.modules, name, version, entrytable.modules)
---                entrytable.commands = repos.package_commands(name, version)
---                store_package_items(manifest.commands, name, version, entrytable.commands)
---             end
---             table.insert(versiontable, entrytable)
---          end
---          pkgtable[version] = versiontable
---       end
---       manifest.repository[name] = pkgtable
---    end
---    sort_package_matching_table(manifest.modules)
---    sort_package_matching_table(manifest.commands)
---    return true
--- end
--- ```
-
 --- Commit a table to disk in given local path.
 -- @param where string: The directory where the table should be saved.
 -- @param name string: The filename.
@@ -290,13 +260,13 @@ end
 
 function writer.make_rock_manifest(name: string, version: string): boolean, string
    local install_dir = path.install_dir(name, version)
-   local tree: {string: {string}} = {}
+   local tree: {string: Entry} = {}
    for _, file in ipairs(fs.find(install_dir)) do
       local full_path = dir.path(install_dir, file)
       local walk = tree
-      local last: {string : {string}}
+      local last: {string : Entry}
       local last_name: string
-      local next: {string}
+      local next: Entry
       for filename in file:gmatch("[^\\/]+") do
          next = walk[filename]
          if not next then
@@ -305,9 +275,14 @@ function writer.make_rock_manifest(name: string, version: string): boolean, stri
          end
          last = walk
          last_name = filename
-         walk = next
+         if not next is string then
+            walk = next
+         else
+            return nil, "Next was string, expected a table"
+         end
       end
       if fs.is_file(full_path) then
+
          local sum, err = fs.get_md5(full_path)
          if not sum then
             return nil, "Failed producing checksum: "..tostring(err)
@@ -315,47 +290,11 @@ function writer.make_rock_manifest(name: string, version: string): boolean, stri
          last[last_name] = sum
       end
    end
-   local rock_manifest = { rock_manifest=tree }
+   local rock_manifest: RockManifest = { rock_manifest=tree }
    manif.rock_manifest_cache[name.."/"..version] = rock_manifest
-   save_table(install_dir, "rock_manifest", rock_manifest )
+   save_table(install_dir, "rock_manifest", rock_manifest as PersistableTable)
    return true
 end
-
--- in this code, what would next and walk be, since we have `walk[filename] = next`,  but also `walk = next`
--- ```
--- function writer.make_rock_manifest(name: string, version: string): boolean, string
---    local install_dir = path.install_dir(name, version)
---    local tree: {string: {string}} = {}
---    for _, file in ipairs(fs.find(install_dir)) do
---       local full_path = dir.path(install_dir, file)
---       local walk = tree
---       local last: {string : {string}}
---       local last_name: string
---       local next: {string}
---       for filename in file:gmatch("[^\\/]+") do
---          next = walk[filename]
---          if not next then
---             next = {}
---             walk[filename] = next
---          end
---          last = walk
---          last_name = filename
---          walk = next
---       end
---       if fs.is_file(full_path) then
---          local sum, err = fs.get_md5(full_path)
---          if not sum then
---             return nil, "Failed producing checksum: "..tostring(err)
---          end
---          last[last_name] = sum
---       end
---    end
---    local rock_manifest = { rock_manifest=tree }
---    manif.rock_manifest_cache[name.."/"..version] = rock_manifest
---    save_table(install_dir, "rock_manifest", rock_manifest )
---    return true
--- end
--- ```
 
 -- Writes a 'rock_namespace' file in a locally installed rock directory.
 -- @param name string: the rock name, without a namespace
@@ -454,7 +393,7 @@ function writer.add_to_manifest(name: string, version: string, repo: string, dep
       return writer.make_manifest(rocks_dir, deps_mode)
    end
 
-   local results = {[name] = {[version] = {{arch = "installed", repo = rocks_dir}}}}
+   local results: {string : {string : {Result}}} = {[name] = {[version] = {{arch = "installed", repo = rocks_dir}}}}
 
    local ok: boolean
    ok, err = store_results(results, manifest) --!

@@ -58,7 +58,7 @@ local record fs
    move: function(string, string, string): boolean, string
    -- writer
    replace_file: function(string, string): boolean, string
-   get_md5: function(string): string
+   get_md5: function(string): string, string
 end
 
 return fs

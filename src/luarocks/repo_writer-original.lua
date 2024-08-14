@@ -1,6 +1,5 @@
 local repo_writer = {}
 
-
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local repos = require("luarocks.repos")
@@ -50,3 +49,4 @@ function repo_writer.refresh_manifest(rocks_dir)
 end
 
 return repo_writer
+
