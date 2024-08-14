@@ -19,7 +19,6 @@ end
 -- @param url string: an URL or a local pathname.
 -- @return string, string: the protocol, and the pathname without the protocol.
 function dir.split_url(url: string): string, string
-   assert(type(url) == "string")
 
    url = unquote(url)
    local protocol, pathname = url:match("^([^:]*)://(.*)")

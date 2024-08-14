@@ -6,8 +6,10 @@ local record build
     interface Build
         type: string
         install: Installs
-        copy_directories: string
+        copy_directories: {string}
         patches: {string : string}
+        extra_files: {string : string}
+        macosx_deployment_target: string
     end
 
     record BuiltinBuild
@@ -15,14 +17,15 @@ local record build
         where self.type == "builtin"
 
         record Module
+            is {string}
             sources: string | {string}
-            libraries: {string}
+            libraries: string | {string}
             defines: {string}
             incdirs: {string}
             libdirs: {string}
         end
 
-        modules: {string: (string | {string} | Module)}
+        modules: {string: (string | Module)}
     end
 
     record MakeBuild

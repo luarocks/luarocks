@@ -19,7 +19,6 @@ local dir_sep = package.config:sub(1, 1)
 -- or "\a\b\c".
 -- @return string: The filename without its path, such as "c".
 function dir.base_name(pathname: string): string
-   assert(type(pathname) == "string")
 
    local b: string
    b = pathname:gsub("[/\\]", "/") -- canonicalize to forward slashes
@@ -36,7 +35,6 @@ end
 -- For entries such as "/a/b/", "/a" is returned. If there are
 -- no directory separators in input, "" is returned.
 function dir.dir_name(pathname: string): string
-   assert(type(pathname) == "string")
 
    local d: string
    d = pathname:gsub("[/\\]", "/") -- canonicalize to forward slashes

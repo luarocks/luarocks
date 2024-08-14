@@ -562,9 +562,7 @@ function zip.gzip(input_filename: string, output_filename?: string): boolean, st
    return fs.filter_file(fn, input_filename, output_filename)
 end
 
-function zip.gunzip(input_filename: string, output_filename: string): boolean, string
-   assert(type(input_filename) == "string")
-   assert(output_filename == nil or type(output_filename) == "string")
+function zip.gunzip(input_filename: string, output_filename?: string): boolean, string
 
    if not output_filename then
       output_filename = input_filename:gsub("%.gz$", "")

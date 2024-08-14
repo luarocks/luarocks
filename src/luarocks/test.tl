@@ -104,7 +104,7 @@ function test.run_test_suite(rockspec_arg: string | Rockspec, test_type: string,
       end
    else
       local flags = rockspec.test and rockspec.test.flags
-      if type(flags) == "table" then
+      if flags is {string} then
          util.variable_substitutions(flags, rockspec.variables)
 
          -- insert any flags given in test.flags at the front of args

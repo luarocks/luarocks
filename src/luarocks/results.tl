@@ -20,8 +20,6 @@ end
 function results.new(name: string, version: string, repo: string, arch?: string, namespace?: string): Result, boolean
 
    assert(not name:match("/"))
-   -- assert(type(arch) == "string" or not arch) --! arch?: string
-   -- assert(type(namespace) == "string" or not namespace) --! namespace?: string
    
 
    if not namespace then

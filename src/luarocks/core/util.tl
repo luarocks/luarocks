@@ -70,7 +70,7 @@ function util.show_table(t: {any:any}, tname: string, top_indent: string): strin
             -- the information is defined through lines
             return ("%q"):format(so .. ", defined in (" .. info.linedefined .. "-" .. info.lastlinedefined .. ")" .. info.source)
          end
-      elseif type(o) == "number" then
+      elseif o is number then
          return so
       else
          return ("%q"):format(so)
@@ -110,7 +110,7 @@ function util.show_table(t: {any:any}, tname: string, top_indent: string): strin
    end
 
    tname = tname or "__unnamed__"
-   if type(t) ~= "table" then
+   if not t is {any:any} then
       return tname .. " = " .. basic_serialize(t)
    end
    cart, autoref = "", ""

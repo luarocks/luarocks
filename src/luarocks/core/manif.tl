@@ -70,7 +70,6 @@ end
 -- @return table or (nil, string, string): A table representing the manifest,
 -- or nil followed by an error message and an error code, see manifest_loader.
 function manif.fast_load_local_manifest(repo_url: string): Manifest, string | {any: any}, string 
-   assert(type(repo_url) == "string")
 
    local cached_manifest = manif.get_cached_manifest(repo_url)
    if cached_manifest then

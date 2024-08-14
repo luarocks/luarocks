@@ -12,4 +12,5 @@ local record installs
         bin: Install
     end
 end
+
 return installs

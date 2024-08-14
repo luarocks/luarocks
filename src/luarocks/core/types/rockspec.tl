@@ -4,9 +4,6 @@ local type Query = q.Query
 local type b = require("luarocks.core.types.build")
 local type Build = b.Build
 
-local type i = require("luarocks.core.types.installs")
-local type Installs = i.Installs
-
 local record rockspec
     record Description
         summary: string

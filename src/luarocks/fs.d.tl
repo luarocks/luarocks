@@ -61,6 +61,7 @@ local record fs
    get_md5: function(string): string, string
    -- build
    apply_patch: function(string, string, boolean): boolean, string
+   copy_contents: function(string, string): boolean, string
 end
 
 return fs

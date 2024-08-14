@@ -57,11 +57,6 @@ end
 -- @param operator string?: operator for version matching (default is "==")
 -- @return table: A query in table format
 function queries.new(name: string, namespace?: string, version?: string, substring?: boolean, arch?: string, operator?: string): Query
-   -- assert(type(namespace) == "string" or not namespace) --! optional parameters?
-   -- assert(type(version) == "string" or not version)
-   -- assert(type(substring) == "boolean" or not substring)
-   -- assert(type(arch) == "string" or not arch)
-   -- assert(type(operator) == "string" or not operator)
 
    operator = operator or "=="
 
@@ -83,7 +78,6 @@ end
 -- Query for all packages
 -- @param arch string (optional)
 function queries.all(arch?: string): Query
-   -- assert(type(arch) == "string" or not arch) --! optional
 
    return queries.new("", nil, nil, true, arch)
 end

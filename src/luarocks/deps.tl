@@ -17,8 +17,10 @@ local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
 local type Dependencies = r.Dependencies
 
-local type b = require("luarocks.core.types.build")
-local type Build = b.Build
+local type bld = require("luarocks.core.types.build")
+local type BuiltinBuild = bld.BuiltinBuild
+local type Module = BuiltinBuild.Module
+local type Build = bld.Build
 
 local type t = require("luarocks.core.types.tree")
 local type Tree = t.Tree
@@ -592,14 +594,14 @@ end
 
 function deps.autodetect_external_dependencies(build: Build): {string : {string : string}}
    -- only applies to the 'builtin' build type
-   if not build or not build.modules then
+   if not build or not (build as BuiltinBuild).modules then
       return nil
    end
 
    local extdeps: {string: {string: string}} = {}
    local any = false
-   for _, data in pairs(build.modules) do
-      if data is {string : string | {string}} and data.libraries then
+   for _, data in pairs((build as BuiltinBuild).modules) do
+      if data is Module and data.libraries then
          local libraries: {string}
          local librariesstr: string | {string} = data.libraries
          if librariesstr is string then
@@ -679,8 +681,6 @@ end
 -- @param name string: Package name.
 -- @param version string: Package version.
 function deps.scan_deps(results: {string: string}, mdeps: {string: {string: {Query}}}, name: string, version: string, deps_mode: string)
-   assert(type(results) == "table")
-   assert(type(mdeps) == "table")
    assert(not name:match("/"))
 
    local fetch = require("luarocks.fetch")
@@ -858,7 +858,6 @@ end
 -- "none" for using the default dependency mode from the configuration.
 function deps.check_dependencies(repo: string, deps_mode: string)
    local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
-   assert(type(deps_mode) == "string")
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
    local manifest = manif.load_manifest(rocks_dir)

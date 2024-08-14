@@ -436,7 +436,6 @@ end
 -- @return table or (nil, string): A table representing the rockspec
 -- or nil followed by an error message.
 function fetch.load_local_rockspec(rel_filename: string, quick?: boolean): Rockspec, string
-   assert(type(rel_filename) == "string")
    local abs_filename = fs.absolute_name(rel_filename)
 
    local basename = dir.base_name(abs_filename)

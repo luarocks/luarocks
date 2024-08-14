@@ -27,7 +27,6 @@ local type Tree = t.Tree
 -- tables with fields "arch" and "repo".
 -- @param result table: A result.
 function search.store_result(result_tree: {string: {string: {Result}}}, result: Result)
-   assert(type(result_tree) == "table")
 
    local name = result.name
    local version = result.version

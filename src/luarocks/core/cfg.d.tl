@@ -79,6 +79,10 @@ local record cfg
    -- writer
    no_manifest: boolean
    accepted_build_types: {boolean}
+   -- builtin
+   gcc_rpath: boolean
+   link_lua_explicitly: boolean
+   obj_extension: string
 end
 
 return cfg
