@@ -1,6 +1,5 @@
 local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
-local type Variables = r.Variables
 
 local type t = require("luarocks.core.types.tree")
 local type Tree = t.Tree
@@ -32,7 +31,7 @@ local record cfg
       rocks_provided: {string: string} --? right type? infered from src/luarocks/util
    end
 
-   variables: Variables
+   variables: {string: string}
    rocks_provided: {Rockspec}
    -- persist
    home: string

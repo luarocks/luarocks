@@ -1,6 +1,12 @@
 local type q = require("luarocks.core.types.query")
 local type Query = q.Query
 
+local type b = require("luarocks.core.types.build")
+local type Build = b.Build
+
+local type i = require("luarocks.core.types.installs")
+local type Installs = i.Installs
+
 local record rockspec
     record Description
         summary: string
@@ -10,31 +16,6 @@ local record rockspec
         maintainer: string
         license: string
         labels: any --!
-    end
-  
-    record Variables
-        HG: string
-        CVS: string
-        LUA: string
-        GPG: string
-        GIT: string
-        SVN: string
-        CURL: string
-        SSCM: string
-        PREFIX: string
-        LUADIR: string
-        LIBDIR: string
-        CONFDIR: string
-        BINDIR: string
-        DOCDIR: string
-        CURLNOCERTFLAG: string
-        LUA_INCDIR_OK: string
-        LUA_INCDIR: string
-        LUA_DIR: string
-        LUA_LIBDIR_OK: string
-        LUA_LIBDIR: string
-        LUA_LIBDIR_FILE: string
-        LUALIB: string
     end
   
     record Source
@@ -59,29 +40,6 @@ local record rockspec
         command: string
         busted_executable: string
         flags: {string}
-    end
-
-    record Install
-        name: string
-        is_module_path: boolean
-        perms: string
-    end
-  
-    record Installs
-        lua: Install
-        lib: Install
-        conf: Install
-        bin: Install
-    end
-  
-    record Build
-        type: string
-        modules: {string: {string: string | {string}}}
-        copy_directories: string
-        install: Installs
-        extra_files: {string : string}
-        patches: {string : string}
-        macosx_deployment_target: string
     end
   
     record Dependencies
@@ -114,7 +72,7 @@ local record rockspec
         test_dependencies: Dependencies
         supported_platforms: {string}
         external_dependencies: {string: {string: string}}
-        variables: Variables
+        variables: {string: string}
         hooks: Hooks
         test: Test
         deploy: Deploy

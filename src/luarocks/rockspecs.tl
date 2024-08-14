@@ -13,7 +13,6 @@ local vers = require("luarocks.core.vers")
 local rock = require("luarocks.core.types.rockspec")
 local type Dependencies = rock.Dependencies
 local type Rockspec = rock.Rockspec
-local type Variables = rock.Variables
 
 local type q = require("luarocks.core.types.query")
 local type Query = q.Query
@@ -84,7 +83,7 @@ end
 -- @param rockspec table: The rockspec table.
 local function configure_paths(rockspec: Rockspec)
    local vars: {string: string} = {}
-   for k,v in pairs(cfg.variables as {string: string}) do
+   for k,v in pairs(cfg.variables) do
       vars[k] = v
    end
    local name, version = rockspec.name, rockspec.version
@@ -94,7 +93,7 @@ local function configure_paths(rockspec: Rockspec)
    vars.CONFDIR = path.conf_dir(name, version)
    vars.BINDIR = path.bin_dir(name, version)
    vars.DOCDIR = path.doc_dir(name, version)
-   rockspec.variables = vars as Variables
+   rockspec.variables = vars
 end
 
 function rockspecs.from_persisted_table(filename: string, rockspec: Rockspec, globals?: {string: any}, quick?: boolean): Rockspec, string

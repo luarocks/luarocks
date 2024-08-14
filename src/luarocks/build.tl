@@ -31,8 +31,10 @@ local deplocks = require("luarocks.deplocks")
 
 local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
-local type Installs = r.Installs
-local type Install = r.Install
+
+local type i = require("luarocks.core.types.installs")
+local type Installs = i.Installs
+local type Install = i.Install
 
 local type t = require("luarocks.core.types.tree")
 local type Tree = t.Tree
@@ -95,7 +97,7 @@ end
 local function check_macosx_deployment_target(rockspec: Rockspec): boolean, string
    local target = rockspec.build.macosx_deployment_target
    local function patch_variable(var: string)
-      local rockspec_variables = rockspec.variables as {string: string}
+      local rockspec_variables = rockspec.variables
       if rockspec_variables[var]:match("MACOSX_DEPLOYMENT_TARGET") then
          rockspec_variables[var] = (rockspec_variables[var]):gsub("MACOSX_DEPLOYMENT_TARGET=[^ ]*", "MACOSX_DEPLOYMENT_TARGET="..target)
       else

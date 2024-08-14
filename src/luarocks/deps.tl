@@ -15,9 +15,10 @@ local deplocks = require("luarocks.deplocks")
 
 local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
-local type Build = r.Build
 local type Dependencies = r.Dependencies
-local type Variables = r.Variables
+
+local type b = require("luarocks.core.types.build")
+local type Build = b.Build
 
 local type t = require("luarocks.core.types.tree")
 local type Tree = t.Tree
@@ -759,7 +760,7 @@ local function find_lua_incdir(prefix: string, luaver: string, luajitver: string
    return nil, mainerr
 end
 
-function deps.check_lua_incdir(vars: Variables): boolean | string, string, string
+function deps.check_lua_incdir(vars: {string: string}): boolean | string, string, string
    if vars.LUA_INCDIR_OK == "ok"
       then return true
    end
@@ -787,7 +788,7 @@ function deps.check_lua_incdir(vars: Variables): boolean | string, string, strin
    return nil, "Failed finding Lua headers; neither LUA_DIR or LUA_INCDIR are set. You may need to install them or configure LUA_INCDIR.", "dependency"
 end
 
-function deps.check_lua_libdir(vars: Variables): boolean, string, string, {string : {string}}
+function deps.check_lua_libdir(vars: {string: string}): boolean, string, string, {string : {string}}
    if vars.LUA_LIBDIR_OK == "ok" --! fix later
       then return true
    end

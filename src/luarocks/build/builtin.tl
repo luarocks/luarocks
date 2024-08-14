@@ -6,8 +6,9 @@ end
 
 local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
-local type Variables = r.Variables
-local type Installs = r.Installs
+
+local type i = require("luarocks.core.types.installs")
+local type Installs = i.Installs
 
 -- This build driver checks LUA_INCDIR and LUA_LIBDIR on demand,
 -- so that pure-Lua rocks don't need to have development headers
@@ -23,7 +24,7 @@ local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
 
-local function autoextract_libs(external_dependencies: {string: {string: string}}, variables: Variables): {string}, {string}, {string}
+local function autoextract_libs(external_dependencies: {string: {string: string}}, variables: {string: string}): {string}, {string}, {string}
    if not external_dependencies then
       return nil, nil, nil
    end
@@ -33,8 +34,8 @@ local function autoextract_libs(external_dependencies: {string: {string: string}
    for name, data in pairs(external_dependencies) do
       if data.library then
          table.insert(libs, data.library)
-         table.insert(incdirs, (variables as {string: string})[name .. "_INCDIR"])
-         table.insert(libdirs, (variables as {string: string})[name .. "_LIBDIR"])
+         table.insert(incdirs, variables[name .. "_INCDIR"])
+         table.insert(libdirs, variables[name .. "_LIBDIR"])
       end
    end
    return libs, incdirs, libdirs
@@ -134,7 +135,7 @@ function builtin.run(rockspec: Rockspec, no_install: boolean)
    local compile_object, compile_library, compile_static_library
 
    local build = rockspec.build
-   local variables = rockspec.variables as {string: string}
+   local variables = rockspec.variables
    local checked_lua_h = false
 
    for _, var in ipairs{ "CC", "CFLAGS", "LDFLAGS" } do
