@@ -79,6 +79,7 @@ local record cfg
    wrapper_suffix: string
    -- writer
    no_manifest: boolean
+   accepted_build_types: {boolean}
 end
 
 return cfg

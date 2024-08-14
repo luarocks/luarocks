@@ -1,7 +1,16 @@
 
 
 
-local rockspec = {Description = {}, Variables = {}, Source = {}, Test = {}, Install = {}, Build = {}, Dependencies = {}, Hooks = {}, Deploy = {}, Rockspec = {}, }
+local rockspec = {Description = {}, Variables = {}, Source = {}, Test = {}, Install = {}, Installs = {}, Build = {}, Dependencies = {}, Hooks = {}, Deploy = {}, Rockspec = {}, }
+
+
+
+
+
+
+
+
+
 
 
 

@@ -60,7 +60,7 @@ end
 -- @param items table: a table mapping item names to paths.
 -- @param name string: package name.
 -- @param version string: package version.
-local function remove_package_items(storage: {string: {string}}, name: string, version: string, items: {string: {string}})
+local function remove_package_items(storage: {string: {string}}, name: string, version: string, items: {string: string})
    assert(not name:match("/"))
 
    local package_identifier = name.."/"..version
@@ -219,7 +219,7 @@ local function store_results(results: {string: {string: {Result}}}, manifest: Ma
       for version, entries in pairs(versions) do
          local versiontable = {}
          for _, entry in ipairs(entries) do
-            local entrytable: Manifest = {}
+            local entrytable: Manifest.Entry = {}
             entrytable.arch = entry.arch
             if entry.arch == "installed" then
                local rock_manifest, err = manif.load_rock_manifest(name, version)

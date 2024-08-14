@@ -78,8 +78,6 @@ function repos.is_installed(name, version)
 end
 
 function repos.recurse_rock_manifest_entry(entry, action)
-   assert(type(action) == "function")
-
    if entry == nil then
       return true
    end

@@ -60,19 +60,28 @@ local record rockspec
         busted_executable: string
         flags: {string}
     end
-  
+
     record Install
-        lua: any
-        lib: any
-        conf: any
-        bin: any
+        name: string
+        is_module_path: boolean
+        perms: string
+    end
+  
+    record Installs
+        lua: Install
+        lib: Install
+        conf: Install
+        bin: Install
     end
   
     record Build
         type: string
         modules: {string: {string: string | {string}}}
         copy_directories: string
-        install: Install
+        install: Installs
+        extra_files: {string : string}
+        patches: {string : string}
+        macosx_deployment_target: string
     end
   
     record Dependencies

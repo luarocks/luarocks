@@ -33,7 +33,7 @@ local record fs
    set_time: function(string, number)
    set_time: function(string, os.DateTable)
    -- zip
-   find: function(string): {string}
+   find: function(?string): {string}
    filter_file: function(function, string, string): boolean, string
    -- fetch
    file_age: function(string): number
@@ -59,6 +59,8 @@ local record fs
    -- writer
    replace_file: function(string, string): boolean, string
    get_md5: function(string): string, string
+   -- build
+   apply_patch: function(string, string, boolean): boolean, string
 end
 
 return fs
