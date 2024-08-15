@@ -7,9 +7,6 @@ end
 local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
 
-local type i = require("luarocks.core.types.installs")
-local type InstallDirs = i.InstallDirs
-
 local type b = require("luarocks.core.types.build")
 local type BuiltinBuild = b.BuiltinBuild
 local type Build = b.Build

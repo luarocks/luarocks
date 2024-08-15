@@ -8,9 +8,6 @@ local builtin = {}
 
 
 
-local InstallDirs = i.InstallDirs
-
-
 
 
 
