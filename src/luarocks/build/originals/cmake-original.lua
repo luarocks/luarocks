@@ -1,24 +1,18 @@
 
 --- Build back-end for CMake-based modules.
-local record cmake
-end
+local cmake = {}
 
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
-
-local type b = require("luarocks.core.types.build")
-local type CMakeBuild = b.CMakeBuild
-
 --- Driver function for the "cmake" build back-end.
 -- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string): true if no errors occurred,
 -- nil and an error message otherwise.
-function cmake.run(rockspec: Rockspec, no_install: boolean): boolean, string, string
-   local build = rockspec.build as CMakeBuild
+function cmake.run(rockspec, no_install)
+   assert(rockspec:type() == "rockspec")
+   local build = rockspec.build
    local variables = build.variables or {}
 
    -- Pass Env variables
@@ -34,9 +28,8 @@ function cmake.run(rockspec: Rockspec, no_install: boolean): boolean, string, st
    end
 
    -- If inline cmake is present create CMakeLists.txt from it.
-   local build_cmake = build.cmake
-   if build_cmake is string then
-      local cmake_handler = assert((io.open(fs.current_dir().."/CMakeLists.txt", "w")))
+   if type(build.cmake) == "string" then
+      local cmake_handler = assert(io.open(fs.current_dir().."/CMakeLists.txt", "w"))
       cmake_handler:write(build.cmake)
       cmake_handler:close()
    end
@@ -59,7 +52,7 @@ function cmake.run(rockspec: Rockspec, no_install: boolean): boolean, string, st
       return nil, "Failed cmake."
    end
 
-   local do_build, do_install: boolean, boolean
+   local do_build, do_install
    if rockspec:format_is_at_least("3.0") then
       do_build   = (build.build_pass   == nil) and true or build.build_pass
       do_install = (build.install_pass == nil) and true or build.install_pass

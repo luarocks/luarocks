@@ -8,10 +8,11 @@ local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
 
 local type i = require("luarocks.core.types.installs")
-local type Installs = i.Installs
+local type InstallDirs = i.InstallDirs
 
 local type b = require("luarocks.core.types.build")
 local type BuiltinBuild = b.BuiltinBuild
+local type Build = b.Build
 local type Module = BuiltinBuild.Module
 
 -- This build driver checks LUA_INCDIR and LUA_LIBDIR on demand,
@@ -54,7 +55,7 @@ do
       return (data:match("int%s+luaopen_([a-zA-Z0-9_]+)"))
    end
 
-   local skiplist = {
+   local skiplist: {string: boolean} = {
       ["spec"] = true,
       [".luarocks"] = true,
       ["lua_modules"] = true,
@@ -62,9 +63,9 @@ do
       ["tests.lua"] = true,
    }
 
-   function builtin.autodetect_modules(libs: {string}, incdirs: {string}, libdirs: {string}):  {string : string | Module}, Installs, {string}
+   function builtin.autodetect_modules(libs: {string}, incdirs: {string}, libdirs: {string}):  {string : string | Module}, BuiltinBuild.Install, {string}
       local modules: {string: (string | Module)} = {}
-      local install: Installs
+      local install: BuiltinBuild.Install
       local copy_directories: {string}
 
       local prefix = ""
@@ -78,14 +79,14 @@ do
 
       for _, file in ipairs(fs.find()) do
          local base = file:match("^([^\\/]*)")
-         if not (skiplist as {string: boolean})[base] then
+         if not skiplist[base] then
             local luamod = file:match("(.*)%.lua$")
             if luamod then
                modules[path.path_to_module(file)] = prefix .. file
             else
                local cmod = file:match("(.*)%.c$")
                if cmod then
-                  local modname = get_cmod_name(file) or path.path_to_module((file:gsub("%.c$", ".lua"))) --!
+                  local modname = get_cmod_name(file) or path.path_to_module((file:gsub("%.c$", ".lua")))
                   modules[modname] = {
                      sources = prefix..file,
                      libraries = libs,
@@ -270,7 +271,7 @@ function builtin.run(rockspec: Rockspec, no_install: boolean): boolean, string, 
 
    if not build.modules then
       if rockspec:format_is_at_least("3.0") then
-         local install, copy_directories: Installs, {string}
+         local install, copy_directories: Build.Install, {string}
          build.modules, install, copy_directories = builtin.autodetect_modules(autolibs, autoincdirs, autolibdirs)
          build.install = build.install or install
          build.copy_directories = build.copy_directories or copy_directories

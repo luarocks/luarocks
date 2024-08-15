@@ -33,8 +33,8 @@ local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
 
 local type i = require("luarocks.core.types.installs")
-local type Installs = i.Installs
-local type Install = i.Install
+local type InstallDirs = i.InstallDirs
+local type InstallDir = i.InstallDir
 
 local type t = require("luarocks.core.types.tree")
 local type Tree = t.Tree
@@ -206,15 +206,15 @@ local function fetch_and_change_to_source_dir(rockspec: Rockspec, opts: Op_b): b
    return true
 end
 
-local function prepare_install_dirs(name: string, version: string): Installs, string
-   local dirs = {
+local function prepare_install_dirs(name: string, version: string): InstallDirs, string
+   local dirs: InstallDirs = {
       lua = { name = path.lua_dir(name, version), is_module_path = true, perms = "read" },
       lib = { name = path.lib_dir(name, version), is_module_path = true, perms = "exec" },
       bin = { name = path.bin_dir(name, version), is_module_path = false, perms = "exec" },
       conf = { name = path.conf_dir(name, version), is_module_path = false, perms = "read" },
    }
 
-   for _, d in pairs(dirs as {string: Install}) do
+   for _, d in pairs(dirs as {string: InstallDir}) do
       local ok, err = fs.make_dir(d.name)
       if not ok then
          return nil, err

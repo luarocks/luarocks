@@ -86,6 +86,9 @@ local record cfg
    -- cmake
    cmake_generator: string
    target_cpu: string
+   -- make
+   makefile: string
+   make: string
 end
 
 return cfg

@@ -62,6 +62,8 @@ local record fs
    -- build
    apply_patch: function(string, string, boolean): boolean, string
    copy_contents: function(string, string): boolean, string
+   --command
+   execute_env: function({any: any}, string, ...:string): boolean
 end
 
 return fs
