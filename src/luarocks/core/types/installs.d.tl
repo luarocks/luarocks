@@ -1,5 +1,6 @@
 local record installs
     record Install
+        is {string}
         name: string
         is_module_path: boolean
         perms: string
