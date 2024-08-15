@@ -32,7 +32,7 @@ function repo_writer.deploy_files(name: string, version: string, wrap_bin_script
    return ok, err
 end
 
-function repo_writer.delete_version(name: string, version: string, deps_mode: string, quick: boolean): boolean,  string
+function repo_writer.delete_version(name: string, version: string, deps_mode: string, quick?: boolean): boolean,  string
    local ok, err, op = repos.delete_local_version(name, version, deps_mode, quick)
 
    if op == "remove" then

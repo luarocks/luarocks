@@ -62,6 +62,7 @@ local record fs
    -- build
    apply_patch: function(string, string, boolean): boolean, string
    copy_contents: function(string, string): boolean, string
+   remove_dir_if_empty: function(string)
    --command
    execute_env: function({any: any}, string, ...:string): boolean
 end

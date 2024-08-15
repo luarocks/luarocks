@@ -2,10 +2,10 @@ local record build
 
    interface Build
       record Install
-         lua: {string}
-         lib: {string}
-         conf: {string}
-         bin: {string}
+         lua: {string: string}
+         lib: {string: string}
+         conf: {string: string}
+         bin: {string: string}
       end
       
       type: string

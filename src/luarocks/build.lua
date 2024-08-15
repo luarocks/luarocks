@@ -1,5 +1,23 @@
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local pairs = _tl_compat and _tl_compat.pairs or pairs; local pcall = _tl_compat and _tl_compat.pcall or pcall; local string = _tl_compat and _tl_compat.string or string
+local build = {Op_b = {}, Builds = {}, }
 
-local build = {}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 local path = require("luarocks.path")
 local util = require("luarocks.util")
@@ -14,10 +32,27 @@ local repos = require("luarocks.repos")
 local repo_writer = require("luarocks.repo_writer")
 local deplocks = require("luarocks.deplocks")
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 do
-   --- Write to the current directory the contents of a table,
-   -- where each key is a file name and its value is the file content.
-   -- @param files table: The table of files to be written.
+
+
+
    local function extract_from_rockspec(files)
       for name, content in pairs(files) do
          local fd = io.open(dir.path(fs.current_dir(), name), "w+")
@@ -26,14 +61,13 @@ do
       end
    end
 
-   --- Applies patches inlined in the build.patches section
-   -- and extracts files inlined in the build.extra_files section
-   -- of a rockspec.
-   -- @param rockspec table: A rockspec table.
-   -- @return boolean or (nil, string): True if succeeded or
-   -- nil and an error message.
+
+
+
+
+
+
    function build.apply_patches(rockspec)
-      assert(rockspec:type() == "rockspec")
 
       if not (rockspec.build.extra_files or rockspec.build.patches) then
          return true
@@ -51,11 +85,11 @@ do
       if rockspec.build.patches then
          extract_from_rockspec(rockspec.build.patches)
          for patch, patchdata in util.sortedpairs(rockspec.build.patches) do
-            util.printout("Applying patch "..patch.."...")
+            util.printout("Applying patch " .. patch .. "...")
             local create_delete = rockspec:format_is_at_least("3.0")
             local ok, err = fs.apply_patch(tostring(patch), patchdata, create_delete)
             if not ok then
-               return nil, "Failed applying patch "..patch
+               return nil, "Failed applying patch " .. patch
             end
          end
       end
@@ -71,10 +105,11 @@ end
 local function check_macosx_deployment_target(rockspec)
    local target = rockspec.build.macosx_deployment_target
    local function patch_variable(var)
-      if rockspec.variables[var]:match("MACOSX_DEPLOYMENT_TARGET") then
-         rockspec.variables[var] = (rockspec.variables[var]):gsub("MACOSX_DEPLOYMENT_TARGET=[^ ]*", "MACOSX_DEPLOYMENT_TARGET="..target)
+      local rockspec_variables = rockspec.variables
+      if rockspec_variables[var]:match("MACOSX_DEPLOYMENT_TARGET") then
+         rockspec_variables[var] = (rockspec_variables[var]):gsub("MACOSX_DEPLOYMENT_TARGET=[^ ]*", "MACOSX_DEPLOYMENT_TARGET=" .. target)
       else
-         rockspec.variables[var] = "env MACOSX_DEPLOYMENT_TARGET="..target.." "..rockspec.variables[var]
+         rockspec_variables[var] = "env MACOSX_DEPLOYMENT_TARGET=" .. target .. " " .. rockspec_variables[var]
       end
    end
    if cfg.is_platform("macosx") and rockspec:format_is_at_least("3.0") and target then
@@ -105,18 +140,18 @@ local function process_dependencies(rockspec, opts, cwd)
    local deplock_dir = fs.exists(dir.path(cwd, "luarocks.lock")) and cwd or nil
 
    if not opts.build_only_deps then
-      if next(rockspec.build_dependencies) then
+      if next(rockspec.build_dependencies) ~= nil then
 
          local user_lua_version = cfg.lua_version
          local running_lua_version = _VERSION:sub(5)
 
          if running_lua_version ~= user_lua_version then
-            -- Temporarily flip the user-selected Lua version,
-            -- so that we install build dependencies for the
-            -- Lua version on which the LuaRocks program is running.
 
-            -- HACK: we have to do this by flipping a bunch of
-            -- global config settings, and this list may not be complete.
+
+
+
+
+
             cfg.lua_version = running_lua_version
             cfg.lua_modules_path = cfg.lua_modules_path:gsub(user_lua_version:gsub("%.", "%%."), running_lua_version)
             cfg.lib_modules_path = cfg.lib_modules_path:gsub(user_lua_version:gsub("%.", "%%."), running_lua_version)
@@ -129,7 +164,7 @@ local function process_dependencies(rockspec, opts, cwd)
          path.add_to_package_paths(cfg.root_dir)
 
          if running_lua_version ~= user_lua_version then
-            -- flip the settings back
+
             cfg.lua_version = user_lua_version
             cfg.lua_modules_path = cfg.lua_modules_path:gsub(running_lua_version:gsub("%.", "%%."), user_lua_version)
             cfg.lib_modules_path = cfg.lib_modules_path:gsub(running_lua_version:gsub("%.", "%%."), user_lua_version)
@@ -154,11 +189,11 @@ local function fetch_and_change_to_source_dir(rockspec, opts)
       if opts.branch then
          rockspec.source.branch = opts.branch
       end
-      local ok, source_dir, errcode = fetch.fetch_sources(rockspec, true)
-      if not ok then
+      local oks, source_dir, errcode = fetch.fetch_sources(rockspec, true)
+      if not oks then
          return nil, source_dir, errcode
       end
-      local err
+      local ok, err
       ok, err = fs.change_dir(source_dir)
       if not ok then
          return nil, err
@@ -202,18 +237,44 @@ local function run_build_driver(rockspec, no_install)
    if btype == "none" then
       return true
    end
-   -- Temporary compatibility
+
    if btype == "module" then
       util.printout("Do not use 'module' as a build type. Use 'builtin' instead.")
       btype = "builtin"
       rockspec.build.type = btype
    end
    if cfg.accepted_build_types and not fun.contains(cfg.accepted_build_types, btype) then
-      return nil, "This rockspec uses the '"..btype.."' build type, which is blocked by the 'accepted_build_types' setting in your LuaRocks configuration."
+      return nil, "This rockspec uses the '" .. btype .. "' build type, which is blocked by the 'accepted_build_types' setting in your LuaRocks configuration."
    end
-   local pok, driver = pcall(require, "luarocks.build." .. btype)
-   if not pok or type(driver) ~= "table" then
-      return nil, "Failed initializing build back-end for build type '"..btype.."': "..driver
+   local pok, driver_str, driver
+   if btype == "builtin" then
+      pok, driver_str = pcall(require, "luarocks.build.builtin")
+      if not pok or not (type(driver_str) == "table") then
+         return nil, "Failed initializing build back-end for build type '" .. btype .. "': " .. driver_str
+      else
+         driver = driver_str
+      end
+   elseif btype == "cmake" then
+      pok, driver_str = pcall(require, "luarocks.build.cmake")
+      if not pok or not (type(driver_str) == "table") then
+         return nil, "Failed initializing build back-end for build type '" .. btype .. "': " .. driver_str
+      else
+         driver = driver_str
+      end
+   elseif btype == "make" then
+      pok, driver_str = pcall(require, "luarocks.build.make")
+      if not pok or not (type(driver_str) == "table") then
+         return nil, "Failed initializing build back-end for build type '" .. btype .. "': " .. driver_str
+      else
+         driver = driver_str
+      end
+   elseif btype == "command" then
+      pok, driver_str = pcall(require, "luarocks.build.command")
+      if not pok or not (type(driver_str) == "table") then
+         return nil, "Failed initializing build back-end for build type '" .. btype .. "': " .. driver_str
+      else
+         driver = driver_str
+      end
    end
 
    if not driver.skip_lua_inc_lib_check then
@@ -223,7 +284,7 @@ local function run_build_driver(rockspec, no_install)
       end
 
       if cfg.link_lua_explicitly then
-         local ok, err, errcode = deps.check_lua_libdir(rockspec.variables)
+         ok, err, errcode = deps.check_lua_libdir(rockspec.variables)
          if not ok then
             return nil, err, errcode
          end
@@ -239,26 +300,24 @@ end
 
 local install_files
 do
-   --- Install files to a given location.
-   -- Takes a table where the array part is a list of filenames to be copied.
-   -- In the hash part, other keys, if is_module_path is set, are identifiers
-   -- in Lua module format, to indicate which subdirectory the file should be
-   -- copied to. For example, install_files({["foo.bar"] = "src/bar.lua"}, "boo")
-   -- will copy src/bar.lua to boo/foo.
-   -- @param files table or nil: A table containing a list of files to copy in
-   -- the format described above. If nil is passed, this function is a no-op.
-   -- Directories should be delimited by forward slashes as in internet URLs.
-   -- @param location string: The base directory files should be copied to.
-   -- @param is_module_path boolean: True if string keys in files should be
-   -- interpreted as dotted module paths.
-   -- @param perms string ("read" or "exec"): Permissions of the newly created
-   -- files installed.
-   -- Directories are always created with the default permissions.
-   -- @return boolean or (nil, string): True if succeeded or
-   -- nil and an error message.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
    local function install_to(files, location, is_module_path, perms)
-      assert(type(files) == "table" or not files)
-      assert(type(location) == "string")
       if not files then
          return true
       end
@@ -273,7 +332,7 @@ do
                if not ok then return nil, err end
                if filename:match("%.lua$") then
                   local basename = modname:match("([^.]+)$")
-                  filename = basename..".lua"
+                  filename = basename .. ".lua"
                end
             else
                dest = dir.path(location, dir.dir_name(modname))
@@ -287,7 +346,7 @@ do
          end
          local ok = fs.copy(file, dir.path(dest, filename), perms)
          if not ok then
-            return nil, "Failed copying "..file
+            return nil, "Failed copying " .. file
          end
       end
       return true
@@ -299,7 +358,7 @@ do
       local has_dir = false
       for file in fs.dir() do
          for _, pattern in ipairs(patterns) do
-            if file:lower():match("^"..pattern) then
+            if file:lower():match("^" .. pattern) then
                if not has_dir then
                   fs.make_dir(dest)
                   has_dir = true
@@ -316,7 +375,7 @@ do
 
       if rockspec.build.install then
          for k, d in pairs(dirs) do
-            local ok, err = install_to(rockspec.build.install[k], d.name, d.is_module_path, d.perms)
+            local ok, err = install_to((rockspec.build.install)[k], d.name, d.is_module_path, d.perms)
             if not ok then return nil, err end
          end
       end
@@ -324,12 +383,12 @@ do
       local copy_directories = rockspec.build.copy_directories
       local copying_default = false
       if not copy_directories then
-         copy_directories = {"doc"}
+         copy_directories = { "doc" }
          copying_default = true
       end
 
       local any_docs = false
-      for _, copy_dir in pairs(copy_directories) do
+      for _, copy_dir in ipairs(copy_directories) do
          if fs.is_dir(copy_dir) then
             local dest = dir.path(path.install_dir(name, version), copy_dir)
             fs.make_dir(dest)
@@ -337,7 +396,7 @@ do
             any_docs = true
          else
             if not copying_default then
-               return nil, "Directory '"..copy_dir.."' not found"
+               return nil, "Directory '" .. copy_dir .. "' not found"
             end
          end
       end
@@ -349,21 +408,20 @@ do
    end
 end
 
---- Build and install a rock given a rockspec.
--- @param rockspec rockspec: the rockspec to build
--- @param opts table: build options table
--- @param cwd string or nil: The current working directory
--- @return (string, string) or (nil, string, [string]): Name and version of
--- installed rock if succeeded or nil and an error message followed by an error code.
+
+
+
+
+
+
 function build.build_rockspec(rockspec, opts, cwd)
-   assert(rockspec:type() == "rockspec")
 
    cwd = cwd or dir.path(".")
 
    if not rockspec.build then
       if rockspec:format_is_at_least("3.0") then
          rockspec.build = {
-            type = "builtin"
+            type = "builtin",
          }
       else
          return nil, "Rockspec error: build table not specified"

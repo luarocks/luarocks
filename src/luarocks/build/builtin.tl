@@ -60,9 +60,9 @@ do
       ["tests.lua"] = true,
    }
 
-   function builtin.autodetect_modules(libs: {string}, incdirs: {string}, libdirs: {string}):  {string : string | Module}, BuiltinBuild.Install, {string}
+   function builtin.autodetect_modules(libs: {string}, incdirs: {string}, libdirs: {string}):  {string : string | Module}, Build.Install, {string}
       local modules: {string: (string | Module)} = {}
-      local install: BuiltinBuild.Install
+      local install: Build.Install
       local copy_directories: {string}
 
       local prefix = ""
