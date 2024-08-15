@@ -83,6 +83,9 @@ local record cfg
    gcc_rpath: boolean
    link_lua_explicitly: boolean
    obj_extension: string
+   -- cmake
+   cmake_generator: string
+   target_cpu: string
 end
 
 return cfg

@@ -9,10 +9,8 @@ local builtin = {}
 
 
 
-local Install = i.Install
 
 
-local Build = b.Build
 
 
 
@@ -240,7 +238,7 @@ function builtin.run(rockspec, no_install)
          add_flags(extras, "-I%s", incdirs)
          return execute(variables.CC .. " " .. variables.CFLAGS, "-I" .. variables.LUA_INCDIR, "-c", source, "-o", object, _tl_table_unpack(extras))
       end
-      compile_library = function(library, objects, libraries, libdirs, name)
+      compile_library = function(library, objects, libraries, libdirs)
          local extras = { _tl_table_unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
          if cfg.gcc_rpath then

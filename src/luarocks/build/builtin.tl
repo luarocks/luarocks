@@ -9,10 +9,8 @@ local type Rockspec = r.Rockspec
 
 local type i = require("luarocks.core.types.installs")
 local type Installs = i.Installs
-local type Install = i.Install
 
 local type b = require("luarocks.core.types.build")
-local type Build = b.Build
 local type BuiltinBuild = b.BuiltinBuild
 local type Module = BuiltinBuild.Module
 
@@ -240,7 +238,7 @@ function builtin.run(rockspec: Rockspec, no_install: boolean): boolean, string, 
          add_flags(extras, "-I%s", incdirs)
          return execute(variables.CC.." "..variables.CFLAGS, "-I"..variables.LUA_INCDIR, "-c", source, "-o", object, table.unpack(extras))
       end
-      compile_library = function (library: string, objects: {string}, libraries: {string}, libdirs: {string}, name: string): boolean, string, string
+      compile_library = function (library: string, objects: {string}, libraries: {string}, libdirs: {string}): boolean, string, string
          local extras = { table.unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
          if cfg.gcc_rpath then
