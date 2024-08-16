@@ -20,8 +20,8 @@ local record argparse
 		get_usage: function(self: Parser): string
 		get_help: function(self: Parser): string
 
-		option: function(self: Parser, name: string, description: string, default: string, convert: function | {function}, args: {string}, count: integer | string): Option
-		option: function(self: Parser, name: string, description: string, default: string, convert: {string:string}, args: {string}, count: integer | string): Option
+		option: function(self: Parser, name: string, description?: string, default?: string, convert?: function | {function}, args?: {string}, count?: integer | string): Option
+		option: function(self: Parser, name: string, description?: string, default?: string, convert?: {string:string}, args?: {string}, count?: integer | string): Option
 
 		require_command: function(self: Parser, require_command: boolean): Parser
 		command_target: function(self: Parser, command_target: string): Parser
@@ -29,6 +29,10 @@ local record argparse
 		command: function(self: Parser, name: string, description: string, epilog: string): Command
 
 		add_help: function(self: Parser, boolean)
+
+		help_max_width: function(self: Parser, number): Parser
+		add_help_command: function(self: Parser, ?string | {string: any}): Parser
+		add_complete_command: function(self: Parser, ?string | {string: any}): Parser
 
 		-- TODO: should be Argument | Option
 		mutex: function(self: Parser, ...: any)
@@ -74,17 +78,25 @@ local record argparse
 		args: function(self: Option, args: string|integer): Option
 
 		action: function(self: Option, cb: ActionCallback)
+
+		hidden_name: function(self: Option, string)
+
+		hidden: function(self: Option, boolean)
+
+		convert: function(self: Option, function)
 	end
 
 	record Command
 		summary: function(self: Command, summary: string): Command
 		description: function(self: Command, description: string): Command
 
-		argument: function(self: Command, name: string, description: string): Argument
+		argument: function(self: Command, name: string, description?: string): Argument
 
 		option: function(self: Command, name: string, description: string): Option
 
 		flag: function(self: Command, string, string): Option
+
+		handle_options: function(self: Command, boolean): Command
 	end
 
 	metamethod __call: function(self: argparse, name: string, description: string, epilog: string): Parser

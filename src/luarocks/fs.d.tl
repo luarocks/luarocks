@@ -1,3 +1,6 @@
+local type a = require("luarocks.core.types.args")
+local type Args = a.Args
+
 local record fs
    verbose: function(): FILE | boolean, string, integer
    load_fns: function(fs_table: FsTable, inits: {any:any}): function
@@ -69,6 +72,9 @@ local record fs
    zip: function(string, ...:string): boolean, string
    -- cmd
    is_superuser: function(): boolean
+   modules: function(string): {string}
+   system_cache_dir: function(): string
+   check_command_permissions: function(Args): boolean, string
 end
 
 return fs

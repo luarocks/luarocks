@@ -713,7 +713,7 @@ function deps.scan_deps(results: {string: string}, mdeps: {string: {string: {Que
    end
 end
 
-local function lua_h_exists(d: string, luaver: string): string, string, string, integer
+local function lua_h_exists(d: string, luaver: string): boolean, string, string, integer
    local major, minor = luaver:match("(%d+)%.(%d+)")
    local luanum = ("%s%02d"):format(major, tonumber(minor))
 
@@ -723,7 +723,7 @@ local function lua_h_exists(d: string, luaver: string): string, string, string, 
       local data = fd:read("*a")
       fd:close()
       if data:match("LUA_VERSION_NUM%s*" .. tostring(luanum)) then
-         return d
+         return d ~= nil
       end
       return nil, "Lua header lua.h found at " .. d .. " does not match Lua version " .. luaver .. ". You can use `luarocks config variables.LUA_INCDIR <path>` to set the correct location.", "dependency", 2
    end
@@ -760,7 +760,7 @@ local function find_lua_incdir(prefix: string, luaver: string, luajitver: string
    return nil, mainerr
 end
 
-function deps.check_lua_incdir(vars: {string: string}): boolean | string, string, string
+function deps.check_lua_incdir(vars: {string: string}): boolean, string, string
    if vars.LUA_INCDIR_OK == "ok"
       then return true
    end

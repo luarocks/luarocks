@@ -89,7 +89,7 @@ end
 -- corresponding cleanup functions. Calling this function will run
 -- these function, erasing temporaries.
 -- Functions are executed in the inverse order they were scheduled.
-function util.run_scheduled_functions()
+function util.run_scheduled_functions(): string --! a hack for xpcall
    local fs = require("luarocks.fs")
    if fs.change_dir_to_root then
       fs.change_dir_to_root()
@@ -262,7 +262,7 @@ function util.see_help(command: string, program: string): string
    return "See '"..util.this_program(program or "luarocks")..' help'..(command and " "..command or "").."'."
 end
 
-function util.see_also(text: string): string
+function util.see_also(text?: string): string
    local see_also = "See also:\n"
    if text then
       see_also = see_also..text.."\n"
@@ -536,7 +536,7 @@ do
       end
    end
 
-   function util.find_lua(prefix: string, luaver: string, verbose: string): {string: string}, string
+   function util.find_lua(prefix: string, luaver: string, verbose?: string): {string: string}, string
       local lua, bindir: string, string
       lua, bindir, luaver = find_lua_bindir(prefix, luaver, verbose)
       if not lua then

@@ -39,8 +39,17 @@ local record cfg
    arch: string
    -- api
    record config_files
+      record system
+         file: string
+         found: boolean
+      end
       record user
          file: string
+         found: boolean
+      end
+      record project
+         file: string
+         found: boolean
       end
    end
    -- type_check
@@ -55,8 +64,7 @@ local record cfg
       api_version: string
    end
    -- loader
-   init: function(): boolean, string, string
-   init_package_paths: function
+   init: function(?{string : string}, ?function(string)): boolean, string, string
    -- rockspecs
    each_platform: function(?string): (function():string)
    -- fetch
@@ -94,6 +102,13 @@ local record cfg
    fs_use_modules: boolean
    is_binary: boolean
    program_version: string
+   homeconfdir: string
+   sysconfdir: string
+   luajit_version: string
+   lua_found: boolean
+   project_dir: string
+   verbose: boolean
+   project_tree: string
 end
 
 return cfg

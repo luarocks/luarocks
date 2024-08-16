@@ -65,23 +65,24 @@ function fun.flip<K, V, S>(f: function(K, V): S): function(V, K): S
    end
 end
 
-function fun.find(xs: function | {any}, f: function): any
-   if xs is function then
-      for v in xs do
-         local x = f(v)
-         if x then
-            return x
+function fun.find<X, R>(xs: function():(X) | {X} , f: function(X):(R) ): R
+   if xs is {X} then
+      for _, x in ipairs(xs) do
+         local r = f(x)
+         if r then
+            return r
          end
       end
-   elseif xs is {any} then
-      for _, v in ipairs(xs) do
-         local x = f(v)
-         if x then
-            return x
+   else
+      for x in xs do
+         local r = f(x)
+         if r then
+            return r
          end
       end
    end
 end
+
 
 function fun.partial<K>(f: (function(...: any): K), ...: any): (function(...: any): K)
    local n = select("#", ...)
