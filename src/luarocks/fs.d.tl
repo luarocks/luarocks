@@ -63,8 +63,10 @@ local record fs
    apply_patch: function(string, string, boolean): boolean, string
    copy_contents: function(string, string): boolean, string
    remove_dir_if_empty: function(string)
-   --command
+   -- command
    execute_env: function({any: any}, string, ...:string): boolean
+   -- pack
+   zip: function(string, string, string): boolean, string
 end
 
 return fs

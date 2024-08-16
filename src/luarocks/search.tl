@@ -254,7 +254,7 @@ function search.find_suitable_rock(query: Query): string, string, string
    end
 end
 
-function search.find_rock_checking_lua_versions(query: Query, check_lua_versions): string, string
+function search.find_rock_checking_lua_versions(query: Query, check_lua_versions: boolean): string, string
    local url, err, errcode = search.find_suitable_rock(query)
    if url then
       return url
@@ -304,7 +304,7 @@ function search.find_rock_checking_lua_versions(query: Query, check_lua_versions
    return nil, err
 end
 
-function search.find_src_or_rockspec(name: string, namespace: string, version: string, check_lua_versions): string, string
+function search.find_src_or_rockspec(name: string, namespace: string, version: string, check_lua_versions: boolean): string, string
    local query = queries.new(name, namespace, version, false, "src|rockspec")
    local url, err = search.find_rock_checking_lua_versions(query, check_lua_versions)
    if not url then
