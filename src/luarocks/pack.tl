@@ -22,7 +22,6 @@ local type q = require("luarocks.core.types.query")
 local type Query = q.Query
 
 local type rm = require("luarocks.core.types.rockmanifest")
-local type RockManifest = rm.RockManifest
 local type Entry = rm.RockManifest.Entry
 
 --- Create a source rock.

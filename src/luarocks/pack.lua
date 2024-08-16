@@ -22,7 +22,6 @@ local signing = require("luarocks.signing")
 
 
 
-local RockManifest = rm.RockManifest
 
 
 
