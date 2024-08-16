@@ -47,7 +47,7 @@ local function try_to_open_homepage(name, namespace, version)
    util.schedule_function(fs.delete, temp_dir)
    local ok, err = fs.change_dir(temp_dir)
    if not ok then return nil, err end
-   local filename, err = download.download("rockspec", name, namespace, version)
+   local filename, err = download.download_file("rockspec", name, namespace, version)
    if not filename then return nil, err end
    local rockspec, err = fetch.load_local_rockspec(filename)
    if not rockspec then return nil, err end

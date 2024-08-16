@@ -44,8 +44,13 @@ function cmd_download.command(args)
       arch = args.arch
    end
 
-   local dl, err = download.download(arch, args.name, args.namespace, args.version, args.all, args.check_lua_versions)
-   return dl and true, err
+   if args.all then
+      local ok, err = download.download_all(arch, args.name, args.namespace, args.version)
+      return ok, err
+   else
+      local dl, err = download.download_file(arch, args.name, args.namespace, args.version, args.check_lua_versions)
+      return dl and true, err
+   end
 end
 
 return cmd_download

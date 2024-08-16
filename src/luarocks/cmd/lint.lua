@@ -21,7 +21,7 @@ function lint.command(args)
    local filename = args.rockspec
    if not filename:match(".rockspec$") then
       local err
-      filename, err = download.download("rockspec", filename:lower())
+      filename, err = download.download_file("rockspec", filename:lower())
       if not filename then
          return nil, err
       end

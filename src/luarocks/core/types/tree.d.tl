@@ -1,5 +1,6 @@
 local record tree
     record Tree
+        name: string
         root: string
         rocks_dir: string
         lua_dir: string

@@ -89,6 +89,11 @@ local record cfg
    -- make
    makefile: string
    make: string
+   -- cmd
+   local_by_default: boolean
+   fs_use_modules: boolean
+   is_binary: boolean
+   program_version: string
 end
 
 return cfg

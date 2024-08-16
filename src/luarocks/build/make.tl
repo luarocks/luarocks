@@ -64,7 +64,6 @@ function make.run(rockspec: Rockspec, not_install: boolean): boolean, string, st
    end
 
    util.warn_if_not_used(build.build_variables, { CFLAGS=true }, "variable %s was not passed in build_variables")
---  Here, `util.warn_if_not_used(build.build_variables, { CFLAGS=true }, "variable %s was not passed in build_variables")` isn't the type of  `build.build_variables`, `{string: string}`, like `variables`
    util.variable_substitutions(build.build_variables, rockspec.variables)
    util.variable_substitutions(build.install_variables, rockspec.variables)
 

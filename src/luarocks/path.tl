@@ -207,7 +207,7 @@ function path.module_to_path(mod: string): string
    return (mod:gsub("[^.]*$", ""):gsub("%.", "/"))
 end
 
-function path.use_tree(tree: Tree)
+function path.use_tree(tree: string | Tree)
    cfg.root_dir = tree
    cfg.rocks_dir = path.rocks_dir(tree)
    cfg.deploy_bin_dir = path.deploy_bin_dir(tree)

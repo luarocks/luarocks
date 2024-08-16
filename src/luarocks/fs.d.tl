@@ -67,6 +67,8 @@ local record fs
    execute_env: function({any: any}, string, ...:string): boolean
    -- pack
    zip: function(string, ...:string): boolean, string
+   -- cmd
+   is_superuser: function(): boolean
 end
 
 return fs

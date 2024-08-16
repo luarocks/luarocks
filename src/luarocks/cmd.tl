@@ -1,6 +1,17 @@
 
 --- Functions for command-line scripts.
 local record cmd
+   record Args
+      tree: string
+      global: boolean
+      deps_mode: string
+      ["local"]: boolean --!
+      project_tree: string
+      server: string
+      dev: boolean
+      only_server: string --!
+   end
+   errorcodes: {string: integer}
 end
 
 local manif = require("luarocks.manif")
@@ -13,10 +24,14 @@ local fun = require("luarocks.fun")
 local fs = require("luarocks.fs")
 local argparse = require("luarocks.vendor.argparse")
 
-local unpack = table.unpack or unpack
-local pack = table.pack or function(...) return { n = select("#", ...), ... } end
+local type t = require("luarocks.core.types.tree")
+local type Tree = t.Tree
 
-local hc_ok, hardcoded = pcall(require, "luarocks.core.hardcoded")
+local type Args = cmd.Args
+
+-- local pack = table.pack or function(...) return { n = select("#", ...), ... } end
+
+local hc_ok, hardcoded: boolean, {string: string} = pcall(require, "luarocks.core.hardcoded")
 if not hc_ok then
    hardcoded = {}
 end
@@ -45,19 +60,20 @@ local function check_popen()
    end
 end
 
-local process_tree_args
+local process_tree_args: function(Args, string): boolean, string
 do
-   local function replace_tree(args, root, tree)
+   local function replace_tree(args: Args, root: string, tree?: Tree)
       root = dir.normalize(root)
       args.tree = root
       path.use_tree(tree or root)
    end
 
    local function strip_trailing_slashes()
-      if type(cfg.root_dir) == "string" then
-        cfg.root_dir = cfg.root_dir:gsub("/+$", "")
+      local cfg_root_dir = cfg.root_dir
+      if cfg_root_dir is string then
+        cfg.root_dir = (cfg.root_dir as string):gsub("/+$", "")
       else
-        cfg.root_dir.root = cfg.root_dir.root:gsub("/+$", "")
+         (cfg.root_dir as Tree).root = (cfg.root_dir as Tree).root:gsub("/+$", "")
       end
       cfg.rocks_dir = cfg.rocks_dir:gsub("/+$", "")
       cfg.deploy_bin_dir = cfg.deploy_bin_dir:gsub("/+$", "")
@@ -65,9 +81,9 @@ do
       cfg.deploy_lib_dir = cfg.deploy_lib_dir:gsub("/+$", "")
    end
 
-   local function set_named_tree(args, name)
+   local function set_named_tree(args: Args, name: string): boolean, string
       for _, tree in ipairs(cfg.rocks_trees) do
-         if type(tree) == "table" and name == tree.name then
+         if tree is Tree and name == tree.name then
             if not tree.root then
                return nil, "Configuration error: tree '"..tree.name.."' has no 'root' field."
             end
@@ -78,7 +94,7 @@ do
       return false
    end
 
-   process_tree_args = function(args, project_dir)
+   process_tree_args = function(args: Args, project_dir: string): boolean, string
 
       if args.global then
          local ok, err = set_named_tree(args, "system")
@@ -134,16 +150,22 @@ do
    end
 end
 
-local function process_server_args(args)
+local function process_server_args(args: Args): boolean, string
    if args.server then
       local protocol, pathname = dir.split_url(args.server)
       table.insert(cfg.rocks_servers, 1, protocol.."://"..pathname)
    end
 
    if args.dev then
-      local append_dev = function(s) return dir.path(s, "dev") end
-      local dev_servers = fun.traverse(cfg.rocks_servers, append_dev)
-      cfg.rocks_servers = fun.concat(dev_servers, cfg.rocks_servers)
+      for i, server in ipairs(cfg.rocks_servers) do
+         if server is string then
+            cfg.rocks_servers[i] = dir.path(server, "dev")
+         else
+            for j, mirror in ipairs(server) do
+               server[j] = dir.path(mirror, "dev")
+            end
+         end
+      end      
    end
 
    if args.only_server then
@@ -159,7 +181,7 @@ local function process_server_args(args)
    return true
 end
 
-local function error_handler(err)
+local function error_handler(err: string): string
    if not debug then
       return err
    end
@@ -180,8 +202,8 @@ end
 --- Display an error message and exit.
 -- @param message string: The error message.
 -- @param exitcode number: the exitcode to use
-local function die(message, exitcode)
-   assert(type(message) == "string", "bad error, expected string, got: " .. type(message))
+local function die(message: string, exitcode: number)
+   assert(type(message) == "string", "bad error, expected string, got: " .. type(message)) --!
    assert(exitcode == nil or type(exitcode) == "number", "bad error, expected number, got: " .. type(exitcode) .. " - " .. tostring(exitcode))
    util.printerr("\nError: "..message)
 

@@ -112,7 +112,7 @@ local var_format_pattern = "%$%((%a[%a%d_]+)%)"
 -- @param needed_set: a set where keys are the names of
 -- needed variables.
 -- @param msg string: the warning message to display.
-function util.warn_if_not_used(var_defs: {string: string}, needed_set: {string: string}, msg: string)
+function util.warn_if_not_used(var_defs: {string: string}, needed_set: {string: boolean}, msg: string)
    local seen = {}
    for _, val in pairs(var_defs) do
       for used in val:gmatch(var_format_pattern) do
