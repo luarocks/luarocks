@@ -20,7 +20,7 @@ local record args
         value: string
         only_sources: string
         no_manifest: boolean
-        force_lock: string
+        force_lock: boolean
      end
 end
 
