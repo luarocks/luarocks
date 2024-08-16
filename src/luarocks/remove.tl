@@ -1,6 +1,6 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local pairs = _tl_compat and _tl_compat.pairs or pairs; local table = _tl_compat and _tl_compat.table or table
-local remove = {}
 
+local record remove
+end
 
 local search = require("luarocks.search")
 local deps = require("luarocks.deps")
@@ -13,17 +13,17 @@ local cfg = require("luarocks.core.cfg")
 local manif = require("luarocks.manif")
 local queries = require("luarocks.queries")
 
+local type r = require("luarocks.core.types.result")
+local type Result = r.Result
 
-
-
-
-
-
-
-
-
-local function check_dependents(name, versions, deps_mode)
-   local dependents = {}
+--- Obtain a list of packages that depend on the given set of packages
+-- (where all packages of the set are versions of one program).
+-- @param name string: the name of a program
+-- @param versions array of string: the versions to be deleted.
+-- @return array of string: an empty table if no packages depend on any
+-- of the given list, or an array of strings in "name/version" format.
+local function check_dependents(name: string, versions: {string: any}, deps_mode: string): {Result}
+   local dependents: {Result} = {}
 
    local skip_set = {}
    skip_set[name] = {}
@@ -50,17 +50,17 @@ local function check_dependents(name, versions, deps_mode)
    return dependents
 end
 
-
-
-
-
-
-
-
-local function delete_versions(name, versions, deps_mode)
+--- Delete given versions of a program.
+-- @param name string: the name of a program
+-- @param versions array of string: the versions to be deleted.
+-- @param deps_mode: string: Which trees to check dependencies for:
+-- "one" for the current default tree, "all" for all trees,
+-- "order" for all trees with priority >= the current default, "none" for no trees.
+-- @return boolean or (nil, string): true on success or nil and an error message.
+local function delete_versions(name: string, versions: {string: any}, deps_mode: string): boolean, string
 
    for version, _ in pairs(versions) do
-      util.printout("Removing " .. name .. " " .. version .. "...")
+      util.printout("Removing "..name.." "..version.."...")
       local ok, err = repo_writer.delete_version(name, version, deps_mode)
       if not ok then return nil, err end
    end
@@ -68,7 +68,7 @@ local function delete_versions(name, versions, deps_mode)
    return true
 end
 
-function remove.remove_search_results(results, name, deps_mode, force, fast)
+function remove.remove_search_results(results: {string : {string : {Result}}}, name: string, deps_mode: string, force: boolean, fast: boolean): boolean, string
    local versions = results[name]
 
    local version = next(versions)
@@ -77,7 +77,7 @@ function remove.remove_search_results(results, name, deps_mode, force, fast)
    local dependents = {}
    if not fast then
       util.printout("Checking stability of dependencies in the absence of")
-      util.printout(name .. " " .. table.concat((util.keys(versions)), ", ") .. "...")
+      util.printout(name.." "..table.concat((util.keys(versions) as {string | number}), ", ").."...")
       util.printout()
       dependents = check_dependents(name, versions, deps_mode)
    end
@@ -86,19 +86,19 @@ function remove.remove_search_results(results, name, deps_mode, force, fast)
       if force or fast then
          util.printerr("The following packages may be broken by this forced removal:")
          for _, dependent in ipairs(dependents) do
-            util.printerr(dependent.name .. " " .. dependent.version)
+            util.printerr(dependent.name.." "..dependent.version)
          end
          util.printerr()
       else
          if not second then
-            util.printerr("Will not remove " .. name .. " " .. version .. ".")
+            util.printerr("Will not remove "..name.." "..version..".")
             util.printerr("Removing it would break dependencies for: ")
          else
-            util.printerr("Will not remove installed versions of " .. name .. ".")
+            util.printerr("Will not remove installed versions of "..name..".")
             util.printerr("Removing them would break dependencies for: ")
          end
          for _, dependent in ipairs(dependents) do
-            util.printerr(dependent.name .. " " .. dependent.version)
+            util.printerr(dependent.name.." "..dependent.version)
          end
          util.printerr()
          util.printerr("Use --force to force removal (warning: this may break modules).")
@@ -113,21 +113,21 @@ function remove.remove_search_results(results, name, deps_mode, force, fast)
    return true
 end
 
-function remove.remove_other_versions(name, version, force, fast)
+function remove.remove_other_versions(name: string, version: string, force: boolean, fast: boolean): boolean, string, string
    local results = {}
    local query = queries.new(name, nil, version, false, nil, "~=")
    search.local_manifest_search(results, cfg.rocks_dir, query)
-   local warn
+   local warn: string
    if results[name] then
       local ok, err = remove.remove_search_results(results, name, cfg.deps_mode, force, fast)
-      if not ok then
+      if not ok then -- downgrade failure to a warning
          warn = err
       end
    end
 
    if not fast then
-
-
+      -- since we're not using --keep, this means that all files of the rock being installed
+      -- should be available as non-versioned variants. Double-check that:
       local rock_manifest, load_err = manif.load_rock_manifest(name, version)
       local ok, err = repos.check_everything_is_installed(name, version, rock_manifest, cfg.root_dir, false)
       if not ok then

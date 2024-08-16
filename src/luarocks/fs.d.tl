@@ -66,7 +66,7 @@ local record fs
    -- command
    execute_env: function({any: any}, string, ...:string): boolean
    -- pack
-   zip: function(string, string, string): boolean, string
+   zip: function(string, ...:string): boolean, string
 end
 
 return fs
