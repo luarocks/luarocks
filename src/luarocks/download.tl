@@ -59,7 +59,7 @@ function download.download_all(arch: string, name: string, namespace: string, ve
    return nil, "Could not find a result named "..rock..(search_err and ": "..search_err or ".")
 end
    
-function download.download_file(arch: string, name: string, namespace: string, version: string, check_lua_versions?: boolean): string, string
+function download.download_file(arch: string, name: string, namespace?: string, version?: string, check_lua_versions?: boolean): string, string
    local query = queries.new(name, namespace, version, false, arch)
    local search_err: string
 

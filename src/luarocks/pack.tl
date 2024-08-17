@@ -159,7 +159,7 @@ function pack.report_and_sign_local_file(file: string, err: string, sign: boolea
    return true
 end
 
-function pack.pack_binary_rock(name: string, namespace: string, version: string, sign: boolean, cmd: function(): (boolean, string)): boolean, string
+function pack.pack_binary_rock(name: string, namespace: string, version: string, sign: boolean, cmd: function(): (string, string)): boolean, string
 
    -- The --pack-binary-rock option for "luarocks build" basically performs
    -- "luarocks build" on a temporary tree and then "luarocks pack". The

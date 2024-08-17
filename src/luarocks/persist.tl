@@ -4,6 +4,11 @@
 local record persist
    run_file: function(string, {string:any}): boolean, any | string, string
    load_into_table: function(string, ?{string:any}) : {any: any}, {any: any} | string, string
+
+   interface Writer
+      write: function(self: Writer, data: string)
+      buffer: {number | string}
+   end
 end
 
 local core = require("luarocks.core.persist")
@@ -20,13 +25,10 @@ local type SortBy = o.SortBy
 local type p = require("luarocks.core.types.persist")
 local type PersistableTable = p.PersistableTable
 
+local type Writer = persist.Writer
+
 persist.run_file = core.run_file
 persist.load_into_table = core.load_into_table
-
-local interface Writer
-   write: function(self: Writer, data: string)
-   buffer: {number | string}
-end
 
 local write_table: function(out: Writer, tbl: PersistableTable, level: integer, sort_by: SortBy<number | string>)
 
@@ -38,7 +40,7 @@ local write_table: function(out: Writer, tbl: PersistableTable, level: integer, 
 -- @param level number: the indentation level
 -- @param sub_order table: optional prioritization table
 -- @see write_table
-function persist.write_value(out: Writer, v: any, level: integer, sub_order?: SortBy<number | string>)
+function persist.write_value(out: Writer, v: any, level?: integer, sub_order?: SortBy<number | string>)
    if v is PersistableTable then
       level = level or 0
       write_table(out, v, level + 1, sub_order)

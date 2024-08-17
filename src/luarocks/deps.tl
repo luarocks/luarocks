@@ -41,6 +41,9 @@ local type dr = require("luarocks.core.types.dir")
 local type Dir = dr.Dir
 local type Dirs = dr.Dirs
 
+local type arg = require("luarocks.core.types.args")
+local type Args = arg.Args
+
 --- Generate a function that matches dep queries against the manifest,
 -- taking into account rocks_provided, the list of versions to skip,
 -- and the lockfile.
@@ -761,7 +764,7 @@ local function find_lua_incdir(prefix: string, luaver: string, luajitver: string
 end
 
 function deps.check_lua_incdir(vars: {string: string}): boolean, string, string
-   if vars.LUA_INCDIR_OK == "ok"
+   if vars.LUA_INCDIR_OK == "ok" --! fix later
       then return true
    end
 
@@ -846,7 +849,7 @@ function deps.check_lua_libdir(vars: {string: string}): boolean, string, string,
    end
 end
 
-function deps.get_deps_mode(args: {string: string}): string
+function deps.get_deps_mode(args: Args): string
    return args.deps_mode or cfg.deps_mode
 end
 

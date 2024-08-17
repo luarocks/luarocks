@@ -311,7 +311,7 @@ end
 -- be nil if not found), or nil followed by an error message.
 -- The inferred dir is returned first to avoid confusion with errors,
 -- because it is never nil.
-function fetch.find_base_dir(file: string, temp_dir: string, src_url: string, src_dir: string): string, string
+function fetch.find_base_dir(file: string, temp_dir: string, src_url: string, src_dir?: string): string, string
    local ok, err = fs.change_dir(temp_dir)
    if not ok then return nil, err end
    fs.unpack_archive(file)

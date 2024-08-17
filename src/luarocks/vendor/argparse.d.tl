@@ -34,6 +34,8 @@ local record argparse
 		add_help_command: function(self: Parser, ?string | {string: any}): Parser
 		add_complete_command: function(self: Parser, ?string | {string: any}): Parser
 
+		group: function(self: Parser, ...:any): Parser
+
 		-- TODO: should be Argument | Option
 		mutex: function(self: Parser, ...: any)
 
@@ -94,9 +96,13 @@ local record argparse
 
 		option: function(self: Command, name: string, description: string): Option
 
-		flag: function(self: Command, string, string): Option
+		flag: function(self: Command, string, ?string): Option
 
 		handle_options: function(self: Command, boolean): Command
+
+		mutex: function(self: Command, ...: any) --! copied over from Parser
+
+		group: function(self: Command, ...:any): Command --! copied over from Parser
 	end
 
 	metamethod __call: function(self: argparse, name: string, description: string, epilog: string): Parser

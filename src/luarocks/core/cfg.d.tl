@@ -38,19 +38,15 @@ local record cfg
    -- queries
    arch: string
    -- api
+   record conf
+      file: string
+      found: boolean
+   end
+
    record config_files
-      record system
-         file: string
-         found: boolean
-      end
-      record user
-         file: string
-         found: boolean
-      end
-      record project
-         file: string
-         found: boolean
-      end
+      system: conf
+      user: conf
+      project: conf
    end
    -- type_check
    accept_unknown_fields: boolean
@@ -109,6 +105,8 @@ local record cfg
    project_dir: string
    verbose: boolean
    project_tree: string
+   -- cmd make
+   keep_other_versions: boolean
 end
 
 return cfg

@@ -53,7 +53,9 @@ util.matchquote = core.matchquote
 local type Fn = util.Fn
 local type r = require("luarocks.core.types.rockspec")
 local type Rockspec = r.Rockspec
-local type Parser = util.Parser
+
+local argparse = require("luarocks.vendor.argparse")
+local type Parser = argparse.Parser
 
 
 local scheduled_functions: {Fn} = {}
@@ -207,7 +209,7 @@ function util.printout(...: string)
    io.stdout:write("\n")
 end
 
-function util.title(msg: string, porcelain: boolean, underline: string)
+function util.title(msg: string, porcelain?: boolean, underline?: string)
    if porcelain then return end
    util.printout()
    util.printout(msg)
@@ -241,7 +243,7 @@ function util.format_rock_name(name: string, namespace: string, version: string)
    return (namespace and namespace.."/" or "")..name..(version and " "..version or "")
 end
 
-function util.deps_mode_option(parser: Parser, program: string)
+function util.deps_mode_option(parser: Parser, program?: string)
 
    parser:option("--deps-mode", "How to handle dependencies. Four modes are supported:\n"..
       "* all - use all trees from the rocks_trees list for finding dependencies\n"..
@@ -258,7 +260,7 @@ function util.deps_mode_option(parser: Parser, program: string)
    parser:flag("--nodeps"):hidden(true)
 end
 
-function util.see_help(command: string, program: string): string
+function util.see_help(command: string, program?: string): string
    return "See '"..util.this_program(program or "luarocks")..' help'..(command and " "..command or "").."'."
 end
 

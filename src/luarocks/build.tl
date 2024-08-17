@@ -1,17 +1,5 @@
 
 local record build
-   record Op_b
-      build_only_deps: boolean
-      deps_mode: string
-      verify: boolean
-      minimal_mode: boolean
-      need_to_fetch: boolean
-      branch: string
-      no_install: boolean
-      pin: boolean
-      namespace: string
-   end
-
    record Builds
       skip_lua_inc_lib_check: boolean
       run: function(Rockspec, boolean): boolean, string, string
@@ -46,7 +34,10 @@ local type b = require("luarocks.core.types.build")
 local type Build = b.Build
 local type Module = b.BuiltinBuild.Module
 
-local type Op_b = build.Op_b
+local type bo = require("luarocks.core.types.bopts")
+local type BOpts = bo.BOpts
+
+
 local type Builds = build.Builds
 
 do
@@ -125,7 +116,7 @@ local function check_macosx_deployment_target(rockspec: Rockspec): boolean, stri
    return true
 end
 
-local function process_dependencies(rockspec: Rockspec, opts: Op_b, cwd: string): boolean, string, string
+local function process_dependencies(rockspec: Rockspec, opts: BOpts, cwd: string): boolean, string, string
    if not opts.build_only_deps then
       local ok, err, errcode = deps.check_external_deps(rockspec, "build")
       if err then
@@ -181,7 +172,7 @@ local function process_dependencies(rockspec: Rockspec, opts: Op_b, cwd: string)
    return deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify, deplock_dir)
 end
 
-local function fetch_and_change_to_source_dir(rockspec: Rockspec, opts: Op_b): boolean, string, string
+local function fetch_and_change_to_source_dir(rockspec: Rockspec, opts: BOpts): boolean, string, string
    if opts.minimal_mode or opts.build_only_deps then
       return true
    end
@@ -414,7 +405,7 @@ end
 -- @param cwd string or nil: The current working directory
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function build.build_rockspec(rockspec: Rockspec, opts: Op_b, cwd: string): string, string
+function build.build_rockspec(rockspec: Rockspec, opts: BOpts, cwd: string): string, string
 
    cwd = cwd or dir.path(".")
 

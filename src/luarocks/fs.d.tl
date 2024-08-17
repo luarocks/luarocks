@@ -75,6 +75,13 @@ local record fs
    modules: function(string): {string}
    system_cache_dir: function(): string
    check_command_permissions: function(Args): boolean, string
+   -- cmd config
+   is_writable: function(string): boolean
+   browser: function(string): boolean
+   -- cmd write_rockspec
+   quiet_stderr: function(string): string
+   -- cmd innit
+   wrap_script: function(string, string, string, ...:string): boolean, string
 end
 
 return fs
