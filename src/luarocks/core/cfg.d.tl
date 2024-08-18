@@ -110,6 +110,12 @@ local record cfg
    -- cmd path
    package_paths: function(string | Tree): string, string, string
    export_path_separator: string
+   -- admin cache
+   upload_server: string
+   upload_servers: {string: string}
+   -- admin add
+   upload_user: string
+   upload_password: string
 end
 
 return cfg
