@@ -1,17 +1,10 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local table = _tl_compat and _tl_compat.table or table
 
-
+--- Module implementing the LuaRocks "test" command.
+-- Tests a rock, compiling its C parts if any.
 local cmd_test = {}
-
 
 local util = require("luarocks.util")
 local test = require("luarocks.test")
-
-local argparse = require("luarocks.vendor.argparse")
-
-
-
-
 
 function cmd_test.add_to_parser(parser)
    local cmd = parser:command("test", [[
@@ -23,18 +16,18 @@ for running tests; otherwise, it will attempt to detect the rockspec.
 Any additional arguments are forwarded to the test suite.
 To make sure that test suite flags are not interpreted as LuaRocks flags, use --
 to separate LuaRocks arguments from test suite arguments.]],
-   util.see_also()):
-   summary("Run the test suite in the current directory.")
+      util.see_also())
+      :summary("Run the test suite in the current directory.")
 
-   cmd:argument("rockspec", "Project rockspec."):
-   args("?")
-   cmd:argument("args", "Test suite arguments."):
-   args("*")
+   cmd:argument("rockspec", "Project rockspec.")
+      :args("?")
+   cmd:argument("args", "Test suite arguments.")
+      :args("*")
    cmd:flag("--prepare", "Only install dependencies needed for testing only, but do not run the test")
 
-   cmd:option("--test-type", "Specify the test suite type manually if it was " ..
-   "not specified in the rockspec and it could not be auto-detected."):
-   argname("<type>")
+   cmd:option("--test-type", "Specify the test suite type manually if it was "..
+      "not specified in the rockspec and it could not be auto-detected.")
+      :argname("<type>")
 end
 
 function cmd_test.command(args)

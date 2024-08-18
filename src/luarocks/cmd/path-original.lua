@@ -1,18 +1,11 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local os = _tl_compat and _tl_compat.os or os; local package = _tl_compat and _tl_compat.package or package
 
-
+--- @module luarocks.path_cmd
+-- Driver for the `luarocks path` command.
 local path_cmd = {}
-
 
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 local fs = require("luarocks.fs")
-
-local argparse = require("luarocks.vendor.argparse")
-
-
-
-
 
 function path_cmd.add_to_parser(parser)
    local cmd = parser:command("path", [[
@@ -24,33 +17,33 @@ On Unix systems, you may run:
 And on Windows:
   luarocks path > "%temp%\_lrp.bat"
   call "%temp%\_lrp.bat" && del "%temp%\_lrp.bat"]],
-   util.see_also()):
-   summary("Return the currently configured package path.")
+  util.see_also())
+      :summary("Return the currently configured package path.")
 
    cmd:flag("--no-bin", "Do not export the PATH variable.")
-   cmd:flag("--append", "Appends the paths to the existing paths. Default is " ..
-   "to prefix the LR paths to the existing paths.")
+   cmd:flag("--append", "Appends the paths to the existing paths. Default is "..
+      "to prefix the LR paths to the existing paths.")
    cmd:flag("--lr-path", "Prints Lua path components defined by the configured rocks trees " ..
-   "(not formatted as a shell command)")
+      "(not formatted as a shell command)")
    cmd:flag("--lr-cpath", "Prints Lua cpath components defined by the configured rocks trees " ..
-   "(not formatted as a shell command)")
+      "(not formatted as a shell command)")
    cmd:flag("--full", "By default, --lr-path and --lr-cpath only include the paths " ..
-   "derived by the LuaRocks rocks_trees. Using --full includes any other components " ..
-   "defined in your system's package.(c)path, either via the running interpreter's " ..
-   "default paths or via LUA_(C)PATH(_5_x) environment variables (in short, using " ..
-   "--full produces the same lists as shown in the shell outputs of 'luarocks path').")
+      "derived by the LuaRocks rocks_trees. Using --full includes any other components " ..
+      "defined in your system's package.(c)path, either via the running interpreter's " ..
+      "default paths or via LUA_(C)PATH(_5_x) environment variables (in short, using " ..
+      "--full produces the same lists as shown in the shell outputs of 'luarocks path').")
    cmd:flag("--lr-bin", "Exports the system path (not formatted as shell command).")
    cmd:flag("--bin"):hidden(true)
 end
 
-
-
+--- Driver function for "path" command.
+-- @return boolean This function always succeeds.
 function path_cmd.command(args)
    local lr_path, lr_cpath, lr_bin = cfg.package_paths(args.tree)
    local path_sep = cfg.export_path_separator
 
-   local full_list = ((not args.lr_path) and (not args.lr_cpath) and (not args.lr_bin)) or
-   args.full
+   local full_list = ((not args.lr_path) and (not args.lr_cpath) and (not args.lr_bin))
+                     or args.full
 
    local clean_path = util.cleanup_path(os.getenv("PATH") or "", path_sep, nil, true)
 
@@ -60,7 +53,7 @@ function path_cmd.command(args)
          lr_cpath = package.cpath .. ";" .. lr_cpath
          lr_bin = clean_path .. path_sep .. lr_bin
       else
-         lr_path = lr_path .. ";" .. package.path
+         lr_path =  lr_path.. ";" .. package.path
          lr_cpath = lr_cpath .. ";" .. package.cpath
          lr_bin = lr_bin .. path_sep .. clean_path
       end

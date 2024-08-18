@@ -1,6 +1,5 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
-local write_rockspec = {}
 
+local write_rockspec = {}
 
 local builtin = require("luarocks.build.builtin")
 local cfg = require("luarocks.core.cfg")
@@ -12,23 +11,6 @@ local rockspecs = require("luarocks.rockspecs")
 local type_rockspec = require("luarocks.type.rockspec")
 local util = require("luarocks.util")
 
-local argparse = require("luarocks.vendor.argparse")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 local lua_versions = {
    "5.1",
    "5.2",
@@ -39,31 +21,31 @@ local lua_versions = {
    "5.3,5.4",
    "5.1,5.2,5.3",
    "5.2,5.3,5.4",
-   "5.1,5.2,5.3,5.4",
+   "5.1,5.2,5.3,5.4"
 }
 
 function write_rockspec.cmd_options(parser)
-   return parser:option("--output", "Write the rockspec with the given filename.\n" ..
-   "If not given, a file is written in the current directory with a " ..
-   "filename based on given name and version."):
-   argname("<file>"),
-   parser:option("--license", 'A license string, such as "MIT/X11" or "GNU GPL v3".'):
-   argname("<string>"),
-   parser:option("--summary", "A short one-line description summary."):
-   argname("<txt>"),
-   parser:option("--detailed", "A longer description string."):
-   argname("<txt>"),
-   parser:option("--homepage", "Project homepage."):
-   argname("<txt>"),
-   parser:option("--lua-versions", 'Supported Lua versions. Accepted values are: "' ..
-   table.concat(lua_versions, '", "') .. '".'):
-   argname("<ver>"):
-   choices(lua_versions),
-   parser:option("--rockspec-format", 'Rockspec format version, such as "1.0" or "1.1".'):
-   argname("<ver>"),
-   parser:option("--tag", "Tag to use. Will attempt to extract version number from it."),
-   parser:option("--lib", "A comma-separated list of libraries that C files need to link to."):
-   argname("<libs>")
+   return parser:option("--output", "Write the rockspec with the given filename.\n"..
+         "If not given, a file is written in the current directory with a "..
+         "filename based on given name and version.")
+         :argname("<file>"),
+      parser:option("--license", 'A license string, such as "MIT/X11" or "GNU GPL v3".')
+         :argname("<string>"),
+      parser:option("--summary", "A short one-line description summary.")
+         :argname("<txt>"),
+      parser:option("--detailed", "A longer description string.")
+         :argname("<txt>"),
+      parser:option("--homepage", "Project homepage.")
+         :argname("<txt>"),
+      parser:option("--lua-versions", 'Supported Lua versions. Accepted values are: "'..
+         table.concat(lua_versions, '", "')..'".')
+         :argname("<ver>")
+         :choices(lua_versions),
+      parser:option("--rockspec-format", 'Rockspec format version, such as "1.0" or "1.1".')
+         :argname("<ver>"),
+      parser:option("--tag", "Tag to use. Will attempt to extract version number from it."),
+      parser:option("--lib", "A comma-separated list of libraries that C files need to link to.")
+         :argname("<libs>")
 end
 
 function write_rockspec.add_to_parser(parser)
@@ -78,15 +60,15 @@ LuaRocks will attempt to infer name and version if not given,
 using 'dev' as a fallback default version.
 
 Note that the generated file is a _starting point_ for writing a
-rockspec, and is not guaranteed to be complete or correct. ]], util.see_also()):
-   summary("Write a template for a rockspec file.")
+rockspec, and is not guaranteed to be complete or correct. ]], util.see_also())
+      :summary("Write a template for a rockspec file.")
 
-   cmd:argument("name", "Name of the rock."):
-   args("?")
-   cmd:argument("version", "Rock version."):
-   args("?")
-   cmd:argument("location", "URL or path to the rock sources."):
-   args("?")
+   cmd:argument("name", "Name of the rock.")
+      :args("?")
+   cmd:argument("version", "Rock version.")
+      :args("?")
+   cmd:argument("location", "URL or path to the rock sources.")
+      :args("?")
 
    write_rockspec.cmd_options(cmd)
 end
@@ -100,7 +82,7 @@ local function fetch_url(rockspec)
    if err_code == "source.dir" then
       file, temp_dir = err_file, err_temp_dir
    elseif not file then
-      util.warning("Could not fetch sources - " .. temp_dir)
+      util.warning("Could not fetch sources - "..temp_dir)
       return false
    end
    util.printout("File successfully downloaded. Making checksum and checking base dir...")
@@ -138,7 +120,7 @@ local simple_scm_protocols = {
 local detect_url
 do
    local function detect_url_from_command(program, args, directory)
-      local command = fs.Q(cfg.variables[program:upper()]) .. " " .. args
+      local command = fs.Q(cfg.variables[program:upper()]).. " "..args
       local pipe = io.popen(fs.command_at(directory, fs.quiet_stderr(command)))
       if not pipe then return nil end
       local url = pipe:read("*a"):match("^([^\r\n]+)")
@@ -146,19 +128,19 @@ do
       if not url then return nil end
       if url:match("^[^@:/]+@[^@:/]+:.*$") then
          local u, h, p = url:match("^([^@]+)@([^:]+):(.*)$")
-         url = program .. "+ssh://" .. u .. "@" .. h .. "/" .. p
-      elseif not util.starts_with(url, program .. "://") then
-         url = program .. "+" .. url
+         url = program.."+ssh://"..u.."@"..h.."/"..p
+      elseif not util.starts_with(url, program.."://") then
+         url = program.."+"..url
       end
 
-      if (simple_scm_protocols)[dir.split_url(url)] then
+      if simple_scm_protocols[dir.split_url(url)] then
          return url
       end
    end
 
    local function detect_scm_url(directory)
       return detect_url_from_command("git", "config --get remote.origin.url", directory) or
-      detect_url_from_command("hg", "paths default", directory)
+         detect_url_from_command("hg", "paths default", directory)
    end
 
    detect_url = function(url_or_dir)
@@ -176,10 +158,10 @@ local function detect_homepage(url, homepage)
    end
    local url_protocol, url_path = dir.split_url(url)
 
-   if (simple_scm_protocols)[url_protocol] then
-      for _, domain in ipairs({ "github.com", "bitbucket.org", "gitlab.com" }) do
+   if simple_scm_protocols[url_protocol] then
+      for _, domain in ipairs({"github.com", "bitbucket.org", "gitlab.com"}) do
          if util.starts_with(url_path, domain) then
-            return "https://" .. url_path:gsub("%.git$", "")
+            return "https://"..url_path:gsub("%.git$", "")
          end
       end
    end
@@ -216,7 +198,7 @@ local function detect_license(data)
    local strip_copyright = (data:gsub("^Copyright [^\n]*\n", ""))
    local sum = 0
    for i = 1, #strip_copyright do
-      local num = string.byte(strip_copyright:sub(i, i))
+      local num = string.byte(strip_copyright:sub(i,i))
       if num > 32 and num <= 128 then
          sum = sum + num
       end
@@ -244,11 +226,12 @@ local function fill_as_builtin(rockspec, libs)
       incdirs, libdirs = {}, {}
       for _, lib in ipairs(libs) do
          local upper = lib:upper()
-         incdirs[#incdirs + 1] = "$(" .. upper .. "_INCDIR)"
-         libdirs[#libdirs + 1] = "$(" .. upper .. "_LIBDIR)"
+         incdirs[#incdirs+1] = "$("..upper.."_INCDIR)"
+         libdirs[#libdirs+1] = "$("..upper.."_LIBDIR)"
       end
    end
-   (rockspec.build).modules, rockspec.build.install, rockspec.build.copy_directories = builtin.autodetect_modules(libs, incdirs, libdirs)
+
+   rockspec.build.modules, rockspec.build.install, rockspec.build.copy_directories = builtin.autodetect_modules(libs, incdirs, libdirs)
 end
 
 local function rockspec_cleanup(rockspec)
@@ -263,15 +246,15 @@ local function rockspec_cleanup(rockspec)
    rockspec.format_is_at_least = nil
    rockspec.local_abs_filename = nil
    rockspec.rocks_provided = nil
-   for _, list in ipairs({ "dependencies", "build_dependencies", "test_dependencies" }) do
-      if (rockspec)[list] and not next((rockspec)[list]) then
-         (rockspec)[list] = nil
+   for _, list in ipairs({"dependencies", "build_dependencies", "test_dependencies"}) do
+      if rockspec[list] and not next(rockspec[list]) then
+         rockspec[list] = nil
       end
    end
-   for _, list in ipairs({ "dependencies", "build_dependencies", "test_dependencies" }) do
-      if (rockspec)[list] then
-         for i, entry in ipairs((rockspec)[list]) do
-            (rockspec)[list][i] = tostring(entry)
+   for _, list in ipairs({"dependencies", "build_dependencies", "test_dependencies"}) do
+      if rockspec[list] then
+         for i, entry in ipairs(rockspec[list]) do
+            rockspec[list][i] = tostring(entry)
          end
       end
    end
@@ -314,11 +297,11 @@ function write_rockspec.command(args)
    end
 
    if not name then
-      return nil, "Could not infer rock name. " .. util.see_help("write_rockspec")
+      return nil, "Could not infer rock name. "..util.see_help("write_rockspec")
    end
    version = version or "dev"
 
-   local filename = args.output or dir.path(fs.current_dir(), name:lower() .. "-" .. version .. "-1.rockspec")
+   local filename = args.output or dir.path(fs.current_dir(), name:lower().."-"..version.."-1.rockspec")
 
    local url = detect_url(location)
    local homepage = detect_homepage(url, args.homepage)
@@ -326,7 +309,7 @@ function write_rockspec.command(args)
    local rockspec, err = rockspecs.from_persisted_table(filename, {
       rockspec_format = args.rockspec_format,
       package = name,
-      version = version .. "-1",
+      version = version.."-1",
       source = {
          url = url,
          tag = args.tag,
@@ -338,7 +321,7 @@ function write_rockspec.command(args)
          license = args.license or "*** please specify a license ***",
       },
       dependencies = {
-         (lua_version_dep)[args.lua_versions],
+         lua_version_dep[args.lua_versions],
       },
       build = {},
    })
@@ -346,7 +329,7 @@ function write_rockspec.command(args)
    rockspec.source.protocol = protocol
 
    if not next(rockspec.dependencies) then
-      util.warning("Please specify supported Lua versions with --lua-versions=<ver>. " .. util.see_help("write_rockspec"))
+      util.warning("Please specify supported Lua versions with --lua-versions=<ver>. "..util.see_help("write_rockspec"))
    end
 
    local local_dir = location
@@ -383,13 +366,13 @@ function write_rockspec.command(args)
       for lib in args.lib:gmatch("([^,]+)") do
          table.insert(libs, lib)
          rockspec.external_dependencies[lib:upper()] = {
-            library = lib,
+            library = lib
          }
       end
    end
 
    local ok, err = fs.change_dir(local_dir)
-   if not ok then return nil, "Failed reaching files from project - error entering directory " .. local_dir end
+   if not ok then return nil, "Failed reaching files from project - error entering directory "..local_dir end
 
    if not (args.summary and args.detailed) then
       local summary, detailed = detect_description()
@@ -416,7 +399,7 @@ function write_rockspec.command(args)
    persist.save_from_table(filename, rockspec, type_rockspec.order)
 
    util.printout()
-   util.printout("Wrote template at " .. filename .. " -- you should now edit and finish it.")
+   util.printout("Wrote template at "..filename.." -- you should now edit and finish it.")
    util.printout()
 
    return true

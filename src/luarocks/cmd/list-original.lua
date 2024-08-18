@@ -1,14 +1,7 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local table = _tl_compat and _tl_compat.table or table
 
-
-local list = {Outdated = {}, }
-
-
-
-
-
-
-
+--- Module implementing the LuaRocks "list" command.
+-- Lists currently installed rocks.
+local list = {}
 
 local search = require("luarocks.search")
 local queries = require("luarocks.queries")
@@ -17,30 +10,16 @@ local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 
-
-
-local argparse = require("luarocks.vendor.argparse")
-
-
-
-
-
-
-
-
-
-
-
 function list.add_to_parser(parser)
    local cmd = parser:command("list", "List currently installed rocks.", util.see_also())
 
-   cmd:argument("filter", "A substring of a rock name to filter by."):
-   args("?")
-   cmd:argument("version", "Rock version to filter by."):
-   args("?")
+   cmd:argument("filter", "A substring of a rock name to filter by.")
+      :args("?")
+   cmd:argument("version", "Rock version to filter by.")
+      :args("?")
 
-   cmd:flag("--outdated", "List only rocks for which there is a higher " ..
-   "version available in the rocks server.")
+   cmd:flag("--outdated", "List only rocks for which there is a higher "..
+      "version available in the rocks server.")
    cmd:flag("--porcelain", "Produce machine-friendly output.")
 end
 
@@ -51,12 +30,12 @@ local function check_outdated(trees, query)
    end
    local outdated = {}
    for name, versions in util.sortedpairs(results_installed) do
-      local versionsk = util.keys(versions)
-      table.sort(versionsk, vers.compare_versions)
-      local latest_installed = versionsk[1]
+      versions = util.keys(versions)
+      table.sort(versions, vers.compare_versions)
+      local latest_installed = versions[1]
 
       local query_available = queries.new(name:lower())
-      local results_available = search.search_repos(query_available)
+      local results_available, err = search.search_repos(query_available)
 
       if results_available[name] then
          local available_versions = util.keys(results_available[name])
@@ -80,19 +59,19 @@ local function list_outdated(trees, query, porcelain)
          util.printout(item.name, item.installed, item.available, item.repo)
       else
          util.printout(item.name)
-         util.printout("   " .. item.installed .. " < " .. item.available .. " at " .. item.repo)
+         util.printout("   "..item.installed.." < "..item.available.." at "..item.repo)
          util.printout()
       end
    end
    return true
 end
 
-
-
+--- Driver function for "list" command.
+-- @return boolean: True if succeeded, nil on errors.
 function list.command(args)
    local query = queries.new(args.filter and args.filter:lower() or "", args.namespace, args.version, true)
    local trees = cfg.rocks_trees
-   local title = "Rocks installed for Lua " .. cfg.lua_version
+   local title = "Rocks installed for Lua "..cfg.lua_version
    if args.tree then
       trees = { args.tree }
       title = title .. " in " .. args.tree

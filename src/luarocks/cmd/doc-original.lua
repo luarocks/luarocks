@@ -1,8 +1,7 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs
 
-
+--- Module implementing the LuaRocks "doc" command.
+-- Shows documentation for an installed rock.
 local doc = {}
-
 
 local util = require("luarocks.util")
 local queries = require("luarocks.queries")
@@ -13,24 +12,18 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local download = require("luarocks.download")
 
-local argparse = require("luarocks.vendor.argparse")
-
-
-
-
-
 function doc.add_to_parser(parser)
-   local cmd = parser:command("doc", "Show documentation for an installed rock.\n\n" ..
-   "Without any flags, tries to load the documentation using a series of heuristics.\n" ..
-   "With flags, return only the desired information.", util.see_also([[
+   local cmd = parser:command("doc", "Show documentation for an installed rock.\n\n"..
+      "Without any flags, tries to load the documentation using a series of heuristics.\n"..
+      "With flags, return only the desired information.", util.see_also([[
    For more information about a rock, see the 'show' command.
-]])):
-   summary("Show documentation for an installed rock.")
+]]))
+      :summary("Show documentation for an installed rock.")
 
-   cmd:argument("rock", "Name of the rock."):
-   action(util.namespaced_name_action)
-   cmd:argument("version", "Version of the rock."):
-   args("?")
+   cmd:argument("rock", "Name of the rock.")
+      :action(util.namespaced_name_action)
+   cmd:argument("version", "Version of the rock.")
+      :args("?")
 
    cmd:flag("--home", "Open the home page of project.")
    cmd:flag("--list", "List documentation files only.")
@@ -39,17 +32,17 @@ end
 
 local function show_homepage(homepage, name, namespace, version)
    if not homepage then
-      return nil, "No 'homepage' field in rockspec for " .. util.format_rock_name(name, namespace, version)
+      return nil, "No 'homepage' field in rockspec for "..util.format_rock_name(name, namespace, version)
    end
-   util.printout("Opening " .. homepage .. " ...")
+   util.printout("Opening "..homepage.." ...")
    fs.browser(homepage)
    return true
 end
 
 local function try_to_open_homepage(name, namespace, version)
-   local temp_dir, err = fs.make_temp_dir("doc-" .. name .. "-" .. (version or ""))
+   local temp_dir, err = fs.make_temp_dir("doc-"..name.."-"..(version or ""))
    if not temp_dir then
-      return nil, "Failed creating temporary directory: " .. err
+      return nil, "Failed creating temporary directory: "..err
    end
    util.schedule_function(fs.delete, temp_dir)
    local ok, err = fs.change_dir(temp_dir)
@@ -63,20 +56,20 @@ local function try_to_open_homepage(name, namespace, version)
    return show_homepage(descript.homepage, name, namespace, version)
 end
 
-
-
+--- Driver function for "doc" command.
+-- @return boolean: True if succeeded, nil on errors.
 function doc.command(args)
    local query = queries.new(args.rock, args.namespace, args.version)
    local iname, iversion, repo = search.pick_installed_rock(query, args.tree)
    if not iname then
       local rock = util.format_rock_name(args.rock, args.namespace, args.version)
-      util.printout(rock .. " is not installed. Looking for it in the rocks servers...")
+      util.printout(rock.." is not installed. Looking for it in the rocks servers...")
       return try_to_open_homepage(args.rock, args.namespace, args.version)
    end
    local name, version = iname, iversion
 
    local rockspec, err = fetch.load_local_rockspec(path.rockspec_file(name, version, repo))
-   if not rockspec then return nil, err end
+   if not rockspec then return nil,err end
    local descript = rockspec.description or {}
 
    if args.home then
@@ -96,30 +89,30 @@ function doc.command(args)
    end
    if not docdir then
       if descript.homepage and not args.list then
-         util.printout("Local documentation directory not found -- opening " .. descript.homepage .. " ...")
+         util.printout("Local documentation directory not found -- opening "..descript.homepage.." ...")
          fs.browser(descript.homepage)
          return true
       end
-      return nil, "Documentation directory not found for " .. name .. " " .. version
+      return nil, "Documentation directory not found for "..name.." "..version
    end
 
    docdir = dir.normalize(docdir)
    local files = fs.find(docdir)
    local htmlpatt = "%.html?$"
-   local extensions = { htmlpatt, "%.md$", "%.txt$", "%.textile$", "" }
+   local extensions = { htmlpatt, "%.md$", "%.txt$",  "%.textile$", "" }
    local basenames = { "index", "readme", "manual" }
 
    local porcelain = args.porcelain
    if #files > 0 then
-      util.title("Documentation files for " .. name .. " " .. version, porcelain)
+      util.title("Documentation files for "..name.." "..version, porcelain)
       if porcelain then
          for _, file in ipairs(files) do
-            util.printout(docdir .. "/" .. file)
+            util.printout(docdir.."/"..file)
          end
       else
-         util.printout(docdir .. "/")
+         util.printout(docdir.."/")
          for _, file in ipairs(files) do
-            util.printout("\t" .. file)
+            util.printout("\t"..file)
          end
       end
    end
@@ -130,7 +123,7 @@ function doc.command(args)
 
    for _, extension in ipairs(extensions) do
       for _, basename in ipairs(basenames) do
-         local filename = basename .. extension
+         local filename = basename..extension
          local found
          for _, file in ipairs(files) do
             if file:lower():match(filename) and ((not found) or #file < #found) then
@@ -140,7 +133,7 @@ function doc.command(args)
          if found then
             local pathname = dir.path(docdir, found)
             util.printout()
-            util.printout("Opening " .. pathname .. " ...")
+            util.printout("Opening "..pathname.." ...")
             util.printout()
             local ok = fs.browser(pathname)
             if not ok and not pathname:match(htmlpatt) then
