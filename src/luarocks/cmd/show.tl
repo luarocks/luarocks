@@ -1,6 +1,12 @@
 --- Module implementing the LuaRocks "show" command.
 -- Shows information about an installed rock.
-local show = {}
+local record show
+   record Return
+      name: string
+      file: string
+      lable: string
+   end
+end
 
 local queries = require("luarocks.queries")
 local search = require("luarocks.search")
@@ -13,7 +19,41 @@ local fetch = require("luarocks.fetch")
 local manif = require("luarocks.manif")
 local repos = require("luarocks.repos")
 
-function show.add_to_parser(parser)
+local type Return = show.Return
+
+local argparse = require("luarocks.vendor.argparse")
+local type Parser = argparse.Parser
+local type Option = argparse.Option
+
+local type a = require("luarocks.core.types.args")
+local type Args = a.Args
+
+local type bo = require("luarocks.core.types.bopts")
+local type BOpts = bo.BOpts
+
+local type i = require("luarocks.core.types.installs")
+local type IOpts = i.IOpts
+
+local type p = require("luarocks.core.types.persist")
+local type PersistableTable = p.PersistableTable
+
+local type res = require("luarocks.core.types.result")
+local type Result = res.Result
+
+local type t = require("luarocks.core.types.tree")
+local type Tree = t.Tree
+
+local type q = require("luarocks.core.types.query")
+local type Query = q.Query
+
+local type r = require("luarocks.core.types.rockspec")
+local type Rockspec = r.Rockspec
+local type Dependencies = r.Dependencies
+
+local type m = require("luarocks.core.types.manifest")
+local type Entry = m.Manifest.Entry
+
+function show.add_to_parser(parser: Parser)
    local cmd = parser:command("show", [[
 Show information about an installed rock.
 
@@ -94,14 +134,14 @@ local porcelain_template = [[
 *ideps    :indirect_dependency\t${name}\t${label}
 ]]
 
-local function keys_as_string(t, sep)
+local function keys_as_string(t: {string: any}, sep: string): string
    local keys = util.keys(t)
    table.sort(keys)
    return table.concat(keys, sep or " ")
 end
 
-local function word_wrap(line)
-   local width = tonumber(os.getenv("COLUMNS")) or 80
+local function word_wrap(line: string): string
+   local width = math.tointeger(os.getenv("COLUMNS")) or 80 --! tonumber to tointeger
    if width > 80 then width = 80 end
    if #line > width then
       local brk = width
@@ -115,7 +155,7 @@ local function word_wrap(line)
    return line
 end
 
-local function format_text(text)
+local function format_text(text: string): string
    text = text:gsub("^%s*",""):gsub("%s$", ""):gsub("\n[ \t]+","\n"):gsub("([^\n])\n([^\n])","%1 %2")
    local paragraphs = util.split_string(text, "\n\n")
    for n, line in ipairs(paragraphs) do
@@ -124,8 +164,8 @@ local function format_text(text)
    return (table.concat(paragraphs, "\n\n"):gsub("%s$", ""))
 end
 
-local function installed_rock_label(dep, tree)
-   local installed, version
+local function installed_rock_label(dep: Query, tree: string | Tree): string
+   local installed, version: string, string
    local rocks_provided = util.get_rocks_provided()
    if rocks_provided[dep.name] then
       installed, version = true, rocks_provided[dep.name]
@@ -135,7 +175,7 @@ local function installed_rock_label(dep, tree)
    return installed and "using "..version or "missing"
 end
 
-local function render(template, data)
+local function render(template: string, data: {string: string | {string}}): string
    local out = {}
    for cmd, var, line in template:gmatch("(.)([a-z]*)%s*:([^\n]*)\n") do
       line = line:gsub("\\t", "\t")
@@ -144,12 +184,12 @@ local function render(template, data)
          table.insert(out, line)
       elseif cmd == "?" or cmd == "*" or cmd == "!" then
          if (cmd == "!" and d == nil)
-             or (cmd ~= "!" and (type(d) == "string"
-                                 or (type(d) == "table" and next(d)))) then
+             or (cmd ~= "!" and (d is string
+                                 or (d is {string} and next(d) ~= nil))) then
             local n = cmd == "*" and #d or 1
             for i = 1, n do
                local tbl = cmd == "*" and d[i] or data
-               if type(tbl) == "string" then
+               if tbl is string   then
                   tbl = tbl:gsub("%%", "%%%%")
                end
                table.insert(out, (line:gsub("${([a-z]+)}", tbl)))
@@ -160,7 +200,7 @@ local function render(template, data)
    return table.concat(out, "\n")
 end
 
-local function adjust_path(name, version, basedir, pathname, suffix)
+local function adjust_path(name: string, version: string, basedir: string, pathname: string, suffix?: string): string
    pathname = dir.path(basedir, pathname)
    local vpathname = path.versioned_name(pathname, basedir, name, version)
    return (fs.exists(vpathname)
@@ -168,25 +208,25 @@ local function adjust_path(name, version, basedir, pathname, suffix)
           or pathname) .. (suffix or "")
 end
 
-local function modules_to_list(name, version, repo)
-   local ret = {}
+local function modules_to_list(name: string, version: string, repo: string | Tree): {Return}
+   local ret: {Return} = {}
    local rock_manifest = manif.load_rock_manifest(name, version, repo)
 
    local lua_dir = path.deploy_lua_dir(repo)
    local lib_dir = path.deploy_lib_dir(repo)
-   repos.recurse_rock_manifest_entry(rock_manifest.lua, function(pathname)
+   repos.recurse_rock_manifest_entry(rock_manifest.lua, function(pathname: string): boolean, string
       table.insert(ret, {
          name = path.path_to_module(pathname),
          file = adjust_path(name, version, lua_dir, pathname),
       })
    end)
-   repos.recurse_rock_manifest_entry(rock_manifest.lib, function(pathname)
+   repos.recurse_rock_manifest_entry(rock_manifest.lib, function(pathname: string): boolean, string
       table.insert(ret, {
          name = path.path_to_module(pathname),
          file = adjust_path(name, version, lib_dir, pathname),
       })
    end)
-   table.sort(ret, function(a, b)
+   table.sort(ret, function(a: Return, b: Return): boolean
       if a.name == b.name then
          return a.file < b.file
       end
@@ -195,18 +235,18 @@ local function modules_to_list(name, version, repo)
    return ret
 end
 
-local function commands_to_list(name, version, repo)
-   local ret = {}
+local function commands_to_list(name: string, version: string, repo: string | Tree): {Return}
+   local ret: {Return} = {}
    local rock_manifest = manif.load_rock_manifest(name, version, repo)
 
    local bin_dir = path.deploy_bin_dir(repo)
-   repos.recurse_rock_manifest_entry(rock_manifest.bin, function(pathname)
+   repos.recurse_rock_manifest_entry(rock_manifest.bin, function(pathname: string): boolean, string
       table.insert(ret, {
          name = name,
          file = adjust_path(name, version, bin_dir, pathname, cfg.wrapper_suffix),
       })
    end)
-   table.sort(ret, function(a, b)
+   table.sort(ret, function(a: Return, b: Return): boolean
       if a.name == b.name then
          return a.file < b.file
       end
@@ -215,16 +255,16 @@ local function commands_to_list(name, version, repo)
    return ret
 end
 
-local function deps_to_list(dependencies, tree)
-   local ret = {}
-   for _, dep in ipairs(dependencies or {}) do
+local function deps_to_list(dependencies: Dependencies, tree: string | Tree): {Return}
+   local ret: {Return} = {}
+   for _, dep in ipairs(dependencies.queries or {}) do
       table.insert(ret, { name = tostring(dep), label = installed_rock_label(dep, tree) })
    end
    return ret
 end
 
-local function indirect_deps(mdeps, rdeps, tree)
-   local ret = {}
+local function indirect_deps(mdeps: {string: string}, rdeps: Dependencies, tree: string | Tree): {Return}
+   local ret: {Return} = {}
    local direct_deps = {}
    for _, dep in ipairs(rdeps) do
       direct_deps[dep] = true
@@ -237,7 +277,7 @@ local function indirect_deps(mdeps, rdeps, tree)
    return ret
 end
 
-local function show_rock(template, namespace, name, version, rockspec, repo, minfo, tree)
+local function show_rock(template: string, namespace: string, name: string, version: string, rockspec: Rockspec, repo: string | Tree, minfo: Entry, tree: string | Tree)
    local desc = rockspec.description or {}
    local data = {
       namespace = namespace,
@@ -262,7 +302,7 @@ end
 
 --- Driver function for "show" command.
 -- @return boolean: True if succeeded, nil on errors.
-function show.command(args)
+function show.command(args: Args): boolean, string
    local query = queries.new(args.rock, args.namespace, args.version, true)
 
    local name, version, repo, repo_url = search.pick_installed_rock(query, args.tree)

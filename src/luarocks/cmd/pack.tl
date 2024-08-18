@@ -1,13 +1,20 @@
 
 --- Module implementing the LuaRocks "pack" command.
 -- Creates a rock, packing sources or binaries.
-local cmd_pack = {}
+local record cmd_pack
+end
 
 local util = require("luarocks.util")
 local pack = require("luarocks.pack")
 local queries = require("luarocks.queries")
 
-function cmd_pack.add_to_parser(parser)
+local argparse = require("luarocks.vendor.argparse")
+local type Parser = argparse.Parser
+
+local type a = require("luarocks.core.types.args")
+local type Args = a.Args
+
+function cmd_pack.add_to_parser(parser: Parser)
    local cmd = parser:command("pack", "Create a rock, packing sources or binaries.", util.see_also())
 
    cmd:argument("rock", "A rockspec file, for creating a source rock, or the "..
@@ -22,8 +29,8 @@ end
 --- Driver function for the "pack" command.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-function cmd_pack.command(args)
-   local file, err
+function cmd_pack.command(args: Args): boolean, string
+   local file, err: string, string
    if args.rock:match(".*%.rockspec") then
       file, err = pack.pack_source_rock(args.rock)
    else

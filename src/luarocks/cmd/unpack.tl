@@ -1,7 +1,8 @@
 
 --- Module implementing the LuaRocks "unpack" command.
 -- Unpack the contents of a rock.
-local unpack = {}
+local record unpack
+end
 
 local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
@@ -10,7 +11,16 @@ local build = require("luarocks.build")
 local dir = require("luarocks.dir")
 local search = require("luarocks.search")
 
-function unpack.add_to_parser(parser)
+local argparse = require("luarocks.vendor.argparse")
+local type Parser = argparse.Parser
+
+local type a = require("luarocks.core.types.args")
+local type Args = a.Args
+
+local type r = require("luarocks.core.types.rockspec")
+local type Rockspec = r.Rockspec
+
+function unpack.add_to_parser(parser: Parser)
    local cmd = parser:command("unpack", [[
 Unpacks the contents of a rock in a newly created directory.
 Argument may be a rock file, or the name of a rock in a rocks server.
@@ -34,9 +44,7 @@ end
 -- @param dir_name string: The directory where to store and unpack files.
 -- @return table or (nil, string): the loaded rockspec table or
 -- nil and an error message.
-local function unpack_rockspec(rockspec_file, dir_name)
-   assert(type(rockspec_file) == "string")
-   assert(type(dir_name) == "string")
+local function unpack_rockspec(rockspec_file: string, dir_name: string): Rockspec, string
 
    local rockspec, err = fetch.load_rockspec(rockspec_file)
    if not rockspec then
@@ -44,8 +52,8 @@ local function unpack_rockspec(rockspec_file, dir_name)
    end
    local ok, err = fs.change_dir(dir_name)
    if not ok then return nil, err end
-   local ok, sources_dir = fetch.fetch_sources(rockspec, true, ".")
-   if not ok then
+   local oks, sources_dir = fetch.fetch_sources(rockspec, true, ".")
+   if not oks then
       return nil, sources_dir
    end
    ok, err = fs.change_dir(sources_dir)
@@ -63,16 +71,14 @@ end
 -- extension in the rock filename (eg. "src", "all", "linux-x86")
 -- @return table or (nil, string): the loaded rockspec table or
 -- nil and an error message.
-local function unpack_rock(rock_file, dir_name, kind)
-   assert(type(rock_file) == "string")
-   assert(type(dir_name) == "string")
+local function unpack_rock(rock_file: string, dir_name: string, kind: string): Rockspec, string, string
 
    local ok, err, errcode = fetch.fetch_and_unpack_rock(rock_file, dir_name)
    if not ok then
       return nil, err, errcode
    end
-   ok, err = fs.change_dir(dir_name)
-   if not ok then return nil, err end
+   local oks, errs = fs.change_dir(dir_name)
+   if not oks then return nil, errs end
    local rockspec_file = dir_name..".rockspec"
    local rockspec, err = fetch.load_rockspec(rockspec_file)
    if not rockspec then
@@ -80,13 +86,13 @@ local function unpack_rock(rock_file, dir_name, kind)
    end
    if kind == "src" then
       if rockspec.source.file then
-         local ok, err = fs.unpack_archive(rockspec.source.file)
+         oks, err = fs.unpack_archive(rockspec.source.file)
          if not ok then return nil, err end
-         ok, err = fetch.find_rockspec_source_dir(rockspec, ".")
+         oks, err = fetch.find_rockspec_source_dir(rockspec, ".")
          if not ok then return nil, err end
-         ok, err = fs.change_dir(rockspec.source.dir)
+         oks, err = fs.change_dir(rockspec.source.dir)
          if not ok then return nil, err end
-         ok, err = build.apply_patches(rockspec)
+         oks, err = build.apply_patches(rockspec)
          fs.pop_dir()
          if not ok then return nil, err end
       end
@@ -100,8 +106,7 @@ end
 -- @param file string: A rockspec or .rock URL.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-local function run_unpacker(file, force)
-   assert(type(file) == "string")
+local function run_unpacker(file: string, force: boolean): boolean, string
 
    local base_name = dir.base_name(file)
    local dir_name, kind, extension = base_name:match("(.*)%.([^.]+)%.(rock)$")
@@ -123,7 +128,7 @@ local function run_unpacker(file, force)
    end
    local rollback = util.schedule_function(fs.delete, fs.absolute_name(dir_name))
 
-   local rockspec, err
+   local rockspec, err: Rockspec, string
    if extension == "rock" then
       rockspec, err = unpack_rock(file, dir_name, kind)
    elseif extension == "rockspec" then
@@ -152,8 +157,8 @@ end
 --- Driver function for the "unpack" command.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-function unpack.command(args)
-   local url, err
+function unpack.command(args: Args): boolean, string
+   local url, err: string, string
    if args.rock:match(".*%.rock") or args.rock:match(".*%.rockspec") then
       url = args.rock
    else

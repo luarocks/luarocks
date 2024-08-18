@@ -81,7 +81,7 @@ overrides and recreates this file scanning dependency based on ranges.
    cmd:argument("rockspec", "Rockspec for the rock to build.")
       :args("?")
 
-   make.cmd_options(cmd) --!
+   make.cmd_options(cmd as Parser) --!
 end
 
 --- Driver function for "make" command.

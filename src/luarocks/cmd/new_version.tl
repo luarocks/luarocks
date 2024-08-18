@@ -1,7 +1,8 @@
 
 --- Module implementing the LuaRocks "new_version" command.
 -- Utility function that writes a new rockspec, updating data from a previous one.
-local new_version = {}
+local record new_version
+end
 
 local util = require("luarocks.util")
 local download = require("luarocks.download")
@@ -11,7 +12,19 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local type_rockspec = require("luarocks.type.rockspec")
 
-function new_version.add_to_parser(parser)
+local argparse = require("luarocks.vendor.argparse")
+local type Parser = argparse.Parser
+
+local type a = require("luarocks.core.types.args")
+local type Args = a.Args
+
+local type p = require("luarocks.core.types.persist")
+local type PersistableTable = p.PersistableTable
+
+local type r = require("luarocks.core.types.rockspec")
+local type Rockspec = r.Rockspec
+
+function new_version.add_to_parser(parser: Parser)
    local cmd = parser:command("new_version", [[
 This is a utility function that writes a new rockspec, updating data from a
 previous one.
@@ -51,7 +64,7 @@ if it already exists.]], util.see_also())
 end
 
 
-local function try_replace(tbl, field, old, new)
+local function try_replace(tbl: {string: string}, field: string, old: string, new: string): boolean
    if not tbl[field] then
       return false
    end
@@ -69,7 +82,7 @@ end
 -- If it specified MD5, update it.
 -- @return (true, false) if MD5 was not specified or it stayed same,
 -- (true, true) if MD5 changed, (nil, string) on error.
-local function check_url_and_update_md5(out_rs, invalid_is_error)
+local function check_url_and_update_md5(out_rs: Rockspec, invalid_is_error?: boolean): boolean, string | boolean --!
    local file, temp_dir = fetch.fetch_url_at_temp_dir(out_rs.source.url, "luarocks-new-version-"..out_rs.package)
    if not file then
       if invalid_is_error then
@@ -105,7 +118,7 @@ local function check_url_and_update_md5(out_rs, invalid_is_error)
    end
 end
 
-local function update_source_section(out_rs, url, tag, old_ver, new_ver)
+local function update_source_section(out_rs: Rockspec, url: string, tag: string, old_ver: string, new_ver: string): boolean, string | boolean
    if tag then
       out_rs.source.tag = tag
    end
@@ -117,21 +130,21 @@ local function update_source_section(out_rs, url, tag, old_ver, new_ver)
       return true
    end
    if out_rs.source.dir then
-      try_replace(out_rs.source, "dir", old_ver, new_ver)
+      try_replace(out_rs.source as {string: string}, "dir", old_ver, new_ver)
    end
    if out_rs.source.file then
-      try_replace(out_rs.source, "file", old_ver, new_ver)
+      try_replace(out_rs.source as {string: string}, "file", old_ver, new_ver)
    end
 
    local old_url = out_rs.source.url
-   if try_replace(out_rs.source, "url", old_ver, new_ver) then
+   if try_replace(out_rs.source as {string: string}, "url", old_ver, new_ver) then
       local ok, md5_changed = check_url_and_update_md5(out_rs, true)
       if ok then
          return ok, md5_changed
       end
       out_rs.source.url = old_url
    end
-   if tag or try_replace(out_rs.source, "tag", old_ver, new_ver) then
+   if tag or try_replace(out_rs.source as {string: string}, "tag", old_ver, new_ver) then
       return true
    end
    -- Couldn't replace anything significant, use the old URL.
@@ -145,16 +158,16 @@ local function update_source_section(out_rs, url, tag, old_ver, new_ver)
    return true
 end
 
-function new_version.command(args)
+function new_version.command(args: Args): boolean, string | boolean
    if not args.rock then
-      local err
+      local err: string
       args.rock, err = util.get_default_rockspec()
       if not args.rock then
          return nil, err
       end
    end
 
-   local filename, err
+   local filename, err: string, string
    if args.rock:match("rockspec$") then
       filename, err = fetch.fetch_url(args.rock)
       if not filename then
@@ -173,13 +186,13 @@ function new_version.command(args)
    end
 
    local old_ver, old_rev = valid_rs.version:match("(.*)%-(%d+)$")
-   local new_ver, new_rev
+   local new_ver, new_rev: string, string
 
    if args.tag and not args.new_version then
       args.new_version = args.tag:gsub("^v", "")
    end
 
-   local out_dir
+   local out_dir: string
    if args.dir then
       out_dir = dir.normalize(args.dir)
    end
@@ -197,7 +210,7 @@ function new_version.command(args)
    end
    local new_rockver = new_ver:gsub("-", "")
 
-   local out_rs, err = persist.load_into_table(filename)
+   local out_rs, err = persist.load_into_table(filename) as Rockspec, string
    local out_name = out_rs.package:lower()
    out_rs.version = new_rockver.."-"..new_rev
 
@@ -213,7 +226,7 @@ function new_version.command(args)
       out_filename = dir.path(out_dir, out_filename)
       fs.make_dir(out_dir)
    end
-   persist.save_from_table(out_filename, out_rs, type_rockspec.order)
+   persist.save_from_table(out_filename, out_rs as PersistableTable, type_rockspec.order)
 
    util.printout("Wrote "..out_filename)
 

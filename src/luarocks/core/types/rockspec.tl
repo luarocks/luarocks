@@ -12,7 +12,7 @@ local record rockspec
         issues_url: string
         maintainer: string
         license: string
-        labels: any --!
+        labels: {string}
     end
   
     record Source

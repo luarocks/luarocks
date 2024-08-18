@@ -107,6 +107,9 @@ local record cfg
    project_tree: string
    -- cmd make
    keep_other_versions: boolean
+   -- cmd path
+   package_paths: function(string | Tree): string, string, string
+   export_path_separator: string
 end
 
 return cfg

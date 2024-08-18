@@ -104,7 +104,7 @@ function multipart.encode(params: Parameters): string, string --! Table map type
                         "\r\n", "--", boundary, "--", "\r\n" }), boundary
 end
 
-function multipart.new_file(fname: string, mime: string): File
+function multipart.new_file(fname: string, mime?: string): File
    local self: File = {}
 
    setmetatable(self, { __index = File })

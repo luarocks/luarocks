@@ -38,7 +38,7 @@ function init.add_to_parser(parser: Parser)
    cmd:flag("--no-wrapper-scripts", "Do not generate wrapper ./lua and ./luarocks launcher scripts.")
    cmd:flag("--no-gitignore", "Do not generate a .gitignore file.")
 
-   cmd:group("Options for specifying rockspec data", write_rockspec.cmd_options(cmd)) --!
+   cmd:group("Options for specifying rockspec data", write_rockspec.cmd_options(cmd as Parser))
 end
 
 local function gitignore_path(pwd: string, wrapper_dir: string, filename: string): string

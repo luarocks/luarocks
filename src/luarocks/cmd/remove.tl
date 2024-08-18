@@ -1,7 +1,9 @@
 
 --- Module implementing the LuaRocks "remove" command.
 -- Uninstalls rocks.
-local cmd_remove = {}
+local record cmd_remove
+   needs_lock: function(Args): boolean
+end
 
 local remove = require("luarocks.remove")
 local util = require("luarocks.util")
@@ -11,7 +13,13 @@ local path = require("luarocks.path")
 local deps = require("luarocks.deps")
 local queries = require("luarocks.queries")
 
-function cmd_remove.add_to_parser(parser)
+local argparse = require("luarocks.vendor.argparse")
+local type Parser = argparse.Parser
+
+local type a = require("luarocks.core.types.args")
+local type Args = a.Args
+
+function cmd_remove.add_to_parser(parser: Parser)
    -- luacheck: push ignore 431
    local cmd = parser:command("remove", [[
 Uninstall a rock.
@@ -30,13 +38,13 @@ To override this check and force the removal, use --force or --force-fast.]],
 
    cmd:flag("--force", "Force removal if it would break dependencies.")
    cmd:flag("--force-fast", "Perform a forced removal without reporting dependency issues.")
-   util.deps_mode_option(cmd)
+   util.deps_mode_option(cmd as Parser)
 end
 
 --- Driver function for the "remove" command.
 -- @return boolean or (nil, string, exitcode): True if removal was
 -- successful, nil and an error message otherwise. exitcode is optionally returned.
-function cmd_remove.command(args)
+function cmd_remove.command(args: Args): boolean, string
    local name = args.rock
    local deps_mode = deps.get_deps_mode(args)
 
@@ -66,6 +74,6 @@ function cmd_remove.command(args)
    return true
 end
 
-cmd_remove.needs_lock = function() return true end
+cmd_remove.needs_lock = function(): boolean return true end
 
 return cmd_remove

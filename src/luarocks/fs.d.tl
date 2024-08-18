@@ -82,6 +82,7 @@ local record fs
    quiet_stderr: function(string): string
    -- cmd innit
    wrap_script: function(string, string, string, ...:string): boolean, string
+   export_cmd: function(string, string): string
 end
 
 return fs

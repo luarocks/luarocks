@@ -88,7 +88,7 @@ rockspec, and is not guaranteed to be complete or correct. ]], util.see_also())
    cmd:argument("location", "URL or path to the rock sources.")
       :args("?")
 
-   write_rockspec.cmd_options(cmd) --!
+   write_rockspec.cmd_options(cmd as Parser)
 end
 
 local function open_file(name: string): FILE, string, integer

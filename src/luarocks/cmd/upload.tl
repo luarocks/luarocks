@@ -1,5 +1,6 @@
 
-local upload = {}
+local record upload
+end
 
 local signing = require("luarocks.signing")
 local util = require("luarocks.util")
@@ -8,7 +9,39 @@ local pack = require("luarocks.pack")
 local cfg = require("luarocks.core.cfg")
 local Api = require("luarocks.upload.api")
 
-function upload.add_to_parser(parser)
+local argparse = require("luarocks.vendor.argparse")
+local type Parser = argparse.Parser
+local type Option = argparse.Option
+
+local type a = require("luarocks.core.types.args")
+local type Args = a.Args
+
+local type bo = require("luarocks.core.types.bopts")
+local type BOpts = bo.BOpts
+
+local type i = require("luarocks.core.types.installs")
+local type IOpts = i.IOpts
+
+local type p = require("luarocks.core.types.persist")
+local type PersistableTable = p.PersistableTable
+
+local type res = require("luarocks.core.types.result")
+local type Result = res.Result
+
+local type t = require("luarocks.core.types.tree")
+local type Tree = t.Tree
+
+local type q = require("luarocks.core.types.query")
+local type Query = q.Query
+
+local type r = require("luarocks.core.types.rockspec")
+local type Rockspec = r.Rockspec
+local type Dependencies = r.Dependencies
+
+local type m = require("luarocks.core.types.manifest")
+local type Entry = m.Manifest.Entry
+
+function upload.add_to_parser(parser: Parser)
    local cmd = parser:command("upload", "Pack a source rock file (.src.rock extension) "..
       "and upload it and the rockspec to the public rocks repository.", util.see_also())
       :summary("Upload a rockspec to the public rocks repository.")
@@ -31,12 +64,12 @@ function upload.add_to_parser(parser)
    cmd:flag("--debug"):hidden(true)
 end
 
-local function is_dev_version(version)
+local function is_dev_version(version: string): string
    return version:match("^dev") or version:match("^scm")
 end
 
-function upload.command(args)
-   local api, err = Api.new(args)
+function upload.command(args: Args): boolean, string, string --!
+   local api, err = Api.new(args as argparse.Args) --!
    if not api then
       return nil, err
    end
@@ -63,8 +96,8 @@ function upload.command(args)
       return nil, "Revision "..rockspec.version.." already exists on the server. "..util.see_help("upload")
    end
 
-   local sigfname
-   local rock_sigfname
+   local sigfname: string
+   local rock_sigfname: string
 
    if args.sign then
       sigfname, err = signing.sign_file(args.rockspec)
@@ -74,7 +107,7 @@ function upload.command(args)
       util.printout("Signed rockspec: "..sigfname)
    end
 
-   local rock_fname
+   local rock_fname: string
    if args.src_rock then
       rock_fname = args.src_rock
    elseif not args.skip_pack and not is_dev_version(rockspec.version) then

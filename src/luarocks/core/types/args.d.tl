@@ -67,6 +67,36 @@ local record args
         no_wrapper_scripts: boolean
         wrapper_dir: string
         reset: boolean
+        filter: string
+        outdated: boolean
+        new_version: string
+        dir: string
+        new_url: string
+        lr_path: string
+        lr_cpath: string
+        lr_bin: string
+        full: boolean
+        append: boolean
+        no_bin: boolean
+        old_versions: boolean
+        binary: boolean
+        rock_tree: boolean
+        rock_namespace: boolean
+        rock_dir: boolean
+        rock_license: boolean
+        issues: boolean
+        labels: boolean
+        modules: boolean
+        deps: boolean
+        build_deps: boolean
+        test_deps: boolean
+        mversion: boolean
+        test_type: string
+        args: {string}
+        prepare: boolean
+        src_rock: string
+        skip_pack: boolean
+        modname: string
      end
 end
 

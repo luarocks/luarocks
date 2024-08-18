@@ -54,7 +54,7 @@ function cmd_build.add_to_parser(parser: Parser)
       "versions of each dependency found for this rock (recursively), "..
       "and store it in the rock's directory. "..
       "Ignores any existing luarocks.lock file in the rock's sources.")
-   make.cmd_options(cmd) --!
+   make.cmd_options(cmd as Parser)
 end
 
 --- Build and install a rock.

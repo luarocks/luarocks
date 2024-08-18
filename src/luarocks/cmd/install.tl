@@ -54,7 +54,7 @@ function install.add_to_parser(parser: Parser)
       "option to work properly.")
    cmd:flag("--check-lua-versions", "If the rock can't be found, check repository "..
       "and report if it is available for another Lua version.")
-   util.deps_mode_option(cmd)  --!
+   util.deps_mode_option(cmd as Parser)
    cmd:flag("--no-manifest", "Skip creating/updating the manifest")
    cmd:flag("--pin", "If the installed rock is a Lua module, create a "..
       "luarocks.lock file listing the exact versions of each dependency found for "..

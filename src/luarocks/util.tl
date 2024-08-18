@@ -13,7 +13,7 @@ local type SortBy = o.SortBy
 
 local record util
    cleanup_path: function(string, string, string, boolean): string
-   split_string: function(string, string, number): {string}
+   split_string: function(string, string, ?number): {string}
    sortedpairs: function<K, V>(tbl: {K: V}, sort_by?: SortBy): function(): K, V, Ordering<K>
    deep_merge: function({any : any}, {any : any})
    deep_merge_under: function({any : any}, {any : any})

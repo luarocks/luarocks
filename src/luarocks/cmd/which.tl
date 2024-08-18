@@ -1,13 +1,20 @@
 
 --- @module luarocks.which_cmd
 -- Driver for the `luarocks which` command.
-local which_cmd = {}
+local record which_cmd
+end
 
-local loader = require("luarocks.loader")
+local loader = require("luarocks.loader") --!
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 
-function which_cmd.add_to_parser(parser)
+local argparse = require("luarocks.vendor.argparse")
+local type Parser = argparse.Parser
+
+local type a = require("luarocks.core.types.args")
+local type Args = a.Args
+
+function which_cmd.add_to_parser(parser: Parser)
    local cmd = parser:command("which", 'Given a module name like "foo.bar", '..
       "output which file would be loaded to resolve that module by "..
       'luarocks.loader, like "/usr/local/lua/'..cfg.lua_version..'/foo/bar.lua".',
@@ -19,7 +26,7 @@ end
 
 --- Driver function for "which" command.
 -- @return boolean This function terminates the interpreter.
-function which_cmd.command(args)
+function which_cmd.command(args: Args): boolean, string
    local pathname, rock_name, rock_version, where = loader.which(args.modname, "lp")
 
    if pathname then
