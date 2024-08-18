@@ -14,35 +14,9 @@ local index = require("luarocks.admin.index")
 
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
-local type Option = argparse.Option
 
 local type a = require("luarocks.core.types.args")
 local type Args = a.Args
-
-local type bo = require("luarocks.core.types.bopts")
-local type BOpts = bo.BOpts
-
-local type i = require("luarocks.core.types.installs")
-local type IOpts = i.IOpts
-
-local type p = require("luarocks.core.types.persist")
-local type PersistableTable = p.PersistableTable
-
-local type res = require("luarocks.core.types.result")
-local type Result = res.Result
-
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
-
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
-
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
-local type Dependencies = r.Dependencies
-
-local type m = require("luarocks.core.types.manifest")
-local type Entry = m.Manifest.Entry
 
 function admin_remove.add_to_parser(parser: Parser)
    local cmd = parser:command("remove", "Remove a rock or rockspec from a rocks server.", util.see_also())
