@@ -22,7 +22,7 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-local t = require("luarocks.core.types.tree")
+
 
 
 function init.add_to_parser(parser)

@@ -22,8 +22,8 @@ local type Args = a.Args
 local type p = require("luarocks.core.types.persist")
 local type PersistableTable = p.PersistableTable
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type tr = require("luarocks.core.types.tree")
+local type Tree = tr.Tree
 
 function init.add_to_parser(parser: Parser)
    local cmd = parser:command("init", "Initialize a directory for a Lua project using LuaRocks.", util.see_also())
