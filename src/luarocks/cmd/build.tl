@@ -22,8 +22,7 @@ local repos = require("luarocks.repos")
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
 local type bo = require("luarocks.core.types.bopts")
 local type BOpts = bo.BOpts
@@ -85,7 +84,9 @@ local function build_rock(rock_filename: string, opts: BOpts): boolean, string, 
       return nil, err, errcode
    end
 
-   ok, err, errcode = build.build_rockspec(rockspec, opts, cwd)
+   local n, v = build.build_rockspec(rockspec, opts, cwd)
+
+   ok, err, errcode = n ~= nil, v, nil
 
    fs.pop_dir()
    return ok, err, errcode
@@ -125,7 +126,11 @@ local function do_build(name: string, namespace: string, version: string, opts: 
       opts.need_to_fetch = false
    end
 
-   return build_rock(url, opts)
+   local ok, err, errcode = build_rock(url, opts)
+   if not ok then
+      return nil, err, errcode
+   end
+   return name, version
 end
 
 --- Driver function for "build" command.
@@ -172,7 +177,7 @@ function cmd_build.command(args: Args): boolean, string, string
       return nil, version
    end
    if skip == "skip" then
-      return name, version
+      return name ~= nil, version
    end
 
    if args.no_doc then
@@ -196,7 +201,7 @@ function cmd_build.command(args: Args): boolean, string, string
    if opts.deps_mode ~= "none" then
       deps.check_dependencies(nil, deps.get_deps_mode(args))
    end
-   return name, version
+   return name ~= nil, version
 end
 
 cmd_build.needs_lock = function(args: Args): boolean

@@ -23,22 +23,9 @@ local type Return = show.Return
 
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
-local type Option = argparse.Option
 
 local type a = require("luarocks.core.types.args")
 local type Args = a.Args
-
-local type bo = require("luarocks.core.types.bopts")
-local type BOpts = bo.BOpts
-
-local type i = require("luarocks.core.types.installs")
-local type IOpts = i.IOpts
-
-local type p = require("luarocks.core.types.persist")
-local type PersistableTable = p.PersistableTable
-
-local type res = require("luarocks.core.types.result")
-local type Result = res.Result
 
 local type t = require("luarocks.core.types.tree")
 local type Tree = t.Tree

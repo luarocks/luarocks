@@ -43,7 +43,7 @@ function make.cmd_options(parser: Parser)
       "built. If the rockspec or src.rock is being downloaded, LuaRocks will "..
       "attempt to download the signature as well. Otherwise, the signature "..
       "file should be already available locally in the same directory.\n"..
-      "You need the signer’s public key in your local keyring for this "..
+      "You need the signer's public key in your local keyring for this "..
       "option to work properly.")
    parser:flag("--sign", "To be used with --pack-binary-rock. Also produce a "..
       "signature file for the generated .rock file.")

@@ -5,7 +5,7 @@ local record cmd
 
    record Module
       add_to_parser: function(Parser)
-      command: function(Args): boolean, string
+      command: function(Args, ...: string): boolean, string, integer
       needs_lock: function(Args): boolean
       help: string
       help_summary: string
@@ -585,7 +585,7 @@ function cmd.run_command(description: string, commands: {string: string}, extern
                         :args("*")
                end
 
-               mod.command = function(args: Args): boolean, string
+               mod.command = function(args: Args): boolean, string, integer
                   return original_command(args, table.unpack(args.input))
                end
             end
@@ -594,7 +594,7 @@ function cmd.run_command(description: string, commands: {string: string}, extern
             util.warning("command module " .. module .. " does not implement command(), skipping")
          end
       else
-         util.warning("failed to load command module " .. module .. ": " .. mod)
+         util.warning("failed to load command module " .. module .. ": " .. tostring(mod))
       end
    end
 
@@ -793,7 +793,7 @@ function cmd.run_command(description: string, commands: {string: string}, extern
       end
    end
 
-   local call_ok, ok, err, exitcode = xpcall(function(): boolean, string
+   local call_ok, ok, err, exitcode = xpcall(function(): boolean, string, integer
       return cmd_mod.command(argsp)
    end, error_handler)
 
@@ -802,7 +802,7 @@ function cmd.run_command(description: string, commands: {string: string}, extern
    end
 
    if not call_ok then
-      die(ok, cmd.errorcodes.CRASH)
+      die(tostring(ok), cmd.errorcodes.CRASH)
    elseif not ok then
       die(err, exitcode)
    end

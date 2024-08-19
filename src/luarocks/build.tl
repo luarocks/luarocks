@@ -403,8 +403,7 @@ end
 -- @param rockspec rockspec: the rockspec to build
 -- @param opts table: build options table
 -- @param cwd string or nil: The current working directory
--- @return (string, string) or (nil, string, [string]): Name and version of
--- installed rock if succeeded or nil and an error message followed by an error code.
+-- @return: Name and version of installed rock if succeeded or nil and an error message.
 function build.build_rockspec(rockspec: Rockspec, opts: BOpts, cwd: string): string, string
 
    cwd = cwd or dir.path(".")

@@ -259,4 +259,6 @@ install.needs_lock = function(args: Args): boolean
    return true
 end
 
+deps.installer = install.command
+
 return install

@@ -1,6 +1,7 @@
 
 --- High-level dependency related functions.
 local record deps
+   installer: function(Args): boolean, string, string
 end
 
 local cfg = require("luarocks.core.cfg")
@@ -41,8 +42,7 @@ local type dr = require("luarocks.core.types.dir")
 local type Dir = dr.Dir
 local type Dirs = dr.Dirs
 
-local type arg = require("luarocks.core.types.args")
-local type Args = arg.Args
+local type Args = require("luarocks.core.types.args").Args
 
 --- Generate a function that matches dep queries against the manifest,
 -- taking into account rocks_provided, the list of versions to skip,
@@ -229,7 +229,6 @@ function deps.fulfill_dependency(dep: Query, deps_mode: string, rocks_provided: 
    end
 
    local search = require("luarocks.search")
-   local install = require("luarocks.cmd.install")
 
    local url, search_err = search.find_suitable_rock(dep)
    if not url then
@@ -242,7 +241,7 @@ function deps.fulfill_dependency(dep: Query, deps_mode: string, rocks_provided: 
       namespace = dep.namespace,
       verify = verify,
    }
-   local ok, install_err, errcode = install.command(install_args)
+   local ok, install_err, errcode = deps.installer(install_args)
    if not ok then
       return nil, "Failed installing dependency: "..url.." - "..install_err, errcode
    end
