@@ -186,7 +186,7 @@ function new_version.command(args: Args): boolean, string | boolean
    end
 
    local old_ver, old_rev = valid_rs.version:match("(.*)%-(%d+)$")
-   local new_ver, new_rev: string, string
+   local new_ver, new_rev: string, string | number
 
    if args.tag and not args.new_version then
       args.new_version = args.tag:gsub("^v", "")
@@ -212,7 +212,7 @@ function new_version.command(args: Args): boolean, string | boolean
 
    local out_rs, err = persist.load_into_table(filename) as Rockspec, string
    local out_name = out_rs.package:lower()
-   out_rs.version = new_rockver.."-"..new_rev
+   out_rs.version = new_rockver.."-"..tostring(new_rev)
 
    local ok, err = update_source_section(out_rs, args.new_url, args.tag, old_ver, new_ver)
    if not ok then return nil, err end
@@ -221,7 +221,7 @@ function new_version.command(args: Args): boolean, string | boolean
       out_rs.build.type = "builtin"
    end
 
-   local out_filename = out_name.."-"..new_rockver.."-"..new_rev..".rockspec"
+   local out_filename = out_name.."-"..new_rockver.."-"..tostring(new_rev)..".rockspec"
    if out_dir then
       out_filename = dir.path(out_dir, out_filename)
       fs.make_dir(out_dir)

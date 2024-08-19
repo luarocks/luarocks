@@ -1,9 +1,11 @@
 
---- Module implementing the LuaRocks "make" command.
--- Builds sources in the current directory, but unlike "build",
--- it does not fetch sources, etc., assuming everything is
--- available in the current directory.
+
+
+
+
 local make = {}
+
+
 
 local build = require("luarocks.build")
 local util = require("luarocks.util")
@@ -15,38 +17,47 @@ local deps = require("luarocks.deps")
 local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
 
+local argparse = require("luarocks.vendor.argparse")
+
+
+
+
+
+
+
+
 function make.cmd_options(parser)
    parser:flag("--no-install", "Do not install the rock.")
    parser:flag("--no-doc", "Install the rock without its documentation.")
-   parser:flag("--pack-binary-rock", "Do not install rock. Instead, produce a "..
-      ".rock file with the contents of compilation in the current directory.")
-   parser:flag("--keep", "Do not remove previously installed versions of the "..
-      "rock after building a new one. This behavior can be made permanent by "..
-      "setting keep_other_versions=true in the configuration file.")
-   parser:flag("--force", "If --keep is not specified, force removal of "..
-      "previously installed versions if it would break dependencies. "..
-      "If rock is already installed, reinstall it anyway.")
-   parser:flag("--force-fast", "Like --force, but performs a forced removal "..
-      "without reporting dependency issues.")
-   parser:flag("--verify", "Verify signature of the rockspec or src.rock being "..
-      "built. If the rockspec or src.rock is being downloaded, LuaRocks will "..
-      "attempt to download the signature as well. Otherwise, the signature "..
-      "file should be already available locally in the same directory.\n"..
-      "You need the signer’s public key in your local keyring for this "..
-      "option to work properly.")
-   parser:flag("--sign", "To be used with --pack-binary-rock. Also produce a "..
-      "signature file for the generated .rock file.")
-   parser:flag("--check-lua-versions", "If the rock can't be found, check repository "..
-      "and report if it is available for another Lua version.")
-   parser:flag("--pin", "Pin the exact dependencies used for the rockspec"..
-      "being built into a luarocks.lock file in the current directory.")
+   parser:flag("--pack-binary-rock", "Do not install rock. Instead, produce a " ..
+   ".rock file with the contents of compilation in the current directory.")
+   parser:flag("--keep", "Do not remove previously installed versions of the " ..
+   "rock after building a new one. This behavior can be made permanent by " ..
+   "setting keep_other_versions=true in the configuration file.")
+   parser:flag("--force", "If --keep is not specified, force removal of " ..
+   "previously installed versions if it would break dependencies. " ..
+   "If rock is already installed, reinstall it anyway.")
+   parser:flag("--force-fast", "Like --force, but performs a forced removal " ..
+   "without reporting dependency issues.")
+   parser:flag("--verify", "Verify signature of the rockspec or src.rock being " ..
+   "built. If the rockspec or src.rock is being downloaded, LuaRocks will " ..
+   "attempt to download the signature as well. Otherwise, the signature " ..
+   "file should be already available locally in the same directory.\n" ..
+   "You need the signer's public key in your local keyring for this " ..
+   "option to work properly.")
+   parser:flag("--sign", "To be used with --pack-binary-rock. Also produce a " ..
+   "signature file for the generated .rock file.")
+   parser:flag("--check-lua-versions", "If the rock can't be found, check repository " ..
+   "and report if it is available for another Lua version.")
+   parser:flag("--pin", "Pin the exact dependencies used for the rockspec" ..
+   "being built into a luarocks.lock file in the current directory.")
    parser:flag("--no-manifest", "Skip creating/updating the manifest")
    parser:flag("--only-deps --deps-only", "Install only the dependencies of the rock.")
    util.deps_mode_option(parser)
 end
 
 function make.add_to_parser(parser)
-   -- luacheck: push ignore 431
+
    local cmd = parser:command("make", [[
 Builds sources in the current directory, but unlike "build", it does not fetch
 sources, etc., assuming everything is available in the current directory. If no
@@ -63,20 +74,21 @@ commands. See the help on those for details.
 If the current directory contains a luarocks.lock file, it is used as the
 authoritative source for exact version of dependencies. The --pin flag
 overrides and recreates this file scanning dependency based on ranges.
-]], util.see_also())
-      :summary("Compile package in current directory using a rockspec.")
-   -- luacheck: pop
+]], util.see_also()):
+   summary("Compile package in current directory using a rockspec.")
 
-   cmd:argument("rockspec", "Rockspec for the rock to build.")
-      :args("?")
+
+   cmd:argument("rockspec", "Rockspec for the rock to build."):
+   args("?")
 
    make.cmd_options(cmd)
 end
 
---- Driver function for "make" command.
--- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
--- error message otherwise. exitcode is optionally returned.
+
+
+
 function make.command(args)
+   local name, namespace, version
    local rockspec_filename = args.rockspec
    if not rockspec_filename then
       local err
@@ -86,7 +98,7 @@ function make.command(args)
       end
    end
    if not rockspec_filename:match("rockspec$") then
-      return nil, "Invalid argument: 'make' takes a rockspec as a parameter. "..util.see_help("make")
+      return nil, "Invalid argument: 'make' takes a rockspec as a parameter. " .. util.see_help("make")
    end
 
    local cwd = fs.absolute_name(dir.path("."))
@@ -95,7 +107,7 @@ function make.command(args)
       return nil, err
    end
 
-   local name, namespace = util.split_namespace(rockspec.name)
+   name, namespace = util.split_namespace(rockspec.name)
    namespace = namespace or args.namespace
 
    local opts = {
@@ -109,7 +121,7 @@ function make.command(args)
       check_lua_versions = not not args.check_lua_versions,
       pin = not not args.pin,
       rebuild = true,
-      no_install = not not args.no_install
+      no_install = not not args.no_install,
    }
 
    if args.sign and not args.pack_binary_rock then
@@ -117,10 +129,15 @@ function make.command(args)
    end
 
    if args.no_install then
-      return build.build_rockspec(rockspec, opts, cwd)
+      name, version = build.build_rockspec(rockspec, opts, cwd)
+      if name then
+         return true
+      else
+         return nil, version
+      end
    elseif args.pack_binary_rock then
       return pack.pack_binary_rock(name, namespace, rockspec.version, args.sign, function()
-         local name, version = build.build_rockspec(rockspec, opts, cwd)  -- luacheck: ignore 431
+         name, version = build.build_rockspec(rockspec, opts, cwd)
          if name and args.no_doc then
             util.remove_doc_dir(name, version)
          end
@@ -129,12 +146,12 @@ function make.command(args)
    else
       local ok, err = build.build_rockspec(rockspec, opts, cwd)
       if not ok then return nil, err end
-      local name, version = ok, err  -- luacheck: ignore 421
+      name, version = ok, err
 
       if opts.build_only_deps then
-         util.printout("Stopping after installing dependencies for " ..name.." "..version)
+         util.printout("Stopping after installing dependencies for " .. name .. " " .. version)
          util.printout()
-         return name, version
+         return name ~= nil, version
       end
 
       if args.no_doc then
@@ -151,7 +168,7 @@ function make.command(args)
       end
 
       deps.check_dependencies(nil, deps.get_deps_mode(args))
-      return name, version
+      return name ~= nil, version
    end
 end
 

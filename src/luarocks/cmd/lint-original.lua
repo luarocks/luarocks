@@ -1,24 +1,17 @@
 
-
-
+--- Module implementing the LuaRocks "lint" command.
+-- Utility function that checks syntax of the rockspec.
 local lint = {}
-
 
 local util = require("luarocks.util")
 local download = require("luarocks.download")
 local fetch = require("luarocks.fetch")
 
-local argparse = require("luarocks.vendor.argparse")
-
-
-
-
-
 function lint.add_to_parser(parser)
-   local cmd = parser:command("lint", "Check syntax of a rockspec.\n\n" ..
-   "Returns success if the text of the rockspec is syntactically correct, else failure.",
-   util.see_also()):
-   summary("Check syntax of a rockspec.")
+   local cmd = parser:command("lint", "Check syntax of a rockspec.\n\n"..
+      "Returns success if the text of the rockspec is syntactically correct, else failure.",
+      util.see_also())
+      :summary("Check syntax of a rockspec.")
 
    cmd:argument("rockspec", "The rockspec to check.")
 end
@@ -36,26 +29,22 @@ function lint.command(args)
 
    local rs, err = fetch.load_local_rockspec(filename)
    if not rs then
-      return nil, "Failed loading rockspec: " .. err
+      return nil, "Failed loading rockspec: "..err
    end
 
    local ok = true
 
-
-
-
-
-
+   -- This should have been done in the type checker,
+   -- but it would break compatibility of other commands.
+   -- Making 'lint' alone be stricter shouldn't be a problem,
+   -- because extra-strict checks is what lint-type commands
+   -- are all about.
    if not rs.description or not rs.description.license then
       util.printerr("Rockspec has no description.license field.")
       ok = false
    end
 
-   if ok then
-      return ok
-   end
-
-   return nil, filename .. " failed consistency checks."
+   return ok, ok or filename.." failed consistency checks."
 end
 
 return lint

@@ -1,6 +1,7 @@
---- Module implementing the LuaRocks "config" command.
--- Queries information about the LuaRocks configuration.
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string
+
 local config_cmd = {}
+
 
 local persist = require("luarocks.persist")
 local config = require("luarocks.config")
@@ -10,6 +11,14 @@ local deps = require("luarocks.deps")
 local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
 local json = require("luarocks.vendor.dkjson")
+
+local argparse = require("luarocks.vendor.argparse")
+
+
+
+
+
+
 
 function config_cmd.add_to_parser(parser)
    local cmd = parser:command("config", [[
@@ -49,23 +58,23 @@ Query information about the LuaRocks configuration.
   Example: luarocks config]], util.see_also([[
    https://github.com/luarocks/luarocks/wiki/Config-file-format
    for detailed information on the LuaRocks config file format.
-]]))
-      :summary("Query information about the LuaRocks configuration.")
+]])):
+   summary("Query information about the LuaRocks configuration.")
 
-   cmd:argument("key", "The configuration key.")
-      :args("?")
-   cmd:argument("value", "The configuration value.")
-      :args("?")
+   cmd:argument("key", "The configuration key."):
+   args("?")
+   cmd:argument("value", "The configuration value."):
+   args("?")
 
-   cmd:option("--scope", "The scope indicates which config file should be rewritten.\n"..
-      '* Using a wrapper created with `luarocks init`, the default is "project".\n'..
-      '* Using --local (or when `local_by_default` is `true`), the default is "user".\n'..
-      '* Otherwise, the default is "system".')
-      :choices({"system", "user", "project"})
+   cmd:option("--scope", "The scope indicates which config file should be rewritten.\n" ..
+   '* Using a wrapper created with `luarocks init`, the default is "project".\n' ..
+   '* Using --local (or when `local_by_default` is `true`), the default is "user".\n' ..
+   '* Otherwise, the default is "system".'):
+   choices({ "system", "user", "project" })
    cmd:flag("--unset", "Delete the key from the configuration file.")
    cmd:flag("--json", "Output as JSON.")
 
-   -- Deprecated flags
+
    cmd:flag("--lua-incdir"):hidden(true)
    cmd:flag("--lua-libdir"):hidden(true)
    cmd:flag("--lua-ver"):hidden(true)
@@ -84,7 +93,9 @@ local function config_file(conf)
 end
 
 local function traverse_varstring(var, tbl, fn, missing_parent)
-   local k, r = var:match("^%[([0-9]+)%]%.(.*)$")
+   local k
+   local r
+   k, r = var:match("^%[([0-9]+)%]%.(.*)$")
    if k then
       k = tonumber(k)
    else
@@ -102,13 +113,13 @@ local function traverse_varstring(var, tbl, fn, missing_parent)
       if tbl[k] then
          return traverse_varstring(r, tbl[k], fn, missing_parent)
       else
-         return nil, "Unknown entry " .. k
+         return nil, "Unknown entry " .. tostring(k)
       end
    end
 
    local i = var:match("^%[([0-9]+)%]$")
    if i then
-      var = tonumber(i)
+      return fn(tbl, tonumber(i))
    end
 
    return fn(tbl, var)
@@ -150,11 +161,12 @@ local function infer_type(var)
 end
 
 local function write_entries(keys, scope, do_unset)
+   local wrote = {}
    if scope == "project" and not cfg.config_files.project then
       return nil, "Current directory is not part of a project. You may want to run `luarocks init`."
    end
 
-   local file_name = cfg.config_files[scope].file
+   local file_name = (cfg.config_files)[scope].file
 
    local tbl, err = persist.load_config_file_if_basic(file_name, cfg)
    if not tbl then
@@ -165,6 +177,7 @@ local function write_entries(keys, scope, do_unset)
       traverse_varstring(var, tbl, function(t, k)
          if do_unset then
             t[k] = nil
+            wrote[var] = ""
          else
             local typ = infer_type(var)
             local v
@@ -178,7 +191,7 @@ local function write_entries(keys, scope, do_unset)
                v = val
             end
             t[k] = v
-            keys[var] = v
+            wrote[var] = v
          end
          return true
       end, function(p, k)
@@ -194,7 +207,7 @@ local function write_entries(keys, scope, do_unset)
    ok, err = persist.save_from_table(file_name, tbl)
    if ok then
       print(do_unset and "Removed" or "Wrote")
-      for var, val in util.sortedpairs(keys) do
+      for var, val in util.sortedpairs(wrote) do
          if do_unset then
             print(("\t%s"):format(var))
          else
@@ -214,15 +227,15 @@ local function write_entries(keys, scope, do_unset)
 end
 
 local function get_scope(args)
-   return args.scope
-          or (args["local"] and "user")
-          or (args.project_tree and "project")
-          or (cfg.local_by_default and "user")
-          or (fs.is_writable(cfg.config_files["system"].file) and "system")
-          or "user"
+   return args.scope or
+   (args["local"] and "user") or
+   (args.project_tree and "project") or
+   (cfg.local_by_default and "user") or
+   (fs.is_writable(cfg.config_files["system"].file) and "system") or
+   "user"
 end
 
-local function report_on_lua_incdir_config(value, lua_version)
+local function report_on_lua_incdir_config(value)
    local variables = {
       ["LUA_DIR"] = cfg.variables.LUA_DIR,
       ["LUA_BINDIR"] = cfg.variables.LUA_BINDIR,
@@ -231,7 +244,7 @@ local function report_on_lua_incdir_config(value, lua_version)
       ["LUA"] = cfg.variables.LUA,
    }
 
-   local ok, err = deps.check_lua_incdir(variables, lua_version)
+   local ok, err = deps.check_lua_incdir(variables)
    if not ok then
       util.printerr()
       util.warning((err:gsub(" You can use.*", "")))
@@ -239,7 +252,7 @@ local function report_on_lua_incdir_config(value, lua_version)
    return ok
 end
 
-local function report_on_lua_libdir_config(value, lua_version)
+local function report_on_lua_libdir_config(value)
    local variables = {
       ["LUA_DIR"] = cfg.variables.LUA_DIR,
       ["LUA_BINDIR"] = cfg.variables.LUA_BINDIR,
@@ -248,7 +261,7 @@ local function report_on_lua_libdir_config(value, lua_version)
       ["LUA"] = cfg.variables.LUA,
    }
 
-   local ok, err, _, err_files = deps.check_lua_libdir(variables, lua_version)
+   local ok, err, _, err_files = deps.check_lua_libdir(variables)
    if not ok then
       util.printerr()
       util.warning((err:gsub(" You can use.*", "")))
@@ -268,15 +281,14 @@ local function warn_bad_c_config()
    util.printerr()
 end
 
---- Driver function for "config" command.
--- @return boolean: True if succeeded, nil on errors.
+
+
 function config_cmd.command(args)
-   local lua_version = args.lua_version or cfg.lua_version
 
-   deps.check_lua_incdir(cfg.variables, lua_version)
-   deps.check_lua_libdir(cfg.variables, lua_version)
+   deps.check_lua_incdir(cfg.variables)
+   deps.check_lua_libdir(cfg.variables)
 
-   -- deprecated flags
+
    if args.lua_incdir then
       print(cfg.variables.LUA_INCDIR)
       return true
@@ -297,12 +309,12 @@ function config_cmd.command(args)
    end
    if args.rock_trees then
       for _, tree in ipairs(cfg.rocks_trees) do
-      	if type(tree) == "string" then
-      	   util.printout(dir.normalize(tree))
-      	else
-      	   local name = tree.name and "\t"..tree.name or ""
-      	   util.printout(dir.normalize(tree.root)..name)
-      	end
+         if type(tree) == "string" then
+            util.printout(dir.normalize(tree))
+         else
+            local name = tree.name and "\t" .. tree.name or ""
+            util.printout(dir.normalize(tree.root) .. name)
+         end
       end
       return true
    end
@@ -313,7 +325,7 @@ function config_cmd.command(args)
          return nil, "Current directory is not part of a project. You may want to run `luarocks init`."
       end
 
-      local location = cfg.config_files[scope]
+      local location = (cfg.config_files)[scope]
       if (not location) or (not location.file) then
          return nil, "could not get config file location for " .. tostring(scope) .. " scope"
       end
@@ -336,13 +348,13 @@ function config_cmd.command(args)
          ["variables.LUA"] = cfg.variables.LUA,
       }
       if args.lua_version then
-         local prefix = dir.dir_name(cfg.config_files[scope].file)
+         local prefix = dir.dir_name((cfg.config_files)[scope].file)
          persist.save_default_lua_version(prefix, args.lua_version)
       end
       local ok, err = write_entries(keys, scope, args.unset)
       if ok then
-         local inc_ok = report_on_lua_incdir_config(cfg.variables.LUA_INCDIR, lua_version)
-         local lib_ok = ok and report_on_lua_libdir_config(cfg.variables.LUA_LIBDIR, lua_version)
+         local inc_ok = report_on_lua_incdir_config(cfg.variables.LUA_INCDIR)
+         local lib_ok = ok and report_on_lua_libdir_config(cfg.variables.LUA_LIBDIR)
          if not (inc_ok and lib_ok) then
             warn_bad_c_config()
          end
@@ -359,16 +371,16 @@ function config_cmd.command(args)
       if args.value or args.unset then
          local scope = get_scope(args)
 
-         local ok, err = write_entries({ [args.key] = args.value or args.unset }, scope, args.unset)
+         local ok, err = write_entries({ [args.key] = args.value or "" }, scope, args.unset)
 
          if ok then
             if args.key == "variables.LUA_INCDIR" then
-               local ok = report_on_lua_incdir_config(args.value, lua_version)
+               local ok = report_on_lua_incdir_config(args.value)
                if not ok then
                   warn_bad_c_config()
                end
             elseif args.key == "variables.LUA_LIBDIR" then
-               local ok = report_on_lua_libdir_config(args.value, lua_version)
+               local ok = report_on_lua_libdir_config(args.value)
                if not ok then
                   warn_bad_c_config()
                end

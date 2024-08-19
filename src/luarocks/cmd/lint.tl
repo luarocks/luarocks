@@ -51,7 +51,11 @@ function lint.command(args: Args): boolean, string, string
       ok = false
    end
 
-   return ok, ok or filename.." failed consistency checks."
+   if ok then
+      return ok
+   end
+
+   return nil, filename.." failed consistency checks."
 end
 
 return lint

@@ -3,9 +3,7 @@
 -- Builds sources in the current directory, but unlike "build",
 -- it does not fetch sources, etc., assuming everything is
 -- available in the current directory.
-local record make
-   needs_lock: function(Args): boolean
-end
+local make = {}
 
 local build = require("luarocks.build")
 local util = require("luarocks.util")
@@ -17,16 +15,7 @@ local deps = require("luarocks.deps")
 local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
 
-local argparse = require("luarocks.vendor.argparse")
-local type Parser = argparse.Parser
-
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
-
-local type bo = require("luarocks.core.types.bopts")
-local type BOpts = bo.BOpts
-
-function make.cmd_options(parser: Parser)
+function make.cmd_options(parser)
    parser:flag("--no-install", "Do not install the rock.")
    parser:flag("--no-doc", "Install the rock without its documentation.")
    parser:flag("--pack-binary-rock", "Do not install rock. Instead, produce a "..
@@ -43,7 +32,7 @@ function make.cmd_options(parser: Parser)
       "built. If the rockspec or src.rock is being downloaded, LuaRocks will "..
       "attempt to download the signature as well. Otherwise, the signature "..
       "file should be already available locally in the same directory.\n"..
-      "You need the signer's public key in your local keyring for this "..
+      "You need the signer’s public key in your local keyring for this "..
       "option to work properly.")
    parser:flag("--sign", "To be used with --pack-binary-rock. Also produce a "..
       "signature file for the generated .rock file.")
@@ -56,7 +45,7 @@ function make.cmd_options(parser: Parser)
    util.deps_mode_option(parser)
 end
 
-function make.add_to_parser(parser: Parser)
+function make.add_to_parser(parser)
    -- luacheck: push ignore 431
    local cmd = parser:command("make", [[
 Builds sources in the current directory, but unlike "build", it does not fetch
@@ -81,17 +70,16 @@ overrides and recreates this file scanning dependency based on ranges.
    cmd:argument("rockspec", "Rockspec for the rock to build.")
       :args("?")
 
-   make.cmd_options(cmd as Parser) --!
+   make.cmd_options(cmd)
 end
 
 --- Driver function for "make" command.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
-function make.command(args: Args): boolean, string
-   local name, namespace, version: string, string, string
+function make.command(args)
    local rockspec_filename = args.rockspec
    if not rockspec_filename then
-      local err: string
+      local err
       rockspec_filename, err = util.get_default_rockspec()
       if not rockspec_filename then
          return nil, err
@@ -107,10 +95,10 @@ function make.command(args: Args): boolean, string
       return nil, err
    end
 
-   name, namespace = util.split_namespace(rockspec.name)
+   local name, namespace = util.split_namespace(rockspec.name)
    namespace = namespace or args.namespace
 
-   local opts: BOpts = {
+   local opts = {
       need_to_fetch = false,
       minimal_mode = true,
       deps_mode = deps.get_deps_mode(args),
@@ -129,15 +117,10 @@ function make.command(args: Args): boolean, string
    end
 
    if args.no_install then
-      name, version = build.build_rockspec(rockspec, opts, cwd)
-      if name then
-         return true
-      else
-         return nil, version
-      end
+      return build.build_rockspec(rockspec, opts, cwd)
    elseif args.pack_binary_rock then
-      return pack.pack_binary_rock(name, namespace, rockspec.version, args.sign, function(): string, string
-         name, version = build.build_rockspec(rockspec, opts, cwd)  -- luacheck: ignore 431
+      return pack.pack_binary_rock(name, namespace, rockspec.version, args.sign, function()
+         local name, version = build.build_rockspec(rockspec, opts, cwd)  -- luacheck: ignore 431
          if name and args.no_doc then
             util.remove_doc_dir(name, version)
          end
@@ -146,12 +129,12 @@ function make.command(args: Args): boolean, string
    else
       local ok, err = build.build_rockspec(rockspec, opts, cwd)
       if not ok then return nil, err end
-      name, version = ok, err  -- luacheck: ignore 421
+      local name, version = ok, err  -- luacheck: ignore 421
 
       if opts.build_only_deps then
          util.printout("Stopping after installing dependencies for " ..name.." "..version)
          util.printout()
-         return name ~= nil, version
+         return name, version
       end
 
       if args.no_doc then
@@ -168,11 +151,11 @@ function make.command(args: Args): boolean, string
       end
 
       deps.check_dependencies(nil, deps.get_deps_mode(args))
-      return name ~= nil, version
+      return name, version
    end
 end
 
-make.needs_lock = function(args: Args): boolean
+make.needs_lock = function(args)
    if args.pack_binary_rock or args.no_install then
       return false
    end

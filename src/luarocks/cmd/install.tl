@@ -180,16 +180,16 @@ function install.install_binary_rock_deps(rock_file: string, opts: IOpts): strin
    return name, version
 end
 
-local function install_rock_file_deps(filename: string, opts: IOpts): string, string
+local function install_rock_file_deps(filename: string, opts: IOpts): boolean, string
 
    local name, version = install.install_binary_rock_deps(filename, opts)
    if not name then return nil, version end
 
    deps.check_dependencies(nil, opts.deps_mode)
-   return name, version
+   return true
 end
 
-local function install_rock_file(filename: string, opts: IOpts): string, string
+local function install_rock_file(filename: string, opts: IOpts): boolean, string
 
    local name, version = install.install_binary_rock(filename, opts)
    if not name then return nil, version end
@@ -208,7 +208,7 @@ local function install_rock_file(filename: string, opts: IOpts): string, string
    end
 
    deps.check_dependencies(nil, opts.deps_mode)
-   return name, version
+   return true
 end
 
 --- Driver function for the "install" command.
