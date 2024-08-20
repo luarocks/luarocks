@@ -73,7 +73,7 @@ function path.deploy_lua_dir(tree: string | Tree): string
    if tree is string then
       return dir.path(tree, cfg.lua_modules_path)
    else
-      return tree.lua_dir or dir.path(tree.root, cfg.lua_modules_path) 
+      return tree.lua_dir or dir.path(tree.root, cfg.lua_modules_path)
    end
 end
 
@@ -95,7 +95,7 @@ local is_src_extension: {string: boolean} = { [".lua"] = true, [".tl"] = true, [
 -- @param i number: the index, 1 if version is the current default, > 1 otherwise.
 -- This is done this way for use by select_module in luarocks.loader.
 -- @return string: filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so")
-function path.which_i(file_name: string, name: string, version: string, tree: string, i: number): string
+function path.which_i(file_name: string, name: string, version: string, tree: string | Tree, i: number): string
    local deploy_dir: string
    local extension = file_name:match("%.[a-z]+$")
    if is_src_extension[extension] then

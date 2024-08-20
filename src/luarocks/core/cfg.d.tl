@@ -59,6 +59,7 @@ local record cfg
    end
    -- loader
    init: function(?{string : string}, ?function(string)): boolean, string, string
+   init_package_paths: function()
    -- rockspecs
    each_platform: function(?string): (function():string)
    -- fetch
