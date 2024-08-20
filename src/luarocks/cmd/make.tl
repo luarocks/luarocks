@@ -23,8 +23,7 @@ local type Parser = argparse.Parser
 local type a = require("luarocks.core.types.args")
 local type Args = a.Args
 
-local type bo = require("luarocks.core.types.bopts")
-local type BOpts = bo.BOpts
+local type BOpts = require("luarocks.core.types.bopts").BOpts
 
 function make.cmd_options(parser: Parser)
    parser:flag("--no-install", "Do not install the rock.")

@@ -21,8 +21,7 @@ local type Args = a.Args
 local type p = require("luarocks.core.types.persist")
 local type PersistableTable = p.PersistableTable
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 function new_version.add_to_parser(parser: Parser)
    local cmd = parser:command("new_version", [[

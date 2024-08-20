@@ -7,11 +7,9 @@ local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
-local type b = require("luarocks.core.types.build")
-local type MakeBuild = b.MakeBuild
+local type MakeBuild = require("luarocks.core.types.build").MakeBuild
 
 --- Call "make" with given target and variables
 -- @param make_cmd string: the make command to be used (typically

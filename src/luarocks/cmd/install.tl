@@ -24,8 +24,7 @@ local type a = require("luarocks.core.types.args")
 local type Args = a.Args
 
 
-local type i = require("luarocks.core.types.installs")
-local type IOpts = i.IOpts
+local type IOpts = require("luarocks.core.types.installs").IOpts
 
 function install.add_to_parser(parser: Parser)
    local cmd = parser:command("install", "Install a rock.", util.see_also())  -- luacheck: ignore 431

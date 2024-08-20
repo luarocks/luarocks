@@ -10,8 +10,7 @@ local persist = require("luarocks.persist")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 local type m = require("luarocks.core.types.manifest")
 local type Entry = m.Manifest.Entry
@@ -106,13 +105,13 @@ function index.format_external_dependencies(rockspec: Rockspec): string
    if rockspec.external_dependencies then
       local deplist = {}
       local listed_set: {string: boolean} = {}
-      local plats: {string : string} = nil
+      local plats: {string : {string: string}} = nil
       for name, desc in util.sortedpairs(rockspec.external_dependencies) do
          if name ~= "platforms" then
             table.insert(deplist, name:lower())
             listed_set[name] = true
          else
-            plats = desc
+            plats = desc as {string : {string: string}}
          end
       end
       if plats then

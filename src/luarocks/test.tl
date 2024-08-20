@@ -5,9 +5,8 @@ local fetch = require("luarocks.fetch")
 local deps = require("luarocks.deps")
 local util = require("luarocks.util")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
-local type Dependencies = r.Dependencies
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
+local type Dependencies = require("luarocks.core.types.rockspec").Dependencies
 
 local type t = require("luarocks.core.types.testrunner")
 local type TestRunner = t.TestRunner

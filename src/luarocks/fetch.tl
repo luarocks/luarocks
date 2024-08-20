@@ -16,8 +16,7 @@ local cfg = require("luarocks.core.cfg")
 
 local type Fetch = fetch.Fetch
 local type Lock = fs.Lock --!
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 
 local function ensure_trailing_slash(url: string): string

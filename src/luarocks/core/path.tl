@@ -5,8 +5,7 @@ end
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.core.dir")
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 
 local dir_sep = package.config:sub(1, 1)
 --------------------------------------------------------------------------------

@@ -24,11 +24,9 @@ local type Parser = argparse.Parser
 
 local type Args = require("luarocks.core.types.args").Args
 
-local type bo = require("luarocks.core.types.bopts")
-local type BOpts = bo.BOpts
+local type BOpts = require("luarocks.core.types.bopts").BOpts
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 function cmd_build.add_to_parser(parser: Parser)
    local cmd = parser:command("build", "Build and install a rock, compiling its C parts if any.\n"..  -- luacheck: ignore 431

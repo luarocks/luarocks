@@ -8,8 +8,7 @@ local core = require("luarocks.core.path")
 local dir = require("luarocks.dir")
 local util = require("luarocks.core.util")
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 
 local record path
    rocks_dir: function(string | Tree): string

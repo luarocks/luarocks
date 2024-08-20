@@ -1,8 +1,6 @@
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 
 local record cfg
    detect_sysconfdir: function(): string
@@ -112,7 +110,7 @@ local record cfg
    export_path_separator: string
    -- admin cache
    upload_server: string
-   upload_servers: {string: string}
+   upload_servers: {string: {string: string}}
    -- admin add
    upload_user: string
    upload_password: string

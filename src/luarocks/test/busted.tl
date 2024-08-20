@@ -9,8 +9,7 @@ local dir = require("luarocks.dir")
 local queries = require("luarocks.queries")
 local install = require("luarocks.cmd.install")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Test = r.Test
+local type Test = require("luarocks.core.types.rockspec").Test
 
 function busted.detect_type(): boolean
    if fs.exists(".busted") then

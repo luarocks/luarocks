@@ -21,7 +21,7 @@ local type Args = a.Args
 function admin_remove.add_to_parser(parser: Parser)
    local cmd = parser:command("remove", "Remove a rock or rockspec from a rocks server.", util.see_also())
 
-   cmd:argument("rock", "A local rockspec or rock file.")
+   cmd:argument("rocks", "A local rockspec or rock file.")
       :args("+")
 
    cmd:option("--server", "The server to use. If not given, the default server "..
@@ -89,9 +89,9 @@ local function remove_files_from_server(refresh: boolean, rockfiles: {string}, s
 end
 
 function admin_remove.command(args: Args): boolean, string
-   local server, server_table = cache.get_upload_server(args.server)
-   if not server then return nil, server_table end
-   return remove_files_from_server(not args.no_refresh, args.rock, server, server_table) --!
+   local server, server_table, err = cache.get_upload_server(args.server)
+   if not server then return nil, err end
+   return remove_files_from_server(not args.no_refresh, args.rocks, server, server_table) --!
 end
 
 

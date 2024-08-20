@@ -4,12 +4,10 @@ local record builtin
    skip_lua_inc_lib_check: boolean
 end
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
-local type b = require("luarocks.core.types.build")
-local type BuiltinBuild = b.BuiltinBuild
-local type Build = b.Build
+local type BuiltinBuild = require("luarocks.core.types.build").BuiltinBuild
+local type Build = require("luarocks.core.types.build").Build
 local type Module = BuiltinBuild.Module
 
 -- This build driver checks LUA_INCDIR and LUA_LIBDIR on demand,

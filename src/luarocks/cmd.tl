@@ -22,8 +22,7 @@ local fun = require("luarocks.fun")
 local fs = require("luarocks.fs")
 local argparse = require("luarocks.vendor.argparse")
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 
 local type Parser = argparse.Parser
 

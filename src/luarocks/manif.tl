@@ -24,8 +24,7 @@ local util = require("luarocks.util")
 local queries = require("luarocks.queries")
 local type_manifest = require("luarocks.type.manifest")
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 local type m = require("luarocks.core.types.manifest")
 local type Manifest = m.Manifest
 local type Tree_manifest = m.Tree_manifest

@@ -6,8 +6,7 @@ end
 local type o = require("luarocks.core.types.ordering")
 local type Ordering = o.Ordering
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 local type_check = require("luarocks.type_check")
 

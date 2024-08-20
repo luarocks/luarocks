@@ -28,11 +28,9 @@ local type rm = require("luarocks.core.types.rockmanifest")
 local type RockManifest = rm.RockManifest
 local type Entry = RockManifest.Entry
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 
 local type Op = repos.Op
 local type Paths = repos.Paths

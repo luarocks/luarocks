@@ -14,17 +14,15 @@ local vers = require("luarocks.core.vers")
 local queries = require("luarocks.queries")
 local deplocks = require("luarocks.deplocks")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
-local type Dependencies = r.Dependencies
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
+local type Dependencies = require("luarocks.core.types.rockspec").Dependencies
 
 local type bld = require("luarocks.core.types.build")
 local type BuiltinBuild = bld.BuiltinBuild
 local type Module = BuiltinBuild.Module
 local type Build = bld.Build
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 
 local type q = require("luarocks.core.types.query")
 local type Query = q.Query

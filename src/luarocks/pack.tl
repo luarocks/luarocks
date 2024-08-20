@@ -15,8 +15,7 @@ local manif = require("luarocks.manif")
 local search = require("luarocks.search")
 local signing = require("luarocks.signing")
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 
 local type q = require("luarocks.core.types.query")
 local type Query = q.Query

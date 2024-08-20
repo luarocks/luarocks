@@ -25,8 +25,7 @@ local type Parser = argparse.Parser
 local type a = require("luarocks.core.types.args")
 local type Args = a.Args
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 
 local type q = require("luarocks.core.types.query")
 local type Query = q.Query

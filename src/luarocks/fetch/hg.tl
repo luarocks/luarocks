@@ -7,8 +7,7 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 --- Download sources for building a rock, using hg.
 -- @param rockspec table: The rockspec table

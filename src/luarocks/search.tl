@@ -18,8 +18,7 @@ local type Query = q.Query
 local type ver = require("luarocks.core.types.version")
 local type Version = ver.Version
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 
 --- Store a search result (a rock or rockspec) in the result tree.
 -- @param result_tree table: The result tree, where keys are package names and

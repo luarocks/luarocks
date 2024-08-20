@@ -6,8 +6,7 @@ end
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 --- Download sources via Surround SCM Server for building a rock.
 -- @param rockspec table: The rockspec table

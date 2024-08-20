@@ -22,12 +22,10 @@ local type Args = a.Args
 local type p = require("luarocks.core.types.persist")
 local type PersistableTable = p.PersistableTable
 
-local type b = require("luarocks.core.types.build")
-local type BuiltinBuild = b.BuiltinBuild
+local type BuiltinBuild = require("luarocks.core.types.build").BuiltinBuild
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
-local type Dependencies = r.Dependencies
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
+local type Dependencies = require("luarocks.core.types.rockspec").Dependencies
 
 local lua_versions = {
    "5.1",

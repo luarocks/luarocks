@@ -11,13 +11,6 @@ local record api
       debug: boolean
       _server_tool_version: string
    end
-
-   record Args
-      server: string
-      temp_key: string
-      api_key: string
-      debug: boolean
-   end
 end
 
 local cfg = require("luarocks.core.cfg")
@@ -31,7 +24,7 @@ local dir_sep = package.config:sub(1, 1)
 
 local type Parameters = multipart.Parameters
 local type Api = api.Api
-local type Args = api.Args
+local type Args = require("luarocks.core.types.args").Args
 local type Configuration = api.Configuration
 local type File = multipart.File
 

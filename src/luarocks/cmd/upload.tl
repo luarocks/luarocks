@@ -1,5 +1,7 @@
 
 local record upload
+   record Response
+   end
 end
 
 local signing = require("luarocks.signing")
@@ -42,8 +44,8 @@ local function is_dev_version(version: string): string
    return version:match("^dev") or version:match("^scm")
 end
 
-function upload.command(args: Args): boolean, string, string --!
-   local api, err = Api.new(args as argparse.Args) --!
+function upload.command(args: Args): boolean, string, string
+   local api, err = Api.new(args)
    if not api then
       return nil, err
    end

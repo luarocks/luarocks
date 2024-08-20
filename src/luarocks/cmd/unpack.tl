@@ -17,8 +17,7 @@ local type Parser = argparse.Parser
 local type a = require("luarocks.core.types.args")
 local type Args = a.Args
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 function unpack.add_to_parser(parser: Parser)
    local cmd = parser:command("unpack", [[

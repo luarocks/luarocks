@@ -4,7 +4,7 @@ local record show
    record Return
       name: string
       file: string
-      lable: string
+      label: string
    end
 end
 
@@ -20,6 +20,7 @@ local manif = require("luarocks.manif")
 local repos = require("luarocks.repos")
 
 local type Return = show.Return
+local type RenderData = {string: string | {string}}
 
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
@@ -27,15 +28,13 @@ local type Parser = argparse.Parser
 local type a = require("luarocks.core.types.args")
 local type Args = a.Args
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 
 local type q = require("luarocks.core.types.query")
 local type Query = q.Query
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
-local type Dependencies = r.Dependencies
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
+local type Dependencies = require("luarocks.core.types.rockspec").Dependencies
 
 local type m = require("luarocks.core.types.manifest")
 local type Entry = m.Manifest.Entry
@@ -152,17 +151,19 @@ local function format_text(text: string): string
 end
 
 local function installed_rock_label(dep: Query, tree: string | Tree): string
-   local installed, version: string, string
+   local installed, version: boolean, string
    local rocks_provided = util.get_rocks_provided()
    if rocks_provided[dep.name] then
       installed, version = true, rocks_provided[dep.name]
    else
-      installed, version = search.pick_installed_rock(dep, tree)
+      local name:  string
+      name, version = search.pick_installed_rock(dep, tree)
+      installed = name ~= nil
    end
    return installed and "using "..version or "missing"
 end
 
-local function render(template: string, data: {string: string | {string}}): string
+local function render(template: string, data: RenderData): string
    local out = {}
    for cmd, var, line in template:gmatch("(.)([a-z]*)%s*:([^\n]*)\n") do
       line = line:gsub("\\t", "\t")
@@ -173,13 +174,16 @@ local function render(template: string, data: {string: string | {string}}): stri
          if (cmd == "!" and d == nil)
              or (cmd ~= "!" and (d is string
                                  or (d is {string} and next(d) ~= nil))) then
-            local n = cmd == "*" and #d or 1
+            local n = d is {string} and #d or 1
+            if cmd ~= "*" then
+               n = 1
+            end
             for i = 1, n do
-               local tbl = cmd == "*" and d[i] or data
+               local tbl: string | {any: any} = cmd == "*" and d is {string} and d[i] or data
                if tbl is string   then
                   tbl = tbl:gsub("%%", "%%%%")
                end
-               table.insert(out, (line:gsub("${([a-z]+)}", tbl)))
+               table.insert(out, (line:gsub("${([a-z]+)}", tbl as string))) -- code works under the assumption that template is well behaved
             end
          end
       end
@@ -284,7 +288,7 @@ local function show_rock(template: string, namespace: string, name: string, vers
       deps = deps_to_list(rockspec.dependencies, tree),
       ideps = indirect_deps(minfo.dependencies, rockspec.dependencies, tree),
    }
-   util.printout(render(template, data))
+   util.printout(render(template, data as RenderData))
 end
 
 --- Driver function for "show" command.

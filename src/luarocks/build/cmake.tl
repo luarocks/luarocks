@@ -7,11 +7,9 @@ local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
-local type b = require("luarocks.core.types.build")
-local type CMakeBuild = b.CMakeBuild
+local type CMakeBuild = require("luarocks.core.types.build").CMakeBuild
 
 --- Driver function for the "cmake" build back-end.
 -- @param rockspec table: the loaded rockspec.

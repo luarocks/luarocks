@@ -22,8 +22,8 @@ function refresh_cache.add_to_parser(parser: Parser)
 end
 
 function refresh_cache.command(args: Args): boolean, string
-   local server, upload_server = cache.get_upload_server(args.server)
-   if not server then return nil, upload_server end
+   local server, upload_server, err = cache.get_upload_server(args.server)
+   if not server then return nil, err end
    local download_url = cache.get_server_urls(server, upload_server)
 
    local ok, err = cache.refresh_local_cache(download_url, cfg.upload_user, cfg.upload_password)

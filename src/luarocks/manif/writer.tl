@@ -19,8 +19,7 @@ local queries = require("luarocks.queries")
 local type m = require("luarocks.core.types.manifest")
 local type Manifest = m.Manifest
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 local type res = require("luarocks.core.types.result")
 local type Result = res.Result

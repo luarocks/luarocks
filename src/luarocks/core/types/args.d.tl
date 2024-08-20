@@ -102,6 +102,10 @@ local record args
       index: boolean
       repository: string
       local_tree: string
+      temp_key: string
+      api_key: string
+      debug: boolean
+      rocks: {string}
    end
 end
 

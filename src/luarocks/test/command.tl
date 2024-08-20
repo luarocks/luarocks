@@ -5,8 +5,7 @@ end
 local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Test = r.Test
+local type Test = require("luarocks.core.types.rockspec").Test
 
 function command.detect_type(): boolean
    if fs.exists("test.lua") then

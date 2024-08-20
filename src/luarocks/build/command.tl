@@ -7,11 +7,9 @@ local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
-local type b = require("luarocks.core.types.build")
-local type CommandBuild = b.CommandBuild
+local type CommandBuild = require("luarocks.core.types.build").CommandBuild
 
 --- Driver function for the "command" build back-end.
 -- @param rockspec table: the loaded rockspec.

@@ -20,22 +20,17 @@ local repos = require("luarocks.repos")
 local repo_writer = require("luarocks.repo_writer")
 local deplocks = require("luarocks.deplocks")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
-local type i = require("luarocks.core.types.installs")
-local type InstallDirs = i.InstallDirs
-local type InstallDir = i.InstallDir
+local type InstallDirs = require("luarocks.core.types.installs").InstallDirs
+local type InstallDir = require("luarocks.core.types.installs").InstallDir
 
-local type t = require("luarocks.core.types.tree")
-local type Tree = t.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 
-local type b = require("luarocks.core.types.build")
-local type Build = b.Build
-local type Module = b.BuiltinBuild.Module
+local type Build = require("luarocks.core.types.build").Build
+local type Module = require("luarocks.core.types.build").BuiltinBuild.Module
 
-local type bo = require("luarocks.core.types.bopts")
-local type BOpts = bo.BOpts
+local type BOpts = require("luarocks.core.types.bopts").BOpts
 
 
 local type Builds = build.Builds

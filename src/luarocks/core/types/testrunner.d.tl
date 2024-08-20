@@ -1,5 +1,4 @@
-local type r = require("luarocks.core.types.rockspec")
-local type Test = r.Test
+local type Test = require("luarocks.core.types.rockspec").Test
 
 local record testrunner
     record TestRunner

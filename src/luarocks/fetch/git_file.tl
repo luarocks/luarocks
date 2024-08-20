@@ -5,8 +5,7 @@ end
 
 local git = require("luarocks.fetch.git")
 
-local type r = require("luarocks.core.types.rockspec")
-local type Rockspec = r.Rockspec
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 --- Fetch sources for building a rock from a local Git repository.
 -- @param rockspec table: The rockspec table
