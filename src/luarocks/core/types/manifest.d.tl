@@ -1,5 +1,4 @@
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
+local type Query = require("luarocks.core.types.query").Query
 
 local type Tree = require("luarocks.core.types.tree").Tree
 

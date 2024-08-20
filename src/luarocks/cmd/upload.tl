@@ -23,8 +23,7 @@ local type Response = upload.Response
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
 function upload.add_to_parser(parser: Parser)
    local cmd = parser:command("upload", "Pack a source rock file (.src.rock extension) "..

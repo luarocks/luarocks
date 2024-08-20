@@ -10,8 +10,7 @@ local download = require("luarocks.download")
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
 function cmd_download.add_to_parser(parser: Parser)
    local cmd = parser:command("download", "Download a specific rock file from a rocks server.", util.see_also())

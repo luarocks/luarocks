@@ -17,28 +17,23 @@ local deplocks = require("luarocks.deplocks")
 local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 local type Dependencies = require("luarocks.core.types.rockspec").Dependencies
 
-local type bld = require("luarocks.core.types.build")
-local type BuiltinBuild = bld.BuiltinBuild
+local type BuiltinBuild = require("luarocks.core.types.build").BuiltinBuild
 local type Module = BuiltinBuild.Module
-local type Build = bld.Build
+
+local type Build = require("luarocks.core.types.build").Build
 
 local type Tree = require("luarocks.core.types.tree").Tree
 
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
+local type Query = require("luarocks.core.types.query").Query
 
-local type ver = require("luarocks.core.types.version")
-local type Version = ver.Version
+local type Version = require("luarocks.core.types.version").Version
 
-local type per = require("luarocks.core.types.persist")
-local type PersistableTable = per.PersistableTable
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
 
-local type res = require("luarocks.core.types.result")
-local type Result = res.Result
+local type Result = require("luarocks.core.types.result").Result
 
-local type dr = require("luarocks.core.types.dir")
-local type Dir = dr.Dir
-local type Dirs = dr.Dirs
+local type Dir = require("luarocks.core.types.dir").Dir
+local type Dirs = require("luarocks.core.types.dir").Dirs
 
 local type Args = require("luarocks.core.types.args").Args
 

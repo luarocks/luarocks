@@ -17,11 +17,9 @@ local signing = require("luarocks.signing")
 
 local type Tree = require("luarocks.core.types.tree").Tree
 
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
+local type Query = require("luarocks.core.types.query").Query
 
-local type rm = require("luarocks.core.types.rockmanifest")
-local type Entry = rm.RockManifest.Entry
+local type Entry = require("luarocks.core.types.rockmanifest").RockManifest.Entry
 
 --- Create a source rock.
 -- Packages a rockspec and its required source files in a rock

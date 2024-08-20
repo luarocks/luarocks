@@ -11,8 +11,7 @@ local fetch = require("luarocks.fetch")
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
 function lint.add_to_parser(parser: Parser)
    local cmd = parser:command("lint", "Check syntax of a rockspec.\n\n"..

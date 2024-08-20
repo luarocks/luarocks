@@ -13,11 +13,9 @@ local results = require("luarocks.results")
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
-local type res = require("luarocks.core.types.result")
-local type Result = res.Result
+local type Result = require("luarocks.core.types.result").Result
 
 function cmd_search.add_to_parser(parser: Parser)
    local cmd = parser:command("search", "Query the LuaRocks servers.", util.see_also())

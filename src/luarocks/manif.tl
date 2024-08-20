@@ -9,9 +9,8 @@ local record manif
    rock_manifest_cache: {string: RockManifest}
 end
 
-local type rm = require("luarocks.core.types.rockmanifest")
-local type RockManifest = rm.RockManifest
-local type Entry = rm.RockManifest.Entry
+local type RockManifest = require("luarocks.core.types.rockmanifest").RockManifest
+local type Entry = require("luarocks.core.types.rockmanifest").RockManifest.Entry
 
 local core = require("luarocks.core.manif")
 local persist = require("luarocks.persist")
@@ -25,11 +24,9 @@ local queries = require("luarocks.queries")
 local type_manifest = require("luarocks.type.manifest")
 
 local type Tree = require("luarocks.core.types.tree").Tree
-local type m = require("luarocks.core.types.manifest")
-local type Manifest = m.Manifest
-local type Tree_manifest = m.Tree_manifest
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
+local type Manifest = require("luarocks.core.types.manifest").Manifest
+local type Tree_manifest = require("luarocks.core.types.manifest").Tree_manifest
+local type Query = require("luarocks.core.types.query").Query
 
 manif.cache_manifest = core.cache_manifest
 manif.load_rocks_tree_manifests = core.load_rocks_tree_manifests

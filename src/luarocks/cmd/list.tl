@@ -22,13 +22,11 @@ local type Outdated = list.Outdated
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
 local type Tree = require("luarocks.core.types.tree").Tree
 
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
+local type Query = require("luarocks.core.types.query").Query
 
 function list.add_to_parser(parser: Parser)
    local cmd = parser:command("list", "List currently installed rocks.", util.see_also())

@@ -13,8 +13,7 @@ local cfg = require("luarocks.core.cfg")
 local manif = require("luarocks.manif")
 local queries = require("luarocks.queries")
 
-local type r = require("luarocks.core.types.result")
-local type Result = r.Result
+local type Result = require("luarocks.core.types.result").Result
 
 --- Obtain a list of packages that depend on the given set of packages
 -- (where all packages of the set are versions of one program).

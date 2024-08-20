@@ -5,8 +5,7 @@ local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local persist = require("luarocks.persist")
 
-local type p = require("luarocks.core.types.persist")
-local type PersistableTable = p.PersistableTable
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
 
 local deptable: PersistableTable = {}
 local deptable_mode = "start"

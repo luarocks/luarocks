@@ -12,15 +12,12 @@ local path = require("luarocks.core.path")
 
 --------------------------------------------------------------------------------
 
-local type tr = require("luarocks.core.types.tree")
-local type Tree = tr.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
+local type Query = require("luarocks.core.types.query").Query
 
-local type m = require("luarocks.core.types.manifest")
-local type Manifest = m.Manifest
-local type Tree_manifest = m.Tree_manifest
+local type Manifest = require("luarocks.core.types.manifest").Manifest
+local type Tree_manifest = require("luarocks.core.types.manifest").Tree_manifest
 
 
 

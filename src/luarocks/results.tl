@@ -3,8 +3,7 @@ end
 
 local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
+local type Query = require("luarocks.core.types.query").Query
 
 local type result = require("luarocks.core.types.result")
 local type Result = result.Result

@@ -12,8 +12,7 @@ local manif = require("luarocks.manif")
 
 local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
-local type m = require("luarocks.core.types.manifest")
-local type Entry = m.Manifest.Entry
+local type Entry = require("luarocks.core.types.manifest").Manifest.Entry
 
 local ext_url_target = ' target="_blank"'
 

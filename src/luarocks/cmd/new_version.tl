@@ -15,11 +15,9 @@ local type_rockspec = require("luarocks.type.rockspec")
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
-local type p = require("luarocks.core.types.persist")
-local type PersistableTable = p.PersistableTable
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
 
 local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 

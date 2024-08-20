@@ -17,8 +17,7 @@ local queries = require("luarocks.queries")
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type args = require("luarocks.core.types.args")
-local type Args = args.Args
+local type Args = require("luarocks.core.types.args").Args
 
 
 function purge.add_to_parser(parser: Parser)

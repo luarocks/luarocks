@@ -8,8 +8,7 @@ local util = require("luarocks.util")
 local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 local type Dependencies = require("luarocks.core.types.rockspec").Dependencies
 
-local type t = require("luarocks.core.types.testrunner")
-local type TestRunner = t.TestRunner
+local type TestRunner = require("luarocks.core.types.testrunner").TestRunner
 
 local test_types = {
    "busted",

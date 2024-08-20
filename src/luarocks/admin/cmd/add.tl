@@ -15,8 +15,7 @@ local index = require("luarocks.admin.index")
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
 function add.add_to_parser(parser: Parser)
    local cmd = parser:command("add", "Add a rock or rockspec to a rocks server.", util.see_also())

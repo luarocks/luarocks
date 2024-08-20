@@ -15,8 +15,7 @@ local json = require("luarocks.vendor.dkjson")
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
 local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
 

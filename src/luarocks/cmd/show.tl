@@ -25,19 +25,16 @@ local type RenderData = {string: string | {string}}
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
 local type Tree = require("luarocks.core.types.tree").Tree
 
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
+local type Query = require("luarocks.core.types.query").Query
 
 local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 local type Dependencies = require("luarocks.core.types.rockspec").Dependencies
 
-local type m = require("luarocks.core.types.manifest")
-local type Entry = m.Manifest.Entry
+local type Entry = require("luarocks.core.types.manifest").Manifest.Entry
 
 function show.add_to_parser(parser: Parser)
    local cmd = parser:command("show", [[

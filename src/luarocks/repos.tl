@@ -24,8 +24,7 @@ local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local vers = require("luarocks.core.vers")
 
-local type rm = require("luarocks.core.types.rockmanifest")
-local type RockManifest = rm.RockManifest
+local type RockManifest = require("luarocks.core.types.rockmanifest").RockManifest
 local type Entry = RockManifest.Entry
 
 local type Rockspec = require("luarocks.core.types.rockspec").Rockspec

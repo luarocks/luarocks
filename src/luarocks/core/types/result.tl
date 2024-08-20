@@ -1,5 +1,4 @@
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
+local type Query = require("luarocks.core.types.query").Query
 
 local record result
     record Result

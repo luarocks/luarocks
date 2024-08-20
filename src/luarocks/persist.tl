@@ -19,11 +19,9 @@ local cfg = require("luarocks.core.cfg")
 
 local type Config = cfg
 
-local type o = require("luarocks.core.types.ordering")
-local type SortBy = o.SortBy
+local type SortBy = require("luarocks.core.types.ordering").SortBy
 
-local type p = require("luarocks.core.types.persist")
-local type PersistableTable = p.PersistableTable
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
 
 local type Writer = persist.Writer
 

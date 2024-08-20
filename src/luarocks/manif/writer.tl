@@ -16,20 +16,16 @@ local persist = require("luarocks.persist")
 local manif = require("luarocks.manif")
 local queries = require("luarocks.queries")
 
-local type m = require("luarocks.core.types.manifest")
-local type Manifest = m.Manifest
+local type Manifest = require("luarocks.core.types.manifest").Manifest
 
 local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
-local type res = require("luarocks.core.types.result")
-local type Result = res.Result
+local type Result = require("luarocks.core.types.result").Result
 
-local type p = require("luarocks.core.types.persist")
-local type PersistableTable = p.PersistableTable
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
 
-local type rm = require("luarocks.core.types.rockmanifest")
-local type RockManifest = rm.RockManifest
-local type Entry = rm.RockManifest.Entry
+local type RockManifest = require("luarocks.core.types.rockmanifest").RockManifest
+local type Entry = require("luarocks.core.types.rockmanifest").RockManifest.Entry
 
 --- Update storage table to account for items provided by a package.
 -- @param storage table: a table storing items in the following format:

@@ -15,8 +15,7 @@ local dir = require("luarocks.dir")
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
 function make_manifest.add_to_parser(parser: Parser)
    local cmd = parser:command("make_manifest", "Compile a manifest file for a repository.", util.see_also())

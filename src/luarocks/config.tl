@@ -10,8 +10,7 @@ local cfg_skip: {string: boolean} = {
    upload_servers = true,
 }
 
-local type p = require("luarocks.core.types.persist")
-local type PersistableTable = p.PersistableTable
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
 
 function config.should_skip(k: string, v: any): boolean
    return v is function or cfg_skip[k]

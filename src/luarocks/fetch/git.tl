@@ -10,8 +10,7 @@ local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
 
 local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
-local type v = require("luarocks.core.types.version")
-local type Version = v.Version
+local type Version = require("luarocks.core.types.version").Version
 
 local cached_git_version: Version
 

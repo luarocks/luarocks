@@ -14,8 +14,7 @@ local rock = require("luarocks.core.types.rockspec")
 local type Dependencies = rock.Dependencies
 local type Rockspec = rock.Rockspec
 
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
+local type Query = require("luarocks.core.types.query").Query
 
 local vendored_build_type_set: {string: boolean} = {
    ["builtin"] = true,

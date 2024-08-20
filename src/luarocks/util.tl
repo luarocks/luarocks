@@ -7,9 +7,8 @@
 local core = require("luarocks.core.util")
 local cfg = require("luarocks.core.cfg")
 
-local type o = require("luarocks.core.types.ordering")
-local type Ordering= o.Ordering
-local type SortBy = o.SortBy
+local type Ordering= require("luarocks.core.types.ordering").Ordering
+local type SortBy = require("luarocks.core.types.ordering").SortBy
 
 local record util
    cleanup_path: function(string, string, string, boolean): string

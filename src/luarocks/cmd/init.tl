@@ -15,15 +15,12 @@ local write_rockspec = require("luarocks.cmd.write_rockspec")
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
 
-local type p = require("luarocks.core.types.persist")
-local type PersistableTable = p.PersistableTable
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
 
-local type tr = require("luarocks.core.types.tree")
-local type Tree = tr.Tree
+local type Tree = require("luarocks.core.types.tree").Tree
 
 function init.add_to_parser(parser: Parser)
    local cmd = parser:command("init", "Initialize a directory for a Lua project using LuaRocks.", util.see_also())

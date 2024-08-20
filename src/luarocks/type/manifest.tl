@@ -1,8 +1,7 @@
 local record type_manifest
 end
 
-local type m = require("luarocks.core.types.manifest")
-local type Manifest = m.Manifest
+local type Manifest = require("luarocks.core.types.manifest").Manifest
 
 local type_check = require("luarocks.type_check")
 

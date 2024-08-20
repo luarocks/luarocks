@@ -1,5 +1,4 @@
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
 local record fs
    verbose: function(): FILE | boolean, string, integer

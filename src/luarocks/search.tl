@@ -9,14 +9,11 @@ local util = require("luarocks.util")
 local queries = require("luarocks.queries")
 local results = require("luarocks.results")
 
-local type r = require("luarocks.core.types.result")
-local type Result = r.Result
+local type Result = require("luarocks.core.types.result").Result
 
-local type q = require("luarocks.core.types.query")
-local type Query = q.Query
+local type Query = require("luarocks.core.types.query").Query
 
-local type ver = require("luarocks.core.types.version")
-local type Version = ver.Version
+local type Version = require("luarocks.core.types.version").Version
 
 local type Tree = require("luarocks.core.types.tree").Tree
 

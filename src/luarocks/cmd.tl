@@ -26,13 +26,11 @@ local type Tree = require("luarocks.core.types.tree").Tree
 
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
 local type Module = cmd.Module
 
-local type p = require("luarocks.core.types.persist")
-local type PersistableTable = p.PersistableTable
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
 
 local type Config = cfg
 

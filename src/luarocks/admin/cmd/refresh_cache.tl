@@ -10,8 +10,7 @@ local cache = require("luarocks.admin.cache")
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
 
-local type a = require("luarocks.core.types.args")
-local type Args = a.Args
+local type Args = require("luarocks.core.types.args").Args
 
 function refresh_cache.add_to_parser(parser: Parser)
    local cmd = parser:command("refresh_cache", "Refresh local cache of a remote rocks server.", util.see_also())

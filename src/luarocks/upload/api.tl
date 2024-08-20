@@ -28,8 +28,7 @@ local type Args = require("luarocks.core.types.args").Args
 local type Configuration = api.Configuration
 local type File = multipart.File
 
-local type p = require("luarocks.core.types.persist")
-local type PersistableTable = p.PersistableTable
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
 
 local function upload_config_file(): string
    if not cfg.config_files.user.file then
