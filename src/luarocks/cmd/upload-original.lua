@@ -1,15 +1,5 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local string = _tl_compat and _tl_compat.string or string
-local upload = {Response = {version = {}, }, }
 
-
-
-
-
-
-
-
-
-
+local upload = {}
 
 local signing = require("luarocks.signing")
 local util = require("luarocks.util")
@@ -18,33 +8,25 @@ local pack = require("luarocks.pack")
 local cfg = require("luarocks.core.cfg")
 local Api = require("luarocks.upload.api")
 
-
-
-local argparse = require("luarocks.vendor.argparse")
-
-
-
-
-
 function upload.add_to_parser(parser)
-   local cmd = parser:command("upload", "Pack a source rock file (.src.rock extension) " ..
-   "and upload it and the rockspec to the public rocks repository.", util.see_also()):
-   summary("Upload a rockspec to the public rocks repository.")
+   local cmd = parser:command("upload", "Pack a source rock file (.src.rock extension) "..
+      "and upload it and the rockspec to the public rocks repository.", util.see_also())
+      :summary("Upload a rockspec to the public rocks repository.")
 
    cmd:argument("rockspec", "Rockspec for the rock to upload.")
-   cmd:argument("src-rock", "A corresponding .src.rock file; if not given it will be generated."):
-   args("?")
+   cmd:argument("src-rock", "A corresponding .src.rock file; if not given it will be generated.")
+      :args("?")
 
    cmd:flag("--skip-pack", "Do not pack and send source rock.")
-   cmd:option("--api-key", "Pass an API key. It will be stored for subsequent uses."):
-   argname("<key>")
-   cmd:option("--temp-key", "Use the given a temporary API key in this " ..
-   "invocation only. It will not be stored."):
-   argname("<key>")
-   cmd:flag("--force", "Replace existing rockspec if the same revision of a " ..
-   "module already exists. This should be used only in case of upload " ..
-   "mistakes: when updating a rockspec, increment the revision number " ..
-   "instead.")
+   cmd:option("--api-key", "Pass an API key. It will be stored for subsequent uses.")
+      :argname("<key>")
+   cmd:option("--temp-key", "Use the given a temporary API key in this "..
+      "invocation only. It will not be stored.")
+      :argname("<key>")
+   cmd:flag("--force", "Replace existing rockspec if the same revision of a "..
+      "module already exists. This should be used only in case of upload "..
+      "mistakes: when updating a rockspec, increment the revision number "..
+      "instead.")
    cmd:flag("--sign", "Upload a signature file alongside each file as well.")
    cmd:flag("--debug"):hidden(true)
 end
@@ -70,7 +52,7 @@ function upload.command(args)
    util.printout("Sending " .. tostring(args.rockspec) .. " ...")
    local res, err = api:method("check_rockspec", {
       package = rockspec.package,
-      version = rockspec.version,
+      version = rockspec.version
    })
    if not res then return nil, err end
 
@@ -78,7 +60,7 @@ function upload.command(args)
       util.printout("Will create new module (" .. tostring(rockspec.package) .. ")")
    end
    if res.version and not args.force then
-      return nil, "Revision " .. rockspec.version .. " already exists on the server. " .. util.see_help("upload")
+      return nil, "Revision "..rockspec.version.." already exists on the server. "..util.see_help("upload")
    end
 
    local sigfname
@@ -89,7 +71,7 @@ function upload.command(args)
       if err then
          return nil, "Failed signing rockspec: " .. err
       end
-      util.printout("Signed rockspec: " .. sigfname)
+      util.printout("Signed rockspec: "..sigfname)
    end
 
    local rock_fname
@@ -108,14 +90,14 @@ function upload.command(args)
       if err then
          return nil, "Failed signing rock: " .. err
       end
-      util.printout("Signed packed rock: " .. rock_sigfname)
+      util.printout("Signed packed rock: "..rock_sigfname)
    end
 
    local multipart = require("luarocks.upload.multipart")
 
    res, err = api:method("upload", nil, {
-      rockspec_file = multipart.new_file(args.rockspec),
-      rockspec_sig = sigfname and multipart.new_file(sigfname),
+     rockspec_file = multipart.new_file(args.rockspec),
+     rockspec_sig = sigfname and multipart.new_file(sigfname),
    })
    if not res then return nil, err end
 

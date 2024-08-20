@@ -12,7 +12,7 @@ local util = require("luarocks.util")
 function cache.get_upload_server(server)
    if not server then server = cfg.upload_server end
    if not server then
-      return nil, "No server specified and no default configured with upload_server."
+      return nil, nil, "No server specified and no default configured with upload_server."
    end
    return server, cfg.upload_servers and cfg.upload_servers[server]
 end

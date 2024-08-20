@@ -1,6 +1,13 @@
 
 local record upload
    record Response
+      module: string
+      is_new: boolean
+      module_url: boolean
+      manifests: {string}
+      record version
+         id: string
+      end
    end
 end
 
@@ -10,6 +17,8 @@ local fetch = require("luarocks.fetch")
 local pack = require("luarocks.pack")
 local cfg = require("luarocks.core.cfg")
 local Api = require("luarocks.upload.api")
+
+local type Response = upload.Response
 
 local argparse = require("luarocks.vendor.argparse")
 local type Parser = argparse.Parser
@@ -62,7 +71,7 @@ function upload.command(args: Args): boolean, string, string
    local res, err = api:method("check_rockspec", {
       package = rockspec.package,
       version = rockspec.version
-   })
+   }) as (Response, string)
    if not res then return nil, err end
 
    if not res.module then
@@ -107,7 +116,7 @@ function upload.command(args: Args): boolean, string, string
    res, err = api:method("upload", nil, {
      rockspec_file = multipart.new_file(args.rockspec),
      rockspec_sig = sigfname and multipart.new_file(sigfname),
-   })
+   }) as (Response, string)
    if not res then return nil, err end
 
    if res.is_new and #res.manifests == 0 then
@@ -124,7 +133,7 @@ function upload.command(args: Args): boolean, string, string
       res, err = api:method("upload_rock/" .. ("%d"):format(res.version.id), nil, {
          rock_file = multipart.new_file(rock_fname),
          rock_sig = rock_sigfname and multipart.new_file(rock_sigfname),
-      })
+      }) as (Response, string)
       if not res then return nil, err end
    end
 

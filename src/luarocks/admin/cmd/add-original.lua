@@ -1,8 +1,7 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
 
-
+--- Module implementing the luarocks-admin "add" command.
+-- Adds a rock or rockspec to a rocks server.
 local add = {}
-
 
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
@@ -12,37 +11,35 @@ local fs = require("luarocks.fs")
 local cache = require("luarocks.admin.cache")
 local index = require("luarocks.admin.index")
 
-local argparse = require("luarocks.vendor.argparse")
-
-
-
-
-
 function add.add_to_parser(parser)
    local cmd = parser:command("add", "Add a rock or rockspec to a rocks server.", util.see_also())
 
-   cmd:argument("rocks", "A local rockspec or rock file."):
-   args("+")
+   cmd:argument("rock", "A local rockspec or rock file.")
+      :args("+")
 
-   cmd:option("--server", "The server to use. If not given, the default server " ..
-   "set in the upload_server variable from the configuration file is used instead."):
-   target("add_server")
-   cmd:flag("--no-refresh", "Do not refresh the local cache prior to " ..
-   "generation of the updated manifest.")
-   cmd:flag("--index", "Produce an index.html file for the manifest. This " ..
-   "flag is automatically set if an index.html file already exists.")
+   cmd:option("--server", "The server to use. If not given, the default server "..
+      "set in the upload_server variable from the configuration file is used instead.")
+      :target("add_server")
+   cmd:flag("--no-refresh", "Do not refresh the local cache prior to "..
+      "generation of the updated manifest.")
+   cmd:flag("--index", "Produce an index.html file for the manifest. This "..
+      "flag is automatically set if an index.html file already exists.")
 end
 
 local function zip_manifests()
    for ver in util.lua_versions() do
-      local file = "manifest-" .. ver
-      local zip = file .. ".zip"
+      local file = "manifest-"..ver
+      local zip = file..".zip"
       fs.delete(dir.path(fs.current_dir(), zip))
       fs.zip(zip, file)
    end
 end
 
 local function add_files_to_server(refresh, rockfiles, server, upload_server, do_index)
+   assert(type(refresh) == "boolean" or not refresh)
+   assert(type(rockfiles) == "table")
+   assert(type(server) == "string")
+   assert(type(upload_server) == "table" or not upload_server)
 
    local download_url, login_url = cache.get_server_urls(server, upload_server)
    local at = fs.current_dir()
@@ -54,7 +51,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
    end
 
    if not login_url then
-      login_url = protocol .. "://" .. server_path
+      login_url = protocol.."://"..server_path
    end
 
    local ok, err = fs.change_dir(at)
@@ -63,12 +60,12 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
    local files = {}
    for _, rockfile in ipairs(rockfiles) do
       if fs.exists(rockfile) then
-         util.printout("Copying file " .. rockfile .. " to " .. local_cache .. "...")
+         util.printout("Copying file "..rockfile.." to "..local_cache.."...")
          local absolute = fs.absolute_name(rockfile)
          fs.copy(absolute, local_cache, "read")
          table.insert(files, dir.base_name(absolute))
       else
-         util.printerr("File " .. rockfile .. " not found")
+         util.printerr("File "..rockfile.." not found")
       end
    end
    if #files == 0 then
@@ -93,8 +90,8 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
    end
 
    local login_info = ""
-   if user then login_info = " -u " .. user end
-   if password then login_info = login_info .. ":" .. password end
+   if user then login_info = " -u "..user end
+   if password then login_info = login_info..":"..password end
    if not login_url:match("/$") then
       login_url = login_url .. "/"
    end
@@ -104,23 +101,23 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
    end
    table.insert(files, "manifest")
    for ver in util.lua_versions() do
-      table.insert(files, "manifest-" .. ver)
-      table.insert(files, "manifest-" .. ver .. ".zip")
+      table.insert(files, "manifest-"..ver)
+      table.insert(files, "manifest-"..ver..".zip")
    end
 
-
+   -- TODO abstract away explicit 'curl' call
 
    local cmd
    if protocol == "rsync" then
       local srv, path = server_path:match("([^/]+)(/.+)")
-      cmd = cfg.variables.RSYNC .. " " .. cfg.variables.RSYNCFLAGS .. " -e ssh " .. local_cache .. "/ " .. user .. "@" .. srv .. ":" .. path .. "/"
+      cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
    elseif protocol == "file" then
       return fs.copy_contents(local_cache, server_path)
    elseif upload_server and upload_server.sftp then
       local part1, part2 = upload_server.sftp:match("^([^/]*)/(.*)$")
-      cmd = cfg.variables.SCP .. " " .. table.concat(files, " ") .. " " .. user .. "@" .. part1 .. ":/" .. part2
+      cmd = cfg.variables.SCP.." "..table.concat(files, " ").." "..user.."@"..part1..":/"..part2
    else
-      cmd = cfg.variables.CURL .. " " .. login_info .. " -T '{" .. table.concat(files, ",") .. "}' " .. login_url
+      cmd = cfg.variables.CURL.." "..login_info.." -T '{"..table.concat(files, ",").."}' "..login_url
    end
 
    util.printout(cmd)
@@ -128,9 +125,9 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
 end
 
 function add.command(args)
-   local server, server_table, err = cache.get_upload_server(args.add_server or args.server)
-   if not server then return nil, err end
-   return add_files_to_server(not args.no_refresh, args.rocks, server, server_table, args.index)
+   local server, server_table = cache.get_upload_server(args.add_server or args.server)
+   if not server then return nil, server_table end
+   return add_files_to_server(not args.no_refresh, args.rock, server, server_table, args.index)
 end
 
 

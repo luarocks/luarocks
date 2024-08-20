@@ -1,7 +1,6 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local package = _tl_compat and _tl_compat.package or package; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
 
+--- Module which builds the index.html page to be used in rocks servers.
 local index = {}
-
 
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
@@ -9,11 +8,6 @@ local vers = require("luarocks.core.vers")
 local persist = require("luarocks.persist")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
-
-
-
-
-
 
 local ext_url_target = ' target="_blank"'
 
@@ -118,12 +112,12 @@ function index.format_external_dependencies(rockspec)
          for plat, entries in util.sortedpairs(plats) do
             for name, desc in util.sortedpairs(entries) do
                if not listed_set[name] then
-                  table.insert(deplist, name:lower() .. " (on " .. plat .. ")")
+                  table.insert(deplist, name:lower() .. " (on "..plat..")")
                end
             end
          end
       end
-      return '<p><b>External dependencies:</b> ' .. table.concat(deplist, ',&nbsp;') .. '</p>'
+      return '<p><b>External dependencies:</b> ' .. table.concat(deplist, ',&nbsp;').. '</p>'
    else
       return ""
    end
@@ -131,7 +125,7 @@ end
 
 function index.make_index(repo)
    if not fs.is_dir(repo) then
-      return nil, "Cannot access repository at " .. repo
+      return nil, "Cannot access repository at "..repo
    end
    local manifest = manif.load_manifest(repo)
    local out = io.open(dir.path(repo, "index.html"), "w")
@@ -142,8 +136,8 @@ function index.make_index(repo)
       local output = index_package_begin
       for version, data in util.sortedpairs(version_list, vers.compare_versions) do
          local versions = {}
-         output = output .. version .. ':&nbsp;'
-         table.sort(data, function(a, b) return a.arch < b.arch end)
+         output = output..version..':&nbsp;'
+         table.sort(data, function(a,b) return a.arch < b.arch end)
          for _, item in ipairs(data) do
             local file
             if item.arch == 'rockspec' then
@@ -152,7 +146,7 @@ function index.make_index(repo)
             else
                file = ("%s-%s.%s.rock"):format(package, version, item.arch)
             end
-            table.insert(versions, '<a href="' .. file .. '">' .. item.arch .. '</a>')
+            table.insert(versions, '<a href="'..file..'">'..item.arch..'</a>')
          end
          output = output .. table.concat(versions, ',&nbsp;') .. '<br/>'
       end
@@ -167,11 +161,11 @@ function index.make_index(repo)
             summary = descript.summary or "",
             detailed = descript.detailed or "",
             license = descript.license or "N/A",
-            homepage = descript.homepage and ('| <a href="' .. descript.homepage .. '"' .. ext_url_target .. '>project homepage</a>') or "",
-            externaldependencies = index.format_external_dependencies(rockspec),
+            homepage = descript.homepage and ('| <a href="'..descript.homepage..'"'..ext_url_target..'>project homepage</a>') or "",
+            externaldependencies = index.format_external_dependencies(rockspec)
          }
          vars.detailed = vars.detailed:gsub("\n\n", "</p><p>"):gsub("%s+", " ")
-         vars.detailed = vars.detailed:gsub("(https?://[a-zA-Z0-9%.%%-_%+%[%]=%?&/$@;:]+)", '<a href="%1"' .. ext_url_target .. '>%1</a>')
+         vars.detailed = vars.detailed:gsub("(https?://[a-zA-Z0-9%.%%-_%+%[%]=%?&/$@;:]+)", '<a href="%1"'..ext_url_target..'>%1</a>')
          output = output:gsub("$(%w+)", vars)
       else
          output = output:gsub("$anchor", package)

@@ -1,12 +1,6 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local os = _tl_compat and _tl_compat.os or os; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
-
-local show = {Return = {}, }
-
-
-
-
-
-
+--- Module implementing the LuaRocks "show" command.
+-- Shows information about an installed rock.
+local show = {}
 
 local queries = require("luarocks.queries")
 local search = require("luarocks.search")
@@ -19,38 +13,18 @@ local fetch = require("luarocks.fetch")
 local manif = require("luarocks.manif")
 local repos = require("luarocks.repos")
 
-
-
-
-local argparse = require("luarocks.vendor.argparse")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function show.add_to_parser(parser)
    local cmd = parser:command("show", [[
 Show information about an installed rock.
 
 Without any flags, show all module information.
-With flags, return only the desired information.]], util.see_also()):
-   summary("Show information about an installed rock.")
+With flags, return only the desired information.]], util.see_also())
+      :summary("Show information about an installed rock.")
 
-   cmd:argument("rock", "Name of an installed rock."):
-   action(util.namespaced_name_action)
-   cmd:argument("version", "Rock version."):
-   args("?")
+   cmd:argument("rock", "Name of an installed rock.")
+      :action(util.namespaced_name_action)
+   cmd:argument("version", "Rock version.")
+      :args("?")
 
    cmd:flag("--home", "Show home page of project.")
    cmd:flag("--modules", "Show all modules provided by the package as used by require().")
@@ -127,7 +101,7 @@ local function keys_as_string(t, sep)
 end
 
 local function word_wrap(line)
-   local width = math.tointeger(os.getenv("COLUMNS")) or 80
+   local width = tonumber(os.getenv("COLUMNS")) or 80
    if width > 80 then width = 80 end
    if #line > width then
       local brk = width
@@ -135,14 +109,14 @@ local function word_wrap(line)
          brk = brk - 1
       end
       if brk > 0 then
-         return line:sub(1, brk - 1) .. "\n" .. word_wrap(line:sub(brk + 1))
+         return line:sub(1, brk-1) .. "\n" .. word_wrap(line:sub(brk+1))
       end
    end
    return line
 end
 
 local function format_text(text)
-   text = text:gsub("^%s*", ""):gsub("%s$", ""):gsub("\n[ \t]+", "\n"):gsub("([^\n])\n([^\n])", "%1 %2")
+   text = text:gsub("^%s*",""):gsub("%s$", ""):gsub("\n[ \t]+","\n"):gsub("([^\n])\n([^\n])","%1 %2")
    local paragraphs = util.split_string(text, "\n\n")
    for n, line in ipairs(paragraphs) do
       paragraphs[n] = word_wrap(line)
@@ -156,11 +130,9 @@ local function installed_rock_label(dep, tree)
    if rocks_provided[dep.name] then
       installed, version = true, rocks_provided[dep.name]
    else
-      local name
-      name, version = search.pick_installed_rock(dep, tree)
-      installed = name ~= nil
+      installed, version = search.pick_installed_rock(dep, tree)
    end
-   return installed and "using " .. version or "missing"
+   return installed and "using "..version or "missing"
 end
 
 local function render(template, data)
@@ -171,15 +143,12 @@ local function render(template, data)
       if cmd == " " then
          table.insert(out, line)
       elseif cmd == "?" or cmd == "*" or cmd == "!" then
-         if (cmd == "!" and d == nil) or
-            (cmd ~= "!" and (type(d) == "string" or
-            (type(d) == "table" and next(d) ~= nil))) then
-            local n = type(d) == "table" and #d or 1
-            if cmd ~= "*" then
-               n = 1
-            end
+         if (cmd == "!" and d == nil)
+             or (cmd ~= "!" and (type(d) == "string"
+                                 or (type(d) == "table" and next(d)))) then
+            local n = cmd == "*" and #d or 1
             for i = 1, n do
-               local tbl = cmd == "*" and type(d) == "table" and d[i] or data
+               local tbl = cmd == "*" and d[i] or data
                if type(tbl) == "string" then
                   tbl = tbl:gsub("%%", "%%%%")
                end
@@ -194,9 +163,9 @@ end
 local function adjust_path(name, version, basedir, pathname, suffix)
    pathname = dir.path(basedir, pathname)
    local vpathname = path.versioned_name(pathname, basedir, name, version)
-   return (fs.exists(vpathname) and
-   vpathname or
-   pathname) .. (suffix or "")
+   return (fs.exists(vpathname)
+          and vpathname
+          or pathname) .. (suffix or "")
 end
 
 local function modules_to_list(name, version, repo)
@@ -248,7 +217,7 @@ end
 
 local function deps_to_list(dependencies, tree)
    local ret = {}
-   for _, dep in ipairs(dependencies.queries or {}) do
+   for _, dep in ipairs(dependencies or {}) do
       table.insert(ret, { name = tostring(dep), label = installed_rock_label(dep, tree) })
    end
    return ret
@@ -291,8 +260,8 @@ local function show_rock(template, namespace, name, version, rockspec, repo, min
    util.printout(render(template, data))
 end
 
-
-
+--- Driver function for "show" command.
+-- @return boolean: True if succeeded, nil on errors.
 function show.command(args)
    local query = queries.new(args.rock, args.namespace, args.version, true)
 
@@ -305,11 +274,11 @@ function show.command(args)
    local namespace = path.read_namespace(name, version, tree)
    local rockspec_file = path.rockspec_file(name, version, repo)
    local rockspec, err = fetch.load_local_rockspec(rockspec_file)
-   if not rockspec then return nil, err end
+   if not rockspec then return nil,err end
 
    local descript = rockspec.description or {}
    local manifest, err = manif.load_manifest(repo_url)
-   if not manifest then return nil, err end
+   if not manifest then return nil,err end
    local minfo = manifest.repository[name][version][1]
 
    if args.rock_tree then util.printout(tree)

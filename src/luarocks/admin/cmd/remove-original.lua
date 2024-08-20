@@ -1,8 +1,7 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs
 
-
+--- Module implementing the luarocks-admin "remove" command.
+-- Removes a rock or rockspec from a rocks server.
 local admin_remove = {}
-
 
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
@@ -12,25 +11,23 @@ local fs = require("luarocks.fs")
 local cache = require("luarocks.admin.cache")
 local index = require("luarocks.admin.index")
 
-local argparse = require("luarocks.vendor.argparse")
-
-
-
-
-
 function admin_remove.add_to_parser(parser)
    local cmd = parser:command("remove", "Remove a rock or rockspec from a rocks server.", util.see_also())
 
-   cmd:argument("rocks", "A local rockspec or rock file."):
-   args("+")
+   cmd:argument("rock", "A local rockspec or rock file.")
+      :args("+")
 
-   cmd:option("--server", "The server to use. If not given, the default server " ..
-   "set in the upload_server variable from the configuration file is used instead.")
-   cmd:flag("--no-refresh", "Do not refresh the local cache prior to " ..
-   "generation of the updated manifest.")
+   cmd:option("--server", "The server to use. If not given, the default server "..
+      "set in the upload_server variable from the configuration file is used instead.")
+   cmd:flag("--no-refresh", "Do not refresh the local cache prior to "..
+      "generation of the updated manifest.")
 end
 
 local function remove_files_from_server(refresh, rockfiles, server, upload_server)
+   assert(type(refresh) == "boolean" or not refresh)
+   assert(type(rockfiles) == "table")
+   assert(type(server) == "string")
+   assert(type(upload_server) == "table" or not upload_server)
 
    local download_url, login_url = cache.get_server_urls(server, upload_server)
    local at = fs.current_dir()
@@ -48,12 +45,12 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    for _, rockfile in ipairs(rockfiles) do
       local basename = dir.base_name(rockfile)
       local file = dir.path(local_cache, basename)
-      util.printout("Removing file " .. file .. "...")
+      util.printout("Removing file "..file.."...")
       fs.delete(file)
       if not fs.exists(file) then
          nr_files = nr_files + 1
       else
-         util.printerr("Failed removing " .. file)
+         util.printerr("Failed removing "..file)
       end
    end
    if nr_files == 0 then
@@ -69,10 +66,10 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    index.make_index(local_cache)
 
    if protocol == "file" then
-      local cmd = cfg.variables.RSYNC .. " " .. cfg.variables.RSYNCFLAGS .. " --delete " .. local_cache .. "/ " .. server_path .. "/"
-      util.printout(cmd)
-      fs.execute(cmd)
-      return true
+       local cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." --delete "..local_cache.."/ ".. server_path.."/"
+       util.printout(cmd)
+       fs.execute(cmd)
+       return true
    end
 
    if protocol ~= "rsync" then
@@ -80,7 +77,7 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    end
 
    local srv, path = server_path:match("([^/]+)(/.+)")
-   local cmd = cfg.variables.RSYNC .. " " .. cfg.variables.RSYNCFLAGS .. " --delete -e ssh " .. local_cache .. "/ " .. user .. "@" .. srv .. ":" .. path .. "/"
+   local cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." --delete -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
 
    util.printout(cmd)
    fs.execute(cmd)
@@ -89,9 +86,9 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
 end
 
 function admin_remove.command(args)
-   local server, server_table, err = cache.get_upload_server(args.server)
-   if not server then return nil, err end
-   return remove_files_from_server(not args.no_refresh, args.rocks, server, server_table)
+   local server, server_table = cache.get_upload_server(args.server)
+   if not server then return nil, server_table end
+   return remove_files_from_server(not args.no_refresh, args.rock, server, server_table)
 end
 
 
