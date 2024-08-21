@@ -229,38 +229,15 @@ local function run_build_driver(rockspec: Rockspec, no_install: boolean): boolea
       btype = "builtin"
       rockspec.build.type = btype
    end
+   local driver: Builds
    if cfg.accepted_build_types and not fun.contains(cfg.accepted_build_types, btype) then
       return nil, "This rockspec uses the '"..btype.."' build type, which is blocked by the 'accepted_build_types' setting in your LuaRocks configuration."
    end
-   local pok, driver_str, driver: boolean, Builds | string, Builds
-   if btype == "builtin" then
-      pok, driver_str = pcall(require, "luarocks.build.builtin") as (boolean, Builds | string)
-      if not pok or not driver_str is Builds then
-         return nil, "Failed initializing build back-end for build type '"..btype.."': "..driver_str as string
-      else
-         driver = driver_str as Builds
-      end
-   elseif btype == "cmake" then
-      pok, driver_str = pcall(require, "luarocks.build.cmake") as (boolean, Builds | string)
-      if not pok or not driver_str is Builds then
-         return nil, "Failed initializing build back-end for build type '"..btype.."': "..driver_str as string
-      else
-         driver = driver_str as Builds
-      end
-   elseif btype == "make" then
-      pok, driver_str = pcall(require, "luarocks.build.make") as (boolean, Builds | string)
-      if not pok or not driver_str is Builds then
-         return nil, "Failed initializing build back-end for build type '"..btype.."': "..driver_str as string
-      else
-         driver = driver_str as Builds
-      end
-   elseif btype == "command" then
-      pok, driver_str = pcall(require, "luarocks.build.command") as (boolean, Builds | string)
-      if not pok or not driver_str is Builds then
-         return nil, "Failed initializing build back-end for build type '"..btype.."': "..driver_str as string
-      else
-         driver = driver_str as Builds
-      end
+   local pok, driver_str = pcall(require, "luarocks.build." .. btype) as (boolean, Builds | string)
+   if not driver_str is Builds then
+      return nil, "Failed initializing build back-end for build type '"..btype.."': "..driver_str
+   else
+      driver = driver_str as Builds
    end
 
    if not driver.skip_lua_inc_lib_check then

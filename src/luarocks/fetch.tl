@@ -579,68 +579,8 @@ function fetch.fetch_sources(rockspec: Rockspec, extract: boolean, dest_dir?: st
    if dir.is_basic_protocol(protocol) then
       proto = fetch as Fetch
    else
-      local protocolfilename = protocol:gsub("[+-]", "_")
-      if protocolfilename == "cvs" then
-         ok, proto = pcall(require, "luarocks.fetch.cvs") as (boolean, Fetch)
-         if not ok then
-            return nil, "Unknown protocol "..protocol
-         end
-      elseif protocolfilename == "git_file" then
-         ok, proto = pcall(require, "luarocks.fetch.git_file") as (boolean, Fetch)
-         if not ok then
-            return nil, "Unknown protocol "..protocol
-         end
-      elseif protocolfilename == "git_http" then
-         ok, proto = pcall(require, "luarocks.fetch.git_http") as (boolean, Fetch)
-         if not ok then
-            return nil, "Unknown protocol "..protocol
-         end
-      elseif protocolfilename == "git_https" then
-         ok, proto = pcall(require, "luarocks.fetch.git_https") as (boolean, Fetch)
-         if not ok then
-            return nil, "Unknown protocol "..protocol
-         end
-      elseif protocolfilename == "git_ssh" then
-         ok, proto = pcall(require, "luarocks.fetch.git_ssh") as (boolean, Fetch)
-         if not ok then
-            return nil, "Unknown protocol "..protocol
-         end
-      elseif protocolfilename == "git" then
-         ok, proto = pcall(require, "luarocks.fetch.git") as (boolean, Fetch)
-         if not ok then
-            return nil, "Unknown protocol "..protocol
-         end
-      elseif protocolfilename == "hg_http" then
-         ok, proto = pcall(require, "luarocks.fetch.hg_http") as (boolean, Fetch)
-         if not ok then
-            return nil, "Unknown protocol "..protocol
-         end
-      elseif protocolfilename == "hg_https" then
-         ok, proto = pcall(require, "luarocks.fetch.hg_https") as (boolean, Fetch)
-         if not ok then
-            return nil, "Unknown protocol "..protocol
-         end
-      elseif protocolfilename == "hg_ssh" then
-         ok, proto = pcall(require, "luarocks.fetch.hg_ssh") as (boolean, Fetch)
-         if not ok then
-            return nil, "Unknown protocol "..protocol
-         end
-      elseif protocolfilename == "hg" then
-         ok, proto = pcall(require, "luarocks.fetch.hg") as (boolean, Fetch)
-         if not ok then
-            return nil, "Unknown protocol "..protocol
-         end
-      elseif protocolfilename == "sscm" then
-         ok, proto = pcall(require, "luarocks.fetch.sscm") as (boolean, Fetch)
-         if not ok then
-            return nil, "Unknown protocol "..protocol
-         end
-      elseif protocolfilename == "svn" then
-         ok, proto = pcall(require, "luarocks.fetch.svn") as (boolean, Fetch)
-         if not ok then
-            return nil, "Unknown protocol "..protocol
-         end
-      else
+      ok, proto = pcall(require, "luarocks.fetch."..protocol:gsub("[+-]", "_")) as (boolean, Fetch)
+      if not ok then
          return nil, "Unknown protocol "..protocol
       end
    end

@@ -1,17 +1,5 @@
 local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local pairs = _tl_compat and _tl_compat.pairs or pairs; local pcall = _tl_compat and _tl_compat.pcall or pcall; local string = _tl_compat and _tl_compat.string or string
-local build = {Op_b = {}, Builds = {}, }
-
-
-
-
-
-
-
-
-
-
-
-
+local build = {Builds = {}, }
 
 
 
@@ -31,8 +19,6 @@ local vers = require("luarocks.core.vers")
 local repos = require("luarocks.repos")
 local repo_writer = require("luarocks.repo_writer")
 local deplocks = require("luarocks.deplocks")
-
-
 
 
 
@@ -243,38 +229,15 @@ local function run_build_driver(rockspec, no_install)
       btype = "builtin"
       rockspec.build.type = btype
    end
+   local driver
    if cfg.accepted_build_types and not fun.contains(cfg.accepted_build_types, btype) then
       return nil, "This rockspec uses the '" .. btype .. "' build type, which is blocked by the 'accepted_build_types' setting in your LuaRocks configuration."
    end
-   local pok, driver_str, driver
-   if btype == "builtin" then
-      pok, driver_str = pcall(require, "luarocks.build.builtin")
-      if not pok or not (type(driver_str) == "table") then
-         return nil, "Failed initializing build back-end for build type '" .. btype .. "': " .. driver_str
-      else
-         driver = driver_str
-      end
-   elseif btype == "cmake" then
-      pok, driver_str = pcall(require, "luarocks.build.cmake")
-      if not pok or not (type(driver_str) == "table") then
-         return nil, "Failed initializing build back-end for build type '" .. btype .. "': " .. driver_str
-      else
-         driver = driver_str
-      end
-   elseif btype == "make" then
-      pok, driver_str = pcall(require, "luarocks.build.make")
-      if not pok or not (type(driver_str) == "table") then
-         return nil, "Failed initializing build back-end for build type '" .. btype .. "': " .. driver_str
-      else
-         driver = driver_str
-      end
-   elseif btype == "command" then
-      pok, driver_str = pcall(require, "luarocks.build.command")
-      if not pok or not (type(driver_str) == "table") then
-         return nil, "Failed initializing build back-end for build type '" .. btype .. "': " .. driver_str
-      else
-         driver = driver_str
-      end
+   local pok, driver_str = pcall(require, "luarocks.build." .. btype)
+   if not (type(driver_str) == "table") then
+      return nil, "Failed initializing build back-end for build type '" .. btype .. "': " .. driver_str
+   else
+      driver = driver_str
    end
 
    if not driver.skip_lua_inc_lib_check then
@@ -407,7 +370,6 @@ do
       return true
    end
 end
-
 
 
 
