@@ -17,7 +17,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
 function make_manifest.add_to_parser(parser)
    local cmd = parser:command("make_manifest", "Compile a manifest file for a repository.", util.see_also())
 

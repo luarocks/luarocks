@@ -18,7 +18,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
 function doc.add_to_parser(parser)
    local cmd = parser:command("doc", "Show documentation for an installed rock.\n\n" ..
    "Without any flags, tries to load the documentation using a series of heuristics.\n" ..

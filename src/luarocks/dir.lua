@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local package = _tl_compat and _tl_compat.package or package; local string = _tl_compat and _tl_compat.string or string
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local package = _tl_compat and _tl_compat.package or package; local string = _tl_compat and _tl_compat.string or string
 
 local dir = {}
 
@@ -19,7 +19,6 @@ local dir_sep = package.config:sub(1, 1)
 
 
 function dir.base_name(pathname)
-   assert(type(pathname) == "string")
 
    local b
    b = pathname:gsub("[/\\]", "/")
@@ -36,7 +35,6 @@ end
 
 
 function dir.dir_name(pathname)
-   assert(type(pathname) == "string")
 
    local d
    d = pathname:gsub("[/\\]", "/")

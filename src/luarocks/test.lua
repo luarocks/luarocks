@@ -10,8 +10,6 @@ local util = require("luarocks.util")
 
 
 
-
-
 local test_types = {
    "busted",
    "command",

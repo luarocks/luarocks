@@ -36,9 +36,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
-
-
 function show.add_to_parser(parser)
    local cmd = parser:command("show", [[
 Show information about an installed rock.

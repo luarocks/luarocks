@@ -21,7 +21,6 @@ local queries = require("luarocks.queries")
 
 
 
-
 local function check_dependents(name, versions, deps_mode)
    local dependents = {}
 

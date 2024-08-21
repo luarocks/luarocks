@@ -28,9 +28,6 @@ local signing = require("luarocks.signing")
 
 
 
-
-
-
 function pack.pack_source_rock(rockspec_file)
 
    local rockspec, errload = fetch.load_rockspec(rockspec_file)

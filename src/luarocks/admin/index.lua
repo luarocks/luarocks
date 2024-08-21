@@ -14,7 +14,6 @@ local manif = require("luarocks.manif")
 
 
 
-
 local ext_url_target = ' target="_blank"'
 
 local index_header = [[

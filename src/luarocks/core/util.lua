@@ -7,7 +7,6 @@ local util = {}
 
 
 
-
 local dir_sep = package.config:sub(1, 1)
 
 
@@ -110,7 +109,7 @@ function util.show_table(t, tname, top_indent)
    end
 
    tname = tname or "__unnamed__"
-   if type(t) ~= "table" then
+   if not (type(t) == "table") then
       return tname .. " = " .. basic_serialize(t)
    end
    cart, autoref = "", ""

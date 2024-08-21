@@ -6,7 +6,6 @@ local hg = {}
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
-local cfg = require("luarocks.core.cfg")
 
 
 

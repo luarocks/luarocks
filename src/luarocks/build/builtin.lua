@@ -13,8 +13,6 @@ local builtin = {}
 
 
 
-
-
 builtin.skip_lua_inc_lib_check = true
 
 local dir_sep = package.config:sub(1, 1)
@@ -104,7 +102,7 @@ do
       if bindir then
          install = { bin = {} }
          for _, file in ipairs(fs.list_dir(bindir)) do
-            table.insert(install.bin, dir.path(bindir, file))
+            table.insert((install.bin), dir.path(bindir, file))
          end
       end
 

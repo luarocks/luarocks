@@ -3,6 +3,7 @@ local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 th
 local deps = {}
 
 
+
 local cfg = require("luarocks.core.cfg")
 local manif = require("luarocks.manif")
 local path = require("luarocks.path")
@@ -12,8 +13,6 @@ local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
 local queries = require("luarocks.queries")
 local deplocks = require("luarocks.deplocks")
-
-
 
 
 
@@ -223,7 +222,6 @@ function deps.fulfill_dependency(dep, deps_mode, rocks_provided, verify, depskey
    end
 
    local search = require("luarocks.search")
-   local install = require("luarocks.cmd.install")
 
    local url, search_err = search.find_suitable_rock(dep)
    if not url then
@@ -236,7 +234,7 @@ function deps.fulfill_dependency(dep, deps_mode, rocks_provided, verify, depskey
       namespace = dep.namespace,
       verify = verify,
    }
-   local ok, install_err, errcode = install.command(install_args)
+   local ok, install_err, errcode = deps.installer(install_args)
    if not ok then
       return nil, "Failed installing dependency: " .. url .. " - " .. install_err, errcode
    end
@@ -591,13 +589,13 @@ end
 
 function deps.autodetect_external_dependencies(build)
 
-   if not build or not build.modules then
+   if not build or not (build).modules then
       return nil
    end
 
    local extdeps = {}
    local any = false
-   for _, data in pairs(build.modules) do
+   for _, data in pairs((build).modules) do
       if type(data) == "table" and data.libraries then
          local libraries
          local librariesstr = data.libraries
@@ -678,8 +676,6 @@ end
 
 
 function deps.scan_deps(results, mdeps, name, version, deps_mode)
-   assert(type(results) == "table")
-   assert(type(mdeps) == "table")
    assert(not name:match("/"))
 
    local fetch = require("luarocks.fetch")
@@ -722,7 +718,7 @@ local function lua_h_exists(d, luaver)
       local data = fd:read("*a")
       fd:close()
       if data:match("LUA_VERSION_NUM%s*" .. tostring(luanum)) then
-         return d
+         return d ~= nil
       end
       return nil, "Lua header lua.h found at " .. d .. " does not match Lua version " .. luaver .. ". You can use `luarocks config variables.LUA_INCDIR <path>` to set the correct location.", "dependency", 2
    end
@@ -857,7 +853,6 @@ end
 
 function deps.check_dependencies(repo, deps_mode)
    local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
-   assert(type(deps_mode) == "string")
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
    local manifest = manif.load_manifest(rocks_dir)

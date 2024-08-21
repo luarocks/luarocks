@@ -1,33 +1,24 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local string = _tl_compat and _tl_compat.string or string; local results = {Results = {}, }
-
-
-
-
-
-
-
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local string = _tl_compat and _tl_compat.string or string; local results = {}
 
 
 local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
-local queries = require("luarocks.queries")
 
 
+local result = require("luarocks.core.types.result")
 
 
 local result_mt = {}
 
-result_mt.__index = results.Results
+result_mt.__index = result.Result
 
-function results.Results.type()
+function result.Result.type()
    return "result"
 end
 
 function results.new(name, version, repo, arch, namespace)
 
    assert(not name:match("/"))
-
-
 
 
    if not namespace then
@@ -63,7 +54,7 @@ end
 
 
 
-function results.Results:satisfies(query)
+function result.Result:satisfies(query)
    return match_name(query, self.name) and
    (query.arch[self.arch] or query.arch["any"]) and
    ((not query.namespace) or (query.namespace == self.namespace)) and

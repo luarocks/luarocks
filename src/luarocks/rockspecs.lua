@@ -16,8 +16,6 @@ local rock = require("luarocks.core.types.rockspec")
 
 
 
-
-
 local vendored_build_type_set = {
    ["builtin"] = true,
    ["cmake"] = true,

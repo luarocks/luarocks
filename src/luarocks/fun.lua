@@ -44,17 +44,6 @@ function fun.filter(xs, f)
    return rs
 end
 
-function fun.traverse(t, f)
-   return fun.map(t, function(x)
-
-      if type(x) == "table" then
-         return fun.traverse(x, f)
-      else
-         return f(x)
-      end
-   end)
-end
-
 function fun.reverse_in(t)
    for i = 1, math.floor(#t / 2) do
       local m, n = i, #t - i + 1
@@ -77,22 +66,23 @@ function fun.flip(f)
 end
 
 function fun.find(xs, f)
-   if type(xs) == "function" then
-      for v in xs do
-         local x = f(v)
-         if x then
-            return x
+   if type(xs) == "table" then
+      for _, x in ipairs(xs) do
+         local r = f(x)
+         if r then
+            return r
          end
       end
-   elseif type(xs) == "table" then
-      for _, v in ipairs(xs) do
-         local x = f(v)
-         if x then
-            return x
+   else
+      for x in xs do
+         local r = f(x)
+         if r then
+            return r
          end
       end
    end
 end
+
 
 function fun.partial(f, ...)
    local n = select("#", ...)

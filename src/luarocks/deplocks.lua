@@ -7,7 +7,6 @@ local persist = require("luarocks.persist")
 
 
 
-
 local deptable = {}
 local deptable_mode = "start"
 local deplock_abs_filename

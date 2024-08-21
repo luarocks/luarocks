@@ -11,7 +11,6 @@ local git_ssh = {}
 
 
 local git = require("luarocks.fetch.git")
-local cfg = require("luarocks.core.cfg")
 
 
 

@@ -1,6 +1,8 @@
 local type_manifest = {}
 
 
+
+
 local type_check = require("luarocks.type_check")
 
 local manifest_formats = type_check.declare_schemas({

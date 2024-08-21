@@ -13,7 +13,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
 function path_cmd.add_to_parser(parser)
    local cmd = parser:command("path", [[
 Returns the package path currently configured for this installation

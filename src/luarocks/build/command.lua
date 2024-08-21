@@ -15,8 +15,6 @@ local cfg = require("luarocks.core.cfg")
 
 
 
-
-
 function command.run(rockspec, not_install)
 
    local build = rockspec.build

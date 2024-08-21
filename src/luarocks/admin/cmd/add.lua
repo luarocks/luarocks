@@ -17,7 +17,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
 function add.add_to_parser(parser)
    local cmd = parser:command("add", "Add a rock or rockspec to a rocks server.", util.see_also())
 

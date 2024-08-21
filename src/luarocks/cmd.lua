@@ -36,9 +36,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
-
-
 local hc_ok, hardcoded = pcall(require, "luarocks.core.hardcoded")
 if not hc_ok then
    hardcoded = {}

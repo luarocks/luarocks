@@ -15,8 +15,6 @@ local cfg = require("luarocks.core.cfg")
 
 
 
-
-
 function cmake.run(rockspec, no_install)
    local build = rockspec.build
    local variables = build.variables or {}

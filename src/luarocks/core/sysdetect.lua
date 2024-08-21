@@ -435,7 +435,6 @@ end
 
 
 function sysdetect.detect_file(file)
-   assert(type(file) == "string")
    local fd = io.open(file, "rb")
    if not fd then
       return nil

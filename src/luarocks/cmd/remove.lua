@@ -18,7 +18,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
 function cmd_remove.add_to_parser(parser)
 
    local cmd = parser:command("remove", [[

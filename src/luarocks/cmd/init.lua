@@ -22,9 +22,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
-
-
 function init.add_to_parser(parser)
    local cmd = parser:command("init", "Initialize a directory for a Lua project using LuaRocks.", util.see_also())
 

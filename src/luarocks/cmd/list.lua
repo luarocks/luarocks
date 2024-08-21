@@ -28,9 +28,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
-
-
 function list.add_to_parser(parser)
    local cmd = parser:command("list", "List currently installed rocks.", util.see_also())
 

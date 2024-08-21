@@ -55,9 +55,6 @@ local vers = require("luarocks.core.vers")
 
 
 
-
-
-
 local function get_installed_versions(name)
    assert(not name:match("/"))
 

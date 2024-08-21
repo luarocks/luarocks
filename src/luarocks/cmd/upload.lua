@@ -25,7 +25,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
 function upload.add_to_parser(parser)
    local cmd = parser:command("upload", "Pack a source rock file (.src.rock extension) " ..
    "and upload it and the rockspec to the public rocks repository.", util.see_also()):

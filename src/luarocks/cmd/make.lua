@@ -24,8 +24,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
-
 function make.cmd_options(parser)
    parser:flag("--no-install", "Do not install the rock.")
    parser:flag("--no-doc", "Install the rock without its documentation.")

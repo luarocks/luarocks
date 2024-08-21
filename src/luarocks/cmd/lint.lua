@@ -13,7 +13,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
 function lint.add_to_parser(parser)
    local cmd = parser:command("lint", "Check syntax of a rockspec.\n\n" ..
    "Returns success if the text of the rockspec is syntactically correct, else failure.",

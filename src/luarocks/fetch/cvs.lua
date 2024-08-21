@@ -6,7 +6,6 @@ local cvs = {}
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
-local cfg = require("luarocks.core.cfg")
 
 
 
@@ -41,8 +40,8 @@ function cvs.get_sources(rockspec, extract, dest_dir)
    else
       store_dir = dest_dir
    end
-   local ok, err = fs.change_dir(store_dir)
-   if not ok then return nil, err end
+   local okchange, err = fs.change_dir(store_dir)
+   if not okchange then return nil, err end
    if not fs.execute(_tl_table_unpack(command)) then
       return nil, "Failed fetching files from CVS."
    end

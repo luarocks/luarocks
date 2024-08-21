@@ -17,7 +17,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
 function admin_remove.add_to_parser(parser)
    local cmd = parser:command("remove", "Remove a rock or rockspec from a rocks server.", util.see_also())
 

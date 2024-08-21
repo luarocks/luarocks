@@ -8,7 +8,6 @@ local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
-local cfg = require("luarocks.core.cfg")
 
 
 

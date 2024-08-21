@@ -22,12 +22,7 @@ local results = require("luarocks.results")
 
 
 
-
-
-
-
 function search.store_result(result_tree, result)
-   assert(type(result_tree) == "table")
 
    local name = result.name
    local version = result.version

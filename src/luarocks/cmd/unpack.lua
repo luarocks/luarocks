@@ -18,8 +18,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
-
 function unpack.add_to_parser(parser)
    local cmd = parser:command("unpack", [[
 Unpacks the contents of a rock in a newly created directory.

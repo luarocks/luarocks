@@ -28,8 +28,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
-
 function cmd_build.add_to_parser(parser)
    local cmd = parser:command("build", "Build and install a rock, compiling its C parts if any.\n" ..
    "If the sources contain a luarocks.lock file, uses it as an authoritative source for " ..

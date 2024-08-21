@@ -21,9 +21,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
-
-
 function new_version.add_to_parser(parser)
    local cmd = parser:command("new_version", [[
 This is a utility function that writes a new rockspec, updating data from a

@@ -1,7 +1,12 @@
 local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local io = _tl_compat and _tl_compat.io or io; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
 
 
-local persist = {}
+local persist = {Writer = {}, }
+
+
+
+
+
 
 
 
@@ -15,13 +20,13 @@ local cfg = require("luarocks.core.cfg")
 
 
 
+
+
+
+
+
 persist.run_file = core.run_file
 persist.load_into_table = core.load_into_table
-
-
-
-
-
 
 local write_table
 

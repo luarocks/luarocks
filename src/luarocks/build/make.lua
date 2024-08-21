@@ -21,8 +21,6 @@ local cfg = require("luarocks.core.cfg")
 
 
 
-
-
 local function make_pass(make_cmd, pass, target, variables)
    local assignments = {}
    for k, v in pairs(variables) do

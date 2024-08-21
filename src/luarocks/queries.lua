@@ -12,7 +12,6 @@ local query = require("luarocks.core.types.query")
 
 
 
-
 local query_mt = {}
 
 query_mt.__index = query.Query
@@ -58,11 +57,6 @@ end
 
 function queries.new(name, namespace, version, substring, arch, operator)
 
-
-
-
-
-
    operator = operator or "=="
 
    local self = {
@@ -83,7 +77,6 @@ end
 
 
 function queries.all(arch)
-
 
    return queries.new("", nil, nil, true, arch)
 end

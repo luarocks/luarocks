@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local table = _tl_compat and _tl_compat.table or table; local _tl_table_unpack = unpack or table.unpack
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local table = _tl_compat and _tl_compat.table or table; local _tl_table_unpack = unpack or table.unpack
 
 local svn = {}
 
@@ -6,9 +6,8 @@ local svn = {}
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
-local cfg = require("luarocks.core.cfg")
 
-local Rockspec = cfg.Rockspec
+
 
 
 
@@ -18,8 +17,6 @@ local Rockspec = cfg.Rockspec
 
 
 function svn.get_sources(rockspec, extract, dest_dir)
-   assert(rockspec:type() == "rockspec")
-   assert(type(dest_dir) == "string" or not dest_dir)
 
    local svn_cmd = rockspec.variables.SVN
    local ok, err_msg = fs.is_tool_available(svn_cmd, "Subversion")
@@ -45,13 +42,13 @@ function svn.get_sources(rockspec, extract, dest_dir)
    else
       store_dir = dest_dir
    end
-   local ok, err = fs.change_dir(store_dir)
-   if not ok then return nil, err end
+   local okchange, err = fs.change_dir(store_dir)
+   if not okchange then return nil, err end
    if not fs.execute(_tl_table_unpack(command)) then
       return nil, "Failed fetching files from Subversion."
    end
-   ok, err = fs.change_dir(module)
-   if not ok then return nil, err end
+   okchange, err = fs.change_dir(module)
+   if not okchange then return nil, err end
    for _, d in ipairs(fs.find(".")) do
       if dir.base_name(d) == ".svn" then
          fs.delete(dir.path(store_dir, module, d))

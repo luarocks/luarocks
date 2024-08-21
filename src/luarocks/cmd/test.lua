@@ -12,7 +12,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
 function cmd_test.add_to_parser(parser)
    local cmd = parser:command("test", [[
 Run the test suite for the Lua project in the current directory.

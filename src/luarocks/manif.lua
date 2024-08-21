@@ -12,7 +12,6 @@ local manif = {}
 
 
 
-
 local core = require("luarocks.core.manif")
 local persist = require("luarocks.persist")
 local fetch = require("luarocks.fetch")
@@ -23,9 +22,6 @@ local path = require("luarocks.path")
 local util = require("luarocks.util")
 local queries = require("luarocks.queries")
 local type_manifest = require("luarocks.type.manifest")
-
-
-
 
 
 

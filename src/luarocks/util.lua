@@ -7,9 +7,10 @@ local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 th
 local core = require("luarocks.core.util")
 local cfg = require("luarocks.core.cfg")
 
+
+
+
 local util = {Fn = {}, Parser = {}, }
-
-
 
 
 
@@ -50,6 +51,8 @@ util.matchquote = core.matchquote
 
 
 
+
+local argparse = require("luarocks.vendor.argparse")
 
 
 

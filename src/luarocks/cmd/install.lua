@@ -25,8 +25,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
-
 function install.add_to_parser(parser)
    local cmd = parser:command("install", "Install a rock.", util.see_also())
 

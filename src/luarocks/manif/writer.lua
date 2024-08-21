@@ -34,11 +34,6 @@ local queries = require("luarocks.queries")
 
 
 
-
-
-
-
-
 local function store_package_items(storage, name, version, items)
    assert(not name:match("/"))
 

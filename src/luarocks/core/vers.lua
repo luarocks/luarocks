@@ -6,7 +6,6 @@ local util = require("luarocks.core.util")
 
 
 
-
 local deltas = {
    dev = 120000000,
    scm = 110000000,

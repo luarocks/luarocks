@@ -17,8 +17,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
-
 function cmd_search.add_to_parser(parser)
    local cmd = parser:command("search", "Query the LuaRocks servers.", util.see_also())
 

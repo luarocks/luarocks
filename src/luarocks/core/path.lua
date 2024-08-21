@@ -42,7 +42,6 @@ end
 
 
 function path.path_to_module(file)
-   assert(type(file) == "string")
 
    local exts = {}
    local paths = package.path .. ";" .. package.cpath
@@ -74,7 +73,6 @@ function path.deploy_lua_dir(tree)
    if type(tree) == "string" then
       return dir.path(tree, cfg.lua_modules_path)
    else
-      assert(type(tree) == "table")
       return tree.lua_dir or dir.path(tree.root, cfg.lua_modules_path)
    end
 end
@@ -83,7 +81,6 @@ function path.deploy_lib_dir(tree)
    if type(tree) == "string" then
       return dir.path(tree, cfg.lib_modules_path)
    else
-      assert(type(tree) == "table")
       return tree.lib_dir or dir.path(tree.root, cfg.lib_modules_path)
    end
 end

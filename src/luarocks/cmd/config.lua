@@ -19,7 +19,6 @@ local argparse = require("luarocks.vendor.argparse")
 
 
 
-
 function config_cmd.add_to_parser(parser)
    local cmd = parser:command("config", [[
 Query information about the LuaRocks configuration.

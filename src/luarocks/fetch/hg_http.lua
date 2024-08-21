@@ -9,7 +9,6 @@ local hg_http = {}
 
 
 local hg = require("luarocks.fetch.hg")
-local cfg = require("luarocks.core.cfg")
 
 
 
