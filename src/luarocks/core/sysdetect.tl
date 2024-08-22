@@ -4,15 +4,65 @@
 -- but aiming to cover every platform where LuaRocks is known to run.
 -- If your system is not detected, patches are welcome!
 
-local sysdetect = {}
-
-local function hex(s)
-   return s:gsub("$(..)", function(x)
-      return string.char(tonumber(x, 16))
-   end)
+local record sysdetect
+   enum Processor
+      "unknown"
+      "sparc"
+      "x86"
+      "mips"
+      "hppa"
+      "sparcv8"
+      "ppc"
+      "ppc64"
+      "ppc64le"
+      "s390"
+      "arm"
+      "armv7l"
+      "arm64"
+      "superh"
+      "sparcv9"
+      "ia_64"
+      "x86_64"
+      "alpha"
+      "aarch64"
+      "riscv64"
+      "alpha"
+   end
+   
+   enum System
+      "sysv"
+      "hpux"
+      "netbsd"
+      "linux"
+      "hurd"
+      "solaris"
+      "aix"
+      "irix"
+      "freebsd"
+      "openbsd"
+      "dragonfly"
+      "haiku"
+      "windows"
+      "cygwin"
+      "macosx"
+   end
 end
 
-local function read_int8(fd)
+local type System = sysdetect.System
+local type Processor = sysdetect.Processor
+
+local enum Endian
+   "little"
+   "big"
+end
+
+local function hex(s: string): string
+   return (s:gsub("$(..)", function(x: string): string
+      return string.char(tonumber(x, 16))
+   end))
+end
+
+local function read_int8(fd: FILE): integer
    if io.type(fd) == "closed file" then
       return nil
    end
@@ -24,12 +74,9 @@ local function read_int8(fd)
    return s:byte()
 end
 
-local LITTLE = 1
--- local BIG = 2
-
-local function bytes2number(s, endian)
-   local r = 0
-   if endian == LITTLE then
+local function bytes2number(s: string, endian: Endian): integer
+   local r: integer = 0
+   if endian == "little" then
       for i = #s, 1, -1 do
          r = r*256 + s:byte(i,i)
       end
@@ -41,11 +88,11 @@ local function bytes2number(s, endian)
    return r
 end
 
-local function read(fd, bytes, endian)
+local function read(fd: FILE, bytes: integer, endian: Endian): integer
    if io.type(fd) == "closed file" then
       return nil
    end
-   local s = fd:read(bytes)
+   local s: string = fd:read(bytes)
    if not s
       then fd:close()
       return nil
@@ -53,15 +100,57 @@ local function read(fd, bytes, endian)
    return bytes2number(s, endian)
 end
 
-local function read_int32le(fd)
-   return read(fd, 4, LITTLE)
+local function read_int32le(fd: FILE): integer
+   return read(fd, 4, "little")
 end
 
 --------------------------------------------------------------------------------
 -- @section ELF
 --------------------------------------------------------------------------------
 
-local e_osabi = {
+local record ElfHeader
+   osabi: integer
+   bits: integer
+   endian: integer
+   elf_version: integer
+   word: integer
+   e_type: integer
+   e_entry: integer
+   e_phoff: integer
+   e_shoff: integer
+   e_flags: integer
+   e_ehsize: integer
+   e_phentsize: integer
+   e_phnum: integer
+   e_shentsize: integer
+   e_shnum: integer
+   e_shstrndx: integer
+end
+
+local record ElfSection
+   sh_name_off: integer
+   sh_type: integer
+   sh_flags: integer
+   sh_addr: integer
+   sh_offset: integer
+   sh_size: integer
+   sh_link: integer
+   sh_info: integer
+
+   name: string
+   namesz: integer
+   namedata: string
+   descsz: integer
+   descdata: string
+   type: integer
+end
+
+local endians: {integer:Endian} = {
+   [0x01] = "little",
+   [0x02] = "big",
+}
+
+local e_osabi: {integer:System} = {
    [0x00] = "sysv",
    [0x01] = "hpux",
    [0x02] = "netbsd",
@@ -74,7 +163,7 @@ local e_osabi = {
    [0x0c] = "openbsd",
 }
 
-local e_machines = {
+local e_machines: {integer:Processor} = {
    [0x02] = "sparc",
    [0x03] = "x86",
    [0x08] = "mips",
@@ -94,17 +183,18 @@ local e_machines = {
    [0x9026] = "alpha",
 }
 
-local SHT_NOTE = 7
+local SHT_NOTE <const> = 7
 
-local function read_elf_section_headers(fd, hdr)
-   local endian = hdr.endian
-   local word = hdr.word
+local function read_elf_section_headers(fd: FILE, hdr: ElfHeader): {string: ElfSection}
+   local endian = endians[hdr.endian]
+   local word: integer = hdr.word
 
-   local strtab_offset
-   local sections = {}
+   local strtab_offset: integer
+   local sections: {string:ElfSection} = {}
+   local secarray: {ElfSection} = {}
    for i = 0, hdr.e_shnum - 1 do
       fd:seek("set", hdr.e_shoff + (i * hdr.e_shentsize))
-      local section = {}
+      local section: ElfSection = {}
       section.sh_name_off = read(fd, 4, endian)
       section.sh_type = read(fd, 4, endian)
       section.sh_flags = read(fd, word, endian)
@@ -123,10 +213,10 @@ local function read_elf_section_headers(fd, hdr)
       elseif i == hdr.e_shstrndx then
          strtab_offset = section.sh_offset
       end
-      table.insert(sections, section)
+      table.insert(secarray, section)
    end
    if strtab_offset then
-      for _, section in ipairs(sections) do
+      for _, section in ipairs(secarray) do
          fd:seek("set", strtab_offset + section.sh_name_off)
          section.name = fd:read(32):gsub("%z.*", "")
          sections[section.name] = section
@@ -135,9 +225,9 @@ local function read_elf_section_headers(fd, hdr)
    return sections
 end
 
-local function detect_elf_system(fd, hdr, sections)
+local function detect_elf_system(fd: FILE, hdr: ElfHeader, sections: {string:ElfSection}): System
    local system = e_osabi[hdr.osabi]
-   local endian = hdr.endian
+   local endian = endians[hdr.endian]
 
    if system == "sysv" then
       local abitag = sections[".note.ABI-tag"]
@@ -197,8 +287,8 @@ local function detect_elf_system(fd, hdr, sections)
    return system
 end
 
-local function read_elf_header(fd)
-   local hdr = {}
+local function read_elf_header(fd: FILE): ElfHeader, Processor
+   local hdr: ElfHeader = {}
 
    hdr.bits = read_int8(fd)
    hdr.endian = read_int8(fd)
@@ -211,12 +301,12 @@ local function read_elf_header(fd)
       return nil
    end
 
-   local endian = hdr.endian
+   local endian = endians[hdr.endian]
    fd:seek("set", 0x10)
    hdr.e_type = read(fd, 2, endian)
    local machine = read(fd, 2, endian)
    local processor = e_machines[machine] or "unknown"
-   if endian == 1 and processor == "ppc64" then
+   if endian == "little" and processor == "ppc64" then
       processor = "ppc64le"
    end
 
@@ -242,7 +332,7 @@ local function read_elf_header(fd)
    return hdr, processor
 end
 
-local function detect_elf(fd)
+local function detect_elf(fd: FILE): System, Processor
    local hdr, processor = read_elf_header(fd)
    if not hdr then
       return nil
@@ -256,25 +346,25 @@ end
 -- @section Mach Objects (Apple)
 --------------------------------------------------------------------------------
 
-local mach_l64 = {
+local mach_l64: {integer:Processor} = {
    [7] = "x86_64",
    [12] = "aarch64",
 }
 
-local mach_b64 = {
+local mach_b64: {integer:Processor} = {
    [0] = "ppc64",
 }
 
-local mach_l32 = {
+local mach_l32: {integer:Processor} = {
    [7] = "x86",
    [12] = "arm",
 }
 
-local mach_b32 = {
+local mach_b32: {integer:Processor} = {
    [0] = "ppc",
 }
 
-local function detect_mach(magic, fd)
+local function detect_mach(magic: string, fd: FILE): System, Processor
    if not magic then
       return nil
    end
@@ -316,20 +406,20 @@ local pe_machine = {
     [0x014c] = "x86",
 }
 
-local function detect_pe(fd)
+local function detect_pe(fd: FILE): System, Processor
    fd:seek("set", 60)                 -- position of PE header position
    local peoffset = read_int32le(fd)  -- read position of PE header
    if not peoffset then
       return nil
    end
-   local system = "windows"
+   local system: System = "windows"
    fd:seek("set", peoffset + 4)       -- move to position of Machine section
-   local machine = read(fd, 2, LITTLE)
-   local processor = pe_machine[machine]
+   local machine = read(fd, 2, "little")
+   local processor: Processor = pe_machine[machine]
 
-   local rdata_pos = fd:read(736):match(".rdata%z%z............(....)")
-   if rdata_pos then
-      rdata_pos = bytes2number(rdata_pos, LITTLE)
+   local rdata_pos_s = fd:read(736):match(".rdata%z%z............(....)")
+   if rdata_pos_s then
+      local rdata_pos = bytes2number(rdata_pos_s, "little")
       fd:seek("set", rdata_pos)
       local data = fd:read(512)
       if data:match("cygwin") or data:match("cyggcc") then
@@ -344,8 +434,7 @@ end
 -- @section API
 --------------------------------------------------------------------------------
 
-function sysdetect.detect_file(file)
-   assert(type(file) == "string")
+function sysdetect.detect_file(file: string): System, Processor
    local fd = io.open(file, "rb")
    if not fd then
       return nil
@@ -360,12 +449,12 @@ function sysdetect.detect_file(file)
    return detect_mach(magic, fd)
 end
 
-local cache_system
-local cache_processor
+local cache_system: System
+local cache_processor: Processor
 
-function sysdetect.detect(input_file)
+function sysdetect.detect(input_file: string): System, Processor
    local dirsep = package.config:sub(1,1)
-   local files
+   local files: {string}
 
    if input_file then
       files = { input_file }
@@ -374,7 +463,7 @@ function sysdetect.detect(input_file)
          return cache_system, cache_processor
       end
 
-      local PATHsep
+      local PATHsep: string
       local interp = arg and arg[-1]
       if dirsep == "/" then
          -- Unix
