@@ -1,13 +1,18 @@
 
 --- Module implementing the LuaRocks "lint" command.
 -- Utility function that checks syntax of the rockspec.
-local lint = {}
+local record lint
+end
 
 local util = require("luarocks.util")
 local download = require("luarocks.download")
 local fetch = require("luarocks.fetch")
 
-function lint.add_to_parser(parser)
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+function lint.add_to_parser(parser: Parser)
    local cmd = parser:command("lint", "Check syntax of a rockspec.\n\n"..
       "Returns success if the text of the rockspec is syntactically correct, else failure.",
       util.see_also())
@@ -16,12 +21,12 @@ function lint.add_to_parser(parser)
    cmd:argument("rockspec", "The rockspec to check.")
 end
 
-function lint.command(args)
+function lint.command(args: Args): boolean, string, string
 
    local filename = args.rockspec
    if not filename:match(".rockspec$") then
-      local err
-      filename, err = download.download("rockspec", filename:lower())
+      local err: string
+      filename, err = download.download_file("rockspec", filename:lower())
       if not filename then
          return nil, err
       end
@@ -44,7 +49,11 @@ function lint.command(args)
       ok = false
    end
 
-   return ok, ok or filename.." failed consistency checks."
+   if ok then
+      return ok
+   end
+
+   return nil, filename.." failed consistency checks."
 end
 
 return lint
