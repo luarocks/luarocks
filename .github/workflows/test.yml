@@ -50,10 +50,10 @@ jobs:
         luarocks install busted
         luarocks install cluacov
         luarocks install busted-htest
+        luarocks install tl --dev --branch next
 
     - name: Compile
       run: |
-        luarocks install tl --dev --branch next
         eval $(luarocks path)
         ./compile.sh
 
