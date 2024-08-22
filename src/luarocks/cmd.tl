@@ -1,6 +1,16 @@
 
 --- Functions for command-line scripts.
-local cmd = {}
+local record cmd
+   errorcodes: {string: integer}
+
+   record Module
+      add_to_parser: function(Parser)
+      command: function(Args, ...: string): boolean, string, integer
+      needs_lock: function(Args): boolean
+      help: string
+      help_summary: string
+   end
+end
 
 local manif = require("luarocks.manif")
 local config = require("luarocks.config")
@@ -12,10 +22,19 @@ local fun = require("luarocks.fun")
 local fs = require("luarocks.fs")
 local argparse = require("luarocks.vendor.argparse")
 
-local unpack = table.unpack or unpack
-local pack = table.pack or function(...) return { n = select("#", ...), ... } end
+local type Tree = require("luarocks.core.types.tree").Tree
 
-local hc_ok, hardcoded = pcall(require, "luarocks.core.hardcoded")
+local type Parser = argparse.Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+local type Module = cmd.Module
+
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
+
+local type Config = cfg
+
+local hc_ok, hardcoded: boolean, {string: string} = pcall(require, "luarocks.core.hardcoded")
 if not hc_ok then
    hardcoded = {}
 end
@@ -44,19 +63,20 @@ local function check_popen()
    end
 end
 
-local process_tree_args
+local process_tree_args: function(Args, string): boolean, string
 do
-   local function replace_tree(args, root, tree)
+   local function replace_tree(args: Args, root: string, tree?: Tree)
       root = dir.normalize(root)
       args.tree = root
       path.use_tree(tree or root)
    end
 
    local function strip_trailing_slashes()
-      if type(cfg.root_dir) == "string" then
-        cfg.root_dir = cfg.root_dir:gsub("/+$", "")
+      local cfg_root_dir = cfg.root_dir
+      if cfg_root_dir is string then
+        cfg.root_dir = (cfg.root_dir as string):gsub("/+$", "")
       else
-        cfg.root_dir.root = cfg.root_dir.root:gsub("/+$", "")
+         (cfg.root_dir as Tree).root = (cfg.root_dir as Tree).root:gsub("/+$", "")
       end
       cfg.rocks_dir = cfg.rocks_dir:gsub("/+$", "")
       cfg.deploy_bin_dir = cfg.deploy_bin_dir:gsub("/+$", "")
@@ -64,9 +84,9 @@ do
       cfg.deploy_lib_dir = cfg.deploy_lib_dir:gsub("/+$", "")
    end
 
-   local function set_named_tree(args, name)
+   local function set_named_tree(args: Args, name: string): boolean, string
       for _, tree in ipairs(cfg.rocks_trees) do
-         if type(tree) == "table" and name == tree.name then
+         if tree is Tree and name == tree.name then
             if not tree.root then
                return nil, "Configuration error: tree '"..tree.name.."' has no 'root' field."
             end
@@ -77,7 +97,7 @@ do
       return false
    end
 
-   process_tree_args = function(args, project_dir)
+   process_tree_args = function(args: Args, project_dir: string): boolean, string
 
       if args.global then
          local ok, err = set_named_tree(args, "system")
@@ -133,16 +153,22 @@ do
    end
 end
 
-local function process_server_args(args)
+local function process_server_args(args: Args): boolean, string
    if args.server then
       local protocol, pathname = dir.split_url(args.server)
       table.insert(cfg.rocks_servers, 1, protocol.."://"..pathname)
    end
 
    if args.dev then
-      local append_dev = function(s) return dir.path(s, "dev") end
-      local dev_servers = fun.traverse(cfg.rocks_servers, append_dev)
-      cfg.rocks_servers = fun.concat(dev_servers, cfg.rocks_servers)
+      for i, server in ipairs(cfg.rocks_servers) do
+         if server is string then
+            cfg.rocks_servers[i] = dir.path(server, "dev")
+         else
+            for j, mirror in ipairs(server) do
+               server[j] = dir.path(mirror, "dev")
+            end
+         end
+      end      
    end
 
    if args.only_server then
@@ -158,7 +184,7 @@ local function process_server_args(args)
    return true
 end
 
-local function error_handler(err)
+local function error_handler(err: string): string
    if not debug then
       return err
    end
@@ -179,8 +205,8 @@ end
 --- Display an error message and exit.
 -- @param message string: The error message.
 -- @param exitcode number: the exitcode to use
-local function die(message, exitcode)
-   assert(type(message) == "string", "bad error, expected string, got: " .. type(message))
+local function die(message: string, exitcode?: integer)
+   assert(type(message) == "string", "bad error, expected string, got: " .. type(message)) --!
    assert(exitcode == nil or type(exitcode) == "number", "bad error, expected number, got: " .. type(exitcode) .. " - " .. tostring(exitcode))
    util.printerr("\nError: "..message)
 
@@ -193,7 +219,7 @@ local function die(message, exitcode)
    os.exit(exitcode or cmd.errorcodes.UNSPECIFIED)
 end
 
-local function search_lua(lua_version, verbose, search_at)
+local function search_lua(lua_version: string, verbose?: string, search_at?: string): {string : string}, string
    if search_at then
       return util.find_lua(search_at, lua_version, verbose)
    end
@@ -215,11 +241,11 @@ local function search_lua(lua_version, verbose, search_at)
                (verbose and " Tried:\n" .. table.concat(all_tried, "\n") or "")
 end
 
-local init_config
+local init_config: function(Args): boolean, string
 do
-   local detect_config_via_args
+   local detect_config_via_args: function(Args): {string : string}
    do
-      local function find_project_dir(project_tree)
+      local function find_project_dir(project_tree: string): string, boolean
          if project_tree then
             return project_tree:gsub("[/\\][^/\\]+$", ""), true
          else
@@ -236,12 +262,12 @@ do
          return nil
       end
 
-      local function find_default_lua_version(args, project_dir)
+      local function find_default_lua_version(args: Args, project_dir: string): string
          if hardcoded.FORCE_CONFIG then
             return nil
          end
 
-         local dirs = {}
+         local dirs: {string} = {}
          if project_dir then
             table.insert(dirs, dir.path(project_dir, ".luarocks"))
          end
@@ -251,10 +277,10 @@ do
          table.insert(dirs, cfg.sysconfdir)
          for _, d in ipairs(dirs) do
             local f = dir.path(d, "default-lua-version.lua")
-            local mod, err = loadfile(f, "t")
+            local mod, _ = loadfile(f, "t")
             if mod then
                local pok, ver = pcall(mod)
-               if pok and type(ver) == "string" and ver:match("%d+.%d+") then
+               if pok and ver is string and ver:match("%d+.%d+") then
                   if args.verbose then
                      util.printout("Defaulting to Lua " .. ver .. " based on " .. f .. " ...")
                   end
@@ -265,15 +291,15 @@ do
          return nil
       end
 
-      local function find_version_from_config(dirname)
-         return fun.find(util.lua_versions("descending"), function(v)
+      local function find_version_from_config(dirname: string): string
+         return fun.find(util.lua_versions("descending"), function(v: string): string
             if util.exists(dir.path(dirname, ".luarocks", "config-"..v..".lua")) then
                return v
             end
          end)
       end
 
-      local function detect_lua_via_args(args, project_dir)
+      local function detect_lua_via_args(args: Args, project_dir: string): {string : string}
          local lua_version = args.lua_version
                              or find_default_lua_version(args, project_dir)
                              or (project_dir and find_version_from_config(project_dir))
@@ -302,8 +328,8 @@ do
          return {}
       end
 
-      detect_config_via_args = function(args)
-         local project_dir, given
+      detect_config_via_args = function(args: Args): {string : string}
+         local project_dir, given: string, boolean
          if not args.no_project then
             project_dir, given = find_project_dir(args.project_tree)
          end
@@ -323,7 +349,7 @@ do
       end
    end
 
-   init_config = function(args)
+   init_config = function(args: Args): boolean, string
       local detected = detect_config_via_args(args)
 
       local ok, err = cfg.init(detected, util.warning)
@@ -346,11 +372,11 @@ local lua_example = package.config:sub(1, 1) == "\\"
                     and "<d:\\path\\lua.exe>"
                     or  "</path/lua>"
 
-local function show_status(file, status, err)
+local function show_status(file: string, status: boolean, err?: string): string
    return (file and file .. " " or "") .. (status and "(ok)" or ("(" .. (err or "not found") ..")"))
 end
 
-local function use_to_fix_location(key, what)
+local function use_to_fix_location(key: string, what?: string): string
    local buf =  "                   ****************************************\n"
    buf = buf .. "                   Use the command\n\n"
    buf = buf .. "                      luarocks config " .. key .. " " .. (what or "<dir>") .. "\n\n"
@@ -359,7 +385,7 @@ local function use_to_fix_location(key, what)
    return buf
 end
 
-local function get_config_text(cfg)  -- luacheck: ignore 431
+local function get_config_text(cfg: Config): string  -- luacheck: ignore 431
    local deps = require("luarocks.deps")
 
    local libdir_ok = deps.check_lua_libdir(cfg.variables)
@@ -398,7 +424,7 @@ local function get_config_text(cfg)  -- luacheck: ignore 431
    end
    buf = buf.."\n   Rocks trees in use: \n"
    for _, tree in ipairs(cfg.rocks_trees) do
-      if type(tree) == "string" then
+      if tree is string then
          buf = buf.."      "..fs.absolute_name(tree)
       else
          local name = tree.name and " (\""..tree.name.."\")" or ""
@@ -410,7 +436,7 @@ local function get_config_text(cfg)  -- luacheck: ignore 431
    return buf
 end
 
-local function get_parser(description, cmd_modules)
+local function get_parser(description: string, cmd_modules: {string: Module}): Parser
    local basename = dir.base_name(program)
    local parser = argparse(
       basename, "LuaRocks "..cfg.program_version..", the Lua package manager\n\n"..
@@ -477,7 +503,7 @@ Enabling completion for Fish:
       :argname("<prefix>")
    parser:option("--lua-version", "Which Lua version to use.")
       :argname("<ver>")
-      :convert(function(s) return (s:match("^%d+%.%d+$")) end)
+      :convert(function(s: string): string return (s:match("^%d+%.%d+$")) end)
    parser:option("--tree", "Which tree to operate on.")
       :hidden_name("--to")
    parser:flag("--local", "Use the tree in the user's home directory.\n"..
@@ -503,7 +529,7 @@ Enabling completion for Fish:
    return parser
 end
 
-local function get_first_arg()
+local function get_first_arg(): string
    if not arg then
       return
    end
@@ -524,7 +550,7 @@ end
 -- @param commands table: contains the loaded modules representing commands.
 -- @param external_namespace string: where to look for external commands.
 -- @param ... string: Arguments given on the command-line.
-function cmd.run_command(description, commands, external_namespace, ...)
+function cmd.run_command(description: string, commands: {string: string}, external_namespace: string, ...: string)
 
    check_popen()
 
@@ -539,14 +565,14 @@ function cmd.run_command(description, commands, external_namespace, ...)
       end
    end
 
-   local cmd_modules = {}
+   local cmd_modules: {string: Module} = {}
    for name, module in pairs(commands) do
-      local pok, mod = pcall(require, module)
-      if pok and type(mod) == "table" then
+      local pok, mod = pcall(require, module) as (boolean, Module)
+      if pok and mod is Module then
          local original_command = mod.command
          if original_command then
             if not mod.add_to_parser then
-               mod.add_to_parser = function(parser)
+               mod.add_to_parser = function(parser: Parser)
                   parser:command(name, mod.help, util.see_also())
                         :summary(mod.help_summary)
                         :handle_options(false)
@@ -554,8 +580,8 @@ function cmd.run_command(description, commands, external_namespace, ...)
                         :args("*")
                end
 
-               mod.command = function(args)
-                  return original_command(args, unpack(args.input))
+               mod.command = function(args: Args): boolean, string, integer
+                  return original_command(args, table.unpack(args.input))
                end
             end
             cmd_modules[name] = mod
@@ -563,13 +589,13 @@ function cmd.run_command(description, commands, external_namespace, ...)
             util.warning("command module " .. module .. " does not implement command(), skipping")
          end
       else
-         util.warning("failed to load command module " .. module .. ": " .. mod)
+         util.warning("failed to load command module " .. module .. ": " .. tostring(mod))
       end
    end
 
-   local function process_cmdline_vars(...)
-      local args = pack(...)
-      local cmdline_vars = {}
+   local function process_cmdline_vars(...: string): table.PackTable<string>, {string : string}
+      local args = table.pack(...)
+      local cmdline_vars: {string: string} = {}
       local last = args.n
       for i = 1, args.n do
          if args[i] == "--" then
@@ -593,9 +619,9 @@ function cmd.run_command(description, commands, external_namespace, ...)
       return args, cmdline_vars
    end
 
-   local args, cmdline_vars = process_cmdline_vars(...)
+   local cmdline_args, cmdline_vars = process_cmdline_vars(...)
    local parser = get_parser(description, cmd_modules)
-   args = parser:parse(args)
+   local args: Args = parser:parse(cmdline_args) as Args
 
    -- Compatibility for old flag
    if args.nodeps then
@@ -627,9 +653,9 @@ function cmd.run_command(description, commands, external_namespace, ...)
 
    -- if the Lua interpreter wasn't explicitly found before cfg.init,
    -- try again now.
-   local tried
+   local tried: string
    if not lua_found then
-      local detected
+      local detected: {string : string}
       detected, tried = search_lua(cfg.lua_version, args.verbose, cfg.variables.LUA_DIR)
       if detected then
          lua_found = true
@@ -683,7 +709,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
       print(("-"):rep(79))
       print("Current configuration:")
       print(("-"):rep(79))
-      print(config.to_string(cfg))
+      print(config.to_string(cfg as PersistableTable))
       print(("-"):rep(79))
       fs.verbose()
    end
@@ -741,7 +767,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
 
    local cmd_mod = cmd_modules[args.command]
 
-   local lock
+   local lock: fs.Lock
    if cmd_mod.needs_lock and cmd_mod.needs_lock(args) then
       local ok, err = fs.check_command_permissions(args)
       if not ok then
@@ -762,7 +788,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
       end
    end
 
-   local call_ok, ok, err, exitcode = xpcall(function()
+   local call_ok, ok, err, exitcode = xpcall(function(): boolean, string, integer
       return cmd_mod.command(args)
    end, error_handler)
 
@@ -771,7 +797,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
    end
 
    if not call_ok then
-      die(ok, cmd.errorcodes.CRASH)
+      die(tostring(ok), cmd.errorcodes.CRASH)
    elseif not ok then
       die(err, exitcode)
    end
