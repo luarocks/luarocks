@@ -1,6 +1,7 @@
 --- Module implementing the LuaRocks "config" command.
 -- Queries information about the LuaRocks configuration.
-local config_cmd = {}
+local record config_cmd
+end
 
 local persist = require("luarocks.persist")
 local config = require("luarocks.config")
@@ -11,7 +12,13 @@ local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
 local json = require("luarocks.vendor.dkjson")
 
-function config_cmd.add_to_parser(parser)
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
+
+function config_cmd.add_to_parser(parser: Parser)
    local cmd = parser:command("config", [[
 Query information about the LuaRocks configuration.
 
@@ -74,7 +81,7 @@ Query information about the LuaRocks configuration.
    cmd:flag("--rock-trees"):hidden(true)
 end
 
-local function config_file(conf)
+local function config_file(conf: cfg.conf): boolean, string
    print(dir.normalize(conf.file))
    if conf.found then
       return true
@@ -83,8 +90,10 @@ local function config_file(conf)
    end
 end
 
-local function traverse_varstring(var, tbl, fn, missing_parent)
-   local k, r = var:match("^%[([0-9]+)%]%.(.*)$")
+local function traverse_varstring(var: string, tbl: PersistableTable, fn: function(PersistableTable, string | number): (boolean, string), missing_parent?: function(PersistableTable, string | number)): boolean, string
+   local k: string | number
+   local r: string
+   k, r = var:match("^%[([0-9]+)%]%.(.*)$")
    if k then
       k = tonumber(k)
    else
@@ -100,27 +109,27 @@ local function traverse_varstring(var, tbl, fn, missing_parent)
       end
 
       if tbl[k] then
-         return traverse_varstring(r, tbl[k], fn, missing_parent)
+         return traverse_varstring(r, tbl[k] as PersistableTable, fn, missing_parent)
       else
-         return nil, "Unknown entry " .. k
+         return nil, "Unknown entry " .. tostring(k)
       end
    end
 
    local i = var:match("^%[([0-9]+)%]$")
    if i then
-      var = tonumber(i)
+      return fn(tbl, tonumber(i))
    end
 
    return fn(tbl, var)
 end
 
-local function print_json(value)
+local function print_json(value: {string : any}): boolean
    print(json.encode(value))
    return true
 end
 
-local function print_entry(var, tbl, is_json)
-   return traverse_varstring(var, tbl, function(t, k)
+local function print_entry(var: string, tbl: PersistableTable, is_json: boolean): boolean, string
+   return traverse_varstring(var, tbl, function(t: PersistableTable, k: string): boolean, string
       if not t[k] then
          return nil, "Unknown entry " .. k
       end
@@ -128,33 +137,34 @@ local function print_entry(var, tbl, is_json)
 
       if not config.should_skip(var, val) then
          if is_json then
-            return print_json(val)
+            return print_json(val as {string : any})
          elseif type(val) == "string" then
             print(val)
          else
-            persist.write_value(io.stdout, val)
+            persist.write_value(io.stdout as persist.Writer, val)
          end
       end
       return true
    end)
 end
 
-local function infer_type(var)
-   local typ
-   traverse_varstring(var, cfg, function(t, k)
-      if t[k] ~= nil then
+local function infer_type(var: string): string
+   local typ: string
+   traverse_varstring(var, cfg as PersistableTable, function(t: PersistableTable, k: string): boolean, string --!
+      if t[k] then
          typ = type(t[k])
       end
    end)
    return typ
 end
 
-local function write_entries(keys, scope, do_unset)
+local function write_entries(keys: {string: string}, scope: string, do_unset: boolean): boolean, string
+   local wrote: PersistableTable = {}
    if scope == "project" and not cfg.config_files.project then
       return nil, "Current directory is not part of a project. You may want to run `luarocks init`."
    end
 
-   local file_name = cfg.config_files[scope].file
+   local file_name = (cfg.config_files as {string: {string: string}})[scope].file
 
    local tbl, err = persist.load_config_file_if_basic(file_name, cfg)
    if not tbl then
@@ -162,12 +172,13 @@ local function write_entries(keys, scope, do_unset)
    end
 
    for var, val in util.sortedpairs(keys) do
-      traverse_varstring(var, tbl, function(t, k)
+      traverse_varstring(var, tbl, function(t: PersistableTable, k: string | number): boolean, string
          if do_unset then
             t[k] = nil
+            wrote[var] = ""
          else
             local typ = infer_type(var)
-            local v
+            local v: string | number | boolean
             if typ == "number" and tonumber(val) then
                v = tonumber(val)
             elseif typ == "boolean" and val == "true" then
@@ -178,10 +189,10 @@ local function write_entries(keys, scope, do_unset)
                v = val
             end
             t[k] = v
-            keys[var] = v
+            wrote[var] = v
          end
          return true
-      end, function(p, k)
+      end, function(p: PersistableTable, k: string | number)
          p[k] = {}
       end)
    end
@@ -194,11 +205,11 @@ local function write_entries(keys, scope, do_unset)
    ok, err = persist.save_from_table(file_name, tbl)
    if ok then
       print(do_unset and "Removed" or "Wrote")
-      for var, val in util.sortedpairs(keys) do
+      for var, val in util.sortedpairs(wrote) do
          if do_unset then
             print(("\t%s"):format(var))
          else
-            if type(val) == "string" then
+            if val is string then
                print(("\t%s = %q"):format(var, val))
             else
                print(("\t%s = %s"):format(var, tostring(val)))
@@ -213,7 +224,7 @@ local function write_entries(keys, scope, do_unset)
    end
 end
 
-local function get_scope(args)
+local function get_scope(args: Args): string
    return args.scope
           or (args["local"] and "user")
           or (args.project_tree and "project")
@@ -222,7 +233,7 @@ local function get_scope(args)
           or "user"
 end
 
-local function report_on_lua_incdir_config(value, lua_version)
+local function report_on_lua_incdir_config(value: string): boolean
    local variables = {
       ["LUA_DIR"] = cfg.variables.LUA_DIR,
       ["LUA_BINDIR"] = cfg.variables.LUA_BINDIR,
@@ -231,7 +242,7 @@ local function report_on_lua_incdir_config(value, lua_version)
       ["LUA"] = cfg.variables.LUA,
    }
 
-   local ok, err = deps.check_lua_incdir(variables, lua_version)
+   local ok, err = deps.check_lua_incdir(variables)
    if not ok then
       util.printerr()
       util.warning((err:gsub(" You can use.*", "")))
@@ -239,7 +250,7 @@ local function report_on_lua_incdir_config(value, lua_version)
    return ok
 end
 
-local function report_on_lua_libdir_config(value, lua_version)
+local function report_on_lua_libdir_config(value: string): boolean
    local variables = {
       ["LUA_DIR"] = cfg.variables.LUA_DIR,
       ["LUA_BINDIR"] = cfg.variables.LUA_BINDIR,
@@ -248,7 +259,7 @@ local function report_on_lua_libdir_config(value, lua_version)
       ["LUA"] = cfg.variables.LUA,
    }
 
-   local ok, err, _, err_files = deps.check_lua_libdir(variables, lua_version)
+   local ok, err, _, err_files = deps.check_lua_libdir(variables)
    if not ok then
       util.printerr()
       util.warning((err:gsub(" You can use.*", "")))
@@ -270,11 +281,10 @@ end
 
 --- Driver function for "config" command.
 -- @return boolean: True if succeeded, nil on errors.
-function config_cmd.command(args)
-   local lua_version = args.lua_version or cfg.lua_version
+function config_cmd.command(args: Args): boolean, string
 
-   deps.check_lua_incdir(cfg.variables, lua_version)
-   deps.check_lua_libdir(cfg.variables, lua_version)
+   deps.check_lua_incdir(cfg.variables)
+   deps.check_lua_libdir(cfg.variables)
 
    -- deprecated flags
    if args.lua_incdir then
@@ -297,7 +307,7 @@ function config_cmd.command(args)
    end
    if args.rock_trees then
       for _, tree in ipairs(cfg.rocks_trees) do
-      	if type(tree) == "string" then
+      	if tree is string then
       	   util.printout(dir.normalize(tree))
       	else
       	   local name = tree.name and "\t"..tree.name or ""
@@ -313,7 +323,7 @@ function config_cmd.command(args)
          return nil, "Current directory is not part of a project. You may want to run `luarocks init`."
       end
 
-      local location = cfg.config_files[scope]
+      local location = (cfg.config_files as {string: {string: string}})[scope]
       if (not location) or (not location.file) then
          return nil, "could not get config file location for " .. tostring(scope) .. " scope"
       end
@@ -336,13 +346,13 @@ function config_cmd.command(args)
          ["variables.LUA"] = cfg.variables.LUA,
       }
       if args.lua_version then
-         local prefix = dir.dir_name(cfg.config_files[scope].file)
+         local prefix = dir.dir_name((cfg.config_files as {string: {string: string}})[scope].file)
          persist.save_default_lua_version(prefix, args.lua_version)
       end
       local ok, err = write_entries(keys, scope, args.unset)
       if ok then
-         local inc_ok = report_on_lua_incdir_config(cfg.variables.LUA_INCDIR, lua_version)
-         local lib_ok = ok and report_on_lua_libdir_config(cfg.variables.LUA_LIBDIR, lua_version)
+         local inc_ok = report_on_lua_incdir_config(cfg.variables.LUA_INCDIR)
+         local lib_ok = ok and report_on_lua_libdir_config(cfg.variables.LUA_LIBDIR)
          if not (inc_ok and lib_ok) then
             warn_bad_c_config()
          end
@@ -359,16 +369,16 @@ function config_cmd.command(args)
       if args.value or args.unset then
          local scope = get_scope(args)
 
-         local ok, err = write_entries({ [args.key] = args.value or args.unset }, scope, args.unset)
+         local ok, err = write_entries({ [args.key] = args.value or "" }, scope, args.unset)
 
          if ok then
             if args.key == "variables.LUA_INCDIR" then
-               local ok = report_on_lua_incdir_config(args.value, lua_version)
+               local ok = report_on_lua_incdir_config(args.value)
                if not ok then
                   warn_bad_c_config()
                end
             elseif args.key == "variables.LUA_LIBDIR" then
-               local ok = report_on_lua_libdir_config(args.value, lua_version)
+               local ok = report_on_lua_libdir_config(args.value)
                if not ok then
                   warn_bad_c_config()
                end
@@ -377,14 +387,14 @@ function config_cmd.command(args)
 
          return ok, err
       else
-         return print_entry(args.key, cfg, args.json)
+         return print_entry(args.key, cfg as PersistableTable, args.json)
       end
    end
 
    if args.json then
-      return print_json(config.get_config_for_display(cfg))
+      return print_json(config.get_config_for_display(cfg as PersistableTable) as {string : any})
    else
-      print(config.to_string(cfg))
+      print(config.to_string(cfg as PersistableTable))
       return true
    end
 end
