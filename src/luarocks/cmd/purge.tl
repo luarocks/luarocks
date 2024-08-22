@@ -1,19 +1,25 @@
 
 --- Module implementing the LuaRocks "purge" command.
 -- Remove all rocks from a given tree.
-local purge = {}
+local record purge
+   needs_lock: function(Args): boolean
+end
 
 local util = require("luarocks.util")
 local path = require("luarocks.path")
 local search = require("luarocks.search")
 local vers = require("luarocks.core.vers")
-local repos = require("luarocks.repos")
-local writer = require("luarocks.manif.writer")
+local repo_writer = require("luarocks.repo_writer")
 local cfg = require("luarocks.core.cfg")
 local remove = require("luarocks.remove")
 local queries = require("luarocks.queries")
 
-function purge.add_to_parser(parser)
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+
+function purge.add_to_parser(parser: Parser)
    -- luacheck: push ignore 431
    local cmd = parser:command("purge", [[
 This command removes rocks en masse from a given tree.
@@ -34,13 +40,13 @@ The --tree option is mandatory: luarocks purge does not assume a default tree.]]
       "without reporting dependency issues.")
 end
 
-function purge.command(args)
+function purge.command(args: Args): boolean, string
    local tree = args.tree
 
    local results = {}
    search.local_manifest_search(results, path.rocks_dir(tree), queries.all())
 
-   local sort = function(a,b) return vers.compare_versions(b,a) end
+   local sort = function(a: string,b: string): boolean return vers.compare_versions(b,a) end
    if args.old_versions then
       sort = vers.compare_versions
    end
@@ -58,16 +64,16 @@ function purge.command(args)
             break
          else
             util.printout("Removing "..package.." "..version.."...")
-            local ok, err = repos.delete_version(package, version, "none", true)
+            local ok, err = repo_writer.delete_version(package, version, "none", true)
             if not ok then
                util.printerr(err)
             end
          end
       end
    end
-   return writer.make_manifest(cfg.rocks_dir, "one")
+   return repo_writer.refresh_manifest(cfg.rocks_dir)
 end
 
-purge.needs_lock = function() return true end
+purge.needs_lock = function(): boolean return true end
 
 return purge
