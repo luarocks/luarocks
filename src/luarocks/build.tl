@@ -1,5 +1,10 @@
 
-local build = {}
+local record build
+   record Builder
+      skip_lua_inc_lib_check: boolean
+      run: function(Rockspec, boolean): boolean, string, string
+   end
+end
 
 local path = require("luarocks.path")
 local util = require("luarocks.util")
@@ -11,28 +16,26 @@ local deps = require("luarocks.deps")
 local cfg = require("luarocks.core.cfg")
 local vers = require("luarocks.core.vers")
 local repos = require("luarocks.repos")
-local writer = require("luarocks.manif.writer")
+local repo_writer = require("luarocks.repo_writer")
 local deplocks = require("luarocks.deplocks")
 
-build.opts = util.opts_table("build.opts", {
-   need_to_fetch = "boolean",
-   minimal_mode = "boolean",
-   deps_mode = "string",
-   build_only_deps = "boolean",
-   namespace = "string?",
-   branch = "string?",
-   verify = "boolean",
-   check_lua_versions = "boolean",
-   pin = "boolean",
-   rebuild = "boolean",
-   no_install = "boolean"
-})
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
+
+local type InstallDirs = require("luarocks.core.types.installs").InstallDirs
+local type InstallDir = require("luarocks.core.types.installs").InstallDir
+
+local type Tree = require("luarocks.core.types.tree").Tree
+
+local type BOpts = require("luarocks.core.types.bopts").BOpts
+
+
+local type Builder = build.Builder
 
 do
    --- Write to the current directory the contents of a table,
    -- where each key is a file name and its value is the file content.
    -- @param files table: The table of files to be written.
-   local function extract_from_rockspec(files)
+   local function extract_from_rockspec(files: {string: string})
       for name, content in pairs(files) do
          local fd = io.open(dir.path(fs.current_dir(), name), "w+")
          fd:write(content)
@@ -46,8 +49,7 @@ do
    -- @param rockspec table: A rockspec table.
    -- @return boolean or (nil, string): True if succeeded or
    -- nil and an error message.
-   function build.apply_patches(rockspec)
-      assert(rockspec:type() == "rockspec")
+   function build.apply_patches(rockspec: Rockspec): boolean, string
 
       if not (rockspec.build.extra_files or rockspec.build.patches) then
          return true
@@ -82,13 +84,14 @@ do
    end
 end
 
-local function check_macosx_deployment_target(rockspec)
+local function check_macosx_deployment_target(rockspec: Rockspec): boolean, string
    local target = rockspec.build.macosx_deployment_target
-   local function patch_variable(var)
-      if rockspec.variables[var]:match("MACOSX_DEPLOYMENT_TARGET") then
-         rockspec.variables[var] = (rockspec.variables[var]):gsub("MACOSX_DEPLOYMENT_TARGET=[^ ]*", "MACOSX_DEPLOYMENT_TARGET="..target)
+   local function patch_variable(var: string)
+      local rockspec_variables = rockspec.variables
+      if rockspec_variables[var]:match("MACOSX_DEPLOYMENT_TARGET") then
+         rockspec_variables[var] = (rockspec_variables[var]):gsub("MACOSX_DEPLOYMENT_TARGET=[^ ]*", "MACOSX_DEPLOYMENT_TARGET="..target)
       else
-         rockspec.variables[var] = "env MACOSX_DEPLOYMENT_TARGET="..target.." "..rockspec.variables[var]
+         rockspec_variables[var] = "env MACOSX_DEPLOYMENT_TARGET="..target.." "..rockspec_variables[var]
       end
    end
    if cfg.is_platform("macosx") and rockspec:format_is_at_least("3.0") and target then
@@ -104,7 +107,7 @@ local function check_macosx_deployment_target(rockspec)
    return true
 end
 
-local function process_dependencies(rockspec, opts, cwd)
+local function process_dependencies(rockspec: Rockspec, opts: BOpts, cwd: string): boolean, string, string
    if not opts.build_only_deps then
       local ok, err, errcode = deps.check_external_deps(rockspec, "build")
       if err then
@@ -135,7 +138,7 @@ local function process_dependencies(rockspec, opts, cwd)
             cfg.lua_modules_path = cfg.lua_modules_path:gsub(user_lua_version:gsub("%.", "%%."), running_lua_version)
             cfg.lib_modules_path = cfg.lib_modules_path:gsub(user_lua_version:gsub("%.", "%%."), running_lua_version)
             cfg.rocks_subdir = cfg.rocks_subdir:gsub(user_lua_version:gsub("%.", "%%."), running_lua_version)
-            path.use_tree(cfg.root_dir)
+            path.use_tree(cfg.root_dir as Tree)
          end
 
          local ok, err, errcode = deps.fulfill_dependencies(rockspec, "build_dependencies", "all", opts.verify, deplock_dir)
@@ -148,7 +151,7 @@ local function process_dependencies(rockspec, opts, cwd)
             cfg.lua_modules_path = cfg.lua_modules_path:gsub(running_lua_version:gsub("%.", "%%."), user_lua_version)
             cfg.lib_modules_path = cfg.lib_modules_path:gsub(running_lua_version:gsub("%.", "%%."), user_lua_version)
             cfg.rocks_subdir = cfg.rocks_subdir:gsub(running_lua_version:gsub("%.", "%%."), user_lua_version)
-            path.use_tree(cfg.root_dir)
+            path.use_tree(cfg.root_dir as Tree)
          end
 
          if err then
@@ -160,7 +163,7 @@ local function process_dependencies(rockspec, opts, cwd)
    return deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify, deplock_dir)
 end
 
-local function fetch_and_change_to_source_dir(rockspec, opts)
+local function fetch_and_change_to_source_dir(rockspec: Rockspec, opts: BOpts): boolean, string, string
    if opts.minimal_mode or opts.build_only_deps then
       return true
    end
@@ -168,11 +171,11 @@ local function fetch_and_change_to_source_dir(rockspec, opts)
       if opts.branch then
          rockspec.source.branch = opts.branch
       end
-      local ok, source_dir, errcode = fetch.fetch_sources(rockspec, true)
-      if not ok then
+      local oks, source_dir, errcode = fetch.fetch_sources(rockspec, true)
+      if not oks then
          return nil, source_dir, errcode
       end
-      local err
+      local ok, err: boolean, string
       ok, err = fs.change_dir(source_dir)
       if not ok then
          return nil, err
@@ -193,15 +196,15 @@ local function fetch_and_change_to_source_dir(rockspec, opts)
    return true
 end
 
-local function prepare_install_dirs(name, version)
-   local dirs = {
+local function prepare_install_dirs(name: string, version: string): InstallDirs, string
+   local dirs: InstallDirs = {
       lua = { name = path.lua_dir(name, version), is_module_path = true, perms = "read" },
       lib = { name = path.lib_dir(name, version), is_module_path = true, perms = "exec" },
       bin = { name = path.bin_dir(name, version), is_module_path = false, perms = "exec" },
       conf = { name = path.conf_dir(name, version), is_module_path = false, perms = "read" },
    }
 
-   for _, d in pairs(dirs) do
+   for _, d in pairs(dirs as {string: InstallDir}) do
       local ok, err = fs.make_dir(d.name)
       if not ok then
          return nil, err
@@ -211,7 +214,7 @@ local function prepare_install_dirs(name, version)
    return dirs
 end
 
-local function run_build_driver(rockspec, no_install)
+local function run_build_driver(rockspec: Rockspec, no_install: boolean): boolean, string, string
    local btype = rockspec.build.type
    if btype == "none" then
       return true
@@ -222,12 +225,15 @@ local function run_build_driver(rockspec, no_install)
       btype = "builtin"
       rockspec.build.type = btype
    end
+   local driver: Builder
    if cfg.accepted_build_types and not fun.contains(cfg.accepted_build_types, btype) then
       return nil, "This rockspec uses the '"..btype.."' build type, which is blocked by the 'accepted_build_types' setting in your LuaRocks configuration."
    end
-   local pok, driver = pcall(require, "luarocks.build." .. btype)
-   if not pok or type(driver) ~= "table" then
-      return nil, "Failed initializing build back-end for build type '"..btype.."': "..driver
+   local pok, driver_str = pcall(require, "luarocks.build." .. btype) as (boolean, Builder | string)
+   if not driver_str is Builder then
+      return nil, "Failed initializing build back-end for build type '"..btype.."': "..driver_str
+   else
+      driver = driver_str as Builder
    end
 
    if not driver.skip_lua_inc_lib_check then
@@ -237,7 +243,7 @@ local function run_build_driver(rockspec, no_install)
       end
 
       if cfg.link_lua_explicitly then
-         local ok, err, errcode = deps.check_lua_libdir(rockspec.variables)
+         ok, err, errcode = deps.check_lua_libdir(rockspec.variables)
          if not ok then
             return nil, err, errcode
          end
@@ -251,7 +257,7 @@ local function run_build_driver(rockspec, no_install)
    return true
 end
 
-local install_files
+local install_files: function(Rockspec, InstallDirs): boolean, string
 do
    --- Install files to a given location.
    -- Takes a table where the array part is a list of filenames to be copied.
@@ -270,16 +276,14 @@ do
    -- Directories are always created with the default permissions.
    -- @return boolean or (nil, string): True if succeeded or
    -- nil and an error message.
-   local function install_to(files, location, is_module_path, perms)
-      assert(type(files) == "table" or not files)
-      assert(type(location) == "string")
+   local function install_to(files: {string: string}, location: string, is_module_path: boolean, perms: string): boolean, string
       if not files then
          return true
       end
       for k, file in pairs(files) do
          local dest = location
          local filename = dir.base_name(file)
-         if type(k) == "string" then
+         if k is string then
             local modname = k
             if is_module_path then
                dest = dir.path(location, path.module_to_path(modname))
@@ -307,7 +311,7 @@ do
       return true
    end
 
-   local function install_default_docs(name, version)
+   local function install_default_docs(name: string, version: string)
       local patterns = { "readme", "license", "copying", ".*%.md" }
       local dest = dir.path(path.install_dir(name, version), "doc")
       local has_dir = false
@@ -325,12 +329,12 @@ do
       end
    end
 
-   install_files = function(rockspec, dirs)
+   install_files = function(rockspec: Rockspec, dirs: InstallDirs): boolean, string
       local name, version = rockspec.name, rockspec.version
 
       if rockspec.build.install then
-         for k, d in pairs(dirs) do
-            local ok, err = install_to(rockspec.build.install[k], d.name, d.is_module_path, d.perms)
+         for k, d in pairs(dirs as {string: InstallDir}) do
+            local ok, err = install_to((rockspec.build.install as {string: {string: string}})[k], d.name, d.is_module_path, d.perms)
             if not ok then return nil, err end
          end
       end
@@ -343,7 +347,7 @@ do
       end
 
       local any_docs = false
-      for _, copy_dir in pairs(copy_directories) do
+      for _, copy_dir in ipairs(copy_directories) do
          if fs.is_dir(copy_dir) then
             local dest = dir.path(path.install_dir(name, version), copy_dir)
             fs.make_dir(dest)
@@ -363,35 +367,12 @@ do
    end
 end
 
-local function write_rock_dir_files(rockspec, opts)
-   local name, version = rockspec.name, rockspec.version
-
-   fs.copy(rockspec.local_abs_filename, path.rockspec_file(name, version), "read")
-
-   local deplock_file = deplocks.get_abs_filename(rockspec.name)
-   if deplock_file then
-      fs.copy(deplock_file, dir.path(path.install_dir(name, version), "luarocks.lock"), "read")
-   end
-
-   local ok, err = writer.make_rock_manifest(name, version)
-   if not ok then return nil, err end
-
-   ok, err = writer.make_namespace_file(name, version, opts.namespace)
-   if not ok then return nil, err end
-
-   return true
-end
-
 --- Build and install a rock given a rockspec.
 -- @param rockspec rockspec: the rockspec to build
 -- @param opts table: build options table
 -- @param cwd string or nil: The current working directory
--- @return (string, string) or (nil, string, [string]): Name and version of
--- installed rock if succeeded or nil and an error message followed by an error code.
-function build.build_rockspec(rockspec, opts, cwd)
-   assert(rockspec:type() == "rockspec")
-   assert(opts:type() == "build.opts")
-   assert(type(cwd) == "string" or type(cwd) == nil)
+-- @return: Name and version of installed rock if succeeded or nil and an error message.
+function build.build_rockspec(rockspec: Rockspec, opts: BOpts, cwd: string): string, string
 
    cwd = cwd or dir.path(".")
 
@@ -431,11 +412,11 @@ function build.build_rockspec(rockspec, opts, cwd)
       return name, version
    end
 
-   local dirs, err
-   local rollback
+   local dirs, err: InstallDirs, string
+   local rollback: util.Fn
    if not opts.no_install then
       if repos.is_installed(name, version) then
-         repos.delete_version(name, version, opts.deps_mode)
+         repo_writer.delete_version(name, version, opts.deps_mode)
       end
 
       dirs, err = prepare_install_dirs(name, version)
@@ -467,7 +448,7 @@ function build.build_rockspec(rockspec, opts, cwd)
    ok, err = install_files(rockspec, dirs)
    if not ok then return nil, err end
 
-   for _, d in pairs(dirs) do
+   for _, d in pairs(dirs as {string: InstallDir}) do
       fs.remove_dir_if_empty(d.name)
    end
 
@@ -480,15 +461,19 @@ function build.build_rockspec(rockspec, opts, cwd)
       deplocks.write_file()
    end
 
-   ok, err = write_rock_dir_files(rockspec, opts)
-   if not ok then return nil, err end
+   fs.copy(rockspec.local_abs_filename, path.rockspec_file(name, version), "read")
 
-   ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), opts.deps_mode)
+   local deplock_file = deplocks.get_abs_filename(name)
+   if deplock_file then
+      fs.copy(deplock_file, dir.path(path.install_dir(name, version), "luarocks.lock"), "read")
+   end
+
+   ok, err = repo_writer.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), opts.deps_mode, opts.namespace)
    if not ok then return nil, err end
 
    util.remove_scheduled_function(rollback)
    rollback = util.schedule_function(function()
-      repos.delete_version(name, version, opts.deps_mode)
+      repo_writer.delete_version(name, version, opts.deps_mode)
    end)
 
    ok, err = repos.run_hook(rockspec, "post_install")
