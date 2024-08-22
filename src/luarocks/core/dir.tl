@@ -1,12 +1,10 @@
-
-local dir = {}
-
-local require = nil
+local record dir
+end
 --------------------------------------------------------------------------------
 
 local dir_sep = package.config:sub(1, 1)
 
-local function unquote(c)
+local function unquote(c: string): string
    local first, last = c:sub(1,1), c:sub(-1)
    if (first == '"' and last == '"') or
       (first == "'" and last == "'") then
@@ -15,33 +13,12 @@ local function unquote(c)
    return c
 end
 
---- Describe a path in a cross-platform way.
--- Use this function to avoid platform-specific directory
--- separators in other modules. Removes trailing slashes from
--- each component given, to avoid repeated separators.
--- Separators inside strings are kept, to handle URLs containing
--- protocols.
--- @param ... strings representing directories
--- @return string: a string with a platform-specific representation
--- of the path.
-function dir.path(...)
-   local t = {...}
-   while t[1] == "" do
-      table.remove(t, 1)
-   end
-   for i, c in ipairs(t) do
-      t[i] = unquote(c)
-   end
-   return dir.normalize(table.concat(t, "/"))
-end
-
 --- Split protocol and path from an URL or local pathname.
 -- URLs should be in the "protocol://path" format.
 -- For local pathnames, "file" is returned as the protocol.
 -- @param url string: an URL or a local pathname.
 -- @return string, string: the protocol, and the pathname without the protocol.
-function dir.split_url(url)
-   assert(type(url) == "string")
+function dir.split_url(url: string): string, string
 
    url = unquote(url)
    local protocol, pathname = url:match("^([^:]*)://(.*)")
@@ -58,10 +35,10 @@ end
 -- for 'file' URLs, the native system's slashes are used.
 -- @param url string: an URL or a local pathname.
 -- @return string: Normalized result.
-function dir.normalize(name)
+function dir.normalize(name: string): string
    local protocol, pathname = dir.split_url(name)
    pathname = pathname:gsub("\\", "/"):gsub("(.)/*$", "%1"):gsub("//", "/")
-   local pieces = {}
+   local pieces: {string} = {}
    local drive = ""
    if pathname:match("^.:") then
       drive, pathname = pathname:match("^(.:)(.*)$")
@@ -92,6 +69,27 @@ function dir.normalize(name)
       pathname = pathname:gsub("/", dir_sep)
    end
    return pathname
+end
+
+
+--- Describe a path in a cross-platform way.
+-- Use this function to avoid platform-specific directory
+-- separators in other modules. Removes trailing slashes from
+-- each component given, to avoid repeated separators.
+-- Separators inside strings are kept, to handle URLs containing
+-- protocols.
+-- @param ... strings representing directories
+-- @return string: a string with a platform-specific representation
+-- of the path.
+function dir.path(...: string): string
+   local t = {...}
+   while t[1] == "" do
+      table.remove(t, 1)
+   end
+   for i, c in ipairs(t) do
+      t[i] = unquote(c)
+   end
+   return dir.normalize(table.concat(t, "/"))
 end
 
 return dir
