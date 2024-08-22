@@ -1,6 +1,7 @@
 
 --- Core functions for querying manifest files.
-local manif = {}
+local record manif
+end
 
 local persist = require("luarocks.core.persist")
 local cfg = require("luarocks.core.cfg")
@@ -8,18 +9,27 @@ local dir = require("luarocks.core.dir")
 local util = require("luarocks.core.util")
 local vers = require("luarocks.core.vers")
 local path = require("luarocks.core.path")
-local require = nil
+
 --------------------------------------------------------------------------------
+
+local type Tree = require("luarocks.core.types.tree").Tree
+
+local type Query = require("luarocks.core.types.query").Query
+
+local type Manifest = require("luarocks.core.types.manifest").Manifest
+local type Tree_manifest = require("luarocks.core.types.manifest").Tree_manifest
+
+
 
 -- Table with repository identifiers as keys and tables mapping
 -- Lua versions to cached loaded manifests as values.
-local manifest_cache = {}
+local manifest_cache: {string: {string: Manifest}} = {}
 
 --- Cache a loaded manifest.
 -- @param repo_url string: The repository identifier.
 -- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
 -- @param manifest table: the manifest to be cached.
-function manif.cache_manifest(repo_url, lua_version, manifest)
+function manif.cache_manifest(repo_url: string, lua_version: string, manifest: Manifest)
    lua_version = lua_version or cfg.lua_version
    manifest_cache[repo_url] = manifest_cache[repo_url] or {}
    manifest_cache[repo_url][lua_version] = manifest
@@ -29,7 +39,7 @@ end
 -- @param repo_url string: The repository identifier.
 -- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
 -- @return table or nil: loaded manifest or nil if cache is empty.
-function manif.get_cached_manifest(repo_url, lua_version)
+function manif.get_cached_manifest(repo_url: string, lua_version?: string): Manifest
    lua_version = lua_version or cfg.lua_version
    return manifest_cache[repo_url] and manifest_cache[repo_url][lua_version]
 end
@@ -41,13 +51,14 @@ end
 -- @param lua_version string: Lua version in "5.x" format, defaults to installed version.
 -- @return table or (nil, string, string): the manifest or nil,
 -- error message and error code ("open", "load", "run").
-function manif.manifest_loader(file, repo_url, lua_version)
-   local manifest, err, errcode = persist.load_into_table(file)
-   if not manifest then
-      return nil, "Failed loading manifest for "..repo_url..": "..err, errcode
+function manif.manifest_loader(file: string, repo_url: string, lua_version: string): Manifest, string | {any: any}, string
+   local manifest, err, errcode: {any: any}, {any: any} | string, string = persist.load_into_table(file)
+   if not manifest and err is string then
+      return nil, "Failed loading manifest for "..repo_url..": " .. err, errcode
    end
-   manif.cache_manifest(repo_url, lua_version, manifest)
-   return manifest, err, errcode
+   
+   manif.cache_manifest(repo_url, lua_version, manifest as Manifest) -- No runtime check if manifest is actually a Manifest!
+   return manifest as Manifest, err, errcode
 end
 
 --- Load a local manifest describing a repository.
@@ -55,8 +66,7 @@ end
 -- @param repo_url string: URL or pathname for the repository.
 -- @return table or (nil, string, string): A table representing the manifest,
 -- or nil followed by an error message and an error code, see manifest_loader.
-function manif.fast_load_local_manifest(repo_url)
-   assert(type(repo_url) == "string")
+function manif.fast_load_local_manifest(repo_url: string): Manifest, string | {any: any}, string 
 
    local cached_manifest = manif.get_cached_manifest(repo_url)
    if cached_manifest then
@@ -64,13 +74,13 @@ function manif.fast_load_local_manifest(repo_url)
    end
 
    local pathname = dir.path(repo_url, "manifest")
-   return manif.manifest_loader(pathname, repo_url, nil, true)
+   return manif.manifest_loader(pathname, repo_url, nil)
 end
 
-function manif.load_rocks_tree_manifests(deps_mode)
+function manif.load_rocks_tree_manifests(deps_mode?: string): {Tree_manifest}
    local trees = {}
-   path.map_trees(deps_mode, function(tree)
-      local manifest, err = manif.fast_load_local_manifest(path.rocks_dir(tree))
+   path.map_trees(deps_mode, function(tree: Tree)
+      local manifest= manif.fast_load_local_manifest(path.rocks_dir(tree))
       if manifest then
          table.insert(trees, {tree=tree, manifest=manifest})
       end
@@ -78,7 +88,7 @@ function manif.load_rocks_tree_manifests(deps_mode)
    return trees
 end
 
-function manif.scan_dependencies(name, version, tree_manifests, dest)
+function manif.scan_dependencies(name: string, version: string, tree_manifests: {Tree_manifest}, dest: {any: any})
    if dest[name] then
       return
    end
@@ -87,7 +97,7 @@ function manif.scan_dependencies(name, version, tree_manifests, dest)
    for _, tree in ipairs(tree_manifests) do
       local manifest = tree.manifest
 
-      local pkgdeps
+      local pkgdeps: {Query}
       if manifest.dependencies and manifest.dependencies[name] then
          pkgdeps = manifest.dependencies[name][version]
       end
