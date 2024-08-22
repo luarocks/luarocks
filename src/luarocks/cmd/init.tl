@@ -1,5 +1,7 @@
 
-local init = {}
+local record init
+   needs_lock: function(Args): boolean
+end
 
 local cfg = require("luarocks.core.cfg")
 local fs = require("luarocks.fs")
@@ -10,7 +12,16 @@ local util = require("luarocks.util")
 local persist = require("luarocks.persist")
 local write_rockspec = require("luarocks.cmd.write_rockspec")
 
-function init.add_to_parser(parser)
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
+
+local type Tree = require("luarocks.core.types.tree").Tree
+
+function init.add_to_parser(parser: Parser)
    local cmd = parser:command("init", "Initialize a directory for a Lua project using LuaRocks.", util.see_also())
 
    cmd:argument("name", "The project name.")
@@ -23,10 +34,10 @@ function init.add_to_parser(parser)
    cmd:flag("--no-wrapper-scripts", "Do not generate wrapper ./lua and ./luarocks launcher scripts.")
    cmd:flag("--no-gitignore", "Do not generate a .gitignore file.")
 
-   cmd:group("Options for specifying rockspec data", write_rockspec.cmd_options(cmd))
+   cmd:group("Options for specifying rockspec data", write_rockspec.cmd_options(cmd as Parser))
 end
 
-local function gitignore_path(pwd, wrapper_dir, filename)
+local function gitignore_path(pwd: string, wrapper_dir: string, filename: string): string
    local norm_cur = fs.absolute_name(pwd)
    local norm_file = fs.absolute_name(dir.path(wrapper_dir, filename))
    if norm_file:sub(1, #norm_cur) == norm_cur then
@@ -36,7 +47,7 @@ local function gitignore_path(pwd, wrapper_dir, filename)
    end
 end
 
-local function write_gitignore(entries)
+local function write_gitignore(entries: {string})
    local gitignore = ""
    local fd = io.open(".gitignore", "r")
    if fd then
@@ -57,23 +68,23 @@ local function write_gitignore(entries)
    end
 end
 
-local function inject_tree(tree)
+local function inject_tree(tree: string | Tree)
    path.use_tree(tree)
    local tree_set = false
    for _, t in ipairs(cfg.rocks_trees) do
-      if type(t) == "table" then
+      if t is Tree then
          if t.name == "project" then
-            t.root = tree
+            t.root = tree as string
             tree_set = true
          end
       end
    end
    if not tree_set then
-      table.insert(cfg.rocks_trees, 1, { name = "project", root = tree })
+      table.insert(cfg.rocks_trees, 1, { name = "project", root = tree } as Tree)
    end
 end
 
-local function write_wrapper_scripts(wrapper_dir, luarocks_wrapper, lua_wrapper)
+local function write_wrapper_scripts(wrapper_dir: string, luarocks_wrapper: string, lua_wrapper: string)
    local tree = dir.path(fs.current_dir(), "lua_modules")
 
    fs.make_dir(wrapper_dir)
@@ -111,7 +122,7 @@ end
 
 --- Driver function for "init" command.
 -- @return boolean: True if succeeded, nil on errors.
-function init.command(args)
+function init.command(args: Args): boolean, string
    local do_gitignore = not args.no_gitignore
    local do_wrapper_scripts = not args.no_wrapper_scripts
    local wrapper_dir = args.wrapper_dir or "."
@@ -185,8 +196,8 @@ function init.command(args)
       }
       for _, varname in ipairs(varnames) do
          if cfg.variables[varname] then
-            config_tbl.variables = config_tbl.variables or {}
-            config_tbl.variables[varname] = cfg.variables[varname]
+            config_tbl.variables = config_tbl.variables as PersistableTable or {}
+            (config_tbl.variables as PersistableTable)[varname] = cfg.variables[varname]
          end
       end
       local ok, err = persist.save_from_table(config_file, config_tbl)
@@ -214,6 +225,6 @@ function init.command(args)
    return true
 end
 
-init.needs_lock = function() return true end
+init.needs_lock = function(): boolean return true end
 
 return init
