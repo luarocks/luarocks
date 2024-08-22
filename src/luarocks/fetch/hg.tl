@@ -1,12 +1,13 @@
 
 --- Fetch back-end for retrieving sources from HG.
-local hg = {}
-
-local unpack = unpack or table.unpack
+local record hg
+end
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
+
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 --- Download sources for building a rock, using hg.
 -- @param rockspec table: The rockspec table
@@ -15,13 +16,11 @@ local util = require("luarocks.util")
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function hg.get_sources(rockspec, extract, dest_dir)
-   assert(rockspec:type() == "rockspec")
-   assert(type(dest_dir) == "string" or not dest_dir)
+function hg.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string
 
    local hg_cmd = rockspec.variables.HG
-   local ok, err_msg = fs.is_tool_available(hg_cmd, "Mercurial")
-   if not ok then
+   local ok_available, err_msg = fs.is_tool_available(hg_cmd, "Mercurial")
+   if not ok_available then
       return nil, err_msg
    end
 
@@ -36,7 +35,7 @@ function hg.get_sources(rockspec, extract, dest_dir)
    if tag_or_branch then
       command = {hg_cmd, "clone", "--rev", tag_or_branch, url, module}
    end
-   local store_dir
+   local store_dir: string
    if not dest_dir then
       store_dir = fs.make_temp_dir(name_version)
       if not store_dir then
@@ -48,7 +47,7 @@ function hg.get_sources(rockspec, extract, dest_dir)
    end
    local ok, err = fs.change_dir(store_dir)
    if not ok then return nil, err end
-   if not fs.execute(unpack(command)) then
+   if not fs.execute(table.unpack(command)) then
       return nil, "Failed cloning hg repository."
    end
    ok, err = fs.change_dir(module)
