@@ -1,7 +1,8 @@
 
 --- Module implementing the luarocks-admin "remove" command.
 -- Removes a rock or rockspec from a rocks server.
-local admin_remove = {}
+local record admin_remove
+end
 
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
@@ -11,10 +12,14 @@ local fs = require("luarocks.fs")
 local cache = require("luarocks.admin.cache")
 local index = require("luarocks.admin.index")
 
-function admin_remove.add_to_parser(parser)
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+function admin_remove.add_to_parser(parser: Parser)
    local cmd = parser:command("remove", "Remove a rock or rockspec from a rocks server.", util.see_also())
 
-   cmd:argument("rock", "A local rockspec or rock file.")
+   cmd:argument("rocks", "A local rockspec or rock file.")
       :args("+")
 
    cmd:option("--server", "The server to use. If not given, the default server "..
@@ -23,11 +28,7 @@ function admin_remove.add_to_parser(parser)
       "generation of the updated manifest.")
 end
 
-local function remove_files_from_server(refresh, rockfiles, server, upload_server)
-   assert(type(refresh) == "boolean" or not refresh)
-   assert(type(rockfiles) == "table")
-   assert(type(server) == "string")
-   assert(type(upload_server) == "table" or not upload_server)
+local function remove_files_from_server(refresh: boolean, rockfiles: {string}, server: string, upload_server: {string: string}): boolean, string
 
    local download_url, login_url = cache.get_server_urls(server, upload_server)
    local at = fs.current_dir()
@@ -85,10 +86,10 @@ local function remove_files_from_server(refresh, rockfiles, server, upload_serve
    return true
 end
 
-function admin_remove.command(args)
-   local server, server_table = cache.get_upload_server(args.server)
-   if not server then return nil, server_table end
-   return remove_files_from_server(not args.no_refresh, args.rock, server, server_table)
+function admin_remove.command(args: Args): boolean, string
+   local server, server_table, err = cache.get_upload_server(args.server)
+   if not server then return nil, err end
+   return remove_files_from_server(not args.no_refresh, args.rocks, server, server_table) --!
 end
 
 
