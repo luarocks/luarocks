@@ -1,13 +1,18 @@
 
 --- @module luarocks.path_cmd
 -- Driver for the `luarocks path` command.
-local path_cmd = {}
+local record path_cmd
+end
 
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 local fs = require("luarocks.fs")
 
-function path_cmd.add_to_parser(parser)
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+function path_cmd.add_to_parser(parser: Parser)
    local cmd = parser:command("path", [[
 Returns the package path currently configured for this installation
 of LuaRocks, formatted as shell commands to update LUA_PATH and LUA_CPATH.
@@ -38,7 +43,7 @@ end
 
 --- Driver function for "path" command.
 -- @return boolean This function always succeeds.
-function path_cmd.command(args)
+function path_cmd.command(args: Args): boolean, string
    local lr_path, lr_cpath, lr_bin = cfg.package_paths(args.tree)
    local path_sep = cfg.export_path_separator
 
