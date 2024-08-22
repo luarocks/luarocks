@@ -1,6 +1,8 @@
 --- Module implementing the LuaRocks "install" command.
 -- Installs binary rocks.
-local install = {}
+local record install
+   needs_lock: function(Args): boolean
+end
 
 local dir = require("luarocks.dir")
 local path = require("luarocks.path")
@@ -9,13 +11,20 @@ local fetch = require("luarocks.fetch")
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
 local deps = require("luarocks.deps")
-local writer = require("luarocks.manif.writer")
+local repo_writer = require("luarocks.repo_writer")
 local remove = require("luarocks.remove")
 local search = require("luarocks.search")
 local queries = require("luarocks.queries")
 local cfg = require("luarocks.core.cfg")
 
-function install.add_to_parser(parser)
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+
+local type IOpts = require("luarocks.core.types.installs").IOpts
+
+function install.add_to_parser(parser: Parser)
    local cmd = parser:command("install", "Install a rock.", util.see_also())  -- luacheck: ignore 431
 
    cmd:argument("rock", "The name of a rock to be fetched from a repository "..
@@ -42,7 +51,7 @@ function install.add_to_parser(parser)
       "option to work properly.")
    cmd:flag("--check-lua-versions", "If the rock can't be found, check repository "..
       "and report if it is available for another Lua version.")
-   util.deps_mode_option(cmd)
+   util.deps_mode_option(cmd as Parser)
    cmd:flag("--no-manifest", "Skip creating/updating the manifest")
    cmd:flag("--pin", "If the installed rock is a Lua module, create a "..
       "luarocks.lock file listing the exact versions of each dependency found for "..
@@ -54,24 +63,13 @@ function install.add_to_parser(parser)
    parser:flag("--sign"):hidden(true)
 end
 
-install.opts = util.opts_table("install.opts", {
-   namespace = "string?",
-   keep = "boolean",
-   force = "boolean",
-   force_fast = "boolean",
-   no_doc = "boolean",
-   deps_mode = "string",
-   verify = "boolean",
-})
 
 --- Install a binary rock.
 -- @param rock_file string: local or remote filename of a rock.
 -- @param opts table: installation options
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
-function install.install_binary_rock(rock_file, opts)
-   assert(type(rock_file) == "string")
-   assert(opts:type() == "install.opts")
+function install.install_binary_rock(rock_file: string, opts: IOpts): string, string, string
 
    local namespace = opts.namespace
    local deps_mode = opts.deps_mode
@@ -90,7 +88,7 @@ function install.install_binary_rock(rock_file, opts)
          util.printout("Use --force to reinstall.")
          return name, version
       end
-      repos.delete_version(name, version, opts.deps_mode)
+      repo_writer.delete_version(name, version, opts.deps_mode)
    end
 
    local install_dir = path.install_dir(name, version)
@@ -99,9 +97,9 @@ function install.install_binary_rock(rock_file, opts)
       fs.delete(install_dir)
       fs.remove_dir_if_empty(path.versions_dir(name))
    end)
-
-   local ok, err, errcode = fetch.fetch_and_unpack_rock(rock_file, install_dir, opts.verify)
-   if not ok then return nil, err, errcode end
+   local ok: boolean
+   local oks, err, errcode = fetch.fetch_and_unpack_rock(rock_file, install_dir, opts.verify)
+   if not oks then return nil, err, errcode end
 
    local rockspec, err = fetch.load_rockspec(path.rockspec_file(name, version))
    if err then
@@ -113,17 +111,6 @@ function install.install_binary_rock(rock_file, opts)
       if err then return nil, err, errcode end
    end
 
-   -- For compatibility with .rock files built with LuaRocks 1
-   if not fs.exists(path.rock_manifest_file(name, version)) then
-      ok, err = writer.make_rock_manifest(name, version)
-      if err then return nil, err end
-   end
-
-   if namespace then
-      ok, err = writer.make_namespace_file(name, version, namespace)
-      if err then return nil, err end
-   end
-
    if deps_mode ~= "none" then
       local deplock_dir = fs.exists(dir.path(".", "luarocks.lock"))
                           and "."
@@ -132,12 +119,12 @@ function install.install_binary_rock(rock_file, opts)
       if err then return nil, err, errcode end
    end
 
-   ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), deps_mode)
+   ok, err = repo_writer.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), deps_mode, namespace)
    if err then return nil, err end
 
    util.remove_scheduled_function(rollback)
    rollback = util.schedule_function(function()
-      repos.delete_version(name, version, deps_mode)
+      repo_writer.delete_version(name, version, deps_mode)
    end)
 
    ok, err = repos.run_hook(rockspec, "post_install")
@@ -154,9 +141,7 @@ end
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- the rock whose dependencies were installed if succeeded or nil and an error message
 -- followed by an error code.
-function install.install_binary_rock_deps(rock_file, opts)
-   assert(type(rock_file) == "string")
-   assert(opts:type() == "install.opts")
+function install.install_binary_rock_deps(rock_file: string, opts: IOpts): string, string, string
 
    local name, version, arch = path.parse_name(rock_file)
    if not name then
@@ -169,8 +154,9 @@ function install.install_binary_rock_deps(rock_file, opts)
 
    local install_dir = path.install_dir(name, version)
 
-   local ok, err, errcode = fetch.fetch_and_unpack_rock(rock_file, install_dir, opts.verify)
-   if not ok then return nil, err, errcode end
+   local ok: boolean
+   local oks, err, errcode = fetch.fetch_and_unpack_rock(rock_file, install_dir, opts.verify)
+   if not oks then return nil, err, errcode end
 
    local rockspec, err = fetch.load_rockspec(path.rockspec_file(name, version))
    if err then
@@ -189,19 +175,16 @@ function install.install_binary_rock_deps(rock_file, opts)
    return name, version
 end
 
-local function install_rock_file_deps(filename, opts)
-   assert(opts:type() == "install.opts")
+local function install_rock_file_deps(filename: string, opts: IOpts): boolean, string
 
    local name, version = install.install_binary_rock_deps(filename, opts)
    if not name then return nil, version end
 
-   writer.check_dependencies(nil, opts.deps_mode)
-   return name, version
+   deps.check_dependencies(nil, opts.deps_mode)
+   return true
 end
 
-local function install_rock_file(filename, opts)
-   assert(type(filename) == "string")
-   assert(opts:type() == "install.opts")
+local function install_rock_file(filename: string, opts: IOpts): boolean, string
 
    local name, version = install.install_binary_rock(filename, opts)
    if not name then return nil, version end
@@ -219,8 +202,8 @@ local function install_rock_file(filename, opts)
       end
    end
 
-   writer.check_dependencies(nil, opts.deps_mode)
-   return name, version
+   deps.check_dependencies(nil, opts.deps_mode)
+   return true
 end
 
 --- Driver function for the "install" command.
@@ -231,13 +214,13 @@ end
 -- if returned a result, installs the matching rock.
 -- @return boolean or (nil, string, exitcode): True if installation was
 -- successful, nil and an error message otherwise. exitcode is optionally returned.
-function install.command(args)
+function install.command(args: Args): boolean, string, string
    if args.rock:match("%.rockspec$") or args.rock:match("%.src%.rock$") then
       local build = require("luarocks.cmd.build")
       return build.command(args)
    elseif args.rock:match("%.rock$") then
       local deps_mode = deps.get_deps_mode(args)
-      local opts = install.opts({
+      local opts = {
          namespace = args.namespace,
          keep = not not args.keep,
          force = not not args.force,
@@ -245,7 +228,7 @@ function install.command(args)
          no_doc = not not args.no_doc,
          deps_mode = deps_mode,
          verify = not not args.verify,
-      })
+      }
       if args.only_deps then
          return install_rock_file_deps(args.rock, opts)
       else
@@ -264,11 +247,13 @@ function install.command(args)
    end
 end
 
-install.needs_lock = function(args)
+install.needs_lock = function(args: Args): boolean
    if args.pack_binary_rock then
       return false
    end
    return true
 end
+
+deps.installer = install.command
 
 return install
