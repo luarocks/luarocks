@@ -1,14 +1,35 @@
 
 --- A pure-Lua implementation of untar (unpacking .tar archives)
-local tar = {}
+local record tar
+   record Header
+      name: string
+      mode: string
+      uid: integer
+      gid: integer
+      size: integer
+      mtime: integer
+      chksum: integer
+      typeflag: string
+      linkname: string
+      magic: string
+      version: string
+      uname: string
+      gname: string
+      devmajor: integer
+      devminor: integer
+      prefix: string
+   end
+end
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local fun = require("luarocks.fun")
 
+local type Header = tar.Header
+
 local blocksize = 512
 
-local function get_typeflag(flag)
+local function get_typeflag(flag: string): string
    if flag == "0" or flag == "\0" then return "file"
    elseif flag == "1" then return "link"
    elseif flag == "2" then return "symlink" -- "reserved" in POSIX, "symlink" in GNU
@@ -25,22 +46,22 @@ local function get_typeflag(flag)
    return "unknown"
 end
 
-local function octal_to_number(octal)
+local function octal_to_number(octal: string): integer
    local exp = 0
-   local number = 0
+   local number: integer = 0
    octal = octal:gsub("%s", "")
    for i = #octal,1,-1 do
-      local digit = tonumber(octal:sub(i,i))
+      local digit = math.tointeger(octal:sub(i,i))
       if not digit then
          break
       end
-      number = number + (digit * 8^exp)
+      number = number + (digit * math.tointeger(8^exp))
       exp = exp + 1
    end
    return number
 end
 
-local function checksum_header(block)
+local function checksum_header(block: string): number
    local sum = 256
 
    if block:byte(1) == 0 then
@@ -59,12 +80,12 @@ local function checksum_header(block)
    return sum
 end
 
-local function nullterm(s)
+local function nullterm(s: string): string
    return s:match("^[^%z]*")
 end
 
-local function read_header_block(block)
-   local header = {}
+local function read_header_block(block: string): boolean | Header, string
+   local header: Header = {}
    header.name = nullterm(block:sub(1,100))
    header.mode = nullterm(block:sub(101,108)):gsub(" ", "")
    header.uid = octal_to_number(nullterm(block:sub(109,116)))
@@ -96,18 +117,16 @@ local function read_header_block(block)
    return header
 end
 
-function tar.untar(filename, destdir)
-   assert(type(filename) == "string")
-   assert(type(destdir) == "string")
+function tar.untar(filename: string, destdir: string): boolean, string
 
    local tar_handle = io.open(filename, "rb")
    if not tar_handle then return nil, "Error opening file "..filename end
 
-   local long_name, long_link_name
-   local ok, err
+   local long_name, long_link_name: string, string
+   local ok, err: boolean, string
    local make_dir = fun.memoize(fs.make_dir)
    while true do
-      local block
+      local block: string
       repeat
          block = tar_handle:read(blocksize)
       until (not block) or block:byte(1) > 0
@@ -117,13 +136,13 @@ function tar.untar(filename, destdir)
          break
       end
 
-      local header
-      header, err = read_header_block(block)
-      if not header then
+      local headerp:  boolean | Header
+      headerp, err = read_header_block(block)
+      if not headerp then
          ok = false
          break
       end
-
+      local header: Header = headerp as Header --!  cast
       local file_data = ""
       if header.size > 0 then
          local nread = math.ceil(header.size / blocksize) * blocksize
@@ -162,7 +181,7 @@ function tar.untar(filename, destdir)
                break
             end
          end
-         local file_handle
+         local file_handle: FILE
          file_handle, err = io.open(pathname, "wb")
          if not file_handle then
             ok = nil
