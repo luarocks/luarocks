@@ -5,9 +5,12 @@
 -- `hg clone http://example.com/foo`
 -- you can use this in the rockspec:
 -- source = { url = "hg+http://example.com/foo" }
-local hg_http = {}
+local record hg_http
+end
 
 local hg = require("luarocks.fetch.hg")
+
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 --- Download sources for building a rock, using hg over http.
 -- @param rockspec table: The rockspec table
@@ -16,7 +19,7 @@ local hg = require("luarocks.fetch.hg")
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function hg_http.get_sources(rockspec, extract, dest_dir)
+function hg_http.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string
    rockspec.source.url = rockspec.source.url:gsub("^hg.", "")
    return hg.get_sources(rockspec, extract, dest_dir)
 end
