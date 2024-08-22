@@ -1,4 +1,6 @@
-local rockspecs = {}
+
+local record rockspecs
+end
 
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
@@ -8,7 +10,12 @@ local type_rockspec = require("luarocks.type.rockspec")
 local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
 
-local vendored_build_type_set = {
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
+local type Dependencies = require("luarocks.core.types.rockspec").Dependencies
+
+local type Query = require("luarocks.core.types.query").Query
+
+local vendored_build_type_set: {string: boolean} = {
    ["builtin"] = true,
    ["cmake"] = true,
    ["command"] = true,
@@ -16,14 +23,6 @@ local vendored_build_type_set = {
    ["module"] = true, -- compatibility alias
    ["none"] = true,
 }
-
-local rockspec_mt = {}
-
-rockspec_mt.__index = rockspec_mt
-
-function rockspec_mt.type()
-   return "rockspec"
-end
 
 --- Perform platform-specific overrides on a table.
 -- Overrides values of table with the contents of the appropriate
@@ -38,15 +37,16 @@ end
 -- tbl.x are preserved).
 -- @param tbl table or nil: Table which may contain a "platforms" field;
 -- if it doesn't (or if nil is passed), this function does nothing.
-local function platform_overrides(tbl)
-   assert(type(tbl) == "table" or not tbl)
+local function platform_overrides(tbl?: {any: any})
 
    if not tbl then return end
 
-   if tbl.platforms then
+   local tblp = tbl.platforms
+
+   if tblp is {any: any} then
       for platform in cfg.each_platform() do
-         local platform_tbl = tbl.platforms[platform]
-         if platform_tbl then
+         local platform_tbl = tblp[platform]
+         if platform_tbl is {any: any} then
             util.deep_merge(tbl, platform_tbl)
          end
       end
@@ -54,18 +54,16 @@ local function platform_overrides(tbl)
    tbl.platforms = nil
 end
 
-local function convert_dependencies(rockspec, key)
-   if rockspec[key] then
-      for i = 1, #rockspec[key] do
-         local parsed, err = queries.from_dep_string(rockspec[key][i])
-         if not parsed then
-            return nil, "Parse error processing dependency '"..rockspec[key][i].."': "..tostring(err)
-         end
-         rockspec[key][i] = parsed
+local function convert_dependencies(dependencies: Dependencies): boolean, string
+   local qs: {Query} = {}
+   for i = 1, #dependencies do
+      local parsed, err = queries.from_dep_string(dependencies[i])
+      if not parsed then
+         return nil, "Parse error processing dependency '"..dependencies[i].."': "..tostring(err)
       end
-   else
-      rockspec[key] = {}
+      qs[i] = parsed
    end
+   dependencies.queries = qs
    return true
 end
 
@@ -73,8 +71,8 @@ end
 -- Create a "variables" table in the rockspec table, containing
 -- adjusted variables according to the configuration file.
 -- @param rockspec table: The rockspec table.
-local function configure_paths(rockspec)
-   local vars = {}
+local function configure_paths(rockspec: Rockspec)
+   local vars: {string: string} = {}
    for k,v in pairs(cfg.variables) do
       vars[k] = v
    end
@@ -88,11 +86,7 @@ local function configure_paths(rockspec)
    rockspec.variables = vars
 end
 
-function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
-   assert(type(rockspec) == "table")
-   assert(type(globals) == "table" or globals == nil)
-   assert(type(filename) == "string")
-   assert(type(quick) == "boolean" or quick == nil)
+function rockspecs.from_persisted_table(filename: string, rockspec: Rockspec, globals?: {string: any}, quick?: boolean): Rockspec, string
 
    if rockspec.rockspec_format then
       if vers.compare_versions(rockspec.rockspec_format, type_rockspec.rockspec_format) then
@@ -113,19 +107,19 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
    -- @return boolean: true if rockspec format matches version or is newer, false otherwise.
    do
       local parsed_format = vers.parse_version(rockspec.rockspec_format or "1.0")
-      rockspec.format_is_at_least = function(self, version)
+      rockspec.format_is_at_least = function(self: Rockspec, version: string): boolean
          return parsed_format >= vers.parse_version(version)
       end
    end
 
-   platform_overrides(rockspec.build)
-   platform_overrides(rockspec.dependencies)
-   platform_overrides(rockspec.build_dependencies)
-   platform_overrides(rockspec.test_dependencies)
-   platform_overrides(rockspec.external_dependencies)
-   platform_overrides(rockspec.source)
-   platform_overrides(rockspec.hooks)
-   platform_overrides(rockspec.test)
+   platform_overrides(rockspec.build as {any : any}) --!
+   platform_overrides(rockspec.dependencies as {any : any})
+   platform_overrides(rockspec.build_dependencies as {any : any})
+   platform_overrides(rockspec.test_dependencies as {any : any})
+   platform_overrides(rockspec.external_dependencies as {any : any})
+   platform_overrides(rockspec.source as {any : any})
+   platform_overrides(rockspec.hooks as {any : any})
+   platform_overrides(rockspec.test as {any : any})
 
    rockspec.name = rockspec.package:lower()
 
@@ -145,9 +139,12 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
 
    rockspec.rocks_provided = util.get_rocks_provided(rockspec)
 
-   for _, key in ipairs({"dependencies", "build_dependencies", "test_dependencies"}) do
-      local ok, err = convert_dependencies(rockspec, key)
-      if not ok then
+   rockspec.dependencies = rockspec.dependencies or {}
+   rockspec.build_dependencies = rockspec.build_dependencies or {}
+   rockspec.test_dependencies = rockspec.test_dependencies or {}
+   for _, d in ipairs({rockspec.dependencies, rockspec.build_dependencies, rockspec.test_dependencies}) do
+      local _, err = convert_dependencies(d)
+      if err then
          return nil, err
       end
    end
@@ -161,7 +158,7 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
       end
 
       local found = false
-      for _, dep in ipairs(rockspec.build_dependencies) do
+      for _, dep in ipairs(rockspec.build_dependencies.queries) do
          if dep.name == build_pkg_name then
             found = true
             break
@@ -169,7 +166,11 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
       end
 
       if not found then
-         table.insert(rockspec.build_dependencies, queries.from_dep_string(build_pkg_name))
+         local query, errfromdep = queries.from_dep_string(build_pkg_name)
+         if errfromdep then
+            return nil, "Invalid dependency in rockspec: " .. errfromdep
+         end
+         table.insert(rockspec.build_dependencies.queries, query)
       end
    end
 
@@ -177,7 +178,7 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
       configure_paths(rockspec)
    end
 
-   return setmetatable(rockspec, rockspec_mt)
+   return rockspec
 end
 
 return rockspecs
