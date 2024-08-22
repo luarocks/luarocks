@@ -1,22 +1,22 @@
-
 --- Core LuaRocks-specific path handling functions.
-local path = {}
+local record path
+end
 
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.core.dir")
-local require = nil
+
+local type Tree = require("luarocks.core.types.tree").Tree
 
 local dir_sep = package.config:sub(1, 1)
 --------------------------------------------------------------------------------
 
-function path.rocks_dir(tree)
+function path.rocks_dir(tree: string | Tree): string
    if tree == nil then
       tree = cfg.root_dir
    end
-   if type(tree) == "string" then
+   if tree is string then
       return dir.path(tree, cfg.rocks_subdir)
    end
-   assert(type(tree) == "table")
    return tree.rocks_dir or dir.path(tree.root, cfg.rocks_subdir)
 end
 
@@ -26,10 +26,8 @@ end
 -- @param name string: Rock name
 -- @param version string: Rock version
 -- @return string: a pathname with the same directory parts and a versioned basename.
-function path.versioned_name(file, prefix, name, version)
-   assert(type(file) == "string")
-   assert(type(name) == "string" and not name:match(dir_sep))
-   assert(type(version) == "string")
+function path.versioned_name(file: string, prefix: string, name: string, version: string): string
+   assert(not name:match(dir_sep))
 
    local rest = file:sub(#prefix+1):gsub("^" .. dir_sep .. "*", "")
    local name_version = (name.."_"..version):gsub("%-", "_"):gsub("%.", "_")
@@ -43,8 +41,7 @@ end
 -- @return string: The module identifier, or nil if given path is
 -- not a conformant module path (the function does not check if the
 -- path actually exists).
-function path.path_to_module(file)
-   assert(type(file) == "string")
+function path.path_to_module(file: string): string
 
    local exts = {}
    local paths = package.path .. ";" .. package.cpath
@@ -55,7 +52,7 @@ function path.path_to_module(file)
       end
    end
 
-   local name
+   local name: string
    for ext, _ in pairs(exts) do
       name = file:match("(.*)%." .. ext .. "$")
       if name then
@@ -72,25 +69,23 @@ function path.path_to_module(file)
    return name
 end
 
-function path.deploy_lua_dir(tree)
-   if type(tree) == "string" then
+function path.deploy_lua_dir(tree: string | Tree): string
+   if tree is string then
       return dir.path(tree, cfg.lua_modules_path)
    else
-      assert(type(tree) == "table")
       return tree.lua_dir or dir.path(tree.root, cfg.lua_modules_path)
    end
 end
 
-function path.deploy_lib_dir(tree)
-   if type(tree) == "string" then
+function path.deploy_lib_dir(tree: string | Tree): string
+   if tree is string then
       return dir.path(tree, cfg.lib_modules_path)
    else
-      assert(type(tree) == "table")
       return tree.lib_dir or dir.path(tree.root, cfg.lib_modules_path)
    end
 end
 
-local is_src_extension = { [".lua"] = true, [".tl"] = true, [".tld"] = true, [".moon"] = true }
+local is_src_extension: {string: boolean} = { [".lua"] = true, [".tl"] = true, [".tld"] = true, [".moon"] = true }
 
 --- Return the pathname of the file that would be loaded for a module, indexed.
 -- @param file_name string: module file name as in manifest (eg. "socket/core.so")
@@ -100,8 +95,8 @@ local is_src_extension = { [".lua"] = true, [".tl"] = true, [".tld"] = true, [".
 -- @param i number: the index, 1 if version is the current default, > 1 otherwise.
 -- This is done this way for use by select_module in luarocks.loader.
 -- @return string: filename of the module (eg. "/usr/local/lib/lua/5.1/socket/core.so")
-function path.which_i(file_name, name, version, tree, i)
-   local deploy_dir
+function path.which_i(file_name: string, name: string, version: string, tree: string | Tree, i: number): string
+   local deploy_dir: string
    local extension = file_name:match("%.[a-z]+$")
    if is_src_extension[extension] then
       deploy_dir = path.deploy_lua_dir(tree)
@@ -116,11 +111,10 @@ function path.which_i(file_name, name, version, tree, i)
    return file_name
 end
 
-function path.rocks_tree_to_string(tree)
-   if type(tree) == "string" then
+function path.rocks_tree_to_string(tree: string | Tree): string
+   if tree is string then
       return tree
    else
-      assert(type(tree) == "table")
       return tree.root
    end
 end
@@ -132,7 +126,7 @@ end
 -- @param fn function: function to be applied, with the tree dir (string) as the first
 -- argument and the remaining varargs of map_trees as the following arguments.
 -- @return a table with all results of invocations of fn collected.
-function path.map_trees(deps_mode, fn, ...)
+function path.map_trees(deps_mode: string, fn: function, ...: string): {any}
    local result = {}
    local current = cfg.root_dir or cfg.rocks_trees[1]
    if deps_mode == "one" then
