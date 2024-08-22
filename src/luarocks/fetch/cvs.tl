@@ -1,12 +1,13 @@
 
 --- Fetch back-end for retrieving sources from CVS.
-local cvs = {}
-
-local unpack = unpack or table.unpack
+local record cvs
+end
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
+
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 --- Download sources for building a rock, using CVS.
 -- @param rockspec table: The rockspec table
@@ -15,10 +16,7 @@ local util = require("luarocks.util")
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function cvs.get_sources(rockspec, extract, dest_dir)
-   assert(rockspec:type() == "rockspec")
-   assert(type(dest_dir) == "string" or not dest_dir)
-
+function cvs.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string --? extract not needed
    local cvs_cmd = rockspec.variables.CVS
    local ok, err_msg = fs.is_tool_available(cvs_cmd, "CVS")
    if not ok then
@@ -32,7 +30,7 @@ function cvs.get_sources(rockspec, extract, dest_dir)
       table.insert(command, 4, "-r")
       table.insert(command, 5, rockspec.source.tag)
    end
-   local store_dir
+   local store_dir: string
    if not dest_dir then
       store_dir = fs.make_temp_dir(name_version)
       if not store_dir then
@@ -42,9 +40,9 @@ function cvs.get_sources(rockspec, extract, dest_dir)
    else
       store_dir = dest_dir
    end
-   local ok, err = fs.change_dir(store_dir)
-   if not ok then return nil, err end
-   if not fs.execute(unpack(command)) then
+   local okchange, err = fs.change_dir(store_dir)
+   if not okchange then return nil, err end
+   if not fs.execute(table.unpack(command)) then
       return nil, "Failed fetching files from CVS."
    end
    fs.pop_dir()
