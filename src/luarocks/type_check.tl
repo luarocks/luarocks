@@ -1,20 +1,42 @@
 
-local type_check = {}
+local record type_check
+   type_check_table: function(version: string, tbl: {any: any}, typetbl: TableSchema, context: string): boolean, string --! tbl and typetbl types)
+
+   record TableSchema
+      fields: {string: TableSchema}
+      _type: string
+      _name: string
+      _pattern: string
+      _version: string
+      _more: boolean
+      _mandatory: boolean
+      _any: TableSchema
+   end
+
+   MAGIC_PLATFORMS: TableSchema
+end
 
 local cfg = require("luarocks.core.cfg")
 local fun = require("luarocks.fun")
 local util = require("luarocks.util")
 local vers = require("luarocks.core.vers")
+
+local type TableSchema = type_check.TableSchema
 --------------------------------------------------------------------------------
 
 -- A magic constant that is not used anywhere in a schema definition
 -- and retains equality when the table is deep-copied.
-type_check.MAGIC_PLATFORMS = 0xEBABEFAC
+type_check.MAGIC_PLATFORMS = {}
 
 do
-   local function fill_in_version(tbl, version)
-      for _, v in pairs(tbl) do
-         if type(v) == "table" then
+   local function fill_in_version(tbl: TableSchema, version?: string)
+
+      if not tbl.fields then --! validation
+         return
+      end
+
+      for _, v in pairs(tbl.fields) do
+         if v is TableSchema then
             if v._version == nil then
                v._version = version
             end
@@ -23,14 +45,13 @@ do
       end
    end
 
-   local function expand_magic_platforms(tbl)
-      for k,v in pairs(tbl) do
+   local function expand_magic_platforms(tbl: TableSchema)
+      for k,v in pairs(tbl.fields) do
          if v == type_check.MAGIC_PLATFORMS then
-            tbl[k] = {
-               _any = util.deep_copy(tbl)
+            tbl.fields[k] = {
+               _any = util.deep_copy(tbl as {string: any}) as TableSchema
             }
-            tbl[k]._any[k] = nil
-         elseif type(v) == "table" then
+            tbl.fields[k]._any.fields[k] = nil
             expand_magic_platforms(v)
          end
       end
@@ -41,17 +62,17 @@ do
    -- and the value is a schema specification. Schema versions are considered
    -- incremental: version "2.0" only needs to specify what's new/changed from
    -- version "1.0".
-   function type_check.declare_schemas(inputs)
-      local schemas = {}
-      local parent_version
+   function type_check.declare_schemas(inputs: {string: TableSchema}): {string : TableSchema}, {string}
+      local schemas: {string: TableSchema} = {}
+      local parent_version: string
 
       local versions = fun.reverse_in(fun.sort_in(util.keys(inputs), vers.compare_versions))
 
       for _, version in ipairs(versions) do
          local schema = inputs[version]
-         if parent_version ~= nil then
-            local copy = util.deep_copy(schemas[parent_version])
-            util.deep_merge(copy, schema)
+         if parent_version then
+            local copy: TableSchema = util.deep_copy(schemas[parent_version] as {any: any}) as TableSchema
+            util.deep_merge(copy as {any: any}, schema as {any: any})
             schema = copy
          end
          fill_in_version(schema, version)
@@ -66,7 +87,7 @@ end
 
 --------------------------------------------------------------------------------
 
-local function check_version(version, typetbl, context)
+local function check_version(version: string, typetbl: TableSchema, context: string): boolean, string
    local typetbl_version = typetbl._version or "1.0"
    if vers.compare_versions(typetbl_version, version) then
       if context == "" then
@@ -77,6 +98,8 @@ local function check_version(version, typetbl, context)
    end
    return true
 end
+
+
 
 --- Type check an object.
 -- The object is compared against an archetypical value
@@ -90,8 +113,7 @@ end
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
 -- @see type_check_table
-local function type_check_item(version, item, typetbl, context)
-   assert(type(version) == "string")
+local function type_check_item(version: string, item: any, typetbl: TableSchema, context: string): boolean, string
 
    if typetbl._version and typetbl._version ~= "1.0" then
       local ok, err = check_version(version, typetbl, context)
@@ -100,7 +122,6 @@ local function type_check_item(version, item, typetbl, context)
       end
    end
 
-   local item_type = type(item) or "nil"
    local expected_type = typetbl._type or "table"
 
    if expected_type == "number" then
@@ -108,32 +129,32 @@ local function type_check_item(version, item, typetbl, context)
          return nil, "Type mismatch on field "..context..": expected a number"
       end
    elseif expected_type == "string" then
-      if item_type ~= "string" then
-         return nil, "Type mismatch on field "..context..": expected a string, got "..item_type
+      if not item is string then
+         return nil, "Type mismatch on field "..context..": expected a string, got "..type(item)
       end
       local pattern = typetbl._pattern
       if pattern then
-         if not item:match("^"..pattern.."$") then
+         if not item:match("^"..pattern.."$") then --! cast or tostring
             local what = typetbl._name or ("'"..pattern.."'")
             return nil, "Type mismatch on field "..context..": invalid value '"..item.."' does not match " .. what
          end
       end
    elseif expected_type == "table" then
-      if item_type ~= expected_type then
+      if not item is table then
          return nil, "Type mismatch on field "..context..": expected a table"
       else
          return type_check.type_check_table(version, item, typetbl, context)
       end
-   elseif item_type ~= expected_type then
+   elseif type(item) ~= expected_type then
       return nil, "Type mismatch on field "..context..": expected "..expected_type
    end
    return true
 end
 
-local function mkfield(context, field)
+local function mkfield(context: string, field: any): string
    if context == "" then
       return tostring(field)
-   elseif type(field) == "string" then
+   elseif field is string then
       return context.."."..field
    else
       return context.."["..tostring(field).."]"
@@ -162,30 +183,33 @@ end
 -- to be used by error messages.
 -- @return boolean or (nil, string): true if type checking
 -- succeeded, or nil and an error message if it failed.
-function type_check.type_check_table(version, tbl, typetbl, context)
-   assert(type(version) == "string")
-   assert(type(tbl) == "table")
-   assert(type(typetbl) == "table")
+function type_check.type_check_table(version: string, tbl: {any: any}, typetbl: TableSchema, context: string): boolean, string
 
    local ok, err = check_version(version, typetbl, context)
    if not ok then
       return nil, err
    end
 
+   if not typetbl.fields then --! validation
+      -- if there are no fields, exit the checker
+      return true
+   end
+
    for k, v in pairs(tbl) do
-      local t = typetbl[k] or typetbl._any
+      local t = typetbl.fields[tostring(k)] or typetbl._any
       if t then
-         local ok, err = type_check_item(version, v, t, mkfield(context, k))
+         ok, err = type_check_item(version, v, t, mkfield(context, k))
          if not ok then return nil, err end
       elseif typetbl._more then
          -- Accept unknown field
       else
          if not cfg.accept_unknown_fields then
-            return nil, "Unknown field "..k
+            return nil, "Unknown field "..tostring(k)
          end
       end
    end
-   for k, v in pairs(typetbl) do
+
+   for k, v in pairs(typetbl.fields) do
       if k:sub(1,1) ~= "_" and v._mandatory then
          if not tbl[k] then
             return nil, "Mandatory field "..mkfield(context, k).." is missing."
@@ -195,10 +219,10 @@ function type_check.type_check_table(version, tbl, typetbl, context)
    return true
 end
 
-function type_check.check_undeclared_globals(globals, typetbl)
+function type_check.check_undeclared_globals(globals: {string: any}, typetbl: TableSchema): boolean, string --! tbl and typetbl types
    local undeclared = {}
    for glob, _ in pairs(globals) do
-      if not (typetbl[glob] or typetbl["MUST_"..glob]) then
+      if not (typetbl.fields[glob] or typetbl.fields["MUST_"..glob]) then
          table.insert(undeclared, glob)
       end
    end
