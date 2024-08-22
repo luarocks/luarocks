@@ -1,28 +1,27 @@
-local results = {}
+local record results
+end
 
 local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
+local type Query = require("luarocks.core.types.query").Query
 
-local result_mt = {}
+local type result = require("luarocks.core.types.result")
+local type Result = result.Result
 
-result_mt.__index = result_mt
+local result_mt: metatable<Result> = {}
 
-function result_mt.type()
-   return "result"
-end
+result_mt.__index = result.Result
 
-function results.new(name, version, repo, arch, namespace)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
-   assert(type(repo) == "string")
-   assert(type(arch) == "string" or not arch)
-   assert(type(namespace) == "string" or not namespace)
+function results.new(name: string, version: string, repo: string, arch?: string, namespace?: string): Result, boolean
+
+   assert(not name:match("/"))
+   
 
    if not namespace then
       name, namespace = util.split_namespace(name)
    end
 
-   local self = {
+   local self: Result = {
       name = name,
       version = version,
       namespace = namespace,
@@ -40,7 +39,7 @@ end
 -- @param query table: A query in dependency table format.
 -- @param name string: A package name.
 -- @return boolean: True if names match, false otherwise.
-local function match_name(query, name)
+local function match_name(query: Query, name: string): boolean
    if query.substring then
       return name:find(query.name, 0, true) and true or false
    else
@@ -51,12 +50,11 @@ end
 --- Returns true if the result satisfies a given query.
 -- @param query: a query.
 -- @return boolean.
-function result_mt:satisfies(query)
-   assert(query:type() == "query")
+function result.Result:satisfies(query: Query): boolean
    return match_name(query, self.name)
       and (query.arch[self.arch] or query.arch["any"])
       and ((not query.namespace) or (query.namespace == self.namespace))
-      and vers.match_constraints(vers.parse_version(self.version), query.constraints)
+      and (vers.match_constraints(vers.parse_version(self.version), query.constraints))
 end
 
 return results
