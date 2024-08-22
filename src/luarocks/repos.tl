@@ -1,6 +1,20 @@
 
 --- Functions for managing the repository on disk.
-local repos = {}
+local record repos
+   record Op
+      name: string
+      dst: string
+      backup: boolean
+      src: string
+      suffix: string
+      backup_file: string
+      fn: function(string, string, boolean): boolean, string
+   end
+   record Paths
+      nv: string
+      v: string
+   end
+end
 
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
@@ -10,19 +24,15 @@ local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
 local vers = require("luarocks.core.vers")
 
-local unpack = unpack or table.unpack  -- luacheck: ignore 211
+local type RockManifest = require("luarocks.core.types.rockmanifest").RockManifest
+local type Entry = RockManifest.Entry
 
---- Get type and name of an item (a module or a command) provided by a file.
--- @param deploy_type string: rock manifest subtree the file comes from ("bin", "lua", or "lib").
--- @param file_path string: path to the file relatively to deploy_type subdirectory.
--- @return (string, string): item type ("module" or "command") and name.
-local function get_provided_item(deploy_type, file_path)
-   assert(type(deploy_type) == "string")
-   assert(type(file_path) == "string")
-   local item_type = deploy_type == "bin" and "command" or "module"
-   local item_name = item_type == "command" and file_path or path.path_to_module(file_path)
-   return item_type, item_name
-end
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
+
+local type Tree = require("luarocks.core.types.tree").Tree
+
+local type Op = repos.Op
+local type Paths = repos.Paths
 
 -- Tree of files installed by a package are stored
 -- in its rock manifest. Some of these files have to
@@ -45,8 +55,8 @@ end
 -- @param name string: a package name.
 -- @return table or nil: An array of strings listing installed
 -- versions of a package, or nil if none is available.
-local function get_installed_versions(name)
-   assert(type(name) == "string" and not name:match("/"))
+local function get_installed_versions(name: string): {string}
+   assert(not name:match("/"))
 
    local dirs = fs.list_dir(path.versions_dir(name))
    return (dirs and #dirs > 0) and dirs or nil
@@ -58,27 +68,24 @@ end
 -- @param version string: package version in string format
 -- @return boolean: true if a package is installed,
 -- false otherwise.
-function repos.is_installed(name, version)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
+function repos.is_installed(name: string, version: string): boolean
+   assert(not name:match("/"))
 
    return fs.is_dir(path.install_dir(name, version))
 end
 
-function repos.recurse_rock_manifest_entry(entry, action)
-   assert(type(action) == "function")
-
+function repos.recurse_rock_manifest_entry(entry: Entry, action: (function(string): boolean, string)): boolean, string
    if entry == nil then
       return true
    end
 
-   local function do_recurse_rock_manifest_entry(tree, parent_path)
+   local function do_recurse_rock_manifest_entry(tree: Entry, parent_path?: string): boolean, string
 
-      for file, sub in pairs(tree) do
+      for file, sub in pairs(tree as {string: any}) do --!
          local sub_path = (parent_path and (parent_path .. "/") or "") .. file
-         local ok, err  -- luacheck: ignore 231
+         local ok, err: boolean, string  -- luacheck: ignore 231
 
-         if type(sub) == "table" then
+         if sub is Entry then
             ok, err = do_recurse_rock_manifest_entry(sub, sub_path)
          else
             ok, err = action(sub_path)
@@ -91,10 +98,10 @@ function repos.recurse_rock_manifest_entry(entry, action)
    return do_recurse_rock_manifest_entry(entry)
 end
 
-local function store_package_data(result, rock_manifest, deploy_type)
+local function store_package_data(result: {string: string}, rock_manifest: {string : Entry}, deploy_type: string)
    if rock_manifest[deploy_type] then
-      repos.recurse_rock_manifest_entry(rock_manifest[deploy_type], function(file_path)
-         local _, item_name = get_provided_item(deploy_type, file_path)
+      repos.recurse_rock_manifest_entry(rock_manifest[deploy_type], function(file_path: string): boolean, string
+         local _, item_name = manif.get_provided_item(deploy_type, file_path)
          result[item_name] = file_path
          return true
       end)
@@ -110,9 +117,8 @@ end
 -- relative to "lib" or "lua" rock manifest subtree.
 -- If no modules are found or if package name or version
 -- are invalid, an empty table is returned.
-function repos.package_modules(name, version)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
+function repos.package_modules(name: string, version: string): {string: string}
+   assert(not name:match("/"))
 
    local result = {}
    local rock_manifest = manif.load_rock_manifest(name, version)
@@ -131,9 +137,8 @@ end
 -- relative to "bin" rock manifest subtree.
 -- If no commands are found or if package name or version
 -- are invalid, an empty table is returned.
-function repos.package_commands(name, version)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
+function repos.package_commands(name: string, version: string): {string: string}
+   assert(not name:match("/"))
 
    local result = {}
    local rock_manifest = manif.load_rock_manifest(name, version)
@@ -148,13 +153,16 @@ end
 -- @param version string: version of an installed rock
 -- @return boolean: returns true if rock contains platform-specific
 -- binary executables, or false if it is a pure-Lua rock.
-function repos.has_binaries(name, version)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
+function repos.has_binaries(name: string, version: string): boolean
+   assert(not name:match("/"))
 
-   local rock_manifest = manif.load_rock_manifest(name, version)
-   if rock_manifest and rock_manifest.bin then
-      for bin_name, md5 in pairs(rock_manifest.bin) do
+   local entries = manif.load_rock_manifest(name, version)
+   if not entries then
+      return false
+   end
+   local bin = entries["bin"]
+   if bin is {string:Entry} then
+      for bin_name, md5 in pairs(bin) do
          -- TODO verify that it is the same file. If it isn't, find the actual command.
          if fs.is_actual_binary(dir.path(cfg.deploy_bin_dir, bin_name)) then
             return true
@@ -164,9 +172,7 @@ function repos.has_binaries(name, version)
    return false
 end
 
-function repos.run_hook(rockspec, hook_name)
-   assert(rockspec:type() == "rockspec")
-   assert(type(hook_name) == "string")
+function repos.run_hook(rockspec: Rockspec, hook_name: string): boolean, string
 
    local hooks = rockspec.hooks
    if not hooks then
@@ -178,10 +184,10 @@ function repos.run_hook(rockspec, hook_name)
    end
 
    if not hooks.substituted_variables then
-      util.variable_substitutions(hooks, rockspec.variables)
+      util.variable_substitutions(hooks as {string: string}, rockspec.variables)
       hooks.substituted_variables = true
    end
-   local hook = hooks[hook_name]
+   local hook = (hooks as {string: string})[hook_name]
    if hook then
       util.printout(hook)
       if not fs.execute(hook) then
@@ -191,10 +197,9 @@ function repos.run_hook(rockspec, hook_name)
    return true
 end
 
-function repos.should_wrap_bin_scripts(rockspec)
-   assert(rockspec:type() == "rockspec")
+function repos.should_wrap_bin_scripts(rockspec: Rockspec): boolean
 
-   if cfg.wrap_bin_scripts ~= nil then
+   if cfg.wrap_bin_scripts then
       return cfg.wrap_bin_scripts
    end
    if rockspec.deploy and rockspec.deploy.wrap_bin_scripts == false then
@@ -203,7 +208,7 @@ function repos.should_wrap_bin_scripts(rockspec)
    return true
 end
 
-local function find_suffixed(file, suffix)
+local function find_suffixed(file: string, suffix: string): string, string
    local filenames = {file}
    if suffix and suffix ~= "" then
       table.insert(filenames, 1, file .. suffix)
@@ -218,7 +223,7 @@ local function find_suffixed(file, suffix)
    return nil, table.concat(filenames, ", ") .. " not found"
 end
 
-local function check_suffix(filename, suffix)
+local function check_suffix(filename: string, suffix: string): string
    local suffixed_filename, err = find_suffixed(filename, suffix)
    if not suffixed_filename then
       return ""
@@ -232,21 +237,17 @@ end
 -- item from the newest version of lexicographically smallest package
 -- is deployed using non-versioned name and others use versioned names.
 
-local function get_deploy_paths(name, version, deploy_type, file_path, repo)
-   assert(type(name) == "string")
-   assert(type(version) == "string")
-   assert(type(deploy_type) == "string")
-   assert(type(file_path) == "string")
+local function get_deploy_paths(name: string, version: string, deploy_type: string, file_path: string, repo?: string | Tree): Paths
 
    repo = repo or cfg.root_dir
-   local deploy_dir = path["deploy_" .. deploy_type .. "_dir"](repo)
+   local deploy_dir = (path as {string: function(string | Tree): string})["deploy_" .. deploy_type .. "_dir"](repo)
    local non_versioned = dir.path(deploy_dir, file_path)
    local versioned = path.versioned_name(non_versioned, deploy_dir, name, version)
    return { nv = non_versioned, v = versioned }
 end
 
-local function check_spot_if_available(name, version, deploy_type, file_path)
-   local item_type, item_name = get_provided_item(deploy_type, file_path)
+local function check_spot_if_available(name: string, version: string, deploy_type: string, file_path: string): string, string, string, string
+   local item_type, item_name = manif.get_provided_item(deploy_type, file_path)
    local cur_name, cur_version = manif.get_current_provider(item_type, item_name)
 
    -- older versions of LuaRocks (< 3) registered "foo.init" files as "foo"
@@ -267,7 +268,7 @@ local function check_spot_if_available(name, version, deploy_type, file_path)
    end
 end
 
-local function backup_existing(should_backup, target)
+local function backup_existing(should_backup: boolean, target: string): string, string
    if not should_backup then
       fs.delete(target)
       return
@@ -287,11 +288,11 @@ local function backup_existing(should_backup, target)
    end
 end
 
-local function prepare_op_install()
+local function prepare_op_install(): function(Op): (boolean, string), function()
    local mkdirs = {}
    local rmdirs = {}
 
-   local function memoize_mkdir(d)
+   local function memoize_mkdir(d: string): boolean, string
       if mkdirs[d] then
          return true
       end
@@ -303,7 +304,7 @@ local function prepare_op_install()
       return true
    end
 
-   local function op_install(op)
+   local function op_install(op: Op): boolean, string
       local ok, err = memoize_mkdir(dir.dir_name(op.dst))
       if not ok then
          return nil, err
@@ -335,7 +336,7 @@ local function prepare_op_install()
    return op_install, done_op_install
 end
 
-local function rollback_install(op)
+local function rollback_install(op: Op): boolean, string
    fs.delete(op.dst)
    if op.backup_file then
       os.rename(op.backup_file, op.dst)
@@ -344,7 +345,7 @@ local function rollback_install(op)
    return true
 end
 
-local function op_rename(op)
+local function op_rename(op: Op): boolean, string
    if op.suffix then
       local suffix = check_suffix(op.src, op.suffix)
       op.src = op.src .. suffix
@@ -362,13 +363,13 @@ local function op_rename(op)
    end
 end
 
-local function rollback_rename(op)
+local function rollback_rename(op: Op): boolean, string
    return op_rename({ src = op.dst, dst = op.src })
 end
 
-local function prepare_op_delete()
-   local deletes = {}
-   local rmdirs = {}
+local function prepare_op_delete(): function(Op), function()
+   local deletes: {string} = {}
+   local rmdirs: {string: boolean} = {}
 
    local function done_op_delete()
       for _, f in ipairs(deletes) do
@@ -380,7 +381,7 @@ local function prepare_op_delete()
       end
    end
 
-   local function op_delete(op)
+   local function op_delete(op: Op)
       if op.suffix then
          local suffix = check_suffix(op.name, op.suffix)
          op.name = op.name .. suffix
@@ -394,19 +395,19 @@ local function prepare_op_delete()
    return op_delete, done_op_delete
 end
 
-local function rollback_ops(ops, op_fn, n)
+local function rollback_ops(ops: {Op}, op_fn: function(Op): (boolean, string), n: integer)
    for i = 1, n do
       op_fn(ops[i])
    end
 end
 
 --- Double check that all files referenced in `rock_manifest` are installed in `repo`.
-function repos.check_everything_is_installed(name, version, rock_manifest, repo, accept_versioned)
+function repos.check_everything_is_installed(name: string, version: string, rock_manifest: {string: Entry}, repo: string | Tree, accept_versioned: boolean): boolean, string
    local missing = {}
    local suffix = cfg.wrapper_suffix or ""
    for _, category in ipairs({"bin", "lua", "lib"}) do
       if rock_manifest[category] then
-         repos.recurse_rock_manifest_entry(rock_manifest[category], function(file_path)
+         repos.recurse_rock_manifest_entry(rock_manifest[category], function(file_path: string): boolean, string
             local paths = get_deploy_paths(name, version, category, file_path, repo)
             if category == "bin" then
                if (fs.exists(paths.nv) or fs.exists(paths.nv .. suffix))
@@ -437,19 +438,17 @@ end
 -- @param deps_mode: string: Which trees to check dependencies for:
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
-function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
-   assert(type(wrap_bin_scripts) == "boolean")
+function repos.deploy_local_files(name: string, version: string, wrap_bin_scripts: boolean, deps_mode: string): boolean, string
+   assert(not name:match("/"))
 
    local rock_manifest, load_err = manif.load_rock_manifest(name, version)
    if not rock_manifest then return nil, load_err end
 
    local repo = cfg.root_dir
-   local renames = {}
-   local installs = {}
+   local renames: {Op} = {}
+   local installs: {Op} = {}
 
-   local function install_binary(source, target)
+   local function install_binary(source: string, target: string): boolean, string
       if wrap_bin_scripts and fs.is_lua(source) then
          return fs.wrap_script(source, target, deps_mode, name, version)
       else
@@ -457,17 +456,17 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
       end
    end
 
-   local function move_lua(source, target)
+   local function move_lua(source: string, target: string): boolean,  string
       return fs.move(source, target, "read")
    end
 
-   local function move_lib(source, target)
+   local function move_lib(source: string, target: string): boolean,  string
       return fs.move(source, target, "exec")
    end
 
    if rock_manifest.bin then
       local source_dir = path.bin_dir(name, version)
-      repos.recurse_rock_manifest_entry(rock_manifest.bin, function(file_path)
+      repos.recurse_rock_manifest_entry(rock_manifest.bin, function(file_path: string): boolean, string
          local source = dir.path(source_dir, file_path)
          local paths = get_deploy_paths(name, version, "bin", file_path, repo)
          local mode, cur_name, cur_version = check_spot_if_available(name, version, "bin", file_path)
@@ -487,7 +486,7 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
 
    if rock_manifest.lua then
       local source_dir = path.lua_dir(name, version)
-      repos.recurse_rock_manifest_entry(rock_manifest.lua, function(file_path)
+      repos.recurse_rock_manifest_entry(rock_manifest.lua, function(file_path: string): boolean, string
          local source = dir.path(source_dir, file_path)
          local paths = get_deploy_paths(name, version, "lua", file_path, repo)
          local mode, cur_name, cur_version = check_spot_if_available(name, version, "lua", file_path)
@@ -506,7 +505,7 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
 
    if rock_manifest.lib then
       local source_dir = path.lib_dir(name, version)
-      repos.recurse_rock_manifest_entry(rock_manifest.lib, function(file_path)
+      repos.recurse_rock_manifest_entry(rock_manifest.lib, function(file_path: string): boolean, string
          local source = dir.path(source_dir, file_path)
          local paths = get_deploy_paths(name, version, "lib", file_path, repo)
          local mode, cur_name, cur_version = check_spot_if_available(name, version, "lib", file_path)
@@ -546,17 +545,16 @@ function repos.deploy_files(name, version, wrap_bin_scripts, deps_mode)
       return nil, err
    end
 
-   local writer = require("luarocks.manif.writer")
-   return writer.add_to_manifest(name, version, nil, deps_mode)
+   return true
 end
 
-local function add_to_double_checks(double_checks, name, version)
+local function add_to_double_checks(double_checks: {string: {string: boolean}}, name: string, version: string)
    double_checks[name] = double_checks[name] or {}
    double_checks[name][version] = true
 end
 
-local function double_check_all(double_checks, repo)
-   local errs = {}
+local function double_check_all(double_checks: {string: {string: boolean}}, repo: string | Tree): boolean, string
+   local errs: {string} = {}
    for next_name, versions in pairs(double_checks) do
       for next_version in pairs(versions) do
          local rock_manifest, load_err = manif.load_rock_manifest(next_name, next_version)
@@ -582,19 +580,15 @@ end
 -- of another version that provides the same module that
 -- was deleted. This is used during 'purge', as every module
 -- will be eventually deleted.
-function repos.delete_version(name, version, deps_mode, quick)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
-   assert(type(deps_mode) == "string")
+function repos.delete_local_version(name: string, version: string, deps_mode: string, quick: boolean): boolean, string, string
+   assert(not name:match("/"))
 
    local rock_manifest, load_err = manif.load_rock_manifest(name, version)
    if not rock_manifest then
       if not quick then
-         local writer = require("luarocks.manif.writer")
-         writer.remove_from_manifest(name, version, nil, deps_mode)
-         return nil, "rock_manifest file not found for "..name.." "..version.." - removed entry from the manifest"
+         return nil, "rock_manifest file not found for "..name.." "..version.." - removed entry from the manifest", "remove"
       end
-      return nil, load_err
+      return nil, load_err, "fail"
    end
 
    local repo = cfg.root_dir
@@ -604,7 +598,7 @@ function repos.delete_version(name, version, deps_mode, quick)
    local double_checks = {}
 
    if rock_manifest.bin then
-      repos.recurse_rock_manifest_entry(rock_manifest.bin, function(file_path)
+      repos.recurse_rock_manifest_entry(rock_manifest.bin, function(file_path: string): boolean, string
          local paths = get_deploy_paths(name, version, "bin", file_path, repo)
          local mode, cur_name, cur_version, item_name = check_spot_if_available(name, version, "bin", file_path)
          if mode == "v" then
@@ -623,7 +617,7 @@ function repos.delete_version(name, version, deps_mode, quick)
    end
 
    if rock_manifest.lua then
-      repos.recurse_rock_manifest_entry(rock_manifest.lua, function(file_path)
+      repos.recurse_rock_manifest_entry(rock_manifest.lua, function(file_path: string): boolean, string
          local paths = get_deploy_paths(name, version, "lua", file_path, repo)
          local mode, cur_name, cur_version, item_name = check_spot_if_available(name, version, "lua", file_path)
          if mode == "v" then
@@ -644,7 +638,7 @@ function repos.delete_version(name, version, deps_mode, quick)
    end
 
    if rock_manifest.lib then
-      repos.recurse_rock_manifest_entry(rock_manifest.lib, function(file_path)
+      repos.recurse_rock_manifest_entry(rock_manifest.lib, function(file_path: string): boolean, string
          local paths = get_deploy_paths(name, version, "lib", file_path, repo)
          local mode, cur_name, cur_version, item_name = check_spot_if_available(name, version, "lib", file_path)
          if mode == "v" then
@@ -677,7 +671,7 @@ function repos.delete_version(name, version, deps_mode, quick)
 
       local ok, err = double_check_all(double_checks, repo)
       if not ok then
-         return nil, err
+         return nil, err, "fail"
       end
    end
 
@@ -687,11 +681,10 @@ function repos.delete_version(name, version, deps_mode, quick)
    end
 
    if quick then
-      return true
+      return true, nil, "ok"
    end
 
-   local writer = require("luarocks.manif.writer")
-   return writer.remove_from_manifest(name, version, nil, deps_mode)
+   return true, nil, "remove"
 end
 
 return repos
