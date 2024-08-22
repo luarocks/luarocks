@@ -1,7 +1,9 @@
 
 --- Module implementing the LuaRocks "build" command.
 -- Builds a rock, compiling its C parts if any.
-local cmd_build = {}
+local record cmd_build
+   needs_lock: function(Args): boolean
+end
 
 local pack = require("luarocks.pack")
 local path = require("luarocks.path")
@@ -13,12 +15,19 @@ local deps = require("luarocks.deps")
 local remove = require("luarocks.remove")
 local cfg = require("luarocks.core.cfg")
 local build = require("luarocks.build")
-local writer = require("luarocks.manif.writer")
 local search = require("luarocks.search")
 local make = require("luarocks.cmd.make")
 local repos = require("luarocks.repos")
 
-function cmd_build.add_to_parser(parser)
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+local type BOpts = require("luarocks.core.types.bopts").BOpts
+
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
+
+function cmd_build.add_to_parser(parser: Parser)
    local cmd = parser:command("build", "Build and install a rock, compiling its C parts if any.\n"..  -- luacheck: ignore 431
       "If the sources contain a luarocks.lock file, uses it as an authoritative source for "..
       "exact version of dependencies.\n"..
@@ -41,7 +50,7 @@ function cmd_build.add_to_parser(parser)
       "versions of each dependency found for this rock (recursively), "..
       "and store it in the rock's directory. "..
       "Ignores any existing luarocks.lock file in the rock's sources.")
-   make.cmd_options(cmd)
+   make.cmd_options(cmd as Parser)
 end
 
 --- Build and install a rock.
@@ -49,15 +58,13 @@ end
 -- @param opts table: build options
 -- @return boolean or (nil, string, [string]): True if build was successful,
 -- or false and an error message and an optional error code.
-local function build_rock(rock_filename, opts)
-   assert(type(rock_filename) == "string")
-   assert(opts:type() == "build.opts")
+local function build_rock(rock_filename: string, opts: BOpts): boolean, string, string
 
    local cwd = fs.absolute_name(dir.path("."))
 
-   local ok, err, errcode
+   local ok, err, errcode: boolean, string, string
 
-   local unpack_dir
+   local unpack_dir: string
    unpack_dir, err, errcode = fetch.fetch_and_unpack_rock(rock_filename, nil, opts.verify)
    if not unpack_dir then
       return nil, err, errcode
@@ -68,25 +75,23 @@ local function build_rock(rock_filename, opts)
    ok, err = fs.change_dir(unpack_dir)
    if not ok then return nil, err end
 
-   local rockspec
+   local rockspec: Rockspec
    rockspec, err, errcode = fetch.load_rockspec(rockspec_filename)
    if not rockspec then
       return nil, err, errcode
    end
 
-   ok, err, errcode = build.build_rockspec(rockspec, opts, cwd)
+   local n, v = build.build_rockspec(rockspec, opts, cwd)
+
+   ok, err, errcode = n ~= nil, v, nil
 
    fs.pop_dir()
    return ok, err, errcode
 end
 
-local function do_build(name, namespace, version, opts)
-   assert(type(name) == "string")
-   assert(type(namespace) == "string" or not namespace)
-   assert(version == nil or type(version) == "string")
-   assert(opts:type() == "build.opts")
+local function do_build(name: string, namespace: string, version: string, opts: BOpts): string, string, string
 
-   local url, err
+   local url, err: string, string
    if name:match("%.rockspec$") or name:match("%.rock$") then
       url = name
    else
@@ -118,7 +123,11 @@ local function do_build(name, namespace, version, opts)
       opts.need_to_fetch = false
    end
 
-   return build_rock(url, opts)
+   local ok, err, errcode = build_rock(url, opts)
+   if not ok then
+      return nil, err, errcode
+   end
+   return name, version
 end
 
 --- Driver function for "build" command.
@@ -127,12 +136,12 @@ end
 -- When passing a package name, a version number may also be given.
 -- @return boolean or (nil, string, exitcode): True if build was successful; nil and an
 -- error message otherwise. exitcode is optionally returned.
-function cmd_build.command(args)
+function cmd_build.command(args: Args): boolean, string, string
    if not args.rock then
       return make.command(args)
    end
 
-   local opts = build.opts({
+   local opts = {
       need_to_fetch = true,
       minimal_mode = false,
       deps_mode = deps.get_deps_mode(args),
@@ -144,14 +153,14 @@ function cmd_build.command(args)
       pin = not not args.pin,
       rebuild = not not (args.force or args.force_fast),
       no_install = false
-   })
+   }
 
    if args.sign and not args.pack_binary_rock then
       return nil, "In the build command, --sign is meant to be used only with --pack-binary-rock"
    end
 
    if args.pack_binary_rock then
-      return pack.pack_binary_rock(args.rock, args.namespace, args.version, args.sign, function()
+      return pack.pack_binary_rock(args.rock, args.namespace, args.version, args.sign, function(): string, string
          local name, version = do_build(args.rock, args.namespace, args.version, opts)
          if name and args.no_doc then
             util.remove_doc_dir(name, version)
@@ -165,7 +174,7 @@ function cmd_build.command(args)
       return nil, version
    end
    if skip == "skip" then
-      return name, version
+      return name ~= nil, version
    end
 
    if args.no_doc then
@@ -187,12 +196,12 @@ function cmd_build.command(args)
    end
 
    if opts.deps_mode ~= "none" then
-      writer.check_dependencies(nil, deps.get_deps_mode(args))
+      deps.check_dependencies(nil, deps.get_deps_mode(args))
    end
-   return name, version
+   return name ~= nil, version
 end
 
-cmd_build.needs_lock = function(args)
+cmd_build.needs_lock = function(args: Args): boolean
    if args.pack_binary_rock then
       return false
    end
