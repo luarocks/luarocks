@@ -1,24 +1,25 @@
 
 --- Module handling the LuaRocks local cache.
 -- Adds a rock or rockspec to a rocks server.
-local cache = {}
+local record cache
+end
 
 local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 
-function cache.get_upload_server(server)
+function cache.get_upload_server(server: string): string, {string: string}, string
    if not server then server = cfg.upload_server end
    if not server then
-      return nil, "No server specified and no default configured with upload_server."
+      return nil, nil, "No server specified and no default configured with upload_server."
    end
    return server, cfg.upload_servers and cfg.upload_servers[server]
 end
 
-function cache.get_server_urls(server, upload_server)
-   local download_url = server
-   local login_url = nil
+function cache.get_server_urls(server: string, upload_server: {string: string}): string, string
+   local download_url: string = server
+   local login_url: string = nil
    if upload_server then
       if upload_server.rsync then download_url = "rsync://"..upload_server.rsync
       elseif upload_server.http then download_url = "http://"..upload_server.http
@@ -32,12 +33,12 @@ function cache.get_server_urls(server, upload_server)
    return download_url, login_url
 end
 
-function cache.split_server_url(url, user, password)
+function cache.split_server_url(url: string, user: string, password: string): string, string, string, string, string
    local protocol, server_path = dir.split_url(url)
    if protocol == "file" then
       server_path = fs.absolute_name(server_path)
    elseif server_path:match("@") then
-      local credentials
+      local credentials: string
       credentials, server_path = server_path:match("([^@]*)@(.*)")
       if credentials:match(":") then
          user, password = credentials:match("([^:]*):(.*)")
@@ -49,7 +50,7 @@ function cache.split_server_url(url, user, password)
    return local_cache, protocol, server_path, user, password
 end
 
-local function download_cache(protocol, server_path, user, password)
+local function download_cache(protocol: string, server_path: string, user: string, password: string): boolean, string, string
    os.remove("index.html")
    -- TODO abstract away explicit 'wget' call
    if protocol == "rsync" then
@@ -65,7 +66,7 @@ local function download_cache(protocol, server_path, user, password)
    end
 end
 
-function cache.refresh_local_cache(url, given_user, given_password)
+function cache.refresh_local_cache(url: string, given_user: string, given_password: string): string, string, string, string, string
    local local_cache, protocol, server_path, user, password = cache.split_server_url(url, given_user, given_password)
 
    local ok, err = fs.make_dir(local_cache)
