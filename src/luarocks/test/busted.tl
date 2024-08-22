@@ -1,22 +1,24 @@
 
-local busted = {}
+local record busted
+end
 
 local fs = require("luarocks.fs")
 local deps = require("luarocks.deps")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 local queries = require("luarocks.queries")
+local install = require("luarocks.cmd.install")
 
-local unpack = table.unpack or unpack
+local type Test = require("luarocks.core.types.rockspec").Test
 
-function busted.detect_type()
+function busted.detect_type(): boolean
    if fs.exists(".busted") then
       return true
    end
    return false
 end
 
-function busted.run_tests(test, args)
+function busted.run_tests(test: Test, args: {string}): boolean, string
    if not test then
       test = {}
    end
@@ -26,7 +28,7 @@ function busted.run_tests(test, args)
       return nil, bustedver
    end
 
-   local busted_exe
+   local busted_exe: string
    if test.busted_executable then
       busted_exe = test.busted_executable
    else
@@ -40,8 +42,8 @@ function busted.run_tests(test, args)
       end
    end
 
-   local err
-   ok, err = fs.execute(busted_exe, unpack(args))
+   local err: string
+   ok, err = fs.execute(busted_exe, table.unpack(args))
    if ok then
       return true
    else
