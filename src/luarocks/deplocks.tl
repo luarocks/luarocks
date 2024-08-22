@@ -5,12 +5,14 @@ local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local persist = require("luarocks.persist")
 
-local deptable = {}
-local deptable_mode = "start"
-local deplock_abs_filename
-local deplock_root_rock_name
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
 
-function deplocks.init(root_rock_name, dirname)
+local deptable: PersistableTable = {}
+local deptable_mode = "start"
+local deplock_abs_filename: string
+local deplock_root_rock_name: string
+
+function deplocks.init(root_rock_name: string, dirname: string)
    if deptable_mode ~= "start" then
       return
    end
@@ -23,20 +25,20 @@ function deplocks.init(root_rock_name, dirname)
    deptable = {}
 end
 
-function deplocks.get_abs_filename(root_rock_name)
+function deplocks.get_abs_filename(root_rock_name: string): string
    if root_rock_name == deplock_root_rock_name then
       return deplock_abs_filename
    end
 end
 
-function deplocks.load(root_rock_name, dirname)
+function deplocks.load(root_rock_name: string, dirname: string): boolean, string, string
    if deptable_mode ~= "start" then
       return true, nil
    end
    deptable_mode = "locked"
 
    local filename = dir.path(dirname, "luarocks.lock")
-   local ok, result, errcode = persist.run_file(filename, {})
+   local _, result, errcode = persist.run_file(filename, {})
    if errcode == "load" or errcode == "run" then
       -- bad config file or depends on env, so error out
       return nil, nil, "Could not read existing lockfile " .. filename
@@ -50,11 +52,11 @@ function deplocks.load(root_rock_name, dirname)
    deplock_abs_filename = fs.absolute_name(filename)
    deplock_root_rock_name = root_rock_name
 
-   deptable = result
+   deptable = result as PersistableTable --! cast
    return true, filename
 end
 
-function deplocks.add(depskey, name, version)
+function deplocks.add(depskey: string, name: string, version: string)
    if deptable_mode == "locked" then
       return
    end
@@ -65,21 +67,24 @@ function deplocks.add(depskey, name, version)
       deptable[depskey] = dk
    end
 
-   if not dk[name] then
+   if dk is PersistableTable and not dk[name] then
       dk[name] = version
    end
 end
 
-function deplocks.get(depskey, name)
+function deplocks.get(depskey: string, name: string): string | number | boolean | PersistableTable
    local dk = deptable[depskey]
    if not dk then
       return nil
    end
-
-   return deptable[name]
+   if dk is PersistableTable then
+      return dk[name]
+   else
+      return dk
+   end
 end
 
-function deplocks.write_file()
+function deplocks.write_file(): boolean, string
    if deptable_mode ~= "create" then
       return true
    end
@@ -88,19 +93,19 @@ function deplocks.write_file()
 end
 
 -- a table-like interface to deplocks
-function deplocks.proxy(depskey)
+function deplocks.proxy(depskey: string): PersistableTable
    return setmetatable({}, {
-      __index = function(_, k)
+      __index = function(_, k: string): string | number | boolean | PersistableTable
          return deplocks.get(depskey, k)
       end,
-      __newindex = function(_, k, v)
+      __newindex = function(_, k: string, v: string)
          return deplocks.add(depskey, k, v)
       end,
    })
 end
 
-function deplocks.each(depskey)
-   return util.sortedpairs(deptable[depskey] or {})
+function deplocks.each(depskey: string): function(): string | number, string | number | boolean | PersistableTable
+   return util.sortedpairs(deptable[depskey] as PersistableTable or {})
 end
 
 return deplocks
