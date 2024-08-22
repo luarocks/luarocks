@@ -7,9 +7,12 @@
 -- source = { url = "git+http://example.com/foo.git" }
 -- Prefer using the normal git:// fetch mode as it is more widely
 -- available in older versions of LuaRocks.
-local git_http = {}
+local record git_http
+end
 
 local git = require("luarocks.fetch.git")
+
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 --- Fetch sources for building a rock from a local Git repository.
 -- @param rockspec table: The rockspec table
@@ -18,7 +21,7 @@ local git = require("luarocks.fetch.git")
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function git_http.get_sources(rockspec, extract, dest_dir)
+function git_http.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string
    rockspec.source.url = rockspec.source.url:gsub("^git.", "")
    return git.get_sources(rockspec, extract, dest_dir, "--")
 end
