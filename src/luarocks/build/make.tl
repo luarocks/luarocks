@@ -1,12 +1,27 @@
 
---- Build back-end for using Makefile-based packages.
-local make = {}
+local type Build = require("luarocks.core.types.build").Build
 
-local unpack = unpack or table.unpack
+--- Build back-end for using Makefile-based packages.
+local record make
+   record MakeBuild
+      is Build where self.type == "make"
+
+      makefile: string
+      build_target: string
+      build_pass: boolean
+      install_target: string
+      install_pass: boolean
+      build_variables: {string: string}
+      install_variables: {string: string}
+      variables: {string: string}
+   end
+end
 
 local fs = require("luarocks.fs")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
+
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 --- Call "make" with given target and variables
 -- @param make_cmd string: the make command to be used (typically
@@ -18,17 +33,13 @@ local cfg = require("luarocks.core.cfg")
 -- @param variables table: A table containing string-string key-value
 -- pairs representing variable assignments to be passed to make.
 -- @return boolean: false if any errors occurred, true otherwise.
-local function make_pass(make_cmd, pass, target, variables)
-   assert(type(pass) == "boolean")
-   assert(type(target) == "string")
-   assert(type(variables) == "table")
-
-   local assignments = {}
+local function make_pass(make_cmd: string, pass: boolean, target: string, variables: {string: string}): boolean, string, string
+   local assignments: {string} = {}
    for k,v in pairs(variables) do
       table.insert(assignments, k.."="..v)
    end
    if pass then
-      return fs.execute(make_cmd.." "..target, unpack(assignments))
+      return fs.execute(make_cmd.." "..target, table.unpack(assignments))
    else
       return true
    end
@@ -38,10 +49,9 @@ end
 -- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string): true if no errors occurred,
 -- nil and an error message otherwise.
-function make.run(rockspec, not_install)
-   assert(rockspec:type() == "rockspec")
+function make.run(rockspec: Rockspec, not_install: boolean): boolean, string, string
 
-   local build = rockspec.build
+   local build = rockspec.build as make.MakeBuild
 
    if build.build_pass == nil then build.build_pass = true end
    if build.install_pass == nil then build.install_pass = true end
@@ -64,13 +74,12 @@ function make.run(rockspec, not_install)
    end
 
    util.warn_if_not_used(build.build_variables, { CFLAGS=true }, "variable %s was not passed in build_variables")
-
    util.variable_substitutions(build.build_variables, rockspec.variables)
    util.variable_substitutions(build.install_variables, rockspec.variables)
 
    local auto_variables = { "CC" }
 
-   for _, variable in pairs(auto_variables) do
+   for _, variable in ipairs(auto_variables) do
       if not build.build_variables[variable] then
          build.build_variables[variable] = rockspec.variables[variable]
       end
