@@ -1,14 +1,19 @@
-local remove = {}
+
+local record remove
+end
 
 local search = require("luarocks.search")
 local deps = require("luarocks.deps")
 local fetch = require("luarocks.fetch")
 local repos = require("luarocks.repos")
+local repo_writer = require("luarocks.repo_writer")
 local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 local manif = require("luarocks.manif")
 local queries = require("luarocks.queries")
+
+local type Result = require("luarocks.core.types.result").Result
 
 --- Obtain a list of packages that depend on the given set of packages
 -- (where all packages of the set are versions of one program).
@@ -16,8 +21,8 @@ local queries = require("luarocks.queries")
 -- @param versions array of string: the versions to be deleted.
 -- @return array of string: an empty table if no packages depend on any
 -- of the given list, or an array of strings in "name/version" format.
-local function check_dependents(name, versions, deps_mode)
-   local dependents = {}
+local function check_dependents(name: string, versions: {string: {Result}}, deps_mode: string): {Result}
+   local dependents: {Result} = {}
 
    local skip_set = {}
    skip_set[name] = {}
@@ -33,7 +38,7 @@ local function check_dependents(name, versions, deps_mode)
       for rock_version, _ in pairs(rock_versions) do
          local rockspec, err = fetch.load_rockspec(path.rockspec_file(rock_name, rock_version))
          if rockspec then
-            local _, missing = deps.match_deps(rockspec.dependencies, rockspec.rocks_provided, skip_set, deps_mode)
+            local _, missing = deps.match_deps(rockspec.dependencies.queries, rockspec.rocks_provided, deps_mode, skip_set)
             if missing[name] then
                table.insert(dependents, { name = rock_name, version = rock_version })
             end
@@ -51,18 +56,18 @@ end
 -- "one" for the current default tree, "all" for all trees,
 -- "order" for all trees with priority >= the current default, "none" for no trees.
 -- @return boolean or (nil, string): true on success or nil and an error message.
-local function delete_versions(name, versions, deps_mode)
+local function delete_versions(name: string, versions: {string: any}, deps_mode: string): boolean, string
 
    for version, _ in pairs(versions) do
       util.printout("Removing "..name.." "..version.."...")
-      local ok, err = repos.delete_version(name, version, deps_mode)
+      local ok, err = repo_writer.delete_version(name, version, deps_mode)
       if not ok then return nil, err end
    end
 
    return true
 end
 
-function remove.remove_search_results(results, name, deps_mode, force, fast)
+function remove.remove_search_results(results: {string : {string : {Result}}}, name: string, deps_mode: string, force: boolean, fast: boolean): boolean, string
    local versions = results[name]
 
    local version = next(versions)
@@ -71,7 +76,7 @@ function remove.remove_search_results(results, name, deps_mode, force, fast)
    local dependents = {}
    if not fast then
       util.printout("Checking stability of dependencies in the absence of")
-      util.printout(name.." "..table.concat(util.keys(versions), ", ").."...")
+      util.printout(name.." "..table.concat((util.keys(versions) as {string | number}), ", ").."...")
       util.printout()
       dependents = check_dependents(name, versions, deps_mode)
    end
@@ -107,11 +112,11 @@ function remove.remove_search_results(results, name, deps_mode, force, fast)
    return true
 end
 
-function remove.remove_other_versions(name, version, force, fast)
+function remove.remove_other_versions(name: string, version: string, force: boolean, fast: boolean): boolean, string, string
    local results = {}
    local query = queries.new(name, nil, version, false, nil, "~=")
    search.local_manifest_search(results, cfg.rocks_dir, query)
-   local warn
+   local warn: string
    if results[name] then
       local ok, err = remove.remove_search_results(results, name, cfg.deps_mode, force, fast)
       if not ok then -- downgrade failure to a warning
