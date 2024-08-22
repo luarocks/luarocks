@@ -1,5 +1,6 @@
 
-local write_rockspec = {}
+local record write_rockspec
+end
 
 local builtin = require("luarocks.build.builtin")
 local cfg = require("luarocks.core.cfg")
@@ -10,6 +11,17 @@ local persist = require("luarocks.persist")
 local rockspecs = require("luarocks.rockspecs")
 local type_rockspec = require("luarocks.type.rockspec")
 local util = require("luarocks.util")
+
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
+
+local type BuiltinBuild = require("luarocks.core.types.build").BuiltinBuild
+
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
+local type Dependencies = require("luarocks.core.types.rockspec").Dependencies
 
 local lua_versions = {
    "5.1",
@@ -24,31 +36,31 @@ local lua_versions = {
    "5.1,5.2,5.3,5.4"
 }
 
-function write_rockspec.cmd_options(parser)
-   return parser:option("--output", "Write the rockspec with the given filename.\n"..
-         "If not given, a file is written in the current directory with a "..
-         "filename based on given name and version.")
-         :argname("<file>"),
-      parser:option("--license", 'A license string, such as "MIT/X11" or "GNU GPL v3".')
-         :argname("<string>"),
-      parser:option("--summary", "A short one-line description summary.")
-         :argname("<txt>"),
-      parser:option("--detailed", "A longer description string.")
-         :argname("<txt>"),
-      parser:option("--homepage", "Project homepage.")
-         :argname("<txt>"),
-      parser:option("--lua-versions", 'Supported Lua versions. Accepted values are: "'..
-         table.concat(lua_versions, '", "')..'".')
-         :argname("<ver>")
-         :choices(lua_versions),
-      parser:option("--rockspec-format", 'Rockspec format version, such as "1.0" or "1.1".')
-         :argname("<ver>"),
-      parser:option("--tag", "Tag to use. Will attempt to extract version number from it."),
-      parser:option("--lib", "A comma-separated list of libraries that C files need to link to.")
-         :argname("<libs>")
+function write_rockspec.cmd_options(parser: Parser)
+   parser:option("--output", "Write the rockspec with the given filename.\n"..
+      "If not given, a file is written in the current directory with a "..
+      "filename based on given name and version.")
+      :argname("<file>")
+   parser:option("--license", 'A license string, such as "MIT/X11" or "GNU GPL v3".')
+      :argname("<string>")
+   parser:option("--summary", "A short one-line description summary.")
+      :argname("<txt>")
+   parser:option("--detailed", "A longer description string.")
+      :argname("<txt>")
+   parser:option("--homepage", "Project homepage.")
+      :argname("<txt>")
+   parser:option("--lua-versions", 'Supported Lua versions. Accepted values are: "'..
+      table.concat(lua_versions, '", "')..'".')
+      :argname("<ver>")
+      :choices(lua_versions)
+   parser:option("--rockspec-format", 'Rockspec format version, such as "1.0" or "1.1".')
+      :argname("<ver>")
+   parser:option("--tag", "Tag to use. Will attempt to extract version number from it.")
+   parser:option("--lib", "A comma-separated list of libraries that C files need to link to.")
+      :argname("<libs>")
 end
 
-function write_rockspec.add_to_parser(parser)
+function write_rockspec.add_to_parser(parser: Parser)
    local cmd = parser:command("write_rockspec", [[
 This command writes an initial version of a rockspec file,
 based on a name, a version, and a location (an URL or a local path).
@@ -70,14 +82,14 @@ rockspec, and is not guaranteed to be complete or correct. ]], util.see_also())
    cmd:argument("location", "URL or path to the rock sources.")
       :args("?")
 
-   write_rockspec.cmd_options(cmd)
+   write_rockspec.cmd_options(cmd as Parser)
 end
 
-local function open_file(name)
+local function open_file(name: string): FILE, string, integer
    return io.open(dir.path(fs.current_dir(), name), "r")
 end
 
-local function fetch_url(rockspec)
+local function fetch_url(rockspec: Rockspec): boolean, string, string
    local file, temp_dir, err_code, err_file, err_temp_dir = fetch.fetch_sources(rockspec, false)
    if err_code == "source.dir" then
       file, temp_dir = err_file, err_temp_dir
@@ -117,9 +129,9 @@ local simple_scm_protocols = {
    ["hg+ssh"] = true,
 }
 
-local detect_url
+local detect_url: function(string): string
 do
-   local function detect_url_from_command(program, args, directory)
+   local function detect_url_from_command(program: string, args: string, directory: string): string
       local command = fs.Q(cfg.variables[program:upper()]).. " "..args
       local pipe = io.popen(fs.command_at(directory, fs.quiet_stderr(command)))
       if not pipe then return nil end
@@ -133,17 +145,17 @@ do
          url = program.."+"..url
       end
 
-      if simple_scm_protocols[dir.split_url(url)] then
+      if (simple_scm_protocols as {string: boolean})[dir.split_url(url)] then
          return url
       end
    end
 
-   local function detect_scm_url(directory)
+   local function detect_scm_url(directory: string): string
       return detect_url_from_command("git", "config --get remote.origin.url", directory) or
          detect_url_from_command("hg", "paths default", directory)
    end
 
-   detect_url = function(url_or_dir)
+   detect_url = function(url_or_dir: string): string
       if url_or_dir:match("://") then
          return url_or_dir
       else
@@ -152,13 +164,13 @@ do
    end
 end
 
-local function detect_homepage(url, homepage)
+local function detect_homepage(url: string, homepage: string): string
    if homepage then
       return homepage
    end
    local url_protocol, url_path = dir.split_url(url)
 
-   if simple_scm_protocols[url_protocol] then
+   if (simple_scm_protocols as {string: boolean})[url_protocol] then
       for _, domain in ipairs({"github.com", "bitbucket.org", "gitlab.com"}) do
          if util.starts_with(url_path, domain) then
             return "https://"..url_path:gsub("%.git$", "")
@@ -169,14 +181,14 @@ local function detect_homepage(url, homepage)
    return "*** please enter a project homepage ***"
 end
 
-local function detect_description()
+local function detect_description(): string, string
    local fd = open_file("README.md") or open_file("README")
    if not fd then return end
    local data = fd:read("*a")
    fd:close()
    local paragraph = data:match("\n\n([^%[].-)\n\n")
    if not paragraph then paragraph = data:match("\n\n(.*)") end
-   local summary, detailed
+   local summary, detailed: string, string
    if paragraph then
       detailed = paragraph
 
@@ -194,7 +206,7 @@ local licenses = {
    [49311] = "ISC",
 }
 
-local function detect_license(data)
+local function detect_license(data: string): string
    local strip_copyright = (data:gsub("^Copyright [^\n]*\n", ""))
    local sum = 0
    for i = 1, #strip_copyright do
@@ -206,7 +218,7 @@ local function detect_license(data)
    return licenses[sum]
 end
 
-local function check_license()
+local function check_license(): string, string
    local fd = open_file("COPYING") or open_file("LICENSE") or open_file("MIT-LICENSE.txt")
    if not fd then return nil end
    local data = fd:read("*a")
@@ -218,10 +230,10 @@ local function check_license()
    return nil, data
 end
 
-local function fill_as_builtin(rockspec, libs)
+local function fill_as_builtin(rockspec: Rockspec, libs: {string})
    rockspec.build.type = "builtin"
 
-   local incdirs, libdirs
+   local incdirs, libdirs: {string}, {string}
    if libs then
       incdirs, libdirs = {}, {}
       for _, lib in ipairs(libs) do
@@ -230,11 +242,10 @@ local function fill_as_builtin(rockspec, libs)
          libdirs[#libdirs+1] = "$("..upper.."_LIBDIR)"
       end
    end
-
-   rockspec.build.modules, rockspec.build.install, rockspec.build.copy_directories = builtin.autodetect_modules(libs, incdirs, libdirs)
+   (rockspec.build as BuiltinBuild).modules, rockspec.build.install, rockspec.build.copy_directories = builtin.autodetect_modules(libs, incdirs, libdirs)
 end
 
-local function rockspec_cleanup(rockspec)
+local function rockspec_cleanup(rockspec: Rockspec)
    rockspec.source.file = nil
    rockspec.source.protocol = nil
    rockspec.source.identifier = nil
@@ -246,21 +257,25 @@ local function rockspec_cleanup(rockspec)
    rockspec.format_is_at_least = nil
    rockspec.local_abs_filename = nil
    rockspec.rocks_provided = nil
-   for _, list in ipairs({"dependencies", "build_dependencies", "test_dependencies"}) do
-      if rockspec[list] and not next(rockspec[list]) then
-         rockspec[list] = nil
-      end
-   end
-   for _, list in ipairs({"dependencies", "build_dependencies", "test_dependencies"}) do
-      if rockspec[list] then
-         for i, entry in ipairs(rockspec[list]) do
-            rockspec[list][i] = tostring(entry)
+
+   local dep_lists: {string: Dependencies} = {
+      dependencies = rockspec.dependencies,
+      build_dependencies = rockspec.build_dependencies,
+      test_dependencies = rockspec.test_dependencies,
+   }
+
+   for name, data in pairs(dep_lists) do
+      if not next(data) then
+         (rockspec as {string: Dependencies})[name] = nil
+      else
+         for i, item in ipairs(data) do
+            data[i] = tostring(item)
          end
       end
    end
 end
 
-function write_rockspec.command(args)
+function write_rockspec.command(args: Args): boolean, string
    local name, version = args.name, args.version
    local location = args.location
 
@@ -321,7 +336,7 @@ function write_rockspec.command(args)
          license = args.license or "*** please specify a license ***",
       },
       dependencies = {
-         lua_version_dep[args.lua_versions],
+         (lua_version_dep as {string: string})[args.lua_versions],
       },
       build = {},
    })
@@ -359,7 +374,7 @@ function write_rockspec.command(args)
       local_dir = "."
    end
 
-   local libs = nil
+   local libs: {string} = nil
    if args.lib then
       libs = {}
       rockspec.external_dependencies = {}
@@ -396,7 +411,7 @@ function write_rockspec.command(args)
 
    rockspec_cleanup(rockspec)
 
-   persist.save_from_table(filename, rockspec, type_rockspec.order)
+   persist.save_from_table(filename, rockspec as PersistableTable, type_rockspec.order)
 
    util.printout()
    util.printout("Wrote template at "..filename.." -- you should now edit and finish it.")
