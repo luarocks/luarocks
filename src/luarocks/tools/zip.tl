@@ -1,27 +1,73 @@
 
 --- A Lua implementation of .zip and .gz file compression and decompression,
 -- using only lzlib or lua-lzib.
-local zip = {}
+local record zip
+   record ZipHandle
+      read: function(ZipHandle, ...: number | string): string...
+      seek: function(ZipHandle, ? string, ? integer): integer, string
+      write: function(ZipHandle, ...: string | number): ZipHandle, string
+      close:  function(ZipHandle): boolean, string, number
+   end
+
+   record LocalFileHeader
+      last_mod_file_time: integer
+      last_mod_file_date: integer
+      file_name_length: integer
+      extra_field_length: integer
+      file_name: string
+      external_attr: integer
+      crc32: integer
+      compressed_size: integer
+      compression_method: integer
+      uncompressed_size: integer
+      offset: integer
+      version_made_by: integer
+      version_needed: integer
+      bitflag: integer
+      last_mod_luatime: os.DateTable
+      file_comment_length: integer
+      disk_number_start: integer
+      internal_attr: integer
+      extra_field: string
+      file_comment: string
+   end
+
+   record Zip
+      in_open_file: boolean
+      add: function(Zip, string): boolean, string
+      close: function(Zip): boolean
+      close_file_in_zip: function(Zip): boolean
+      open_new_file_in_zip: function(Zip, string): boolean
+      write_file_in_zip: function(Zip, string): boolean
+      local_file_header: LocalFileHeader
+      data: string
+      ZipHandle: ZipHandle
+      files: {LocalFileHeader}
+   end
+end
 
 local zlib = require("zlib")
 local fs = require("luarocks.fs")
 local fun = require("luarocks.fun")
 local dir = require("luarocks.dir")
 
-local pack = table.pack or function(...) return { n = select("#", ...), ... } end
+local type Zip = zip.Zip
+local type LocalFileHeader = zip.LocalFileHeader
+local type ZipHandle = zip.ZipHandle
 
-local function shr(n, m)
+local function shr(n: integer, m: integer): integer
    return math.floor(n / 2^m)
 end
 
-local function shl(n, m)
-   return n * 2^m
-end
-local function lowbits(n, m)
-   return n % 2^m
+local function shl(n: integer, m: integer): integer 
+   return (n * 2^m) as integer
 end
 
-local function mode_to_windowbits(mode)
+local function lowbits(n: integer, m: integer): integer
+   return (n % 2^m) as integer
+end
+
+local function mode_to_windowbits(mode: string): integer
    if mode == "gzip" then
       return 31
    elseif mode == "zlib" then
@@ -33,47 +79,49 @@ end
 
 -- zlib module can be provided by both lzlib and lua-lzib packages.
 -- Create a compatibility layer.
-local zlib_compress, zlib_uncompress, zlib_crc32
+local zlib_compress: function(string, string): string
+local zlib_uncompress: function(string, string): string
+local zlib_crc32: function(string): integer
 if zlib._VERSION:match "^lua%-zlib" then
-   function zlib_compress(data, mode)
+   function zlib_compress(data: string, mode: string): string
       return (zlib.deflate(6, mode_to_windowbits(mode))(data, "finish"))
    end
 
-   function zlib_uncompress(data, mode)
+   function zlib_uncompress(data: string, mode: string): string
       return (zlib.inflate(mode_to_windowbits(mode))(data))
    end
 
-   function zlib_crc32(data)
+   function zlib_crc32(data: string): integer
       return zlib.crc32()(data)
    end
 elseif zlib._VERSION:match "^lzlib" then
-   function zlib_compress(data, mode)
+   function zlib_compress(data: string, mode: string): string
       return zlib.compress(data, -1, nil, mode_to_windowbits(mode))
    end
 
-   function zlib_uncompress(data, mode)
+   function zlib_uncompress(data: string, mode: string): string
       return zlib.decompress(data, mode_to_windowbits(mode))
    end
 
-   function zlib_crc32(data)
+   function zlib_crc32(data: string): integer
       return zlib.crc32(zlib.crc32(), data)
    end
 else
    error("unknown zlib library", 0)
 end
 
-local function number_to_lestring(number, nbytes)
+local function number_to_lestring(number: number, nbytes: number): string
    local out = {}
    for _ = 1, nbytes do
-      local byte = number % 256
+      local byte: integer = number as integer % 256 --! cast I don't like
       table.insert(out, string.char(byte))
       number = (number - byte) / 256
    end
    return table.concat(out)
 end
 
-local function lestring_to_number(str)
-   local n = 0
+local function lestring_to_number(str: string): integer
+   local n: number = 0
    local bytes = { string.byte(str, 1, #str) }
    for b = 1, #str do
       n = n + shl(bytes[b], (b-1)*8)
@@ -88,14 +136,14 @@ local END_OF_CENTRAL_DIR_SIGNATURE = number_to_lestring(0x06054b50, 4)
 
 --- Begin a new file to be stored inside the zipfile.
 -- @param self handle of the zipfile being written.
--- @param filename filenome of the file to be added to the zipfile.
+-- @param filename filename of the file to be added to the zipfile.
 -- @return true if succeeded, nil in case of failure.
-local function zipwriter_open_new_file_in_zip(self, filename)
+local function zipwriter_open_new_file_in_zip(self: Zip, filename: string): boolean
    if self.in_open_file then
       self:close_file_in_zip()
       return nil
    end
-   local lfh = {}
+   local lfh: LocalFileHeader = {}
    self.local_file_header = lfh
    lfh.last_mod_file_time = 0 -- TODO
    lfh.last_mod_file_date = 0 -- TODO
@@ -111,7 +159,7 @@ end
 -- @param self handle of the zipfile being written.
 -- @param data string containing full contents of the file.
 -- @return true if succeeded, nil in case of failure.
-local function zipwriter_write_file_in_zip(self, data)
+local function zipwriter_write_file_in_zip(self: Zip, data: string): boolean
    if not self.in_open_file then
       return nil
    end
@@ -127,8 +175,8 @@ end
 --- Complete the writing of a file stored in the zipfile.
 -- @param self handle of the zipfile being written.
 -- @return true if succeeded, nil in case of failure.
-local function zipwriter_close_file_in_zip(self)
-   local zh = self.ziphandle
+local function zipwriter_close_file_in_zip(self: Zip): boolean
+   local zh = self.ZipHandle
 
    if not self.in_open_file then
       return nil
@@ -167,9 +215,9 @@ end
 
 -- @return boolean or (boolean, string): true on success,
 -- false and an error message on failure.
-local function zipwriter_add(self, file)
-   local fin
-   local ok, err = self:open_new_file_in_zip(file)
+local function zipwriter_add(self: Zip, file: string): boolean, string
+   local fin: FILE
+   local ok, err: boolean, string = self:open_new_file_in_zip(file)
    if not ok then
       err = "error in opening "..file.." in zipfile"
    else
@@ -206,8 +254,8 @@ end
 --- Complete the writing of the zipfile.
 -- @param self handle of the zipfile being written.
 -- @return true if succeeded, nil in case of failure.
-local function zipwriter_close(self)
-   local zh = self.ziphandle
+local function zipwriter_close(self: Zip): boolean
+   local zh = self.ZipHandle
 
    local central_directory_offset = zh:seek()
 
@@ -252,12 +300,12 @@ end
 --- Return a zip handle open for writing.
 -- @param name filename of the zipfile to be created.
 -- @return a zip handle, or nil in case of error.
-function zip.new_zipwriter(name)
+function zip.new_zipwriter(name: string): Zip
 
-   local zw = {}
+   local zw: Zip = {}
 
-   zw.ziphandle = io.open(fs.absolute_name(name), "wb")
-   if not zw.ziphandle then
+   zw.ZipHandle = io.open(fs.absolute_name(name), "wb") as ZipHandle
+   if not zw.ZipHandle then
       return nil
    end
    zw.files = {}
@@ -278,18 +326,18 @@ end
 -- additional arguments.
 -- @return boolean or (boolean, string): true on success,
 -- false and an error message on failure.
-function zip.zip(zipfile, ...)
+function zip.zip(zipfile: string, ...: string): boolean, string
    local zw = zip.new_zipwriter(zipfile)
    if not zw then
       return nil, "error opening "..zipfile
    end
 
-   local args = pack(...)
-   local ok, err
+   local args = table.pack(...)
+   local ok, err: boolean, string
    for i=1, args.n do
       local file = args[i]
       if fs.is_dir(file) then
-         for _, entry in pairs(fs.find(file)) do
+         for _, entry in ipairs(fs.find(file)) do
             local fullname = dir.path(file, entry)
             if fs.is_file(fullname) then
                ok, err = zw:add(fullname)
@@ -307,8 +355,8 @@ function zip.zip(zipfile, ...)
 end
 
 
-local function ziptime_to_luatime(ztime, zdate)
-   local date = {
+local function ziptime_to_luatime(ztime: integer, zdate: integer): os.DateTable
+   local date: os.DateTable = {
       year = shr(zdate, 9) + 1980,
       month = shr(lowbits(zdate, 9), 5),
       day = lowbits(zdate, 5),
@@ -323,7 +371,7 @@ local function ziptime_to_luatime(ztime, zdate)
    return date
 end
 
-local function read_file_in_zip(zh, cdr)
+local function read_file_in_zip(zh: FILE, cdr: LocalFileHeader): string, string
    local sig = zh:read(4)
    if sig ~= LOCAL_FILE_HEADER_SIGNATURE then
       return nil, "failed reading Local File Header signature"
@@ -339,7 +387,7 @@ local function read_file_in_zip(zh, cdr)
 
    local data = zh:read(cdr.compressed_size)
 
-   local uncompressed
+   local uncompressed: string
    if cdr.compression_method == 8 then
       uncompressed = zlib_uncompress(data, "raw")
    elseif cdr.compression_method == 0 then
@@ -358,10 +406,10 @@ local function read_file_in_zip(zh, cdr)
    return uncompressed
 end
 
-local function process_end_of_central_dir(zh)
-   local at, err = zh:seek("end", -22)
+local function process_end_of_central_dir(zh: ZipHandle): number, integer | string
+   local at, errend = zh:seek("end", -22)
    if not at then
-      return nil, err
+      return nil, errend
    end
 
    while true do
@@ -370,7 +418,7 @@ local function process_end_of_central_dir(zh)
          break
       end
       at = at - 1
-      local at1, err = zh:seek("set", at)
+      local at1 = zh:seek("set", at)
       if at1 ~= at then
          return nil, "Could not find End of Central Directory signature"
       end
@@ -392,9 +440,9 @@ local function process_end_of_central_dir(zh)
    return central_directory_entries, central_directory_offset
 end
 
-local function process_central_dir(zh, cd_entries)
+local function process_central_dir(zh: ZipHandle, cd_entries: number): {LocalFileHeader}, string
 
-   local files = {}
+   local files: {LocalFileHeader} = {}
 
    for i = 1, cd_entries do
       local sig = zh:read(4)
@@ -402,8 +450,8 @@ local function process_central_dir(zh, cd_entries)
          return nil, "failed reading Central Directory signature"
       end
 
-      local cdr = {}
-      files[i] = cdr
+      local cdr: LocalFileHeader = {}
+      files[i as integer] = cdr
 
       cdr.version_made_by = lestring_to_number(zh:read(2))
       cdr.version_needed = lestring_to_number(zh:read(2))
@@ -433,50 +481,50 @@ end
 -- @param zipfile string: pathname of .zip archive to be created.
 -- @return boolean or (boolean, string): true on success,
 -- false and an error message on failure.
-function zip.unzip(zipfile)
+function zip.unzip(zipfile: string): boolean, string
    zipfile = fs.absolute_name(zipfile)
-   local zh, err = io.open(zipfile, "rb")
+   local zh, erropen = io.open(zipfile, "rb")
    if not zh then
-      return nil, err
+      return nil, erropen
    end
 
-   local cd_entries, cd_offset = process_end_of_central_dir(zh)
-   if not cd_entries then
+   local cd_entries, cd_offset = process_end_of_central_dir(zh as ZipHandle)
+   if cd_offset is string then
       return nil, cd_offset
    end
 
-   local ok, err = zh:seek("set", cd_offset)
-   if not ok then
-      return nil, err
+   local okseek, errseek = zh:seek("set", cd_offset)
+   if not okseek then
+      return nil, errseek
    end
 
-   local files, err = process_central_dir(zh, cd_entries)
+   local files, errproc = process_central_dir(zh as ZipHandle, cd_entries)
    if not files then
-      return nil, err
+      return nil, errproc
    end
 
    for _, cdr in ipairs(files) do
       local file = cdr.file_name
       if file:sub(#file) == "/" then
-         local ok, err = fs.make_dir(dir.path(fs.current_dir(), file))
-         if not ok then
-            return nil, err
+         local okmake, errmake = fs.make_dir(dir.path(fs.current_dir(), file))
+         if not okmake then
+            return nil, errmake
          end
       else
          local base = dir.dir_name(file)
          if base ~= "" then
             base = dir.path(fs.current_dir(), base)
             if not fs.is_dir(base) then
-               local ok, err = fs.make_dir(base)
-               if not ok then
-                  return nil, err
+               local okmake, errmake = fs.make_dir(base)
+               if not okmake then
+                  return nil, errmake
                end
             end
          end
 
-         local ok, err = zh:seek("set", cdr.offset)
-         if not ok then
-            return nil, err
+         local okseek2, errseek2 = zh:seek("set", cdr.offset)
+         if not okseek2 then
+            return nil, errseek2
          end
 
          local contents, err = read_file_in_zip(zh, cdr)
@@ -484,10 +532,10 @@ function zip.unzip(zipfile)
             return nil, err
          end
          local pathname = dir.path(fs.current_dir(), file)
-         local wf, err = io.open(pathname, "wb")
+         local wf, erropen2 = io.open(pathname, "wb")
          if not wf then
             zh:close()
-            return nil, err
+            return nil, erropen2
          end
          wf:write(contents)
          wf:close()
@@ -504,9 +552,7 @@ function zip.unzip(zipfile)
    return true
 end
 
-function zip.gzip(input_filename, output_filename)
-   assert(type(input_filename) == "string")
-   assert(output_filename == nil or type(output_filename) == "string")
+function zip.gzip(input_filename: string, output_filename?: string): boolean, string
 
    if not output_filename then
       output_filename = input_filename .. ".gz"
@@ -516,9 +562,7 @@ function zip.gzip(input_filename, output_filename)
    return fs.filter_file(fn, input_filename, output_filename)
 end
 
-function zip.gunzip(input_filename, output_filename)
-   assert(type(input_filename) == "string")
-   assert(output_filename == nil or type(output_filename) == "string")
+function zip.gunzip(input_filename: string, output_filename?: string): boolean, string
 
    if not output_filename then
       output_filename = input_filename:gsub("%.gz$", "")
