@@ -7,9 +7,12 @@
 -- It also handles scp-style ssh urls: git@example.com:path/foo.git,
 -- but you have to prepend the "git+ssh://" and why not use the "newer"
 -- style anyway?
-local git_ssh = {}
+local record git_ssh
+end
 
 local git = require("luarocks.fetch.git")
+
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 --- Fetch sources for building a rock from a local Git repository.
 -- @param rockspec table: The rockspec table
@@ -18,7 +21,7 @@ local git = require("luarocks.fetch.git")
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function git_ssh.get_sources(rockspec, extract, dest_dir)
+function git_ssh.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string
    rockspec.source.url = rockspec.source.url:gsub("^git.", "")
 
    -- Handle old-style scp-like git ssh urls
