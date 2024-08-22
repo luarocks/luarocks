@@ -1,7 +1,8 @@
 
 --- Module implementing the luarocks-admin "make_manifest" command.
 -- Compile a manifest file for a repository.
-local make_manifest = {}
+local record make_manifest
+end
 
 local writer = require("luarocks.manif.writer")
 local index = require("luarocks.admin.index")
@@ -11,7 +12,11 @@ local deps = require("luarocks.deps")
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 
-function make_manifest.add_to_parser(parser)
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+function make_manifest.add_to_parser(parser: Parser)
    local cmd = parser:command("make_manifest", "Compile a manifest file for a repository.", util.see_also())
 
    cmd:argument("repository", "Local repository pathname.")
@@ -19,13 +24,13 @@ function make_manifest.add_to_parser(parser)
 
    cmd:flag("--local-tree", "If given, do not write versioned versions of the manifest file.\n"..
       "Use this when rebuilding the manifest of a local rocks tree.")
-   util.deps_mode_option(cmd)
+   util.deps_mode_option(cmd as Parser)
 end
 
 --- Driver function for "make_manifest" command.
 -- @return boolean or (nil, string): True if manifest was generated,
 -- or nil and an error message.
-function make_manifest.command(args)
+function make_manifest.command(args: Args): boolean, string
    local repo = args.repository or cfg.rocks_dir
 
    util.printout("Making manifest for "..repo)
