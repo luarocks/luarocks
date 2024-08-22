@@ -1,7 +1,8 @@
 
 --- Module implementing the LuaRocks "search" command.
 -- Queries LuaRocks servers.
-local cmd_search = {}
+local record cmd_search
+end
 
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
@@ -9,7 +10,13 @@ local search = require("luarocks.search")
 local queries = require("luarocks.queries")
 local results = require("luarocks.results")
 
-function cmd_search.add_to_parser(parser)
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+local type Result = require("luarocks.core.types.result").Result
+
+function cmd_search.add_to_parser(parser: Parser)
    local cmd = parser:command("search", "Query the LuaRocks servers.", util.see_also())
 
    cmd:argument("name", "Name of the rock to search for.")
@@ -33,7 +40,7 @@ end
 -- @param result_tree table: A search results table.
 -- @return (table, table): Two tables, one for source and one for binary
 -- results.
-local function split_source_and_binary_results(result_tree)
+local function split_source_and_binary_results(result_tree: {string: {string: {Result}}}): {string : {string : {Result}}}, {string : {string : {Result}}}
    local sources, binaries = {}, {}
    for name, versions in pairs(result_tree) do
       for version, repositories in pairs(versions) do
@@ -53,7 +60,7 @@ end
 --- Driver function for "search" command.
 -- @return boolean or (nil, string): True if build was successful; nil and an
 -- error message otherwise.
-function cmd_search.command(args)
+function cmd_search.command(args: Args): boolean, string
    local name = args.name
 
    if args.all then
@@ -65,7 +72,7 @@ function cmd_search.command(args)
    end
 
    local query = queries.new(name, args.namespace, args.version, true)
-   local result_tree, err = search.search_repos(query)
+   local result_tree = search.search_repos(query)
    local porcelain = args.porcelain
    local full_name = util.format_rock_name(name, args.namespace, args.version)
    util.title(full_name .. " - Search results for Lua "..cfg.lua_version..":", porcelain, "=")
