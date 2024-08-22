@@ -1,9 +1,12 @@
 
 --- Fetch back-end for retrieving sources from Surround SCM Server
-local sscm = {}
+local record sscm
+end
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
+
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 --- Download sources via Surround SCM Server for building a rock.
 -- @param rockspec table: The rockspec table
@@ -12,9 +15,7 @@ local dir = require("luarocks.dir")
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function sscm.get_sources(rockspec, extract, dest_dir)
-   assert(rockspec:type() == "rockspec")
-   assert(type(dest_dir) == "string" or not dest_dir)
+function sscm.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string
 
    local sscm_cmd = rockspec.variables.SSCM
    local module = rockspec.source.module or dir.base_name(rockspec.source.url)
@@ -23,7 +24,7 @@ function sscm.get_sources(rockspec, extract, dest_dir)
       return nil, "Error retrieving branch and repository from rockspec."
    end
    -- Search for working directory.
-   local working_dir
+   local working_dir: string
    local tmp = io.popen(string.format(sscm_cmd..[[ property "/" -d -b%s -p%s]], branch, repository))
    for line in tmp:lines() do
       --%c because a chr(13) comes in the end.
