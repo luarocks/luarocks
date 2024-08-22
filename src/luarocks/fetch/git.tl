@@ -1,20 +1,23 @@
 
 --- Fetch back-end for retrieving sources from GIT.
-local git = {}
+local record git
 
-local unpack = unpack or table.unpack
+end
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local vers = require("luarocks.core.vers")
 local util = require("luarocks.util")
 
-local cached_git_version
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
+local type Version = require("luarocks.core.types.version").Version
+
+local cached_git_version: Version
 
 --- Get git version.
 -- @param git_cmd string: name of git command.
 -- @return table: git version as returned by luarocks.core.vers.parse_version.
-local function git_version(git_cmd)
+local function git_version(git_cmd: string): Version
    if not cached_git_version then
       local version_line = io.popen(fs.Q(git_cmd)..' --version'):read()
       local version_string = version_line:match('%d-%.%d+%.?%d*')
@@ -28,7 +31,7 @@ end
 -- @param git_cmd string: name of git command.
 -- @param version string: required version.
 -- @return boolean: true if git matches version or is newer, false otherwise.
-local function git_is_at_least(git_cmd, version)
+local function git_is_at_least(git_cmd: string, version: string): boolean
    return git_version(git_cmd) >= vers.parse_version(version)
 end
 
@@ -38,7 +41,7 @@ end
 -- given tag.
 -- @param git_cmd string: name of git command.
 -- @return boolean: Whether Git can clone by tag.
-local function git_can_clone_by_tag(git_cmd)
+local function git_can_clone_by_tag(git_cmd?: string): boolean
    return git_is_at_least(git_cmd, "1.7.10")
 end
 
@@ -46,18 +49,18 @@ end
 -- submodules with large history.
 -- @param git_cmd string: name of git command.
 -- @return boolean: Whether Git can fetch submodules shallowly.
-local function git_supports_shallow_submodules(git_cmd)
+local function git_supports_shallow_submodules(git_cmd: string): boolean
    return git_is_at_least(git_cmd, "1.8.4")
 end
 
 --- Git >= 2.10 can fetch submodules shallowly according to .gitmodules configuration, allowing more granularity.
 -- @param git_cmd string: name of git command.
 -- @return boolean: Whether Git can fetch submodules shallowly according to .gitmodules.
-local function git_supports_shallow_recommendations(git_cmd)
+local function git_supports_shallow_recommendations(git_cmd: string): boolean
    return git_is_at_least(git_cmd, "2.10.0")
 end
 
-local function git_identifier(git_cmd, ver)
+local function git_identifier(git_cmd: string, ver: string): string
    if not (ver:match("^dev%-%d+$") or ver:match("^scm%-%d+$")) then
       return nil
    end
@@ -70,7 +73,7 @@ local function git_identifier(git_cmd, ver)
    if not date_hash then
       return nil
    end
-   local date, time, tz, hash = date_hash:match("([^%s]+) ([^%s]+) ([^%s]+)_([^%s]+)")
+   local date, time, _tz, hash = date_hash:match("([^%s]+) ([^%s]+) ([^%s]+)_([^%s]+)")
    date = date:gsub("%-", "")
    time = time:gsub(":", "")
    return date .. "." .. time .. "." .. hash
@@ -83,9 +86,7 @@ end
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function git.get_sources(rockspec, extract, dest_dir, depth)
-   assert(rockspec:type() == "rockspec")
-   assert(type(dest_dir) == "string" or not dest_dir)
+function git.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string, depth?: string): string, string
 
    local git_cmd = rockspec.variables.GIT
    local name_version = rockspec.name .. "-" .. rockspec.version
@@ -93,12 +94,12 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
    -- Strip off .git from base name if present
    module = module:gsub("%.git$", "")
 
-   local ok, err_msg = fs.is_tool_available(git_cmd, "Git")
-   if not ok then
+   local ok_available, err_msg = fs.is_tool_available(git_cmd, "Git")
+   if not ok_available then
       return nil, err_msg
    end
 
-   local store_dir
+   local store_dir: string
    if not dest_dir then
       store_dir = fs.make_temp_dir(name_version)
       if not store_dir then
@@ -124,7 +125,7 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
          table.insert(command, 3, "--branch=" .. tag_or_branch)
       end
    end
-   if not fs.execute(unpack(command)) then
+   if not fs.execute(table.unpack(command)) then
       return nil, "Failed cloning git repository."
    end
    ok, err = fs.change_dir(module)
@@ -146,7 +147,7 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
          table.insert(command, 5, "--depth=1")
       end
 
-      if not fs.execute(unpack(command)) then
+      if not fs.execute(table.unpack(command)) then
          return nil, 'Failed to fetch submodules.'
       end
    end
