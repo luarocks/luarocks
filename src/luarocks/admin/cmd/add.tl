@@ -1,7 +1,8 @@
 
 --- Module implementing the luarocks-admin "add" command.
 -- Adds a rock or rockspec to a rocks server.
-local add = {}
+local record add
+end
 
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
@@ -11,10 +12,14 @@ local fs = require("luarocks.fs")
 local cache = require("luarocks.admin.cache")
 local index = require("luarocks.admin.index")
 
-function add.add_to_parser(parser)
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+function add.add_to_parser(parser: Parser)
    local cmd = parser:command("add", "Add a rock or rockspec to a rocks server.", util.see_also())
 
-   cmd:argument("rock", "A local rockspec or rock file.")
+   cmd:argument("rocks", "A local rockspec or rock file.")
       :args("+")
 
    cmd:option("--server", "The server to use. If not given, the default server "..
@@ -35,11 +40,7 @@ local function zip_manifests()
    end
 end
 
-local function add_files_to_server(refresh, rockfiles, server, upload_server, do_index)
-   assert(type(refresh) == "boolean" or not refresh)
-   assert(type(rockfiles) == "table")
-   assert(type(server) == "string")
-   assert(type(upload_server) == "table" or not upload_server)
+local function add_files_to_server(refresh: boolean, rockfiles: {string}, server: string, upload_server: {string: string}, do_index: boolean): boolean, string, string
 
    local download_url, login_url = cache.get_server_urls(server, upload_server)
    local at = fs.current_dir()
@@ -107,7 +108,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
 
    -- TODO abstract away explicit 'curl' call
 
-   local cmd
+   local cmd: string
    if protocol == "rsync" then
       local srv, path = server_path:match("([^/]+)(/.+)")
       cmd = cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..local_cache.."/ "..user.."@"..srv..":"..path.."/"
@@ -124,10 +125,10 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
    return fs.execute(cmd)
 end
 
-function add.command(args)
-   local server, server_table = cache.get_upload_server(args.add_server or args.server)
-   if not server then return nil, server_table end
-   return add_files_to_server(not args.no_refresh, args.rock, server, server_table, args.index)
+function add.command(args: Args): boolean, string, string --!
+   local server, server_table, err = cache.get_upload_server(args.add_server or args.server)
+   if not server then return nil, err end
+   return add_files_to_server(not args.no_refresh, args.rocks, server, server_table, args.index)
 end
 
 
