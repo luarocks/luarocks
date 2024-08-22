@@ -1,13 +1,20 @@
 
 --- A builtin build system: back-end to provide a portable way of building C-based Lua modules.
-local builtin = {}
+local record builtin
+   skip_lua_inc_lib_check: boolean
+end
+
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
+
+local type BuiltinBuild = require("luarocks.core.types.build").BuiltinBuild
+local type Build = require("luarocks.core.types.build").Build
+local type Module = BuiltinBuild.Module
 
 -- This build driver checks LUA_INCDIR and LUA_LIBDIR on demand,
 -- so that pure-Lua rocks don't need to have development headers
 -- installed.
 builtin.skip_lua_inc_lib_check = true
 
-local unpack = unpack or table.unpack
 local dir_sep = package.config:sub(1, 1)
 
 local fs = require("luarocks.fs")
@@ -17,13 +24,13 @@ local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local deps = require("luarocks.deps")
 
-local function autoextract_libs(external_dependencies, variables)
+local function autoextract_libs(external_dependencies: {string: {string: string}}, variables: {string: string}): {string}, {string}, {string}
    if not external_dependencies then
       return nil, nil, nil
    end
-   local libs = {}
-   local incdirs = {}
-   local libdirs = {}
+   local libs: {string} = {}
+   local incdirs: {string} = {}
+   local libdirs: {string} = {}
    for name, data in pairs(external_dependencies) do
       if data.library then
          table.insert(libs, data.library)
@@ -35,7 +42,7 @@ local function autoextract_libs(external_dependencies, variables)
 end
 
 do
-   local function get_cmod_name(file)
+   local function get_cmod_name(file: string): string
       local fd = io.open(dir.path(fs.current_dir(), file), "r")
       if not fd then return nil end
       local data = fd:read("*a")
@@ -43,7 +50,7 @@ do
       return (data:match("int%s+luaopen_([a-zA-Z0-9_]+)"))
    end
 
-   local skiplist = {
+   local skiplist: {string: boolean} = {
       ["spec"] = true,
       [".luarocks"] = true,
       ["lua_modules"] = true,
@@ -51,10 +58,10 @@ do
       ["tests.lua"] = true,
    }
 
-   function builtin.autodetect_modules(libs, incdirs, libdirs)
-      local modules = {}
-      local install
-      local copy_directories
+   function builtin.autodetect_modules(libs: {string}, incdirs: {string}, libdirs: {string}):  {string : string | Module}, Build.Install, {string}
+      local modules: {string: (string | Module)} = {}
+      local install: Build.Install
+      local copy_directories: {string}
 
       local prefix = ""
       for _, parent in ipairs({"src", "lua", "lib"}) do
@@ -74,7 +81,7 @@ do
             else
                local cmod = file:match("(.*)%.c$")
                if cmod then
-                  local modname = get_cmod_name(file) or path.path_to_module(file:gsub("%.c$", ".lua"))
+                  local modname = get_cmod_name(file) or path.path_to_module((file:gsub("%.c$", ".lua")))
                   modules[modname] = {
                      sources = prefix..file,
                      libraries = libs,
@@ -95,7 +102,7 @@ do
       if bindir then
          install = { bin = {} }
          for _, file in ipairs(fs.list_dir(bindir)) do
-            table.insert(install.bin, dir.path(bindir, file))
+            table.insert((install.bin as {string}), dir.path(bindir, file))
          end
       end
 
@@ -115,7 +122,7 @@ end
 --- Run a command displaying its execution on standard output.
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
-local function execute(...)
+local function execute(...: string): boolean, string, string
    io.stdout:write(table.concat({...}, " ").."\n")
    return fs.execute(...)
 end
@@ -124,11 +131,12 @@ end
 -- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string): true if no errors occurred,
 -- nil and an error message otherwise.
-function builtin.run(rockspec, no_install)
-   assert(rockspec:type() == "rockspec")
-   local compile_object, compile_library, compile_static_library
+function builtin.run(rockspec: Rockspec, no_install: boolean): boolean, string, string
+   local compile_object: function(string, string, {string}, {string}): boolean, string, string
+   local compile_library: function(string, {string}, {string}, {string}, string): boolean, string, string
+   local  compile_static_library: function(string, {string}, {string}, {string}, string): boolean, string, string
 
-   local build = rockspec.build
+   local build = rockspec.build as BuiltinBuild
    local variables = rockspec.variables
    local checked_lua_h = false
 
@@ -136,9 +144,9 @@ function builtin.run(rockspec, no_install)
       variables[var] = variables[var] or os.getenv(var) or ""
    end
 
-   local function add_flags(extras, flag, flags)
+   local function add_flags(extras: {string}, flag: string, flags: {string})
       if flags then
-         if type(flags) ~= "table" then
+         if not flags is {string} then
             flags = { tostring(flags) }
          end
          util.variable_substitutions(flags, variables)
@@ -149,14 +157,14 @@ function builtin.run(rockspec, no_install)
    end
 
    if cfg.is_platform("mingw32") then
-      compile_object = function(object, source, defines, incdirs)
+      compile_object = function(object: string, source: string, defines: {string}, incdirs: {string}): boolean, string, string
          local extras = {}
          add_flags(extras, "-D%s", defines)
          add_flags(extras, "-I%s", incdirs)
-         return execute(variables.CC.." "..variables.CFLAGS, "-c", "-o", object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
+         return execute(variables.CC.." "..variables.CFLAGS, "-c", "-o", object, "-I"..variables.LUA_INCDIR, source, table.unpack(extras))
       end
-      compile_library = function(library, objects, libraries, libdirs, name)
-         local extras = { unpack(objects) }
+      compile_library = function(library: string, objects: {string}, libraries: {string}, libdirs: {string}, name: string): boolean, string, string
+         local extras = { table.unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
          add_flags(extras, "-l%s", libraries)
          extras[#extras+1] = dir.path(variables.LUA_LIBDIR, variables.LUALIB)
@@ -169,7 +177,7 @@ function builtin.run(rockspec, no_install)
             extras[#extras+1] = "-l" .. (variables.MSVCRT or "m")
          end
 
-         local ok = execute(variables.LD.." "..variables.LDFLAGS.." "..variables.LIBFLAG, "-o", library, unpack(extras))
+         local ok = execute(variables.LD.." "..variables.LDFLAGS.." "..variables.LIBFLAG, "-o", library, table.unpack(extras))
          return ok
       end
       --[[ TODO disable static libs until we fix the conflict in the manifest, which will take extending the manifest format.
@@ -182,14 +190,14 @@ function builtin.run(rockspec, no_install)
       end
       ]]
    elseif cfg.is_platform("win32") then
-      compile_object = function(object, source, defines, incdirs)
+      compile_object = function(object: string, source: string, defines: {string}, incdirs: {string}): boolean, string, string
          local extras = {}
          add_flags(extras, "-D%s", defines)
          add_flags(extras, "-I%s", incdirs)
-         return execute(variables.CC.." "..variables.CFLAGS, "-c", "-Fo"..object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
+         return execute(variables.CC.." "..variables.CFLAGS, "-c", "-Fo"..object, "-I"..variables.LUA_INCDIR, source, table.unpack(extras))
       end
-      compile_library = function(library, objects, libraries, libdirs, name)
-         local extras = { unpack(objects) }
+      compile_library = function(library: string, objects: {string}, libraries: {string}, libdirs: {string}, name: string): boolean, string, string
+         local extras = { table.unpack(objects) }
          add_flags(extras, "-libpath:%s", libdirs)
          add_flags(extras, "%s.lib", libraries)
          local basename = dir.base_name(library):gsub(".[^.]*$", "")
@@ -200,9 +208,9 @@ function builtin.run(rockspec, no_install)
          def:write("EXPORTS\n")
          def:write("luaopen_"..exported_name.."\n")
          def:close()
-         local ok = execute(variables.LD, "-dll", "-def:"..deffile, "-out:"..library, dir.path(variables.LUA_LIBDIR, variables.LUALIB), unpack(extras))
+         local ok = execute(variables.LD, "-dll", "-def:"..deffile, "-out:"..library, dir.path(variables.LUA_LIBDIR, variables.LUALIB), table.unpack(extras))
          local basedir = ""
-         if name:find("%.") ~= nil then
+         if name:find("%.") then
             basedir = name:gsub("%.%w+$", "\\")
             basedir = basedir:gsub("%.", "\\")
          end
@@ -220,14 +228,14 @@ function builtin.run(rockspec, no_install)
       end
       ]]
    else
-      compile_object = function(object, source, defines, incdirs)
+      compile_object = function(object: string, source: string, defines: {string}, incdirs: {string}): boolean, string, string
          local extras = {}
          add_flags(extras, "-D%s", defines)
          add_flags(extras, "-I%s", incdirs)
-         return execute(variables.CC.." "..variables.CFLAGS, "-I"..variables.LUA_INCDIR, "-c", source, "-o", object, unpack(extras))
+         return execute(variables.CC.." "..variables.CFLAGS, "-I"..variables.LUA_INCDIR, "-c", source, "-o", object, table.unpack(extras))
       end
-      compile_library = function (library, objects, libraries, libdirs)
-         local extras = { unpack(objects) }
+      compile_library = function (library: string, objects: {string}, libraries: {string}, libdirs: {string}): boolean, string, string
+         local extras = { table.unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
          if cfg.gcc_rpath then
             add_flags(extras, "-Wl,-rpath,%s", libdirs)
@@ -237,10 +245,10 @@ function builtin.run(rockspec, no_install)
             extras[#extras+1] = "-L"..variables.LUA_LIBDIR
             extras[#extras+1] = "-llua"
          end
-         return execute(variables.LD.." "..variables.LDFLAGS.." "..variables.LIBFLAG, "-o", library, unpack(extras))
+         return execute(variables.LD.." "..variables.LDFLAGS.." "..variables.LIBFLAG, "-o", library, table.unpack(extras))
       end
-      compile_static_library = function(library, objects, libraries, libdirs, name)  -- luacheck: ignore 211
-         local ok = execute(variables.AR, "rc", library, unpack(objects))
+      compile_static_library = function(library: string, objects: {string}, libraries: {string}, libdirs: {string}, name: string): boolean, string, string  -- luacheck: ignore 211
+         local ok = execute(variables.AR, "rc", library, table.unpack(objects))
          if ok then
             ok = execute(variables.RANLIB, library)
          end
@@ -248,7 +256,7 @@ function builtin.run(rockspec, no_install)
       end
    end
 
-   local ok, err
+   local ok, err: boolean, string
    local lua_modules = {}
    local lib_modules = {}
    local luadir = path.lua_dir(rockspec.name, rockspec.version)
@@ -258,7 +266,7 @@ function builtin.run(rockspec, no_install)
 
    if not build.modules then
       if rockspec:format_is_at_least("3.0") then
-         local install, copy_directories
+         local install, copy_directories: Build.Install, {string}
          build.modules, install, copy_directories = builtin.autodetect_modules(autolibs, autoincdirs, autolibdirs)
          build.install = build.install or install
          build.copy_directories = build.copy_directories or copy_directories
@@ -267,10 +275,10 @@ function builtin.run(rockspec, no_install)
       end
    end
 
-   local compile_temp_dir
+   local compile_temp_dir: string
 
    local mkdir_cache = {}
-   local function cached_make_dir(name)
+   local function cached_make_dir(name: string): boolean, string
       if name == "" or mkdir_cache[name] then
          return true
       end
@@ -280,7 +288,7 @@ function builtin.run(rockspec, no_install)
 
    for name, info in pairs(build.modules) do
       local moddir = path.module_to_path(name)
-      if type(info) == "string" then
+      if info is string then
          local ext = info:match("%.([^.]+)$")
          if ext == "lua" then
             local filename = dir.base_name(info)
@@ -296,7 +304,7 @@ function builtin.run(rockspec, no_install)
             info = {info}
          end
       end
-      if type(info) == "table" then
+      if info is Module then
          if not checked_lua_h then
             local ok, err, errcode = deps.check_lua_incdir(rockspec.variables)
             if not ok then
@@ -314,12 +322,12 @@ function builtin.run(rockspec, no_install)
          local objects = {}
          local sources = info.sources
          if info[1] then sources = info end
-         if type(sources) == "string" then sources = {sources} end
-         if type(sources) ~= "table" then
+         if sources is string then sources = {sources} end
+         if not sources is {string} then
             return nil, "error in rockspec: module '" .. name .. "' entry has no 'sources' list"
          end
          for _, source in ipairs(sources) do
-            if type(source) ~= "string" then
+            if not source is string then
                return nil, "error in rockspec: module '" .. name .. "' does not specify source correctly."
             end
             local object = source:gsub("%.[^.]*$", "."..cfg.obj_extension)
@@ -348,7 +356,7 @@ function builtin.run(rockspec, no_install)
          cached_make_dir(build_dir)
 
          lib_modules[build_name] = dir.path(libdir, module_name)
-         ok = compile_library(build_name, objects, info.libraries, info.libdirs or autolibdirs, name)
+         ok = compile_library(build_name, objects, info.libraries as {string}, info.libdirs or autolibdirs, name)
          if not ok then
             return nil, "Failed compiling module "..module_name
          end
