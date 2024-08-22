@@ -1,7 +1,8 @@
 
 --- Module implementing the LuaRocks "doc" command.
 -- Shows documentation for an installed rock.
-local doc = {}
+local record doc
+end
 
 local util = require("luarocks.util")
 local queries = require("luarocks.queries")
@@ -12,7 +13,11 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local download = require("luarocks.download")
 
-function doc.add_to_parser(parser)
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+function doc.add_to_parser(parser:  Parser)
    local cmd = parser:command("doc", "Show documentation for an installed rock.\n\n"..
       "Without any flags, tries to load the documentation using a series of heuristics.\n"..
       "With flags, return only the desired information.", util.see_also([[
@@ -30,7 +35,7 @@ function doc.add_to_parser(parser)
    cmd:flag("--porcelain", "Produce machine-friendly output.")
 end
 
-local function show_homepage(homepage, name, namespace, version)
+local function show_homepage(homepage: string, name: string, namespace: string, version: string): boolean, string
    if not homepage then
       return nil, "No 'homepage' field in rockspec for "..util.format_rock_name(name, namespace, version)
    end
@@ -39,7 +44,7 @@ local function show_homepage(homepage, name, namespace, version)
    return true
 end
 
-local function try_to_open_homepage(name, namespace, version)
+local function try_to_open_homepage(name: string, namespace: string, version: string): boolean, string
    local temp_dir, err = fs.make_temp_dir("doc-"..name.."-"..(version or ""))
    if not temp_dir then
       return nil, "Failed creating temporary directory: "..err
@@ -47,7 +52,7 @@ local function try_to_open_homepage(name, namespace, version)
    util.schedule_function(fs.delete, temp_dir)
    local ok, err = fs.change_dir(temp_dir)
    if not ok then return nil, err end
-   local filename, err = download.download("rockspec", name, namespace, version)
+   local filename, err = download.download_file("rockspec", name, namespace, version)
    if not filename then return nil, err end
    local rockspec, err = fetch.load_local_rockspec(filename)
    if not rockspec then return nil, err end
@@ -58,7 +63,7 @@ end
 
 --- Driver function for "doc" command.
 -- @return boolean: True if succeeded, nil on errors.
-function doc.command(args)
+function doc.command(args: Args): boolean, string
    local query = queries.new(args.rock, args.namespace, args.version)
    local iname, iversion, repo = search.pick_installed_rock(query, args.tree)
    if not iname then
@@ -78,7 +83,7 @@ function doc.command(args)
 
    local directory = path.install_dir(name, version, repo)
 
-   local docdir
+   local docdir: string
    local directories = { "doc", "docs" }
    for _, d in ipairs(directories) do
       local dirname = dir.path(directory, d)
@@ -124,7 +129,7 @@ function doc.command(args)
    for _, extension in ipairs(extensions) do
       for _, basename in ipairs(basenames) do
          local filename = basename..extension
-         local found
+         local found: string
          for _, file in ipairs(files) do
             if file:lower():match(filename) and ((not found) or #file < #found) then
                found = file
