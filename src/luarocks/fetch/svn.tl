@@ -1,12 +1,13 @@
 
 --- Fetch back-end for retrieving sources from Subversion.
-local svn = {}
-
-local unpack = unpack or table.unpack
+local record svn
+end
 
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
+
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 --- Download sources for building a rock, using Subversion.
 -- @param rockspec table: The rockspec table
@@ -15,9 +16,7 @@ local util = require("luarocks.util")
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function svn.get_sources(rockspec, extract, dest_dir)
-   assert(rockspec:type() == "rockspec")
-   assert(type(dest_dir) == "string" or not dest_dir)
+function svn.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string
 
    local svn_cmd = rockspec.variables.SVN
    local ok, err_msg = fs.is_tool_available(svn_cmd, "Subversion")
@@ -33,7 +32,7 @@ function svn.get_sources(rockspec, extract, dest_dir)
       table.insert(command, 5, "-r")
       table.insert(command, 6, rockspec.source.tag)
    end
-   local store_dir
+   local store_dir: string
    if not dest_dir then
       store_dir = fs.make_temp_dir(name_version)
       if not store_dir then
@@ -43,13 +42,13 @@ function svn.get_sources(rockspec, extract, dest_dir)
    else
       store_dir = dest_dir
    end
-   local ok, err = fs.change_dir(store_dir)
-   if not ok then return nil, err end
-   if not fs.execute(unpack(command)) then
+   local okchange, err = fs.change_dir(store_dir)
+   if not okchange then return nil, err end
+   if not fs.execute(table.unpack(command)) then
       return nil, "Failed fetching files from Subversion."
    end
-   ok, err = fs.change_dir(module)
-   if not ok then return nil, err end
+   okchange, err = fs.change_dir(module)
+   if not okchange then return nil, err end
    for _, d in ipairs(fs.find(".")) do
       if dir.base_name(d) == ".svn" then
          fs.delete(dir.path(store_dir, module, d))
