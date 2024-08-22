@@ -1,6 +1,7 @@
 
 --- Module which builds the index.html page to be used in rocks servers.
-local index = {}
+local record index
+end
 
 local util = require("luarocks.util")
 local fs = require("luarocks.fs")
@@ -8,6 +9,10 @@ local vers = require("luarocks.core.vers")
 local persist = require("luarocks.persist")
 local dir = require("luarocks.dir")
 local manif = require("luarocks.manif")
+
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
+
+local type Entry = require("luarocks.core.types.manifest").Manifest.Entry
 
 local ext_url_target = ' target="_blank"'
 
@@ -95,17 +100,17 @@ local index_footer_end = [[
 </html>
 ]]
 
-function index.format_external_dependencies(rockspec)
+function index.format_external_dependencies(rockspec: Rockspec): string
    if rockspec.external_dependencies then
       local deplist = {}
-      local listed_set = {}
-      local plats = nil
+      local listed_set: {string: boolean} = {}
+      local plats: {string : {string: string}} = nil
       for name, desc in util.sortedpairs(rockspec.external_dependencies) do
          if name ~= "platforms" then
             table.insert(deplist, name:lower())
             listed_set[name] = true
          else
-            plats = desc
+            plats = desc as {string : {string: string}}
          end
       end
       if plats then
@@ -123,7 +128,7 @@ function index.format_external_dependencies(rockspec)
    end
 end
 
-function index.make_index(repo)
+function index.make_index(repo: string): boolean, string
    if not fs.is_dir(repo) then
       return nil, "Cannot access repository at "..repo
    end
@@ -132,14 +137,14 @@ function index.make_index(repo)
 
    out:write(index_header)
    for package, version_list in util.sortedpairs(manifest.repository) do
-      local latest_rockspec = nil
+      local latest_rockspec: string = nil
       local output = index_package_begin
       for version, data in util.sortedpairs(version_list, vers.compare_versions) do
          local versions = {}
          output = output..version..':&nbsp;'
-         table.sort(data, function(a,b) return a.arch < b.arch end)
+         table.sort(data, function(a: Entry,b: Entry): boolean return a.arch < b.arch end)
          for _, item in ipairs(data) do
-            local file
+            local file: string
             if item.arch == 'rockspec' then
                file = ("%s-%s.rockspec"):format(package, version)
                if not latest_rockspec then latest_rockspec = file end
@@ -152,7 +157,7 @@ function index.make_index(repo)
       end
       output = output .. index_package_end
       if latest_rockspec then
-         local rockspec = persist.load_into_table(dir.path(repo, latest_rockspec))
+         local rockspec = persist.load_into_table(dir.path(repo, latest_rockspec)) as Rockspec
          local descript = rockspec.description or {}
          local vars = {
             anchor = package,
