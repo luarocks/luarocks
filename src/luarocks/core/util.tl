@@ -1,8 +1,11 @@
 
-local util = {}
+local record util
+end
 
-local require = nil
 --------------------------------------------------------------------------------
+
+local type Ordering = require("luarocks.core.types.ordering").Ordering
+local type SortBy = require("luarocks.core.types.ordering").SortBy
 
 local dir_sep = package.config:sub(1, 1)
 
@@ -13,8 +16,8 @@ local dir_sep = package.config:sub(1, 1)
 -- @param spec string: "*l" by default, to read a single line.
 -- May be used to read more, passing, for instance, "*a".
 -- @return string: the output of the program.
-function util.popen_read(cmd, spec)
-   local tmpfile = (dir_sep == "\\")
+function util.popen_read(cmd: string, spec?: string): string
+   local tmpfile: string = (dir_sep == "\\")
                    and (os.getenv("TMP") .. "/luarocks-" .. tostring(math.floor(math.random() * 10000)))
                    or os.tmpname()
    os.execute(cmd .. " > " .. tmpfile)
@@ -46,15 +49,15 @@ end
 -- @param tname string: is the name of the table (optional)
 -- @param top_indent string: is a first indentation (optional).
 -- @return string: the pretty-printed table
-function util.show_table(t, tname, top_indent)
-   local cart     -- a container
-   local autoref  -- for self references
+function util.show_table(t: {any:any}, tname: string, top_indent: string): string
+   local cart: string     -- a container
+   local autoref: string  -- for self references
 
-   local function is_empty_table(tbl) return next(tbl) == nil end
+   local function is_empty_table(tbl: {any:any}): boolean return next(tbl) == nil end
 
-   local function basic_serialize(o)
+   local function basic_serialize(o: any): string
       local so = tostring(o)
-      if type(o) == "function" then
+      if o is function then
          local info = debug and debug.getinfo(o, "S")
          if not info then
             return ("%q"):format(so)
@@ -66,21 +69,21 @@ function util.show_table(t, tname, top_indent)
             -- the information is defined through lines
             return ("%q"):format(so .. ", defined in (" .. info.linedefined .. "-" .. info.lastlinedefined .. ")" .. info.source)
          end
-      elseif type(o) == "number" then
+      elseif o is number then
          return so
       else
          return ("%q"):format(so)
       end
    end
 
-   local function add_to_cart(value, name, indent, saved, field)
+   local function add_to_cart (value: any | {any:any}, name: string, indent: string, saved?: {any: string}, field?: string)
       indent = indent or ""
       saved = saved or {}
       field = field or name
 
       cart = cart .. indent .. field
 
-      if type(value) ~= "table" then
+      if not value is {any: any} then
          cart = cart .. " = " .. basic_serialize(value) .. ";\n"
       else
          if saved[value] then
@@ -106,7 +109,7 @@ function util.show_table(t, tname, top_indent)
    end
 
    tname = tname or "__unnamed__"
-   if type(t) ~= "table" then
+   if not t is {any:any} then
       return tname .. " = " .. basic_serialize(t)
    end
    cart, autoref = "", ""
@@ -114,18 +117,29 @@ function util.show_table(t, tname, top_indent)
    return cart .. autoref
 end
 
+--- Produce a Lua pattern that matches precisely the given string
+-- (this is suitable to be concatenating to other patterns,
+-- so it does not include beginning- and end-of-string markers (^$)
+-- @param s string: The input string
+-- @return string: The equivalent pattern
+function util.matchquote(s: string): string
+   return (s:gsub("[?%-+*%[%].%%()$^]","%%%1"))
+end
+
 --- Merges contents of src on top of dst's contents
 -- (i.e. if an key from src already exists in dst, replace it).
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.
-function util.deep_merge(dst, src)
+function util.deep_merge(dst: {any: any}, src: {any: any})
    for k, v in pairs(src) do
-      if type(v) == "table" then
-         if dst[k] == nil then
+      if v is {any: any} then
+         local dstk: any | {any: any} = dst[k]
+         if dstk == nil then
             dst[k] = {}
+            dstk = dst[k]
          end
-         if type(dst[k]) == "table" then
-            util.deep_merge(dst[k], v)
+         if dstk is {any: any} then
+            util.deep_merge(dstk, v)
          else
             dst[k] = v
          end
@@ -139,20 +153,50 @@ end
 -- (i.e. if an key from src already exists in dst, do not replace it).
 -- @param dst Destination table, which will receive src's contents.
 -- @param src Table which provides new contents to dst.
-function util.deep_merge_under(dst, src)
+function util.deep_merge_under(dst: {any: any}, src: {any: any})
    for k, v in pairs(src) do
-      if type(v) == "table" then
-         if dst[k] == nil then
+      if v is {any: any} then
+         local dstk: any | {any: any} = dst[k]
+         if dstk == nil then
             dst[k] = {}
+            dstk = dst[k]
          end
-         if type(dst[k]) == "table" then
-            util.deep_merge_under(dst[k], v)
+         if dstk is {any: any} then
+            util.deep_merge_under(dstk, v)
          end
       elseif dst[k] == nil then
          dst[k] = v
       end
    end
 end
+
+-- from http://lua-users.org/wiki/SplitJoin
+-- by Philippe Lhoste
+function util.split_string(str: string, delim: string, maxNb?: number): {string}
+   -- Eliminate bad cases...
+   if string.find(str, delim) == nil then
+      return { str }
+   end
+   if maxNb == nil or maxNb < 1 then
+      maxNb = 0    -- No limit
+   end
+   local result = {}
+   local pat = "(.-)" .. delim .. "()"
+   local nb = 0
+   local lastPos: integer
+   for part, pos in string.gmatch(str, pat) do
+      nb = nb + 1
+      result[nb] = part
+      lastPos = tonumber(pos) as integer
+      if nb == maxNb then break end
+   end
+   -- Handle the last field
+   if nb ~= maxNb then
+      result[nb + 1] = string.sub(str, lastPos)
+   end
+   return result
+end
+
 
 --- Clean up a path-style string ($PATH, $LUA_PATH/package.path, etc.),
 -- removing repeated entries and making sure only the relevant
@@ -163,15 +207,13 @@ end
 -- @param lua_version (optional) string: The Lua version to use.
 -- @param keep_first (optional) if true, keep first occurrence in case
 -- of duplicates; otherwise keep last occurrence. The default is false.
-function util.cleanup_path(list, sep, lua_version, keep_first)
-   assert(type(list) == "string")
-   assert(type(sep) == "string")
+function util.cleanup_path(list: string, sep: string, lua_version: string, keep_first: boolean): string
 
    list = list:gsub(dir_sep, "/")
 
    local parts = util.split_string(list, sep)
    local final, entries = {}, {}
-   local start, stop, step
+   local start, stop, step: integer, integer, integer
 
    if keep_first then
       start, stop, step = 1, #parts, 1
@@ -182,7 +224,7 @@ function util.cleanup_path(list, sep, lua_version, keep_first)
    for i = start, stop, step do
       local part = parts[i]:gsub("//", "/")
       if lua_version then
-         part = part:gsub("/lua/([%d.]+)/", function(part_version)
+         part = part:gsub("/lua/([%d.]+)/", function(part_version: string): string
             if part_version:sub(1, #lua_version) ~= lua_version then
                return "/lua/"..lua_version.."/"
             end
@@ -198,37 +240,10 @@ function util.cleanup_path(list, sep, lua_version, keep_first)
    return (table.concat(final, sep):gsub("/", dir_sep))
 end
 
--- from http://lua-users.org/wiki/SplitJoin
--- by Philippe Lhoste
-function util.split_string(str, delim, maxNb)
-   -- Eliminate bad cases...
-   if string.find(str, delim) == nil then
-      return { str }
-   end
-   if maxNb == nil or maxNb < 1 then
-      maxNb = 0    -- No limit
-   end
-   local result = {}
-   local pat = "(.-)" .. delim .. "()"
-   local nb = 0
-   local lastPos
-   for part, pos in string.gmatch(str, pat) do
-      nb = nb + 1
-      result[nb] = part
-      lastPos = pos
-      if nb == maxNb then break end
-   end
-   -- Handle the last field
-   if nb ~= maxNb then
-      result[nb + 1] = string.sub(str, lastPos)
-   end
-   return result
-end
-
 --- Return an array of keys of a table.
 -- @param tbl table: The input table.
 -- @return table: The array of keys.
-function util.keys(tbl)
+function util.keys<K, V>(tbl: {K: V}): {K}
    local ks = {}
    for k,_ in pairs(tbl) do
       table.insert(ks, k)
@@ -237,23 +252,23 @@ function util.keys(tbl)
 end
 
 --- Print a line to standard error
-function util.printerr(...)
+function util.printerr(...: string | number)
    io.stderr:write(table.concat({...},"\t"))
    io.stderr:write("\n")
 end
 
 --- Display a warning message.
 -- @param msg string: the warning message
-function util.warning(msg)
+function util.warning(msg: string)
    util.printerr("Warning: "..msg)
 end
 
 --- Simple sort function used as a default for util.sortedpairs.
-local function default_sort(a, b)
+local function default_sort(a: any, b: any): boolean
    local ta = type(a)
    local tb = type(b)
    if ta == "number" and tb == "number" then
-      return a < b
+      return tonumber(a) < tonumber(b)
    elseif ta == "number" then
       return true
    elseif tb == "number" then
@@ -273,48 +288,46 @@ end
 -- for that key, which is returned by the iterator as the third value after the key
 -- and the value.
 -- @return function: the iterator function.
-function util.sortedpairs(tbl, sort_function)
-   sort_function = sort_function or default_sort
+function util.sortedpairs<K, V>(tbl: {K: V}, sort_by?: SortBy<K>): function(): K, V, Ordering<K>
    local keys = util.keys(tbl)
-   local sub_orders = {}
+   local sub_orders: {K: Ordering<K>} = nil
 
-   if type(sort_function) == "function" then
-      table.sort(keys, sort_function)
+   if sort_by == nil then
+      table.sort(keys, default_sort)
+   elseif sort_by is table.SortFunction<K> then
+      table.sort(keys, sort_by)
    else
-      local order = sort_function
-      local ordered_keys = {}
-      local all_keys = keys
-      keys = {}
+      -- sort_by is Ordering<K>
+      
+      sub_orders = sort_by.sub_orders
 
-      for _, order_entry in ipairs(order) do
-         local key, sub_order
-         if type(order_entry) == "table" then
-            key = order_entry[1]
-            sub_order = order_entry[2]
-         else
-            key = order_entry
-         end
-
+      local seen_ordered_key: {K: boolean} = {}
+      
+      local my_ordered_keys: {K} = {}
+      
+      for _, key in ipairs(sort_by) do
          if tbl[key] then
-            ordered_keys[key] = true
-            sub_orders[key] = sub_order
-            table.insert(keys, key)
+            seen_ordered_key[key] = true
+            table.insert(my_ordered_keys, key)
          end
       end
 
-      table.sort(all_keys, default_sort)
-      for _, key in ipairs(all_keys) do
-         if not ordered_keys[key] then
-            table.insert(keys, key)
+      table.sort(keys, default_sort)
+
+      for _, key in ipairs(keys) do
+         if not seen_ordered_key[key] then
+            table.insert(my_ordered_keys, key)
          end
       end
+      
+      keys = my_ordered_keys
    end
-
+   
    local i = 1
-   return function()
+   return function(): K, V, Ordering<K>
       local key = keys[i]
       i = i + 1
-      return key, tbl[key], sub_orders[key]
+      return key, tbl[key], sub_orders and sub_orders[key]
    end
 end
 
