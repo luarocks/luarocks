@@ -1,12 +1,17 @@
 
 --- Module implementing the luarocks "download" command.
 -- Download a rock from the repository.
-local cmd_download = {}
+local record cmd_download
+end
 
 local util = require("luarocks.util")
 local download = require("luarocks.download")
 
-function cmd_download.add_to_parser(parser)
+local type Parser = require("luarocks.vendor.argparse").Parser
+
+local type Args = require("luarocks.core.types.args").Args
+
+function cmd_download.add_to_parser(parser: Parser)
    local cmd = parser:command("download", "Download a specific rock file from a rocks server.", util.see_also())
 
    cmd:argument("name", "Name of the rock.")
@@ -27,14 +32,14 @@ end
 --- Driver function for the "download" command.
 -- @return boolean or (nil, string): true if successful or nil followed
 -- by an error message.
-function cmd_download.command(args)
+function cmd_download.command(args: Args): boolean, string
    if not args.name and not args.all then
       return nil, "Argument missing. "..util.see_help("download")
    end
 
    args.name = args.name or ""
 
-   local arch
+   local arch: string
 
    if args.source then
       arch = "src"
@@ -44,8 +49,13 @@ function cmd_download.command(args)
       arch = args.arch
    end
 
-   local dl, err = download.download(arch, args.name, args.namespace, args.version, args.all, args.check_lua_versions)
-   return dl and true, err
+   if args.all then
+      local ok, err = download.download_all(arch, args.name, args.namespace, args.version)
+      return ok, err
+   else
+      local dl, err = download.download_file(arch, args.name, args.namespace, args.version, args.check_lua_versions)
+      return dl and true, err
+   end
 end
 
 return cmd_download
