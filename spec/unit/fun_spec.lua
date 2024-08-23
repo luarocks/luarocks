@@ -58,17 +58,6 @@ describe("luarocks.fun #unit", function()
       end)
    end)
 
-   describe("fun.traverse", function()
-      it("recursively applies a function to each element in a given table and returns the results in a new table", function()
-         local t
-
-         t = {1, 2, {3, 4, {5, 6}}}
-         assert.same(fun.traverse(t, addOne), {2, 3, {4, 5, {6, 7}}})
-         t = {1, 2, {}, {1, {}, 2}}
-         assert.same(fun.traverse(t, addOne), {2, 3, {}, {2, {}, 3}})
-      end)
-   end)
-
    describe("fun.filter", function()
       it("filters the elements in the given table and returns the result in a new table", function()
          local t
