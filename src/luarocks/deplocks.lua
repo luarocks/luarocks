@@ -1,5 +1,11 @@
 local deplocks = {}
 
+
+
+
+
+
+
 local fs = require("luarocks.fs")
 local dir = require("luarocks.dir")
 local util = require("luarocks.util")
@@ -7,22 +13,23 @@ local persist = require("luarocks.persist")
 
 
 
-local deptable = {}
-local deptable_mode = "start"
+
+local depstable = {}
+local depstable_mode = "start"
 local deplock_abs_filename
 local deplock_root_rock_name
 
 function deplocks.init(root_rock_name, dirname)
-   if deptable_mode ~= "start" then
+   if depstable_mode ~= "start" then
       return
    end
-   deptable_mode = "create"
+   depstable_mode = "create"
 
    local filename = dir.path(dirname, "luarocks.lock")
    deplock_abs_filename = fs.absolute_name(filename)
    deplock_root_rock_name = root_rock_name
 
-   deptable = {}
+   depstable = {}
 end
 
 function deplocks.get_abs_filename(root_rock_name)
@@ -32,10 +39,10 @@ function deplocks.get_abs_filename(root_rock_name)
 end
 
 function deplocks.load(root_rock_name, dirname)
-   if deptable_mode ~= "start" then
+   if depstable_mode ~= "start" then
       return true, nil
    end
-   deptable_mode = "locked"
+   depstable_mode = "locked"
 
    local filename = dir.path(dirname, "luarocks.lock")
    local _, result, errcode = persist.run_file(filename, {})
@@ -52,19 +59,20 @@ function deplocks.load(root_rock_name, dirname)
    deplock_abs_filename = fs.absolute_name(filename)
    deplock_root_rock_name = root_rock_name
 
-   deptable = result
+
+   depstable = result
    return true, filename
 end
 
 function deplocks.add(depskey, name, version)
-   if deptable_mode == "locked" then
+   if depstable_mode == "locked" then
       return
    end
 
-   local dk = deptable[depskey]
+   local dk = depstable[depskey]
    if not dk then
       dk = {}
-      deptable[depskey] = dk
+      depstable[depskey] = dk
    end
 
    if type(dk) == "table" and not dk[name] then
@@ -73,23 +81,19 @@ function deplocks.add(depskey, name, version)
 end
 
 function deplocks.get(depskey, name)
-   local dk = deptable[depskey]
-   if not dk then
-      return nil
-   end
+   local dk = depstable[depskey]
    if type(dk) == "table" then
       return dk[name]
-   else
-      return dk
    end
+   return nil
 end
 
 function deplocks.write_file()
-   if deptable_mode ~= "create" then
+   if depstable_mode ~= "create" then
       return true
    end
 
-   return persist.save_as_module(deplock_abs_filename, deptable)
+   return persist.save_as_module(deplock_abs_filename, depstable)
 end
 
 
@@ -105,7 +109,7 @@ function deplocks.proxy(depskey)
 end
 
 function deplocks.each(depskey)
-   return util.sortedpairs(deptable[depskey] or {})
+   return util.sortedpairs(depstable[depskey] or {})
 end
 
 return deplocks
