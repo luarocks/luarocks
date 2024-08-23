@@ -28,12 +28,12 @@ local type Query = require("luarocks.core.types.query").Query
 
 local type Version = require("luarocks.core.types.version").Version
 
-local type PersistableTable = require("luarocks.core.types.persist").PersistableTable
-
 local type Result = require("luarocks.core.types.result").Result
 
 local type Dir = require("luarocks.core.types.dir").Dir
 local type Dirs = require("luarocks.core.types.dir").Dirs
+
+local type DepsKey = require("luarocks.core.types.depskey").DepsKey
 
 local type Args = require("luarocks.core.types.args").Args
 
@@ -54,9 +54,9 @@ local type Args = require("luarocks.core.types.args").Args
 -- * map of versions to locations
 -- * version matched via lockfile if any
 -- * true if rock matched via rocks_provided
-local function prepare_get_versions(deps_mode: string, rocks_provided: {string : string}, depskey: string, skip_set?: {string: {string: boolean}}): function(Query): {string}, {string: string | Tree}, string | number | boolean | PersistableTable, boolean
+local function prepare_get_versions(deps_mode: string, rocks_provided: {string : string}, depskey: DepsKey, skip_set?: {string: {string: boolean}}): function(Query): {string}, {string: string | Tree}, string, boolean
 
-   return function(dep: Query): {string}, {string: string | Tree}, string | number | boolean | PersistableTable, boolean
+   return function(dep: Query): {string}, {string: string | Tree}, string, boolean
       local versions, locations: {string}, {string: string | Tree}
       local provided = rocks_provided[dep.name]
       if provided then
@@ -78,7 +78,7 @@ local function prepare_get_versions(deps_mode: string, rocks_provided: {string :
          end
       end
 
-      local lockversion = deplocks.get(depskey, dep.name) --! cast?
+      local lockversion = deplocks.get(depskey, dep.name)
 
       return versions, locations, lockversion, provided ~= nil
    end
@@ -206,7 +206,7 @@ function deps.report_missing_dependencies(name: string, version: string, depende
    end
 end
 
-function deps.fulfill_dependency(dep: Query, deps_mode: string, rocks_provided: {string: string}, verify: boolean, depskey?: string): boolean, string, string | Tree
+function deps.fulfill_dependency(dep: Query, deps_mode: string, rocks_provided: {string: string}, verify: boolean, depskey?: DepsKey): boolean, string, string | Tree
 
    deps_mode = deps_mode or "all"
    rocks_provided = rocks_provided or {}
@@ -286,7 +286,7 @@ end
 -- @return boolean or (nil, string, [string]): True if no errors occurred, or
 -- nil and an error message if any test failed, followed by an optional
 -- error code.
-function deps.fulfill_dependencies(rockspec: Rockspec, depskey: string, deps_mode: string, verify?: boolean, deplock_dir?: string): boolean, string, string
+function deps.fulfill_dependencies(rockspec: Rockspec, depskey: DepsKey, deps_mode: string, verify?: boolean, deplock_dir?: string): boolean, string, string
    local name = rockspec.name
    local version = rockspec.version
    local rocks_provided = rockspec.rocks_provided
@@ -296,16 +296,9 @@ function deps.fulfill_dependencies(rockspec: Rockspec, depskey: string, deps_mod
       util.printout("Using dependencies pinned in lockfile: " .. filename)
 
       local get_versions = prepare_get_versions("none", rocks_provided, depskey)
-      local dnsnamestr, dversionstr: string, string
       for dnsname, dversion in deplocks.each(depskey) do
-         if dnsname is string then
-            dnsnamestr = dnsname
-         end
-         if dversion is string then
-            dversionstr = dversion
-         end
-         local dname, dnamespace = util.split_namespace(dnsnamestr)
-         local depq = queries.new(dname, dnamespace, dversionstr)
+         local dname, dnamespace = util.split_namespace(dnsname)
+         local depq = queries.new(dname, dnamespace, dversion)
 
          util.printout(("%s %s is pinned to %s (%s)"):format(
             name, version, tostring(depq), rock_status(depq, get_versions)))

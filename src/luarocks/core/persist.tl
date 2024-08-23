@@ -45,7 +45,7 @@ end
 -- or nil, an error message and an error code ("open"; couldn't open the file,
 -- "load"; compile-time error, or "run"; run-time error)
 -- in case of errors.
-function persist.load_into_table(filename: string, tbl?: {string:any}) : {any: any}, {any: any} | string, string
+function persist.load_into_table(filename: string, tbl?: {string:any}) : {string: any}, {string: boolean} | string, string
 
    local result: {string:any} = tbl or {}
    local globals = {}

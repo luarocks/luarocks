@@ -296,16 +296,9 @@ function deps.fulfill_dependencies(rockspec, depskey, deps_mode, verify, deplock
       util.printout("Using dependencies pinned in lockfile: " .. filename)
 
       local get_versions = prepare_get_versions("none", rocks_provided, depskey)
-      local dnsnamestr, dversionstr
       for dnsname, dversion in deplocks.each(depskey) do
-         if type(dnsname) == "string" then
-            dnsnamestr = dnsname
-         end
-         if type(dversion) == "string" then
-            dversionstr = dversion
-         end
-         local dname, dnamespace = util.split_namespace(dnsnamestr)
-         local depq = queries.new(dname, dnamespace, dversionstr)
+         local dname, dnamespace = util.split_namespace(dnsname)
+         local depq = queries.new(dname, dnamespace, dversion)
 
          util.printout(("%s %s is pinned to %s (%s)"):format(
          name, version, tostring(depq), rock_status(depq, get_versions)))
