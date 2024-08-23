@@ -7,6 +7,7 @@ local util = require("luarocks.util")
 
 local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 local type Dependencies = require("luarocks.core.types.rockspec").Dependencies
+local type DepsKey = require("luarocks.core.types.depskey").DepsKey
 
 local type TestRunner = require("luarocks.core.types.testrunner").TestRunner
 
@@ -66,7 +67,7 @@ function test.run_test_suite(rockspec_arg: string | Rockspec, test_type: string,
       end
    end
 
-   local all_deps = {
+   local all_deps: {DepsKey} = {
       "dependencies",
       "build_dependencies",
       "test_dependencies",
