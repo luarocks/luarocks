@@ -936,14 +936,16 @@ local downloader_warning = false
 -- resulting local filename of the remote file as the basename of the URL;
 -- if that is not correct (due to a redirection, for example), the local
 -- filename can be given explicitly as this second argument.
--- @return (boolean, string, boolean):
+-- @return (string, string, string, boolean):
 -- In case of success:
--- * true
--- * a string with the filename
+-- * name
+-- nil
+-- nil
 -- * true if the file was retrieved from local cache
 -- In case of failure:
--- * false
+-- nil
 -- * error message
+-- * error code
 function fs_lua.download(url, filename, cache)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
@@ -984,7 +986,7 @@ function fs_lua.download(url, filename, cache)
    elseif not ok then
       return nil, err, "network"
    end
-   return true, filename, from_cache
+   return filename, nil, nil, from_cache
 end
 
 else --...if socket_ok == false then
