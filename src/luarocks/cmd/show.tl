@@ -206,12 +206,14 @@ local function modules_to_list(name: string, version: string, repo: string | Tre
          name = path.path_to_module(pathname),
          file = adjust_path(name, version, lua_dir, pathname),
       })
+      return true
    end)
    repos.recurse_rock_manifest_entry(rock_manifest.lib, function(pathname: string): boolean, string
       table.insert(ret, {
          name = path.path_to_module(pathname),
          file = adjust_path(name, version, lib_dir, pathname),
       })
+      return true
    end)
    table.sort(ret, function(a: Return, b: Return): boolean
       if a.name == b.name then
@@ -232,6 +234,7 @@ local function commands_to_list(name: string, version: string, repo: string | Tr
          name = name,
          file = adjust_path(name, version, bin_dir, pathname, cfg.wrapper_suffix),
       })
+      return true
    end)
    table.sort(ret, function(a: Return, b: Return): boolean
       if a.name == b.name then
