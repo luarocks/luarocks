@@ -79,21 +79,19 @@ function repos.recurse_rock_manifest_entry(entry, action)
       return true
    end
 
-   local function do_recurse_rock_manifest_entry(tree, parent_path)
-
-      for file, sub in pairs(tree) do
-         local sub_path = (parent_path and (parent_path .. "/") or "") .. file
-         local ok, err
-
-         if type(sub) == "table" then
-            ok, err = do_recurse_rock_manifest_entry(sub, sub_path)
-         else
-            ok, err = action(sub_path)
+   local function do_recurse_rock_manifest_entry(tree, pathname)
+      if type(tree) == "string" then
+         return action(pathname)
+      else
+         for file, sub in pairs(tree) do
+            local sub_path = pathname and dir.path(pathname, file) or file
+            local ok, err = do_recurse_rock_manifest_entry(sub, sub_path)
+            if not ok then
+               return nil, err
+            end
          end
-
-         if err then return nil, err end
+         return true
       end
-      return true
    end
    return do_recurse_rock_manifest_entry(entry)
 end
@@ -412,14 +410,15 @@ function repos.check_everything_is_installed(name, version, rock_manifest, repo,
             if category == "bin" then
                if (fs.exists(paths.nv) or fs.exists(paths.nv .. suffix)) or
                   (accept_versioned and (fs.exists(paths.v) or fs.exists(paths.v .. suffix))) then
-                  return
+                  return true
                end
             else
                if fs.exists(paths.nv) or (accept_versioned and fs.exists(paths.v)) then
-                  return
+                  return true
                end
             end
             table.insert(missing, paths.nv)
+            return true
          end)
       end
    end
@@ -481,6 +480,7 @@ function repos.deploy_local_files(name, version, wrap_bin_scripts, deps_mode)
             target = target .. (cfg.wrapper_suffix or "")
          end
          table.insert(installs, { fn = install_binary, src = source, dst = target, backup = backup })
+         return true
       end)
    end
 
@@ -500,6 +500,7 @@ function repos.deploy_local_files(name, version, wrap_bin_scripts, deps_mode)
          local target = mode == "nv" and paths.nv or paths.v
          local backup = name ~= cur_name or version ~= cur_version
          table.insert(installs, { fn = move_lua, src = source, dst = target, backup = backup })
+         return true
       end)
    end
 
@@ -519,6 +520,7 @@ function repos.deploy_local_files(name, version, wrap_bin_scripts, deps_mode)
          local target = mode == "nv" and paths.nv or paths.v
          local backup = name ~= cur_name or version ~= cur_version
          table.insert(installs, { fn = move_lib, src = source, dst = target, backup = backup })
+         return true
       end)
    end
 
@@ -613,6 +615,7 @@ function repos.delete_local_version(name, version, deps_mode, quick)
                table.insert(renames, { src = next_paths.v, dst = next_paths.nv, suffix = cfg.wrapper_suffix })
             end
          end
+         return true
       end)
    end
 
@@ -634,6 +637,7 @@ function repos.delete_local_version(name, version, deps_mode, quick)
                table.insert(renames, { src = next_lib_paths.v, dst = next_lib_paths.nv })
             end
          end
+         return true
       end)
    end
 
@@ -655,6 +659,7 @@ function repos.delete_local_version(name, version, deps_mode, quick)
                table.insert(renames, { src = next_lib_paths.v, dst = next_lib_paths.nv })
             end
          end
+         return true
       end)
    end
 
