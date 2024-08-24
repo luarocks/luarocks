@@ -333,14 +333,14 @@ function deps.fulfill_dependencies(rockspec: Rockspec, depskey: DepsKey, deps_mo
       if okfulfill then
          deplocks.add(depskey, depq.name, found_or_err)
       else
-         -- if no_upgrade then
-         --    util.printerr("This version of "..name.." is designed for use with")
-         --    util.printerr(tostring(dep)..", but is configured to avoid upgrading it")
-         --    util.printerr("automatically. Please upgrade "..dep.name.." with")
-         --    util.printerr("   luarocks install "..dep.name)
-         --    util.printerr("or look for a suitable version of "..name.." with")
-         --    util.printerr("   luarocks search "..name)
-         -- end
+         if depq.constraints and depq.constraints[1] and depq.constraints[1].no_upgrade then
+            util.printerr("This version of "..name.." is designed for use with")
+            util.printerr(tostring(depq)..", but is configured to avoid upgrading it")
+            util.printerr("automatically. Please upgrade "..depq.name.." with")
+            util.printerr("   luarocks install "..depq.name)
+            util.printerr("or look for a suitable version of "..name.." with")
+            util.printerr("   luarocks search "..name)
+         end
          return nil, found_or_err
       end
    end
