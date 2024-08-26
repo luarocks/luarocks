@@ -223,9 +223,8 @@ describe("Luarocks patch test #unit", function()
 
       it("fails if the patch file is invalid", function()
          write_file("test.patch", invalid_patch1, finally)
-         local p = patch.read_patch("test.patch")
-         local result = pcall(patch.apply_patch, p)
-         assert.falsy(result)
+         local p, all_ok = patch.read_patch("test.patch")
+         assert.falsy(all_ok)
       end)
 
       it("returns false if the files from the patch doesn't exist", function()
