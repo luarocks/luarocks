@@ -22,7 +22,7 @@ local record patch
     invalid: boolean
     text: {string}
   end
-  record File --!
+  record File
     at: integer
     str: string
     len: integer
@@ -31,7 +31,7 @@ local record patch
     close: function(File): boolean
   end
   record Files
-    source: {string} --!
+    source: {string}
     target: {string}
     epoch: {boolean}
     hunks: {{Hunk}}
@@ -53,7 +53,7 @@ end
 
 -- logging
 local debugmode = false
-local function debug(_: string) end --!
+local function dbg(_: string) end
 local function info(_: string) end
 local function warning(s: string) io.stderr:write(s .. '\n') end
 
@@ -79,7 +79,7 @@ local function table_copy<K, V>(t: {K: V}): {K: V}
   return t2
 end
 
-local function string_as_file(s: string): File --!
+local function string_as_file(s: string): File
    return {
       at = 0,
       str = s,
@@ -122,7 +122,7 @@ local function file_lines(f: FILE): function(): string
       elseif f then
         local chunk = f:read(CHUNK_SIZE)
         if chunk then
-          buffer = buffer:sub(pos_beg) .. chunk           --! funcy stuff with pos
+          buffer = buffer:sub(pos_beg) .. chunk
           pos_beg = 1
         else
           f = nil
@@ -178,11 +178,11 @@ function patch.read_patch(filename: string, data: string): Files, boolean
   }
   local hunkactual: Hunk = {linessrc=nil, linestgt=nil}
 
-  info(string.format("reading patch %s", filename)) --!
+  info(string.format("reading patch %s", filename))
 
   local fp: FILE
   if data then
-    fp = string_as_file(data) as FILE --! cast
+    fp = string_as_file(data) as FILE
   else
     fp = filename == '-' and io.stdin or open(filename, "rb")
   end
@@ -271,7 +271,7 @@ function patch.read_patch(filename: string, data: string): Files, boolean
       elseif startswith(line, "--- ") then
         state = 'filenames'
         if debugmode and #files.source > 0 then
-            debug(string.format("- %2d hunks for %s", #files.hunks[nextfileno],
+            dbg(string.format("- %2d hunks for %s", #files.hunks[nextfileno],
                          files.source[nextfileno]))
         end
       end
@@ -385,7 +385,7 @@ function patch.read_patch(filename: string, data: string): Files, boolean
   else
     -- duplicated message when an eof is reached
     if debugmode and #files.source > 0 then
-      debug(string.format("- %2d hunks for %s", #files.hunks[nextfileno],
+      dbg(string.format("- %2d hunks for %s", #files.hunks[nextfileno],
                    files.source[nextfileno]))
     end
   end
@@ -406,7 +406,7 @@ local function find_hunk(file: {string}, h: Hunk, hno: integer): boolean
         if l > fuzz then
           -- todo: \ No newline at the end of file
           if startswith(hline, " ") or startswith(hline, "-") then
-            local line = file[lineno] --! cast
+            local line = file[lineno]
             lineno = lineno + 1
             if not line or #line == 0 then
               found = false
@@ -468,7 +468,7 @@ local function check_patched(file: {string}, hunks: {Hunk}): boolean
       if #file < h.starttgt then
         error('nomatch', 0)
       end
-      lineno = h.starttgt as integer --! cast
+      lineno = h.starttgt as integer
       for _, hline in ipairs(h.text) do
         -- todo: \ No newline at the end of file
         if not startswith(hline, "-") and not startswith(hline, "\\") then
@@ -502,9 +502,9 @@ local function patch_hunks(srcname: string, tgtname: string, hunks: {Hunk}): boo
   --       of patching. Also issue a warning about mixed lineends
 
   local srclineno = 1
-  local lineends = {['\n']=0, ['\r\n']=0, ['\r']=0}
+  local lineends: {string: integer} = {['\n']=0, ['\r\n']=0, ['\r']=0}
   for hno, h in ipairs(hunks) do
-    debug(string.format("processing hunk %d for file %s", hno, tgtname))
+    dbg(string.format("processing hunk %d for file %s", hno, tgtname))
     -- skip to line just before hunk starts
     while srclineno < h.startsrc do
       local line = src_readline()
@@ -533,7 +533,7 @@ local function patch_hunks(srcname: string, tgtname: string, hunks: {Hunk}): boo
         local line2write = hline:sub(2)
         -- detect if line ends are consistent in source file
         local sum = 0
-        for _,v in pairs(lineends as {string:any}) do if v as integer > 0 then sum=sum+1 end end --! unchecked
+        for _,v in pairs(lineends) do if v > 0 then sum=sum+1 end end
         if sum == 1 then
           local newline: string
           for k,v in pairs(lineends as {string:any}) do if v ~= 0 then newline = k end end
@@ -649,7 +649,7 @@ local function patch_file(source: string, target: string, epoch: boolean, hunks:
       if endlstrip(line) == hunkfind[hunklineno] then
         hunklineno = hunklineno + 1
       else
-        debug(string.format("hunk no.%d doesn't match source file %s",
+        dbg(string.format("hunk no.%d doesn't match source file %s",
                      hunkno, source))
         -- file may be already patched, but check other hunks anyway
         hunkno = hunkno + 1
@@ -663,7 +663,7 @@ local function patch_file(source: string, target: string, epoch: boolean, hunks:
     end
     -- check if processed line is the last line
     if lineno == hunk.startsrc + #hunkfind - 1 then
-      debug(string.format("file %s hunk no.%d -- is ready to be patched",
+      dbg(string.format("file %s hunk no.%d -- is ready to be patched",
                    source, hunkno))
       hunkno = hunkno + 1
       validhunks = validhunks + 1
@@ -706,7 +706,7 @@ local function patch_file(source: string, target: string, epoch: boolean, hunks:
     return true
   end
   local backupname = source .. ".orig"
-  if exists(backupname) then
+  if fs.exists(backupname) then
     warning(string.format("can't backup original file to %s - aborting",
                    backupname))
     return false

@@ -86,7 +86,7 @@ end
 
 
 
-function git.get_sources(rockspec, extract, dest_dir, depth)
+function git.get_sources(rockspec, _extract, dest_dir, depth)
 
    local git_cmd = rockspec.variables.GIT
    local name_version = rockspec.name .. "-" .. rockspec.version

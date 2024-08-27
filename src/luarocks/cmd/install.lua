@@ -23,7 +23,6 @@ local cfg = require("luarocks.core.cfg")
 
 
 
-
 function install.add_to_parser(parser)
    local cmd = parser:command("install", "Install a rock.", util.see_also())
 
@@ -97,11 +96,15 @@ function install.install_binary_rock(rock_file, opts)
       fs.delete(install_dir)
       fs.remove_dir_if_empty(path.versions_dir(name))
    end)
-   local ok
-   local oks, err, errcode = fetch.fetch_and_unpack_rock(rock_file, install_dir, opts.verify)
-   if not oks then return nil, err, errcode end
 
-   local rockspec, err = fetch.load_rockspec(path.rockspec_file(name, version))
+   local ok, err, errcode
+
+   local filename
+   filename, err, errcode = fetch.fetch_and_unpack_rock(rock_file, install_dir, opts.verify)
+   if not filename then return nil, err, errcode end
+
+   local rockspec
+   rockspec, err, errcode = fetch.load_rockspec(path.rockspec_file(name, version))
    if err then
       return nil, "Failed loading rockspec for installed package: " .. err, errcode
    end
@@ -158,7 +161,8 @@ function install.install_binary_rock_deps(rock_file, opts)
    local oks, err, errcode = fetch.fetch_and_unpack_rock(rock_file, install_dir, opts.verify)
    if not oks then return nil, err, errcode end
 
-   local rockspec, err = fetch.load_rockspec(path.rockspec_file(name, version))
+   local rockspec
+   rockspec, err = fetch.load_rockspec(path.rockspec_file(name, version))
    if err then
       return nil, "Failed loading rockspec for installed package: " .. err, errcode
    end

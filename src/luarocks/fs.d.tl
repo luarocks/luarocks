@@ -43,7 +43,7 @@ local record fs
    record Lock
       free: function()
    end
-   lock_access: function(string, ?boolean): Lock, string --!
+   lock_access: function(string, ?boolean): Lock, string
    unlock_access: function(Lock)
    copy: function(string, string, ?string): boolean, string
    unpack_archive: function(string): boolean, string

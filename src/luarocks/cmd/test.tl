@@ -35,7 +35,7 @@ to separate LuaRocks arguments from test suite arguments.]],
       :argname("<type>")
 end
 
-function cmd_test.command(args: Args): boolean, string, string --!
+function cmd_test.command(args: Args): boolean, string, string
    if args.rockspec and args.rockspec:match("rockspec$") then
       return test.run_test_suite(args.rockspec, args.test_type, args.args, args.prepare)
    end

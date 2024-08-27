@@ -17,6 +17,7 @@ local download = require("luarocks.download")
 
 
 
+
 function doc.add_to_parser(parser)
    local cmd = parser:command("doc", "Show documentation for an installed rock.\n\n" ..
    "Without any flags, tries to load the documentation using a series of heuristics.\n" ..
@@ -45,17 +46,26 @@ local function show_homepage(homepage, name, namespace, version)
 end
 
 local function try_to_open_homepage(name, namespace, version)
-   local temp_dir, err = fs.make_temp_dir("doc-" .. name .. "-" .. (version or ""))
+   local temp_dir, err
+   temp_dir, err = fs.make_temp_dir("doc-" .. name .. "-" .. (version or ""))
    if not temp_dir then
       return nil, "Failed creating temporary directory: " .. err
    end
+
    util.schedule_function(fs.delete, temp_dir)
-   local ok, err = fs.change_dir(temp_dir)
+
+   local ok
+   ok, err = fs.change_dir(temp_dir)
    if not ok then return nil, err end
-   local filename, err = download.download_file("rockspec", name, namespace, version)
+
+   local filename
+   filename, err = download.download_file("rockspec", name, namespace, version)
    if not filename then return nil, err end
-   local rockspec, err = fetch.load_local_rockspec(filename)
+
+   local rockspec
+   rockspec, err = fetch.load_local_rockspec(filename)
    if not rockspec then return nil, err end
+
    fs.pop_dir()
    local descript = rockspec.description or {}
    return show_homepage(descript.homepage, name, namespace, version)

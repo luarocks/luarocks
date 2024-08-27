@@ -107,12 +107,12 @@ function rockspecs.from_persisted_table(filename: string, rockspec: Rockspec, gl
    -- @return boolean: true if rockspec format matches version or is newer, false otherwise.
    do
       local parsed_format = vers.parse_version(rockspec.rockspec_format or "1.0")
-      rockspec.format_is_at_least = function(self: Rockspec, version: string): boolean
+      rockspec.format_is_at_least = function(_self: Rockspec, version: string): boolean
          return parsed_format >= vers.parse_version(version)
       end
    end
 
-   platform_overrides(rockspec.build as {any : any}) --!
+   platform_overrides(rockspec.build as {any : any})
    platform_overrides(rockspec.dependencies as {any : any})
    platform_overrides(rockspec.build_dependencies as {any : any})
    platform_overrides(rockspec.test_dependencies as {any : any})

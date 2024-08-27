@@ -51,11 +51,11 @@ function purge.command(args: Args): boolean, string
       sort = vers.compare_versions
    end
 
-   for package, versions in util.sortedpairs(results) do
+   for pkg, versions in util.sortedpairs(results) do
       for version, _ in util.sortedpairs(versions, sort) do
          if args.old_versions then
-            util.printout("Keeping "..package.." "..version.."...")
-            local ok, err, warn = remove.remove_other_versions(package, version, args.force, args.force_fast)
+            util.printout("Keeping "..pkg.." "..version.."...")
+            local ok, err, warn = remove.remove_other_versions(pkg, version, args.force, args.force_fast)
             if not ok then
                util.printerr(err)
             elseif warn then
@@ -63,8 +63,8 @@ function purge.command(args: Args): boolean, string
             end
             break
          else
-            util.printout("Removing "..package.." "..version.."...")
-            local ok, err = repo_writer.delete_version(package, version, "none", true)
+            util.printout("Removing "..pkg.." "..version.."...")
+            local ok, err = repo_writer.delete_version(pkg, version, "none", true)
             if not ok then
                util.printerr(err)
             end

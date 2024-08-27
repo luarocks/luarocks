@@ -36,7 +36,7 @@ local function check_dependents(name: string, versions: {string: {Result}}, deps
    local_rocks[name] = nil
    for rock_name, rock_versions in pairs(local_rocks) do
       for rock_version, _ in pairs(rock_versions) do
-         local rockspec, err = fetch.load_rockspec(path.rockspec_file(rock_name, rock_version))
+         local rockspec = fetch.load_rockspec(path.rockspec_file(rock_name, rock_version))
          if rockspec then
             local _, missing = deps.match_deps(rockspec.dependencies.queries, rockspec.rocks_provided, deps_mode, skip_set)
             if missing[name] then
@@ -127,8 +127,13 @@ function remove.remove_other_versions(name: string, version: string, force: bool
    if not fast then
       -- since we're not using --keep, this means that all files of the rock being installed
       -- should be available as non-versioned variants. Double-check that:
-      local rock_manifest, load_err = manif.load_rock_manifest(name, version)
-      local ok, err = repos.check_everything_is_installed(name, version, rock_manifest, cfg.root_dir, false)
+      local rock_manifest, err = manif.load_rock_manifest(name, version)
+      if not rock_manifest then
+         return nil, err
+      end
+
+      local ok: boolean
+      ok, err = repos.check_everything_is_installed(name, version, rock_manifest, cfg.root_dir, false)
       if not ok then
          return nil, err
       end

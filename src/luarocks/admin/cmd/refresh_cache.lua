@@ -24,8 +24,9 @@ function refresh_cache.command(args)
    if not server then return nil, err end
    local download_url = cache.get_server_urls(server, upload_server)
 
-   local ok, err = cache.refresh_local_cache(download_url, cfg.upload_user, cfg.upload_password)
-   if not ok then
+   local local_cache
+   local_cache, err = cache.refresh_local_cache(download_url, cfg.upload_user, cfg.upload_password)
+   if not local_cache then
       return nil, err
    else
       return true
