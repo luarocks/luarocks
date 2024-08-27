@@ -47,6 +47,10 @@ local type Hunk = patch.Hunk
 local type Files = patch.Files
 local type File = patch.File
 
+local function open(filename: string, mode?: io.OpenMode): FILE
+   return assert(io.open(fs.absolute_name(filename), mode) as (FILE, string))
+end
+
 -- logging
 local debugmode = false
 local function debug(_: string) end --!
@@ -74,14 +78,6 @@ local function table_copy<K, V>(t: {K: V}): {K: V}
   for k,v in pairs(t) do t2[k] = v end
   return t2
 end
-
-local function exists(filename: string): boolean
-  local fh = io.open(filename)
-  local result = fh ~= nil
-  if fh then fh:close() end
-  return result
-end
-local function isfile(): boolean return true end --FIX? --!
 
 local function string_as_file(s: string): File --!
    return {
@@ -188,7 +184,7 @@ function patch.read_patch(filename: string, data: string): Files, boolean
   if data then
     fp = string_as_file(data) as FILE --! cast
   else
-    fp = filename == '-' and io.stdin or assert(io.open(filename, "rb") as (FILE, string)) --! use of cast
+    fp = filename == '-' and io.stdin or open(filename, "rb")
   end
   local lineno = 0
 
@@ -386,7 +382,6 @@ function patch.read_patch(filename: string, data: string): Files, boolean
   if state ~= 'hunkskip' then
     warning(string.format("patch file incomplete - %s", filename))
     all_ok = false
-    -- os.exit(?)
   else
     -- duplicated message when an eof is reached
     if debugmode and #files.source > 0 then
@@ -444,7 +439,7 @@ local function find_hunk(file: {string}, h: Hunk, hno: integer): boolean
 end
 
 local function load_file(filename: string): {string}
-  local fp = assert(io.open(filename) as (FILE, string)) --! cast
+  local fp = open(filename)
   local file = {}
   local readline = file_lines(fp)
   while true do
@@ -495,8 +490,8 @@ local function check_patched(file: {string}, hunks: {Hunk}): boolean
 end
 
 local function patch_hunks(srcname: string, tgtname: string, hunks: {Hunk}): boolean
-  local src = assert(io.open(srcname, "rb") as (FILE, string)) --! cast
-  local tgt = assert(io.open(tgtname, "wb") as (FILE, string)) --! cast
+  local src = open(srcname, "rb")
+  local tgt = open(tgtname, "wb")
 
   local src_readline = file_lines(src)
 
@@ -566,7 +561,7 @@ local function strip_dirs(filename: string, strip: integer): string
 end
 
 local function write_new_file(filename: string, hunk: Hunk): boolean, string
-  local fh = io.open(filename, "wb")
+  local fh = io.open(fs.absolute_name(filename), "wb")
   if not fh then return false end
   for _, hline in ipairs(hunk.text) do
     local c = hline:sub(1,1)
@@ -593,17 +588,16 @@ local function patch_file(source: string, target: string, epoch: boolean, hunks:
   end
   source = strip_dirs(source, strip)
   local f2patch = source
-  if not exists(f2patch) then
+  if not fs.exists(f2patch) then
     f2patch = strip_dirs(target, strip)
     f2patch = fs.absolute_name(f2patch)
-    if not exists(f2patch) then  --FIX:if f2patch nil
+    if not fs.exists(f2patch) then
       warning(string.format("source/target file does not exist\n--- %s\n+++ %s",
               source, f2patch))
       return false
     end
   end
-  -- if not isfile(f2patch) then --!
-  if not isfile() then --!
+  if not fs.is_file(f2patch) then
     warning(string.format("not a file - %s", f2patch))
     return false
   end
@@ -624,7 +618,7 @@ local function patch_file(source: string, target: string, epoch: boolean, hunks:
 
   if create_delete then
     if epoch and #hunks == 1 and hunks[1].starttgt == 0 and hunks[1].linestgt == 0 then
-      local ok = os.remove(source)
+      local ok = fs.delete(fs.absolute_name(source))
       if not ok then
         return false
       end
@@ -717,14 +711,14 @@ local function patch_file(source: string, target: string, epoch: boolean, hunks:
                    backupname))
     return false
   end
-  local ok = os.rename(source, backupname)
+  local ok = fs.move(fs.absolute_name(source), fs.absolute_name(backupname))
   if not ok then
     warning(string.format("failed backing up %s when patching", source))
     return false
   end
   patch_hunks(backupname, source, hunks)
   info(string.format("successfully patched %s", source))
-  os.remove(backupname)
+  fs.delete(fs.absolute_name(backupname))
   return true
 end
 
