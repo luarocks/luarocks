@@ -197,7 +197,8 @@ local function write_entries(keys, scope, do_unset)
       end)
    end
 
-   local ok, err = fs.make_dir(dir.dir_name(file_name))
+   local ok
+   ok, err = fs.make_dir(dir.dir_name(file_name))
    if not ok then
       return nil, err
    end
@@ -373,13 +374,13 @@ function config_cmd.command(args)
 
          if ok then
             if args.key == "variables.LUA_INCDIR" then
-               local ok = report_on_lua_incdir_config(args.value)
-               if not ok then
+               local found = report_on_lua_incdir_config(args.value)
+               if not found then
                   warn_bad_c_config()
                end
             elseif args.key == "variables.LUA_LIBDIR" then
-               local ok = report_on_lua_libdir_config(args.value)
-               if not ok then
+               local found = report_on_lua_libdir_config(args.value)
+               if not found then
                   warn_bad_c_config()
                end
             end

@@ -111,7 +111,7 @@ local function read_header_block(block)
 
    if header.typeflag == "unknown" then
       if checksum_header(block) ~= header.chksum then
-         return false, "Failed header checksum"
+         return nil, "Failed header checksum"
       end
    end
    return header
@@ -136,13 +136,12 @@ function tar.untar(filename, destdir)
          break
       end
 
-      local headerp
-      headerp, err = read_header_block(block)
-      if not headerp then
+      local header
+      header, err = read_header_block(block)
+      if not header then
          ok = false
          break
       end
-      local header = headerp
       local file_data = ""
       if header.size > 0 then
          local nread = math.ceil(header.size / blocksize) * blocksize

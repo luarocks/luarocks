@@ -107,7 +107,7 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
 
    do
       local parsed_format = vers.parse_version(rockspec.rockspec_format or "1.0")
-      rockspec.format_is_at_least = function(self, version)
+      rockspec.format_is_at_least = function(_self, version)
          return parsed_format >= vers.parse_version(version)
       end
    end

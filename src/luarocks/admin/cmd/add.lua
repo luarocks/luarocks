@@ -73,7 +73,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
       return nil, "No files found"
    end
 
-   local ok, err = fs.change_dir(local_cache)
+   ok, err = fs.change_dir(local_cache)
    if not ok then return nil, err end
 
    util.printout("Updating manifest...")

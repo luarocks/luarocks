@@ -134,7 +134,7 @@ end
 local function sort_package_matching_table(tbl: {string: {string}})
 
    if next(tbl) then
-      for item, pkgs in pairs(tbl) do
+      for _item, pkgs in pairs(tbl) do
          if #pkgs > 1 then
             table.sort(pkgs, sort_pkgs)
             -- Remove duplicates from the sorted array.
@@ -261,17 +261,17 @@ function writer.make_rock_manifest(name: string, version: string): boolean, stri
       local walk = tree
       local last: {string : Entry}
       local last_name: string
-      local next: Entry
+      local nxt: Entry
       for filename in file:gmatch("[^\\/]+") do
-         next = walk[filename]
-         if not next then
-            next = {}
-            walk[filename] = next
+         nxt = walk[filename]
+         if not nxt then
+            nxt = {}
+            walk[filename] = nxt
          end
          last = walk
          last_name = filename
-         assert(next is {string: Entry})
-         walk = next
+         assert(nxt is {string: Entry})
+         walk = nxt
       end
       if fs.is_file(full_path) then
 
@@ -303,8 +303,8 @@ function writer.make_namespace_file(name: string, version: string, namespace?: s
    if not fd then
       return nil, err
    end
-   local ok, err = fd:write(namespace)
-   if not ok then
+   fd, err = fd:write(namespace)
+   if not fd then
       return nil, err
    end
    fd:close()
@@ -370,7 +370,7 @@ end
 -- "none" for using the default dependency mode from the configuration.
 -- @return boolean or (nil, string): True if manifest was updated successfully,
 -- or nil and an error message.
-function writer.add_to_manifest(name: string, version: string, repo: string, deps_mode: string): boolean, string  
+function writer.add_to_manifest(name: string, version: string, repo: string, deps_mode: string): boolean, string
    assert(not name:match("/"))
    local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
 
@@ -388,7 +388,7 @@ function writer.add_to_manifest(name: string, version: string, repo: string, dep
    local results: {string : {string : {Result}}} = {[name] = {[version] = {{arch = "installed", repo = rocks_dir}}}}
 
    local ok: boolean
-   ok, err = store_results(results, manifest) --!
+   ok, err = store_results(results, manifest)
    if not ok then return nil, err end
 
    update_dependencies(manifest, deps_mode)
@@ -416,7 +416,7 @@ function writer.remove_from_manifest(name: string, version: string, repo: string
 
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
-   local manifest, err = manif.load_manifest(rocks_dir)
+   local manifest, _err = manif.load_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
       -- Manifest built by `writer.make_manifest` should already
@@ -436,7 +436,7 @@ function writer.remove_from_manifest(name: string, version: string, repo: string
       return writer.make_manifest(rocks_dir, deps_mode)
    end
 
-   remove_package_items(manifest.modules, name, version, version_entry.modules) --!
+   remove_package_items(manifest.modules, name, version, version_entry.modules)
    remove_package_items(manifest.commands, name, version, version_entry.commands)
 
    package_entry[version] = nil

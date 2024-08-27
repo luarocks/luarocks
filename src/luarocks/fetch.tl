@@ -196,7 +196,7 @@ function fetch.fetch_url(url: string, filename?: string, cache?: boolean, mirror
       if not name then
          return nil, "Failed downloading "..url..(err and " - "..err or ""), err_code
       end
-      return name, nil, nil, from_cache --! string or boolean
+      return name, nil, nil, from_cache
    else
       return nil, "Unsupported protocol "..protocol
    end

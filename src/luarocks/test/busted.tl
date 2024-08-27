@@ -7,7 +7,6 @@ local deps = require("luarocks.deps")
 local path = require("luarocks.path")
 local dir = require("luarocks.dir")
 local queries = require("luarocks.queries")
-local install = require("luarocks.cmd.install")
 
 local type Test = require("luarocks.core.types.rockspec").Test
 

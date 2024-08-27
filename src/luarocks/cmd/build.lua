@@ -25,8 +25,6 @@ local repos = require("luarocks.repos")
 
 
 
-
-
 function cmd_build.add_to_parser(parser)
    local cmd = parser:command("build", "Build and install a rock, compiling its C parts if any.\n" ..
    "If the sources contain a luarocks.lock file, uses it as an authoritative source for " ..
@@ -90,7 +88,6 @@ local function build_rock(rock_filename, opts)
 end
 
 local function do_build(name, namespace, version, opts)
-
    local url, err
    if name:match("%.rockspec$") or name:match("%.rock$") then
       url = name
@@ -112,7 +109,8 @@ local function do_build(name, namespace, version, opts)
 
    if url:match("%.rockspec$") then
       local cwd = fs.absolute_name(dir.path("."))
-      local rockspec, err = fetch.load_rockspec(url, nil, opts.verify)
+      local rockspec
+      rockspec, err = fetch.load_rockspec(url, nil, opts.verify)
       if not rockspec then
          return nil, err
       end
@@ -123,7 +121,8 @@ local function do_build(name, namespace, version, opts)
       opts.need_to_fetch = false
    end
 
-   local ok, err, errcode = build_rock(url, opts)
+   local ok, errcode
+   ok, err, errcode = build_rock(url, opts)
    if not ok then
       return nil, err, errcode
    end

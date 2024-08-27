@@ -16,7 +16,7 @@ local util = require("luarocks.util")
 
 
 
-function hg.get_sources(rockspec, extract, dest_dir)
+function hg.get_sources(rockspec, _extract, dest_dir)
 
    local hg_cmd = rockspec.variables.HG
    local ok_available, err_msg = fs.is_tool_available(hg_cmd, "Mercurial")

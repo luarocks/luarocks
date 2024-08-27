@@ -154,7 +154,7 @@ function init.command(args)
    if not has_rockspec then
       args.version = args.version or "dev"
       args.location = pwd
-      local ok, err = write_rockspec.command(args)
+      ok, err = write_rockspec.command(args)
       if not ok then
          util.printerr(err)
       end
@@ -185,7 +185,8 @@ function init.command(args)
       fs.delete(fs.absolute_name(config_file))
    end
 
-   local config_tbl, err = persist.load_config_file_if_basic(config_file, cfg)
+   local config_tbl
+   config_tbl, err = persist.load_config_file_if_basic(config_file, cfg)
    if config_tbl then
       local varnames = {
          "LUA_DIR",
@@ -200,7 +201,7 @@ function init.command(args)
             (config_tbl.variables)[varname] = cfg.variables[varname]
          end
       end
-      local ok, err = persist.save_from_table(config_file, config_tbl)
+      ok, err = persist.save_from_table(config_file, config_tbl)
       if ok then
          util.printout("Wrote " .. config_file)
       else

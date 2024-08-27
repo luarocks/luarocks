@@ -69,7 +69,7 @@ do
          for patch, patchdata in util.sortedpairs(rockspec.build.patches) do
             util.printout("Applying patch "..patch.."...")
             local create_delete = rockspec:format_is_at_least("3.0")
-            local ok, err = fs.apply_patch(tostring(patch), patchdata, create_delete)
+            local ok, _err = fs.apply_patch(tostring(patch), patchdata, create_delete)
             if not ok then
                return nil, "Failed applying patch "..patch
             end
@@ -110,7 +110,7 @@ end
 local function process_dependencies(rockspec: Rockspec, opts: BOpts, cwd: string): boolean, string, string
    if not opts.build_only_deps then
       local ok, err, errcode = deps.check_external_deps(rockspec, "build")
-      if err then
+      if not ok then
          return nil, err, errcode
       end
    end
@@ -141,7 +141,7 @@ local function process_dependencies(rockspec: Rockspec, opts: BOpts, cwd: string
             path.use_tree(cfg.root_dir as Tree)
          end
 
-         local ok, err, errcode = deps.fulfill_dependencies(rockspec, "build_dependencies", "all", opts.verify, deplock_dir)
+         local _ok, err, errcode = deps.fulfill_dependencies(rockspec, "build_dependencies", "all", opts.verify, deplock_dir)
 
          path.add_to_package_paths(cfg.root_dir)
 
@@ -229,7 +229,7 @@ local function run_build_driver(rockspec: Rockspec, no_install: boolean): boolea
    if cfg.accepted_build_types and not fun.contains(cfg.accepted_build_types, btype) then
       return nil, "This rockspec uses the '"..btype.."' build type, which is blocked by the 'accepted_build_types' setting in your LuaRocks configuration."
    end
-   local pok, driver_str = pcall(require, "luarocks.build." .. btype) as (boolean, Builder | string)
+   local _pok, driver_str = pcall(require, "luarocks.build." .. btype) as (boolean, Builder | string)
    if not driver_str is Builder then
       return nil, "Failed initializing build back-end for build type '"..btype.."': "..driver_str
    else
@@ -412,7 +412,7 @@ function build.build_rockspec(rockspec: Rockspec, opts: BOpts, cwd: string): str
       return name, version
    end
 
-   local dirs, err: InstallDirs, string
+   local dirs: InstallDirs
    local rollback: util.Fn
    if not opts.no_install then
       if repos.is_installed(name, version) then

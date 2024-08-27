@@ -11,7 +11,6 @@ local query = require("luarocks.core.types.query")
 
 
 
-
 local query_mt = {}
 
 query_mt.__index = query.Query

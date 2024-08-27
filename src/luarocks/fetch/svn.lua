@@ -16,7 +16,7 @@ local util = require("luarocks.util")
 
 
 
-function svn.get_sources(rockspec, extract, dest_dir)
+function svn.get_sources(rockspec, _extract, dest_dir)
 
    local svn_cmd = rockspec.variables.SVN
    local ok, err_msg = fs.is_tool_available(svn_cmd, "Subversion")

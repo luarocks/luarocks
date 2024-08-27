@@ -150,7 +150,7 @@ end
 
 local function infer_type(var: string): string
    local typ: string
-   traverse_varstring(var, cfg as PersistableTable, function(t: PersistableTable, k: string): boolean, string --!
+   traverse_varstring(var, cfg as PersistableTable, function(t: PersistableTable, k: string): boolean, string
       if t[k] then
          typ = type(t[k])
       end
@@ -197,7 +197,8 @@ local function write_entries(keys: {string: string}, scope: string, do_unset: bo
       end)
    end
 
-   local ok, err = fs.make_dir(dir.dir_name(file_name))
+   local ok: boolean
+   ok, err = fs.make_dir(dir.dir_name(file_name))
    if not ok then
       return nil, err
    end
@@ -373,13 +374,13 @@ function config_cmd.command(args: Args): boolean, string
 
          if ok then
             if args.key == "variables.LUA_INCDIR" then
-               local ok = report_on_lua_incdir_config(args.value)
-               if not ok then
+               local found = report_on_lua_incdir_config(args.value)
+               if not found then
                   warn_bad_c_config()
                end
             elseif args.key == "variables.LUA_LIBDIR" then
-               local ok = report_on_lua_libdir_config(args.value)
-               if not ok then
+               local found = report_on_lua_libdir_config(args.value)
+               if not found then
                   warn_bad_c_config()
                end
             end

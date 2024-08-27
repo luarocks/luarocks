@@ -30,11 +30,11 @@ end
 
 local function remove_files_from_server(refresh: boolean, rockfiles: {string}, server: string, upload_server: {string: string}): boolean, string
 
-   local download_url, login_url = cache.get_server_urls(server, upload_server)
+   local download_url, _login_url = cache.get_server_urls(server, upload_server)
    local at = fs.current_dir()
    local refresh_fn = refresh and cache.refresh_local_cache or cache.split_server_url
 
-   local local_cache, protocol, server_path, user, password = refresh_fn(download_url, cfg.upload_user, cfg.upload_password)
+   local local_cache, protocol, server_path, user, _password = refresh_fn(download_url, cfg.upload_user, cfg.upload_password)
    if not local_cache then
       return nil, protocol
    end
@@ -58,7 +58,7 @@ local function remove_files_from_server(refresh: boolean, rockfiles: {string}, s
       return nil, "No files removed."
    end
 
-   local ok, err = fs.change_dir(local_cache)
+   ok, err = fs.change_dir(local_cache)
    if not ok then return nil, err end
 
    util.printout("Updating manifest...")
@@ -89,7 +89,7 @@ end
 function admin_remove.command(args: Args): boolean, string
    local server, server_table, err = cache.get_upload_server(args.server)
    if not server then return nil, err end
-   return remove_files_from_server(not args.no_refresh, args.rocks, server, server_table) --!
+   return remove_files_from_server(not args.no_refresh, args.rocks, server, server_table)
 end
 
 

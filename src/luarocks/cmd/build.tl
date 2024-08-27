@@ -22,9 +22,7 @@ local repos = require("luarocks.repos")
 local type Parser = require("luarocks.vendor.argparse").Parser
 
 local type Args = require("luarocks.core.types.args").Args
-
 local type BOpts = require("luarocks.core.types.bopts").BOpts
-
 local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 function cmd_build.add_to_parser(parser: Parser)
@@ -90,7 +88,6 @@ local function build_rock(rock_filename: string, opts: BOpts): boolean, string, 
 end
 
 local function do_build(name: string, namespace: string, version: string, opts: BOpts): string, string, string
-
    local url, err: string, string
    if name:match("%.rockspec$") or name:match("%.rock$") then
       url = name
@@ -112,7 +109,8 @@ local function do_build(name: string, namespace: string, version: string, opts: 
 
    if url:match("%.rockspec$") then
       local cwd = fs.absolute_name(dir.path("."))
-      local rockspec, err = fetch.load_rockspec(url, nil, opts.verify)
+      local rockspec: Rockspec
+      rockspec, err = fetch.load_rockspec(url, nil, opts.verify)
       if not rockspec then
          return nil, err
       end
@@ -123,7 +121,8 @@ local function do_build(name: string, namespace: string, version: string, opts: 
       opts.need_to_fetch = false
    end
 
-   local ok, err, errcode = build_rock(url, opts)
+   local ok, errcode: boolean, string
+   ok, err, errcode = build_rock(url, opts)
    if not ok then
       return nil, err, errcode
    end

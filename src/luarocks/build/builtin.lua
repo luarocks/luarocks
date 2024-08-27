@@ -247,7 +247,7 @@ function builtin.run(rockspec, no_install)
          end
          return execute(variables.LD .. " " .. variables.LDFLAGS .. " " .. variables.LIBFLAG, "-o", library, _tl_table_unpack(extras))
       end
-      compile_static_library = function(library, objects, libraries, libdirs, name)
+      compile_static_library = function(library, objects, _libraries, _libdirs, _name)
          local ok = execute(variables.AR, "rc", library, _tl_table_unpack(objects))
          if ok then
             ok = execute(variables.RANLIB, library)
@@ -256,7 +256,7 @@ function builtin.run(rockspec, no_install)
       end
    end
 
-   local ok, err
+   local ok, err, errcode
    local lua_modules = {}
    local lib_modules = {}
    local luadir = path.lua_dir(rockspec.name, rockspec.version)
@@ -306,13 +306,13 @@ function builtin.run(rockspec, no_install)
       end
       if type(info) == "table" then
          if not checked_lua_h then
-            local ok, err, errcode = deps.check_lua_incdir(rockspec.variables)
+            ok, err, errcode = deps.check_lua_incdir(rockspec.variables)
             if not ok then
                return nil, err, errcode
             end
 
             if cfg.link_lua_explicitly then
-               local ok, err, errcode = deps.check_lua_libdir(rockspec.variables)
+               ok, err, errcode = deps.check_lua_libdir(rockspec.variables)
                if not ok then
                   return nil, err, errcode
                end

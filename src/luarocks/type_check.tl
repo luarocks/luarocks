@@ -1,6 +1,6 @@
 
 local record type_check
-   type_check_table: function(version: string, tbl: {any: any}, typetbl: TableSchema, context: string): boolean, string --! tbl and typetbl types)
+   type_check_table: function(version: string, tbl: {any: any}, typetbl: TableSchema, context: string): boolean, string
 
    record TableSchema
       fields: {string: TableSchema}
@@ -134,7 +134,7 @@ local function type_check_item(version: string, item: any, typetbl: TableSchema,
       end
       local pattern = typetbl._pattern
       if pattern then
-         if not item:match("^"..pattern.."$") then --! cast or tostring
+         if not item:match("^"..pattern.."$") then
             local what = typetbl._name or ("'"..pattern.."'")
             return nil, "Type mismatch on field "..context..": invalid value '"..item.."' does not match " .. what
          end
@@ -219,7 +219,7 @@ function type_check.type_check_table(version: string, tbl: {any: any}, typetbl: 
    return true
 end
 
-function type_check.check_undeclared_globals(globals: {string: any}, typetbl: TableSchema): boolean, string --! tbl and typetbl types
+function type_check.check_undeclared_globals(globals: {string: any}, typetbl: TableSchema): boolean, string
    local undeclared = {}
    for glob, _ in pairs(globals) do
       if not (typetbl.fields[glob] or typetbl.fields["MUST_"..glob]) then

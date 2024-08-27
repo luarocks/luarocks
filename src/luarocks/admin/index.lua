@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local package = _tl_compat and _tl_compat.package or package; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
 
 local index = {}
 
@@ -115,7 +115,7 @@ function index.format_external_dependencies(rockspec)
       end
       if plats then
          for plat, entries in util.sortedpairs(plats) do
-            for name, desc in util.sortedpairs(entries) do
+            for name, _desc in util.sortedpairs(entries) do
                if not listed_set[name] then
                   table.insert(deplist, name:lower() .. " (on " .. plat .. ")")
                end
@@ -136,7 +136,7 @@ function index.make_index(repo)
    local out = io.open(dir.path(repo, "index.html"), "w")
 
    out:write(index_header)
-   for package, version_list in util.sortedpairs(manifest.repository) do
+   for pkg, version_list in util.sortedpairs(manifest.repository) do
       local latest_rockspec = nil
       local output = index_package_begin
       for version, data in util.sortedpairs(version_list, vers.compare_versions) do
@@ -146,10 +146,10 @@ function index.make_index(repo)
          for _, item in ipairs(data) do
             local file
             if item.arch == 'rockspec' then
-               file = ("%s-%s.rockspec"):format(package, version)
+               file = ("%s-%s.rockspec"):format(pkg, version)
                if not latest_rockspec then latest_rockspec = file end
             else
-               file = ("%s-%s.%s.rock"):format(package, version, item.arch)
+               file = ("%s-%s.%s.rock"):format(pkg, version, item.arch)
             end
             table.insert(versions, '<a href="' .. file .. '">' .. item.arch .. '</a>')
          end
@@ -160,7 +160,7 @@ function index.make_index(repo)
          local rockspec = persist.load_into_table(dir.path(repo, latest_rockspec))
          local descript = rockspec.description or {}
          local vars = {
-            anchor = package,
+            anchor = pkg,
             package = rockspec.package,
             original = rockspec.source.url,
             summary = descript.summary or "",
@@ -173,8 +173,8 @@ function index.make_index(repo)
          vars.detailed = vars.detailed:gsub("(https?://[a-zA-Z0-9%.%%-_%+%[%]=%?&/$@;:]+)", '<a href="%1"' .. ext_url_target .. '>%1</a>')
          output = output:gsub("$(%w+)", vars)
       else
-         output = output:gsub("$anchor", package)
-         output = output:gsub("$package", package)
+         output = output:gsub("$anchor", pkg)
+         output = output:gsub("$package", pkg)
          output = output:gsub("$(%w+)", "")
       end
       out:write(output)

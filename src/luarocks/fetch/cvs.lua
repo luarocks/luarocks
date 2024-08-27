@@ -16,7 +16,7 @@ local util = require("luarocks.util")
 
 
 
-function cvs.get_sources(rockspec, extract, dest_dir)
+function cvs.get_sources(rockspec, _extract, dest_dir)
    local cvs_cmd = rockspec.variables.CVS
    local ok, err_msg = fs.is_tool_available(cvs_cmd, "CVS")
    if not ok then

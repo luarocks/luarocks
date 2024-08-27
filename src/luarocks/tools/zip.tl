@@ -59,7 +59,7 @@ local function shr(n: integer, m: integer): integer
    return math.floor(n / 2^m)
 end
 
-local function shl(n: integer, m: integer): integer 
+local function shl(n: integer, m: integer): integer
    return (n * 2^m) as integer
 end
 
@@ -110,12 +110,12 @@ else
    error("unknown zlib library", 0)
 end
 
-local function number_to_lestring(number: number, nbytes: number): string
+local function number_to_lestring(num: integer, nbytes: number): string
    local out = {}
    for _ = 1, nbytes do
-      local byte: integer = number as integer % 256 --! cast I don't like
+      local byte: integer = num % 256
       table.insert(out, string.char(byte))
-      number = (number - byte) / 256
+      num = (num - byte) // 256
    end
    return table.concat(out)
 end

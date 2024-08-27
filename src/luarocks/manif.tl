@@ -142,7 +142,7 @@ function manif.load_manifest(repo_url: string, lua_version?: string, versioned_o
       pathname = nozip
    end
    local manifest, err, errcode = core.manifest_loader(pathname, repo_url, lua_version)
-   if not manifest and err is string then --!
+   if not manifest and err is string then
       return nil, err, errcode
    end
 

@@ -23,6 +23,7 @@ local type Response = upload.Response
 local type Parser = require("luarocks.vendor.argparse").Parser
 
 local type Args = require("luarocks.core.types.args").Args
+local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
 function upload.add_to_parser(parser: Parser)
    local cmd = parser:command("upload", "Pack a source rock file (.src.rock extension) "..
@@ -60,13 +61,16 @@ function upload.command(args: Args): boolean, string, string
       api.debug = true
    end
 
-   local rockspec, err, errcode = fetch.load_rockspec(args.rockspec)
+   local rockspec: Rockspec
+   local errcode: string
+   rockspec, err, errcode = fetch.load_rockspec(args.rockspec)
    if err then
       return nil, err, errcode
    end
 
    util.printout("Sending " .. tostring(args.rockspec) .. " ...")
-   local res, err = api:method("check_rockspec", {
+   local res: Response
+   res, err = api:method("check_rockspec", {
       package = rockspec.package,
       version = rockspec.version
    }) as (Response, string)

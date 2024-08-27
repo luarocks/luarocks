@@ -73,7 +73,7 @@ local function add_files_to_server(refresh: boolean, rockfiles: {string}, server
       return nil, "No files found"
    end
 
-   local ok, err = fs.change_dir(local_cache)
+   ok, err = fs.change_dir(local_cache)
    if not ok then return nil, err end
 
    util.printout("Updating manifest...")
@@ -125,7 +125,7 @@ local function add_files_to_server(refresh: boolean, rockfiles: {string}, server
    return fs.execute(cmd)
 end
 
-function add.command(args: Args): boolean, string, string --!
+function add.command(args: Args): boolean, string, string
    local server, server_table, err = cache.get_upload_server(args.add_server or args.server)
    if not server then return nil, err end
    return add_files_to_server(not args.no_refresh, args.rocks, server, server_table, args.index)

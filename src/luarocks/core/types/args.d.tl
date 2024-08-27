@@ -3,18 +3,18 @@ local record args
       tree: string
       global: boolean
       deps_mode: string
-      ["local"]: boolean --!
+      ["local"]: boolean
       project_tree: string
       server: string
       dev: boolean
-      only_server: string --!
+      only_server: string
       verbose: string
       lua_version: string
       lua_dir: string
       no_project: boolean
       input: {string}
       nodeps: boolean
-      timeout: number --!
+      timeout: number
       command: string
       key: string
       value: string
@@ -26,8 +26,8 @@ local record args
       pack_binary_rock: boolean
       only_deps: boolean
       branch: string
-      verify: boolean --!
-      check_lua_versions: boolean --!
+      verify: boolean
+      check_lua_versions: boolean
       pin: boolean
       no_install: boolean
       sign: boolean
@@ -48,7 +48,7 @@ local record args
       json: boolean
       home: boolean
       porcelain: boolean
-      list: boolean --!
+      list: boolean
       name: string
       all: boolean
       source: string

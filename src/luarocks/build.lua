@@ -69,7 +69,7 @@ do
          for patch, patchdata in util.sortedpairs(rockspec.build.patches) do
             util.printout("Applying patch " .. patch .. "...")
             local create_delete = rockspec:format_is_at_least("3.0")
-            local ok, err = fs.apply_patch(tostring(patch), patchdata, create_delete)
+            local ok, _err = fs.apply_patch(tostring(patch), patchdata, create_delete)
             if not ok then
                return nil, "Failed applying patch " .. patch
             end
@@ -110,7 +110,7 @@ end
 local function process_dependencies(rockspec, opts, cwd)
    if not opts.build_only_deps then
       local ok, err, errcode = deps.check_external_deps(rockspec, "build")
-      if err then
+      if not ok then
          return nil, err, errcode
       end
    end
@@ -141,7 +141,7 @@ local function process_dependencies(rockspec, opts, cwd)
             path.use_tree(cfg.root_dir)
          end
 
-         local ok, err, errcode = deps.fulfill_dependencies(rockspec, "build_dependencies", "all", opts.verify, deplock_dir)
+         local _ok, err, errcode = deps.fulfill_dependencies(rockspec, "build_dependencies", "all", opts.verify, deplock_dir)
 
          path.add_to_package_paths(cfg.root_dir)
 
@@ -229,7 +229,7 @@ local function run_build_driver(rockspec, no_install)
    if cfg.accepted_build_types and not fun.contains(cfg.accepted_build_types, btype) then
       return nil, "This rockspec uses the '" .. btype .. "' build type, which is blocked by the 'accepted_build_types' setting in your LuaRocks configuration."
    end
-   local pok, driver_str = pcall(require, "luarocks.build." .. btype)
+   local _pok, driver_str = pcall(require, "luarocks.build." .. btype)
    if not (type(driver_str) == "table") then
       return nil, "Failed initializing build back-end for build type '" .. btype .. "': " .. driver_str
    else
@@ -412,7 +412,7 @@ function build.build_rockspec(rockspec, opts, cwd)
       return name, version
    end
 
-   local dirs, err
+   local dirs
    local rollback
    if not opts.no_install then
       if repos.is_installed(name, version) then
