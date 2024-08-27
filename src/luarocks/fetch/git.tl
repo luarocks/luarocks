@@ -86,7 +86,7 @@ end
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function git.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string, depth?: string): string, string
+function git.get_sources(rockspec: Rockspec, _extract: boolean, dest_dir?: string, depth?: string): string, string
 
    local git_cmd = rockspec.variables.GIT
    local name_version = rockspec.name .. "-" .. rockspec.version

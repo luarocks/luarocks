@@ -160,7 +160,7 @@ function repos.has_binaries(name, version)
    end
    local bin = entries["bin"]
    if type(bin) == "table" then
-      for bin_name, md5 in pairs(bin) do
+      for bin_name, _md5 in pairs(bin) do
 
          if fs.is_actual_binary(dir.path(cfg.deploy_bin_dir, bin_name)) then
             return true
@@ -222,7 +222,7 @@ local function find_suffixed(file, suffix)
 end
 
 local function check_suffix(filename, suffix)
-   local suffixed_filename, err = find_suffixed(filename, suffix)
+   local suffixed_filename, _err = find_suffixed(filename, suffix)
    if not suffixed_filename then
       return ""
    end
@@ -308,7 +308,8 @@ local function prepare_op_install()
          return nil, err
       end
 
-      local backup, err = backup_existing(op.backup, op.dst)
+      local backup
+      backup, err = backup_existing(op.backup, op.dst)
       if err then
          return nil, err
       end
@@ -559,8 +560,12 @@ local function double_check_all(double_checks, repo)
    local errs = {}
    for next_name, versions in pairs(double_checks) do
       for next_version in pairs(versions) do
-         local rock_manifest, load_err = manif.load_rock_manifest(next_name, next_version)
-         local ok, err = repos.check_everything_is_installed(next_name, next_version, rock_manifest, repo, true)
+         local rock_manifest
+         local ok, err
+         rock_manifest, err = manif.load_rock_manifest(next_name, next_version)
+         if rock_manifest then
+            ok, err = repos.check_everything_is_installed(next_name, next_version, rock_manifest, repo, true)
+         end
          if not ok then
             table.insert(errs, err)
          end
@@ -582,7 +587,7 @@ end
 
 
 
-function repos.delete_local_version(name, version, deps_mode, quick)
+function repos.delete_local_version(name, version, _deps_mode, quick)
    assert(not name:match("/"))
 
    local rock_manifest, load_err = manif.load_rock_manifest(name, version)
@@ -602,7 +607,7 @@ function repos.delete_local_version(name, version, deps_mode, quick)
    if rock_manifest.bin then
       repos.recurse_rock_manifest_entry(rock_manifest.bin, function(file_path)
          local paths = get_deploy_paths(name, version, "bin", file_path, repo)
-         local mode, cur_name, cur_version, item_name = check_spot_if_available(name, version, "bin", file_path)
+         local mode, _cur_name, _cur_version, item_name = check_spot_if_available(name, version, "bin", file_path)
          if mode == "v" then
             table.insert(deletes, { name = paths.v, suffix = cfg.wrapper_suffix })
          else
@@ -622,7 +627,7 @@ function repos.delete_local_version(name, version, deps_mode, quick)
    if rock_manifest.lua then
       repos.recurse_rock_manifest_entry(rock_manifest.lua, function(file_path)
          local paths = get_deploy_paths(name, version, "lua", file_path, repo)
-         local mode, cur_name, cur_version, item_name = check_spot_if_available(name, version, "lua", file_path)
+         local mode, _cur_name, _cur_version, item_name = check_spot_if_available(name, version, "lua", file_path)
          if mode == "v" then
             table.insert(deletes, { name = paths.v })
          else
@@ -644,7 +649,7 @@ function repos.delete_local_version(name, version, deps_mode, quick)
    if rock_manifest.lib then
       repos.recurse_rock_manifest_entry(rock_manifest.lib, function(file_path)
          local paths = get_deploy_paths(name, version, "lib", file_path, repo)
-         local mode, cur_name, cur_version, item_name = check_spot_if_available(name, version, "lib", file_path)
+         local mode, _cur_name, _cur_version, item_name = check_spot_if_available(name, version, "lib", file_path)
          if mode == "v" then
             table.insert(deletes, { name = paths.v })
          else

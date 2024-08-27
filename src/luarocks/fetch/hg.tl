@@ -16,7 +16,7 @@ local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function hg.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string
+function hg.get_sources(rockspec: Rockspec, _extract: boolean, dest_dir?: string): string, string
 
    local hg_cmd = rockspec.variables.HG
    local ok_available, err_msg = fs.is_tool_available(hg_cmd, "Mercurial")

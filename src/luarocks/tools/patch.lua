@@ -53,7 +53,7 @@ end
 
 
 local debugmode = false
-local function debug(_) end
+local function dbg(_) end
 local function info(_) end
 local function warning(s) io.stderr:write(s .. '\n') end
 
@@ -78,14 +78,6 @@ local function table_copy(t)
    for k, v in pairs(t) do t2[k] = v end
    return t2
 end
-
-local function exists(filename)
-   local fh = io.open(filename)
-   local result = fh ~= nil
-   if fh then fh:close() end
-   return result
-end
-local function isfile() return true end
 
 local function string_as_file(s)
    return {
@@ -279,7 +271,7 @@ function patch.read_patch(filename, data)
          elseif startswith(line, "--- ") then
             state = 'filenames'
             if debugmode and #files.source > 0 then
-               debug(string.format("- %2d hunks for %s", #files.hunks[nextfileno],
+               dbg(string.format("- %2d hunks for %s", #files.hunks[nextfileno],
                files.source[nextfileno]))
             end
          end
@@ -393,7 +385,7 @@ function patch.read_patch(filename, data)
    else
 
       if debugmode and #files.source > 0 then
-         debug(string.format("- %2d hunks for %s", #files.hunks[nextfileno],
+         dbg(string.format("- %2d hunks for %s", #files.hunks[nextfileno],
          files.source[nextfileno]))
       end
    end
@@ -512,7 +504,7 @@ local function patch_hunks(srcname, tgtname, hunks)
    local srclineno = 1
    local lineends = { ['\n'] = 0, ['\r\n'] = 0, ['\r'] = 0 }
    for hno, h in ipairs(hunks) do
-      debug(string.format("processing hunk %d for file %s", hno, tgtname))
+      dbg(string.format("processing hunk %d for file %s", hno, tgtname))
 
       while srclineno < h.startsrc do
          local line = src_readline()
@@ -596,17 +588,16 @@ local function patch_file(source, target, epoch, hunks, strip, create_delete)
    end
    source = strip_dirs(source, strip)
    local f2patch = source
-   if not exists(f2patch) then
+   if not fs.exists(f2patch) then
       f2patch = strip_dirs(target, strip)
       f2patch = fs.absolute_name(f2patch)
-      if not exists(f2patch) then
+      if not fs.exists(f2patch) then
          warning(string.format("source/target file does not exist\n--- %s\n+++ %s",
          source, f2patch))
          return false
       end
    end
-
-   if not isfile() then
+   if not fs.is_file(f2patch) then
       warning(string.format("not a file - %s", f2patch))
       return false
    end
@@ -658,7 +649,7 @@ local function patch_file(source, target, epoch, hunks, strip, create_delete)
          if endlstrip(line) == hunkfind[hunklineno] then
             hunklineno = hunklineno + 1
          else
-            debug(string.format("hunk no.%d doesn't match source file %s",
+            dbg(string.format("hunk no.%d doesn't match source file %s",
             hunkno, source))
 
             hunkno = hunkno + 1
@@ -672,7 +663,7 @@ local function patch_file(source, target, epoch, hunks, strip, create_delete)
       end
 
       if lineno == hunk.startsrc + #hunkfind - 1 then
-         debug(string.format("file %s hunk no.%d -- is ready to be patched",
+         dbg(string.format("file %s hunk no.%d -- is ready to be patched",
          source, hunkno))
          hunkno = hunkno + 1
          validhunks = validhunks + 1
@@ -715,7 +706,7 @@ local function patch_file(source, target, epoch, hunks, strip, create_delete)
       return true
    end
    local backupname = source .. ".orig"
-   if exists(backupname) then
+   if fs.exists(backupname) then
       warning(string.format("can't backup original file to %s - aborting",
       backupname))
       return false

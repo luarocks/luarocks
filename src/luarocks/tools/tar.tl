@@ -84,7 +84,7 @@ local function nullterm(s: string): string
    return s:match("^[^%z]*")
 end
 
-local function read_header_block(block: string): boolean | Header, string
+local function read_header_block(block: string): Header, string
    local header: Header = {}
    header.name = nullterm(block:sub(1,100))
    header.mode = nullterm(block:sub(101,108)):gsub(" ", "")
@@ -111,7 +111,7 @@ local function read_header_block(block: string): boolean | Header, string
    -- end
    if header.typeflag == "unknown" then
       if checksum_header(block) ~= header.chksum then
-         return false, "Failed header checksum"
+         return nil, "Failed header checksum"
       end
    end
    return header
@@ -136,13 +136,12 @@ function tar.untar(filename: string, destdir: string): boolean, string
          break
       end
 
-      local headerp:  boolean | Header
-      headerp, err = read_header_block(block)
-      if not headerp then
+      local header: Header
+      header, err = read_header_block(block)
+      if not header then
          ok = false
          break
       end
-      local header: Header = headerp as Header --!  cast
       local file_data = ""
       if header.size > 0 then
          local nread = math.ceil(header.size / blocksize) * blocksize

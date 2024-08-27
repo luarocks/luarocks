@@ -78,6 +78,7 @@ end
 
 
 
+
 local function check_url_and_update_md5(out_rs, invalid_is_error)
    local file, temp_dir = fetch.fetch_url_at_temp_dir(out_rs.source.url, "luarocks-new-version-" .. out_rs.package)
    if not file then
@@ -85,7 +86,7 @@ local function check_url_and_update_md5(out_rs, invalid_is_error)
          return nil, "invalid URL - " .. temp_dir
       end
       util.warning("invalid URL - " .. temp_dir)
-      return true, false
+      return true, nil, false
    end
    do
       local inferred_dir, found_dir = fetch.find_base_dir(file, temp_dir, out_rs.source.url, out_rs.source.dir)
@@ -106,15 +107,16 @@ local function check_url_and_update_md5(out_rs, invalid_is_error)
          end
          local old_md5 = out_rs.source.md5
          out_rs.source.md5 = new_md5
-         return true, new_md5 ~= old_md5
+         return true, nil, new_md5 ~= old_md5
       else
          util.printout("File successfully downloaded.")
-         return true, false
+         return true, nil, false
       end
    end
 end
 
 local function update_source_section(out_rs, url, tag, old_ver, new_ver)
+   local ok, err, md5_changed
    if tag then
       out_rs.source.tag = tag
    end
@@ -123,7 +125,7 @@ local function update_source_section(out_rs, url, tag, old_ver, new_ver)
       return check_url_and_update_md5(out_rs)
    end
    if new_ver == old_ver then
-      return true
+      return true, nil, false
    end
    if out_rs.source.dir then
       try_replace(out_rs.source, "dir", old_ver, new_ver)
@@ -134,24 +136,25 @@ local function update_source_section(out_rs, url, tag, old_ver, new_ver)
 
    local old_url = out_rs.source.url
    if try_replace(out_rs.source, "url", old_ver, new_ver) then
-      local ok, md5_changed = check_url_and_update_md5(out_rs, true)
+      ok, err, md5_changed = check_url_and_update_md5(out_rs, true)
       if ok then
-         return ok, md5_changed
+         return ok, nil, md5_changed
       end
       out_rs.source.url = old_url
    end
    if tag or try_replace(out_rs.source, "tag", old_ver, new_ver) then
-      return true
+      return true, nil, false
    end
 
-   local ok, md5_changed = check_url_and_update_md5(out_rs)
+
+   ok, err, md5_changed = check_url_and_update_md5(out_rs)
    if not ok then
-      return nil, md5_changed
+      return nil, err
    end
    if md5_changed then
       util.warning("URL is the same, but MD5 has changed. Old rockspec is broken.")
    end
-   return true
+   return true, nil, true
 end
 
 function new_version.command(args)
@@ -176,7 +179,8 @@ function new_version.command(args)
       end
    end
 
-   local valid_rs, err = fetch.load_rockspec(filename)
+   local valid_rs
+   valid_rs, err = fetch.load_rockspec(filename)
    if not valid_rs then
       return nil, err
    end
@@ -206,11 +210,13 @@ function new_version.command(args)
    end
    local new_rockver = new_ver:gsub("-", "")
 
-   local out_rs, err = persist.load_into_table(filename), string
+   local out_rs
+   out_rs, err = persist.load_into_table(filename)
    local out_name = out_rs.package:lower()
    out_rs.version = new_rockver .. "-" .. tostring(new_rev)
 
-   local ok, err = update_source_section(out_rs, args.new_url, args.tag, old_ver, new_ver)
+   local ok
+   ok, err = update_source_section(out_rs, args.new_url, args.tag, old_ver, new_ver)
    if not ok then return nil, err end
 
    if out_rs.build and out_rs.build.type == "module" then
@@ -226,7 +232,8 @@ function new_version.command(args)
 
    util.printout("Wrote " .. out_filename)
 
-   local valid_out_rs, err = fetch.load_local_rockspec(out_filename)
+   local valid_out_rs
+   valid_out_rs, err = fetch.load_local_rockspec(out_filename)
    if not valid_out_rs then
       return nil, "Failed loading generated rockspec: " .. err
    end

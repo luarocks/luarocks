@@ -24,6 +24,7 @@ local Api = require("luarocks.upload.api")
 
 
 
+
 function upload.add_to_parser(parser)
    local cmd = parser:command("upload", "Pack a source rock file (.src.rock extension) " ..
    "and upload it and the rockspec to the public rocks repository.", util.see_also()):
@@ -60,13 +61,16 @@ function upload.command(args)
       api.debug = true
    end
 
-   local rockspec, err, errcode = fetch.load_rockspec(args.rockspec)
+   local rockspec
+   local errcode
+   rockspec, err, errcode = fetch.load_rockspec(args.rockspec)
    if err then
       return nil, err, errcode
    end
 
    util.printout("Sending " .. tostring(args.rockspec) .. " ...")
-   local res, err = api:method("check_rockspec", {
+   local res
+   res, err = api:method("check_rockspec", {
       package = rockspec.package,
       version = rockspec.version,
    })

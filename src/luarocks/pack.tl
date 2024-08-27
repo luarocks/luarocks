@@ -111,18 +111,19 @@ function pack.pack_installed_rock(query: Query, tree: string | Tree): string, st
    local temp_dir = fs.make_temp_dir("pack")
    fs.copy_contents(prefix, temp_dir)
 
+   local ok: boolean
    local is_binary = false
    if rock_manifest.lib then
-      local ok, err = copy_back_files(name, version, (rock_manifest.lib as {string: Entry}), path.deploy_lib_dir(repo), dir.path(temp_dir, "lib"), "exec")
+      ok, err = copy_back_files(name, version, (rock_manifest.lib as {string: Entry}), path.deploy_lib_dir(repo), dir.path(temp_dir, "lib"), "exec")
       if not ok then return nil, "Failed copying back files: " .. err end
       is_binary = true
    end
    if rock_manifest.lua then
-      local ok, err = copy_back_files(name, version, (rock_manifest.lua as {string: Entry}), path.deploy_lua_dir(repo), dir.path(temp_dir, "lua"), "read")
+      ok, err = copy_back_files(name, version, (rock_manifest.lua as {string: Entry}), path.deploy_lua_dir(repo), dir.path(temp_dir, "lua"), "read")
       if not ok then return nil, "Failed copying back files: " .. err end
    end
 
-   local ok, err = fs.change_dir(temp_dir)
+   ok, err = fs.change_dir(temp_dir)
    if not ok then return nil, err end
    if not is_binary and not repos.has_binaries(name, version) then
       rock_file = rock_file:gsub("%."..cfg.arch:gsub("%-","%%-").."%.", ".all.")
@@ -172,16 +173,22 @@ function pack.pack_binary_rock(name: string, namespace: string, version: string,
    util.schedule_function(fs.delete, temp_dir)
 
    path.use_tree(temp_dir)
-   local ok, err = cmd()
-   if not ok then
+
+   local ret: string
+   ret, err = cmd()
+   if not ret then
       return nil, err
    end
+
    local rname, rversion = path.parse_name(name)
    if not rname then
       rname, rversion = name, version
    end
    local query = queries.new(rname, namespace, rversion)
-   local file, err = pack.pack_installed_rock(query, temp_dir)
+
+   local file: string
+   file, err = pack.pack_installed_rock(query, temp_dir)
+
    return pack.report_and_sign_local_file(file, err, sign)
 end
 

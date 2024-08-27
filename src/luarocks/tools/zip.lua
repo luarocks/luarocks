@@ -110,12 +110,12 @@ else
    error("unknown zlib library", 0)
 end
 
-local function number_to_lestring(number, nbytes)
+local function number_to_lestring(num, nbytes)
    local out = {}
    for _ = 1, nbytes do
-      local byte = number % 256
+      local byte = num % 256
       table.insert(out, string.char(byte))
-      number = (number - byte) / 256
+      num = math.floor((num - byte) / 256)
    end
    return table.concat(out)
 end

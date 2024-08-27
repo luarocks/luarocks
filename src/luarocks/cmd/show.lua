@@ -307,8 +307,10 @@ function show.command(args)
    if not rockspec then return nil, err end
 
    local descript = rockspec.description or {}
-   local manifest, err = manif.load_manifest(repo_url)
-   if not manifest then return nil, err end
+
+   local manifest, manifest_err = manif.load_manifest(repo_url)
+   if not manifest then return nil, manifest_err end
+
    local minfo = manifest.repository[name][version][1]
 
    if args.rock_tree then util.printout(tree)

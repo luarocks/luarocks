@@ -16,7 +16,7 @@ local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function svn.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string
+function svn.get_sources(rockspec: Rockspec, _extract: boolean, dest_dir?: string): string, string
 
    local svn_cmd = rockspec.variables.SVN
    local ok, err_msg = fs.is_tool_available(svn_cmd, "Subversion")

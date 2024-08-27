@@ -386,7 +386,8 @@ function write_rockspec.command(args)
       end
    end
 
-   local ok, err = fs.change_dir(local_dir)
+   local ok
+   ok, err = fs.change_dir(local_dir)
    if not ok then return nil, "Failed reaching files from project - error entering directory " .. local_dir end
 
    if not (args.summary and args.detailed) then

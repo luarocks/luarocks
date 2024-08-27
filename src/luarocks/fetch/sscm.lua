@@ -15,7 +15,7 @@ local dir = require("luarocks.dir")
 
 
 
-function sscm.get_sources(rockspec, extract, dest_dir)
+function sscm.get_sources(rockspec, _extract, _dest_dir)
 
    local sscm_cmd = rockspec.variables.SSCM
    local module = rockspec.source.module or dir.base_name(rockspec.source.url)

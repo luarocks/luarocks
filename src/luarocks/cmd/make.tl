@@ -99,7 +99,7 @@ function make.command(args: Args): boolean, string
    end
 
    local cwd = fs.absolute_name(dir.path("."))
-   local rockspec, err, errcode = fetch.load_rockspec(rockspec_filename)
+   local rockspec, err = fetch.load_rockspec(rockspec_filename)
    if not rockspec then
       return nil, err
    end
@@ -141,9 +141,9 @@ function make.command(args: Args): boolean, string
          return name, version
       end)
    else
-      local ok, err = build.build_rockspec(rockspec, opts, cwd)
-      if not ok then return nil, err end
-      name, version = ok, err  -- luacheck: ignore 421
+      name, err = build.build_rockspec(rockspec, opts, cwd)
+      if not name then return nil, err end
+      version = err
 
       if opts.build_only_deps then
          util.printout("Stopping after installing dependencies for " ..name.." "..version)
@@ -156,7 +156,8 @@ function make.command(args: Args): boolean, string
       end
 
       if (not args.keep) and not cfg.keep_other_versions then
-         local ok, err, warn = remove.remove_other_versions(name, version, args.force, args.force_fast)
+         local ok, warn: boolean, string
+         ok, err, warn = remove.remove_other_versions(name, version, args.force, args.force_fast)
          if not ok then
             return nil, err
          elseif warn then

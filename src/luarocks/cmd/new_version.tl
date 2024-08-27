@@ -76,16 +76,17 @@ end
 
 -- Try to download source file using URL from a rockspec.
 -- If it specified MD5, update it.
--- @return (true, false) if MD5 was not specified or it stayed same,
--- (true, true) if MD5 changed, (nil, string) on error.
-local function check_url_and_update_md5(out_rs: Rockspec, invalid_is_error?: boolean): boolean, string | boolean --!
+-- @return true if no errors ocurred
+-- @return an error message in case of errors
+-- @return if no errors, a true boolean if the MD5 changed.
+local function check_url_and_update_md5(out_rs: Rockspec, invalid_is_error?: boolean): boolean, string, boolean
    local file, temp_dir = fetch.fetch_url_at_temp_dir(out_rs.source.url, "luarocks-new-version-"..out_rs.package)
    if not file then
       if invalid_is_error then
          return nil, "invalid URL - "..temp_dir
       end
       util.warning("invalid URL - "..temp_dir)
-      return true, false
+      return true, nil, false
    end
    do
       local inferred_dir, found_dir = fetch.find_base_dir(file, temp_dir, out_rs.source.url, out_rs.source.dir)
@@ -106,15 +107,16 @@ local function check_url_and_update_md5(out_rs: Rockspec, invalid_is_error?: boo
          end
          local old_md5 = out_rs.source.md5
          out_rs.source.md5 = new_md5
-         return true, new_md5 ~= old_md5
+         return true, nil, new_md5 ~= old_md5
       else
          util.printout("File successfully downloaded.")
-         return true, false
+         return true, nil, false
       end
    end
 end
 
-local function update_source_section(out_rs: Rockspec, url: string, tag: string, old_ver: string, new_ver: string): boolean, string | boolean
+local function update_source_section(out_rs: Rockspec, url: string, tag: string, old_ver: string, new_ver: string): boolean, string, boolean
+   local ok, err, md5_changed: boolean, string, boolean
    if tag then
       out_rs.source.tag = tag
    end
@@ -123,7 +125,7 @@ local function update_source_section(out_rs: Rockspec, url: string, tag: string,
       return check_url_and_update_md5(out_rs)
    end
    if new_ver == old_ver then
-      return true
+      return true, nil, false
    end
    if out_rs.source.dir then
       try_replace(out_rs.source as {string: string}, "dir", old_ver, new_ver)
@@ -134,24 +136,25 @@ local function update_source_section(out_rs: Rockspec, url: string, tag: string,
 
    local old_url = out_rs.source.url
    if try_replace(out_rs.source as {string: string}, "url", old_ver, new_ver) then
-      local ok, md5_changed = check_url_and_update_md5(out_rs, true)
+      ok, err, md5_changed = check_url_and_update_md5(out_rs, true)
       if ok then
-         return ok, md5_changed
+         return ok, nil, md5_changed
       end
       out_rs.source.url = old_url
    end
    if tag or try_replace(out_rs.source as {string: string}, "tag", old_ver, new_ver) then
-      return true
+      return true, nil, false
    end
+
    -- Couldn't replace anything significant, use the old URL.
-   local ok, md5_changed = check_url_and_update_md5(out_rs)
+   ok, err, md5_changed = check_url_and_update_md5(out_rs)
    if not ok then
-      return nil, md5_changed
+      return nil, err
    end
    if md5_changed then
       util.warning("URL is the same, but MD5 has changed. Old rockspec is broken.")
    end
-   return true
+   return true, nil, true
 end
 
 function new_version.command(args: Args): boolean, string | boolean
@@ -176,7 +179,8 @@ function new_version.command(args: Args): boolean, string | boolean
       end
    end
 
-   local valid_rs, err = fetch.load_rockspec(filename)
+   local valid_rs: Rockspec
+   valid_rs, err = fetch.load_rockspec(filename)
    if not valid_rs then
       return nil, err
    end
@@ -206,11 +210,13 @@ function new_version.command(args: Args): boolean, string | boolean
    end
    local new_rockver = new_ver:gsub("-", "")
 
-   local out_rs, err = persist.load_into_table(filename) as Rockspec, string
+   local out_rs: Rockspec
+   out_rs, err = persist.load_into_table(filename) as (Rockspec, string)
    local out_name = out_rs.package:lower()
    out_rs.version = new_rockver.."-"..tostring(new_rev)
 
-   local ok, err = update_source_section(out_rs, args.new_url, args.tag, old_ver, new_ver)
+   local ok: boolean
+   ok, err = update_source_section(out_rs, args.new_url, args.tag, old_ver, new_ver)
    if not ok then return nil, err end
 
    if out_rs.build and out_rs.build.type == "module" then
@@ -226,7 +232,8 @@ function new_version.command(args: Args): boolean, string | boolean
 
    util.printout("Wrote "..out_filename)
 
-   local valid_out_rs, err = fetch.load_local_rockspec(out_filename)
+   local valid_out_rs: Rockspec
+   valid_out_rs, err = fetch.load_local_rockspec(out_filename)
    if not valid_out_rs then
       return nil, "Failed loading generated rockspec: "..err
    end

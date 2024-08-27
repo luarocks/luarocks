@@ -15,7 +15,7 @@ local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 -- @return (string, string) or (nil, string): The absolute pathname of
 -- the fetched source tarball and the temporary directory created to
 -- store it; or nil and an error message.
-function sscm.get_sources(rockspec: Rockspec, extract: boolean, dest_dir?: string): string, string
+function sscm.get_sources(rockspec: Rockspec, _extract: boolean, _dest_dir?: string): string, string
 
    local sscm_cmd = rockspec.variables.SSCM
    local module = rockspec.source.module or dir.base_name(rockspec.source.url)

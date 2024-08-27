@@ -385,45 +385,45 @@ local function use_to_fix_location(key, what)
    return buf
 end
 
-local function get_config_text(cfg)
+local function get_config_text(conf)
    local deps = require("luarocks.deps")
 
-   local libdir_ok = deps.check_lua_libdir(cfg.variables)
-   local incdir_ok = deps.check_lua_incdir(cfg.variables)
-   local lua_ok = cfg.variables.LUA and fs.exists(cfg.variables.LUA)
+   local libdir_ok = deps.check_lua_libdir(conf.variables)
+   local incdir_ok = deps.check_lua_incdir(conf.variables)
+   local lua_ok = conf.variables.LUA and fs.exists(conf.variables.LUA)
 
    local buf = "Configuration:\n"
    buf = buf .. "   Lua:\n"
-   buf = buf .. "      Version    : " .. cfg.lua_version .. "\n"
-   if cfg.luajit_version then
-      buf = buf .. "      LuaJIT     : " .. cfg.luajit_version .. "\n"
+   buf = buf .. "      Version    : " .. conf.lua_version .. "\n"
+   if conf.luajit_version then
+      buf = buf .. "      LuaJIT     : " .. conf.luajit_version .. "\n"
    end
-   buf = buf .. "      LUA        : " .. show_status(cfg.variables.LUA, lua_ok, "interpreter not found") .. "\n"
+   buf = buf .. "      LUA        : " .. show_status(conf.variables.LUA, lua_ok, "interpreter not found") .. "\n"
    if not lua_ok then
       buf = buf .. use_to_fix_location("variables.LUA", lua_example)
    end
-   buf = buf .. "      LUA_INCDIR : " .. show_status(cfg.variables.LUA_INCDIR, incdir_ok, "lua.h not found") .. "\n"
+   buf = buf .. "      LUA_INCDIR : " .. show_status(conf.variables.LUA_INCDIR, incdir_ok, "lua.h not found") .. "\n"
    if lua_ok and not incdir_ok then
       buf = buf .. use_to_fix_location("variables.LUA_INCDIR")
    end
-   buf = buf .. "      LUA_LIBDIR : " .. show_status(cfg.variables.LUA_LIBDIR, libdir_ok, "Lua library itself not found") .. "\n"
+   buf = buf .. "      LUA_LIBDIR : " .. show_status(conf.variables.LUA_LIBDIR, libdir_ok, "Lua library itself not found") .. "\n"
    if lua_ok and not libdir_ok then
       buf = buf .. use_to_fix_location("variables.LUA_LIBDIR")
    end
 
    buf = buf .. "\n   Configuration files:\n"
-   local conf = cfg.config_files
-   buf = buf .. "      System  : " .. show_status(fs.absolute_name(conf.system.file), conf.system.found) .. "\n"
-   if conf.user.file then
-      buf = buf .. "      User    : " .. show_status(fs.absolute_name(conf.user.file), conf.user.found) .. "\n"
+   local files = conf.config_files
+   buf = buf .. "      System  : " .. show_status(fs.absolute_name(files.system.file), files.system.found) .. "\n"
+   if files.user.file then
+      buf = buf .. "      User    : " .. show_status(fs.absolute_name(files.user.file), files.user.found) .. "\n"
    else
       buf = buf .. "      User    : disabled in this LuaRocks installation.\n"
    end
-   if conf.project then
-      buf = buf .. "      Project : " .. show_status(fs.absolute_name(conf.project.file), conf.project.found) .. "\n"
+   if files.project then
+      buf = buf .. "      Project : " .. show_status(fs.absolute_name(files.project.file), files.project.found) .. "\n"
    end
    buf = buf .. "\n   Rocks trees in use: \n"
-   for _, tree in ipairs(cfg.rocks_trees) do
+   for _, tree in ipairs(conf.rocks_trees) do
       if type(tree) == "string" then
          buf = buf .. "      " .. fs.absolute_name(tree)
       else
@@ -604,14 +604,14 @@ function cmd.run_command(description, commands, external_namespace, ...)
          end
       end
       for i = last, 1, -1 do
-         local arg = args[i]
-         if arg:match("^[^-][^=]*=") then
-            local var, val = arg:match("^([A-Z_][A-Z0-9_]*)=(.*)")
+         local arg_i = args[i]
+         if arg_i:match("^[^-][^=]*=") then
+            local var, val = arg_i:match("^([A-Z_][A-Z0-9_]*)=(.*)")
             if val then
                cmdline_vars[var] = val
                table.remove(args, i)
             else
-               die("Invalid assignment: " .. arg)
+               die("Invalid assignment: " .. arg_i)
             end
          end
       end
@@ -718,7 +718,8 @@ function cmd.run_command(description, commands, external_namespace, ...)
       die("Current directory does not exist. Please run LuaRocks from an existing directory.")
    end
 
-   local ok, err = process_tree_args(args, cfg.project_dir)
+   local ok
+   ok, err = process_tree_args(args, cfg.project_dir)
    if not ok then
       die(err)
    end
@@ -769,7 +770,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
 
    local lock
    if cmd_mod.needs_lock and cmd_mod.needs_lock(args) then
-      local ok, err = fs.check_command_permissions(args)
+      ok, err = fs.check_command_permissions(args)
       if not ok then
          die(err, cmd.errorcodes.PERMISSIONDENIED)
       end
@@ -788,7 +789,9 @@ function cmd.run_command(description, commands, external_namespace, ...)
       end
    end
 
-   local call_ok, ok, err, exitcode = xpcall(function()
+   local call_ok
+   local exitcode
+   call_ok, ok, err, exitcode = xpcall(function()
       return cmd_mod.command(args)
    end, error_handler)
 

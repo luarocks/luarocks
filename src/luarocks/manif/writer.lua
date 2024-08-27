@@ -134,7 +134,7 @@ end
 local function sort_package_matching_table(tbl)
 
    if next(tbl) then
-      for item, pkgs in pairs(tbl) do
+      for _item, pkgs in pairs(tbl) do
          if #pkgs > 1 then
             table.sort(pkgs, sort_pkgs)
 
@@ -261,17 +261,17 @@ function writer.make_rock_manifest(name, version)
       local walk = tree
       local last
       local last_name
-      local next
+      local nxt
       for filename in file:gmatch("[^\\/]+") do
-         next = walk[filename]
-         if not next then
-            next = {}
-            walk[filename] = next
+         nxt = walk[filename]
+         if not nxt then
+            nxt = {}
+            walk[filename] = nxt
          end
          last = walk
          last_name = filename
-         assert(type(next) == "table")
-         walk = next
+         assert(type(nxt) == "table")
+         walk = nxt
       end
       if fs.is_file(full_path) then
 
@@ -303,8 +303,8 @@ function writer.make_namespace_file(name, version, namespace)
    if not fd then
       return nil, err
    end
-   local ok, err = fd:write(namespace)
-   if not ok then
+   fd, err = fd:write(namespace)
+   if not fd then
       return nil, err
    end
    fd:close()
@@ -416,7 +416,7 @@ function writer.remove_from_manifest(name, version, repo, deps_mode)
 
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
-   local manifest, err = manif.load_manifest(rocks_dir)
+   local manifest, _err = manif.load_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
 
