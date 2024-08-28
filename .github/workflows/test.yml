@@ -47,6 +47,7 @@ jobs:
 
     - name: Prep
       run: |
+        luarocks install compat53
         luarocks install busted
         luarocks install cluacov
         luarocks install busted-htest
