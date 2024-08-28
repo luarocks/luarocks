@@ -553,15 +553,13 @@ local function check_external_dependency(name, ext_files, vars, mode, cache)
 
    for _, prefix in ipairs(prefixes) do
       prefix = resolve_prefix(prefix, dirs)
-      if cfg.is_platform("mingw32") and name == "LUA" then
+
+      if name == "LUA" and cfg.link_lua_explicitly then
          dirs.LIBDIR.pattern = fun.filter(util.deep_copy(dirs.LIBDIR.pattern), function(s)
-            return not s:match("%.a$")
-         end)
-      elseif cfg.is_platform("windows") and name == "LUA" then
-         dirs.LIBDIR.pattern = fun.filter(util.deep_copy(dirs.LIBDIR.pattern), function(s)
-            return not s:match("%.dll$")
+            return not s:match("%." .. cfg.static_lib_extension .. "$")
          end)
       end
+
       ok, err_dirname, err_testfile = check_external_dependency_at(prefix, name, ext_files, vars, dirs, err_files, cache)
       if ok then
          return true
