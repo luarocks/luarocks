@@ -1114,6 +1114,10 @@ function test_env.main()
    table.insert(rocks, "luacov")
    table.insert(rocks, "cluacov")
 
+   -- compat53 is needed
+   table.insert(urls, "/compat53-${COMPAT53}.src.rock")
+   table.insert(rocks, "compat53")
+
    -- Download rocks needed for LuaRocks testing environment
    lfs.mkdir(testing_paths.testing_server)
    download_rocks(urls, testing_paths.testing_server)
