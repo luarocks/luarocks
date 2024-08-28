@@ -77,6 +77,7 @@ before_build:
   - copy deps\zlib\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\lib\native\v120\windesktop\msvcstl\dyn\rt-dyn\Win32\MinSizeRel\zlib.lib c:\external\lib\z.lib
 
 build_script:
+  - luarocks install compat53 1> NUL 2> NUL
   - IF NOT EXIST lua_install-%LUAV%\bin\busted.bat ( luarocks install busted 1> NUL 2> NUL )
   - IF NOT EXIST lua_install-%LUAV%\bin\luacov.bat ( luarocks install cluacov 1> NUL 2> NUL )
   - luarocks install busted-htest 1> NUL 2> NUL
