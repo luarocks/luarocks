@@ -43,8 +43,12 @@ describe("luarocks upload #integration", function()
       end)
 
       it("#gpg rockspec with --sign", function()
-         os.remove(testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec.asc")
-         os.remove(testing_paths.testrun_dir .. "/a_rock-1.0-1.src.rock.asc")
+         local function cleanup()
+            os.remove(testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec.asc")
+            os.remove(testing_paths.testrun_dir .. "/a_rock-1.0-1.src.rock.asc")
+         end
+         cleanup()
+         finally(cleanup)
          print(run.luarocks("upload " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec " .. test_env.openssl_dirs .. " --api-key=123 --sign", {LUAROCKS_CONFIG = testing_paths.testrun_dir .. "/luarocks_site.lua"}))
       end)
 
