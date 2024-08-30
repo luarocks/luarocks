@@ -193,6 +193,7 @@ describe("Luarocks patch test #unit", function()
          olddir = lfs.currentdir()
          lfs.mkdir(tmpdir)
          lfs.chdir(tmpdir)
+         fs.change_dir(tmpdir)
 
          write_file("lao", tzu, finally)
          write_file("tzu", lao, finally)
