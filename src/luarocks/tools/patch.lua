@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local debug = _tl_compat and _tl_compat.debug or debug; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local os = _tl_compat and _tl_compat.os or os; local pairs = _tl_compat and _tl_compat.pairs or pairs; local pcall = _tl_compat and _tl_compat.pcall or pcall; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local pairs = _tl_compat and _tl_compat.pairs or pairs; local pcall = _tl_compat and _tl_compat.pcall or pcall; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
 
 
 
@@ -46,6 +46,10 @@ local fs = require("luarocks.fs")
 
 
 
+
+local function open(filename, mode)
+   return assert(io.open(fs.absolute_name(filename), mode))
+end
 
 
 local debugmode = false
@@ -188,7 +192,7 @@ function patch.read_patch(filename, data)
    if data then
       fp = string_as_file(data)
    else
-      fp = filename == '-' and io.stdin or assert(io.open(filename, "rb"))
+      fp = filename == '-' and io.stdin or open(filename, "rb")
    end
    local lineno = 0
 
@@ -386,7 +390,6 @@ function patch.read_patch(filename, data)
    if state ~= 'hunkskip' then
       warning(string.format("patch file incomplete - %s", filename))
       all_ok = false
-
    else
 
       if debugmode and #files.source > 0 then
@@ -444,7 +447,7 @@ local function find_hunk(file, h, hno)
 end
 
 local function load_file(filename)
-   local fp = assert(io.open(filename))
+   local fp = open(filename)
    local file = {}
    local readline = file_lines(fp)
    while true do
@@ -495,8 +498,8 @@ local function check_patched(file, hunks)
 end
 
 local function patch_hunks(srcname, tgtname, hunks)
-   local src = assert(io.open(srcname, "rb"))
-   local tgt = assert(io.open(tgtname, "wb"))
+   local src = open(srcname, "rb")
+   local tgt = open(tgtname, "wb")
 
    local src_readline = file_lines(src)
 
@@ -566,7 +569,7 @@ local function strip_dirs(filename, strip)
 end
 
 local function write_new_file(filename, hunk)
-   local fh = io.open(filename, "wb")
+   local fh = io.open(fs.absolute_name(filename), "wb")
    if not fh then return false end
    for _, hline in ipairs(hunk.text) do
       local c = hline:sub(1, 1)
@@ -624,7 +627,7 @@ local function patch_file(source, target, epoch, hunks, strip, create_delete)
 
    if create_delete then
       if epoch and #hunks == 1 and hunks[1].starttgt == 0 and hunks[1].linestgt == 0 then
-         local ok = os.remove(source)
+         local ok = fs.delete(fs.absolute_name(source))
          if not ok then
             return false
          end
@@ -717,14 +720,14 @@ local function patch_file(source, target, epoch, hunks, strip, create_delete)
       backupname))
       return false
    end
-   local ok = os.rename(source, backupname)
+   local ok = fs.move(fs.absolute_name(source), fs.absolute_name(backupname))
    if not ok then
       warning(string.format("failed backing up %s when patching", source))
       return false
    end
    patch_hunks(backupname, source, hunks)
    info(string.format("successfully patched %s", source))
-   os.remove(backupname)
+   fs.delete(fs.absolute_name(backupname))
    return true
 end
 
