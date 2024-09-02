@@ -29,6 +29,8 @@ local util = {Fn = {}, }
 
 
 
+
+
 util.cleanup_path = core.cleanup_path
 util.split_string = core.split_string
 util.sortedpairs = core.sortedpairs
@@ -40,6 +42,8 @@ util.printerr = core.printerr
 util.warning = core.warning
 util.keys = core.keys
 util.matchquote = core.matchquote
+util.exists = core.exists
+util.starts_with = core.starts_with
 
 
 
@@ -186,10 +190,6 @@ function util.lua_path_variables()
       end
    end
    return lpath_var, lcpath_var
-end
-
-function util.starts_with(s, prefix)
-   return s:sub(1, #prefix) == prefix
 end
 
 
@@ -394,23 +394,6 @@ function util.deep_copy(tbl)
       end
    end
    return copy
-end
-
-
-
-
-function util.exists(file)
-   local fd, _, code = io.open(file, "r")
-   if code == 13 then
-
-
-      return true
-   end
-   if fd then
-      fd:close()
-      return true
-   end
-   return false
 end
 
 function util.lua_is_wrapper(interp)
