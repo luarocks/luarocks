@@ -1,5 +1,6 @@
-
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
 local writer = {}
+
 
 local cfg = require("luarocks.core.cfg")
 local search = require("luarocks.search")
@@ -15,22 +16,30 @@ local persist = require("luarocks.persist")
 local manif = require("luarocks.manif")
 local queries = require("luarocks.queries")
 
---- Update storage table to account for items provided by a package.
--- @param storage table: a table storing items in the following format:
--- keys are item names and values are arrays of packages providing each item,
--- where a package is specified as string `name/version`.
--- @param items table: a table mapping item names to paths.
--- @param name string: package name.
--- @param version string: package version.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 local function store_package_items(storage, name, version, items)
-   assert(type(storage) == "table")
-   assert(type(items) == "table")
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
+   assert(not name:match("/"))
 
-   local package_identifier = name.."/"..version
+   local package_identifier = name .. "/" .. version
 
-   for item_name, path in pairs(items) do  -- luacheck: ignore 431
+   for item_name, _ in pairs(items) do
       if not storage[item_name] then
          storage[item_name] = {}
       end
@@ -39,22 +48,19 @@ local function store_package_items(storage, name, version, items)
    end
 end
 
---- Update storage table removing items provided by a package.
--- @param storage table: a table storing items in the following format:
--- keys are item names and values are arrays of packages providing each item,
--- where a package is specified as string `name/version`.
--- @param items table: a table mapping item names to paths.
--- @param name string: package name.
--- @param version string: package version.
+
+
+
+
+
+
+
 local function remove_package_items(storage, name, version, items)
-   assert(type(storage) == "table")
-   assert(type(items) == "table")
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
+   assert(not name:match("/"))
 
-   local package_identifier = name.."/"..version
+   local package_identifier = name .. "/" .. version
 
-   for item_name, path in pairs(items) do  -- luacheck: ignore 431
+   for item_name, _path in pairs(items) do
       local key = item_name
       local all_identifiers = storage[key]
       if not all_identifiers then
@@ -79,17 +85,15 @@ local function remove_package_items(storage, name, version, items)
    end
 end
 
---- Process the dependencies of a manifest table to determine its dependency
--- chains for loading modules. The manifest dependencies information is filled
--- and any dependency inconsistencies or missing dependencies are reported to
--- standard error.
--- @param manifest table: a manifest table.
--- @param deps_mode string: Dependency mode: "one" for the current default tree,
--- "all" for all trees, "order" for all trees with priority >= the current default,
--- "none" for no trees.
+
+
+
+
+
+
+
+
 local function update_dependencies(manifest, deps_mode)
-   assert(type(manifest) == "table")
-   assert(type(deps_mode) == "string")
 
    if not manifest.dependencies then manifest.dependencies = {} end
    local mdeps = manifest.dependencies
@@ -110,34 +114,30 @@ end
 
 
 
---- Sort function for ordering rock identifiers in a manifest's
--- modules table. Rocks are ordered alphabetically by name, and then
--- by version which greater first.
--- @param a string: Version to compare.
--- @param b string: Version to compare.
--- @return boolean: The comparison result, according to the
--- rule outlined above.
-local function sort_pkgs(a, b)
-   assert(type(a) == "string")
-   assert(type(b) == "string")
 
+
+
+
+
+
+
+local function sort_pkgs(a, b)
    local na, va = a:match("(.*)/(.*)$")
    local nb, vb = b:match("(.*)/(.*)$")
 
    return (na == nb) and vers.compare_versions(va, vb) or na < nb
 end
 
---- Sort items of a package matching table by version number (higher versions first).
--- @param tbl table: the package matching table: keys should be strings
--- and values arrays of strings with packages names in "name/version" format.
+
+
+
 local function sort_package_matching_table(tbl)
-   assert(type(tbl) == "table")
 
    if next(tbl) then
-      for item, pkgs in pairs(tbl) do
+      for _item, pkgs in pairs(tbl) do
          if #pkgs > 1 then
             table.sort(pkgs, sort_pkgs)
-            -- Remove duplicates from the sorted array.
+
             local prev = nil
             local i = 1
             while pkgs[i] do
@@ -154,32 +154,30 @@ local function sort_package_matching_table(tbl)
    end
 end
 
---- Filter manifest table by Lua version, removing rockspecs whose Lua version
--- does not match.
--- @param manifest table: a manifest table.
--- @param lua_version string or nil: filter by Lua version
--- @param repodir string: directory of repository being scanned
--- @param cache table: temporary rockspec cache table
-local function filter_by_lua_version(manifest, lua_version, repodir, cache)
-   assert(type(manifest) == "table")
-   assert(type(repodir) == "string")
-   assert((not cache) or type(cache) == "table")
+
+
+
+
+
+
+local function filter_by_lua_version(manifest, lua_version_str, repodir, cache)
 
    cache = cache or {}
-   lua_version = vers.parse_version(lua_version)
+   local lua_version = vers.parse_version(lua_version_str)
    for pkg, versions in pairs(manifest.repository) do
       local to_remove = {}
       for version, repositories in pairs(versions) do
          for _, repo in ipairs(repositories) do
             if repo.arch == "rockspec" then
-               local pathname = dir.path(repodir, pkg.."-"..version..".rockspec")
-               local rockspec, err = cache[pathname]
+               local pathname = dir.path(repodir, pkg .. "-" .. version .. ".rockspec")
+               local rockspec = cache[pathname]
+               local err
                if not rockspec then
                   rockspec, err = fetch.load_local_rockspec(pathname, true)
                end
                if rockspec then
                   cache[pathname] = rockspec
-                  for _, dep in ipairs(rockspec.dependencies) do
+                  for _, dep in ipairs(rockspec.dependencies.queries) do
                      if dep.name == "lua" then
                         if not vers.match_constraints(lua_version, dep.constraints) then
                            table.insert(to_remove, version)
@@ -188,7 +186,7 @@ local function filter_by_lua_version(manifest, lua_version, repodir, cache)
                      end
                   end
                else
-                  util.printerr("Error loading rockspec for "..pkg.." "..version..": "..err)
+                  util.printerr("Error loading rockspec for " .. pkg .. " " .. version .. ": " .. err)
                end
             end
          end
@@ -204,14 +202,12 @@ local function filter_by_lua_version(manifest, lua_version, repodir, cache)
    end
 end
 
---- Store search results in a manifest table.
--- @param results table: The search results as returned by search.disk_search.
--- @param manifest table: A manifest table (must contain repository, modules, commands tables).
--- It will be altered to include the search results.
--- @return boolean or (nil, string): true in case of success, or nil followed by an error message.
+
+
+
+
+
 local function store_results(results, manifest)
-   assert(type(results) == "table")
-   assert(type(manifest) == "table")
 
    for name, versions in pairs(results) do
       local pkgtable = manifest.repository[name] or {}
@@ -240,21 +236,19 @@ local function store_results(results, manifest)
    return true
 end
 
---- Commit a table to disk in given local path.
--- @param where string: The directory where the table should be saved.
--- @param name string: The filename.
--- @param tbl table: The table to be saved.
--- @return boolean or (nil, string): true if successful, or nil and a
--- message in case of errors.
+
+
+
+
+
+
 local function save_table(where, name, tbl)
-   assert(type(where) == "string")
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(tbl) == "table")
+   assert(not name:match("/"))
 
    local filename = dir.path(where, name)
-   local ok, err = persist.save_from_table(filename..".tmp", tbl)
+   local ok, err = persist.save_from_table(filename .. ".tmp", tbl)
    if ok then
-      ok, err = fs.replace_file(filename, filename..".tmp")
+      ok, err = fs.replace_file(filename, filename .. ".tmp")
    end
    return ok, err
 end
@@ -267,40 +261,41 @@ function writer.make_rock_manifest(name, version)
       local walk = tree
       local last
       local last_name
+      local nxt
       for filename in file:gmatch("[^\\/]+") do
-         local next = walk[filename]
-         if not next then
-            next = {}
-            walk[filename] = next
+         nxt = walk[filename]
+         if not nxt then
+            nxt = {}
+            walk[filename] = nxt
          end
          last = walk
          last_name = filename
-         walk = next
+         assert(type(nxt) == "table")
+         walk = nxt
       end
       if fs.is_file(full_path) then
+
          local sum, err = fs.get_md5(full_path)
          if not sum then
-            return nil, "Failed producing checksum: "..tostring(err)
+            return nil, "Failed producing checksum: " .. tostring(err)
          end
          last[last_name] = sum
       end
    end
-   local rock_manifest = { rock_manifest=tree }
-   manif.rock_manifest_cache[name.."/"..version] = rock_manifest
-   save_table(install_dir, "rock_manifest", rock_manifest )
+   local rock_manifest = { rock_manifest = tree }
+   manif.rock_manifest_cache[name .. "/" .. version] = rock_manifest
+   save_table(install_dir, "rock_manifest", rock_manifest)
    return true
 end
 
--- Writes a 'rock_namespace' file in a locally installed rock directory.
--- @param name string: the rock name, without a namespace
--- @param version string: the rock version
--- @param namespace string?: the namespace
--- @return true if successful (or unnecessary, if there is no namespace),
--- or nil and an error message.
+
+
+
+
+
+
 function writer.make_namespace_file(name, version, namespace)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
-   assert(type(namespace) == "string" or not namespace)
+   assert(not name:match("/"))
    if not namespace then
       return true
    end
@@ -308,32 +303,30 @@ function writer.make_namespace_file(name, version, namespace)
    if not fd then
       return nil, err
    end
-   local ok, err = fd:write(namespace)
-   if not ok then
+   fd, err = fd:write(namespace)
+   if not fd then
       return nil, err
    end
    fd:close()
    return true
 end
 
---- Scan a LuaRocks repository and output a manifest file.
--- A file called 'manifest' will be written in the root of the given
--- repository directory.
--- @param repo A local repository directory.
--- @param deps_mode string: Dependency mode: "one" for the current default tree,
--- "all" for all trees, "order" for all trees with priority >= the current default,
--- "none" for the default dependency mode from the configuration.
--- @param remote boolean: 'true' if making a manifest for a rocks server.
--- @return boolean or (nil, string): True if manifest was generated,
--- or nil and an error message.
+
+
+
+
+
+
+
+
+
+
 function writer.make_manifest(repo, deps_mode, remote)
-   assert(type(repo) == "string")
-   assert(type(deps_mode) == "string")
 
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
    if not fs.is_dir(repo) then
-      return nil, "Cannot access repository at "..repo
+      return nil, "Cannot access repository at " .. repo
    end
 
    local query = queries.all("any")
@@ -349,10 +342,10 @@ function writer.make_manifest(repo, deps_mode, remote)
       local cache = {}
       for luaver in util.lua_versions() do
          local vmanifest = { repository = {}, modules = {}, commands = {} }
-         local ok, err = store_results(results, vmanifest)
+         ok, err = store_results(results, vmanifest)
          filter_by_lua_version(vmanifest, luaver, repo, cache)
          if not cfg.no_manifest then
-            save_table(repo, "manifest-"..luaver, vmanifest)
+            save_table(repo, "manifest-" .. luaver, vmanifest)
          end
       end
    else
@@ -360,43 +353,42 @@ function writer.make_manifest(repo, deps_mode, remote)
    end
 
    if cfg.no_manifest then
-      -- We want to have cache updated; but exit before save_table is called
+
       return true
    end
    return save_table(repo, "manifest", manifest)
 end
 
---- Update manifest file for a local repository
--- adding information about a version of a package installed in that repository.
--- @param name string: Name of a package from the repository.
--- @param version string: Version of a package from the repository.
--- @param repo string or nil: Pathname of a local repository. If not given,
--- the default local repository is used.
--- @param deps_mode string: Dependency mode: "one" for the current default tree,
--- "all" for all trees, "order" for all trees with priority >= the current default,
--- "none" for using the default dependency mode from the configuration.
--- @return boolean or (nil, string): True if manifest was updated successfully,
--- or nil and an error message.
+
+
+
+
+
+
+
+
+
+
+
 function writer.add_to_manifest(name, version, repo, deps_mode)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
+   assert(not name:match("/"))
    local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
-   assert(type(deps_mode) == "string")
 
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
    local manifest, err = manif.load_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
-      -- Manifest built by `writer.make_manifest` should already
-      -- include information about given name and version,
-      -- no need to update it.
+
+
+
       return writer.make_manifest(rocks_dir, deps_mode)
    end
 
-   local results = {[name] = {[version] = {{arch = "installed", repo = rocks_dir}}}}
+   local results = { [name] = { [version] = { { arch = "installed", repo = rocks_dir } } } }
 
-   local ok, err = store_results(results, manifest)
+   local ok
+   ok, err = store_results(results, manifest)
    if not ok then return nil, err end
 
    update_dependencies(manifest, deps_mode)
@@ -407,42 +399,40 @@ function writer.add_to_manifest(name, version, repo, deps_mode)
    return save_table(rocks_dir, "manifest", manifest)
 end
 
---- Update manifest file for a local repository
--- removing information about a version of a package.
--- @param name string: Name of a package removed from the repository.
--- @param version string: Version of a package removed from the repository.
--- @param repo string or nil: Pathname of a local repository. If not given,
--- the default local repository is used.
--- @param deps_mode string: Dependency mode: "one" for the current default tree,
--- "all" for all trees, "order" for all trees with priority >= the current default,
--- "none" for using the default dependency mode from the configuration.
--- @return boolean or (nil, string): True if manifest was updated successfully,
--- or nil and an error message.
+
+
+
+
+
+
+
+
+
+
+
 function writer.remove_from_manifest(name, version, repo, deps_mode)
-   assert(type(name) == "string" and not name:match("/"))
-   assert(type(version) == "string")
+   assert(not name:match("/"))
    local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
-   assert(type(deps_mode) == "string")
 
    if deps_mode == "none" then deps_mode = cfg.deps_mode end
 
-   local manifest, err = manif.load_manifest(rocks_dir)
+   local manifest, _err = manif.load_manifest(rocks_dir)
    if not manifest then
       util.printerr("No existing manifest. Attempting to rebuild...")
-      -- Manifest built by `writer.make_manifest` should already
-      -- include up-to-date information, no need to update it.
+
+
       return writer.make_manifest(rocks_dir, deps_mode)
    end
 
    local package_entry = manifest.repository[name]
    if package_entry == nil or package_entry[version] == nil then
-      -- entry is already missing from repository, no need to do anything
+
       return true
    end
 
    local version_entry = package_entry[version][1]
    if not version_entry then
-      -- manifest looks corrupted, rebuild
+
       return writer.make_manifest(rocks_dir, deps_mode)
    end
 
@@ -453,7 +443,7 @@ function writer.remove_from_manifest(name, version, repo, deps_mode)
    manifest.dependencies[name][version] = nil
 
    if not next(package_entry) then
-      -- No more versions of this package.
+
       manifest.repository[name] = nil
       manifest.dependencies[name] = nil
    end
@@ -464,35 +454,6 @@ function writer.remove_from_manifest(name, version, repo, deps_mode)
       return true
    end
    return save_table(rocks_dir, "manifest", manifest)
-end
-
---- Report missing dependencies for all rocks installed in a repository.
--- @param repo string or nil: Pathname of a local repository. If not given,
--- the default local repository is used.
--- @param deps_mode string: Dependency mode: "one" for the current default tree,
--- "all" for all trees, "order" for all trees with priority >= the current default,
--- "none" for using the default dependency mode from the configuration.
-function writer.check_dependencies(repo, deps_mode)
-   local rocks_dir = path.rocks_dir(repo or cfg.root_dir)
-   assert(type(deps_mode) == "string")
-   if deps_mode == "none" then deps_mode = cfg.deps_mode end
-
-   local manifest = manif.load_manifest(rocks_dir)
-   if not manifest then
-      return
-   end
-
-   for name, versions in util.sortedpairs(manifest.repository) do
-      for version, version_entries in util.sortedpairs(versions, vers.compare_versions) do
-         for _, entry in ipairs(version_entries) do
-            if entry.arch == "installed" then
-               if manifest.dependencies[name] and manifest.dependencies[name][version] then
-                  deps.report_missing_dependencies(name, version, manifest.dependencies[name][version], deps_mode, util.get_rocks_provided())
-               end
-            end
-         end
-      end
-   end
 end
 
 return writer

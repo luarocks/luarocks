@@ -307,10 +307,13 @@ describe("LuaRocks build #unit", function()
                else
                   os.execute("cl " .. fdir .. "\\fixturedep.c /link /export:fixturedep_fn /out:" .. fdir .. "\\fixturedep.dll /implib:" .. fdir .. "\\fixturedep.lib")
                end
+               finally(function() os.remove(fdir .. "\\libfixturedep.dll") end)
             elseif test_env.TEST_TARGET_OS == "linux" then
                os.execute("gcc -shared -o " .. fdir .. "/libfixturedep.so " .. fdir .. "/fixturedep.c")
+               finally(function() os.remove(fdir .. "/libfixturedep.so") end)
             elseif test_env.TEST_TARGET_OS == "osx" then
                os.execute("cc -dynamiclib -o " .. fdir .. "/libfixturedep.dylib " .. fdir .. "/fixturedep.c")
+               finally(function() os.remove(fdir .. "/libfixturedep.dylib") end)
             end
 
             local rockspec = {

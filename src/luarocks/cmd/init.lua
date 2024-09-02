@@ -1,5 +1,7 @@
-
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
 local init = {}
+
+
 
 local cfg = require("luarocks.core.cfg")
 local fs = require("luarocks.fs")
@@ -10,15 +12,24 @@ local util = require("luarocks.util")
 local persist = require("luarocks.persist")
 local write_rockspec = require("luarocks.cmd.write_rockspec")
 
+
+
+
+
+
+
+
+
+
 function init.add_to_parser(parser)
    local cmd = parser:command("init", "Initialize a directory for a Lua project using LuaRocks.", util.see_also())
 
-   cmd:argument("name", "The project name.")
-      :args("?")
-   cmd:argument("version", "An optional project version.")
-      :args("?")
+   cmd:argument("name", "The project name."):
+   args("?")
+   cmd:argument("version", "An optional project version."):
+   args("?")
    cmd:option("--wrapper-dir", "Location where the 'lua' and 'luarocks' wrapper scripts " ..
-      "should be generated; if not given, the current directory is used as a default.")
+   "should be generated; if not given, the current directory is used as a default.")
    cmd:flag("--reset", "Delete any .luarocks/config-5.x.lua and ./lua and generate new ones.")
    cmd:flag("--no-wrapper-scripts", "Do not generate wrapper ./lua and ./luarocks launcher scripts.")
    cmd:flag("--no-gitignore", "Do not generate a .gitignore file.")
@@ -49,8 +60,8 @@ local function write_gitignore(entries)
    if fd then
       for _, entry in ipairs(entries) do
          entry = "/" .. entry
-         if not gitignore:find("\n"..entry.."\n", 1, true) then
-            fd:write(entry.."\n")
+         if not gitignore:find("\n" .. entry .. "\n", 1, true) then
+            fd:write(entry .. "\n")
          end
       end
       fd:close()
@@ -99,7 +110,7 @@ local function write_wrapper_scripts(wrapper_dir, luarocks_wrapper, lua_wrapper)
       if util.check_lua_version(cfg.variables.LUA, cfg.lua_version) then
          util.printout("Preparing " .. lua_wrapper .. " for version " .. cfg.lua_version .. "...")
 
-         -- Inject tree so it shows up as a lookup path in the wrappers
+
          inject_tree(tree)
 
          fs.wrap_script(nil, lua_wrapper, "all")
@@ -109,8 +120,8 @@ local function write_wrapper_scripts(wrapper_dir, luarocks_wrapper, lua_wrapper)
    end
 end
 
---- Driver function for "init" command.
--- @return boolean: True if succeeded, nil on errors.
+
+
 function init.command(args)
    local do_gitignore = not args.no_gitignore
    local do_wrapper_scripts = not args.no_wrapper_scripts
@@ -143,7 +154,7 @@ function init.command(args)
    if not has_rockspec then
       args.version = args.version or "dev"
       args.location = pwd
-      local ok, err = write_rockspec.command(args)
+      ok, err = write_rockspec.command(args)
       if not ok then
          util.printerr(err)
       end
@@ -174,7 +185,8 @@ function init.command(args)
       fs.delete(fs.absolute_name(config_file))
    end
 
-   local config_tbl, err = persist.load_config_file_if_basic(config_file, cfg)
+   local config_tbl
+   config_tbl, err = persist.load_config_file_if_basic(config_file, cfg)
    if config_tbl then
       local varnames = {
          "LUA_DIR",
@@ -185,11 +197,11 @@ function init.command(args)
       }
       for _, varname in ipairs(varnames) do
          if cfg.variables[varname] then
-            config_tbl.variables = config_tbl.variables or {}
-            config_tbl.variables[varname] = cfg.variables[varname]
+            config_tbl.variables = config_tbl.variables or {};
+            (config_tbl.variables)[varname] = cfg.variables[varname]
          end
       end
-      local ok, err = persist.save_from_table(config_file, config_tbl)
+      ok, err = persist.save_from_table(config_file, config_tbl)
       if ok then
          util.printout("Wrote " .. config_file)
       else

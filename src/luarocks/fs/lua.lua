@@ -8,7 +8,7 @@ local fs = require("luarocks.fs")
 
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
-local util = require("luarocks.util")
+local util = require("luarocks.core.util")
 local vers = require("luarocks.core.vers")
 
 local pack = table.pack or function(...) return { n = select("#", ...), ... } end
@@ -562,14 +562,15 @@ end
 local function recursive_delete(name)
    local ok = os.remove(name)
    if ok then return true end
-   local pok, ok, err = pcall(function()
+   local pok, err
+   pok, ok, err = pcall(function()
       for file in lfs.dir(name) do
          if file ~= "." and file ~= ".." then
-            local ok, err = recursive_delete(dir.path(name, file))
+            ok, err = recursive_delete(dir.path(name, file))
             if not ok then return nil, err end
          end
       end
-      local ok, err = lfs.rmdir(name)
+      ok, err = lfs.rmdir(name)
       return ok, (not ok) and err
    end)
    if pok then
@@ -581,10 +582,10 @@ end
 
 --- Delete a file or a directory and all its contents.
 -- @param name string: Pathname of source
--- @return nil
+-- @return true on success, or nil and an error message on failure
 function fs_lua.delete(name)
    name = dir.normalize(name)
-   recursive_delete(name)
+   return recursive_delete(name)
 end
 
 --- Internal implementation function for fs.dir.
@@ -936,14 +937,16 @@ local downloader_warning = false
 -- resulting local filename of the remote file as the basename of the URL;
 -- if that is not correct (due to a redirection, for example), the local
 -- filename can be given explicitly as this second argument.
--- @return (boolean, string, boolean):
+-- @return (string, string, string, boolean):
 -- In case of success:
--- * true
--- * a string with the filename
+-- * name
+-- nil
+-- nil
 -- * true if the file was retrieved from local cache
 -- In case of failure:
--- * false
+-- nil
 -- * error message
+-- * error code
 function fs_lua.download(url, filename, cache)
    assert(type(url) == "string")
    assert(type(filename) == "string" or not filename)
@@ -984,7 +987,7 @@ function fs_lua.download(url, filename, cache)
    elseif not ok then
       return nil, err, "network"
    end
-   return true, filename, from_cache
+   return filename, nil, nil, from_cache
 end
 
 else --...if socket_ok == false then

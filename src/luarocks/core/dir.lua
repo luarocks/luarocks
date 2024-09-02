@@ -1,47 +1,24 @@
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local package = _tl_compat and _tl_compat.package or package; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local dir = {}
 
-local dir = {}
 
-local require = nil
---------------------------------------------------------------------------------
 
 local dir_sep = package.config:sub(1, 1)
 
 local function unquote(c)
-   local first, last = c:sub(1,1), c:sub(-1)
+   local first, last = c:sub(1, 1), c:sub(-1)
    if (first == '"' and last == '"') or
       (first == "'" and last == "'") then
-      return c:sub(2,-2)
+      return c:sub(2, -2)
    end
    return c
 end
 
---- Describe a path in a cross-platform way.
--- Use this function to avoid platform-specific directory
--- separators in other modules. Removes trailing slashes from
--- each component given, to avoid repeated separators.
--- Separators inside strings are kept, to handle URLs containing
--- protocols.
--- @param ... strings representing directories
--- @return string: a string with a platform-specific representation
--- of the path.
-function dir.path(...)
-   local t = {...}
-   while t[1] == "" do
-      table.remove(t, 1)
-   end
-   for i, c in ipairs(t) do
-      t[i] = unquote(c)
-   end
-   return dir.normalize(table.concat(t, "/"))
-end
 
---- Split protocol and path from an URL or local pathname.
--- URLs should be in the "protocol://path" format.
--- For local pathnames, "file" is returned as the protocol.
--- @param url string: an URL or a local pathname.
--- @return string, string: the protocol, and the pathname without the protocol.
+
+
+
+
 function dir.split_url(url)
-   assert(type(url) == "string")
 
    url = unquote(url)
    local protocol, pathname = url:match("^([^:]*)://(.*)")
@@ -52,12 +29,12 @@ function dir.split_url(url)
    return protocol, pathname
 end
 
---- Normalize a url or local path.
--- URLs should be in the "protocol://path" format.
--- Removes trailing and double slashes, and '.' and '..' components.
--- for 'file' URLs, the native system's slashes are used.
--- @param url string: an URL or a local pathname.
--- @return string: Normalized result.
+
+
+
+
+
+
 function dir.normalize(name)
    local protocol, pathname = dir.split_url(name)
    pathname = pathname:gsub("\\", "/"):gsub("(.)/*$", "%1"):gsub("//", "/")
@@ -94,5 +71,25 @@ function dir.normalize(name)
    return pathname
 end
 
-return dir
 
+
+
+
+
+
+
+
+
+
+function dir.path(...)
+   local t = { ... }
+   while t[1] == "" do
+      table.remove(t, 1)
+   end
+   for i, c in ipairs(t) do
+      t[i] = unquote(c)
+   end
+   return dir.normalize(table.concat(t, "/"))
+end
+
+return dir

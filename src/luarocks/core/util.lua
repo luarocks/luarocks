@@ -1,22 +1,25 @@
-
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local debug = _tl_compat and _tl_compat.debug or debug; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local os = _tl_compat and _tl_compat.os or os; local package = _tl_compat and _tl_compat.package or package; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
 local util = {}
 
-local require = nil
---------------------------------------------------------------------------------
+
+
+
+
+
 
 local dir_sep = package.config:sub(1, 1)
 
---- Run a process and read a its output.
--- Equivalent to io.popen(cmd):read("*l"), except that it
--- closes the fd right away.
--- @param cmd string: The command to execute
--- @param spec string: "*l" by default, to read a single line.
--- May be used to read more, passing, for instance, "*a".
--- @return string: the output of the program.
+
+
+
+
+
+
+
 function util.popen_read(cmd, spec)
-   local tmpfile = (dir_sep == "\\")
-                   and (os.getenv("TMP") .. "/luarocks-" .. tostring(math.floor(math.random() * 10000)))
-                   or os.tmpname()
+   local tmpfile = (dir_sep == "\\") and
+   (os.getenv("TMP") .. "/luarocks-" .. tostring(math.floor(math.random() * 10000))) or
+   os.tmpname()
    os.execute(cmd .. " > " .. tmpfile)
    local fd = io.open(tmpfile, "rb")
    if not fd then
@@ -29,26 +32,26 @@ function util.popen_read(cmd, spec)
    return out or ""
 end
 
----
--- Formats tables with cycles recursively to any depth.
--- References to other tables are shown as values.
--- Self references are indicated.
--- The string returned is "Lua code", which can be processed
--- (in the case in which indent is composed by spaces or "--").
--- Userdata and function keys and values are shown as strings,
--- which logically are exactly not equivalent to the original code.
--- This routine can serve for pretty formating tables with
--- proper indentations, apart from printing them:
--- io.write(table.show(t, "t"))   -- a typical use
--- Written by Julio Manuel Fernandez-Diaz,
--- Heavily based on "Saving tables with cycles", PIL2, p. 113.
--- @param t table: is the table.
--- @param tname string: is the name of the table (optional)
--- @param top_indent string: is a first indentation (optional).
--- @return string: the pretty-printed table
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function util.show_table(t, tname, top_indent)
-   local cart     -- a container
-   local autoref  -- for self references
+   local cart
+   local autoref
 
    local function is_empty_table(tbl) return next(tbl) == nil end
 
@@ -59,11 +62,11 @@ function util.show_table(t, tname, top_indent)
          if not info then
             return ("%q"):format(so)
          end
-         -- info.name is nil because o is not a calling level
+
          if info.what == "C" then
             return ("%q"):format(so .. ", C function")
          else
-            -- the information is defined through lines
+
             return ("%q"):format(so .. ", defined in (" .. info.linedefined .. "-" .. info.lastlinedefined .. ")" .. info.source)
          end
       elseif type(o) == "number" then
@@ -80,12 +83,12 @@ function util.show_table(t, tname, top_indent)
 
       cart = cart .. indent .. field
 
-      if type(value) ~= "table" then
+      if not (type(value) == "table") then
          cart = cart .. " = " .. basic_serialize(value) .. ";\n"
       else
          if saved[value] then
             cart = cart .. " = {}; -- " .. saved[value] .. " (self reference)\n"
-            autoref = autoref ..  name .. " = " .. saved[value] .. ";\n"
+            autoref = autoref .. name .. " = " .. saved[value] .. ";\n"
          else
             saved[value] = name
             if is_empty_table(value) then
@@ -96,7 +99,7 @@ function util.show_table(t, tname, top_indent)
                   k = basic_serialize(k)
                   local fname = ("%s[%s]"):format(name, k)
                   field = ("[%s]"):format(k)
-                  -- three spaces between levels
+
                   add_to_cart(v, fname, indent .. "   ", saved, field)
                end
                cart = cart .. indent .. "};\n"
@@ -106,7 +109,7 @@ function util.show_table(t, tname, top_indent)
    end
 
    tname = tname or "__unnamed__"
-   if type(t) ~= "table" then
+   if not (type(t) == "table") then
       return tname .. " = " .. basic_serialize(t)
    end
    cart, autoref = "", ""
@@ -114,18 +117,29 @@ function util.show_table(t, tname, top_indent)
    return cart .. autoref
 end
 
---- Merges contents of src on top of dst's contents
--- (i.e. if an key from src already exists in dst, replace it).
--- @param dst Destination table, which will receive src's contents.
--- @param src Table which provides new contents to dst.
+
+
+
+
+
+function util.matchquote(s)
+   return (s:gsub("[?%-+*%[%].%%()$^]", "%%%1"))
+end
+
+
+
+
+
 function util.deep_merge(dst, src)
    for k, v in pairs(src) do
       if type(v) == "table" then
-         if dst[k] == nil then
+         local dstk = dst[k]
+         if dstk == nil then
             dst[k] = {}
+            dstk = dst[k]
          end
-         if type(dst[k]) == "table" then
-            util.deep_merge(dst[k], v)
+         if type(dstk) == "table" then
+            util.deep_merge(dstk, v)
          else
             dst[k] = v
          end
@@ -135,18 +149,20 @@ function util.deep_merge(dst, src)
    end
 end
 
---- Merges contents of src below those of dst's contents
--- (i.e. if an key from src already exists in dst, do not replace it).
--- @param dst Destination table, which will receive src's contents.
--- @param src Table which provides new contents to dst.
+
+
+
+
 function util.deep_merge_under(dst, src)
    for k, v in pairs(src) do
       if type(v) == "table" then
-         if dst[k] == nil then
+         local dstk = dst[k]
+         if dstk == nil then
             dst[k] = {}
+            dstk = dst[k]
          end
-         if type(dst[k]) == "table" then
-            util.deep_merge_under(dst[k], v)
+         if type(dstk) == "table" then
+            util.deep_merge_under(dstk, v)
          end
       elseif dst[k] == nil then
          dst[k] = v
@@ -154,18 +170,44 @@ function util.deep_merge_under(dst, src)
    end
 end
 
---- Clean up a path-style string ($PATH, $LUA_PATH/package.path, etc.),
--- removing repeated entries and making sure only the relevant
--- Lua version is used.
--- Example: given ("a;b;c;a;b;d", ";"), returns "a;b;c;d".
--- @param list string: A path string (from $PATH or package.path)
--- @param sep string: The separator
--- @param lua_version (optional) string: The Lua version to use.
--- @param keep_first (optional) if true, keep first occurrence in case
--- of duplicates; otherwise keep last occurrence. The default is false.
+
+
+function util.split_string(str, delim, maxNb)
+
+   if string.find(str, delim) == nil then
+      return { str }
+   end
+   if maxNb == nil or maxNb < 1 then
+      maxNb = 0
+   end
+   local result = {}
+   local pat = "(.-)" .. delim .. "()"
+   local nb = 0
+   local lastPos
+   for part, pos in string.gmatch(str, pat) do
+      nb = nb + 1
+      result[nb] = part
+      lastPos = tonumber(pos)
+      if nb == maxNb then break end
+   end
+
+   if nb ~= maxNb then
+      result[nb + 1] = string.sub(str, lastPos)
+   end
+   return result
+end
+
+
+
+
+
+
+
+
+
+
+
 function util.cleanup_path(list, sep, lua_version, keep_first)
-   assert(type(list) == "string")
-   assert(type(sep) == "string")
 
    list = list:gsub(dir_sep, "/")
 
@@ -184,12 +226,12 @@ function util.cleanup_path(list, sep, lua_version, keep_first)
       if lua_version then
          part = part:gsub("/lua/([%d.]+)/", function(part_version)
             if part_version:sub(1, #lua_version) ~= lua_version then
-               return "/lua/"..lua_version.."/"
+               return "/lua/" .. lua_version .. "/"
             end
          end)
       end
       if not entries[part] then
-         local at = keep_first and #final+1 or 1
+         local at = keep_first and #final + 1 or 1
          table.insert(final, at, part)
          entries[part] = true
       end
@@ -198,62 +240,35 @@ function util.cleanup_path(list, sep, lua_version, keep_first)
    return (table.concat(final, sep):gsub("/", dir_sep))
 end
 
--- from http://lua-users.org/wiki/SplitJoin
--- by Philippe Lhoste
-function util.split_string(str, delim, maxNb)
-   -- Eliminate bad cases...
-   if string.find(str, delim) == nil then
-      return { str }
-   end
-   if maxNb == nil or maxNb < 1 then
-      maxNb = 0    -- No limit
-   end
-   local result = {}
-   local pat = "(.-)" .. delim .. "()"
-   local nb = 0
-   local lastPos
-   for part, pos in string.gmatch(str, pat) do
-      nb = nb + 1
-      result[nb] = part
-      lastPos = pos
-      if nb == maxNb then break end
-   end
-   -- Handle the last field
-   if nb ~= maxNb then
-      result[nb + 1] = string.sub(str, lastPos)
-   end
-   return result
-end
 
---- Return an array of keys of a table.
--- @param tbl table: The input table.
--- @return table: The array of keys.
+
+
 function util.keys(tbl)
    local ks = {}
-   for k,_ in pairs(tbl) do
+   for k, _ in pairs(tbl) do
       table.insert(ks, k)
    end
    return ks
 end
 
---- Print a line to standard error
+
 function util.printerr(...)
-   io.stderr:write(table.concat({...},"\t"))
+   io.stderr:write(table.concat({ ... }, "\t"))
    io.stderr:write("\n")
 end
 
---- Display a warning message.
--- @param msg string: the warning message
+
+
 function util.warning(msg)
-   util.printerr("Warning: "..msg)
+   util.printerr("Warning: " .. msg)
 end
 
---- Simple sort function used as a default for util.sortedpairs.
+
 local function default_sort(a, b)
    local ta = type(a)
    local tb = type(b)
    if ta == "number" and tb == "number" then
-      return a < b
+      return tonumber(a) < tonumber(b)
    elseif ta == "number" then
       return true
    elseif tb == "number" then
@@ -263,60 +278,83 @@ local function default_sort(a, b)
    end
 end
 
---- A table iterator generator that returns elements sorted by key,
--- to be used in "for" loops.
--- @param tbl table: The table to be iterated.
--- @param sort_function function or table or nil: An optional comparison function
--- to be used by table.sort when sorting keys, or an array listing an explicit order
--- for keys. If a value itself is an array, it is taken so that the first element
--- is a string representing the field name, and the second element is a priority table
--- for that key, which is returned by the iterator as the third value after the key
--- and the value.
--- @return function: the iterator function.
-function util.sortedpairs(tbl, sort_function)
-   sort_function = sort_function or default_sort
+
+
+
+
+
+
+
+
+
+
+function util.sortedpairs(tbl, sort_by)
    local keys = util.keys(tbl)
-   local sub_orders = {}
+   local sub_orders = nil
 
-   if type(sort_function) == "function" then
-      table.sort(keys, sort_function)
+   if sort_by == nil then
+      table.sort(keys, default_sort)
+   elseif type(sort_by) == "function" then
+      table.sort(keys, sort_by)
    else
-      local order = sort_function
-      local ordered_keys = {}
-      local all_keys = keys
-      keys = {}
 
-      for _, order_entry in ipairs(order) do
-         local key, sub_order
-         if type(order_entry) == "table" then
-            key = order_entry[1]
-            sub_order = order_entry[2]
-         else
-            key = order_entry
-         end
 
+      sub_orders = sort_by.sub_orders
+
+      local seen_ordered_key = {}
+
+      local my_ordered_keys = {}
+
+      for _, key in ipairs(sort_by) do
          if tbl[key] then
-            ordered_keys[key] = true
-            sub_orders[key] = sub_order
-            table.insert(keys, key)
+            seen_ordered_key[key] = true
+            table.insert(my_ordered_keys, key)
          end
       end
 
-      table.sort(all_keys, default_sort)
-      for _, key in ipairs(all_keys) do
-         if not ordered_keys[key] then
-            table.insert(keys, key)
+      table.sort(keys, default_sort)
+
+      for _, key in ipairs(keys) do
+         if not seen_ordered_key[key] then
+            table.insert(my_ordered_keys, key)
          end
       end
+
+      keys = my_ordered_keys
    end
 
    local i = 1
    return function()
       local key = keys[i]
       i = i + 1
-      return key, tbl[key], sub_orders[key]
+      return key, tbl[key], sub_orders and sub_orders[key]
    end
 end
 
-return util
 
+
+
+
+
+
+
+
+function util.exists(file)
+   local fd, _, code = io.open(file, "r")
+   if code == 13 then
+
+
+      return true
+   end
+   if fd then
+      fd:close()
+      return true
+   end
+   return false
+end
+
+function util.starts_with(s, prefix)
+   return s:sub(1, #prefix) == prefix
+end
+
+return util
