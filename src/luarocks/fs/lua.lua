@@ -562,14 +562,15 @@ end
 local function recursive_delete(name)
    local ok = os.remove(name)
    if ok then return true end
-   local pok, ok, err = pcall(function()
+   local pok, err
+   pok, ok, err = pcall(function()
       for file in lfs.dir(name) do
          if file ~= "." and file ~= ".." then
-            local ok, err = recursive_delete(dir.path(name, file))
+            ok, err = recursive_delete(dir.path(name, file))
             if not ok then return nil, err end
          end
       end
-      local ok, err = lfs.rmdir(name)
+      ok, err = lfs.rmdir(name)
       return ok, (not ok) and err
    end)
    if pok then
@@ -581,10 +582,10 @@ end
 
 --- Delete a file or a directory and all its contents.
 -- @param name string: Pathname of source
--- @return nil
+-- @return true on success, or nil and an error message on failure
 function fs_lua.delete(name)
    name = dir.normalize(name)
-   recursive_delete(name)
+   return recursive_delete(name)
 end
 
 --- Internal implementation function for fs.dir.
