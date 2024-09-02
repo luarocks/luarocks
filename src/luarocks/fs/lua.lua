@@ -8,7 +8,7 @@ local fs = require("luarocks.fs")
 
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
-local util = require("luarocks.util")
+local util = require("luarocks.core.util")
 local vers = require("luarocks.core.vers")
 
 local pack = table.pack or function(...) return { n = select("#", ...), ... } end

@@ -331,4 +331,30 @@ function util.sortedpairs(tbl, sort_by)
    end
 end
 
+
+
+
+
+
+
+
+
+function util.exists(file)
+   local fd, _, code = io.open(file, "r")
+   if code == 13 then
+
+
+      return true
+   end
+   if fd then
+      fd:close()
+      return true
+   end
+   return false
+end
+
+function util.starts_with(s, prefix)
+   return s:sub(1, #prefix) == prefix
+end
+
 return util

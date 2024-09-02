@@ -22,6 +22,8 @@ local record util
    warning: function(string)
    keys: function<K, V>({K : V}): {K}
    matchquote: function(string): string
+   exists: function(string): boolean
+   starts_with: function(s: string, prefix: string): boolean
 
    record Fn
       fn: function(any)
@@ -40,6 +42,8 @@ util.printerr = core.printerr
 util.warning = core.warning
 util.keys = core.keys
 util.matchquote = core.matchquote
+util.exists = core.exists
+util.starts_with = core.starts_with
 
 local type Fn = util.Fn
 local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
@@ -186,10 +190,6 @@ function util.lua_path_variables(): string, string
       end
    end
    return lpath_var, lcpath_var
-end
-
-function util.starts_with(s: string, prefix: string): boolean
-   return s:sub(1,#prefix) == prefix
 end
 
 --- Print a line to standard output
@@ -394,23 +394,6 @@ function util.deep_copy(tbl: {any: any}): {any: any}
       end
    end
    return copy
-end
-
--- A portable version of fs.exists that can be used at early startup,
--- before the platform has been determined and luarocks.fs has been
--- initialized.
-function util.exists(file: string): boolean
-   local fd, _, code = io.open(file, "r")
-   if code == 13 then
-      -- code 13 means "Permission denied" on both Unix and Windows
-      -- io.open on folders always fails with code 13 on Windows
-      return true
-   end
-   if fd then
-      fd:close()
-      return true
-   end
-   return false
 end
 
 function util.lua_is_wrapper(interp: string): boolean, string
