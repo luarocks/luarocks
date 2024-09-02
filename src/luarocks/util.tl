@@ -24,8 +24,8 @@ local record util
    matchquote: function(string): string
 
    record Fn
-      fn: function(...: any)
-      args: table.PackTable<any>
+      fn: function(any)
+      arg: any
    end
 end
 
@@ -56,8 +56,8 @@ local scheduled_functions: {Fn} = {}
 -- @param ... arguments to be passed to function.
 -- @return table: A token representing the scheduled execution,
 -- which can be used to remove the item later from the list.
-function util.schedule_function(f: function(...: any), ...:any): Fn
-   local item: Fn = { fn = f, args = table.pack(...) }
+function util.schedule_function<X>(f: function(X...), x?: X): Fn
+   local item: Fn = { fn = f, arg = x }
    table.insert(scheduled_functions, item)
    return item
 end
@@ -87,7 +87,7 @@ function util.run_scheduled_functions(): string --! a hack for xpcall
    end
    for i = #scheduled_functions, 1, -1 do
       local item = scheduled_functions[i]
-      item.fn(table.unpack(item.args, 1, item.args.n))
+      item.fn(item.arg)
    end
 end
 
