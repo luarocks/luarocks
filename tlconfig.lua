@@ -1,5 +1,8 @@
 return {
-    build_dir = "build",
+    build_dir = "target",
     source_dir = "src",
     include_dir = { "src", "types" },
+    exclude = {
+       "**/*.lua",
+    }
  }
