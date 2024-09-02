@@ -56,8 +56,8 @@ local scheduled_functions = {}
 
 
 
-function util.schedule_function(f, ...)
-   local item = { fn = f, args = _tl_table_pack(...) }
+function util.schedule_function(f, x)
+   local item = { fn = f, arg = x }
    table.insert(scheduled_functions, item)
    return item
 end
@@ -87,7 +87,7 @@ function util.run_scheduled_functions()
    end
    for i = #scheduled_functions, 1, -1 do
       local item = scheduled_functions[i]
-      item.fn(_tl_table_unpack(item.args, 1, item.args.n))
+      item.fn(item.arg)
    end
 end
 
