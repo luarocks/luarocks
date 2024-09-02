@@ -15,7 +15,7 @@ local record fs
    is_file: function(file: string): boolean
    current_dir: function(): string
    list_dir: function(?string): {string}
-   delete: function(string)
+   delete: function(string): boolean, string
    -- signing
    is_tool_available: function(string, string): string, string
    execute: function(...: string): boolean, string, string
@@ -57,7 +57,7 @@ local record fs
    wrap_script: function(string, string, string, string, string): boolean, string
    is_lua: function(string): boolean
    copy_binary: function(string, string): boolean, string
-   move: function(string, string, string): boolean, string
+   move: function(string, string, perms?: string): boolean, string
    -- writer
    replace_file: function(string, string): boolean, string
    get_md5: function(string): string, string
