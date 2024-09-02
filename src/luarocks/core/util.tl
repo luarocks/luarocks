@@ -298,13 +298,13 @@ function util.sortedpairs<K, V>(tbl: {K: V}, sort_by?: SortBy<K>): function(): K
       table.sort(keys, sort_by)
    else
       -- sort_by is Ordering<K>
-      
+
       sub_orders = sort_by.sub_orders
 
       local seen_ordered_key: {K: boolean} = {}
-      
+
       local my_ordered_keys: {K} = {}
-      
+
       for _, key in ipairs(sort_by) do
          if tbl[key] then
             seen_ordered_key[key] = true
@@ -319,16 +319,42 @@ function util.sortedpairs<K, V>(tbl: {K: V}, sort_by?: SortBy<K>): function(): K
             table.insert(my_ordered_keys, key)
          end
       end
-      
+
       keys = my_ordered_keys
    end
-   
+
    local i = 1
    return function(): K, V, Ordering<K>
       local key = keys[i]
       i = i + 1
       return key, tbl[key], sub_orders and sub_orders[key]
    end
+end
+
+--------------------------------------------------------------------------------
+-- Functions needed by luarocks.fs,
+-- added here to avoid a circular dependency:
+--------------------------------------------------------------------------------
+
+-- A portable version of fs.exists that can be used at early startup,
+-- before the platform has been determined and luarocks.fs has been
+-- initialized.
+function util.exists(file: string): boolean
+   local fd, _, code = io.open(file, "r")
+   if code == 13 then
+      -- code 13 means "Permission denied" on both Unix and Windows
+      -- io.open on folders always fails with code 13 on Windows
+      return true
+   end
+   if fd then
+      fd:close()
+      return true
+   end
+   return false
+end
+
+function util.starts_with(s: string, prefix: string): boolean
+   return s:sub(1,#prefix) == prefix
 end
 
 return util
