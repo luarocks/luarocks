@@ -3,9 +3,9 @@ local SSLCertificate = ssl.SSLCertificate
 local SSLConnection = ssl.SSLConnection
 
 local ltn12 = require("ltn12")
-local Pump = ltn12.Pump
-local Sink = ltn12.Sink
-local Source = ltn12.Source
+local type Pump = ltn12.Pump
+local type Sink = ltn12.Sink
+local type Source = ltn12.Source
 
 local record https
    record HTTPSRequest

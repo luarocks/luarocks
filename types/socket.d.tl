@@ -1,6 +1,6 @@
 local ltn12 = require("ltn12")
-local Sink = ltn12.Sink
-local Source = ltn12.Source
+local type Sink = ltn12.Sink
+local type Source = ltn12.Source
 
 local record socket
    record TCP
