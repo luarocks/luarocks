@@ -108,6 +108,11 @@ local function S (tmpl)
 	return (tmpl:gsub('%$([%a_][%w_]*)', vars))
 end
 
+-- returns this script absolute path
+local function this_script_path()
+	return debug.getinfo(1, "S").source:sub(2)
+end
+
 local function print_help()
 	print(S[[
 Installs LuaRocks.
@@ -704,61 +709,125 @@ end
 -- Find GCC based toolchain
 local find_gcc_suite = function()
 
-    -- read output os-command
-    local read_output = function(cmd)
-        local f = io.popen("type NUL && " .. cmd .. ' 2>NUL')
-        if not f then return nil, "failed to open command: " .. tostring(cmd) end
-        local lines = {}
-        while true do
-            local l = f:read()
-            if not l then
-                f:close()
-                return lines
-            end
-            table.insert(lines, l)
-        end
-    end
-    
-    -- returns: full filename, path, filename
-    local find_file = function(mask, path)
-        local cmd
-        if path then
-            cmd = 'where.exe /R "' .. path .. '" ' .. mask
-        else
-            cmd = 'where.exe ' .. mask
-        end
-        local files, err = read_output(cmd)
-        if not files or not files[1] then
-            return nil, "couldn't find '".. mask .. "', " .. (err or "not found")
-        end
-        local path, file = string.match(files[1], "^(.+)%\\([^%\\]+)$")
-        return files[1], path, file
-    end
+	-- read output os-command
+	local read_output = function(cmd, map_result)
+		local f = io.popen("type NUL && " .. cmd .. ' 2>NUL')
+		if not f then return nil, "failed to open command: " .. tostring(cmd) end
+			local lines = {}
+			while true do
+				local l = f:read()
+				if not l then
+					f:close()
+					return lines
+				end
+				if map_result then
+					l = map_result(l)
+				end
+				table.insert(lines, l)
+			end
+	end
 
-    local first_one = "*gcc.exe"  -- first file we're assuming to point to the compiler suite
-    local full, path, filename = find_file(first_one, nil)
-    if not full then
-        return nil, path
-    end
-    vars.MINGW_BIN_PATH = path
+	-- checks for where.exe to actualy work, under Wine it's just a stub which returns nothing
+	local check_where = function()
+		local files = read_output("where.exe where.exe")
+		return #(files or {}) > 0
+	end
 
-    local result = {
-        gcc = full
-    }
-    for i, name in ipairs({"make", "ar", "windres", "ranlib"}) do
-        result[name] = find_file(name..".exe", path)
-        if not result[name] then
-            result[name] = find_file("*"..name.."*.exe", path)
-        end
-    end
+	local get_path_parts = function(path)
+		return string.match(path, "^(.+)%\\([^%\\]+)$")
+	end
 
-    vars.MINGW_MAKE = (result.make and '[['..result.make..']]') or "nil,  -- not found by installer"
-    vars.MINGW_CC = (result.gcc and '[['..result.gcc..']]') or "nil,  -- not found by installer"
-    vars.MINGW_RC = (result.windres and '[['..result.windres..']]') or "nil,  -- not found by installer"
-    vars.MINGW_LD = (result.gcc and '[['..result.gcc..']]') or "nil,  -- not found by installer"
-    vars.MINGW_AR = (result.ar and '[['..result.ar..']]') or "nil,  -- not found by installer"
-    vars.MINGW_RANLIB = (result.ranlib and '[['..result.ranlib..']]') or "nil,  -- not found by installer"
-    return true
+	local find_file_with_where = function(mask, path)
+		local cmd
+		if path then
+			cmd = 'where.exe /R "' .. path .. '" ' .. mask
+		else
+			cmd = 'where.exe ' .. mask
+		end
+		return read_output(cmd)
+	end
+
+	local find_file_with_find = function(mask, path)
+		local correct_find_result = function(p)
+			return p:gsub("/", "\\")
+		end
+
+		local script_path = this_script_path();
+		local script_dir_path = get_path_parts(script_path)
+		local find_cmd_path = script_dir_path .. "\\win32\\tools\\find.exe"
+
+		-- Starting path is given no need to iterate over %PATH%
+		if path then
+			-- Remove trailing backslashes from path, but not from a drive letter like `C:\`.
+			path = path:gsub("([^:])\\+$", "%1")
+			local cmd = find_cmd_path .. " " .. path .. " -name " .. mask
+
+			return read_output(cmd, correct_find_result)
+		end
+
+		-- Iterating over %PATH% directories
+		local path_env = os.getenv("PATH") or ""
+		for dir in path_env:gmatch("[^;]+") do
+			-- Remove trailing backslashes, but not from a drive letter like `C:\`.
+			dir = dir:gsub("([^:])\\+$", "%1")
+			-- Got the directory, building find command
+			local cmd = find_cmd_path .. " " .. dir .. " -maxdepth 1 -name " .. mask
+
+			-- Reading results
+			local dir_lines, err = read_output(cmd, correct_find_result)
+			if (not dir_lines) or err then
+				return nil, err
+			end
+
+			-- Found something no need to iterate more
+			if #dir_lines > 0 then
+				return dir_lines, nil
+			end
+		end
+
+		return nil, nil
+	end
+
+	-- returns: full filename, path, filename
+	local find_file = function(mask, path)
+		local files, err
+		if (check_where()) then
+			files, err = find_file_with_where(mask, path)
+		else
+			files, err = find_file_with_find(mask, path)
+		end
+
+		if not files or not files[1] then
+			return nil, "couldn't find '" .. mask .. "', " .. (err or "not found")
+		end
+		local path, file = get_path_parts(files[1])
+		return files[1], path, file
+	end
+
+	local first_one = "*gcc.exe" -- first file we're assuming to point to the compiler suite
+	local full, path, filename = find_file(first_one, nil)
+	if not full then
+		return nil, path
+	end
+	vars.MINGW_BIN_PATH = path
+
+	local result = {
+		gcc = full
+	}
+  for i, name in ipairs({"make", "ar", "windres", "ranlib"}) do
+    result[name] = find_file(name..".exe", path)
+		if not result[name] then
+    	result[name] = find_file("*"..name.."*.exe", path)
+		end
+	end
+
+  vars.MINGW_MAKE = (result.make and '[['..result.make..']]') or "nil,  -- not found by installer"
+  vars.MINGW_CC = (result.gcc and '[['..result.gcc..']]') or "nil,  -- not found by installer"
+  vars.MINGW_RC = (result.windres and '[['..result.windres..']]') or "nil,  -- not found by installer"
+  vars.MINGW_LD = (result.gcc and '[['..result.gcc..']]') or "nil,  -- not found by installer"
+  vars.MINGW_AR = (result.ar and '[['..result.ar..']]') or "nil,  -- not found by installer"
+  vars.MINGW_RANLIB = (result.ranlib and '[['..result.ranlib..']]') or "nil,  -- not found by installer"
+	return true
 end
 
 -- ***********************************************************
