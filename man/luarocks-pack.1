@@ -1,0 +1,54 @@
+.Dd $Mdocdate: January 11 2023 $
+.Dt LUAROCKS-PACK 1
+.Os
+.Sh NAME
+.Nm luarocks-pack
+.Nd create a rock
+
+.Sh SYNOPSIS
+.Nm luarocks pack
+.Bk -words
+.Op Fl h
+.Op Fl -sign
+.Ar rock
+.Op version
+.Ek
+
+.Sh DESCRIPTION
+.Nm luarocks pack
+creates a source rock from a rockspec, or a binary rock from an installed package.
+.Pp
+If
+.Ar rock
+is the name of a rockspec file,
+.Nm luarocks pack
+will create a source rock from it.
+Otherwise if it is the name of an installed package,
+.Nm luarocks pack
+will create a binary rock, and the argument
+.Ar version
+may be given to specify a version of
+.Ar rock
+to pack.
+.Pp
+The options are as follows:
+.Bl -tag -width keyword
+.It Fl h
+Show a help message and exit.
+.It Fl -sign
+Produce a signature file as well.
+.El
+
+.Sh EXAMPLES
+.Pp
+Pack a source rock from a rockspec:
+.Pp
+.Dl $ luarocks pack mysuperawesomerock-0.1.0-1.rockspec
+.Pp
+Pack version 1.1.2-1 of the xml package into a binary rock (as long as the xml package is installed):
+.Pp
+.Dl $ luarocks pack xml 1.1.2-1
+.Pp
+
+.Sh SEE ALSO
+.Xr luarocks-unpack 1
