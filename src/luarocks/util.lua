@@ -412,9 +412,6 @@ end
 
 do
    local function Q(pathname)
-      if pathname:match("^.:") then
-         return pathname:sub(1, 2) .. '"' .. pathname:sub(3) .. '"'
-      end
       return '"' .. pathname .. '"'
    end
 
