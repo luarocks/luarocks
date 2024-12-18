@@ -1,4 +1,4 @@
-local deplocks = {}
+local type = type; local deplocks = {}
 
 
 
