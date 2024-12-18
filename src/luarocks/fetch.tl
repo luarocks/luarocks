@@ -60,12 +60,12 @@ function fetch.fetch_caching(url: string, mirroring?: string): string, string, s
       return cachefile, nil, nil, true
    end
 
-   local lock, errlock: Lock, string
+   local lock: Lock
    if ok then
-      lock, errlock = fs.lock_access(cache_dir)
+      lock = fs.lock_access(cache_dir)
    end
 
-   if not (ok and lock) then
+   if not lock then
       cfg.local_cache = fs.make_temp_dir("local_cache")
       if not cfg.local_cache then
          return nil, "Failed creating temporary local_cache directory"
@@ -76,6 +76,10 @@ function fetch.fetch_caching(url: string, mirroring?: string): string, string, s
          return nil, "Failed creating temporary cache directory "..cache_dir
       end
       lock = fs.lock_access(cache_dir)
+   end
+
+   if not lock then
+      return nil, "Failed locking cache directory"
    end
 
    local file, err, errcode, from_cache = fetch.fetch_url(url, cachefile, true, mirroring)
