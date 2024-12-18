@@ -134,7 +134,7 @@ end
 function builtin.run(rockspec, no_install)
    local compile_object
    local compile_library
-   local compile_static_library
+
 
    local build = rockspec.build
    local variables = rockspec.variables
@@ -247,13 +247,15 @@ function builtin.run(rockspec, no_install)
          end
          return execute(variables.LD .. " " .. variables.LDFLAGS .. " " .. variables.LIBFLAG, "-o", library, _tl_table_unpack(extras))
       end
-      compile_static_library = function(library, objects, _libraries, _libdirs, _name)
-         local ok = execute(variables.AR, "rc", library, _tl_table_unpack(objects))
-         if ok then
-            ok = execute(variables.RANLIB, library)
-         end
-         return ok
-      end
+
+
+
+
+
+
+
+
+
    end
 
    local ok, err, errcode

@@ -111,7 +111,7 @@ function install.install_binary_rock(rock_file: string, opts: IOpts): string, st
 
    if opts.deps_mode ~= "none" then
       ok, err, errcode = deps.check_external_deps(rockspec, "install")
-      if err then return nil, err, errcode end
+      if not ok then return nil, err, errcode end
    end
 
    if deps_mode ~= "none" then
@@ -119,11 +119,11 @@ function install.install_binary_rock(rock_file: string, opts: IOpts): string, st
                           and "."
                           or install_dir
       ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", deps_mode, opts.verify, deplock_dir)
-      if err then return nil, err, errcode end
+      if not ok then return nil, err, errcode end
    end
 
    ok, err = repo_writer.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), deps_mode, namespace)
-   if err then return nil, err end
+   if not ok then return nil, err end
 
    util.remove_scheduled_function(rollback)
    rollback = util.schedule_function(function()
@@ -131,7 +131,7 @@ function install.install_binary_rock(rock_file: string, opts: IOpts): string, st
    end)
 
    ok, err = repos.run_hook(rockspec, "post_install")
-   if err then return nil, err end
+   if not ok then return nil, err end
 
    util.announce_install(rockspec)
    util.remove_scheduled_function(rollback)
@@ -157,7 +157,6 @@ function install.install_binary_rock_deps(rock_file: string, opts: IOpts): strin
 
    local install_dir = path.install_dir(name, version)
 
-   local ok: boolean
    local oks, err, errcode = fetch.fetch_and_unpack_rock(rock_file, install_dir, opts.verify)
    if not oks then return nil, err, errcode end
 
@@ -168,10 +167,12 @@ function install.install_binary_rock_deps(rock_file: string, opts: IOpts): strin
    end
 
    local deplock_dir = fs.exists(dir.path(".", "luarocks.lock"))
-                        and "."
-                        or install_dir
+                       and "."
+                       or install_dir
+
+   local ok: boolean
    ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify, deplock_dir)
-   if err then return nil, err, errcode end
+   if not ok then return nil, err, errcode end
 
    util.printout()
    util.printout("Successfully installed dependencies for " ..name.." "..version)

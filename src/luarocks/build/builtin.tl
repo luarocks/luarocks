@@ -134,7 +134,7 @@ end
 function builtin.run(rockspec: Rockspec, no_install: boolean): boolean, string, string
    local compile_object: function(string, string, {string}, {string}): boolean, string, string
    local compile_library: function(string, {string}, {string}, {string}, string): boolean, string, string
-   local  compile_static_library: function(string, {string}, {string}, {string}, string): boolean, string, string
+   --local compile_static_library: function(string, {string}, {string}, {string}, string): boolean, string, string
 
    local build = rockspec.build as BuiltinBuild
    local variables = rockspec.variables
@@ -247,6 +247,7 @@ function builtin.run(rockspec: Rockspec, no_install: boolean): boolean, string, 
          end
          return execute(variables.LD.." "..variables.LDFLAGS.." "..variables.LIBFLAG, "-o", library, table.unpack(extras))
       end
+      --[[ TODO disable static libs until we fix the conflict in the manifest, which will take extending the manifest format.
       compile_static_library = function(library: string, objects: {string}, _libraries: {string}, _libdirs: {string}, _name: string): boolean, string, string
          local ok = execute(variables.AR, "rc", library, table.unpack(objects))
          if ok then
@@ -254,6 +255,7 @@ function builtin.run(rockspec: Rockspec, no_install: boolean): boolean, string, 
          end
          return ok
       end
+      ]]
    end
 
    local ok, err, errcode: boolean, string, string
