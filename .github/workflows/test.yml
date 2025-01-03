@@ -43,7 +43,11 @@ jobs:
 
     - name: 'Setup macOS deps'
       if: ${{ contains(matrix.os, 'macos') }}
-      run: brew install openssl
+      run: brew install openssl bzip2
+
+    - name: 'Setup Ubuntu deps'
+      if: ${{ contains(matrix.os, 'ubuntu') }}
+      run: sudo apt-get install libbz2-dev
 
     - name: Prep
       run: |
@@ -98,6 +102,9 @@ jobs:
     - uses: hishamhm/gh-actions-lua@master
       with:
         luaVersion: "5.4"
+
+    - name: 'Setup Ubuntu deps'
+      run: sudo apt-get install libbz2-dev
 
     - name: Binary Build Smoke Test
       run: |
