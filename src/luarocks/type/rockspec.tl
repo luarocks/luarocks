@@ -1,5 +1,5 @@
 local record type_rockspec
-   order: Ordering<string>
+   order: Ordering<number | string>
    rockspec_format: string
 end
 
