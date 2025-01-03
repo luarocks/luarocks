@@ -394,7 +394,7 @@ then
    else
       where="\$PATH"
    fi
-   echo "$(RED $interp interpreter not found) in $where"
+   echo "$(RED "$interp interpreter not found") in $where"
    echo "You may want to use the flags $(BOLD --with-lua), $(BOLD --with-lua-bin) and/or $(BOLD --lua-version)"
    die "Run $(BOLD ./configure --help) for details."
 fi
