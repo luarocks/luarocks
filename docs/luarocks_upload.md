@@ -4,10 +4,13 @@ Upload a rockspec to the public rocks repository.
 
 ## Usage
 
-`luarocks upload [--skip-pack] [--api-key=<key>] [--force] <rockspec>`
+`luarocks upload [--skip-pack] [--api-key=<key>] [--force] <rockspec> [<src.rock>]`
 
-Packs a source rock file (`.src.rock`) using a rockspec and uploads it
-and the rockspec to the public rocks repository.
+Packs a source rock file (`.src.rock`) using a rockspec and
+
+Uploads a rockspec and a source rock file (`.src.rock`) to the public rocks
+repository. If the `.src.rock` file is not given, the command generates the
+`.src.rock` file from the rockspec by itself.
 
 To access the server, an API key is required. It is passed using `--api-key`
 option and can be issued at the [LuaRocks site](https://luarocks.org/) on
