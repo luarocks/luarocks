@@ -126,7 +126,7 @@ won't be compiled.
 
 You can specify that your code depends on other rocks, so you can use modules
 from other rocks in your code and have them be automatically downloaded and
-installed when a user installs your rock. 
+installed when a user installs your rock.
 
 Suppose we need the modules from the "luaknife" rock, in order to cut our
 fruits. But we need version later than 2.3 of luaknife, because we're using
@@ -212,7 +212,7 @@ sources are in the current directory as well.
 
 In the build section you can include arbitrary files through the
 "copy_directories" table. In this table you can list directories in your rock
-that will be copied to the target rocktree during installation. 
+that will be copied to the target rocktree during installation.
 
 ```lua
    copy_directories = { "doc", "test" }
@@ -422,17 +422,18 @@ site](https://luarocks.org/settings/api-keys).
 
 ## Conclusion
 
-And we're done -- by writing a simple rules file which simply describes which
+And we're done! By writing a simple rules file which describe which
 sources compose the project and which libraries they use, we actually achieved
-a lot behind the scenes: LuaRocks takes care of using the right compiler for
-your platform (GCC? MSVC?), passing the right flags (-fpic? -shared? -bundle
--undefined dynamic_lookup?) and checking external dependencies (/usr/lib?
-/usr/local/lib? Is it really there?). Getting all these little portability
-details right is not always easy to do on hand-written Makefiles, so that's
-why we recommend using LuaRocks's own build system whenever possible. There
-are many other features of LuaRocks we haven't covered in this tutorial
-(per-platform overrides, support for command-line scripts, etc.), but this
-should get you started.
+a lot behind the scenes. LuaRocks takes care of:
 
+* using the right compiler for your platform (GCC? MSVC?)
+* passing the right flags (`-fpic`? `-shared`? `-bundle -undefined dynamic_lookup`?)
+* and checking external dependencies (`/usr/lib`? `/usr/local/lib`? Is it really there?).
 
+Getting all these little portability details right is not always easy to do on
+hand-written Makefiles, so that's why we recommend using LuaRocks's own build
+system whenever possible.
 
+There are many other features of LuaRocks we haven't covered in this tutorial
+([per-platform overrides](platform_overrides.md), support for command-line
+scripts, etc.), but this should get you started.
