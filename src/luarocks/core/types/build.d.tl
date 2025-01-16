@@ -1,13 +1,13 @@
 local record build
 
    interface Build
-      record Install
+      interface Install
          lua: {(string|integer): string}
          lib: {(string|integer): string}
          conf: {(string|integer): string}
          bin: {(string|integer): string}
       end
-      
+
       type: string
       install: Install
       copy_directories: {string}
