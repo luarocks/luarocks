@@ -1,6 +1,6 @@
 
 
-local result = {Result = {}, }
+local result = { Result = {} }
 
 
 

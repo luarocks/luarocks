@@ -1,6 +1,6 @@
 
 
-local query = {Query = {}, }
+local query = { Query = {} }
 
 
 

@@ -10,7 +10,7 @@ local cfg = require("luarocks.core.cfg")
 
 
 
-local util = {Fn = {}, }
+local util = { Fn = {} }
 
 
 

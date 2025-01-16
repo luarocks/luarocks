@@ -2,7 +2,7 @@
 
 
 
-local command = {CommandBuild = {Install = {}, }, }
+local command = { CommandBuild = {} }
 
 
 

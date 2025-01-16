@@ -2,7 +2,7 @@
 
 
 
-local rockspec = {Description = {}, Source = {}, Test = {}, Dependencies = {}, Hooks = {}, Deploy = {}, Rockspec = {}, }
+local rockspec = { Description = {}, Source = {}, Test = {}, Dependencies = {}, Hooks = {}, Deploy = {}, Rockspec = {} }
 
 
 
