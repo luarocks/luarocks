@@ -3,109 +3,127 @@
 "3.11.1": {
 "date": "2024-05-31",
 "files": ["luarocks-3.11.1.tar.gz", "luarocks-3.11.1.tar.gz.asc", "luarocks-3.11.1-win32.zip", "luarocks-3.11.1-win32.zip.asc", "luarocks-3.11.1-windows-32.zip", "luarocks-3.11.1-windows-32.zip.asc", "luarocks-3.11.1-windows-64.zip", "luarocks-3.11.1-windows-64.zip.asc", "luarocks-3.11.1-linux-x86_64.zip", "luarocks-3.11.1-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "c3fb3d960dffb2b2fe9de7e3cb004dc4d0b34bb3d342578af84f84325c669102"
 }},
 {
 "3.11.0": {
 "date": "2024-03-13",
 "files": ["luarocks-3.11.0.tar.gz", "luarocks-3.11.0.tar.gz.asc", "luarocks-3.11.0-win32.zip", "luarocks-3.11.0-win32.zip.asc", "luarocks-3.11.0-windows-32.zip", "luarocks-3.11.0-windows-32.zip.asc", "luarocks-3.11.0-windows-64.zip", "luarocks-3.11.0-windows-64.zip.asc", "luarocks-3.11.0-linux-x86_64.zip", "luarocks-3.11.0-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "25f56b3c7272fb35b869049371d649a1bbe668a56d24df0a66e3712e35dd44a6"
 }},
 {
 "3.10.0": {
 "date": "2024-02-27",
 "files": ["luarocks-3.10.0.tar.gz", "luarocks-3.10.0.tar.gz.asc", "luarocks-3.10.0-win32.zip", "luarocks-3.10.0-win32.zip.asc", "luarocks-3.10.0-windows-32.zip", "luarocks-3.10.0-windows-32.zip.asc", "luarocks-3.10.0-windows-64.zip", "luarocks-3.10.0-windows-64.zip.asc", "luarocks-3.10.0-linux-x86_64.zip", "luarocks-3.10.0-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "e9bf06d5ec6b8ecc6dbd1530d2d77bdb3377d814a197c46388e9f148548c1c89"
 }},
 {
 "3.9.2": {
 "date": "2022-12-08",
 "files": ["luarocks-3.9.2.tar.gz", "luarocks-3.9.2.tar.gz.asc", "luarocks-3.9.2-win32.zip", "luarocks-3.9.2-win32.zip.asc", "luarocks-3.9.2-windows-32.zip", "luarocks-3.9.2-windows-32.zip.asc", "luarocks-3.9.2-windows-64.zip", "luarocks-3.9.2-windows-64.zip.asc", "luarocks-3.9.2-linux-x86_64.zip", "luarocks-3.9.2-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "bca6e4ecc02c203e070acdb5f586045d45c078896f6236eb46aa33ccd9b94edb"
 }},
 {
 "3.9.1": {
 "date": "2022-07-01",
 "files": ["luarocks-3.9.1.tar.gz", "luarocks-3.9.1.tar.gz.asc", "luarocks-3.9.1-win32.zip", "luarocks-3.9.1-win32.zip.asc", "luarocks-3.9.1-windows-32.zip", "luarocks-3.9.1-windows-32.zip.asc", "luarocks-3.9.1-windows-64.zip", "luarocks-3.9.1-windows-64.zip.asc", "luarocks-3.9.1-linux-x86_64.zip", "luarocks-3.9.1-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "ffafd83b1c42aa38042166a59ac3b618c838ce4e63f4ace9d961a5679ef58253"
 }},
 {
 "3.9.0": {
 "date": "2022-04-17",
 "files": ["luarocks-3.9.0.tar.gz", "luarocks-3.9.0.tar.gz.asc", "luarocks-3.9.0-win32.zip", "luarocks-3.9.0-win32.zip.asc", "luarocks-3.9.0-windows-32.zip", "luarocks-3.9.0-windows-32.zip.asc", "luarocks-3.9.0-windows-64.zip", "luarocks-3.9.0-windows-64.zip.asc", "luarocks-3.9.0-linux-x86_64.zip", "luarocks-3.9.0-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "5e840f0224891de96be4139e9475d3b1de7af3a32b95c1bdf05394563c60175f"
 }},
 {
 "3.8.0": {
 "date": "2021-11-08",
 "files": ["luarocks-3.8.0.tar.gz", "luarocks-3.8.0.tar.gz.asc", "luarocks-3.8.0-win32.zip", "luarocks-3.8.0-win32.zip.asc", "luarocks-3.8.0-windows-32.zip", "luarocks-3.8.0-windows-32.zip.asc", "luarocks-3.8.0-windows-64.zip", "luarocks-3.8.0-windows-64.zip.asc", "luarocks-3.8.0-linux-x86_64.zip", "luarocks-3.8.0-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "56ab9b90f5acbc42eb7a94cf482e6c058a63e8a1effdf572b8b2a6323a06d923"
 }},
 {
 "3.7.0": {
 "date": "2021-04-13",
 "files": ["luarocks-3.7.0.tar.gz", "luarocks-3.7.0.tar.gz.asc", "luarocks-3.7.0-win32.zip", "luarocks-3.7.0-win32.zip.asc", "luarocks-3.7.0-windows-32.zip", "luarocks-3.7.0-windows-32.zip.asc", "luarocks-3.7.0-windows-64.zip", "luarocks-3.7.0-windows-64.zip.asc", "luarocks-3.7.0-linux-x86_64.zip", "luarocks-3.7.0-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "9255d97fee95cec5b54fc6ac718b11bf5029e45bed7873e053314919cd448551"
 }},
 {
 "3.6.0": {
 "date": "2021-03-30",
 "files": ["luarocks-3.6.0.tar.gz", "luarocks-3.6.0.tar.gz.asc", "luarocks-3.6.0-win32.zip", "luarocks-3.6.0-win32.zip.asc", "luarocks-3.6.0-windows-32.zip", "luarocks-3.6.0-windows-32.zip.asc", "luarocks-3.6.0-windows-64.zip", "luarocks-3.6.0-windows-64.zip.asc", "luarocks-3.6.0-linux-x86_64.zip", "luarocks-3.6.0-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "b0eaf59e7711ca2a886722c0423dabe22ccbdcdf3a042c3f2615596879f8252f"
 }},
 {
 "3.5.0": {
 "date": "2020-12-10",
 "files": ["luarocks-3.5.0.tar.gz", "luarocks-3.5.0.tar.gz.asc", "luarocks-3.5.0-win32.zip", "luarocks-3.5.0-win32.zip.asc", "luarocks-3.5.0-windows-32.zip", "luarocks-3.5.0-windows-32.zip.asc", "luarocks-3.5.0-windows-64.zip", "luarocks-3.5.0-windows-64.zip.asc", "luarocks-3.5.0-linux-x86_64.zip", "luarocks-3.5.0-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "701d0cc0c7e97cc2cf2c2f4068fce45e52a8854f5dc6c9e49e2014202eec9a4f"
 }},
 {
 "3.4.0": {
 "date": "2020-09-25",
 "files": ["luarocks-3.4.0.tar.gz", "luarocks-3.4.0.tar.gz.asc", "luarocks-3.4.0-win32.zip", "luarocks-3.4.0-win32.zip.asc", "luarocks-3.4.0-windows-32.zip", "luarocks-3.4.0-windows-32.zip.asc", "luarocks-3.4.0-windows-64.zip", "luarocks-3.4.0-windows-64.zip.asc", "luarocks-3.4.0-linux-x86_64.zip", "luarocks-3.4.0-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "62ce5826f0eeeb760d884ea8330cd1552b5d432138b8bade0fa72f35badd02d0"
 }},
 {
 "3.3.1": {
 "date": "2020-02-07",
 "files": ["luarocks-3.3.1.tar.gz", "luarocks-3.3.1.tar.gz.asc", "luarocks-3.3.1-win32.zip", "luarocks-3.3.1-win32.zip.asc", "luarocks-3.3.1-windows-32.zip", "luarocks-3.3.1-windows-32.zip.asc", "luarocks-3.3.1-windows-64.zip", "luarocks-3.3.1-windows-64.zip.asc", "luarocks-3.3.1-linux-x86_64.zip", "luarocks-3.3.1-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "eb20cd9814df05535d9aae98da532217c590fc07d48d90ca237e2a7cdcf284fe"
 }},
 {
 "3.3.0": {
 "date": "2020-01-28",
 "files": ["luarocks-3.3.0.tar.gz", "luarocks-3.3.0.tar.gz.asc", "luarocks-3.3.0-win32.zip", "luarocks-3.3.0-win32.zip.asc", "luarocks-3.3.0-windows-32.zip", "luarocks-3.3.0-windows-32.zip.asc", "luarocks-3.3.0-windows-64.zip", "luarocks-3.3.0-windows-64.zip.asc", "luarocks-3.3.0-linux-x86_64.zip", "luarocks-3.3.0-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "8de54eb851f5245ed3708d94d8872e825b9704049d3ad4febe8e219f419b427d"
 }},
 {
 "3.2.1": {
 "date": "2019-09-09",
 "files": ["luarocks-3.2.1.tar.gz", "luarocks-3.2.1.tar.gz.asc", "luarocks-3.2.1-win32.zip", "luarocks-3.2.1-win32.zip.asc", "luarocks-3.2.1-windows-32.zip", "luarocks-3.2.1-windows-32.zip.asc", "luarocks-3.2.1-linux-x86_64.zip", "luarocks-3.2.1-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "f27e20c9cdb3ffb991ccdb85796c36a0690566676f8e1a59b0d0ee6598907d04"
 }},
 {
 "3.2.0": {
 "date": "2019-08-28",
 "files": ["luarocks-3.2.0.tar.gz", "luarocks-3.2.0.tar.gz.asc", "luarocks-3.2.0-win32.zip", "luarocks-3.2.0-win32.zip.asc", "luarocks-3.2.0-windows-32.zip", "luarocks-3.2.0-windows-32.zip.asc", "luarocks-3.2.0-linux-x86_64.zip", "luarocks-3.2.0-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "66c1848a25924917ddc1901e865add8f19f2585360c44a001a03a8c234d3e796"
 }},
 {
 "3.1.3": {
 "date": "2019-06-06",
 "files": ["luarocks-3.1.3.tar.gz", "luarocks-3.1.3.tar.gz.asc", "luarocks-3.1.3-win32.zip", "luarocks-3.1.3-win32.zip.asc", "luarocks-3.1.3-windows-32.zip", "luarocks-3.1.3-windows-32.zip.asc", "luarocks-3.1.3-linux-x86_64.zip", "luarocks-3.1.3-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "c573435f495aac159e34eaa0a3847172a2298eb6295fcdc35d565f9f9b990513"
 }},
 {
 "3.1.2": {
 "date": "2019-05-07",
 "files": ["luarocks-3.1.2.tar.gz", "luarocks-3.1.2.tar.gz.asc", "luarocks-3.1.2-win32.zip", "luarocks-3.1.2-win32.zip.asc", "luarocks-3.1.2-windows-32.zip", "luarocks-3.1.2-windows-32.zip.asc", "luarocks-3.1.2-linux-x86_64.zip", "luarocks-3.1.2-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "72a3b74f05b7fd011eed894dc34193ee80b3235fe58016ac9ffdbfceecc88950"
 }},
 {
 "3.1.1": {
 "date": "2019-05-06",
 "files": ["luarocks-3.1.1.tar.gz", "luarocks-3.1.1.tar.gz.asc", "luarocks-3.1.1-win32.zip", "luarocks-3.1.1-win32.zip.asc", "luarocks-3.1.1-windows-32.zip", "luarocks-3.1.1-windows-32.zip.asc", "luarocks-3.1.1-linux-x86_64.zip", "luarocks-3.1.1-linux-x86_64.zip.asc"],
-"about": []
+"about": [],
+"source_digest": "3c26c102f8e69f81e12ea39037c770a00b6244e115a4c832e7a92feffdfad1aa"
 }},
 {
 "3.1.0": {
@@ -123,7 +141,8 @@
 "install: new flag --no-doc",
 "Improve Lua paths auto-detection",
 "Various bugfixes"
-]
+],
+"source_digest": "865eae1e49b0f701c955c1c8f7b6fae99287c9cef32227d64177509224908921"
 }},
 {
 "3.0.4": {
@@ -133,7 +152,8 @@
 "Fork-free platform detection at startup",
 "Improved detection of the default rockspec in commands such as `luarocks test`",
 "Various minor bugfixes"
-]
+],
+"source_digest": "1236a307ca5c556c4fed9fdbd35a7e0e80ccf063024becc8c3bf212f37ff0edf"
 }},
 {
 "3.0.3": {
@@ -141,7 +161,8 @@
 "files": ["luarocks-3.0.3.tar.gz", "luarocks-3.0.3.tar.gz.asc", "luarocks-3.0.3-win32.zip", "luarocks-3.0.3-win32.zip.asc", "luarocks-3.0.3-windows-32.zip", "luarocks-3.0.3-windows-32.zip.asc", "luarocks-3.0.3-linux-x86_64.zip", "luarocks-3.0.3-linux-x86_64.zip.asc"], 
 "about": [
 "Minor bugfix release"
-]
+],
+"source_digest": "f9a3fca236c87db55bc128a182ff605731ca15b43b1c4942d98f5e34acc88a6e"
 }},
 {
 "3.0.2": {
@@ -154,7 +175,8 @@
 "Bugfixes in luarocks show",
 "Fix upgrade/downgrade when a single rock has clashing module filenames",
 "Fix for autodetected external dependencies with non-alphabetic characters"
-]
+],
+"source_digest": "3836267eff2f85fb552234e966602b1e649c58f81f47c7de3785e071c8127f5a"
 }},
 {
 "3.0.0": {
@@ -168,7 +190,8 @@
 "General improvements, including namespaces",
 "User-visible changes, including some breaking changes",
 "Various internal changes"
-]
+],
+"source_digest": "a43fffb997100f11cccb529a3db5456ce8dab18171a5cb3645f948147b6f64a1"
 }},
 {
 "2.4.4": {
@@ -180,7 +203,8 @@
 "Updated Windows installer to better handle gcc toolchains",
 "Fix detection of directories on Windows",
 "Fixes .def generation on Windows"
-]
+],
+"source_digest": "3938df33de33752ff2c526e604410af3dceb4b7ff06a770bc4a240de80a1f934"
 }},
 {
 "2.4.3": {
@@ -189,7 +213,8 @@
 "about": [
 "Fixed display of pathnames in `luarocks show`",
 "Improved check for write permissions when installing"
-]
+],
+"source_digest": "4d414d32fed5bb121c72d3ff1280b7f2dc9027a9bc012e41dfbffd5b519b362e"
 }},
 {
 "2.4.2": {
@@ -203,7 +228,8 @@
 "Improvements in Lua interpreter version detection in Unix configure script",
 "Relaxed Lua version detection to improve support for alternative implementations (e.g. Ravi)",
 "Plus assorted bugfixes and improvements"
-]
+],
+"source_digest": "0e1ec34583e1b265e0fbafb64c8bd348705ad403fe85967fd05d3a659f74d2e5"
 }},
 {
 "2.4.1": {
@@ -212,7 +238,8 @@
 "about": [
 "Avoid coroutine use in luarocks.loader", 
 "Fix upgrade issues for very old versions"
-]
+],
+"source_digest": "e429e0af9764bfd5cb640cac40f9d4ed1023fa17c052dff82ed0a41c05f3dcf9"
 }},
 {
 "2.4.0": {
@@ -229,7 +256,8 @@
 "Internal reorganization of luarocks.fs code", 
 "`remove` option --force=fast renamed to --force-fast", 
 "Plus assorted bugfixes and cleanups"
-]
+],
+"source_digest": "44381c9128d036247d428531291d1ff9405ae1daa238581d3c15f96d899497c3"
 }},
 {
 "2.3.0": {
@@ -247,7 +275,8 @@
 "Improved UI for messages when external deps are missing", 
 "Unix: Robustness improvement in configure script", 
 "Plus tweaks and bugfixes. See the changelog for details."
-]
+],
+"source_digest": "68e38feeb66052e29ad1935a71b875194ed8b9c67c2223af5f4d4e3e2464ed97"
 }},
 {
 "2.2.2": {
@@ -261,7 +290,8 @@
 "Improvements to CMake build backend", 
 "Improved Makefiles for handling simultaneous bootstrapped installations", 
 "Various bugfixes"
-]
+],
+"source_digest": "4f0427706873f30d898aeb1dfb6001b8a3478e46a5249d015c061fe675a1f022"
 }},
 {
 "2.2.1": {
@@ -271,7 +301,8 @@
 "Improved compatibility with Lua 5.3", 
 "`luarocks list --outdated` for listing modules with available upgrades", 
 "Assorted bugfixes"
-]
+],
+"source_digest": "713f8a7e33f1e6dc77ba2eec849a80a95f24f82382e0abc4523c2b8d435f7c55"
 }},
 {
 "2.2.0": {
@@ -285,7 +316,8 @@
 "--branch flag for `luarocks build` and `luarocks make`", 
 "various improvements in `luarocks doc` command", 
 "`git+http` transport for source.url"
-]
+],
+"source_digest": "9b1a4ec7b103e2fb90a7ba8589d7e0c8523a3d6d54ac469b0bbc144292b9279c"
 }},
 {
 "2.1.2": {
@@ -302,7 +334,8 @@
 "`luarocks` with no arguments presents more useful diagnostics", 
 "Improved Lua detection in Unix installer", 
 "plus assorted bugfixes"
-]
+],
+"source_digest": "62625c7609c886bae23f8db55dba45dbb083bae0d19bf12fe29ec95f7d389ff3"
 }},
 {
 "2.1.1": {
@@ -317,7 +350,8 @@
 "New --local-tree flag for 'luarocks-admin make-manifest'", 
 "Improved error checking", 
 "plus assorted bugfixes"
-]
+],
+"source_digest": "995ba1b9c982b503fd6fc61c905dc07c3a7533c06587616d9f00d9f62bd318ac"
 }},
 {
 "2.1.0": {
@@ -334,7 +368,8 @@
 "new flags --lr-path, --lr-cpath, --lr-bin for 'luarocks path' for use in scripts", 
 "friendlier error messages", 
 "plus bugfixes"
-]
+],
+"source_digest": "69bf4cb40c8010a5d434f70d26c9885f4260ac265fdaa848c0edb50cc8e53f88"
 }},
 {
 "2.0.13": {
@@ -348,7 +383,8 @@
 "Improvements for the Windows installer, including optional registry entries for context-menu operations", 
 "Improvements in `luarocks new_version` command for autogenerating updated rockspecs", 
 "`luarocks remove` command accepts rock and rockspec filenames"
-]
+],
+"source_digest": "17db43664b555a467af74c91778d7e70937398da4325e3f88740621204a559a6"
 }},
 {
 "2.0.12": {
@@ -361,7 +397,8 @@
 "More consistent user-agent reporting", 
 "Code cleanups, removal of dead code", 
 "Fixes regressions on Mac and Windows"
-]
+],
+"source_digest": "ad4b465c5dfbdce436ef746a434317110d79f18ff79202a2697e215f4ac407ed"
 }},
 {
 "2.0.11": {
@@ -382,7 +419,8 @@
 "New command `lint`, to check the syntax of a rockspec", 
 "Fix builtin build mode on Mac OSX < 10.5", 
 "Improve configure tests for Debian-based platforms"
-]
+],
+"source_digest": "feee5a606938604f4fef1fdadc29692b9b7cdfb76fa537908d772adfb927741e"
 }},
 {
 "2.0.10": {
@@ -395,7 +433,8 @@
 "Use full path in $(LUA) when configured with --with-lua", 
 "Cleanup of .svn dir in svn-based rocks", 
 "Improvement for 'make bootstrap'"
-]
+],
+"source_digest": "11731dfe6e210a962cb2a857b8b2f14a9ab1043e13af09a1b9455b486401b46e"
 }},
 {
 "2.0.9": {
@@ -410,7 +449,8 @@
 "Clickable URLs in descriptions in rocks repo index.html", 
 "Nicer-looking persisted tables", 
 "Assorted bugfixes"
-]
+],
+"source_digest": "4e25a8052c6abe1685da1093e1adb59aa034106c9d335aa932f7b3b51297c63d"
 }},
 {
 "2.0.8": {
@@ -428,7 +468,8 @@
 "git+file:// pseudoprotocol for local Git repos", 
 "New binaries from GnuWin32 shipped in Win32 zip", 
 "Nicer-looking help"
-]
+],
+"source_digest": "f8abf1ab03b744a817721a0ff4a0ee454e068735efaa8d1aadcfcd0f07cdaa88"
 }},
 {
 "2.0.7.1": {
@@ -438,7 +479,8 @@
 "Fix installation of files in build operation", 
 "Deprecate --to and --from, use --server and --tree instead", 
 "Improved documentation, thanks to LDoc"
-]
+],
+"source_digest": "a7da6f796e6cffd63dd7a7f9a2fdab2ca3a1461e5e5e94aa8569068b701f7272"
 }},
 {
 "2.0.7": {
@@ -452,7 +494,8 @@
 "Isolate references to `5.1` to luarocks.cfg module", 
 "More logical names for flags: --tree, --server", 
 "Improved documentation"
-]
+],
+"source_digest": "0d9bbadb0bea8db8c16a27c11a0183a37f6622470d8c869015189844f9072c54"
 }},
 {
 "2.0.6": {
@@ -466,7 +509,8 @@
 "Support for Mercurial", 
 "Flag for experimental extensions", 
 "Plus assorted bugfixes"
-]
+],
+"source_digest": "a5d6e39bedcd62c4a9933d055d4ed7a7e9e6f1da6b9498d05857df1dad4f574a"
 }},
 {
 "2.0.5": {
@@ -478,7 +522,8 @@
 "Handle redirects between http (LuaSocket) and https (LuaSec)", 
 "Avoid relying on the $PWD variable", 
 "Code cleanups"
-]
+],
+"source_digest": "289b6c9acea85a4d8a96baa4d33ca14e92ed93b8a88f90eae669534e1a75cd1c"
 }},
 {
 "2.0.4.1": {
@@ -486,7 +531,8 @@
 "files": ["luarocks-2.0.4.1.tar.gz", "luarocks-2.0.4.1.tar.gz.asc", "luarocks-2.0.4.1-win32.zip", "luarocks-2.0.4.1-win32.zip.asc"], 
 "about": [
 "Minor bugfix release"
-]
+],
+"source_digest": "f8da04e43952b8a3047465e45df95fd4d76539fcb546a0c5b2ecf89b00c82d71"
 }},
 {
 "2.0.4": {
@@ -504,7 +550,8 @@
 "Better propagation of error messages", 
 "Stable sort of persisted files such as manifests", 
 "Plus assorted bugfixes"
-]
+],
+"source_digest": "cf328c12cdc6510d2192a0f5109e4b8e0d4faf36dc43fd148679ea880416b776"
 }},
 {
 "2.0.3": {
@@ -523,7 +570,8 @@
 "new command: `luarocks show` displays information about an installed rock", 
 "new command: `luarocks path` to make it easy to export Lua env variables", 
 "plus assorted bugfixes"
-]
+],
+"source_digest": "57c6489c4de9acbd95042540314f02cc833cc4df48c0dc8526812a5b9c783e42"
 }},
 {
 "2.0.2": {
@@ -534,7 +582,8 @@
 "use LuaZip if available for unzipping files", 
 "MinGW support in builtin build backend", 
 "updated installation files for Windows, including a LuaForWindows-compatible package"
-]
+],
+"source_digest": "fd8106586598aed165337e174266b11cbf689fce1fa84688d89e674ccd2a9ec3"
 }},
 {
 "2.0.1": {
@@ -546,7 +595,8 @@
 "cleanup of configure options and references to the old LuaForge URLs", 
 "install LuaRocks as a rock", 
 "plus assorted bugfixes"
-]
+],
+"source_digest": "e7ca4f144cdae923a75439a96f6c15f142ec485fa4c5f5a586ec04923914d42b"
 }},
 {
 "2.0": {
@@ -560,7 +610,8 @@
 "new command for luarocks: `download`, to fetch .rock and .rockspec files", 
 "new commands for luarocks-admin: `add`, to upload rocks to a repository, and `refresh_cache`, to refresh the cache used by the `add` command", 
 "plus a number of cleanups and bugfixes"
-]
+],
+"source_digest": "d554e7963a4c72dc1f5651424c5330a2cd5aa8a6ab13d1204f70a6629925a9e3"
 }},
 {
 "1.0.1": {
@@ -572,7 +623,8 @@
 "Improve detection of external libraries on Mac OSX", 
 "Fix build of the 'builtin' backend under Windows", 
 "Support for the 'md5' binary as a MD5 checker"
-]
+],
+"source_digest": "6cb9d5c672a4842ec4e37df31d5f774ac4231b58a88f8f21ff96de28935d9154"
 }},
 {
 "1.0": {
@@ -587,7 +639,8 @@
 "Add check for rockspec version format.", 
 "Generate index.html when building a manifest for a repository.", 
 "Plus assorted bugfixes."
-]
+],
+"source_digest": "7177cd32c55214ffd0c3543c1350b4e5f3908e81308f65c573fd5b03dc2d711d"
 }},
 {
 "0.5.2": {
@@ -598,7 +651,8 @@
 "Fixes issues with external libraries on the 'module' build type on Windows", 
 "Fixes the --only-from flag", 
 "Renames the luarocks.config module to luarocks.cfg avoiding conflict's with the user configuration file config.lua"
-]
+],
+"source_digest": "ea625db82b617c72e296a3da9e3e8933ab0a48a58ea93e4a6d17112dd9095f36"
 }},
 {
 "0.5.1": {
@@ -609,7 +663,8 @@
 "Added variables LUA, LIB_EXTENSION and OBJ_EXTENSION, now available for rockspec authors.", 
 "Assorted bugfixes, especially for the Windows package.", 
 "Build system improvements: add DESTDIR variable to makefile to make things easier for distros packaging LuaRocks."
-]
+],
+"source_digest": "abdb376457acf75c4282484ac4a19ccee7a5bd9d51f0430f3baf15f7a0248182"
 }},
 {
 "0.5": {
@@ -622,7 +677,8 @@
 "The manifest file now stores dependency info -- luarocks.require no longer scans rockspec files.", 
 "'unpack' command allows unpacking binary and pure-Lua rocks, for inspecting.", 
 "Plus assorted bugfixes."
-]
+],
+"source_digest": "197a4cc601c8bc880227e6e8906b83d03a33cf65fd71fb6a1bd4841a8cd1f0e2"
 }},
 {
 "0.4.3": {
@@ -632,7 +688,8 @@
 "The MD5 check feature added in 0.4.2 can now use openssl instead of md5sum (making LuaRocks friendlier to OSX).", 
 "Added a license file in the tarball (making LuaRocks friendlier to Debian).", 
 "Plus assorted bugfixes."
-]
+],
+"source_digest": "186c9dff8b88392219d0f168491485a102549f2dce2346e90cad8eb20364f5eb"
 }},
 {
 "0.4.2": {
@@ -643,7 +700,8 @@
 "Perform check of MD5 checksum in sources.", 
 "Accept plain strings in all fields of the source table of the `module` build type.", 
 "Bugfixes."
-]
+],
+"source_digest": "d8cdfb8ea5a9322d3fc33c47cbc2a5ab5cfc0e7d062345c50b837503beb151c3"
 }},
 {
 "0.4.1": {
@@ -654,7 +712,8 @@
 "`unpack` command now supports rockspec files as well.", 
 "Complete code documentation.", 
 "Many assorted bugfixes."
-]
+],
+"source_digest": "b367beaa47dd67beaf841610a894fcd5b4a59c92a81c57a4d901fb94418948bc"
 }},
 {
 "0.4": {
@@ -669,7 +728,8 @@
 "FreeBSD support, by Matthew M. Burke.", 
 "Performance improvements.", 
 "Many assorted bugfixes."
-]
+],
+"source_digest": "d7cb303da68abc111eb49ea1ec76df908e9874e693587e434ebb5dc6c4ff7978"
 }},
 {
 "0.3.2": {
@@ -679,7 +739,8 @@
 "Support for patching and inclusion of extra files (such as Makefiles) through a rockspec.", 
 "Support `platforms` overrides table for dependencies, external dependencies and source URLs.", 
 "Many assorted bugfixes."
-]
+],
+"source_digest": "6e94c07905a43d5c4217278edf592c93f84d679ffc451291b80404abd2e8d07f"
 }},
 {
 "0.3.1": {
@@ -689,7 +750,8 @@
 "Improved search: results now feature separate lists for source and binary rocks.", 
 "Windows support for the `module` build type (using Visual Studio).", 
 "Many assorted bugfixes."
-]
+],
+"source_digest": "72d84bd39443adcd3ccc76921e4c7c2e26d0ef71dc30c33dbf1434fb95f529a0"
 }},
 {
 "0.3": {
@@ -699,7 +761,8 @@
 "Includes Windows package.", 
 "Adds the `module` build type.", 
 "Performance improvements."
-]
+],
+"source_digest": "5341533ade74871a9831cec7e3bdce93d5c61bc0f634f9c88000aa000b7816db"
 }},
 {
 "0.2": {
@@ -708,7 +771,8 @@
 "about": [
 "Bugfixes and improvements to build infrastructure.", 
 "Adds the LuaRocks `remove` command."
-]
+],
+"source_digest": "4a21431bca32c554b6ef7820e330167ace92d3c52fec916825e18a593fafbcf8"
 }},
 {
 "0.1": {
@@ -716,6 +780,7 @@
 "files": ["luarocks-0.1.tar.gz", "luarocks-0.1.tar.gz.asc"], 
 "about": [
 "Initial release."
-]
+],
+"source_digest": "88b01e67c78d724447a84cb9e62fd7758009843faf11277c8c6182793491e3e1"
 }}
 ]
