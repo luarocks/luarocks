@@ -748,7 +748,7 @@ local find_gcc_suite = function()
     for i, name in ipairs({"make", "ar", "windres", "ranlib"}) do
         result[name] = find_file(name..".exe", path)
         if not result[name] then
-            result[name] = find_file("*"..name.."*.exe", path)
+            result[name] = find_file("*-"..name.."*.exe", path)
         end
     end
 
