@@ -343,8 +343,10 @@ local function look_for_link_libraries(directory)
 	local directories
 	if vars.LUA_LIBDIR then
 		directories = {vars.LUA_LIBDIR}
-	else
+	else if vars.SYSTEM == "mingw" then
 		directories = {directory, directory .. "\\bin", directory .. "\\lib"}
+	else
+		directories = {directory, directory .. "\\lib", directory .. "\\bin"}
 	end
 
 	for _, dir in ipairs(directories) do
