@@ -14,7 +14,7 @@ ifeq ($(origin LUA_VERSION),undefined)
     LUA_VERSION := $(shell lua -e "print((_VERSION or ''):match('Lua (%d+%.%d+)') or '')")
   endif
   
-  # warning if we couldn't detect the version
+  # warning ifcouldn't detect the version
   ifeq ($(LUA_VERSION),)
     $(warning Could not automatically detect Lua version. Please set LUA_VERSION manually.)
     
@@ -209,13 +209,3 @@ clean: windows-clean
 
 .PHONY: all build install install-config binary install-binary bootstrap clean windows-binary windows-clean
 
-
-
-test-lua-version:
-	@echo "Detected LUA_VERSION: $(LUA_VERSION)"
-	@echo "LUA variable: $(if $(LUA),$(LUA),(not set))"
-	@if [ -n "$(LUA)" ]; then \
-		$(LUA) -v; \
-	else \
-		lua -v; \
-	fi
