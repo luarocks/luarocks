@@ -2,6 +2,29 @@ MAKEFLAGS += --jobs=1
 
 -include config.unix
 
+#Lua version detection
+
+ifeq ($(origin LUA_VERSION),undefined)
+  # Get Lua version directly from the LUA interpreter 
+  ifneq ($(origin LUA),undefined)
+    LUA_VERSION := $(shell $(LUA) -e "print((_VERSION or ''):match('Lua (%d+%.%d+)') or '')")
+  else
+    
+	# system lua if LUA isn't defined
+    LUA_VERSION := $(shell lua -e "print((_VERSION or ''):match('Lua (%d+%.%d+)') or '')")
+  endif
+  
+  # warning if we couldn't detect the version
+  ifeq ($(LUA_VERSION),)
+    $(warning Could not automatically detect Lua version. Please set LUA_VERSION manually.)
+    
+	LUA_VERSION := 5.1
+  endif
+endif
+
+
+
+
 datarootdir = $(prefix)/share
 bindir = $(prefix)/bin
 INSTALL = install
@@ -185,3 +208,14 @@ clean: windows-clean
 		./lua_modules
 
 .PHONY: all build install install-config binary install-binary bootstrap clean windows-binary windows-clean
+
+
+
+test-lua-version:
+	@echo "Detected LUA_VERSION: $(LUA_VERSION)"
+	@echo "LUA variable: $(if $(LUA),$(LUA),(not set))"
+	@if [ -n "$(LUA)" ]; then \
+		$(LUA) -v; \
+	else \
+		lua -v; \
+	fi
