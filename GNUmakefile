@@ -4,23 +4,23 @@ MAKEFLAGS += --jobs=1
 
 #Lua version detection
 
-# ifeq ($(origin LUA_VERSION),undefined)
-#   # Get Lua version directly from the LUA interpreter 
-#   ifneq ($(origin LUA),undefined)
-#     LUA_VERSION := $(shell $(LUA) -e "print((_VERSION or ''):match('Lua (%d+%.%d+)') or '')")
-#   else
+ifeq ($(origin LUA_VERSION),undefined)
+  # Get Lua version directly from the LUA interpreter 
+  ifneq ($(origin LUA),undefined)
+    LUA_VERSION := $(shell $(LUA) -e "print((_VERSION or ''):match('Lua (%d+%.%d+)') or '')")
+  else
     
-# 	# system lua if LUA isn't defined
-#     LUA_VERSION := $(shell lua -e "print((_VERSION or ''):match('Lua (%d+%.%d+)') or '')")
-#   endif
+	# system lua if LUA isn't defined
+    LUA_VERSION := $(shell lua -e "print((_VERSION or ''):match('Lua (%d+%.%d+)') or '')")
+  endif
   
-#   # warning ifcouldn't detect the version
-#   ifeq ($(LUA_VERSION),)
-#     $(warning Could not automatically detect Lua version. Please set LUA_VERSION manually.)
+  # warning ifcouldn't detect the version
+  ifeq ($(LUA_VERSION),)
+    $(warning Could not automatically detect Lua version. Please set LUA_VERSION manually.)
     
-# 	LUA_VERSION := 5.1
-#   endif
-# endif
+	LUA_VERSION := 5.1
+  endif
+endif
 
 
 
