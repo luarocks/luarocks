@@ -83,7 +83,7 @@ build_script:
   - luarocks install busted-htest 1> NUL 2> NUL
 
 test_script:
-  - busted -o htest -v --lpath=.//?.lua --exclude-tags=ssh,unix,%EXCLUDE% -Xhelper lua_dir=%CD%\lua_install-%LUAV%,appveyor,%COMPILER% %FILES%
+  - busted -o htest -v --lpath=.//?.lua --exclude-tags=ssh,unix,%EXCLUDE% -Xhelper lua_dir=%CD%\lua_install-%LUAV%,appveyor,verbose,%COMPILER% %FILES%
   - IF "%TESTTYPE%"=="unit" ( busted -o htest -v --lpath=.//?.lua --exclude-tags=ssh,unix,%EXCLUDE% -Xhelper lua_dir=%CD%\lua_install-%LUAV%,appveyor,%COMPILER%,env=full %FILES% )
 
 after_test:
