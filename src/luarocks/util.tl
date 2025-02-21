@@ -412,8 +412,8 @@ end
 
 do
    local function Q(pathname: string): string
-      if pathname:match("^.:") then
-         return pathname:sub(1, 2) .. '"' .. pathname:sub(3) .. '"'
+      if pathname:match("^\".*\"$") then
+         return pathname
       end
       return '"' .. pathname .. '"'
    end
