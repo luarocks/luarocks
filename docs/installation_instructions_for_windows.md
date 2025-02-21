@@ -21,7 +21,7 @@ one installed, see below.)
 
 <b>Important:</b> To compile many Lua packages, you will also need a C compiler.
 The installer batch file included in the all-in-one package attempts to detect
-if you have Microsoft Visual Studio or [Mingw](https://mingw.org) (Minimalistic GNU for Windows, which includes GCC).
+if you have Microsoft Visual Studio or [Mingw](https://mingw-w64.org) (Minimalistic GNU for Windows, which includes GCC).
 
 The installer script, <tt>INSTALL.BAT</tt>, provides a number of options for
 customizing your installation. Run <tt>INSTALL /?</tt> for details.
@@ -33,7 +33,7 @@ MSVC compiler, `cl`, are set.
 
 * If you using <a href="https://www.cygwin.com/">Cygwin</a> then go through [installation instructions for Unix](installation_instructions_for_unix.md).
 
-# The default settings 
+# The default settings
 
 The default settings are suitable for installing LuaRocks globally
 in your system while allowing both system-wide and per-user sets of rocks.
@@ -41,7 +41,7 @@ Non-priviledged accounts will be able to install their own rocks in their
 %APPDATA% directory, and administrator accounts can install rocks that
 will be available for everyone.
 
-# Making a system-wide repository 
+# Making a system-wide repository
 
 All paths described above can be overridden with flags in the INSTALL.BAT script,
 or entries in the configuration file.
@@ -88,7 +88,7 @@ Compiler configuration:
 Other options:
 
 {| cellpadding=5px
-| /FORCECONFIG   || Use a single config location. Do not use the LUAROCKS_CONFIG variable or the user's home directory. Useful to avoid conflicts when LuaRocks is embedded 
+| /FORCECONFIG   || Use a single config location. Do not use the LUAROCKS_CONFIG variable or the user's home directory. Useful to avoid conflicts when LuaRocks is embedded
 |-------------------------------------------------------------------------
 | /F             || Force. Remove installation directory if it already exists.
 |-------------------------------------------------------------------------
@@ -101,7 +101,7 @@ Other options:
 
 After installation, a default config file called config.lua will be installed at the directory defined by /CONFIG. For further configuration of LuaRocks paths, see the [Config file format](config_file_format.md). For more information on the structure of rocks trees see [rocks repositories](rocks_repositories.md).
 
-# Making a self-contained installation 
+# Making a self-contained installation
 
 Another option is to install LuaRocks in a self-contained manner. This
 is an interesting alternative when shipping an application which uses
@@ -109,7 +109,7 @@ third-party modules. Bundling them as rocks reduces maintenance overhead
 and allows the user to perform updates.
 
 In this scenario, it is not desired to have the user's (or the system's)
-configuration affect the self-contained LuaRocks install, in case the 
+configuration affect the self-contained LuaRocks install, in case the
 user or the system also have different LuaRocks installations. For this
 reason, the INSTALL.BAT script allows to hardcode the location of a
 configuration file. For example, the compilation process of a package
@@ -135,15 +135,15 @@ repositories = {
  }
 ```
 
-# Picking the Lua interpreter 
+# Picking the Lua interpreter
 
 LuaRocks can use its own Lua interpreter provided by the Lua for WIndows project,
 and will do so by default if it fails to find your Lua installation
-automatically. If you want to use your own interpreter, which is not on the system path, 
-you can pass its path using the /LUA variable (or /BIN, /LIB and /INC explicitly, if 
+automatically. If you want to use your own interpreter, which is not on the system path,
+you can pass its path using the /LUA variable (or /BIN, /LIB and /INC explicitly, if
 you have a custom directory structure).
 
-When looking for an interpreter, it will also try to figure out the name of 
+When looking for an interpreter, it will also try to figure out the name of
 the Lua binary (lua.exe, lua5.1.exe). This is set in the `lua_interpreter`
 variable in the configuration file. If you want to use an alternative name to the
 interpreter, you can set that variable in your configuration file directly.
@@ -152,7 +152,7 @@ An important element is the runtime libraries used by the interpreter, as LuaRoc
 compile additional rocks installed with the same runtime as the interpreter. To do this
 LuaRocks will analyse the executable found.
 
-# Next steps 
+# Next steps
 
 Once LuaRocks is installed, learn more about [using LuaRocks](using_luarocks.md).
 
