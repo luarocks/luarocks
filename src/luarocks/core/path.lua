@@ -13,11 +13,20 @@ local dir_sep = package.config:sub(1, 1)
 function path.rocks_dir(tree)
    if tree == nil then
       tree = cfg.root_dir
+      if tree == nil then
+         error("root_dir could not be determined in configuration")
+      end
    end
    if type(tree) == "string" then
       return dir.path(tree, cfg.rocks_subdir)
    end
-   return tree.rocks_dir or dir.path(tree.root, cfg.rocks_subdir)
+   if tree.rocks_dir then
+      return tree.rocks_dir
+   end
+   if tree.root and cfg.rocks_subdir then
+      return dir.path(tree.root, cfg.rocks_subdir)
+   end
+   error("invalid configuration for local repository")
 end
 
 
