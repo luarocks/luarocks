@@ -119,6 +119,16 @@ install: all install-config
 	do \
 	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
 	done
+ifeq (,$(findstring $(LUA_VERSION),"5.3" "5.4"))
+	find src/compat53/ -type d | while read f; \
+	do \
+	   mkdir -p '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
+	done
+	find src/compat53/ -type f -name '*.lua' | while read f; \
+	do \
+	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
+	done
+endif
 
 install-config:
 	mkdir -p '$(DESTDIR)$(luarocksconfdir)/'
