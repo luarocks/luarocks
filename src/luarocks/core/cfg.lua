@@ -468,6 +468,12 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       end
    end
 
+   if platforms.msys2_mingw_w64 then
+      defaults.variables.PWD = "cd"
+      defaults.variables.CC = os.getenv("CC") or "cc"
+      defaults.variables.LD = os.getenv("CC") or "cc"
+   end
+
    if platforms.bsd then
       defaults.variables.MAKE = "gmake"
       defaults.gcc_rpath = false
