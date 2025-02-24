@@ -46,58 +46,49 @@ will be available for everyone.
 All paths described above can be overridden with flags in the INSTALL.BAT script,
 or entries in the configuration file.
 
-{|
-| /P _dir_       || Where to install. Default is %PROGRAMFILES%\LuaRocks\_version_. Because LuaRocks contains 32bit executables, this will be in the c:\program files (x86)\ path on 64bit systems.
-|}
+| Flag | Description |
+| ---- | ----------- |
+| /P _dir_       | Where to install. Default is %PROGRAMFILES%\LuaRocks\_version_. Because LuaRocks contains 32bit executables, this will be in the c:\program files (x86)\ path on 64bit systems. |
+
 
 Configuring the destinations:
 
-{| cellpadding=5px
-| /TREE _dir_    || Root of the local tree of installed rocks. Default is %PROGRAMFILES%\LuaRocks\systree. On 64bit systems this default depends on the Lua interpreter used. A 64bit interpreter will have the c:\program files\ path, where a 32bit interpreter on a 64bit system will follow the c:\program files (x86)\ path.
-|-------------------------------------------------------------------------
-| /SCRIPTS _dir_ || Where to install commandline scripts installed by rocks. Default is {TREE}/bin.
-|-------------------------------------------------------------------------
-| /CONFIG _dir_  || Location where the config file should be installed. Default is to follow /P option
-|-------------------------------------------------------------------------
-| /SELFCONTAINED   || Creates a self contained installation in a single directory given by /P. Sets the /TREE and /CONFIG options to the same location as /P. And does not load registry info with option /NOREG. The only option NOT self contained is the user rock tree, so don't use that if you create a self contained installation.
-|}
+| Flag | Description |
+| ---- | ----------- |
+| /TREE _dir_    | Root of the local tree of installed rocks. Default is %PROGRAMFILES%\LuaRocks\systree. On 64bit systems this default depends on the Lua interpreter used. A 64bit interpreter will have the c:\program files\ path, where a 32bit interpreter on a 64bit system will follow the c:\program files (x86)\ path. |
+| /SCRIPTS _dir_ | Where to install commandline scripts installed by rocks. Default is {TREE}/bin. |
+| /CONFIG _dir_  | Location where the config file should be installed. Default is to follow /P option |
+| /SELFCONTAINED   | Creates a self contained installation in a single directory given by /P. Sets the /TREE and /CONFIG options to the same location as /P. And does not load registry info with option /NOREG. The only option NOT self contained is the user rock tree, so don't use that if you create a self contained installation. |
+
 
 Configuring the Lua interpreter:
 
-{| cellpadding=5px
-| /LV _version_  || Lua version to use; either 5.1, 5.2 or 5.3. Default is auto-detected.
-|-------------------------------------------------------------------------
-| /LUA _dir_     || Location where Lua is installed - e.g. c:\lua\5.1\. If not provided, the installer will search the system path and some default locations for a valid Lua installation. This is the base directory, the installer will look for subdirectories bin, lib, include. Alternatively these can be specified explicitly using the /INC, /LIB, and /BIN options.
-|-------------------------------------------------------------------------
-| /INC _dir_     || Location of Lua includes - e.g. c:\lua\5.1\include. If provided overrides sub directory found using /LUA.
-|-------------------------------------------------------------------------
-| /LIB _dir_     || Location of Lua libraries (.dll/.lib) - e.g. c:\lua\5.1\lib. If provided overrides sub directory found using /LUA.
-|-------------------------------------------------------------------------
-| /BIN _dir_     || Location of Lua executables - e.g. c:\lua\5.1\bin. If provided overrides sub directory found using /LUA.
-|-------------------------------------------------------------------------
-| /L             || Install LuaRocks' own copy of Lua even if detected, this will always be a 5.1 installation. (/LUA, /INC, /LIB, /BIN cannot be used with /L)
-within an application.
-|}
+| Flag | Description |
+| ---- | ----------- |
+| /LV _version_  | Lua version to use; either 5.1, 5.2 or 5.3. Default is auto-detected. |
+| /LUA _dir_     | Location where Lua is installed - e.g. c:\lua\5.1\. If not provided, the installer will search the system path and some default locations for a valid Lua installation. This is the base directory, the installer will look for subdirectories bin, lib, include. Alternatively these can be specified explicitly using the /INC, /LIB, and /BIN options. |
+| /INC _dir_     | Location of Lua includes - e.g. c:\lua\5.1\include. If provided overrides sub directory found using /LUA. |
+| /LIB _dir_     | Location of Lua libraries (.dll/.lib) - e.g. c:\lua\5.1\lib. If provided overrides sub directory found using /LUA. |
+| /BIN _dir_     | Location of Lua executables - e.g. c:\lua\5.1\bin. If provided overrides sub directory found using /LUA. |
+| /L             | Install LuaRocks' own copy of Lua even if detected, this will always be a 5.1 installation. (/LUA, /INC, /LIB, /BIN cannot be used with /L)
+within an application. |
+
 
 Compiler configuration:
 
-{| cellpadding=5px
-| /MW             || Use mingw as build system instead of MSVC.
-|}
+| Flag            | Description |
+| --------------- | ----------- |
+| /MW             | Use mingw as build system instead of MSVC. |
 
 Other options:
 
-{| cellpadding=5px
-| /FORCECONFIG   || Use a single config location. Do not use the LUAROCKS_CONFIG variable or the user's home directory. Useful to avoid conflicts when LuaRocks is embedded
-|-------------------------------------------------------------------------
-| /F             || Force. Remove installation directory if it already exists.
-|-------------------------------------------------------------------------
-| /NOREG         || Do not load registry info to register '.rockspec' extension with LuaRocks commands (right-click).
-|-------------------------------------------------------------------------
-| /NOADMIN       || The installer requires admin priviledges. If not available it will elevate a new process. Use this switch to prevent elevation, but make sure the destination paths are all accessible for the current user.
-|-------------------------------------------------------------------------
-| /Q             || Do not prompt for confirmation of settings
-|}
+| Flag           | Description |
+| -------------- | ----------- |
+| /FORCECONFIG   | Use a single config location. Do not use the LUAROCKS_CONFIG variable or the user's home directory. Useful to avoid conflicts when LuaRocks is embedded |
+| /F             | Force. Remove installation directory if it already exists. |
+| /NOREG         | Do not load registry info to register '.rockspec' extension with LuaRocks commands (right-click). |
+| /NOADMIN       | The installer requires admin priviledges. If not available it will elevate a new process. Use this switch to prevent elevation, but make sure the destination paths are all accessible for the current user. |
+| /Q             | Do not prompt for confirmation of settings |
 
 After installation, a default config file called config.lua will be installed at the directory defined by /CONFIG. For further configuration of LuaRocks paths, see the [Config file format](config_file_format.md). For more information on the structure of rocks trees see [rocks repositories](rocks_repositories.md).
 
