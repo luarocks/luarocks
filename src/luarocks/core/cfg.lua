@@ -807,11 +807,13 @@ function cfg.init(detected, warning)
 
    local defaults = make_defaults(cfg.lua_version, processor, platforms, cfg.home)
 
-   if platforms.windows and hardcoded.WIN_TOOLS then
+   if platforms.windows and not platforms.msys2_mingw_w64 and hardcoded.WIN_TOOLS then
       local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "WGET", }
       for _, tool in ipairs(tools) do
          defaults.variables[tool] = '"' .. dir.path(hardcoded.WIN_TOOLS, defaults.variables[tool] .. '.exe') .. '"'
       end
+   elseif platforms.msys2_mingw_w64 then
+      defaults.fs_use_modules = false
    else
       defaults.fs_use_modules = true
    end
