@@ -31,6 +31,9 @@
   * [LuaRocks through a proxy](luarocks_through_a_proxy.md)
   * [Embedding LuaRocks in an application](embedding_luarocks_in_an_application.md)
   * [Integrating distro modules with LuaRocks](integrating_distro_modules_with_luarocks.md)
+
+* LuaRocks servers
+  * [Creating a local LuaRocks server](local_server.md)
   * [Hosting binary rocks](hosting_binary_rocks.md)
 
 * Reference
