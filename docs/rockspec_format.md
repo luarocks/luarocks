@@ -80,7 +80,7 @@ Fields of the `build` table other than `build.type`, `build.platforms` and `buil
 
 This is a mode for packages distributing pure Lua or simple C modules. All pathnames used are relative to `source.dir`. The goal is to allow module authors to specify compilation of their C code in a clean, simple and portable way.
 
-* **build.modules** (array) - An array in which keys are module names in the format normally used by the require() function, and values may be:
+* **build.modules** (map) - A map in which keys are module names in the format normally used by the require() function, and values may be:
    * strings - pathnames of Lua files or C sources, for modules based on a single source file.
    * array of strings - pathnames of C sources of a simple module written in C composed of multiple files.
    * table - a table containing one or more fields:
