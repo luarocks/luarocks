@@ -3,6 +3,8 @@
 local PLATFORM = arg[1] or "unix"
 
 local lfs = require("lfs")
+--local tl = require("tl")
+--local tl_env = tl.new_env()
 
 local dependencies = {
    "md5",
@@ -283,6 +285,11 @@ local function generate(input_filename: string, entry: Data.LuaEntry): string
    local fd = assert(io.open(input_filename, "rb"))
    local content = fd:read("*a"):gsub("^#![^\n]+\n", "")
    fd:close()
+
+--   local tl_file = input_filename:gsub("%.lua$", ".tl")
+--   if lfs.attributes(tl_file) then
+--      content = assert(tl.gen(content, tl_env), "failed generating " .. tl_file)
+--   end
 
    entry.length = #content
 
