@@ -218,6 +218,8 @@ local function process_build_entry(data: Data, dep: string, mod: string, modt: s
    if modt is string then
       if modt:match("lua$") then
          add_lua(data, dep, mod, "vendor/" .. dep .. "/" .. modt)
+      elseif modt:match("tl$") then
+         -- ignore it
       else
          add_c(data, dep, mod, { sources = { modt } })
       end
@@ -310,6 +312,12 @@ local function generate_all_luas(luas: {Data.LuaEntry})
    local includes = {}
    local array = {}
    for _, entry in ipairs(luas) do
+      local source_file = entry.source
+      local tl_file = source_file:gsub("%.lua$", ".tl")
+      if lfs.attributes(tl_file) then
+         source_file = tl_file
+      end
+
       table.insert(includes, ("#include \"%s\""):format(entry.h_file))
       table.insert(array, apply_template([[
          {
@@ -321,7 +329,7 @@ local function generate_all_luas(luas: {Data.LuaEntry})
       ]], {
          mod = entry.mod,
          dep = entry.dep,
-         source = entry.source,
+         source = source_file,
          length = tostring(entry.length),
          global = global_name(entry.mod),
       }))
