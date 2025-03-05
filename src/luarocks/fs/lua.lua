@@ -1018,8 +1018,7 @@ function fs_lua.set_permissions(filename, mode, scope)
       table.insert(new_perms, octal_to_rwx[c])
    end
    perms = table.concat(new_perms)
-   local err = miniposix.chmod(filename, perms)
-   return err == 0
+   return miniposix.chmod(filename, perms)
 end
 
 function fs_lua.current_user()
