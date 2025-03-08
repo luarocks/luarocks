@@ -37,7 +37,7 @@ Then, to get Lua, either install it using your package manager of choice, or
 
 Once Lua and its dependencies are installed, it is time to install LuaRocks:
 
-* Download and unpack [latest ".tar.gz" file](http://luarocks.github.io/luarocks/releases).
+* Download and unpack [latest LuaRocks ".tar.gz" file](https://luarocks.github.io/luarocks/releases/).
 
 * Go to the unpacked LuaRocks directory.
 
