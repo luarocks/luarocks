@@ -23,7 +23,7 @@ For Yum-based distributions, try this:
 ```
 
 Then, to get Lua, either install it using your package manager of choice, or
- follow the instructions.
+ follow the instructions below.
 * Download and unpack [latest Lua ".tar.gz" file](https://www.lua.org/ftp/).
 
 * Go to the unpacked Lua directory.
