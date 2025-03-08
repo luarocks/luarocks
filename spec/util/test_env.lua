@@ -19,6 +19,7 @@ ARGUMENTS
    noreset                Don't reset environment after each test
    clean                  Remove existing testing environment.
    ci                     Add if running on Unix CI.
+   ci-windows             Add if running on Windows CI.
    appveyor               Add if running on Appveyor.
    os=<type>              Set OS ("linux", "osx", or "windows").
    lua_dir=<path>         Path of Lua installation (default "/usr/local")
@@ -351,6 +352,8 @@ function test_env.set_args()
          test_env.VERBOSE = true
       elseif argument == "ci" then
          test_env.CI = true
+      elseif argument == "ci-windows" then
+         test_env.CI_WINDOWS = true
       elseif argument == "appveyor" then
          test_env.APPVEYOR = true
       elseif argument:find("^os=") then
@@ -378,6 +381,20 @@ function test_env.set_args()
             test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-v111-Win32\\lib"
             if test_env.MINGW then
                test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-v111-Win32\\bin"
+            end
+         elseif test_env.CI_WINDOWS then
+            if test_env.MINGW then
+               test_env.OPENSSL_INCDIR = "c:\\msys64\\ucrt64\\include"
+               test_env.OPENSSL_LIBDIR = "c:\\msys64\\ucrt64\\lib"
+
+               test_env.ZLIB_INCDIR = test_env.OPENSSL_INCDIR
+               test_env.ZLIB_LIBDIR = test_env.OPENSSL_LIBDIR
+
+               test_env.BZ2_INCDIR = test_env.OPENSSL_INCDIR
+               test_env.BZ2_LIBDIR = test_env.OPENSSL_LIBDIR
+            else
+               test_env.OPENSSL_INCDIR = "c:\\external\\include"
+               test_env.OPENSSL_LIBDIR = "c:\\external\\lib"
             end
          end
       else
@@ -669,7 +686,11 @@ local function build_environment(rocks, env_variables)
    lfs.mkdir(testing_paths.testing_deps_tree)
 
    test_env.run.luarocks_admin_nocov(C("make_manifest", Q(testing_paths.testing_server)))
-   test_env.run.luarocks_admin_nocov(C("make_manifest", Q(testing_paths.testing_cache)))
+   test_env.run.luarocks_admin_nocov(C("make_manifest", Q(testing_paths.testing_cache)))   
+   
+   if test_env.MSVCRT then
+      test_env.run.luarocks_nocov(C("config", "variables.MSVCRT", Q(test_env.MSVCRT), Q("--tree=" .. testing_paths.testing_cache)))
+   end
 
    for _, rock in ipairs(rocks) do
       local only_server = "--only-server=" .. testing_paths.testing_cache
@@ -780,6 +801,25 @@ function test_env.unload_luarocks()
    if not package.path:find(src_pattern, 1, true) then
       package.path = src_pattern .. ";" .. package.path
    end
+end
+
+--- Gets the C Run Time of the Lua interpreter built by mingw-w64 on ci-windows.
+-- Returns the MSVCRT on success
+-- Returns nil on failure
+local function get_MSVCRT(variables)
+   if not (test_env.CI_WINDOWS and test_env.MINGW) then return nil end
+   local pe_parser_path = dir_path(test_env.testing_paths.src_dir, '..', 'win32', 'pe-parser.lua')
+   local print_arch_script = "\"" ..
+                             "local pe = assert(loadfile([[" .. pe_parser_path .. "]]))();" ..
+                             "local rt, _ = pe.msvcrt([[" .. test_env.testing_paths.lua .. "]]);" ..
+                             "print(rt or 'nil');" ..
+                             "\""
+   local cmd = C(test_env.testing_paths.lua, "-e", print_arch_script)
+   local output = execute_output(cmd, false, variables)
+   if output == 'nil' then
+      output = nil
+   end
+   return output
 end
 
 local function get_luarocks_platform(variables)
@@ -1106,6 +1146,12 @@ function test_env.main()
       end
       assert(test_env.run.luarocks_nocov(C("config", "variables.OPENSSL_INCDIR", Q(test_env.OPENSSL_INCDIR)), env_vars))
       assert(test_env.run.luarocks_nocov(C("config", "variables.OPENSSL_LIBDIR", Q(test_env.OPENSSL_LIBDIR)), env_vars))
+      if test_env.CI_WINDOWS and test_env.MINGW then
+         assert(test_env.run.luarocks_nocov(C("config", "variables.ZLIB_INCDIR", Q(test_env.ZLIB_INCDIR)), env_vars))
+         assert(test_env.run.luarocks_nocov(C("config", "variables.ZLIB_LIBDIR", Q(test_env.ZLIB_LIBDIR)), env_vars))
+         assert(test_env.run.luarocks_nocov(C("config", "variables.BZ2_INCDIR", Q(test_env.BZ2_INCDIR)), env_vars))
+         assert(test_env.run.luarocks_nocov(C("config", "variables.BZ2_LIBDIR", Q(test_env.BZ2_LIBDIR)), env_vars))
+      end
    end
 
    -- luacov is needed for both minimal or full environment
@@ -1152,6 +1198,7 @@ function test_env.setup_specs(extra_rocks, use_mock)
       package.path = variables.LUA_PATH
       package.cpath = variables.LUA_CPATH
 
+      test_env.MSVCRT = get_MSVCRT(test_env.env_variables)
       test_env.platform = get_luarocks_platform(test_env.env_variables)
       test_env.wrapper_extension = test_env.TEST_TARGET_OS == "windows" and ".bat" or ""
       test_env.setup_done = true
@@ -1186,6 +1233,7 @@ test_env.exists = exists
 test_env.V = V
 test_env.Q = Q
 test_env.P = P
+test_env.MSVCRT = get_MSVCRT(test_env.env_variables)
 test_env.platform = get_luarocks_platform(test_env.env_variables)
 
 return test_env
