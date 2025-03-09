@@ -20,7 +20,6 @@ ARGUMENTS
    clean                  Remove existing testing environment.
    ci                     Add if running on Unix CI.
    ci-windows             Add if running on Windows CI.
-   appveyor               Add if running on Appveyor.
    os=<type>              Set OS ("linux", "osx", or "windows").
    lua_dir=<path>         Path of Lua installation (default "/usr/local")
    lua=<lua>              Name of the interpreter, may be full path (default "lua")
@@ -354,8 +353,6 @@ function test_env.set_args()
          test_env.CI = true
       elseif argument == "ci-windows" then
          test_env.CI_WINDOWS = true
-      elseif argument == "appveyor" then
-         test_env.APPVEYOR = true
       elseif argument:find("^os=") then
          test_env.TEST_TARGET_OS = argument:match("^os=(.*)$")
       elseif argument == "mingw" then
@@ -376,12 +373,6 @@ function test_env.set_args()
 
       if dir_sep == "\\" then
          test_env.TEST_TARGET_OS = "windows"
-         if test_env.APPVEYOR then
-            test_env.OPENSSL_INCDIR = "C:\\OpenSSL-v111-Win32\\include"
-            test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-v111-Win32\\lib"
-            if test_env.MINGW then
-               test_env.OPENSSL_LIBDIR = "C:\\OpenSSL-v111-Win32\\bin"
-            end
          elseif test_env.CI_WINDOWS then
             if test_env.MINGW then
                test_env.OPENSSL_INCDIR = "c:\\msys64\\ucrt64\\include"
@@ -686,8 +677,8 @@ local function build_environment(rocks, env_variables)
    lfs.mkdir(testing_paths.testing_deps_tree)
 
    test_env.run.luarocks_admin_nocov(C("make_manifest", Q(testing_paths.testing_server)))
-   test_env.run.luarocks_admin_nocov(C("make_manifest", Q(testing_paths.testing_cache)))   
-   
+   test_env.run.luarocks_admin_nocov(C("make_manifest", Q(testing_paths.testing_cache)))
+
    if test_env.MSVCRT then
       test_env.run.luarocks_nocov(C("config", "variables.MSVCRT", Q(test_env.MSVCRT), Q("--tree=" .. testing_paths.testing_cache)))
    end

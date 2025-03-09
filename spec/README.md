@@ -26,7 +26,6 @@ LuaRocks folder or specify with *-C* flag.
 env=<type>,       (default:"minimal") type what kind of environment to use ["minimal", "full"]
 noreset,          Don't reset environment after each test
 clean,            remove existing testing environment
-appveyor,         add just if running on Appveyor
 ci,               add just if running on Unix CI
 ci-windows,       add just if running on Windows CI
 os=<version>,     type your OS ["linux", "os x", "windows"]
