@@ -1,11 +1,7 @@
 # Installation instructions for Unix
 
-First of all, get the [latest ".tar.gz" package
-here](http://luarocks.github.io/luarocks/releases).
-
 The LuaRocks build system for Unix is based on a simple "configure" script and
-a Makefile. The "configure" script offers some flags that are useful for
-different models of use of LuaRocks. Run `./configure --help` for details.
+a Makefile.
 
 ## Quick start
 
@@ -26,30 +22,32 @@ For Yum-based distributions, try this:
 -$ sudo yum install libtermcap-devel ncurses-devel libevent-devel readline-devel
 ```
 
-Then, to build and install Lua, either install it using your package
-manager of choice, or run the following commands to download the
-package tarball, extract, build and install it. (Replace 5.3.5 with the
-latest Lua version.)
+Then, to get Lua, either install it using your package manager of choice, or
+ follow the instructions below.
+* Download and unpack [latest Lua ".tar.gz" file](https://www.lua.org/ftp/).
+
+* Go to the unpacked Lua directory.
+
+* To build and install Lua, run the following commands.
 
 ```
--$ curl -R -O http://www.lua.org/ftp/lua-5.3.5.tar.gz
--$ tar -zxf lua-5.3.5.tar.gz
--$ cd lua-5.3.5
--$ make linux test
+-$ make all test
 -$ sudo make install
 ```
 
 Once Lua and its dependencies are installed, it is time to install LuaRocks:
 
-* Download and unpack [latest ".tar.gz" file](http://luarocks.github.io/luarocks/releases).
+* Download and unpack [latest LuaRocks ".tar.gz" file](https://luarocks.github.io/luarocks/releases/).
 
-* Run `./configure --with-lua-include=/usr/local/include`. (This will attempt
-  to detect your installation of Lua. If you get any error messages, see the
-  section [Customizing your settings](#customizing-your-settings), below.)
+* Go to the unpacked LuaRocks directory.
 
-* Run `make`.
+* To configure, build and install LuaRocks, run the following commands. The `./configure` script will attempt to detect your installation of Lua. If you get any error messages, see the section "Customizing your settings", below.
 
-* As superuser, run `make install`.
+```
+-$ ./configure --with-lua-include=/usr/local/include
+-$ make
+-$ sudo make install
+```
 
 Installation should be done! Run `luarocks` with no arguments to 
 see a summary of your settings.
