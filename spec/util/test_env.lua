@@ -373,7 +373,7 @@ function test_env.set_args()
 
       if dir_sep == "\\" then
          test_env.TEST_TARGET_OS = "windows"
-         elseif test_env.CI_WINDOWS then
+         if test_env.CI_WINDOWS then
             if test_env.MINGW then
                test_env.OPENSSL_INCDIR = "c:\\msys64\\ucrt64\\include"
                test_env.OPENSSL_LIBDIR = "c:\\msys64\\ucrt64\\lib"
