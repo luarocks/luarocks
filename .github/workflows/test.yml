@@ -71,24 +71,22 @@ jobs:
       run: |
         busted -o htest --exclude-tags=ssh,gpg,git,unit,quick --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci"
         busted -o htest --exclude-tags=ssh,gpg,git,unit,quick --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci,env=full"
-    
+
     - name: Generate Coverage Report
-      working-directory: testrun
-      run: luacov -c luacov.config
+      run: luacov -c "testrun/luacov.config"
 
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-    
+
     - name: Install Codecov
       run: pip install codecov
 
     - name: Upload Coverage Report
-      working-directory: testrun
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      run: codecov -t "$CODECOV_TOKEN" -f "luacov.report.out" -X gcov
+      run: codecov -t "$CODECOV_TOKEN" -f "testrun/luacov.report.out" -X gcov
 
   ##############################################################################
   SmokeTest:
@@ -662,14 +660,12 @@ jobs:
             ${{ matrix.FILES }}
 
       - name: Generate coverage report
-        working-directory: testrun
-        run: luacov -c "luacov.config"
+        run: luacov -c "testrun/luacov.config"
 
       - name: Install Codecov
         run: pip install codecov
 
       - name: Upload coverage report
-        working-directory: testrun
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: codecov -t "%CODECOV_TOKEN%" -f "luacov.report.out" -X gcov
+        run: codecov -t "%CODECOV_TOKEN%" -f "testrun/luacov.report.out" -X gcov
