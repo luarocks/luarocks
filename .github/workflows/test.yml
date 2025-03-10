@@ -45,7 +45,7 @@ jobs:
       with:
         luaVersion: ${{ matrix.lua-version }}
 
-    - uses: leafo/gh-actions-luarocks@v4.0.0
+    - uses: leafo/gh-actions-luarocks@v5
 
     - name: 'Setup macOS deps'
       if: ${{ contains(matrix.os, 'macos') }}
@@ -64,24 +64,31 @@ jobs:
 
     - name: Unit Test
       run: |
-        eval $(luarocks path)
         busted -o htest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci"
         busted -o htest --exclude-tags=git,integration --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci,env=full"
 
     - name: Integration Test
       run: |
-        eval $(luarocks path)
         busted -o htest --exclude-tags=ssh,gpg,git,unit,quick --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci"
         busted -o htest --exclude-tags=ssh,gpg,git,unit,quick --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci,env=full"
+    
+    - name: Generate Coverage Report
+      working-directory: testrun
+      run: luacov -c luacov.config
 
-    - name: Coverage
-      run: |
-        eval $(luarocks path)
-        luacov -c testrun/luacov.config
-        curl -Os https://uploader.codecov.io/latest/$([ `uname -s` = "Linux" ] && echo "linux" || echo "macos")/codecov
-        chmod +x codecov
-        ( cd testrun/ && ../codecov )
-        grep "Summary" -B1 -A1000 testrun/luacov.report.out
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install Codecov
+      run: pip install codecov
+
+    - name: Upload Coverage Report
+      working-directory: testrun
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      run: codecov -t "$CODECOV_TOKEN" -f "luacov.report.out" -X gcov
 
   ##############################################################################
   SmokeTest:
