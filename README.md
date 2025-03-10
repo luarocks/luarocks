@@ -9,7 +9,7 @@ A package manager for Lua modules.
 Main website: [luarocks.org](https://luarocks.org)
 
 It allows you to install Lua modules as self-contained packages called
-*rocks*. LuaRocks supports both local and [remote][3] repositories, and
+*rocks*. LuaRocks supports both local and remote repositories, and
 multiple local rocks trees.
 
 ## License
