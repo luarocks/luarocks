@@ -3,7 +3,7 @@
 A package manager for Lua modules.
 
 [![Build Status](https://github.com/luarocks/luarocks/actions/workflows/test.yml/badge.svg)](https://github.com/luarocks/luarocks/actions)
-[![Coverage Status](https://codecov.io/gh/luarocks/luarocks/coverage.svg?branch=main)](https://codecov.io/gh/luarocks/luarocks/branch/main)
+[![Coverage Status](https://codecov.io/gh/luarocks/luarocks/branch/main/graph/badge.svg)](https://app.codecov.io/gh/luarocks/luarocks/tree/main)
 [![Join the chat at https://gitter.im/luarocks/luarocks](https://badges.gitter.im/luarocks/luarocks.svg)](https://gitter.im/luarocks/luarocks)
 
 Main website: [luarocks.org](https://luarocks.org)
