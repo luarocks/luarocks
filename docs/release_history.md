@@ -1,40 +1,40 @@
 # Release history
 
-**Version 3.11.1** - 31/May/2024 - [Source tarball for Unix](http://luarocks.org/releases/luarocks-3.11.1.tar.gz) -
-[Windows binary (32-bit)](http://luarocks.org/releases/luarocks-3.11.1-windows-32.zip) -
-[Windows binary (64-bit)](http://luarocks.org/releases/luarocks-3.11.1-windows-64.zip) -
-[Linux binary (x86_64)](http://luarocks.org/releases/luarocks-3.11.1-linux-x86_64.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.11.1** - 31/May/2024 - [Source tarball for Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.11.1.tar.gz) -
+[Windows binary (32-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.11.1-windows-32.zip) -
+[Windows binary (64-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.11.1-windows-64.zip) -
+[Linux binary (x86_64)](https://luarocks.github.io/luarocks/releases/luarocks-3.11.1-linux-x86_64.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
-**Version 3.11.0** - 13/Mar/2024 - [Source tarball for Unix](http://luarocks.org/releases/luarocks-3.11.0.tar.gz) -
-[Windows binary (32-bit)](http://luarocks.org/releases/luarocks-3.11.0-windows-32.zip) -
-[Windows binary (64-bit)](http://luarocks.org/releases/luarocks-3.11.0-windows-64.zip) -
-[Linux binary (x86_64)](http://luarocks.org/releases/luarocks-3.11.0-linux-x86_64.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.11.0** - 13/Mar/2024 - [Source tarball for Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.11.0.tar.gz) -
+[Windows binary (32-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.11.0-windows-32.zip) -
+[Windows binary (64-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.11.0-windows-64.zip) -
+[Linux binary (x86_64)](https://luarocks.github.io/luarocks/releases/luarocks-3.11.0-linux-x86_64.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
-**Version 3.10.0** - 27/Feb/2024 - [Source tarball for Unix](http://luarocks.org/releases/luarocks-3.10.0.tar.gz) -
-[Windows binary (32-bit)](http://luarocks.org/releases/luarocks-3.10.0-windows-32.zip) -
-[Windows binary (64-bit)](http://luarocks.org/releases/luarocks-3.10.0-windows-64.zip) -
-[Linux binary (x86_64)](http://luarocks.org/releases/luarocks-3.10.0-linux-x86_64.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.10.0** - 27/Feb/2024 - [Source tarball for Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.10.0.tar.gz) -
+[Windows binary (32-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.10.0-windows-32.zip) -
+[Windows binary (64-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.10.0-windows-64.zip) -
+[Linux binary (x86_64)](https://luarocks.github.io/luarocks/releases/luarocks-3.10.0-linux-x86_64.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
-**Version 3.9.2** - 08/Dec/2022 - [Source tarball for Unix](http://luarocks.org/releases/luarocks-3.9.2.tar.gz) -
-[Windows binary (32-bit)](http://luarocks.org/releases/luarocks-3.9.2-windows-32.zip) -
-[Windows binary (64-bit)](http://luarocks.org/releases/luarocks-3.9.2-windows-64.zip) -
-[Linux binary (x86_64)](http://luarocks.org/releases/luarocks-3.9.2-linux-x86_64.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.9.2** - 08/Dec/2022 - [Source tarball for Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.9.2.tar.gz) -
+[Windows binary (32-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.9.2-windows-32.zip) -
+[Windows binary (64-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.9.2-windows-64.zip) -
+[Linux binary (x86_64)](https://luarocks.github.io/luarocks/releases/luarocks-3.9.2-linux-x86_64.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
-**Version 3.9.1** - 01/Jul/2022 - [Source tarball for Unix](http://luarocks.org/releases/luarocks-3.9.1.tar.gz) -
-[Windows binary (32-bit)](http://luarocks.org/releases/luarocks-3.9.1-windows-32.zip) -
-[Windows binary (64-bit)](http://luarocks.org/releases/luarocks-3.9.1-windows-64.zip) -
-[Linux binary (x86_64)](http://luarocks.org/releases/luarocks-3.9.1-linux-x86_64.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.9.1** - 01/Jul/2022 - [Source tarball for Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.9.1.tar.gz) -
+[Windows binary (32-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.9.1-windows-32.zip) -
+[Windows binary (64-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.9.1-windows-64.zip) -
+[Linux binary (x86_64)](https://luarocks.github.io/luarocks/releases/luarocks-3.9.1-linux-x86_64.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
-**Version 3.9.0** - 17/Apr/2022 - [Source tarball for Unix](http://luarocks.org/releases/luarocks-3.9.0.tar.gz) -
-[Windows binary (32-bit)](http://luarocks.org/releases/luarocks-3.9.0-windows-32.zip) -
-[Windows binary (64-bit)](http://luarocks.org/releases/luarocks-3.9.0-windows-64.zip) -
-[Linux binary (x86_64)](http://luarocks.org/releases/luarocks-3.9.0-linux-x86_64.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.9.0** - 17/Apr/2022 - [Source tarball for Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.9.0.tar.gz) -
+[Windows binary (32-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.9.0-windows-32.zip) -
+[Windows binary (64-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.9.0-windows-64.zip) -
+[Linux binary (x86_64)](https://luarocks.github.io/luarocks/releases/luarocks-3.9.0-linux-x86_64.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
 * `builtin` build mode now always respects CC, CFLAGS and LDFLAGS
 * Check that lua.h version matches the desired Lua version
@@ -53,35 +53,35 @@
 * LuaRocks test suite now runs on Lua 5.4 and LuaJIT
 * Internal dependencies of standalone LuaRocks executable were bumped
 
-**Version 3.8.0** - 08/Nov/2021 - [Source tarball for Unix](http://luarocks.org/releases/luarocks-3.8.0.tar.gz) -
-[Windows binary (32-bit)](http://luarocks.org/releases/luarocks-3.8.0-windows-32.zip) -
-[Windows binary (64-bit)](http://luarocks.org/releases/luarocks-3.8.0-windows-64.zip) -
-[Linux binary (x86_64)](http://luarocks.org/releases/luarocks-3.8.0-linux-x86_64.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.8.0** - 08/Nov/2021 - [Source tarball for Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.8.0.tar.gz) -
+[Windows binary (32-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.8.0-windows-32.zip) -
+[Windows binary (64-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.8.0-windows-64.zip) -
+[Linux binary (x86_64)](https://luarocks.github.io/luarocks/releases/luarocks-3.8.0-linux-x86_64.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
-**Version 3.7.0** - 13/Apr/2021 - [Source tarball for Unix](http://luarocks.org/releases/luarocks-3.7.0.tar.gz) -
-[Windows binary (32-bit)](http://luarocks.org/releases/luarocks-3.7.0-windows-32.zip) -
-[Windows binary (64-bit)](http://luarocks.org/releases/luarocks-3.7.0-windows-64.zip) -
-[Linux binary (x86_64)](http://luarocks.org/releases/luarocks-3.7.0-linux-x86_64.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.7.0** - 13/Apr/2021 - [Source tarball for Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.7.0.tar.gz) -
+[Windows binary (32-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.7.0-windows-32.zip) -
+[Windows binary (64-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.7.0-windows-64.zip) -
+[Linux binary (x86_64)](https://luarocks.github.io/luarocks/releases/luarocks-3.7.0-linux-x86_64.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
-**Version 3.6.0** - 30/Mar/2021 - [Source tarball for Unix](http://luarocks.org/releases/luarocks-3.6.0.tar.gz) -
-[Windows binary (32-bit)](http://luarocks.org/releases/luarocks-3.6.0-windows-32.zip) -
-[Windows binary (64-bit)](http://luarocks.org/releases/luarocks-3.6.0-windows-64.zip) -
-[Linux binary (x86_64)](http://luarocks.org/releases/luarocks-3.6.0-linux-x86_64.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.6.0** - 30/Mar/2021 - [Source tarball for Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.6.0.tar.gz) -
+[Windows binary (32-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.6.0-windows-32.zip) -
+[Windows binary (64-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.6.0-windows-64.zip) -
+[Linux binary (x86_64)](https://luarocks.github.io/luarocks/releases/luarocks-3.6.0-linux-x86_64.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
-**Version 3.5.0** - 10/Dec/2020 - [Source tarball for Unix](http://luarocks.org/releases/luarocks-3.5.0.tar.gz) -
-[Windows binary (32-bit)](http://luarocks.org/releases/luarocks-3.5.0-windows-32.zip) -
-[Windows binary (64-bit)](http://luarocks.org/releases/luarocks-3.5.0-windows-64.zip) -
-[Linux binary (x86_64)](http://luarocks.org/releases/luarocks-3.5.0-linux-x86_64.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.5.0** - 10/Dec/2020 - [Source tarball for Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.5.0.tar.gz) -
+[Windows binary (32-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.5.0-windows-32.zip) -
+[Windows binary (64-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.5.0-windows-64.zip) -
+[Linux binary (x86_64)](https://luarocks.github.io/luarocks/releases/luarocks-3.5.0-linux-x86_64.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
-**Version 3.4.0** - 25/Sep/2020 - [Source tarball for Unix](http://luarocks.org/releases/luarocks-3.4.0.tar.gz) -
-[Windows binary (32-bit)](http://luarocks.org/releases/luarocks-3.4.0-windows-32.zip) -
-[Windows binary (64-bit)](http://luarocks.org/releases/luarocks-3.4.0-windows-64.zip) -
-[Linux binary (x86_64)](http://luarocks.org/releases/luarocks-3.4.0-linux-x86_64.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.4.0** - 25/Sep/2020 - [Source tarball for Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.4.0.tar.gz) -
+[Windows binary (32-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.4.0-windows-32.zip) -
+[Windows binary (64-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.4.0-windows-64.zip) -
+[Linux binary (x86_64)](https://luarocks.github.io/luarocks/releases/luarocks-3.4.0-linux-x86_64.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
 * `luarocks make` now supports `--only-deps`
 * `luarocks make` new flag: `--no-install`, which only performs the compilation step
@@ -104,25 +104,25 @@
 * Fix detection of Lua path based on arg variable
 * Fix regression on dependency matching of luarocks.loader
 
-**Version 3.3.1** - 07/Feb/2020 - [All Unix](http://luarocks.org/releases/luarocks-3.3.1.tar.gz) -
-[Windows all-in-one executable (32-bit)](http://luarocks.org/releases/luarocks-3.3.1-windows-32.zip) -
-[Windows all-in-one executable (64-bit)](http://luarocks.org/releases/luarocks-3.3.1-windows-64.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.3.1** - 07/Feb/2020 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.3.1.tar.gz) -
+[Windows all-in-one executable (32-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.3.1-windows-32.zip) -
+[Windows all-in-one executable (64-bit)](https://luarocks.github.io/luarocks/releases/luarocks-3.3.1-windows-64.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
 * Fix downgrades of rocks containing directories: stop it from creating spurious 0-byte files where directories have been
 * Fix error message when attempting to copy a file that is missing
 * Detect OpenBSD-specific dependency paths
 
-**Version 3.3.0** - 28/Jan/2020 - [All Unix](http://luarocks.org/releases/luarocks-3.3.0.tar.gz) -
-[Windows all-in-one executable](http://luarocks.org/releases/luarocks-3.3.0-windows-32.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.3.0** - 28/Jan/2020 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.3.0.tar.gz) -
+[Windows all-in-one executable](https://luarocks.github.io/luarocks/releases/luarocks-3.3.0-windows-32.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
-**Version 3.2.1** - 05/Sep/2019 - [All Unix](http://luarocks.org/releases/luarocks-3.2.1.tar.gz) -
-[Windows all-in-one executable](http://luarocks.org/releases/luarocks-3.2.1-windows-32.zip) -
-[other files](http://luarocks.github.io/luarocks/releases)
+**Version 3.2.1** - 05/Sep/2019 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.2.1.tar.gz) -
+[Windows all-in-one executable](https://luarocks.github.io/luarocks/releases/luarocks-3.2.1-windows-32.zip) -
+[other files](https://luarocks.github.io/luarocks/releases/)
 
-**Version 3.2.0** - 28/Aug/2019 - [All Unix](http://luarocks.org/releases/luarocks-3.2.0.tar.gz) -
-[Windows all-in-one executable](http://luarocks.org/releases/luarocks-3.2.0-windows-32.zip) - [other files](https://luarocks.github.io/luarocks/releases)
+**Version 3.2.0** - 28/Aug/2019 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.2.0.tar.gz) -
+[Windows all-in-one executable](https://luarocks.github.io/luarocks/releases/luarocks-3.2.0-windows-32.zip) - [other files](https://luarocks.github.io/luarocks/releases)
 
 * Bugfix: luarocks path does not change the order of pre-existing path items when prepending or appending to path variables
 * Bugfix: fix directory detection on the Mac
@@ -136,17 +136,17 @@
 * install.bat: Improved detection for Visual Studio 2017 and higher
 * Bundled LuaSec in all-in-one binary bumped to version 0.8.1
 
-**Version 3.1.3** - 06/Jun/2019 - [All Unix](http://luarocks.org/releases/luarocks-3.1.3.tar.gz) -
-[Windows all-in-one executable](http://luarocks.org/releases/luarocks-3.1.3-windows-32.zip)
+**Version 3.1.3** - 06/Jun/2019 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.1.3.tar.gz) -
+[Windows all-in-one executable](https://luarocks.github.io/luarocks/releases/luarocks-3.1.3-windows-32.zip)
 
-**Version 3.1.2** - 07/May/2019 - [All Unix](http://luarocks.org/releases/luarocks-3.1.2.tar.gz) -
-[Windows all-in-one executable](http://luarocks.org/releases/luarocks-3.1.2-windows-32.zip)
+**Version 3.1.2** - 07/May/2019 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.1.2.tar.gz) -
+[Windows all-in-one executable](https://luarocks.github.io/luarocks/releases/luarocks-3.1.2-windows-32.zip)
 
-**Version 3.1.1** - 06/May/2019 - [All Unix](http://luarocks.org/releases/luarocks-3.1.1.tar.gz) -
-[Windows all-in-one executable](http://luarocks.org/releases/luarocks-3.1.1-windows-32.zip)
+**Version 3.1.1** - 06/May/2019 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.1.1.tar.gz) -
+[Windows all-in-one executable](https://luarocks.github.io/luarocks/releases/luarocks-3.1.1-windows-32.zip)
 
-**Version 3.1.0** - 30/Apr/2019 - [All Unix](http://luarocks.org/releases/luarocks-3.1.0.tar.gz) - 
-[Windows all-in-one executable](http://luarocks.org/releases/luarocks-3.1.0-windows-32.zip)
+**Version 3.1.0** - 30/Apr/2019 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.1.0.tar.gz) - 
+[Windows all-in-one executable](https://luarocks.github.io/luarocks/releases/luarocks-3.1.0-windows-32.zip)
 
 * config: add git-like modes for setting and inspecting configuration
 * make: run rockspec patches on first `luarocks make` run and use a lockfile to avoid double patching
@@ -160,20 +160,20 @@
 * Improve Lua paths auto-detection
 * Various bugfixes
 
-**Version 3.0.4** - 30/Oct/2018 - [All Unix](http://luarocks.org/releases/luarocks-3.0.4.tar.gz) - 
-[Windows all-in-one executable](http://luarocks.org/releases/luarocks-3.0.4-windows-32.zip)
+**Version 3.0.4** - 30/Oct/2018 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.0.4.tar.gz) - 
+[Windows all-in-one executable](https://luarocks.github.io/luarocks/releases/luarocks-3.0.4-windows-32.zip)
 
 * Fork-free platform detection at startup
 * Improved detection of the default rockspec in commands such as `luarocks test`
 * Various minor bugfixes
 
-**Version 3.0.3** - 15/Sep/2018 - [All Unix](http://luarocks.org/releases/luarocks-3.0.3.tar.gz) - 
-[Windows all-in-one executable](http://luarocks.org/releases/luarocks-3.0.3-windows-32.zip)
+**Version 3.0.3** - 15/Sep/2018 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.0.3.tar.gz) - 
+[Windows all-in-one executable](https://luarocks.github.io/luarocks/releases/luarocks-3.0.3-windows-32.zip)
 
 * Minor bugfixes
 
-**Version 3.0.2** - 07/Sep/2018 - [All Unix](http://luarocks.org/releases/luarocks-3.0.2.tar.gz) - 
-[Windows all-in-one executable](http://luarocks.org/releases/luarocks-3.0.2-windows-32.zip)
+**Version 3.0.2** - 07/Sep/2018 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.0.2.tar.gz) - 
+[Windows all-in-one executable](https://luarocks.github.io/luarocks/releases/luarocks-3.0.2-windows-32.zip)
 
 * Improvements in luarocks init, new --reset flag
 * write_rockspec: --lua-version renamed to --lua-versions
@@ -182,16 +182,16 @@
 * Fix upgrade/downgrade when a single rock has clashing module filenames
 * Fix for autodetected external dependencies with non-alphabetic characters
 
-**Version 3.0.1** - 14/Aug/2018 - [All Unix](http://luarocks.org/releases/luarocks-3.0.1.tar.gz) - 
-[Windows all-in-one executable](http://luarocks.org/releases/luarocks-3.0.1-windows-32.zip)
+**Version 3.0.1** - 14/Aug/2018 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.0.1.tar.gz) - 
+[Windows all-in-one executable](https://luarocks.github.io/luarocks/releases/luarocks-3.0.1-windows-32.zip)
 
 * Numerous bugfixes
 * Store Lua location in config file, so that a user can run `luarocks init --lua-dir=/my/lua/location` and have that location remain active for that project
 * Various improvements to the Unix makefile, including $(DESTDIR) support and an uninstall rule
 * Autodetect FreeBSD-style include paths (/usr/include/lua5x/)
 
-**Version 3.0.0** - 25/Jul/2018 - [All Unix](http://luarocks.org/releases/luarocks-3.0.0.tar.gz) - 
-[Windows batch installer](http://luarocks.org/releases/luarocks-3.0.0-win32.zip)
+**Version 3.0.0** - 25/Jul/2018 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-3.0.0.tar.gz) - 
+[Windows batch installer](https://luarocks.github.io/luarocks/releases/luarocks-3.0.0-win32.zip)
 
 * New rockspec format
 * New commands, including `luarocks init` for per-project workflows
@@ -201,8 +201,8 @@
 * User-visible changes, including some breaking changes
 * Internal changes
 
-**Version 2.4.4** - 12/Mar/2018 - [All Unix](http://luarocks.org/releases/luarocks-2.4.4.tar.gz) - 
-[Windows](http://luarocks.org/releases/luarocks-2.4.4-win32.zip)
+**Version 2.4.4** - 12/Mar/2018 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.4.4.tar.gz) - 
+[Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.4.4-win32.zip)
 
 * Do not halt a package deletion process when a file from the package is missing
 * Updated bundled binaries in Windows package: Lua 5.1.5, Wget 1.19.4, 7zip 18.01
@@ -210,14 +210,14 @@
 * Fix detection of directories on Windows
 * Fixes .def generation on Windows
 
-**Version 2.4.3** - 12/Sep/2017 - [All Unix](http://luarocks.org/releases/luarocks-2.4.3.tar.gz) - 
-[Windows](http://luarocks.org/releases/luarocks-2.4.3-win32.zip)
+**Version 2.4.3** - 12/Sep/2017 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.4.3.tar.gz) - 
+[Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.4.3-win32.zip)
 
 * Fixed display of pathnames in `luarocks show`
 * Improved check for write permissions when installing
 * Plus assorted bugfixes and improvements
 
-**Version 2.4.2** - 30/Nov/2016 - [All Unix](http://luarocks.org/releases/luarocks-2.4.2.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.4.2-win32.zip)
+**Version 2.4.2** - 30/Nov/2016 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.4.2.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.4.2-win32.zip)
 
 * Fixed conflict resolution on deploy/delete
 * Improved dependency check messages
@@ -227,12 +227,12 @@
 * Relaxed Lua version detection to improve support for alternative implementations (e.g. Ravi)
 * Plus assorted bugfixes and improvements
 
-**Version 2.4.1** - 06/Oct/2016 - [All Unix](http://luarocks.org/releases/luarocks-2.4.1.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.4.1-win32.zip)
+**Version 2.4.1** - 06/Oct/2016 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.4.1.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.4.1-win32.zip)
 
 * Avoid coroutine use in luarocks.loader
 * Fix upgrade issues for very old versions
 
-**Version 2.4.0** - 08/Sep/2016 - [All Unix](http://luarocks.org/releases/luarocks-2.4.0.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.4.0-win32.zip)
+**Version 2.4.0** - 08/Sep/2016 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.4.0.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.4.0-win32.zip)
 
 * New test suite based on Busted; runs on Linux, OSX and Windows
 * git+ssh:// fetch protocol
@@ -245,7 +245,7 @@
 * `remove` option --force=fast renamed to --force-fast
 * Plus assorted bugfixes and cleanups
 
-**Version 2.3.0** - 09/Jan/2016 - [All Unix](http://luarocks.org/releases/luarocks-2.3.0.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.3.0-win32.zip)
+**Version 2.3.0** - 09/Jan/2016 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.3.0.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.3.0-win32.zip)
 
 * Windows: major redesign of the install tree structure
 * Windows: Auto setup of MSVC environments
@@ -259,7 +259,7 @@
 * Unix: Robustness improvement in configure script
 * Plus tweaks and bugfixes. See the changelog for details.
 
-**Version 2.2.2** - 24/Apr/2015 - [All Unix](http://luarocks.org/releases/luarocks-2.2.2.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.2.2-win32.zip)
+**Version 2.2.2** - 24/Apr/2015 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.2.2.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.2.2-win32.zip)
 
 * `luarocks build --only-deps` and `luarocks install --only-deps` for installing dependencies only
 * Mercurial support
@@ -269,13 +269,13 @@
 * Improved Makefiles for handling simultaneous bootstrapped installations
 * Various bugfixes
 
-**Version 2.2.1** - 17/Mar/2015 - [All Unix](http://luarocks.org/releases/luarocks-2.2.1.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.2.1-win32.zip)
+**Version 2.2.1** - 17/Mar/2015 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.2.1.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.2.1-win32.zip)
 
 * Improved compatibility with Lua 5.3
 * `luarocks list --outdated` for listing modules with available upgrades
 * Assorted bugfixes
 
-**Version 2.2.0** - 15/Aug/2014 - [All Unix](http://luarocks.org/releases/luarocks-2.2.0.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.2.0-win32.zip)
+**Version 2.2.0** - 15/Aug/2014 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.2.0.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.2.0-win32.zip)
 
 * MoonRocks is the new default repository: http://rocks.moonscript.org - Rocks don't need to be sent to the LuaRocks mailing list anymore, you can upload them directly at the website or using...
 * ...`luarocks upload` command for uploading rocks to MoonRocks via the command-line
@@ -285,7 +285,7 @@
 * various improvements in `luarocks doc` command
 * "git+http" transport for source.url
 
-**Version 2.1.2** - 10/Jan/2014 - [All Unix](http://luarocks.org/releases/luarocks-2.1.2.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.1.2-win32.zip)
+**Version 2.1.2** - 10/Jan/2014 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.1.2.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.1.2-win32.zip)
 
 * major improvements in the Windows install.bat script. Now installs by default on standard Windows locations, while the old self-contained all-under-one-dir installation is still supported through an option flag. The documentation at luarocks.org didn't catch up with it yet, so please refer to "install /?" for instructions.
 * a new command, "luarocks doc <module>" that tries to find any installed documentation. Due to the lack of documentation standards for Lua, this uses a few heuristics. Feedback on the feature is appreciated.
@@ -298,7 +298,7 @@
 * Improved Lua detection in Unix installer
 * plus assorted bugfixes
 
-**Version 2.1.1** - 29/Oct/2013 - [All Unix](http://luarocks.org/releases/luarocks-2.1.1.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.1.1-win32.zip)
+**Version 2.1.1** - 29/Oct/2013 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.1.1.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.1.1-win32.zip)
 
 * Remote manifests are now compressed and locally cached, making commands faster
 * New command "write_rockspec" which generates rockspec file templates
@@ -309,7 +309,7 @@
 * Improved error checking
 * plus assorted bugfixes
 
-**Version 2.1.0** - 09/Aug/2013 - [All Unix](http://luarocks.org/releases/luarocks-2.1.0.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.1.0-win32.zip)
+**Version 2.1.0** - 09/Aug/2013 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.1.0.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.1.0-win32.zip)
 
 * accesses manifest-{5.1,5.2} in remote servers to provide properly filtered results for Lua 5.1 or 5.2
 * Remove old versions when installing a new one and old versions are no longer needed to honor dependencies.
@@ -322,7 +322,7 @@
 * friendlier error messages
 * plus bugfixes
 
-**Version 2.0.13** - 16/Apr/2013 - [All Unix](http://luarocks.org/releases/luarocks-2.0.13.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.13-win32.zip)
+**Version 2.0.13** - 16/Apr/2013 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.13.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.13-win32.zip)
 
 * Support for Lua 5.2 is no longer marked as experimental
 * Support for installing two instances of LuaRocks, for Lua 5.1 and 5.2, in parallel
@@ -332,7 +332,7 @@
 * Improvements in 'luarocks new_version` command for autogenerating updated rockspecs
 * 'luarocks remove' command accepts rock and rockspec filenames
 
-**Version 2.0.12** - 05/Nov/2012 - [All Unix](http://luarocks.org/releases/luarocks-2.0.12.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.12-win32.zip)
+**Version 2.0.12** - 05/Nov/2012 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.12.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.12-win32.zip)
 
 * "Dependencies mode" selection to configure how to work with multiple local trees
 * New command "purge" that erases a local tree
@@ -341,7 +341,7 @@
 * Code cleanups, removal of dead code
 * Fixes regressions on Mac and Windows
 
-**Version 2.0.11** - 21/Sep/2012 - [All Unix](http://luarocks.org/releases/luarocks-2.0.11.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.11-win32.zip)
+**Version 2.0.11** - 21/Sep/2012 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.11.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.11-win32.zip)
 
 * Work around LuaSocket crash when given proxy URLs without the scheme part
 * Save manifest file in a single fs operation to make it more atomic
@@ -358,7 +358,7 @@
 * Fix builtin build mode on Mac OSX < 10.5
 * Improve configure tests for Debian-based platforms
 
-**Version 2.0.10** - 12/Jul/2012 - [All Unix](http://luarocks.org/releases/luarocks-2.0.10.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.10-win32.zip)
+**Version 2.0.10** - 12/Jul/2012 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.10.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.10-win32.zip)
 
 * Fix fetching Git tags/branches 
 * Fix strictness issue with parameter of io.open
@@ -367,7 +367,7 @@
 * Cleanup of .svn dir in svn-based rocks
 * Improvement for 'make bootstrap'
 
-**Version 2.0.9** - 31/May/2012 - [All Unix](http://luarocks.org/releases/luarocks-2.0.9.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.9-win32.zip)
+**Version 2.0.9** - 31/May/2012 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.9.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.9-win32.zip)
 
 * Experimental support for Lua 5.2 (auto-detection and explicit --lua-version flag in configure)
 * Solaris support and BSD fixes
@@ -378,7 +378,7 @@
 * Nicer-looking persisted tables
 * Assorted bugfixes
 
-**Version 2.0.8** - 29/Feb/2012 - [All Unix](http://luarocks.org/releases/luarocks-2.0.8.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.8-win32.zip)
+**Version 2.0.8** - 29/Feb/2012 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.8.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.8-win32.zip)
 
 * Fix in CMake build backend
 * Fix handling error condition of --pack-binary-rock
@@ -392,13 +392,13 @@
 * New binaries from GnuWin32 shipped in Win32 zip
 * Nicer-looking help
 
-**Version 2.0.7.1** - 10/Jan/2012 - [All Unix](http://luarocks.org/releases/luarocks-2.0.7.1.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.7.1-win32.zip)
+**Version 2.0.7.1** - 10/Jan/2012 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.7.1.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.7.1-win32.zip)
 
 * Fix installation of files in build operation
 * Deprecate --to and --from, use --server and --tree instead
 * Improved documentation, thanks to LDoc
 
-**Version 2.0.7** - 10/Dec/2011 - [All Unix](http://luarocks.org/releases/luarocks-2.0.7.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.7-win32.zip)
+**Version 2.0.7** - 10/Dec/2011 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.7.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.7-win32.zip)
 
 * Quieter git checkout
 * --only-sources flag to restrict download of sources from a single domain
@@ -408,7 +408,7 @@
 * More logical names for flags: --tree, --server
 * Improved documentation
 
-**Version 2.0.6** - 04/Oct/2011 - [All Unix](http://luarocks.org/releases/luarocks-2.0.6.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.6-win32.zip)
+**Version 2.0.6** - 04/Oct/2011 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.6.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.6-win32.zip)
 
 * Fixes for rockspecs missing 'description' or the contents of 'source.url'
 * Escape fixes for LuaJIT/Metalua
@@ -418,7 +418,7 @@
 * Flag for experimental extensions
 * Plus assorted bugfixes
 
-**Version 2.0.5** - 17/Aug/2011 - [All Unix](http://luarocks.org/releases/luarocks-2.0.5.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.5-win32.zip)
+**Version 2.0.5** - 17/Aug/2011 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.5.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.5-win32.zip)
 
 * External commands are overridable through variables or config.lua
 * No longer uses print() - output goes to stdout, errors to stderr
@@ -426,11 +426,11 @@
 * Avoid relying on the $PWD variable
 * Code cleanups
 
-**Version 2.0.4.1** - 17/Jan/2011 - [All Unix](http://luarocks.org/releases/luarocks-2.0.4.1.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.4.1-win32.zip)
+**Version 2.0.4.1** - 17/Jan/2011 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.4.1.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.4.1-win32.zip)
 
 * Minor bugfix release
 
-**Version 2.0.4** - 23/Dec/2010 - [All Unix](http://luarocks.org/releases/luarocks-2.0.4.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.4-win32.zip)
+**Version 2.0.4** - 23/Dec/2010 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.4.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.4-win32.zip)
 
 * Command "remove" for luarocks-admin
 * Check for write permissions in repository and suggest --local
@@ -444,7 +444,7 @@
 * Stable sort of persisted files such as manifests
 * Plus assorted bugfixes
 
-**Version 2.0.3** - 14/Sep/2010 - [All Unix](http://luarocks.org/releases/luarocks-2.0.3.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.3-win32.zip)
+**Version 2.0.3** - 14/Sep/2010 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.3.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.3-win32.zip)
 
 * Check for permissions and warn user instead of just installing in local tree
 * --local flag for operations on the local tree
@@ -459,14 +459,14 @@
 * new command: "luarocks path" to make it easy to export Lua env variables
 * plus assorted bugfixes
 
-**Version 2.0.2** - 01/Apr/2010 - [All Unix](http://luarocks.org/releases/luarocks-2.0.2.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.2-win32.zip)
+**Version 2.0.2** - 01/Apr/2010 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.2.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.2-win32.zip)
 
 * use LuaSocket if available for downloading files
 * use LuaZip if available for unzipping files
 * MinGW support in builtin build backend
 * updated installation files for Windows, including a LuaForWindows-compatible package
 
-**Version 2.0.1** - 27/Oct/2009 - [All Unix](http://luarocks.org/releases/luarocks-2.0.1.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0.1-win32.zip)
+**Version 2.0.1** - 27/Oct/2009 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.1.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0.1-win32.zip)
 
 * luarocks.cfg is no longer edited during installation; a separate site-local luarocks.config module is created.
 * robustness fixes and improvements for luarocks.add
@@ -474,7 +474,7 @@
 * install LuaRocks as a rock
 * plus assorted bugfixes
 
-**Version 2.0** - 17/Oct/2009 - [All Unix](http://luarocks.org/releases/luarocks-2.0.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-2.0-win32.zip)
+**Version 2.0** - 17/Oct/2009 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-2.0.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-2.0-win32.zip)
 
 * module files are now deployed to standard Lua-style paths
 * new package loader module luarocks.loader, superseding the require()-override module luarocks.require
@@ -484,7 +484,7 @@
 * new commands for luarocks-admin: "add", to upload rocks to a repository, and "refresh_cache", to refresh the cache used by the "add" command
 * plus a number of cleanups and bugfixes
 
-**Version 1.0.1** - 13/Mar/2009 - [All Unix](http://luarocks.org/releases/luarocks-1.0.1.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-1.0.1-win32.zip)
+**Version 1.0.1** - 13/Mar/2009 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-1.0.1.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-1.0.1-win32.zip)
 
 * Improve portability in usage of Unix tools
 * Allow use of local rocks servers in the --from flag
@@ -492,7 +492,7 @@
 * Fix build of the 'builtin' backend under Windows
 * Support for the 'md5' binary as a MD5 checker
 
-**Version 1.0** - 01/Sep/2008 - [All Unix](http://luarocks.org/releases/luarocks-1.0.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-1.0-win32.zip)
+**Version 1.0** - 01/Sep/2008 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-1.0.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-1.0-win32.zip)
 
 * Add support for post-install hooks
 * Path helper scripts for binaries on Windows systems.
@@ -503,7 +503,7 @@
 * Generate index.html when building a manifest for a repository.
 * Plus assorted bugfixes.
 
-**Version 0.6** - 30/Jun/2008 - [All Unix](http://luarocks.org/releases/luarocks-0.6.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-0.6-win32.zip)
+**Version 0.6** - 30/Jun/2008 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-0.6.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-0.6-win32.zip)
 
 * Check external deps on binary installs. Allow rockspecs to specify supported platforms. Support platform-agnostic specification of external deps files.  Allow overriding external deps subdirs.
 * Structured build systems in subdirectories.
@@ -515,21 +515,21 @@
 * "module" build type renamed to "builtin"; "cvs_tag" and "cvs_module" renamed to "tag" and "module". Old names still supported for compatibility for now, to be cleaned up by 1.0.
 * Plus many bugfixes.
 
-**Version 0.5.2** - 13/May/2008 - [All Unix](http://luarocks.org/releases/luarocks-0.5.2.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-0.5.2-win32.zip)
+**Version 0.5.2** - 13/May/2008 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-0.5.2.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-0.5.2-win32.zip)
 
 * Fixes problems with removal of read-only files on Windows
 * Fixes issues with external libraries on the 'module' build type on Windows
 * Fixes the --only-from flag
 * Renames the luarocks.config module to luarocks.cfg avoiding conflict's with the user configuration file config.lua
 
-**Version 0.5.1** - 25/Apr/2008 - [All Unix](http://luarocks.org/releases/luarocks-0.5.1.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-0.5.1-win32.zip)
+**Version 0.5.1** - 25/Apr/2008 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-0.5.1.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-0.5.1-win32.zip)
 
 * Added function get_rock_from_module in luarocks.require, allowing apps to inspect which rock they're getting modules from.
 * Added variables LUA, LIB_EXTENSION and OBJ_EXTENSION, now available for rockspec authors.
 * Assorted bugfixes, especially for the Windows package.
 * Build system improvements: add DESTDIR variable to makefile to make things easier for distros packaging LuaRocks.
 
-**Version 0.5** - 03/Apr/2008 - [All Unix](http://luarocks.org/releases/luarocks-0.5.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-0.5-win32.zip)
+**Version 0.5** - 03/Apr/2008 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-0.5.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-0.5-win32.zip)
 
 * New flags in the ./configure on Unix (see configure --help) and install.bat on Windows (see install.bat /?)
 * Support for multiple local repositories. By extension, LuaRocks features more intuitive configuration defaults (it installs rocks to $PREFIX/lib/luarocks if you have the permission, and to $HOME/.luarocks if you don't).
@@ -538,27 +538,27 @@
 * 'unpack' command allows unpacking binary and pure-Lua rocks, for inspecting.
 * Plus assorted bugfixes.
 
-**Version 0.4.3** - 03/Mar/2008 - [All Unix](http://luarocks.org/releases/luarocks-0.4.3.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-0.4.3-win32.zip)
+**Version 0.4.3** - 03/Mar/2008 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-0.4.3.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-0.4.3-win32.zip)
 
 * The MD5 check feature added in 0.4.2 can now use openssl instead of md5sum (making LuaRocks friendlier to OSX).
 * Added a license file in the tarball (making LuaRocks friendlier to Debian).
 * Plus assorted bugfixes.
 
-**Version 0.4.2** - 09/Feb/2008 - [All Unix](http://luarocks.org/releases/luarocks-0.4.2.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-0.4.2-win32.zip)
+**Version 0.4.2** - 09/Feb/2008 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-0.4.2.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-0.4.2-win32.zip)
 
 * Support .lua files directly in the URL field.
 * Perform check of MD5 checksum in sources.
 * Accept plain strings in all fields of the source table of the "module" build type.
 * Bugfixes.
 
-**Version 0.4.1** - 25/Jan/2008 - [All Unix](http://luarocks.org/releases/luarocks-0.4.1.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-0.4.1-win32.zip)
+**Version 0.4.1** - 25/Jan/2008 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-0.4.1.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-0.4.1-win32.zip)
 
 * New configure/install.bat flags for setting scripts dir and local repository dir.
 * "unpack" command now supports rockspec files as well.
 * Complete code documentation.
 * Many assorted bugfixes.
 
-**Version 0.4** - 18/Jan/2008 - [All Unix](http://luarocks.org/releases/luarocks-0.4.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-0.4-win32.zip)
+**Version 0.4** - 18/Jan/2008 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-0.4.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-0.4-win32.zip)
 
 * Adds the "unpack" command for debugging rocks (.src.rock only at this point).
 * Support curl as an alternative downloader for OSX, removing the dependency on wget.
@@ -569,29 +569,29 @@
 * Performance improvements.
 * Many assorted bugfixes.
 
-**Version 0.3.2** - 21/Dec/2007 - [All Unix](http://luarocks.org/releases/luarocks-0.3.2.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-0.3.2-win32.zip)
+**Version 0.3.2** - 21/Dec/2007 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-0.3.2.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-0.3.2-win32.zip)
 
 * Support for patching and inclusion of extra files (such as Makefiles) through a rockspec.
 * Support "platforms" overrides table for dependencies, external dependencies and source URLs.
 * Many assorted bugfixes.
 
-**Version 0.3.1** - 18/Dec/2007 - [All Unix](http://luarocks.org/releases/luarocks-0.3.1.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-0.3.1-win32.zip)
+**Version 0.3.1** - 18/Dec/2007 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-0.3.1.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-0.3.1-win32.zip)
 
 * Improved search: results now feature separate lists for source and binary rocks.
 * Windows support for the "module" build type (using Visual Studio).
 * Many assorted bugfixes.
 
-**Version 0.3** - 04/Dec/2007 - [All Unix](http://luarocks.org/releases/luarocks-0.3.tar.gz) - [Windows](http://luarocks.org/releases/luarocks-0.3-win32.zip)
+**Version 0.3** - 04/Dec/2007 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-0.3.tar.gz) - [Windows](https://luarocks.github.io/luarocks/releases/luarocks-0.3-win32.zip)
 
 * Includes Windows package.
 * Adds the "module" build type.
 * Performance improvements.
 
-**Version 0.2** - 23/Oct/2007 - [All Unix](http://luarocks.org/releases/luarocks-0.2.tar.gz)
+**Version 0.2** - 23/Oct/2007 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-0.2.tar.gz)
 
 * Bugfixes and improvements to build infrastructure.
 * Adds the LuaRocks "remove" command.
 
-**Version 0.1** - 09/Aug/2007 - [All Unix](http://luarocks.org/releases/luarocks-0.1.tar.gz)
+**Version 0.1** - 09/Aug/2007 - [All Unix](https://luarocks.github.io/luarocks/releases/luarocks-0.1.tar.gz)
 
 * Initial release.

@@ -19,14 +19,13 @@ repository is an address (a local directory or a remote URL) where LuaRocks
 can find a `manifest-5.x` file and .rock and .rockspec files. We also call
 such repository a "manifest", for short. 
 
-The [LuaRocks.org](LuaRocks.org)(LuaRocks.org)(https://luarocks.org) website
-features a root manifest at `https://luarocks.org` as well as per-user
-manifests at `https://luarocks.org/manifests/<your-user-name>`. Entries in the
-root manifest are operated in a first-come first-served manner, but even if
-someone else has already taken a rock name, you can upload your own version of
-it to your user manifest. You can refer to a per-user manifest the same way as
-any other rocks server, adding to your configuration or using it with the
-`--server` flag. This means that you were always able to install your own
+The [LuaRocks.org](https://luarocks.org) website features a root manifest at
+`https://luarocks.org` as well as per-user manifests at
+`https://luarocks.org/manifests/<your-user-name>`. Entries in the root
+manifest are operated in a first-come first-served manner, but even if someone
+else has already taken a rock name, you can upload your own version of it to
+your user manifest. You can refer to a per-user manifest the same way as any
+other rocks server, adding to your configuration or using it with the`--server` flag. This means that you were always able to install your own
 version of a rock using a command such as `luarocks install <my-rock>
 --server=https://luarocks.org/manifests/<your-user-name>`. However, you could
 not specifically depend on it from another rockspec, and once installed, the

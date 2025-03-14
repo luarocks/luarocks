@@ -31,6 +31,6 @@ This adds the following to your `~/.gitconfig`:
 
 ## External references
 
-* [curl manpage](http://www.hmug.org/man/1/curl.php)
+* [curl manpage](https://www.manpagez.com/man/1/curl/)
 * ["How to use wget through proxy"](http://blog.taragana.com/index.php/archive/how-to-use-wget-through-proxy/)
-* ["Tell git to use https instead of git protocol"](http://jgoodall.me/posts/2013/05/29/git-use-https)
+* ["Tell git to use https instead of git protocol"](https://jgoodall.me/2013/05/29/git-use-https.html)

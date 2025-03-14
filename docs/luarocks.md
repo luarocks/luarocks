@@ -15,7 +15,7 @@ Variables from the "variables" table of the [configuration file](config_file_for
 |-
 | --only-server=_server_ || Fetch rocks/rockspecs from this server only (overrides any entries in the config file)
 |-
-| --only-sources=_url_ || Restrict downloads of sources to URLs starting with the given URL. For example, --only-sources=http://luarocks.org will allow LuaRocks to download sources only if the URL given in the rockspec starts with http://luarocks.org .
+| --only-sources=_url_ || Restrict downloads of sources to URLs starting with the given URL. For example, --only-sources=https://luarocks.org will allow LuaRocks to download sources only if the URL given in the rockspec starts with https://luarocks.org .
 |-
 | --tree=_tree_ || Which tree to operate on.
 |-
