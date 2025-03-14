@@ -34,8 +34,8 @@ Additionally, it must contain the sources:
 
 A binary rock must contain at its root two files. For a rock called `myrock-1.0-1.linux-x86.rock` they would be called:
 
-* `myrock-1.0-1.rockspec` - the [rockspec file](Rockspec-format) in the archive root
-* `rock_manifest` - a [rock manifest file](Rock-manifest-file-format)
+* `myrock-1.0-1.rockspec` - the [rockspec file](rockspec_format.md) in the archive root
+* `rock_manifest` - a [rock manifest file](rock_manifest_file_format.md)
 
 These standard directories are handled specially:
 

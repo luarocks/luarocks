@@ -5,7 +5,7 @@ default builds non-relocatable packages. For many programs it's not necessary
 to do anything particular to make them relocatable; applications which need to
 find resources at run-time may be problematic. See GNU Smalltalk for one
 approach (look at the RELOCATABILITY section in its configure.ac).
-[Zee](http://github.com/rrthomas/zee) uses another approach, of patching in
+[Zee](https://github.com/rrthomas/zee) uses another approach, of patching in
 paths for in-place running of the program during development, and relying on
 Lua search paths at run-time, purely to find Lua modules. Search for
 'in_place_lua_path'.
@@ -25,7 +25,7 @@ package="@PACKAGE@"
    detailed = [[
        <Detailed information.>
    ]],
-   homepage = "http://github.com/<USER>/@PACKAGE@/",
+   homepage = "https://github.com/<USER>/@PACKAGE@",
    license = "<LICENSE>"
  }
  dependencies = {
@@ -60,8 +60,8 @@ EXTRA_DIST = $(PACKAGE).rockspec.in
 DISTCLEANFILES = $(PACKAGE).rockspec
 ```
 
-You can use [woger](http://github.com/rrthomas/woger/) to automate your
+You can use [woger](https://github.com/rrthomas/woger) to automate your
 releases, uploading rockspecs to luarocks.org and announcements to the Lua
 mailing list. The details are evolving, so see woger itself for details, and a
 frequently-updated project such as
-[luaposix](http://github.com/luaposix/luaposix/) for example Makefile.am code.
+[luaposix](https://github.com/luaposix/luaposix) for example Makefile.am code.

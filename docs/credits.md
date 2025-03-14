@@ -7,11 +7,11 @@ various forms by a number of organizations over the years and we thank every
 one of them:
 
 * [CNPq](http://www.cnpq.br)
-* [Fábrica Digital](http://www.fabricadigital.com.br/)
+* [Fábrica Digital](https://www.fabricadigital.com.br/)
 * [FINEP](http://www.finep.gov.br/)
-* [IMPA](http://www.impa.br/)
+* [IMPA](https://impa.br/)
 * [LabLua](http://www.lua.inf.puc-rio.br/)
-* [itch.io](http://itch.io/)
+* [itch.io](https://itch.io/)
 * [Kong](http://getkong.org/)
 
 # Developers

@@ -41,7 +41,7 @@ Once Lua and its dependencies are installed, it is time to install LuaRocks:
 
 * Go to the unpacked LuaRocks directory.
 
-* To configure, build and install LuaRocks, run the following commands. The `./configure` script will attempt to detect your installation of Lua. If you get any error messages, see the section "Customizing your settings", below.
+* To configure, build and install LuaRocks, run the following commands. The `./configure` script will attempt to detect your installation of Lua. If you get any error messages, see the section "[Customizing your settings](#customizing-your-settings)", below.
 
 ```
 -$ ./configure --with-lua-include=/usr/local/include

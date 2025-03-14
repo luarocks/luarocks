@@ -231,7 +231,7 @@ luarocks doc ROCKNAME
 Now, to complete the rockspec for public consumption we need to fill the
 sources.url field. For that, we need the code to be available online. We have
 two approaches for that: if you have your source code in an online repository
-such as [GitHub](GitHub)(https://github.com), you may use that directly.
+such as [GitHub](https://github.com), you may use that directly.
 Alternatively, you can publish a tarball with the sources on the web.
 
 ### Method 1: using a repository such as Github
@@ -315,7 +315,7 @@ tar czvpf luafruits-1.0.tar.gz luafruits-1.0/
 
 And now we're ready to publish the tarball online. You can upload it to any
 public web server; if you need hosting space, you can use the Pages feature
-from [GitHub](GitHub)(https://github.com). Your source section would then look
+from [GitHub](https://github.com). Your source section would then look
 something like this:
 
 ```lua

@@ -1,4 +1,4 @@
-<p align="center"><img src="http://luarocks.github.io/luarocks/luarocks.png" width="500px"/></p>
+<p align="center"><img src="https://luarocks.github.io/luarocks/luarocks.png" width="500px"/></p>
 
 This is **LuaRocks**, the package manager for the Lua programming language.
 

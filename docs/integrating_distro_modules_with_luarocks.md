@@ -151,14 +151,14 @@ Continuing the examples above:
 * /usr/lib/luarocks/rocks-5.3/lua-cjson/2.1.0-0/lua-cjson-2.1.0-0.rockspec
 
 For simplicity, I would recommend just copying over the appropriate rockspec
-file from [luarocks.org](http://luarocks.org) and bundling them in the package
+file from [luarocks.org](https://luarocks.org) and bundling them in the package
 metadata. For completeness, this is how the one for LPeg 1.0 looks like:
 
 ```
 package = "LPeg"
 version = "1.0.0-1"
 source = {
-   url = "http://www.inf.puc-rio.br/~roberto/lpeg/lpeg-1.0.0.tar.gz",
+   url = "https://www.inf.puc-rio.br/~roberto/lpeg/lpeg-1.0.0.tar.gz",
    md5 = "0aec64ccd13996202ad0c099e2877ece",
 }
 description = {
@@ -171,7 +171,7 @@ description = {
       we expect from a pattern-matching library (and more, as we can
       define entire grammars).
    ]],
-   homepage = "http://www.inf.puc-rio.br/~roberto/lpeg.html",
+   homepage = "https://www.inf.puc-rio.br/~roberto/lpeg/lpeg.html",
    maintainer = "Gary V. Vaughan <gary@vaughan.pe>",
    license = "MIT/X11"
 }

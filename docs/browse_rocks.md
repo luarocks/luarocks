@@ -2,7 +2,7 @@
 
 To browse rocks, simply go to:
 
-* [http://luarocks.org](http://luarocks.org)
+* [https://luarocks.org](https://luarocks.org)
 
 You can also use the [luarocks search](luarocks_search.md) command in the [luarocks](luarocks.md) command-line tool.
 

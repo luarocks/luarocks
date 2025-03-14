@@ -17,7 +17,7 @@ it was installed and LuaRocks failed to find it.
 Dependencies of a rock are specified in its [rockspec](rockspec_format.md)
 file. See the complete specification of the dependency syntax in the [Rockspec
 format](rockspec_format.md) page and examples in rockspec files of the [public
-rocks server](http://luarocks.org/).
+rocks server](https://luarocks.org).
 
 # Dependency modes 
 

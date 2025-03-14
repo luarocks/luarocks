@@ -7,7 +7,7 @@ Latest release: **LuaRocks 3.11.1** - '31/May/2024'
 * [Tarball for Unix](https://luarocks.org/releases/luarocks-3.11.1.tar.gz)
 * [Windows all-in-one executable (32-bit)](https://luarocks.org/releases/luarocks-3.11.1-windows-32.zip)
 * [Windows all-in-one executable (64-bit)](https://luarocks.org/releases/luarocks-3.11.1-windows-64.zip)
-* [other files](https://luarocks.github.io/luarocks/releases)
+* [other files](https://luarocks.github.io/luarocks/releases/)
 
 For release notes and older versions, see the [release history](release_history.md).
 
@@ -35,5 +35,5 @@ git clone git://github.com/luarocks/luarocks.git
 
 There is also a web interface available at:
 
-* [http://github.com/luarocks/luarocks](http://github.com/luarocks/luarocks)
+* [https://github.com/luarocks/luarocks](https://github.com/luarocks/luarocks)
 
