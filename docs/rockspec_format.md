@@ -29,10 +29,10 @@ Dependencies are represented in LuaRocks through strings with a package name fol
 ## Build rules
 
 * **source** (table, mandatory field) - Contains information on how to fetch sources to build this rock. Supports [per-platform overrides](platform_overrides.md).
-   * **source.url** (string, mandatory field) - the URL of the package source archive. Examples: "https://github.com/downloads/keplerproject/wsapi/wsapi-1.3.4.tar.gz", "git://github.com/keplerproject/wsapi.git". Note that this field is ignored when running [luarocks make](luarocks_make.md), which uses the sources from your current directory instead. Different protocols are supported:
+   * **source.url** (string, mandatory field) - the URL of the package source archive. Examples: "https://github.com/keplerproject/wsapi/archive/v1.3.4.tar.gz, "git://github.com/keplerproject/wsapi.git". Note that this field is ignored when running [luarocks make](luarocks_make.md), which uses the sources from your current directory instead. Different protocols are supported:
       * `cvs://` - for the CVS source control manager
-      * `file://` - for URLs in the local filesystem (note that for Unix paths, the root slash is the third slash, resulting in paths like `"file:///full/path/filename"`
-      * `ftp://` - for FTP URLs
+      * `file://` - for URLs in the local filesystem to archive file (note that for Unix paths, the root slash is the third slash, resulting in paths like `"file:///full/path/filename"`)
+      * `ftp://` - for FTP URLs to archive file
       * `git://` - for the Git source control manager
       * `git+file://` - for the Git source control manager when using repositories that need file:// URLs
       * `git+http://` - for the Git source control manager when using repositories that need http:// URLs
@@ -42,11 +42,11 @@ Dependencies are represented in LuaRocks through strings with a package name fol
       * `hg+http://` - for the Mercurial source control manager using repositories that need http:// URLs
       * `hg+https://` - for the Mercurial source control manager using repositories that need https:// URLs
       * `hg+ssh://` - for the Mercurial source control manager using repositories that need SSH login
-      * `http://` - for HTTP URLs
-      * `https://` - for HTTPS URLs
-      * `hg://` - for the Mercurial source control manager
+      * `http://` - for HTTP URLs to archive file
+      * `https://` - for HTTPS URLs to archive file
       * `sscm://` - for the SurroundSCM source control manager
       * `svn://` - for the Subversion source control manager
+      * **Important:** A source control manager URL cannot start with `http://` `https://`, `ftp://` or `file://`. For example, `https://github.com/keplerproject/wsapi.git` is incorrect, even though it works perfectly fine with `git clone`. The correct one is `git://github.com/keplerproject/wsapi.git`. Also note that only for GitHub URLs `git://` is being treated the same as `git+https://`. This is due to [GitHub's increased security](https://github.blog/security/application-security/improving-git-protocol-security-github/) and preserving backwards compatibility.
    * **source.md5** (string) - the MD5 sum for the source archive. Example: "9ca22fd9f9413b54802d3d40b38c4e5c"
    * **source.file** (string) - the filename of the source archive. Can be omitted if it can be inferred from the `source.url` field. Example: "luasocket-2.0.1.tar.gz"
    * **source.dir** (string) - the name of the directory created when the source archive is unpacked. Can be omitted if it can be inferred from the `source.file` field. Example: "luasocket-2.0.1"
