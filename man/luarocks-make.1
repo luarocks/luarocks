@@ -1,0 +1,125 @@
+.Dd $Mdocdate: January 11 2023 $
+.Dt LUAROCKS-MAKE 1
+.Os
+.Sh NAME
+.Nm luarocks-make
+.Nd build a rock in the current directory
+
+.Sh SYNOPSIS
+.Nm luarocks make
+.Bk -words
+.Op Fl h
+.Op Fl -no-install
+.Op Fl -no-doc
+.Op Fl -pack-binary-rock
+.Op Fl -keep
+.Op Fl -force
+.Op Fl -force-fast
+.Op Fl -verify
+.Op Fl -sign
+.Op Fl -check-lua-versions
+.Op Fl -pin
+.Op Fl -no-manifest
+.Op Fl -only-deps
+.Op Fl -deps-mode Ar mode
+.Op rockspec
+.Ek
+
+.Sh DESCRIPTION
+.Nm luarocks make
+builds sources in the current directory. Unlike
+.Sy luarocks build
+however, it does not fetch sources, but assumes everything is available in the current directory. Once building is finished,
+.Nm luarocks make
+will install the rock, unless the
+.Fl -no-install
+flag is given.
+.Pp
+If no
+.Ar rockspec
+argument is given, it looks for a rockspec in the current directory and in subdirectories
+.Sq rockspec/
+and
+.Sq rockspecs/ ,
+picking the rockspec with the newest version or without a version name. If rockspecs for different rocks are found or there are several rockspecs without a version number, you must specify
+.Ar rockspec
+through the command-line.
+.Pp
+This command is useful as a tool for debugging rockspecs. To install rocks, you'll normally want to use the
+.Sy luarocks install
+and
+.Sy luarocks build
+commands. See their manuals for details.
+.Pp
+If the current directory contains a luarocks.lock file, it is used as the authoritative source for exact version of dependencies. The
+.Fl -pin
+flag overrides and recreates this file scanning dependency based on ranges.
+.Pp
+The options are as follows:
+.Bl -tag -width keyword
+.It Fl h
+Show a help message and exit.
+.It Fl -no-install
+Build the rock without installing it.
+.It Fl -no-doc
+Install the rock without its documentation.
+.It Fl -pack-binary-rock
+Do not install
+.Ar rock .
+Instead, produce a .rock file with the contents of compilation in the current directory.
+.It Fl -keep
+Do not remove previously installed versions of the rock after building a new one. This behavior can be made permanent by setting keep_other_versions=true in the configuration file.
+.It Fl -force
+If --keep is not specified, force removal of previously installed versions even if it would break dependencies.
+.It Fl -force-fast
+Similar to --force, but performs a forced removal without reporting dependency issues.
+.It Fl -verify
+Verify signature of the rockspec or src.rock being built. If the rockspec or src.rock is being downloaded,
+.Sy luarocks
+will attempt to download the signature as well. Otherwise, the signature file should be already available locally in the same directory. You need the signer’s public key in your local keyring for this option to work properly.
+.It Fl -sign
+Produce a signature file for the generated .rock file when used with
+.Fl -pack-binary-rock .
+.It Fl -check-lua-versions
+If the rock can't be found, check the repository and report if it is available for another Lua version.
+.It Fl -pin
+Create a luarocks.lock file listing the exact versions of each dependency found for this rock (recursively), and store it in the rock's directory. Ignores any existing luarocks.lock file in the rock's sources.
+.It Fl -no-manifest
+Skip creating/updating the manifest.
+.It Fl -only-deps , Fl -deps-only
+Install only the dependencies of the rock.
+.It Fl -deps-mode Ar mode
+Specify how to handle dependencies. Four modes are supported:
+.Pp
+.Bl -bullet
+.It
+.Sy all :
+use all trees from the rocks_trees list for finding dependencies
+.It
+.Sy one :
+use only the current tree (possibly set with --tree)
+.It
+.Sy order :
+use trees based on order (use the current tree and all trees below it on the rocks_trees list)
+.It
+.Sy none :
+ignore dependencies altogether.
+.El
+.Pp
+The default mode may be set with the deps_mode entry in the configuration file. The current default is
+.Ar one .
+Run
+.Sy luarocks
+with no arguments to see your
+list of rocks trees.
+.El
+
+.Sh EXAMPLES
+.Pp
+Search for a rockspec and build it without installing it:
+.Pp
+.Dl $ luarocks make --no-install
+.Pp
+
+.Sh SEE ALSO
+.Xr luarocks-build 1
