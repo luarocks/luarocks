@@ -332,7 +332,7 @@ jobs:
         if: ${{ matrix.COMPILER == 'vs' && steps.restore-zlib-tarball.outputs.cache-hit != 'true' }}
         run: |
           curl -o "${{ github.workspace }}\zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}.tar.gz" ^
-              "https://zlib.net/zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}.tar.gz"
+              "https://zlib.net/fossils/zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}.tar.gz"
 
       - name: Save zlib tarball
         if: ${{ matrix.COMPILER == 'vs' && steps.restore-zlib-tarball.outputs.cache-hit != 'true' }}
