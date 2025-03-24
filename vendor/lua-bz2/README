@@ -1,0 +1,27 @@
+A Lua binding to Julian Seward's libbzip2.
+
+Current  maintainer: harningt@gmail.com
+Previous maintainer: evan@yelp.com
+
+This software is released under a BSD-style license (to be exact, the ISC
+license). The full license can be found in the LICENSE file included with this
+source code.
+
+Requirements:
+ * libbzip2
+ * Lua >= 5.1
+
+Tested Operating Systems:
+ * Mac OSX 10.5
+ * Linux
+   * Ubuntu
+   * Gentoo
+
+Patches to make this work fully on Windows and other OSes are welcome.
+
+More information about Lua:   http://www.lua.org/
+More information about bzip2: http://www.bzip.org/
+
+Current Repository Details
+     Project : https://github.com/harningt/lua-bz2/tree
+  Public Git : git://github.com/harningt/lua-bz2.git
