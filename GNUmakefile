@@ -2,6 +2,9 @@ MAKEFLAGS += --jobs=1
 
 -include config.unix
 
+#Lua version detection
+LUA_VERSION ?= $(shell $(if $(LUA),$(LUA),lua) -e "print((_VERSION or ''):match('Lua (%d+%.%d+)') or '5.1')")
+
 datarootdir = $(prefix)/share
 bindir = $(prefix)/bin
 INSTALL = install
