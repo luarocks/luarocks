@@ -145,13 +145,14 @@ function unix.is_actual_binary(filename)
    if not file then
       return true
    end
-   local first = file:read(2)
+   local first = file:read()
    file:close()
    if not first then
       util.warning("could not read "..filename)
       return true
    end
-   return first ~= "#!"
+   -- only create wrapper for lua scripts with `#!/usr/bin/env lua` or `#!/usr/bin/lua`
+   return first:match('^#!.*[ /]lua.*') == first
 end
 
 function unix.copy_binary(filename, dest)
