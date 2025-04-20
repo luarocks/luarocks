@@ -12,7 +12,6 @@ on:
       - "docs"
       - "**/*.md"
   workflow_dispatch:
-    branches: '*'
 
 jobs:
   ##############################################################################
@@ -125,7 +124,7 @@ jobs:
 
   ##############################################################################
   WindowsTest:
-    runs-on: "windows-latest"
+    runs-on: ${{ matrix.OS }}
     defaults:
       run:
         shell: cmd
@@ -145,6 +144,7 @@ jobs:
             EXCLUDE: "integration,unit"
             TESTTYPE: ""
             ARCH: x64
+            OS: "windows-latest"
           # Lua 5.4 tests
           - LUAV: "5.4"
             LUAT: "lua"
@@ -153,6 +153,7 @@ jobs:
             EXCLUDE: "integration,quick"
             TESTTYPE: "unit"
             ARCH: x64
+            OS: "windows-latest"
           - LUAV: "5.4"
             LUAT: "lua"
             COMPILER: "vs"
@@ -160,6 +161,7 @@ jobs:
             EXCLUDE: "unit,quick"
             TESTTYPE: ""
             ARCH: x64
+            OS: "windows-latest"
           - LUAV: "5.4"
             LUAT: "lua"
             COMPILER: "vs"
@@ -167,6 +169,7 @@ jobs:
             EXCLUDE: ""
             TESTTYPE: ""
             ARCH: x64
+            OS: "windows-latest"
           # LuaJIT 2.1 tests
           - LUAV: "2.1"
             LUAT: "luajit"
@@ -175,6 +178,7 @@ jobs:
             EXCLUDE: "integration,quick"
             TESTTYPE: "unit"
             ARCH: x64
+            OS: "windows-latest"
           - LUAV: "2.1"
             LUAT: "luajit"
             COMPILER: "vs"
@@ -182,6 +186,7 @@ jobs:
             EXCLUDE: "unit,quick"
             TESTTYPE: ""
             ARCH: x64
+            OS: "windows-latest"
           - LUAV: "2.1"
             LUAT: "luajit"
             COMPILER: "vs"
@@ -189,6 +194,7 @@ jobs:
             EXCLUDE: ""
             TESTTYPE: ""
             ARCH: x64
+            OS: "windows-latest"
 
           #
           # Visual Studio x86
@@ -202,6 +208,7 @@ jobs:
             EXCLUDE: "integration,unit"
             TESTTYPE: ""
             ARCH: x86
+            OS: "windows-latest"
           # Lua 5.4 tests
           - LUAV: "5.4"
             LUAT: "lua"
@@ -210,6 +217,7 @@ jobs:
             EXCLUDE: "integration,quick"
             TESTTYPE: "unit"
             ARCH: x86
+            OS: "windows-latest"
           - LUAV: "5.4"
             LUAT: "lua"
             COMPILER: "vs"
@@ -217,6 +225,7 @@ jobs:
             EXCLUDE: "unit,quick"
             TESTTYPE: ""
             ARCH: x86
+            OS: "windows-latest"
           - LUAV: "5.4"
             LUAT: "lua"
             COMPILER: "vs"
@@ -224,6 +233,7 @@ jobs:
             EXCLUDE: ""
             TESTTYPE: ""
             ARCH: x86
+            OS: "windows-latest"
           # LuaJIT 2.1 tests
           - LUAV: "2.1"
             LUAT: "luajit"
@@ -232,6 +242,7 @@ jobs:
             EXCLUDE: "integration,quick"
             TESTTYPE: "unit"
             ARCH: x86
+            OS: "windows-latest"
           - LUAV: "2.1"
             LUAT: "luajit"
             COMPILER: "vs"
@@ -239,6 +250,7 @@ jobs:
             EXCLUDE: "unit,quick"
             TESTTYPE: ""
             ARCH: x86
+            OS: "windows-latest"
           - LUAV: "2.1"
             LUAT: "luajit"
             COMPILER: "vs"
@@ -246,6 +258,40 @@ jobs:
             EXCLUDE: ""
             TESTTYPE: ""
             ARCH: x86
+            OS: "windows-latest"
+
+          #
+          # Visual Studio arm64
+          #
+
+          # Note: at the moment, only PUC Rio Lua
+          #       is tested on Windows arm64
+
+          # Lua 5.4 tests
+          - LUAV: "5.4"
+            LUAT: "lua"
+            COMPILER: "vs"
+            FILES: ""
+            EXCLUDE: "integration,quick"
+            TESTTYPE: "unit"
+            ARCH: arm64
+            OS: "windows-11-arm"
+          - LUAV: "5.4"
+            LUAT: "lua"
+            COMPILER: "vs"
+            FILES: ""
+            EXCLUDE: "unit,quick"
+            TESTTYPE: ""
+            ARCH: arm64
+            OS: "windows-11-arm"
+          - LUAV: "5.4"
+            LUAT: "lua"
+            COMPILER: "vs"
+            FILES: "spec//build_spec.lua"
+            EXCLUDE: ""
+            TESTTYPE: ""
+            ARCH: arm64
+            OS: "windows-11-arm"
 
           #
           # MinGW-w64 with Universal C Run Time
@@ -259,6 +305,7 @@ jobs:
             FILES: ""
             EXCLUDE: "integration,unit"
             TESTTYPE: ""
+            OS: "windows-latest"
           # Lua 5.4 tests
           - LUAV: "5.4"
             LUAT: "lua"
@@ -266,18 +313,21 @@ jobs:
             FILES: ""
             EXCLUDE: "integration,quick"
             TESTTYPE: "unit"
+            OS: "windows-latest"
           - LUAV: "5.4"
             LUAT: "lua"
             COMPILER: "mingw"
             FILES: ""
             EXCLUDE: "unit,quick"
             TESTTYPE: ""
+            OS: "windows-latest"
           - LUAV: "5.4"
             LUAT: "lua"
             COMPILER: "mingw"
             FILES: "spec//build_spec.lua"
             EXCLUDE: ""
             TESTTYPE: ""
+            OS: "windows-latest"
           # LuaJIT 2.1 tests
           - LUAV: "2.1"
             LUAT: "luajit"
@@ -285,23 +335,26 @@ jobs:
             FILES: ""
             EXCLUDE: "integration,quick"
             TESTTYPE: "unit"
+            OS: "windows-latest"
           - LUAV: "2.1"
             LUAT: "luajit"
             COMPILER: "mingw"
             FILES: ""
             EXCLUDE: "unit,quick"
             TESTTYPE: ""
+            OS: "windows-latest"
           - LUAV: "2.1"
             LUAT: "luajit"
             COMPILER: "mingw"
             FILES: "spec//build_spec.lua"
             EXCLUDE: ""
             TESTTYPE: ""
+            OS: "windows-latest"
     env:
       # The following env variables
       # only applies to Visual Studio
       LUAROCKS_DEPS_DIR: c:\external
-      LUAROCKS_DEPS_OPENSSL_VER: "3.4.1"
+      LUAROCKS_DEPS_OPENSSL_VER: "3.5.0"
       LUAROCKS_DEPS_ZLIB_VER: "1.3.1"
       # The following env variable
       # applies to both Visual Studio and MinGW-w64
@@ -451,7 +504,14 @@ jobs:
         run: |
           $installerName = "${{ github.workspace }}\build\openssl-installer-${{ env.LUAROCKS_DEPS_OPENSSL_VER }}-${{ matrix.ARCH }}.exe";
 
-          $arch = 'INTEL';
+          if ("${{ matrix.ARCH }}" -eq "arm64")
+          {
+            $arch = 'ARM';
+          }
+          else
+          {
+            $arch = 'INTEL';
+          }
 
           if ("${{ matrix.ARCH }}" -eq "x86")
           {
