@@ -373,6 +373,52 @@ describe("LuaRocks build #integration", function()
       end)
    end)
 
+   describe("rockspec format 3.1", function()
+      it("version of Lua is not provided for old format", function()
+         test_env.run_in_tmp(function(tmpdir)
+            write_file("verify_argument.lua", string.format("assert(arg[1] == %q)", test_env.lua_version))
+            write_file("uses_luaversion_variable-3.1-11.rockspec", [[
+               package = "uses_luaversion_variable"
+               version = "3.1-11"
+               source = {
+                  url = "file://]] .. tmpdir:gsub("\\", "/") .. [[/verify_argument.lua"
+               }
+               dependencies = {
+                  "lua >= 5.1"
+               }
+               build = {
+                  type = "command",
+                  build_command = "$(LUA) verify_argument.lua $(LUA_VERSION)",
+               }
+            ]])
+            assert.is_false(run.luarocks_bool("build uses_luaversion_variable-3.1-11.rockspec"))
+         end, finally)
+      end)
+
+      it("version of Lua is provided as variable", function()
+         test_env.run_in_tmp(function(tmpdir)
+            write_file("verify_argument.lua", string.format("assert(arg[1] == %q)", test_env.lua_version))
+            write_file("uses_luaversion_variable-3.1-11.rockspec", [[
+               rockspec_format = "3.1"
+               package = "uses_luaversion_variable"
+               version = "3.1-11"
+               source = {
+                  url = "file://]] .. tmpdir:gsub("\\", "/") .. [[/verify_argument.lua"
+               }
+               dependencies = {
+                  "lua >= 5.1"
+               }
+               build = {
+                  type = "command",
+                  build_command = "$(LUA) verify_argument.lua $(LUA_VERSION)",
+               }
+            ]])
+            assert.is_truthy(run.luarocks_bool("build uses_luaversion_variable-3.1-11.rockspec"))
+            assert.is.truthy(run.luarocks("show uses_luaversion_variable"))
+         end, finally)
+      end)
+   end)
+
    describe("#mock external dependencies", function()
       lazy_setup(function()
          test_env.setup_specs(nil, "mock")

@@ -11,7 +11,7 @@ local type_check = require("luarocks.type_check")
 
 -- local type TableSchema = type_check.TableSchema
 
-type_rockspec.rockspec_format = "3.0"
+type_rockspec.rockspec_format = "3.1"
 
 -- Syntax for type-checking tables:
 --
@@ -173,7 +173,10 @@ local rockspec_formats, versions = type_check.declare_schemas({
             _more = true,
          },
       }
-   }
+   },
+
+   ["3.1"] = {},
+
 })
 
 -- type_rockspec.order = {"rockspec_format", "package", "version",
