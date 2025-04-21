@@ -21,6 +21,7 @@ For building:
 * `LUA_INCDIR` - where to find the Lua headers
 * `LUALIB` - the name of the Lua library. This is not available nor needed on all platforms.
 * `LUA` - the name of the Lua interpreter
+* `LUA_VERSION` - the version of Lua
 
 For installing:
 

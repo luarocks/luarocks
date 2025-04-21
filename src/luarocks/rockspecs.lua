@@ -83,6 +83,9 @@ local function configure_paths(rockspec)
    vars.CONFDIR = path.conf_dir(name, version)
    vars.BINDIR = path.bin_dir(name, version)
    vars.DOCDIR = path.doc_dir(name, version)
+   if rockspec:format_is_at_least("3.1") then
+      vars.LUA_VERSION = cfg.lua_version
+   end
    rockspec.variables = vars
 end
 
