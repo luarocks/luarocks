@@ -27,11 +27,6 @@ function cmake.run(rockspec: Rockspec, no_install: boolean): boolean, string, st
    local build = rockspec.build as cmake.CMakeBuild
    local variables = build.variables or {}
 
-   -- Pass Env variables
-   variables.CMAKE_MODULE_PATH=os.getenv("CMAKE_MODULE_PATH")
-   variables.CMAKE_LIBRARY_PATH=os.getenv("CMAKE_LIBRARY_PATH")
-   variables.CMAKE_INCLUDE_PATH=os.getenv("CMAKE_INCLUDE_PATH")
-
    util.variable_substitutions(variables, rockspec.variables)
 
    local ok, err_msg = fs.is_tool_available(rockspec.variables.CMAKE, "CMake")
