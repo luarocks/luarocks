@@ -16,18 +16,18 @@ For building:
 
 * `CFLAGS` - flags for the C compiler
 * `LIBFLAG` - the flags needed for the linker to create shared libraries
-* `LUA_LIBDIR` - where to find the lua libraries
-* `LUA_BINDIR` - where to find the lua binary
-* `LUA_INCDIR` - where to find the lua headers
-* `LUALIB` - the name of the lua library. This is not available nor needed on all platforms.
-* `LUA` - the name of the lua interpreter
+* `LUA_LIBDIR` - where to find the Lua libraries
+* `LUA_BINDIR` - where to find the Lua binary
+* `LUA_INCDIR` - where to find the Lua headers
+* `LUALIB` - the name of the Lua library. This is not available nor needed on all platforms.
+* `LUA` - the name of the Lua interpreter
 
 For installing:
 
 * `PREFIX` - basic installation prefix for the module
 * `BINDIR` - where to put user callable programs or scripts
-* `LIBDIR` - where to put the shared libraries
-* `LUADIR` - where to put the lua files
+* `LIBDIR` - where to put the shared libraries implementing modules
+* `LUADIR` - where to put the Lua scripts implementing modules
 * `CONFDIR` - where to put your modules configuration
 
 Most of these variables point immediately where you'd expect them to, but
