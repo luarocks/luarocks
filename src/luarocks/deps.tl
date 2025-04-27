@@ -329,9 +329,12 @@ function deps.fulfill_dependencies(rockspec: Rockspec, depskey: DepsKey, deps_mo
       util.printout(("%s %s depends on %s (%s)"):format(
          name, version, tostring(depq), rock_status(depq, get_versions)))
 
-      local okfulfill, found_or_err, _ = deps.fulfill_dependency(depq, deps_mode, rocks_provided, verify, depskey)
+      local okfulfill, version_or_err, tree = deps.fulfill_dependency(depq, deps_mode, rocks_provided, verify, depskey)
       if okfulfill then
-         deplocks.add(depskey, depq.name, found_or_err)
+         deplocks.add(depskey, depq.name, version_or_err)
+         if tree and rockspec:format_is_at_least("3.1") then
+            rockspec.variables[depq.name:upper() .. "_ROCKDIR"] = path.install_dir(depq.name, version_or_err, tree)
+         end
       else
          if depq.constraints and depq.constraints[1] and depq.constraints[1].no_upgrade then
             util.printerr("This version of "..name.." is designed for use with")
@@ -341,7 +344,7 @@ function deps.fulfill_dependencies(rockspec: Rockspec, depskey: DepsKey, deps_mo
             util.printerr("or look for a suitable version of "..name.." with")
             util.printerr("   luarocks search "..name)
          end
-         return nil, found_or_err
+         return nil, version_or_err
       end
    end
 

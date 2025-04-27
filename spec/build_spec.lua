@@ -417,6 +417,55 @@ describe("LuaRocks build #integration", function()
             assert.is.truthy(run.luarocks("show uses_luaversion_variable"))
          end, finally)
       end)
+
+
+      it("dependency directory is not provided for old format", function()
+         test_env.run_in_tmp(function(tmpdir)
+            local rocks_tree = run.luarocks("config variables.ROCKS_TREE")
+            local rocks_path = table.concat({rocks_tree, "a_rock", "1.0-1"}, package.config:sub(1, 1))
+            write_file("verify_argument.lua", string.format("assert(arg[1] == %q)", rocks_path))
+            write_file("uses_rockdir_variable-3.1-11.rockspec", [[
+               package = "uses_rockdir_variable"
+               version = "3.1-11"
+               source = {
+                  url = "file://]] .. tmpdir:gsub("\\", "/") .. [[/verify_argument.lua"
+               }
+               dependencies = {
+                  "a_rock 1.0"
+               }
+               build = {
+                  type = "command",
+                  build_command = "$(LUA) verify_argument.lua $(A_ROCK_ROCKDIR)",
+               }
+            ]])
+            assert.is_false(run.luarocks_bool("build uses_rockdir_variable-3.1-11.rockspec"))
+         end, finally)
+      end)
+
+      it("dependency directory is provided as variable", function()
+         test_env.run_in_tmp(function(tmpdir)
+            local rocks_tree = run.luarocks("config variables.ROCKS_TREE")
+            local rocks_path = table.concat({rocks_tree, "a_rock", "1.0-1"}, package.config:sub(1, 1))
+            write_file("verify_argument.lua", string.format("assert(arg[1] == %q)", rocks_path))
+            write_file("uses_rockdir_variable-3.1-11.rockspec", [[
+               rockspec_format = "3.1"
+               package = "uses_rockdir_variable"
+               version = "3.1-11"
+               source = {
+                  url = "file://]] .. tmpdir:gsub("\\", "/") .. [[/verify_argument.lua"
+               }
+               dependencies = {
+                  "a_rock 1.0"
+               }
+               build = {
+                  type = "command",
+                  build_command = "$(LUA) verify_argument.lua $(A_ROCK_ROCKDIR)",
+               }
+            ]])
+            assert.is_truthy(run.luarocks_bool("build uses_rockdir_variable-3.1-11.rockspec"))
+            assert.is.truthy(run.luarocks("show uses_rockdir_variable"))
+         end, finally)
+      end)
    end)
 
    describe("#mock external dependencies", function()
