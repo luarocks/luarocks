@@ -148,6 +148,14 @@ and `5.3`, but not yet-to-be-released `5.4`. There are a few other operators
 for specifying version constraints, see
 [Rockspec format](rockspec_format.md#dependency-information).
 
+Rockspecs from [`rockspec_format = "3.1"`](rockspec_format.md#package-metadata)),
+have access to special variables with the path of the installed rocks of its
+dependencies. See the [section below](#including-documentation-and-other-files)
+for information on how rocks can include files in their installation. Each
+variable is the name of the dependency followed by the suffix `_ROCKDIR`. For
+the example above, variable `LUAKNIFE_ROCKDIR` will be provided with the path of
+the installed rock.
+
 #### C modules linking to external libraries
 
 *If your code does not use third-party libraries, you may skip this subsection.*
