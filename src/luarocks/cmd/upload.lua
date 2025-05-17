@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local string = _tl_compat and _tl_compat.string or string
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local math = _tl_compat and _tl_compat.math or math; local string = _tl_compat and _tl_compat.string or string
 local upload = { Response = { version = {} } }
 
 
@@ -132,7 +132,8 @@ function upload.command(args)
          return nil, "Invalid response from server."
       end
       util.printout(("Sending " .. tostring(rock_fname) .. " ..."))
-      res, err = api:method("upload_rock/" .. ("%d"):format(res.version.id), nil, {
+      local id = math.tointeger(res.version.id)
+      res, err = api:method("upload_rock/" .. ("%d"):format(id), nil, {
          rock_file = multipart.new_file(rock_fname),
          rock_sig = rock_sigfname and multipart.new_file(rock_sigfname),
       })

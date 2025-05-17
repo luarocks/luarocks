@@ -114,7 +114,7 @@ local function file_lines(f: FILE): function(): string
   local buffer = ""
   local pos_beg = 1
   return function(): string
-    local pos, chars: string, string
+    local pos, chars: integer, string
     while 1 do
       pos, chars = buffer:match('()([\r\n].)', pos_beg)
       if pos or not f then
@@ -129,14 +129,13 @@ local function file_lines(f: FILE): function(): string
         end
       end
     end
-    local posi = math.tointeger(pos)
-    if not posi then
-      posi = #buffer
+    if not pos then
+      pos = #buffer
     elseif chars == '\r\n' then
-      posi = posi + 1
+      pos = pos + 1
     end
-    local line = buffer:sub(pos_beg, posi)
-    pos_beg = posi + 1
+    local line = buffer:sub(pos_beg, pos)
+    pos_beg = pos + 1
     if #line > 0 then
       return line
     end

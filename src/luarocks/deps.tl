@@ -201,7 +201,7 @@ function deps.report_missing_dependencies(name: string, version: string, depende
             first_missing_dep = false
          end
 
-         util.printout(("   %s (%s)"):format(tostring(depq), rock_status(depq, get_versions)))
+         util.printout(("   %s (%s)"):format(tostring(depq), (rock_status(depq, get_versions))))
       end
    end
 end
@@ -301,7 +301,7 @@ function deps.fulfill_dependencies(rockspec: Rockspec, depskey: DepsKey, deps_mo
          local depq = queries.new(dname, dnamespace, dversion)
 
          util.printout(("%s %s is pinned to %s (%s)"):format(
-            name, version, tostring(depq), rock_status(depq, get_versions)))
+            name, version, tostring(depq), (rock_status(depq, get_versions))))
 
          local okfullfill, errfullfill = deps.fulfill_dependency(depq, "none", rocks_provided, verify, depskey)
          if not okfullfill then
@@ -327,7 +327,7 @@ function deps.fulfill_dependencies(rockspec: Rockspec, depskey: DepsKey, deps_mo
    for _, depq in ipairs((rockspec as {string: Dependencies})[depskey].queries) do
 
       util.printout(("%s %s depends on %s (%s)"):format(
-         name, version, tostring(depq), rock_status(depq, get_versions)))
+         name, version, tostring(depq), (rock_status(depq, get_versions))))
 
       local okfulfill, found_or_err, _ = deps.fulfill_dependency(depq, deps_mode, rocks_provided, verify, depskey)
       if okfulfill then
@@ -703,7 +703,7 @@ end
 
 local function lua_h_exists(d: string, luaver: string): boolean, string, string, integer
    local major, minor = luaver:match("(%d+)%.(%d+)")
-   local luanum = ("%s%02d"):format(major, tonumber(minor))
+   local luanum = ("%s%02d"):format(major, math.tointeger(minor))
 
    local lua_h = dir.path(d, "lua.h")
    local fd = io.open(lua_h)
@@ -749,7 +749,7 @@ local function find_lua_incdir(prefix: string, luaver: string, luajitver: string
 end
 
 function deps.check_lua_incdir(vars: {string: string}): boolean, string, string
-   if vars.LUA_INCDIR_OK == "ok" 
+   if vars.LUA_INCDIR_OK == "ok"
       then return true
    end
 
@@ -777,7 +777,7 @@ function deps.check_lua_incdir(vars: {string: string}): boolean, string, string
 end
 
 function deps.check_lua_libdir(vars: {string: string}): boolean, string, string, {string : {string}}
-   if vars.LUA_LIBDIR_OK == "ok" 
+   if vars.LUA_LIBDIR_OK == "ok"
       then return true
    end
 
@@ -814,7 +814,7 @@ function deps.check_lua_libdir(vars: {string: string}): boolean, string, string,
             -- if filename isn't versioned, check file contents
             local txt = fd:read("*a")
             ok = txt:find("Lua " .. cfg.lua_version, 1, true)
-                 or txt:find("lua" .. (cfg.lua_version:gsub("%.", "")), 1, true) 
+                 or txt:find("lua" .. (cfg.lua_version:gsub("%.", "")), 1, true)
                  and true
             if not ok then
                err = "Lua library at " .. filename .. " does not match Lua version " .. cfg.lua_version .. ". You can use `luarocks config variables.LUA_LIBDIR <path>` to set the correct location."
