@@ -129,14 +129,13 @@ local function file_lines(f)
             end
          end
       end
-      local posi = math.tointeger(pos)
-      if not posi then
-         posi = #buffer
+      if not pos then
+         pos = #buffer
       elseif chars == '\r\n' then
-         posi = posi + 1
+         pos = pos + 1
       end
-      local line = buffer:sub(pos_beg, posi)
-      pos_beg = posi + 1
+      local line = buffer:sub(pos_beg, pos)
+      pos_beg = pos + 1
       if #line > 0 then
          return line
       end

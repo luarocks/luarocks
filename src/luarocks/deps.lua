@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local type = type
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local math = _tl_compat and _tl_compat.math or math; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local type = type
 
 local deps = {}
 
@@ -201,7 +201,7 @@ function deps.report_missing_dependencies(name, version, dependencies, deps_mode
             first_missing_dep = false
          end
 
-         util.printout(("   %s (%s)"):format(tostring(depq), rock_status(depq, get_versions)))
+         util.printout(("   %s (%s)"):format(tostring(depq), (rock_status(depq, get_versions))))
       end
    end
 end
@@ -301,7 +301,7 @@ function deps.fulfill_dependencies(rockspec, depskey, deps_mode, verify, deplock
          local depq = queries.new(dname, dnamespace, dversion)
 
          util.printout(("%s %s is pinned to %s (%s)"):format(
-         name, version, tostring(depq), rock_status(depq, get_versions)))
+         name, version, tostring(depq), (rock_status(depq, get_versions))))
 
          local okfullfill, errfullfill = deps.fulfill_dependency(depq, "none", rocks_provided, verify, depskey)
          if not okfullfill then
@@ -327,7 +327,7 @@ function deps.fulfill_dependencies(rockspec, depskey, deps_mode, verify, deplock
    for _, depq in ipairs((rockspec)[depskey].queries) do
 
       util.printout(("%s %s depends on %s (%s)"):format(
-      name, version, tostring(depq), rock_status(depq, get_versions)))
+      name, version, tostring(depq), (rock_status(depq, get_versions))))
 
       local okfulfill, found_or_err, _ = deps.fulfill_dependency(depq, deps_mode, rocks_provided, verify, depskey)
       if okfulfill then
@@ -703,7 +703,7 @@ end
 
 local function lua_h_exists(d, luaver)
    local major, minor = luaver:match("(%d+)%.(%d+)")
-   local luanum = ("%s%02d"):format(major, tonumber(minor))
+   local luanum = ("%s%02d"):format(major, math.tointeger(minor))
 
    local lua_h = dir.path(d, "lua.h")
    local fd = io.open(lua_h)

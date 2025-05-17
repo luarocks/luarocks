@@ -132,7 +132,8 @@ function upload.command(args: Args): boolean, string, string
          return nil, "Invalid response from server."
       end
       util.printout(("Sending " .. tostring(rock_fname) .. " ..."))
-      res, err = api:method("upload_rock/" .. ("%d"):format(res.version.id), nil, {
+      local id = math.tointeger(res.version.id)
+      res, err = api:method("upload_rock/" .. ("%d"):format(id), nil, {
          rock_file = multipart.new_file(rock_fname),
          rock_sig = rock_sigfname and multipart.new_file(rock_sigfname),
       }) as (Response, string)
