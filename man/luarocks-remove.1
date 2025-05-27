@@ -1,0 +1,71 @@
+.Dd $Mdocdate: January 11 2023 $
+.Dt LUAROCKS-REMOVE 1
+.Os
+.Sh NAME
+.Nm luarocks-remove
+.Nd uninstall a rock
+
+.Sh SYNOPSIS
+.Nm luarocks remove
+.Bk -words
+.Op Fl h
+.Op Fl -force
+.Op Fl -force-fast
+.Op Fl -deps-mode Ar mode
+.Ar rock
+.Op version
+.Ek
+
+.Sh DESCRIPTION
+.Nm luarocks remove
+removes the rock named
+.Ar rock ,
+and if specified, version number
+.Ar version .
+.Pp
+The options are as follows:
+.Bl -tag -width keyword
+.It Fl h
+Show a help message and exit.
+.It Fl -force
+Force removal even if it would break dependencies.
+.It Fl -force-fast
+Similar to --force, but don't report dependency issues.
+.It Fl -deps-mode Ar mode
+Specify how to handle dependencies. Four modes are supported:
+.Pp
+.Bl -bullet
+.It
+.Sy all :
+use all trees from the rocks_trees list for finding dependencies
+.It
+.Sy one :
+use only the current tree (possibly set with --tree)
+.It
+.Sy order :
+use trees based on order (use the current tree and all trees below it on the rocks_trees list)
+.It
+.Sy none :
+ignore dependencies altogether.
+.El
+.Pp
+The default mode may be set with the deps_mode entry in the configuration file. The current default is
+.Ar one .
+Run
+.Sy luarocks
+with no arguments to see your
+list of rocks trees.
+.It Fl -no-manifest
+Skip creating/updating the manifest.
+.It Fl -pin
+If the removed rock is a Lua module, create a luarocks.lock file listing the exact versions of each dependency found for this rock (recursively), and store it in the rock's directory. Ignores any existing luarocks.lock file in the rock's sources.
+.El
+
+.Sh EXAMPLES
+.Pp
+Remove the
+.Sq luafilesystem
+rock:
+.Pp
+.Dl # luarocks remove luafilesystem
+.Pp
