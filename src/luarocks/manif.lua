@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local type = type
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local type = type
 
 
 
@@ -98,11 +98,14 @@ function manif.load_manifest(repo_url, lua_version, versioned_only)
    end
 
    local filenames = {
-      "manifest-" .. lua_version .. ".json",
       "manifest-" .. lua_version .. ".zip",
       "manifest-" .. lua_version,
       not versioned_only and "manifest" or nil,
    }
+
+   if util.get_luajit_version() then
+      table.insert(filenames, 1, "manifest-" .. lua_version .. ".json")
+   end
 
    local protocol, repodir = dir.split_url(repo_url)
    local pathname, from_cache
