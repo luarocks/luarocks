@@ -15,7 +15,7 @@ local record dkjson
    end
    encode: function({string:any}, ?JsonState): string
 
-   decode: function(string, ?number, ?any, ?table): {string:any}, integer, string|nil
+   decode: function(string, ?number, ?any, ?table): {string:any}, integer, string
 
    null: table
 
