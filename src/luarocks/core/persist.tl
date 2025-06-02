@@ -2,6 +2,8 @@
 local record persist
 end
 
+local json = require("luarocks.vendor.dkjson")
+
 --------------------------------------------------------------------------------
 
 --- Load and run a Lua file in an environment.
@@ -65,6 +67,34 @@ function persist.load_into_table(filename: string, tbl?: {string:any}) : {string
       return nil, tostring(err), errcode 
    end
    return result, globals
+end
+
+--- Load a JSON file containing assignments, storing them in a table.
+-- The global environment is not propagated to the loaded file.
+-- @param filename string: the name of the file.
+-- @param tbl table or nil: if given, this table is used to store
+-- loaded values.
+-- @return (table, table) or (nil, string, string): a table with the file's assignments
+-- as fields and set of undefined globals accessed in file,
+-- or nil, an error message and an error code ("open"; couldn't open the file,
+-- "load"; compile-time error, or "run"; run-time error)
+-- in case of errors.
+function persist.load_json_into_table(filename: string) : {string: any}, {string: boolean} | string, string
+   local fd, open_err = io.open(filename)
+   if not fd then
+      return nil, open_err, "open"
+   end
+   local str, read_err = fd:read("*a")
+   fd:close()
+   if not str then
+      return nil, read_err, "open"
+   end
+   local manifest, _, err = json.decode(str)
+   if not manifest then
+      return nil, "Failed decode manifest: " .. err, "load"
+   end
+
+   return manifest, {}
 end
 
 return persist

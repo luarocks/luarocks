@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local table = _tl_compat and _tl_compat.table or table; local type = type
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local type = type
 
 local manif = {}
 
@@ -52,7 +52,14 @@ end
 
 
 function manif.manifest_loader(file, repo_url, lua_version)
-   local manifest, err, errcode = persist.load_into_table(file)
+   local manifest, err, errcode
+
+   if file:match(".*%.json$") then
+      manifest, err, errcode = persist.load_json_into_table(file)
+   else
+      manifest, err, errcode = persist.load_into_table(file)
+   end
+
    if not manifest and type(err) == "string" then
       return nil, "Failed loading manifest for " .. repo_url .. ": " .. err, errcode
    end

@@ -98,6 +98,7 @@ function manif.load_manifest(repo_url: string, lua_version?: string, versioned_o
    end
 
    local filenames = {
+      "manifest-" .. lua_version .. ".json",
       "manifest-"..lua_version..".zip",
       "manifest-"..lua_version,
       not versioned_only and "manifest" or nil,

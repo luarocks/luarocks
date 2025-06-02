@@ -2,6 +2,8 @@ local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 th
 local persist = {}
 
 
+local json = require("luarocks.vendor.dkjson")
+
 
 
 
@@ -65,6 +67,34 @@ function persist.load_into_table(filename, tbl)
       return nil, tostring(err), errcode
    end
    return result, globals
+end
+
+
+
+
+
+
+
+
+
+
+
+function persist.load_json_into_table(filename)
+   local fd, open_err = io.open(filename)
+   if not fd then
+      return nil, open_err, "open"
+   end
+   local str, read_err = fd:read("*a")
+   fd:close()
+   if not str then
+      return nil, read_err, "open"
+   end
+   local manifest, _, err = json.decode(str)
+   if not manifest then
+      return nil, "Failed decode manifest: " .. err, "load"
+   end
+
+   return manifest, {}
 end
 
 return persist
