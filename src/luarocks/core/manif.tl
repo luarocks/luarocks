@@ -52,7 +52,14 @@ end
 -- @return table or (nil, string, string): the manifest or nil,
 -- error message and error code ("open", "load", "run").
 function manif.manifest_loader(file: string, repo_url: string, lua_version: string): Manifest, string | {any: any}, string
-   local manifest, err, errcode = persist.load_into_table(file)
+   local manifest, err, errcode: {string: any}, {string: boolean} | string, string
+
+   if file:match(".*%.json$") then
+      manifest, err, errcode = persist.load_json_into_table(file)
+   else
+      manifest, err, errcode = persist.load_into_table(file)
+   end
+
    if not manifest and err is string then
       return nil, "Failed loading manifest for "..repo_url..": " .. err, errcode
    end

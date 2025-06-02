@@ -103,6 +103,10 @@ function manif.load_manifest(repo_url: string, lua_version?: string, versioned_o
       not versioned_only and "manifest" or nil,
    }
 
+   if util.get_luajit_version() then
+      table.insert(filenames, 1, "manifest-" .. lua_version .. ".json")
+   end
+
    local protocol, repodir = dir.split_url(repo_url)
    local pathname, from_cache: string, boolean
    if protocol == "file" then
