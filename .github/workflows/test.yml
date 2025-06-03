@@ -55,7 +55,24 @@ jobs:
       if: ${{ contains(matrix.os, 'ubuntu') }}
       run: sudo apt-get install libbz2-dev
 
+      # this temporary fix should be removed
+      # after the implementation of json manifest
+      # gets merged.
+    - name: Prep (luajit temporary fix)
+      if: ${{ startsWith(matrix.lua-version, 'luajit') }}
+      run: |
+        luarocks install compat53 --only-server https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/daab2726276e3282dc347b89a42a5107c3500567
+        luarocks install busted --only-server https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/daab2726276e3282dc347b89a42a5107c3500567
+        luarocks install cluacov --only-server https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/daab2726276e3282dc347b89a42a5107c3500567
+        luarocks install busted-htest --only-server https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/daab2726276e3282dc347b89a42a5107c3500567
+
     - name: Prep
+
+      # this 'if' clause is a temporary fix, and should be removed
+      # after the implementation of json manifest
+      # gets merged.
+      if: ${{ !startsWith(matrix.lua-version, 'luajit') }}
+
       run: |
         luarocks install compat53
         luarocks install busted
@@ -626,16 +643,68 @@ jobs:
             )
           )
 
+      #####################################################
+      #                                                   #
+      # Start of LuaJIT temporary fix to install packages #
+      #                                                   #
+      #####################################################
+
+      - name: Install compat53 (luajit temporary fix)
+        if: ${{ startsWith(matrix.LUAT, 'luajit') }}
+        run: luarocks install compat53 --only-server https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/daab2726276e3282dc347b89a42a5107c3500567
+
+      - name: Install busted (luajit temporary fix)
+        if: ${{ startsWith(matrix.LUAT, 'luajit') }}
+        run: IF NOT EXIST "${{ env.BUSTED_BAT }}" luarocks install busted --only-server https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/daab2726276e3282dc347b89a42a5107c3500567
+
+      - name: Install cluacov (luajit temporary fix)
+        if: ${{ startsWith(matrix.LUAT, 'luajit') }}
+        run: IF NOT EXIST "${{ env.LUACOV_BAT }}" luarocks install cluacov --only-server https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/daab2726276e3282dc347b89a42a5107c3500567
+
+      - name: Install busted-htest (luajit temporary fix)
+        if: ${{ startsWith(matrix.LUAT, 'luajit') }}
+        run: luarocks install busted-htest --only-server https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/daab2726276e3282dc347b89a42a5107c3500567
+
+      #####################################################
+      #                                                   #
+      # End of LuaJIT temporary fix to install packages   #
+      #                                                   #
+      #####################################################
+
       - name: Install compat53
+
+        # this 'if' clause is a temporary fix, and should be removed
+        # after the implementation of json manifest
+        # gets merged.
+        if: ${{ !startsWith(matrix.LUAT, 'luajit') }}
+
         run: luarocks install compat53
 
       - name: Install busted
+
+        # this 'if' clause is a temporary fix, and should be removed
+        # after the implementation of json manifest
+        # gets merged.
+        if: ${{ !startsWith(matrix.LUAT, 'luajit') }}
+
         run: IF NOT EXIST "${{ env.BUSTED_BAT }}" luarocks install busted
 
       - name: Install cluacov
+
+        # this 'if' clause is a temporary fix, and should be removed
+        # after the implementation of json manifest
+        # gets merged.
+        if: ${{ !startsWith(matrix.LUAT, 'luajit') }}
+
         run: IF NOT EXIST "${{ env.LUACOV_BAT }}" luarocks install cluacov
 
       - name: Install busted-htest
+
+        # this 'if' clause is a temporary fix, and should be removed
+        # after the implementation of json manifest
+        # gets merged.
+        if: ${{ !startsWith(matrix.LUAT, 'luajit') }}
+
         run: luarocks install busted-htest
 
       - name: Run test
