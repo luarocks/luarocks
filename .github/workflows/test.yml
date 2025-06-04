@@ -46,6 +46,8 @@ jobs:
         luaVersion: ${{ matrix.lua-version }}
 
     - uses: leafo/gh-actions-luarocks@v5
+      with:
+        luaRocksVersion: "3.11.2"
 
     - name: 'Setup macOS deps'
       if: ${{ contains(matrix.os, 'macos') }}
@@ -594,11 +596,11 @@ jobs:
           SET "CURRENT_LUA_BIN=%CURRENT_LUA_DIR%\bin"
           SET "CURRENT_LUA_INTERPRETER=%CURRENT_LUA_BIN%\lua.exe"
 
-          pip install hererocks && ^
+          pip install git+https://github.com/luarocks/hererocks && ^
           hererocks ^
             "%CURRENT_LUA_DIRNAME%" ^
             "--${{ matrix.LUAT }}" "${{ matrix.LUAV }}" ^
-            --luarocks latest ^
+            --luarocks "@418d2ab34891b130cc317df32f65f978640febcf" ^
             "--target=${{ matrix.COMPILER }}"
 
           IF %ERRORLEVEL% NEQ 0 (
