@@ -23,7 +23,7 @@ shift || {
    exit 1
 }
 
-if ! [ -d "$lua54dir" ]
+if ! [ -d "$lua54dir" -a -d "$lua54dir/lib" ]
 then
    echo "Second argument must be the Lua 5.4 prefix."
    exit 1
