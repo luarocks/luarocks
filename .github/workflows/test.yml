@@ -45,9 +45,9 @@ jobs:
       with:
         luaVersion: ${{ matrix.lua-version }}
 
-    - uses: leafo/gh-actions-luarocks@v5
+    - uses: luarocks/gh-actions-luarocks@master
       with:
-        luaRocksVersion: "3.11.2"
+        luaRocksVersion: "@418d2ab34891b130cc317df32f65f978640febcf"
 
     - name: 'Setup macOS deps'
       if: ${{ contains(matrix.os, 'macos') }}
