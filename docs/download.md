@@ -1,17 +1,11 @@
 # Download
 
-# Downloading 
+# Downloading
 
-Latest release: **LuaRocks 3.11.1** - '31/May/2024'
+* [Releases](https://luarocks.github.io/luarocks/releases/)
+* [Changelog](../CHANGELOG.md)
 
-* [Tarball for Unix](https://luarocks.org/releases/luarocks-3.11.1.tar.gz)
-* [Windows all-in-one executable (32-bit)](https://luarocks.org/releases/luarocks-3.11.1-windows-32.zip)
-* [Windows all-in-one executable (64-bit)](https://luarocks.org/releases/luarocks-3.11.1-windows-64.zip)
-* [other files](https://luarocks.github.io/luarocks/releases/)
-
-For release notes and older versions, see the [release history](release_history.md).
-
-# Installing 
+# Installing
 
 * [Installation instructions for Unix](installation_instructions_for_unix.md) (Linux, BSDs, etc.)
 * [Installation instructions for macOS](installation_instructions_for_macos.md)
@@ -25,7 +19,7 @@ package already includes them and a binary of Lua, as a convenience.
 Once LuaRocks is installed, make sure to read the
 [Documentation](index.md) for more information!
 
-# The bleeding edge 
+# The bleeding edge
 
 Development is done using Git. To get the latest development sources, run:
 

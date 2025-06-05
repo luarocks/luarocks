@@ -76,7 +76,7 @@
       * [luarocks-admin refresh cache](luarocks_admin_refresh_cache.md)
       * [luarocks-admin remove](luarocks_admin_remove.md)
 
-  * [Release history](release_history.md)
+  * [Release history](../CHANGELOG.md)
 
 * [Credits](credits.md)
 * [License](license.md)
