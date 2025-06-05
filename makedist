@@ -2,7 +2,7 @@
 
 if ! [ "$1" ]
 then
-   echo "usage: $0 <version> <lua54dir>"
+   echo "usage: $0 <version> <lua54dir> [branch] [binary] [sign]"
    exit 1
 fi
 
