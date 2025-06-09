@@ -42,6 +42,7 @@ local platform_order = {
    "cygwin",
    "msys",
    "haiku",
+   "serenity",
    -- Windows
    "windows",
    "win32",
@@ -163,6 +164,7 @@ local platform_sets = {
    netbsd = { unix = true, bsd = true, netbsd = true },
    haiku = { unix = true, haiku = true },
    linux = { unix = true, linux = true },
+   serenity = { unix = true, serenity = true },
    mingw = { windows = true, win32 = true, mingw32 = true, mingw = true },
    msys = { unix = true, cygwin = true, msys = true },
    msys2_mingw_w64 = { windows = true, win32 = true, mingw32 = true, mingw = true, msys = true, msys2_mingw_w64 = true },
@@ -555,6 +557,13 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
    elseif platforms.solaris then
       defaults.arch = "solaris-"..target_cpu
       defaults.variables.MAKE = "gmake"
+   end
+
+   if platforms.serenity then
+      defaults.arch = "serenity"..target_cpu
+      defaults.variables.UNZIP = "unzip"
+      defaults.variables.MKTEMP = "mktemp -p /"
+      defaults.web_browser = "br"
    end
 
    -- Expose some more values detected by LuaRocks for use by rockspec authors.
