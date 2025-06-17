@@ -21,7 +21,7 @@ local vers = require("luarocks.core.vers")
 
 --------------------------------------------------------------------------------
 
-local program_version = "3.12.0"
+local program_version = "3.12.1"
 
 local is_windows = package.config:sub(1,1) == "\\"
 
