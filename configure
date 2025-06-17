@@ -321,7 +321,7 @@ do
 done
 
 echo
-BLUE "Configuring LuaRocks version 3.12.0..."
+BLUE "Configuring LuaRocks version 3.12.1..."
 echo
 echo
 
