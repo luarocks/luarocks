@@ -24,6 +24,19 @@ local vendored_build_type_set = {
    ["none"] = true,
 }
 
+local rockspec_mt_funcs = {}
+
+local rockspec_mt = {}
+rockspec_mt.__index = rockspec_mt_funcs
+
+function rockspec_mt_funcs.type()
+   util.warning("The function rockspec.type() is no longer " ..
+   "necessary and is now deprecated. Please update your " ..
+   "plugin to remove calls to this function.")
+
+   return "rockspec"
+end
+
 
 
 
@@ -181,7 +194,8 @@ function rockspecs.from_persisted_table(filename, rockspec, globals, quick)
       configure_paths(rockspec)
    end
 
-   return rockspec
+
+   return setmetatable(rockspec, rockspec_mt)
 end
 
 return rockspecs

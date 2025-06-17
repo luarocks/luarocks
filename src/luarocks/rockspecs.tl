@@ -24,6 +24,19 @@ local vendored_build_type_set: {string: boolean} = {
    ["none"] = true,
 }
 
+local rockspec_mt_funcs = {}
+
+local rockspec_mt: metatable<Rockspec> = {}
+rockspec_mt.__index = rockspec_mt_funcs
+
+function rockspec_mt_funcs.type(): string
+   util.warning("The function rockspec.type() is no longer " ..
+      "necessary and is now deprecated. Please update your " ..
+      "plugin to remove calls to this function.")
+
+   return "rockspec"
+end
+
 --- Perform platform-specific overrides on a table.
 -- Overrides values of table with the contents of the appropriate
 -- subset of its "platforms" field. The "platforms" field should
@@ -181,7 +194,8 @@ function rockspecs.from_persisted_table(filename: string, rockspec: Rockspec, gl
       configure_paths(rockspec)
    end
 
-   return rockspec
+   -- TODO remove this on LuaRocks 4.0
+   return setmetatable(rockspec, rockspec_mt)
 end
 
 return rockspecs
