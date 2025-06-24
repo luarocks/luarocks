@@ -54,7 +54,7 @@ function fetch.fetch_caching(url, mirroring)
    local cachefile = dir.path(cache_dir, filename)
    local checkfile = cachefile .. ".check"
 
-   if (fs.file_age(checkfile) < 10 or
+   if (fs.exists(checkfile) and fs.file_age(checkfile) < 10 or
       cfg.aggressive_cache and (not name:match("^manifest"))) and fs.exists(cachefile) then
 
       return cachefile, nil, nil, true
@@ -75,6 +75,8 @@ function fetch.fetch_caching(url, mirroring)
       if not ok then
          return nil, "Failed creating temporary cache directory " .. cache_dir
       end
+      cachefile = dir.path(cache_dir, filename)
+      checkfile = cachefile .. ".check"
       lock = fs.lock_access(cache_dir)
    end
 
