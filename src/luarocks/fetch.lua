@@ -49,7 +49,10 @@ function fetch.fetch_caching(url, mirroring)
    local repo_url, filename = url:match("^(.*)/([^/]+)$")
    local name = repo_url:gsub("[/:]", "_")
    local cache_dir = dir.path(cfg.local_cache, name)
-   local ok = fs.make_dir(cache_dir)
+   local ok = fs.exists(cfg.local_cache)
+   if ok then
+      ok = fs.make_dir(cache_dir)
+   end
 
    local cachefile = dir.path(cache_dir, filename)
    local checkfile = cachefile .. ".check"
