@@ -49,12 +49,15 @@ function fetch.fetch_caching(url: string, mirroring?: string): string, string, s
    local repo_url, filename = url:match("^(.*)/([^/]+)$")
    local name = repo_url:gsub("[/:]","_")
    local cache_dir = dir.path(cfg.local_cache, name)
-   local ok = fs.make_dir(cache_dir)
+   local ok = fs.exists(cfg.local_cache)
+   if ok then
+      ok = fs.make_dir(cache_dir)
+   end
 
    local cachefile = dir.path(cache_dir, filename)
    local checkfile = cachefile .. ".check"
 
-   if (fs.file_age(checkfile) < 10 or
+   if (fs.exists(checkfile) and fs.file_age(checkfile) < 10 or
       cfg.aggressive_cache and (not name:match("^manifest"))) and fs.exists(cachefile)
    then
       return cachefile, nil, nil, true
@@ -75,6 +78,8 @@ function fetch.fetch_caching(url: string, mirroring?: string): string, string, s
       if not ok then
          return nil, "Failed creating temporary cache directory "..cache_dir
       end
+      cachefile = dir.path(cache_dir, filename)
+      checkfile = cachefile .. ".check"
       lock = fs.lock_access(cache_dir)
    end
 
