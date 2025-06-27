@@ -1,0 +1,107 @@
+name: PR on GH Actions
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+
+  SanitizeVersion:
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Extract version from the tag and set it as output
+        id: version
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ];
+          then
+            version=$(echo "${{ github.ref_name }}" | sed -e "s/v//g" | grep -oP '^(\d+\.\d+\.\d+)$')
+
+            if [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]];
+            then
+              echo "version=${version}" >> "$GITHUB_OUTPUT"
+            else
+              echo "version=none" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "version=none" >> "$GITHUB_OUTPUT"
+          fi
+
+  CreatePullRequest:
+    runs-on: ubuntu-latest
+    needs:
+      - SanitizeVersion
+    if: ${{ github.ref_type == 'tag' && needs.SanitizeVersion.outputs.version != 'none' }}
+
+    env:
+      TARGET_REPOSITORY: luarocks/gh-actions-luarocks
+      NEW_BRANCH: luarocks-${{ needs.SanitizeVersion.outputs.version }}
+      NEW_COMMIT_MSG: 'LuaRocks: update to ${{ needs.SanitizeVersion.outputs.version }}'
+      NEW_PR_TITLE: 'LuaRocks: update to ${{ needs.SanitizeVersion.outputs.version }}'
+
+      # comma (,) separated list
+      # of users to mention in the
+      # body of the Pull Request
+      USERS_TO_MENTION: hishamhm
+
+    steps:
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.TARGET_REPOSITORY }}
+          token: ${{ secrets.GH_ACTIONS_LUAROCKS_TOKEN }}
+          path: gh-actions-luarocks
+
+      - name: Create a new branch
+        working-directory: gh-actions-luarocks
+        run: git checkout -b ${{ env.NEW_BRANCH }}
+
+      - name: Set user name and email on commit
+        working-directory: gh-actions-luarocks
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Replace default version on action.yml
+        working-directory: gh-actions-luarocks
+        run: |
+          sed -e "s/default: \".*\"/default: \"${{ needs.SanitizeVersion.outputs.version }}\"/g" -i action.yml
+
+      - name: Stage changes
+        working-directory: gh-actions-luarocks
+        run: git add action.yml
+
+      - name: Commit changes
+        working-directory: gh-actions-luarocks
+        run: git commit "--message=${{ env.NEW_COMMIT_MSG }}"
+
+      - name: Print diff
+        working-directory: gh-actions-luarocks
+        run: git show
+
+      - name: Push changes
+        working-directory: gh-actions-luarocks
+        run: git push --set-upstream origin ${{ env.NEW_BRANCH }}
+
+      - name: Submit Pull Request
+        working-directory: gh-actions-luarocks
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_ACTIONS_LUAROCKS_TOKEN }}
+        run: |
+          PR_BODY=""
+
+          IFS=',' read -ra reviewers <<< "${{ env.USERS_TO_MENTION }}"
+          for i in "${reviewers[@]}"; do
+              PR_BODY+="CC @${i} "
+          done
+
+          gh pr create \
+            --repo "${{ env.TARGET_REPOSITORY }}" \
+            --head ${{ env.NEW_BRANCH }} \
+            --title "${{ env.NEW_PR_TITLE }}" \
+            --body "${PR_BODY}"
