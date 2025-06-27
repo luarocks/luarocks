@@ -486,6 +486,11 @@ local function main()
       "luafilesystem",
    }
 
+   print("CONFIG_FILE: " .. CONFIG_FILE)
+   print("----------------------------------------------------------------")
+   os.execute("cat " .. CONFIG_FILE)
+   print("----------------------------------------------------------------")
+
    fs.make_dir(LUA_MODULES)
    for _, name in ipairs(dependency_order) do
       local use = dependencies[name]
