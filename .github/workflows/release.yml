@@ -78,7 +78,7 @@ jobs:
 
     - name: install Linux binary build deps
       run: |
-        sudo apt install lua5.4 liblua5.4-dev
+        sudo apt install lua5.4 liblua5.4-dev libbz2-dev libssl-dev
 
     - name: build Linux binary
       run: |
