@@ -445,6 +445,11 @@ local function main()
 
    fs.make_dir(CONFIG_DIR)
 
+   local LUA_LIBDIR = LUA_DIR .. "/lib"
+   if not fs.exists(LUA_LIBDIR .. "/liblua.a") then
+      LUA_LIBDIR = nil
+   end
+
    persist.save_from_table(CONFIG_FILE, {
       lib_extension = "a",
       external_lib_extension = "a",
@@ -453,6 +458,7 @@ local function main()
          LD = fs.current_dir() .. "/binary/static-gcc",
          LIB_EXTENSION = "a",
          LUA_DIR = LUA_DIR,
+         LUA_LIBDIR = LUA_LIBDIR,
          LIBFLAG = "-static",
          PWD = "pwd",
          MKDIR = "mkdir",
