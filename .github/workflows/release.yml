@@ -1,0 +1,147 @@
+name: release
+
+on:
+  push:
+    tags:
+    - "v*"
+  pull_request:
+
+jobs:
+  release:
+    runs-on: "ubuntu-latest"
+
+    steps:
+    - uses: actions/checkout@master
+
+    - name: check repository state
+      run: |
+        tag="${{ github.ref_name }}"
+        version="${tag#v}"
+        xyversion="${version%.*}"
+        grep -q "LuaRocks version $version" "configure" || {
+           echo
+           echo "version in configure is incorrect. Please fix it."
+           exit 1
+        }
+        grep -q "program_version = \"$version\"" src/luarocks/core/cfg.lua || {
+           echo
+           echo "program_version in src/luarocks/core/cfg.lua is incorrect. Please fix it."
+           exit 1
+        }
+        grep -q "vars.VERSION = \"$xyversion\"" install.bat || {
+           echo
+           echo "vars.VERSION in install.bat is incorrect. Please fix it."
+           exit 1
+        }
+
+    - name: make Unix tarball
+      run: |
+        tag="${{ github.ref_name }}"
+        version="${tag#v}"
+        lrdir="luarocks-$version"
+        out="unix_tarball/$lrdir"
+        mkdir -p "$out"
+        git ls-files | while read i
+        do
+           if [ -f "$i" ]
+           then
+              dir=`dirname $i`
+              mkdir -p "$out/$dir"
+              cp "$i" "$out/$dir"
+           fi
+        done
+        cd "$out"
+        rm -rf makedist install.bat win32 .github .gitignore
+        cd ..
+        tar czvpf ../"$lrdir.tar.gz" "$lrdir"
+
+    - name: make Windows legacy zip
+      run: |
+        tag="${{ github.ref_name }}"
+        version="${tag#v}"
+        lrdir="luarocks-$version-win32"
+        out="windows_legacy/$lrdir"
+        mkdir -p "$out"
+        git ls-files | while read i
+        do
+           if [ -f "$i" ]
+           then
+              dir=`dirname $i`
+              mkdir -p "$out/$dir"
+              cp "$i" "$out/$dir"
+           fi
+        done
+        cd "$out"
+        rm -rf makedist Makefile GNUmakefile configure .github .gitignore test
+        cd ..
+        zip -r ../"$lrdir.zip" "$lrdir"
+
+    - name: install Linux binary build deps
+      run: |
+        sudo apt install lua5.4 liblua5.4-dev
+
+    - name: build Linux binary
+      run: |
+        tag="${{ github.ref_name }}"
+        version="${tag#v}"
+        lrdir="luarocks-$version-linux-x86_64"
+        lua54dir="/usr"
+        ./configure --lua-version=5.4 --with-lua=$lua54dir
+        make binary
+        cd build-binary
+        mkdir "$lrdir"
+        cp luarocks.exe "$lrdir/luarocks"
+        cp luarocks-admin.exe "$lrdir/luarocks-admin"
+        zip "../$lrdir.zip" "$lrdir"/*
+
+    - name: install Windows 32-bit binary bulid deps
+      run: |
+        sudo apt install gcc-mingw-w64-i686
+
+    - name: build Windows 32-bit binary
+      run: |
+        tag="${{ github.ref_name }}"
+        version="${tag#v}"
+        lrdir="luarocks-$version-windows-32"
+        lua54dir="/usr"
+        ./configure --lua-version=5.4 --with-lua=$lua54dir
+        make windows-binary-32
+        cd build-windows-binary-i686-w64-mingw32
+        mkdir "$lrdir"
+        cp luarocks.exe "$lrdir/luarocks.exe"
+        cp luarocks-admin.exe "$lrdir/luarocks-admin.exe"
+        zip "../$lrdir.zip" "$lrdir"/*
+
+    - name: install Windows 64-bit binary bulid deps
+      run: |
+        sudo apt install gcc-mingw-w64-x86-64
+
+    - name: build Windows 64-bit binary
+      run: |
+        tag="${{ github.ref_name }}"
+        version="${tag#v}"
+        lrdir="luarocks-$version-windows-64"
+        lua54dir="/usr"
+        ./configure --lua-version=5.4 --with-lua=$lua54dir
+        make windows-binary-64
+        cd build-windows-binary-x86_64-w64-mingw32
+        mkdir "$lrdir"
+        cp luarocks.exe "$lrdir/luarocks.exe"
+        cp luarocks-admin.exe "$lrdir/luarocks-admin.exe"
+        zip "../$lrdir.zip" "$lrdir"/*
+
+    - name: push to Releases
+      env:
+        GITHUB_USER: ${{ github.actor }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        tag="${{ github.ref_name }}"
+        version="${tag#v}"
+        echo "LuaRocks $version" > release.txt
+        echo hub release create -F release.txt \
+          -a "luarocks-$version.tar.gz" \
+          -a "luarocks-$version-linux-x86_64.zip" \
+          -a "luarocks-$version-windows-32.zip" \
+          -a "luarocks-$version-windows-64.zip" \
+          "$tag"
+        ls
