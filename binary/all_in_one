@@ -491,6 +491,12 @@ local function main()
    os.execute("cat " .. CONFIG_FILE)
    print("----------------------------------------------------------------")
 
+   do
+      local command = "LUAROCKS_CONFIG='" .. CONFIG_FILE .. "' ./luarocks --no-project"
+      print(command)
+      local ok = os.execute(command)
+   end
+
    fs.make_dir(LUA_MODULES)
    for _, name in ipairs(dependency_order) do
       local use = dependencies[name]
@@ -500,7 +506,7 @@ local function main()
          print("----------------------------------------------------------------")
          local vers = manif.get_versions(queries.from_dep_string(name), "one")
          if not next(vers) then
-            local command = "LUAROCKS_CONFIG='" .. CONFIG_FILE .. "' ./luarocks install --no-project '--tree=" .. LUA_MODULES .. "' " .. use
+            local command = "LUAROCKS_CONFIG='" .. CONFIG_FILE .. "' ./luarocks install --no-project '--tree=" .. LUA_MODULES .. "' --lua-dir=" .. LUA_DIR .. " " ..  use
             print(command)
             local ok = os.execute(command)
             if ok ~= 0 and ok ~= true then
