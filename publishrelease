@@ -139,6 +139,18 @@ git commit -av -m "Release $v"
 git push
 
 #######################################
+# GitHub Releases
+#######################################
+
+assets=()
+for p in "${packages[@]}"
+do
+   assets=("${assets[@]}" "-a" "$p")
+done
+echo "LuaRocks $version" > release.txt
+hub release edit -F release.txt "${assets[@]}" v"$version"
+
+#######################################
 # luarocks.org
 #######################################
 
