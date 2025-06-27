@@ -124,7 +124,7 @@ gawk '
       print "\"'$v'\": {"
       print "\"date\": \"'$(date +'%Y-%m-%d')'\","
       print "\"files\": [\"luarocks-'$v'.tar.gz\", \"luarocks-'$v'.tar.gz.asc\", \"luarocks-'$v'-win32.zip\", \"luarocks-'$v'-win32.zip.asc\", \"luarocks-'$v'-windows-32.zip\", \"luarocks-'$v'-windows-32.zip.asc\", \"luarocks-'$v'-windows-64.zip\", \"luarocks-'$v'-windows-64.zip.asc\", \"luarocks-'$v'-linux-x86_64.zip\", \"luarocks-'$v'-linux-x86_64.zip.asc\"],"
-      print "\"about\": []"
+      print "\"about\": [],"
       print "\"source_digest\": \"'$source_digest'\""
       print "}},"
    }
