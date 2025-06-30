@@ -3,7 +3,7 @@ name: PR on GH Actions
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
   workflow_dispatch:
 
 jobs:
