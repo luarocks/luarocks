@@ -304,7 +304,7 @@ jobs:
       # The following env variables
       # only applies to Visual Studio
       LUAROCKS_DEPS_DIR: c:\external
-      LUAROCKS_DEPS_OPENSSL_VER: "3.4.1"
+      LUAROCKS_DEPS_OPENSSL_VER: "3.5.1"
       LUAROCKS_DEPS_ZLIB_VER: "1.3.1"
       # The following env variable
       # applies to both Visual Studio and MinGW-w64
@@ -487,7 +487,7 @@ jobs:
           }
 
           if ($installerUrl -eq $null) {
-            throw "Installer not found for version $version";
+            throw "Installer not found for version ${version}. Please, update OpenSSL to the latest version found at ${jsonUrl}";
           }
 
           # Download the installer
