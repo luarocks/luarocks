@@ -811,7 +811,7 @@ function deps.check_lua_libdir(vars: {string: string}): boolean, string, string,
    local err: string
    if ok then
       local filename = dir.path(vars.LUA_LIBDIR, vars.LUA_LIBDIR_FILE)
-      local fd = io.open(filename, "r")
+      local fd = io.open(filename, "rb")
       if fd then
          if not vars.LUA_LIBDIR_FILE:match((cfg.lua_version:gsub("%.", "%%.?"))) then
             -- if filename isn't versioned, check file contents
