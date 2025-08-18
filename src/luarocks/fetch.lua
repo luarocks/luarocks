@@ -141,7 +141,7 @@ local function download_with_mirrors(url, filename, cache, servers)
       if name then
          return name, nil, nil, from_cache
       else
-         err = err .. name .. "\n"
+         err = err .. (name or "nil").. "\n"
       end
    end
 
