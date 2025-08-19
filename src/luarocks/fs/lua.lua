@@ -16,6 +16,11 @@ local pack = table.pack or function(...) return { n = select("#", ...), ... } en
 local socket_ok, zip_ok, lfs_ok, md5_ok, posix_ok, bz2_ok, _
 local http, ftp, zip, lfs, md5, posix, bz2
 
+-- Minimum lfs version required to
+-- install and remove modules
+local lfs_min_version = '1.6.0'
+local lfs_at_least_min_ver = false
+
 if cfg.fs_use_modules then
    socket_ok, http = pcall(require, "socket.http")
    _, ftp = pcall(require, "socket.ftp")
@@ -24,6 +29,20 @@ if cfg.fs_use_modules then
    lfs_ok, lfs = pcall(require, "lfs")
    md5_ok, md5 = pcall(require, "md5")
    posix_ok, posix = pcall(require, "posix")
+
+   if lfs_ok then
+      local lfs_ver = lfs._VERSION
+      if lfs_ver then
+         local v = lfs_ver:match("(%d+%.%d+%.%d+)$")
+         if v then
+            lfs_at_least_min_ver = vers.parse_version(v) >= vers.parse_version(lfs_min_version)
+         end
+      end
+   end
+
+   if not lfs_at_least_min_ver then
+      lfs_ok = false
+   end
 end
 
 local patch = require("luarocks.tools.patch")
