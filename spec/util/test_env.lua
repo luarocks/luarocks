@@ -250,6 +250,8 @@ function test_env.execute_helper(command, print_command, env_variables)
       "LUA_CPATH_5_2",
       "LUA_PATH_5_3",
       "LUA_CPATH_5_3",
+      "LUA_PATH_5_4",
+      "LUA_CPATH_5_4",
       "LUAROCKS_SYSCONFDIR",
    }
 
