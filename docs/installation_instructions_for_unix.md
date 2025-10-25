@@ -31,6 +31,7 @@ Then, to get Lua, either install it using your package manager of choice, or
 * To build and install Lua, run the following commands.
 
 ```
+-$ ./configure
 -$ make all test
 -$ sudo make install
 ```
