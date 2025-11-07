@@ -67,7 +67,7 @@ On Unix, performing a vanilla installation of Lua from lua.org and a vanilla
 installation of LuaRocks will install both under /usr/local, meaning that the
 environment variables for the system-wide rock tree are correct by default.
 
-The command `[luarocks path](luarocks_path.md)` outputs the correct environment
+The command [`luarocks path`](luarocks_path.md) outputs the correct environment
 variables set for a rock tree.
 
 # Path where command-line scripts are installed 
@@ -90,7 +90,7 @@ installed need to be in your environment path.
 On Unix, /usr/local/bin is usually in the $PATH by default, but
 $HOME/.luarocks/bin is not. 
 
-The command `[luarocks path](luarocks_path.md) --bin` outputs the correct PATH
+The command [`luarocks path --bin`](luarocks_path.md) outputs the correct PATH
 environment variables set for a rock tree.
 
 # Compiler 
