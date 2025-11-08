@@ -13,13 +13,13 @@ otherwise run the command below to install them.
 For Ubuntu/Debian systems, this should do it:
 
 ``` 
--$ sudo apt install build-essential libreadline-dev unzip
+sudo apt install build-essential libreadline-dev unzip
 ```
 
 For Yum-based distributions, try this:
 
 ``` 
--$ sudo yum install libtermcap-devel ncurses-devel libevent-devel readline-devel
+sudo yum install libtermcap-devel ncurses-devel libevent-devel readline-devel
 ```
 
 Then, to get Lua, either install it using your package manager of choice, or
@@ -31,8 +31,8 @@ Then, to get Lua, either install it using your package manager of choice, or
 * To build and install Lua, run the following commands.
 
 ```
--$ make all test
--$ sudo make install
+make all test
+sudo make install
 ```
 
 Once Lua and its dependencies are installed, it is time to install LuaRocks:
@@ -44,9 +44,9 @@ Once Lua and its dependencies are installed, it is time to install LuaRocks:
 * To configure, build and install LuaRocks, run the following commands. The `./configure` script will attempt to detect your installation of Lua. If you get any error messages, see the section "[Customizing your settings](#customizing-your-settings)", below.
 
 ```
--$ ./configure --with-lua-include=/usr/local/include
--$ make
--$ sudo make install
+./configure --with-lua-include=/usr/local/include
+make
+sudo make install
 ```
 
 Installation should be done! Run `luarocks` with no arguments to 
