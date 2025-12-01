@@ -160,7 +160,7 @@ function util.variable_substitutions(tbl, vars)
 end
 
 function util.lua_versions(sort)
-   local versions = { "5.1", "5.2", "5.3", "5.4" }
+   local versions = { "5.1", "5.2", "5.3", "5.4", "5.5" }
    local i = 0
    if sort == "descending" then
       i = #versions + 1
@@ -286,7 +286,7 @@ local function collect_rockspecs(versions, paths, unnamed_paths, subdir)
    local vers = require("luarocks.core.vers")
    if fs.is_dir(subdir) then
       for file in fs.dir(subdir) do
-         file = dir.path(subdir, file)
+         local file = dir.path(subdir, file)
 
          if file:match("rockspec$") and fs.is_file(file) then
             local rock, version = path.parse_name(file)
@@ -550,7 +550,7 @@ function util.get_rocks_provided(rockspec)
       rocks_provided["bit32"] = lv .. "-1"
    end
 
-   if lv == "5.3" or lv == "5.4" then
+   if lv == "5.3" or lv == "5.4" or lv == "5.5" then
       rocks_provided["utf8"] = lv .. "-1"
    end
 

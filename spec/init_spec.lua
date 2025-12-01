@@ -153,13 +153,13 @@ describe("luarocks init #integration", function()
          lfs.mkdir(myproject)
          lfs.chdir(myproject)
 
-         assert(run.luarocks("init --lua-versions=5.1,5.2,5.3,5.4"))
+         assert(run.luarocks("init --lua-versions=5.1,5.2,5.3,5.4,5.5"))
          local rockspec_name = myproject .. "/myproject-dev-1.rockspec"
          assert.truthy(lfs.attributes(rockspec_name))
          local fd = assert(io.open(rockspec_name, "rb"))
          local data = fd:read("*a")
          fd:close()
-         assert.truthy(data:find("lua >= 5.1, < 5.5", 1, true))
+         assert.truthy(data:find("lua >= 5.1, < 5.6", 1, true))
       end, finally)
    end)
 
