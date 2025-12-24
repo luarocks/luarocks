@@ -1058,6 +1058,12 @@ IF NOT "%LUA_PATH_5_2%"=="" (
 IF NOT "%LUA_PATH_5_3%"=="" (
    SET "LUA_PATH_5_3=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_3%"
 )
+IF NOT "%LUA_PATH_5_4%"=="" (
+   SET "LUA_PATH_5_4=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_4%"
+)
+IF NOT "%LUA_PATH_5_5%"=="" (
+   SET "LUA_PATH_5_5=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_5%"
+)
 SET "PATH=$BINDIR;%PATH%"
 "$LUA" "$BINDIR\]]..c..[[.lua" %*
 SET EXITCODE=%ERRORLEVEL%
