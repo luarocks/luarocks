@@ -1,6 +1,6 @@
 
 --- Native Lua implementation of filesystem and platform abstractions,
--- using LuaFileSystem, LuaSocket, LuaSec, lua-zlib, LuaPosix, MD5.
+-- using LuaFileSystem, LuaSocket, LuaSec, lua-zlib, miniposix, MD5.
 -- module("luarocks.fs.lua")
 local fs_lua = {}
 
@@ -9,22 +9,18 @@ local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local util = require("luarocks.core.util")
-local vers = require("luarocks.core.vers")
 
 local pack = table.pack or function(...) return { n = select("#", ...), ... } end
 
-local socket_ok, zip_ok, lfs_ok, md5_ok, posix_ok, bz2_ok, _
-local http, ftp, zip, lfs, md5, posix, bz2
-
-if cfg.fs_use_modules then
-   socket_ok, http = pcall(require, "socket.http")
-   _, ftp = pcall(require, "socket.ftp")
-   zip_ok, zip = pcall(require, "luarocks.tools.zip")
-   bz2_ok, bz2 = pcall(require, "bz2")
-   lfs_ok, lfs = pcall(require, "lfs")
-   md5_ok, md5 = pcall(require, "md5")
-   posix_ok, posix = pcall(require, "posix")
-end
+local http = require("socket.http")
+local ftp = require("socket.ftp")
+local zip = require("luarocks.tools.zip")
+local bz2 = require("bz2")
+local lfs = require("lfs")
+local md5 = require("md5")
+local miniposix = require("miniposix")
+local ltn12 = require("ltn12")
+local https = require("ssl.https")
 
 local patch = require("luarocks.tools.patch")
 local tar = require("luarocks.tools.tar")
@@ -289,8 +285,6 @@ end
 -- LuaFileSystem functions
 ---------------------------------------------------------------------
 
-if lfs_ok then
-
 function fs_lua.file_age(filename)
    local attr = lfs.attributes(filename)
    if attr and attr.change then
@@ -482,8 +476,8 @@ function fs_lua.copy(src, dest, perms)
    if not perms then
       fullattrs = lfs.attributes(src, "permissions")
    end
-   if fullattrs and posix_ok then
-      return posix.chmod(dest, fullattrs)
+   if fullattrs then
+      return miniposix.chmod(dest, fullattrs)
    else
       if cfg.is_platform("unix") then
          if not perms then
@@ -683,25 +677,9 @@ function fs_lua.set_time(file, time)
    return lfs.touch(file, time)
 end
 
-else -- if not lfs_ok
-
-function fs_lua.exists(file)
-   assert(file)
-   -- check if file exists by attempting to open it
-   return util.exists(fs.absolute_name(file))
-end
-
-function fs_lua.file_age(_)
-   return math.huge
-end
-
-end
-
 ---------------------------------------------------------------------
 -- lua-bz2 functions
 ---------------------------------------------------------------------
-
-if bz2_ok then
 
 local function bunzip2_string(data)
    local decompressor = bz2.initDecompress()
@@ -728,13 +706,9 @@ function fs_lua.bunzip2(infile, outfile)
    return fs.filter_file(bunzip2_string, infile, outfile)
 end
 
-end
-
 ---------------------------------------------------------------------
 -- luarocks.tools.zip functions
 ---------------------------------------------------------------------
-
-if zip_ok then
 
 function fs_lua.zip(zipfile, ...)
    return zip.zip(zipfile, ...)
@@ -748,25 +722,13 @@ function fs_lua.gunzip(infile, outfile)
    return zip.gunzip(infile, outfile)
 end
 
-end
-
 ---------------------------------------------------------------------
--- LuaSocket functions
+-- LuaSocket/LuaSec functions
 ---------------------------------------------------------------------
-
-if socket_ok then
-
-local ltn12 = require("ltn12")
-local luasec_ok, https = pcall(require, "ssl.https")
-
-if luasec_ok and not vers.compare_versions(https._VERSION, "1.0.3") then
-   luasec_ok = false
-   https = nil
-end
 
 local redirect_protocols = {
    http = http,
-   https = luasec_ok and https,
+   https = https,
 }
 
 local function request(url, method, http, loop_control)  -- luacheck: ignore 431
@@ -964,8 +926,7 @@ function fs_lua.download(url, filename, cache)
    elseif util.starts_with(url, "ftp:") then
       ok, err = ftp_request(url, filename)
    elseif util.starts_with(url, "https:") then
-      -- skip LuaSec when proxy is enabled since it is not supported
-      if luasec_ok and not os.getenv("https_proxy") then
+      if not os.getenv("https_proxy") then
          local _
          ok, err, _, from_cache = http_request(url, filename, https, cache)
       else
@@ -990,28 +951,9 @@ function fs_lua.download(url, filename, cache)
    return filename, nil, nil, from_cache
 end
 
-else --...if socket_ok == false then
-
-function fs_lua.download(url, filename, cache)
-   return fs.use_downloader(url, filename, cache)
-end
-
-end
 ---------------------------------------------------------------------
 -- MD5 functions
 ---------------------------------------------------------------------
-
-if md5_ok then
-
--- Support the interface of lmd5 by lhf in addition to md5 by Roberto
--- and the keplerproject.
-if not md5.sumhexa and md5.digest then
-   md5.sumhexa = function(msg)
-      return md5.digest(msg)
-   end
-end
-
-if md5.sumhexa then
 
 --- Get the MD5 checksum for a file.
 -- @param file string: The file to be computed.
@@ -1024,9 +966,6 @@ function fs_lua.get_md5(file)
    file_handler:close()
    if computed then return computed end
    return nil, "Failed to compute MD5 hash for file "..file
-end
-
-end
 end
 
 ---------------------------------------------------------------------
@@ -1045,8 +984,6 @@ function fs_lua._unix_rwx_to_number(rwx, neg)
    return math.floor(num)
 end
 
-if posix_ok then
-
 local octal_to_rwx = {
    ["0"] = "---",
    ["1"] = "--x",
@@ -1064,9 +1001,7 @@ do
       if umask_cache then
          return umask_cache
       end
-      -- LuaPosix (as of 34.0.4) only returns the umask as rwx
-      local rwx = posix.umask()
-      local num = fs_lua._unix_rwx_to_number(rwx, true)
+      local num = miniposix.umask()
       umask_cache = ("%03o"):format(num)
       return umask_cache
    end
@@ -1078,26 +1013,21 @@ function fs_lua.set_permissions(filename, mode, scope)
       return false, err
    end
 
-   -- LuaPosix (as of 5.1.15) does not support octal notation...
    local new_perms = {}
    for c in perms:sub(-3):gmatch(".") do
       table.insert(new_perms, octal_to_rwx[c])
    end
    perms = table.concat(new_perms)
-   local err = posix.chmod(filename, perms)
-   return err == 0
+   return miniposix.chmod(filename, perms)
 end
 
 function fs_lua.current_user()
-   return posix.getpwuid(posix.geteuid()).pw_name
+   return miniposix.getpwuid(miniposix.geteuid()).pw_name
 end
 
 function fs_lua.is_superuser()
-   return posix.geteuid() == 0
+   return miniposix.geteuid() == 0
 end
-
--- This call is not available on all systems, see #677
-if posix.mkdtemp then
 
 --- Create a temporary directory.
 -- @param name_pattern string: name pattern to use for avoiding conflicts
@@ -1106,11 +1036,7 @@ if posix.mkdtemp then
 function fs_lua.make_temp_dir(name_pattern)
    assert(type(name_pattern) == "string")
 
-   return posix.mkdtemp(temp_dir_pattern(name_pattern) .. "-XXXXXX")
-end
-
-end -- if posix.mkdtemp
-
+   return miniposix.mkdtemp(temp_dir_pattern(name_pattern) .. "-XXXXXX")
 end
 
 ---------------------------------------------------------------------

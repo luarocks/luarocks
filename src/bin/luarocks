@@ -1,9 +1,17 @@
 #!/usr/bin/env lua
 
+if os.getenv("LUAROCKS_DEBUG") then
+   local tl = require("tl")
+   tl.path = "./src/?.tl"
+   tl.loader()
+   local tl_loader = table.remove(package.searchers, 2)
+   table.insert(package.searchers, 1, tl_loader)
+end
+
 -- Load cfg first so that the loader knows it is running inside LuaRocks
+
 local cfg = require("luarocks.core.cfg")
 
-local loader = require("luarocks.loader")
 local cmd = require("luarocks.cmd")
 
 local description = "LuaRocks main command-line interface"
