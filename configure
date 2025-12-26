@@ -120,7 +120,7 @@ Where to install files provided by rocks:
                                - Default is [PREFIX]
 
 Where is your Lua interpreter:
-  --lua-version=VERSION        Use specific Lua version: 5.1, 5.2, 5.3, or 5.4
+  --lua-version=VERSION        Use specific Lua version: 5.1, 5.2, 5.3, 5.4 or 5.5
                                - Default is auto-detected.
   --with-lua-bin=LUA_BINDIR    Location of your Lua binar(y/ies).
                                - Default is the directory of the
@@ -151,7 +151,7 @@ EOF
 # -------------
 
 detect_lua_version() {
-   detected_lua=$($1 -e 'print(_VERSION:match(" (5%.[1234])$"))' 2> /dev/null)
+   detected_lua=$($1 -e 'print(_VERSION:match(" (5%.[12345])$"))' 2> /dev/null)
    if [ "$detected_lua" != "nil" ]
    then
       if [ "$LUA_VERSION_SET" != "yes" ]
@@ -258,7 +258,7 @@ do
       [ -n "$value" ] || die "Missing value in flag $key."
       LUA_VERSION="$value"
       case "$LUA_VERSION" in
-      5.1|5.2|5.3|5.4) ;;
+      5.1|5.2|5.3|5.4|5.5) ;;
       *) die "Invalid Lua version in flag $key."
       esac
       LUA_VERSION_SET=yes
@@ -362,8 +362,11 @@ case "$LUA_VERSION" in
 5.4)
    names="lua5.4 lua54 lua-5.4 lua-54 lua"
    ;;
+5.5)
+   names="lua5.5 lua55 lua-5.5 lua-55 lua"
+   ;;
 *)
-   names="lua5.4 lua54 lua-5.4 lua-54 lua5.3 lua53 lua-5.3 lua-53 lua5.2 lua52 lua-5.2 lua-52 lua5.1 lua51 lua-5.1 lua-51 luajit lua"
+   names="lua5.5 lua55 lua-5.5 lua-55 lua5.4 lua54 lua-5.4 lua-54 lua5.3 lua53 lua-5.3 lua-53 lua5.2 lua52 lua-5.2 lua-52 lua5.1 lua51 lua-5.1 lua-51 luajit lua"
    ;;
 esac
 
@@ -438,7 +441,12 @@ check_incdir() {
    do
       if [ -f "$lua_h" ]
       then
-         grep "LUA_VERSION_NUM.*$LUA_VERSION" "$lua_h" > /dev/null 2> /dev/null && return
+         if [ "$LUA_VERSION" = "5.5" ]
+         then
+            grep "LUA_VERSION_MINOR_N.*5" "$lua_h" > /dev/null 2> /dev/null && return
+         else
+            grep "LUA_VERSION_NUM.*$LUA_VERSION" "$lua_h" > /dev/null 2> /dev/null && return
+         fi
       fi
       tried="$tried $lua_h"
    done

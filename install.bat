@@ -136,7 +136,7 @@ Configuring the destinations:
                if you create a self contained installation.
                
 Configuring the Lua interpreter:
-/LV [version]  Lua version to use; either 5.1, 5.2, 5.3, or 5.4.
+/LV [version]  Lua version to use; either 5.1, 5.2, 5.3, 5.4 or 5.5.
                Default is auto-detected.
 /LUA [dir]     Location where Lua is installed - e.g. c:\lua\5.1\
                If not provided, the installer will search the system
@@ -258,8 +258,8 @@ local function check_flags()
 			die("Bundled Lua version is 5.1, cannot install "..vars.LUA_VERSION)
 		end
 	end
-	if not vars.LUA_VERSION:match("^5%.[1234]$") then
-		die("Bad argument: /LV must either be 5.1, 5.2, 5.3, or 5.4")
+	if not vars.LUA_VERSION:match("^5%.[12345]$") then
+		die("Bad argument: /LV must either be 5.1, 5.2, 5.3, 5.4 or 5.5")
 	end
   if USE_MSVC_MANUAL and USE_MINGW then
     die("Cannot combine option /MSVC and /MW")
@@ -277,7 +277,7 @@ local function detect_lua_version(interpreter_path)
 	local full_version = handler:read("*a")
 	handler:close()
 
-	local version = full_version:match(" (5%.[1234])$")
+	local version = full_version:match(" (5%.[12345])$")
 	if not version then
 		return nil, "unknown interpreter version '" .. full_version .. "'"
 	end
@@ -289,7 +289,7 @@ local function look_for_interpreter(directory)
 	if lua_version_set then
 		names = {S"lua$LUA_VERSION.exe", S"lua$LUA_SHORTV.exe"}
 	else
-		names = {"lua5.4.exe", "lua54.exe", "lua5.3.exe", "lua53.exe", "lua5.2.exe", "lua52.exe", "lua5.1.exe", "lua51.exe"}
+		names = {"lua5.5.exe", "lua55.exe", "lua5.4.exe", "lua54.exe", "lua5.3.exe", "lua53.exe", "lua5.2.exe", "lua52.exe", "lua5.1.exe", "lua51.exe"}
 	end
 	table.insert(names, "lua.exe")
 	table.insert(names, "luajit.exe")
@@ -622,7 +622,7 @@ local function get_possible_lua_directories()
 	local directories = {}
 	for dir in path:gmatch("[^;]+") do
 		-- Remove trailing backslashes, but not from a drive letter like `C:\`.
-		dir = dir:gsub("([^:])\\+$", "%1")
+		local dir = dir:gsub("([^:])\\+$", "%1")
 		-- Remove trailing `bin` subdirectory, the searcher will check there anyway.
 		if dir:upper():match("[:\\]BIN$") then
 			dir = dir:sub(1, -5)
@@ -1024,7 +1024,7 @@ end
 if not exec(S[[XCOPY /S src\luarocks\*.* "$LUADIR\luarocks" >NUL]]) then
 	die()
 end
-if vars.LUA_VERSION ~= "5.3" or vars.LUA_VERSION ~= "5.4" then
+if vars.LUA_VERSION ~= "5.3" or vars.LUA_VERSION ~= "5.4" or vars.LUA_VERSION ~= "5.5" then
 	-- Copy the vendored lua-copmat53 source files
 	if not exists(S[[$LUADIR\compat53]]) then
 		if not mkdir(S[[$LUADIR\compat53]]) then
@@ -1057,6 +1057,12 @@ IF NOT "%LUA_PATH_5_2%"=="" (
 )
 IF NOT "%LUA_PATH_5_3%"=="" (
    SET "LUA_PATH_5_3=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_3%"
+)
+IF NOT "%LUA_PATH_5_4%"=="" (
+   SET "LUA_PATH_5_4=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_4%"
+)
+IF NOT "%LUA_PATH_5_5%"=="" (
+   SET "LUA_PATH_5_5=$LUADIR\?.lua;$LUADIR\?\init.lua;%LUA_PATH_5_5%"
 )
 SET "PATH=$BINDIR;%PATH%"
 "$LUA" "$BINDIR\]]..c..[[.lua" %*

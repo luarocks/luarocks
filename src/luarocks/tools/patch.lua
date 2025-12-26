@@ -188,6 +188,7 @@ function patch.read_patch(filename, data)
    local lineno = 0
 
    for line in file_lines(fp) do
+      local line = line
       lineno = lineno + 1
       if state == 'header' then
          if startswith(line, "--- ") then

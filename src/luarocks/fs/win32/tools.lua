@@ -131,6 +131,7 @@ function tools.find(at)
    local pipe = io.popen(fs.command_at(at, fs.quiet_stderr(vars.FIND), true))
    for file in pipe:lines() do
       -- Windows find is a bit different
+      local file = file
       local first_two = file:sub(1,2)
       if first_two == ".\\" or first_two == "./" then file=file:sub(3) end
       if file ~= "." then
@@ -223,7 +224,7 @@ local function get_system_users()
    local result = {}
    local fd = assert(io.popen("wmic UserAccount get name"))
    for user in fd:lines() do
-      user = user:gsub("%s+$", "")
+      local user = user:gsub("%s+$", "")
       if not exclude[user] then
          table.insert(result, user)
       end

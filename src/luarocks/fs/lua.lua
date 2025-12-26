@@ -213,6 +213,7 @@ function fs_lua.modules(at)
    local path = package.path:sub(-1, -1) == ";" and package.path or package.path .. ";"
    local paths = {}
    for location in path:gmatch("(.-);") do
+      local location = location
       if location:lower() == "?.lua" then
          location = "./?.lua"
       end
