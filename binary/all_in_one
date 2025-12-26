@@ -69,7 +69,7 @@ local function reindent_c(input)
    local indent = 0
    local previous_is_blank = true
    for line in input:gmatch("([^\n]*)") do
-      line = line:match("^[ \t]*(.-)[ \t]*$")
+      local line = line:match("^[ \t]*(.-)[ \t]*$")
 
       local is_blank = (#line == 0)
       local do_print =
