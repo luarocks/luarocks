@@ -119,7 +119,7 @@ install: all install-config
 	do \
 	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
 	done
-ifeq (,$(findstring $(LUA_VERSION),"5.3" "5.4"))
+ifeq (,$(findstring $(LUA_VERSION),"5.3" "5.4" "5.5"))
 	find src/compat53/ -type d | while read f; \
 	do \
 	   mkdir -p '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
