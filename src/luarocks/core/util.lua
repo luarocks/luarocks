@@ -96,7 +96,8 @@ function util.show_table(t, tname, top_indent)
             else
                cart = cart .. " = {\n"
                for k, v in pairs(value) do
-                  local k = basic_serialize(k)
+                  local k = k
+                  k = basic_serialize(k)
                   local fname = ("%s[%s]"):format(name, k)
                   field = ("[%s]"):format(k)
 

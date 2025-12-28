@@ -1,4 +1,3 @@
-
 --- Native Lua implementation of filesystem and platform abstractions,
 -- using LuaFileSystem, LuaSocket, LuaSec, lua-zlib, miniposix, MD5.
 -- module("luarocks.fs.lua")

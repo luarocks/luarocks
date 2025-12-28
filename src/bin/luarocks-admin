@@ -3,7 +3,6 @@
 -- Load cfg first so that luarocks.loader knows it is running inside LuaRocks
 local cfg = require("luarocks.core.cfg")
 
-local loader = require("luarocks.loader")
 local cmd = require("luarocks.cmd")
 
 local description = "LuaRocks repository administration interface"

@@ -69,12 +69,10 @@ function manif.manifest_loader(file: string, repo_url: string, lua_version: stri
 end
 
 --- Load a local manifest describing a repository.
--- This is used by the luarocks.loader only.
 -- @param repo_url string: URL or pathname for the repository.
 -- @return table or (nil, string, string): A table representing the manifest,
 -- or nil followed by an error message and an error code, see manifest_loader.
-function manif.fast_load_local_manifest(repo_url: string): Manifest, string | {any: any}, string 
-
+local function fast_load_local_manifest(repo_url: string): Manifest, string | {any: any}, string
    local cached_manifest = manif.get_cached_manifest(repo_url)
    if cached_manifest then
       return cached_manifest
@@ -87,7 +85,7 @@ end
 function manif.load_rocks_tree_manifests(deps_mode?: string): {Tree_manifest}
    local trees = {}
    path.map_trees(deps_mode, function(tree: Tree)
-      local manifest= manif.fast_load_local_manifest(path.rocks_dir(tree))
+      local manifest = fast_load_local_manifest(path.rocks_dir(tree))
       if manifest then
          table.insert(trees, {tree=tree, manifest=manifest})
       end

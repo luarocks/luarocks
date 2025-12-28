@@ -286,7 +286,8 @@ local function collect_rockspecs(versions: {string: string}, paths: {string: str
    local vers = require("luarocks.core.vers")
    if fs.is_dir(subdir) then
       for file in fs.dir(subdir) do
-         local file = dir.path(subdir, file)
+         local file = file
+         file = dir.path(subdir, file)
 
          if file:match("rockspec$") and fs.is_file(file) then
             local rock, version = path.parse_name(file)

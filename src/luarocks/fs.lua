@@ -62,6 +62,9 @@ do
    local function load_fns(module_name, inits)
       local ok, fs_table = pcall(require, module_name)
       if not ok or not type(fs_table) == "table" then
+         if type(fs_table) == "string" and not fs_table:match("^module ") then
+            io.stderr:write(fs_table .. "\n")
+         end
          return
       end
 
@@ -114,18 +117,7 @@ do
       local inits = {}
 
       if fs.current_dir then
-         -- unload luarocks fs so it can be reloaded using all modules
-         -- providing extra functionality in the current package paths
-         for k, _ in pairs(fs) do
-            if k ~= "init" and k ~= "verbose" then
-               fs[k] = nil
-            end
-         end
-         for m, _ in pairs(package.loaded) do
-            if m:match("luarocks%.fs%.") then
-               package.loaded[m] = nil
-            end
-         end
+         return
       end
 
       -- Load platform-specific functions
@@ -133,12 +125,6 @@ do
 
       -- Load platform-independent pure-Lua functionality
       load_fns("luarocks.fs.lua", inits)
-
-      -- Load platform-specific fallbacks for missing Lua modules
-      load_platform_fns("luarocks.fs.%s.tools", inits)
-
-      -- Load platform-independent external tool functionality
-      load_fns("luarocks.fs.tools", inits)
 
       -- Run platform-specific initializations after everything is loaded
       for _, init in ipairs(inits) do

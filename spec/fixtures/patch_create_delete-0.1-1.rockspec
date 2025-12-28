@@ -14,10 +14,10 @@ dependencies = {
 build = {
    type = "builtin",
    modules = {
-      ["luarocks.loader"] = "src/luarocks/loader.lua"
+      ["luarocks.fetch"] = "src/luarocks/fetch.lua"
    },
    patches = {
-      ["create_delete.patch"] = 
+      ["create_delete.patch"] =
 [[
 diff -Naur luarocks/spec/fixtures/patch_create_delete/a_file.txt luarocks-patch/spec/fixtures/patch_create_delete/a_file.txt
 --- luarocks/spec/fixtures/patch_create_delete/a_file.txt	2017-10-04 15:39:44.179306674 -0300

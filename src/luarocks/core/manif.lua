@@ -72,9 +72,7 @@ end
 
 
 
-
-function manif.fast_load_local_manifest(repo_url)
-
+local function fast_load_local_manifest(repo_url)
    local cached_manifest = manif.get_cached_manifest(repo_url)
    if cached_manifest then
       return cached_manifest
@@ -87,7 +85,7 @@ end
 function manif.load_rocks_tree_manifests(deps_mode)
    local trees = {}
    path.map_trees(deps_mode, function(tree)
-      local manifest = manif.fast_load_local_manifest(path.rocks_dir(tree))
+      local manifest = fast_load_local_manifest(path.rocks_dir(tree))
       if manifest then
          table.insert(trees, { tree = tree, manifest = manifest })
       end

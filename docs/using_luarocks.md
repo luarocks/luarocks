@@ -4,12 +4,12 @@ So, you have followed the installation instructions (either on
 [Unix](installation_instructions_for_unix.md) or
 [Windows](installation_instructions_for_windows.md)) and now you have LuaRocks
 installed on your machine. Now you probably want to install some rocks
-(packages containing Lua modules) and use them in your Lua code. 
+(packages containing Lua modules) and use them in your Lua code.
 
 For LuaRocks to function properly, we have a quick checklist to go through
 first:
 
-# Command-line tools (and the system path) 
+# Command-line tools (and the system path)
 
 LuaRocks installs some command-line tools which are your interface for
 managing your rocks: [luarocks](luarocks.md) and
@@ -20,7 +20,7 @@ when installing LuaRocks.
 Run [luarocks](luarocks.md) to see the available commands:
 
 ```
-luarocks 
+luarocks
 ```
 
 You can get help on any command by using the [luarocks help](luarocks_help.md) command:
@@ -35,7 +35,7 @@ Installing packages is done by typing commands such as:
 luarocks install dkjson
 ```
 
-# Rocks trees and the Lua libraries path 
+# Rocks trees and the Lua libraries path
 
 When you install rocks using the `luarocks install`, you get new modules
 available for loading via `require()` from Lua. For example, after we install
@@ -50,19 +50,19 @@ This should output something like this:
 
 ```
 dkjson 2.5-2 - David Kolf's JSON module for Lua
-  
+
 dkjson is a module for encoding and decoding JSON data. It supports UTF-8.
-  
+
 JSON (JavaScript Object Notation) is a format for serializing data based on the
 syntax for JavaScript data structures.
-  
+
 dkjson is written in Lua without any dependencies, but when LPeg is available
 dkjson uses it to speed up decoding.
-  
+
 License: 	MIT/X11
 Homepage: 	http://dkolf.de/src/dkjson-lua.fsl/
 Installed in: 	/usr/local
-  
+
 Modules:
 	dkjson (/usr/local/share/lua/5.3/dkjson.lua)
 ```
@@ -87,7 +87,7 @@ print(package.cpath)
 ```
 
 These variables can be pre-configured from outside Lua, using the LUA_PATH and
-LUA_CPATH environment variables. 
+LUA_CPATH environment variables.
 
 If you installed both Lua and LuaRocks in their default directories
 (/usr/local on Linux and Mac OSX), then the "system" tree is /usr/local and it
@@ -114,13 +114,15 @@ set permanently, you have to configure the environment variables to your shell
 configuration (for example, by adding the above line to your `.bashrc` file if
 your shell is Bash).
 
-# Multiple versions using the LuaRocks package loader 
+# Multiple versions using the LuaRocks package loader
 
 If you want to make use of LuaRocks' support for multiple installed versions
-of modules, you need to load a custom package loader: luarocks.loader.
+of modules, you need to load a custom package loader. This is available as a
+separate package, called
+[luarocks-loader](https://github.com/luarocks/luarocks-loader).
 
-You should be able to launch the Lua interpreter with the LuaRocks-enabled
-loader by typing:
+Once luarocks-loader is installed, you should be able to launch the Lua
+interpreter with the LuaRocks-enabled loader by typing:
 
 ```
 lua -lluarocks.loader
@@ -136,9 +138,9 @@ require "luarocks.loader"
 If your system is correctly set up so that this command runs with no errors,
 subsequent calls to `require()` are LuaRocks-aware and the exact version of
 each module will be determined based on the dependency tree of previously
-loaded modules. 
+loaded modules.
 
-# Scripts installed by rocks (and the scripts path) 
+# Scripts installed by rocks (and the scripts path)
 
 Besides modules, rocks can also install command-line scripts. The default
 location of this directory (unless you configured your local repository
@@ -153,7 +155,7 @@ appropriate PATH configuration:
 luarocks path --bin
 ```
 
-# Using in Unix systems with sudo 
+# Using in Unix systems with sudo
 
 When you use LuaRocks to install a package while you aren't root, the package
 will get installed in $HOME/.luarocks/ instead of the system-wide (by default,
@@ -179,7 +181,7 @@ cd /usr/local/share/lua/5.1
  sudo chmod a+r *
 ```
 
-# Using a C compiler 
+# Using a C compiler
 
 Because rocks are generally available in the repository as [source
 rocks](types_of_rocks.md) rather than binary rocks, it is best to have a C

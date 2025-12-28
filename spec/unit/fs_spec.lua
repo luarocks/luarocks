@@ -1,6 +1,5 @@
 local test_env = require("spec.util.test_env")
 
-test_env.setup_specs()
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
 local cfg = require("luarocks.core.cfg")
@@ -11,6 +10,9 @@ local testing_paths = test_env.testing_paths
 local get_tmp_path = test_env.get_tmp_path
 local write_file = test_env.write_file
 local P = test_env.P
+
+local dir_sep = package.config:sub(1, 1)
+local wrapper_extension = dir_sep == "\\" and ".bat" or ""
 
 -- A chdir that works in both full and minimal mode, setting
 -- both the real process current dir and the LuaRocks internal stack in minimal mode
@@ -1414,7 +1416,7 @@ describe("luarocks.fs #unit", function()
       it("produces a wrapper for a Lua script", function()
          write_file("my_script", "io.write('Hello ' .. arg[1])", finally)
          path.use_tree(testing_paths.testing_tree)
-         local wrapper_name = fs.absolute_name("wrapper") .. test_env.wrapper_extension
+         local wrapper_name = fs.absolute_name("wrapper") .. wrapper_extension
          fs.wrap_script("my_script", wrapper_name, "one", nil, nil, "World")
          local pd = assert(io.popen(wrapper_name))
          local data = pd:read("*a")

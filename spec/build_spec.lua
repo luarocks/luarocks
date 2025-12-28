@@ -65,6 +65,27 @@ describe("LuaRocks build #integration", function()
          end, finally)
       end)
 
+      it("builtin auto installs files in lua subdir", function()
+         test_env.run_in_tmp(function(tmpdir)
+            lfs.mkdir("lua")
+            write_file("lua_module-1.0-1.rockspec", [[
+               package = "lua_module"
+               version = "1.0-1"
+               source = {
+                  url = "http://example.com/lua_module"
+               }
+               build = {
+                  type = "builtin",
+                  modules = {}
+               }
+            ]], finally)
+            write_file("lua/lua_module.lua", "return 123", finally)
+
+            assert.is_true(run.luarocks_bool("build"))
+            assert.match("[\\/]lua_module%.lua", run.luarocks("show lua_module"))
+         end, finally)
+      end)
+
       it("fails if the deps-mode argument is invalid", function()
          assert.is_false(run.luarocks_bool("build --deps-mode=123 " .. testing_paths.fixtures_dir .. "/a_rock-1.0-1.rockspec"))
          assert.falsy(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/1.0-1/a_rock-1.0-1.rockspec"))

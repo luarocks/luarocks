@@ -21,6 +21,8 @@ local vers = require("luarocks.core.vers")
 
 --------------------------------------------------------------------------------
 
+PROGRAM_VERSION = PROGRAM_VERSION or "dev"
+
 local is_windows = package.config:sub(1,1) == "\\"
 
 -- Set order for platform overrides.

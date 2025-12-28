@@ -100,8 +100,8 @@ function multipart.encode(params)
    end
    local inner = "\r\n--" .. boundary .. "\r\n"
    return table.concat({ "--", boundary, "\r\n",
-table.concat(chunks, inner),
-"\r\n", "--", boundary, "--", "\r\n", }), boundary
+   table.concat(chunks, inner),
+   "\r\n", "--", boundary, "--", "\r\n", }), boundary
 end
 
 function multipart.new_file(fname, mime)
