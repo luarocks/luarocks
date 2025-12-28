@@ -15,7 +15,7 @@ jobs:
 
     - name: check repository state
       run: |
-        tag="v3.13.0" # tag="${{ github.ref_name }}"
+        tag="v3.12.2" # tag="${{ github.ref_name }}"
         version="${tag#v}"
         xyversion="${version%.*}"
         grep -q "LuaRocks version $version" "configure" || {
@@ -36,7 +36,7 @@ jobs:
 
     - name: make Unix tarball
       run: |
-        tag="v3.13.0" # tag="${{ github.ref_name }}"
+        tag="v3.12.2" # tag="${{ github.ref_name }}"
         version="${tag#v}"
         lrdir="luarocks-$version"
         out="unix_tarball/$lrdir"
@@ -57,7 +57,7 @@ jobs:
 
     - name: make Windows legacy zip
       run: |
-        tag="v3.13.0" # tag="${{ github.ref_name }}"
+        tag="v3.12.2" # tag="${{ github.ref_name }}"
         version="${tag#v}"
         lrdir="luarocks-$version-win32"
         out="windows_legacy/$lrdir"
@@ -82,7 +82,7 @@ jobs:
 
 #    - name: build Linux binary
 #      run: |
-#        tag="v3.13.0" # tag="${{ github.ref_name }}"
+#        tag="v3.12.2" # tag="${{ github.ref_name }}"
 #        version="${tag#v}"
 #        lrdir="luarocks-$version-linux-x86_64"
 #        lua54dir="/usr"
@@ -100,7 +100,7 @@ jobs:
 
     - name: build Windows 32-bit binary
       run: |
-        tag="v3.13.0" # tag="${{ github.ref_name }}"
+        tag="v3.12.2" # tag="${{ github.ref_name }}"
         version="${tag#v}"
         lrdir="luarocks-$version-windows-32"
         lua54dir="/usr"
@@ -118,7 +118,7 @@ jobs:
 
     - name: build Windows 64-bit binary
       run: |
-        tag="v3.13.0" # tag="${{ github.ref_name }}"
+        tag="v3.12.2" # tag="${{ github.ref_name }}"
         version="${tag#v}"
         lrdir="luarocks-$version-windows-64"
         lua54dir="/usr"
@@ -135,7 +135,7 @@ jobs:
         GITHUB_USER: ${{ github.actor }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        tag="v3.13.0" # tag="${{ github.ref_name }}"
+        tag="v3.12.2" # tag="${{ github.ref_name }}"
         version="${tag#v}"
         echo "LuaRocks $version" > release.txt
         echo hub release create -F release.txt \
