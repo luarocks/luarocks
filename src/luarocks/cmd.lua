@@ -12,6 +12,8 @@ local cmd = { Module = {} }
 
 
 
+
+
 local manif = require("luarocks.manif")
 local config = require("luarocks.config")
 local util = require("luarocks.util")
@@ -197,7 +199,7 @@ local function error_handler(err)
    if cfg and cfg.is_binary then
       mode = mode .. " (binary)"
    end
-   return debug.traceback("LuaRocks " .. cfg.program_version ..
+   return debug.traceback("LuaRocks " .. PROGRAM_VERSION ..
    " bug (please report at https://github.com/luarocks/luarocks/issues).\n" ..
    mode .. "\n" .. err, 2)
 end
@@ -439,7 +441,7 @@ end
 local function get_parser(description, cmd_modules)
    local basename = dir.base_name(program)
    local parser = argparse(
-   basename, "LuaRocks " .. cfg.program_version .. ", the Lua package manager\n\n" ..
+   basename, "LuaRocks " .. PROGRAM_VERSION .. ", the Lua package manager\n\n" ..
    program .. " - " .. description, variables_help .. "Run '" .. basename ..
    "' without any arguments to see the configuration."):
    help_max_width(80):
@@ -480,7 +482,7 @@ Enabling completion for Fish:
 
    parser:flag("--version", "Show version info and exit."):
    action(function()
-      util.printout(program .. " " .. cfg.program_version)
+      util.printout(program .. " " .. PROGRAM_VERSION)
       util.printout(description)
       util.printout()
       os.exit(cmd.errorcodes.OK)

@@ -14,6 +14,7 @@ typedef struct {
 
 #include "gen/gen.h"
 #include "gen/libraries.h"
+#include "gen/version.h"
 
 static const char* progname = "luarocks";
 
@@ -147,6 +148,7 @@ int main(int argc, char** argv) {
    install_pkg_loader(L);
    declare_libraries(L);
    declare_modules(L);
+   declare_program_version(L);
    lua_pushcfunction(L, &msghandler);
    lua_pushcfunction(L, &pmain);
    lua_pushinteger(L, argc);

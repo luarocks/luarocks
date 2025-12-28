@@ -1,4 +1,6 @@
 
+LUAROCKS_VERSION=4.0.0
+
 CC = gcc
 MKDIR = mkdir
 
@@ -25,5 +27,5 @@ realclean: clean
 	rm -rf gen
 
 gen: realclean
-	./bootstrap.tl
+	./bootstrap.tl $(LUAROCKS_VERSION)
 

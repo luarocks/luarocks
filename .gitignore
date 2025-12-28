@@ -18,3 +18,4 @@
 /luarocks-admin
 /.luarocks
 /.luacheckcache
+/vendor/**/*.o

@@ -21,8 +21,6 @@ local vers = require("luarocks.core.vers")
 
 --------------------------------------------------------------------------------
 
-local program_version = "3.12.2"
-
 local is_windows = package.config:sub(1,1) == "\\"
 
 -- Set order for platform overrides.
@@ -624,8 +622,6 @@ function cfg.init(detected, warning)
       cfg[k] = nil
    end
 
-   cfg.program_version = program_version
-
    if hardcoded.IS_BINARY then
       cfg.is_binary = true
    end
@@ -846,7 +842,7 @@ function cfg.init(detected, warning)
 
    use_defaults(cfg, defaults)
 
-   cfg.user_agent = "LuaRocks/"..cfg.program_version.." "..cfg.arch
+   cfg.user_agent = "LuaRocks/"..PROGRAM_VERSION.." "..cfg.arch
 
    cfg.config_files = {
       project = cfg.project_dir and {

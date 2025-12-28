@@ -302,7 +302,7 @@ static const Gen GEN[] = {
    {
       .module_name = "luarocks.core.cfg",
       .source_name = "src/luarocks/core/cfg.lua",
-      .length = 33538,
+      .length = 33458,
       .code = luarocks_gen_luarocks_core_cfg,
    },
    {
@@ -530,7 +530,7 @@ static const Gen GEN[] = {
    {
       .module_name = "luarocks.cmd",
       .source_name = "src/luarocks/cmd.tl",
-      .length = 25438,
+      .length = 25428,
       .code = luarocks_gen_luarocks_cmd,
    },
    {

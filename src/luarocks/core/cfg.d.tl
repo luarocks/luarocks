@@ -96,7 +96,6 @@ local record cfg
    local_by_default: boolean
    fs_use_modules: boolean
    is_binary: boolean
-   program_version: string
    homeconfdir: string
    sysconfdir: string
    luajit_version: string
