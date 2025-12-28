@@ -100,7 +100,9 @@ static struct luaL_Reg miniposix_lib[] = {
 
 int luaopen_miniposix(lua_State* L) {
    lua_newtable(L);
-   luaL_setfuncs(L, miniposix_lib, 0);
+   for (int i = 0; miniposix_lib[i].name; i++) {
+      lua_pushcfunction(L, miniposix_lib[i].func);
+      lua_setfield(L, -2, miniposix_lib[i].name);
+   }
    return 1;
 }
-
