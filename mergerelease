@@ -25,8 +25,8 @@ git show origin v$v &> /dev/null || {
 }
 
 git fetch --all
-git checkout master
-git diff master $v > version.diff
+git checkout main
+git diff main $v > version.diff
 git merge --no-ff $v
 patch -R -p1 < version.diff
 git add luarocks-dev-1.rockspec
