@@ -3,19 +3,14 @@
 /testrun/*
 /lua_install
 # Stuff that pops up during development but shouldn't be in the repo (helps clean up `git status`)
-/build
-/build-binary
+/target
 /*.rock
 /*.tar.gz
 /*.zip
-/prefix-*
-/dev_*
-/gh-pages
-/wiki
-/lua
-/lua_modules
 /luarocks
 /luarocks-admin
-/.luarocks
 /.luacheckcache
 /vendor/**/*.o
+/vendor/lua-*/src/liblua.*
+/vendor/lua-*/src/lua
+/vendor/lua-*/src/luac
