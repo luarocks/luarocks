@@ -6,3 +6,5 @@ git clone https://github.com/lunarmodules/luasec         luasec --branch v1.3.2
 git clone https://github.com/brimworks/lua-zlib.git      lua-zlib --branch v1.2
 git clone https://github.com/hishamhm/lua-bz2.git        lua-bz2 --branch 0.2.2
 git clone https://github.com/keplerproject/luafilesystem luafilesystem --branch v1_8_0
+[ -e lua-5.5.0 ] || { curl https://www.lua.org/ftp/lua-5.5.0.tar.gz | tar zxvp; }
+
