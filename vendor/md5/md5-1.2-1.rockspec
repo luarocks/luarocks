@@ -31,5 +31,4 @@ build = {
          incdirs = { "src/", },
       },
    },
-   copy_directories = { "doc", "tests", },
 }

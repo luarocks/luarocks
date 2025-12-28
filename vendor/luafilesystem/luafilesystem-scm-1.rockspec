@@ -21,8 +21,4 @@ build = {
    modules = {
       lfs = "src/lfs.c"
    },
-   copy_directories = {
-      "doc",
-      "tests"
-   }
 }
