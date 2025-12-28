@@ -18,8 +18,11 @@ luarocks: src/main.c gen/gen.h gen/libraries.h gen/main.h $(VENDOR_LIBS)
 	$(CC) -o luarocks -I. -I$(VENDOR_LUA_DIR)/src src/main.c $(VENDOR_LIBS) $(VENDOR_LUA_DIR)/src/liblua.a $(DEPS_LIBS)
 
 clean:
-	rm -rf gen target
+	rm -rf target
 
-gen: clean
+realclean: clean
+	rm -rf gen
+
+gen: realclean
 	./bootstrap.tl
 
