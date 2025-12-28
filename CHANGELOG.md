@@ -1,3 +1,11 @@
+## LuaRocks 3.13.0
+
+> Released 28/Dec/2025
+
+* Supports Lua 5.5!
+* documentation fixes
+* fix: check_lua_libdir reads liblua in binary mode
+
 ## LuaRocks 3.12.2
 
 > Released 27/Jun/2025
