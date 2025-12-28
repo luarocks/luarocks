@@ -15,7 +15,8 @@ WINDOWS_DEPS_DIR=windows-deps-$(MINGW_PREFIX)
 BUILD_WINDOWS_DEPS_DIR=build-windows-deps-$(MINGW_PREFIX)
 BUILD_WINDOWS_BINARY_DIR=build-windows-binary-$(MINGW_PREFIX)
 
-windows-binary: $(WINDOWS_DEPS_DIR)/lib/liblua.a $(WINDOWS_DEPS_DIR)/lib/libssl.a $(WINDOWS_DEPS_DIR)/lib/libz.a $(WINDOWS_DEPS_DIR)/lib/libbz2.a
+# windows-binary: $(WINDOWS_DEPS_DIR)/lib/liblua.a $(WINDOWS_DEPS_DIR)/lib/libssl.a $(WINDOWS_DEPS_DIR)/lib/libz.a $(WINDOWS_DEPS_DIR)/lib/libbz2.a
+windows-binary: $(WINDOWS_DEPS_DIR)/lib/liblua.a
 	STATIC_GCC_AR=$(MINGW_PREFIX)-ar \
 	STATIC_GCC_RANLIB=$(MINGW_PREFIX)-ranlib \
 	STATIC_GCC_CC=$(MINGW_PREFIX)-gcc \
