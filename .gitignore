@@ -11,6 +11,7 @@
 /luarocks-admin
 /.luacheckcache
 /vendor/**/*.o
+/vendor/**/*.so
 /vendor/lua-*/src/liblua.*
 /vendor/lua-*/src/lua
 /vendor/lua-*/src/luac
