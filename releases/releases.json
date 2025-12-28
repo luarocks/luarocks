@@ -1,5 +1,12 @@
 [
 {
+"3.13.0": {
+"date": "2025-12-28",
+"files": ["luarocks-3.13.0.tar.gz", "luarocks-3.13.0.tar.gz.asc", "luarocks-3.13.0-win32.zip", "luarocks-3.13.0-win32.zip.asc", "luarocks-3.13.0-windows-32.zip", "luarocks-3.13.0-windows-32.zip.asc", "luarocks-3.13.0-windows-64.zip", "luarocks-3.13.0-windows-64.zip.asc", "luarocks-3.13.0-linux-x86_64.zip", "luarocks-3.13.0-linux-x86_64.zip.asc"],
+"about": [],
+"source_digest": "245bf6ec560c042cb8948e3d661189292587c5949104677f1eecddc54dbe7e37"
+}},
+{
 "3.12.2": {
 "date": "2025-06-27",
 "files": ["luarocks-3.12.2.tar.gz", "luarocks-3.12.2.tar.gz.asc", "luarocks-3.12.2-win32.zip", "luarocks-3.12.2-win32.zip.asc", "luarocks-3.12.2-windows-32.zip", "luarocks-3.12.2-windows-32.zip.asc", "luarocks-3.12.2-windows-64.zip", "luarocks-3.12.2-windows-64.zip.asc", "luarocks-3.12.2-linux-x86_64.zip", "luarocks-3.12.2-linux-x86_64.zip.asc"],
