@@ -49,20 +49,20 @@ Dependencies are represented in LuaRocks through strings with a package name fol
       * **Important:** A source control manager URL cannot start with `http://` `https://`, `ftp://` or `file://`. For example, `https://github.com/keplerproject/wsapi.git` is incorrect, even though it works perfectly fine with `git clone`. The correct one is `git+https://github.com/keplerproject/wsapi.git`. Also note that only for GitHub URLs `git://` is being automatically handled internally as if it was `git+https://`. This is due to preserve backwards compatibility while still working with [GitHub's increased default security](https://github.blog/security/application-security/improving-git-protocol-security-github/) measures in blocking insecure connection types.
    * **source.md5** (string) - the MD5 sum for the source archive. Example: "9ca22fd9f9413b54802d3d40b38c4e5c"
    * **source.file** (string) - the filename of the source archive. Can be omitted if it can be inferred from the `source.url` field. Example: "luasocket-2.0.1.tar.gz"
-   * **source.dir** (string) - the name of the directory created when the source archive is unpacked. Can be omitted if it can be inferred from the `source.file` field. Example: "luasocket-2.0.1"
+   * **source.dir** (string) - the name of the directory created when the source archive is unpacked. Can be omitted if it can be inferred from the `source.file` field or if it can be inferred from the archive contents (i.e. the archive only contains a single directory with the sources). Example: "luasocket-2.0.1"
    * **source.tag** (string) - for SCM-based URL protocols such as "cvs://" and "git://", this field can be used to specify a tag for checking out sources. Example: "HEAD" (For compatibility reasons, `source.cvs_tag` is also accepted.)
    * **source.branch** (string) - for SCM-based URL protocols such as "git://", this field can be used to specify a branch for checking out sources. Example: "v1.0"
    * **source.module** (string) - for SCM-based URL protocols such as "cvs://" and "git://", this field can be used to specify the module to be checked out. Can be omitted if it is the same as the basename of the `source.url` field. Example: "cgilua"  (For compatibility reasons, `source.cvs_module` is also accepted.)
 * **build** (table) - Contains all information pertaining _how_ to build a rock. Supports [per-platform overrides](platform_overrides.md).
    * **build.type** (string) - The LuaRocks build back-end to use. Example: "make"
    * **build.install** (table) - For packages which don't provide means to install modules and expect the user to copy the .lua or library files by hand to the proper locations. This table contains categories of files. Each category is itself a table, where the array part is a list of filenames to be copied. For module directories only, in the hash part, other keys are identifiers in Lua module format, to indicate which subdirectory the file should be copied to. For example, `build.install.lua = {["foo.bar"] = "src/bar.lua"}` will copy src/bar.lua to the foo directory under the rock's Lua files directory. The available categories are:
-      * **build.install.lua** (table) - Lua modules written in Lua. 
-      * **build.install.lib** (table) - Dynamic libraries implemented compiled Lua modules. 
+      * **build.install.lua** (table) - Lua modules written in Lua.
+      * **build.install.lib** (table) - Dynamic libraries implemented compiled Lua modules.
       * **build.install.conf** (table) - Configuration files.
       * **build.install.bin** (table) - Lua command-line scripts.
    * **build.copy_directories** (array of strings) (since 1.0) - A list of directories in the source directory to be copied to the rock installation prefix as-is. Useful for installing documentation and other files such as samples and tests. Default is {"doc"} for documentation to be locally installed in the rocktree.
       * :warning: **Warning:** - do not use the following directory names: "lua", "lib", "rock_manifest" or the name of your rockspec; those names are used by the .rock format internally, and attempting to copy directories with those names using the build.copy_directories directive will cause a clash.
-   * **build.patches** (table) - A rockspec can embed patches in unified diff ("diff -u") format, which are applied prior to building the modules. Each entry in this table should contain a descriptive file name for the patch a the key, and the text of the patch as the value (typically, as a long string). The patch is applied from within the source.dir directory, and file names ignore the first directory level (in other word, patches are applied with the equivalent of "patch -p 1"). Keep in mind that the actual text of the patch cannot be indented. Example: 
+   * **build.patches** (table) - A rockspec can embed patches in unified diff ("diff -u") format, which are applied prior to building the modules. Each entry in this table should contain a descriptive file name for the patch a the key, and the text of the patch as the value (typically, as a long string). The patch is applied from within the source.dir directory, and file names ignore the first directory level (in other word, patches are applied with the equivalent of "patch -p 1"). Keep in mind that the actual text of the patch cannot be indented. Example:
 ```
 patches = {
    ["lua51-support.diff"] = [[
@@ -73,8 +73,8 @@ patches = {
 
 ### Build back-ends
 
-Build back-ends indicate how to build a package. 
-Fields of the `build` table other than `build.type`, `build.platforms` and `build.install` are specific to the given type. 
+Build back-ends indicate how to build a package.
+Fields of the `build` table other than `build.type`, `build.platforms` and `build.install` are specific to the given type.
 
 #### builtin
 
@@ -146,8 +146,8 @@ A null build back-end. Indicates that there is no build to perform.
 
 ### Test back-ends
 
-Test back-ends indicate how to test a package. 
-Fields of the `test` table other than `test.type` and `test.platforms` are specific to the given type. 
+Test back-ends indicate how to test a package.
+Fields of the `test` table other than `test.type` and `test.platforms` are specific to the given type.
 
 #### busted
 
