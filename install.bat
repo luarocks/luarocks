@@ -1031,7 +1031,7 @@ if vars.LUA_VERSION == "5.1" or vars.LUA_VERSION == "5.2" then
 			die()
 		end
 	end
-	if not exec(S[[XCOPY /S src\compat53\*.* "$LUADIR\compat53" >NUL]]) then
+	if not exec(S[[XCOPY /S vendor\compat53\*.* "$LUADIR\compat53" >NUL]]) then
 		die()
 	end
 end

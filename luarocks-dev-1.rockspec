@@ -20,6 +20,9 @@ description = {
    maintainer = "Hisham Muhammad",
    license = "MIT",
 }
+dependencies = {
+   "compat53",
+}
 test_dependencies = {
    "luacov",
    "busted-htest",
