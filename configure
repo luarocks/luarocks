@@ -143,9 +143,9 @@ For specialized uses of LuaRocks:
                                (e.g. when only deploying binary packages)
                                you do not need lua.h installed. This flag
                                skips the check for lua.h in "configure".
-  --with-system-compat53       Use an external installation of lua-compat53
-                               instead of the vendored version (applies to
-                               lua 5.1 and 5.2).
+  --with-system-rocks          Use an external installation of rocks required
+                               for running luarocks instead instead of the
+                               vendored versions.
 
 EOF
 }
@@ -304,8 +304,8 @@ do
    --disable-incdir-check)
       DISABLE_INCDIR_CHECK=yes
       ;;
-   --with-system-compat53)
-      WITH_SYSTEM_COMPAT53=yes
+   --with-system-rocks)
+      WITH_SYSTEM_ROCKS=yes
       ;;
 
    # Old options that no longer apply
@@ -506,7 +506,7 @@ LUA_BINDIR=$LUA_BINDIR
 LUA_INCDIR=$LUA_INCDIR
 LUA_LIBDIR=$LUA_LIBDIR
 FORCE_CONFIG=$FORCE_CONFIG
-WITH_SYSTEM_COMPAT53=$WITH_SYSTEM_COMPAT53
+WITH_SYSTEM_ROCKS=$WITH_SYSTEM_ROCKS
 EOF
 
 echo
