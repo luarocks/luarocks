@@ -18,6 +18,15 @@ LUAROCKS_FILES = $(shell find src/luarocks/ -type f -name '*.lua')
 
 LUA_ENV_VARS = LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4 LUA_PATH_5_5 LUA_CPATH LUA_CPATH_5_2 LUA_CPATH_5_3 LUA_CPATH_5_4 LUA_CPATH_5_5
 
+luarockspackagepath := $(luadir)/?.lua
+
+ifndef WITH_SYSTEM_COMPAT53
+ifeq (,$(findstring $(LUA_VERSION),"5.3" "5.4" "5.5"))
+vendored_compat53 = 1
+luarockspackagepath := $(luarockspackagepath);$(luadir)/luarocks/vendor/?.lua
+endif
+endif
+
 all: build
 
 # ----------------------------------------
@@ -71,7 +80,7 @@ $(builddir)/luarocks: src/bin/luarocks config.unix
 	'package.loaded["luarocks.core.hardcoded"] = { '\
 	"$$([ -n "$(FORCE_CONFIG)" ] && printf 'FORCE_CONFIG = true, ')"\
 	'SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
-	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'\
+	'package.path=[[$(luarockspackagepath);]] .. package.path\n'\
 	'local list = package.searchers or package.loaders; table.insert(list, 1, function(name) if name:match("^luarocks%%.") then return loadfile([[$(luadir)/]] .. name:gsub([[%%.]], [[/]]) .. [[.lua]]) end end)\n'; \
 	tail -n +2 src/bin/luarocks \
 	)> "$@"
@@ -82,7 +91,7 @@ $(builddir)/luarocks-admin: src/bin/luarocks-admin config.unix
 	'package.loaded["luarocks.core.hardcoded"] = { '\
 	"$$([ -n "$(FORCE_CONFIG)" ] && printf 'FORCE_CONFIG = true, ')"\
 	'SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
-	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'\
+	'package.path=[[$(luarockspackagepath);]] .. package.path\n'\
 	'local list = package.searchers or package.loaders; table.insert(list, 1, function(name) if name:match("^luarocks%%.") then return loadfile([[$(luadir)/]] .. name:gsub([[%%.]], [[/]]) .. [[.lua]]) end end)\n'; \
 	tail -n +2 src/bin/luarocks-admin \
 	)> "$@"
@@ -119,17 +128,15 @@ install: all install-config
 	do \
 	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
 	done
-ifndef WITH_SYSTEM_COMPAT53
-ifeq (,$(findstring $(LUA_VERSION),"5.3" "5.4" "5.5"))
+ifdef vendored_compat53
 	find src/compat53/ -type d | while read f; \
 	do \
-	   mkdir -p '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
+	   mkdir -p '$(DESTDIR)$(luadir)/luarocks/vendor'/`echo $$f | sed 's,^src/,,'`; \
 	done
 	find src/compat53/ -type f -name '*.lua' | while read f; \
 	do \
-	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
+	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)/luarocks/vendor'/`echo $$f | sed 's,^src/,,'`; \
 	done
-endif
 endif
 
 install-config:
