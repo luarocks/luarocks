@@ -2,7 +2,7 @@
 local record persist
 end
 
-local json = require("luarocks.vendor.dkjson")
+local json = require("dkjson")
 
 --------------------------------------------------------------------------------
 
@@ -64,7 +64,7 @@ function persist.load_into_table(filename: string, tbl?: {string:any}) : {string
    setmetatable(result, save_mt)
 
    if not ok then
-      return nil, tostring(err), errcode 
+      return nil, tostring(err), errcode
    end
    return result, globals
 end

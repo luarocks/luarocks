@@ -20,7 +20,7 @@ local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local fun = require("luarocks.fun")
 local fs = require("luarocks.fs")
-local argparse = require("luarocks.vendor.argparse")
+local argparse = require("argparse")
 
 
 
