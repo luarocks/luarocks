@@ -44,7 +44,7 @@ end
 local LUA_MODULES = TARGET_DIR .. "/lua_modules"
 local CONFIG_DIR = TARGET_DIR .. "/.luarocks"
 
-package.path = "./src/?.lua;" .. package.path
+package.path = "./src/?.lua;" .. "./vendor/?.lua;" .. package.path
 
 local fs = require("luarocks.fs")
 local cfg = require("luarocks.core.cfg")
