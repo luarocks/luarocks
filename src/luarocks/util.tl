@@ -48,7 +48,7 @@ util.starts_with = core.starts_with
 local type Fn = util.Fn
 local type Rockspec = require("luarocks.core.types.rockspec").Rockspec
 
-local type Parser = require("luarocks.vendor.argparse").Parser
+local type Parser = require("argparse").Parser
 
 
 local scheduled_functions: {Fn} = {}

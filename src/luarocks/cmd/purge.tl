@@ -14,7 +14,7 @@ local cfg = require("luarocks.core.cfg")
 local remove = require("luarocks.remove")
 local queries = require("luarocks.queries")
 
-local type Parser = require("luarocks.vendor.argparse").Parser
+local type Parser = require("argparse").Parser
 
 local type Args = require("luarocks.core.types.args").Args
 

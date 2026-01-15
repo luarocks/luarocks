@@ -19,7 +19,7 @@ local search = require("luarocks.search")
 local make = require("luarocks.cmd.make")
 local repos = require("luarocks.repos")
 
-local type Parser = require("luarocks.vendor.argparse").Parser
+local type Parser = require("argparse").Parser
 
 local type Args = require("luarocks.core.types.args").Args
 local type BOpts = require("luarocks.core.types.bopts").BOpts

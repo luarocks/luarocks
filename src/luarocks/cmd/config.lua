@@ -10,7 +10,7 @@ local util = require("luarocks.util")
 local deps = require("luarocks.deps")
 local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
-local json = require("luarocks.vendor.dkjson")
+local json = require("dkjson")
 
 
 

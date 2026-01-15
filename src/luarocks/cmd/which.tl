@@ -8,7 +8,7 @@ local loader = require("luarocks.loader")
 local cfg = require("luarocks.core.cfg")
 local util = require("luarocks.util")
 
-local type Parser = require("luarocks.vendor.argparse").Parser
+local type Parser = require("argparse").Parser
 
 local type Args = require("luarocks.core.types.args").Args
 

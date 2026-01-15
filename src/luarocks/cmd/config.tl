@@ -10,9 +10,9 @@ local util = require("luarocks.util")
 local deps = require("luarocks.deps")
 local dir = require("luarocks.dir")
 local fs = require("luarocks.fs")
-local json = require("luarocks.vendor.dkjson")
+local json = require("dkjson")
 
-local type Parser = require("luarocks.vendor.argparse").Parser
+local type Parser = require("argparse").Parser
 
 local type Args = require("luarocks.core.types.args").Args
 
