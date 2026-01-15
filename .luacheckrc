@@ -26,7 +26,7 @@ ignore = {
 }
 
 exclude_files = {
-   "src/luarocks/vendor/**/*.lua",
+   "vendor/**/*.lua",
 }
 
 include_files = {
