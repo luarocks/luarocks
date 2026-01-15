@@ -282,6 +282,11 @@ local function detect_elf_system(fd, hdr, sections)
             return "linux"
          end
       end
+
+      local uname_s = io.popen("uname -s"):read("*l")
+      if uname_s == "SerenityOS" then
+         return "serenity"
+      end
    end
 
    return system
