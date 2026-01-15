@@ -13,7 +13,7 @@ local fetch = require("luarocks.fetch")
 local fs = require("luarocks.fs")
 local download = require("luarocks.download")
 
-local type Parser = require("luarocks.vendor.argparse").Parser
+local type Parser = require("argparse").Parser
 
 local type Args = require("luarocks.core.types.args").Args
 local type Rockspec = require("luarocks.core.types.rockspec").Rockspec

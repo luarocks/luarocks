@@ -10,7 +10,7 @@ do
    luaname=$(echo $tealname | sed 's/.tl$/.lua/g')
    if [ $tealname -nt $luaname ] || [ "$1" = "--all" ]
    then
-      tl gen --check -I ../types $tealname -o $luaname
+      tl gen --check -I ../types -I ../vendor $tealname -o $luaname
       i=$[i+1]
    fi
 done

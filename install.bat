@@ -1024,14 +1024,17 @@ end
 if not exec(S[[XCOPY /S src\luarocks\*.* "$LUADIR\luarocks" >NUL]]) then
 	die()
 end
-if vars.LUA_VERSION ~= "5.3" or vars.LUA_VERSION ~= "5.4" or vars.LUA_VERSION ~= "5.5" then
-	-- Copy the vendored lua-copmat53 source files
+if not exec(S[[XCOPY vendor\*.* "$LUADIR\luarocks" >NUL]]) then
+	die()
+end
+if vars.LUA_VERSION == "5.1" or vars.LUA_VERSION == "5.2" then
+	-- Copy the vendored lua-compat53 source files
 	if not exists(S[[$LUADIR\compat53]]) then
 		if not mkdir(S[[$LUADIR\compat53]]) then
 			die()
 		end
 	end
-	if not exec(S[[XCOPY /S src\compat53\*.* "$LUADIR\compat53" >NUL]]) then
+	if not exec(S[[XCOPY /S vendor\compat53\*.* "$LUADIR\compat53" >NUL]]) then
 		die()
 	end
 end

@@ -7,7 +7,7 @@ end
 local util = require("luarocks.util")
 local test = require("luarocks.test")
 
-local type Parser = require("luarocks.vendor.argparse").Parser
+local type Parser = require("argparse").Parser
 
 local type Args = require("luarocks.core.types.args").Args
 

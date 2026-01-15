@@ -24,7 +24,7 @@ local dir = require("luarocks.dir")
 local util = require("luarocks.util")
 local persist = require("luarocks.persist")
 local multipart = require("luarocks.upload.multipart")
-local json = require("luarocks.vendor.dkjson")
+local json = require("dkjson")
 local dir_sep = package.config:sub(1, 1)
 
 local type Parameters = multipart.Parameters

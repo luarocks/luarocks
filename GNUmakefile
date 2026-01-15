@@ -18,6 +18,16 @@ LUAROCKS_FILES = $(shell find src/luarocks/ -type f -name '*.lua')
 
 LUA_ENV_VARS = LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4 LUA_PATH_5_5 LUA_CPATH LUA_CPATH_5_2 LUA_CPATH_5_3 LUA_CPATH_5_4 LUA_CPATH_5_5
 
+luarockspackagepath := $(luadir)/?.lua
+
+ifndef WITH_SYSTEM_ROCKS
+luarockspackagepath := $(luarockspackagepath);$(luadir)/luarocks/vendor/?.lua
+vendored_rocks = 1
+ifneq ($(filter $(LUA_VERSION),5.1 5.2),)
+vendored_compat53 = 1
+endif
+endif
+
 all: build
 
 # ----------------------------------------
@@ -54,7 +64,7 @@ luarocks: config.unix $(builddir)/config-$(LUA_VERSION).lua
 	rm -f src/luarocks/core/hardcoded.lua
 	echo "#!/bin/sh" > luarocks
 	echo "unset $(LUA_ENV_VARS)" >> luarocks
-	echo 'LUAROCKS_SYSCONFDIR="$(luarocksconfdir)" LUA_PATH="$(CURDIR)/src/?.lua;;" exec "$(LUA)" "$(CURDIR)/src/bin/luarocks" --project-tree="$(CURDIR)/lua_modules" "$$@"' >> luarocks
+	echo 'LUAROCKS_SYSCONFDIR="$(luarocksconfdir)" LUA_PATH="$(CURDIR)/src/?.lua;$(CURDIR)/vendor/?.lua;;" exec "$(LUA)" "$(CURDIR)/src/bin/luarocks" --project-tree="$(CURDIR)/lua_modules" "$$@"' >> luarocks
 	chmod +rx ./luarocks
 	./luarocks init
 
@@ -62,7 +72,7 @@ luarocks-admin: config.unix
 	rm -f src/luarocks/core/hardcoded.lua
 	echo "#!/bin/sh" > luarocks-admin
 	echo "unset $(LUA_ENV_VARS)" >> luarocks-admin
-	echo 'LUAROCKS_SYSCONFDIR="$(luarocksconfdir)" LUA_PATH="$(CURDIR)/src/?.lua;;" exec "$(LUA)" "$(CURDIR)/src/bin/luarocks-admin" --project-tree="$(CURDIR)/lua_modules" "$$@"' >> luarocks-admin
+	echo 'LUAROCKS_SYSCONFDIR="$(luarocksconfdir)" LUA_PATH="$(CURDIR)/src/?.lua;$(CURDIR)/vendor/?.lua;;" exec "$(LUA)" "$(CURDIR)/src/bin/luarocks-admin" --project-tree="$(CURDIR)/lua_modules" "$$@"' >> luarocks-admin
 	chmod +rx ./luarocks-admin
 
 $(builddir)/luarocks: src/bin/luarocks config.unix
@@ -71,7 +81,7 @@ $(builddir)/luarocks: src/bin/luarocks config.unix
 	'package.loaded["luarocks.core.hardcoded"] = { '\
 	"$$([ -n "$(FORCE_CONFIG)" ] && printf 'FORCE_CONFIG = true, ')"\
 	'SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
-	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'\
+	'package.path=[[$(luarockspackagepath);]] .. package.path\n'\
 	'local list = package.searchers or package.loaders; table.insert(list, 1, function(name) if name:match("^luarocks%%.") then return loadfile([[$(luadir)/]] .. name:gsub([[%%.]], [[/]]) .. [[.lua]]) end end)\n'; \
 	tail -n +2 src/bin/luarocks \
 	)> "$@"
@@ -82,7 +92,7 @@ $(builddir)/luarocks-admin: src/bin/luarocks-admin config.unix
 	'package.loaded["luarocks.core.hardcoded"] = { '\
 	"$$([ -n "$(FORCE_CONFIG)" ] && printf 'FORCE_CONFIG = true, ')"\
 	'SYSCONFDIR = [[$(luarocksconfdir)]] }\n'\
-	'package.path=[[$(luadir)/?.lua;]] .. package.path\n'\
+	'package.path=[[$(luarockspackagepath);]] .. package.path\n'\
 	'local list = package.searchers or package.loaders; table.insert(list, 1, function(name) if name:match("^luarocks%%.") then return loadfile([[$(luadir)/]] .. name:gsub([[%%.]], [[/]]) .. [[.lua]]) end end)\n'; \
 	tail -n +2 src/bin/luarocks-admin \
 	)> "$@"
@@ -119,15 +129,25 @@ install: all install-config
 	do \
 	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
 	done
-ifeq (,$(findstring $(LUA_VERSION),"5.3" "5.4" "5.5"))
-	find src/compat53/ -type d | while read f; \
+ifdef vendored_rocks
+	find vendor/ -type d | while read f; \
 	do \
-	   mkdir -p '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
+	   mkdir -p '$(DESTDIR)$(luadir)/luarocks'/`echo $$f`; \
 	done
-	find src/compat53/ -type f -name '*.lua' | while read f; \
+	find vendor/ -maxdepth 1 -type f -name '*.lua' | while read f; \
 	do \
-	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
+	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)/luarocks'/`echo $$f`; \
 	done
+ifdef vendored_compat53
+	find vendor/compat53/ -type d | while read f; \
+	do \
+	   mkdir -p '$(DESTDIR)$(luadir)/luarocks'/`echo $$f`; \
+	done
+	find vendor/compat53/ -type f -name '*.lua' | while read f; \
+	do \
+	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)/luarocks'/`echo $$f`; \
+	done
+endif
 endif
 
 install-config:

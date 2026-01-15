@@ -11,7 +11,7 @@ local build = require("luarocks.build")
 local dir = require("luarocks.dir")
 local search = require("luarocks.search")
 
-local type Parser = require("luarocks.vendor.argparse").Parser
+local type Parser = require("argparse").Parser
 
 local type Args = require("luarocks.core.types.args").Args
 
