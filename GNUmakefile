@@ -63,7 +63,7 @@ luarocks: config.unix $(builddir)/config-$(LUA_VERSION).lua
 	rm -f src/luarocks/core/hardcoded.lua
 	echo "#!/bin/sh" > luarocks
 	echo "unset $(LUA_ENV_VARS)" >> luarocks
-	echo 'LUAROCKS_SYSCONFDIR="$(luarocksconfdir)" LUA_PATH="$(CURDIR)/src/?.lua;;" exec "$(LUA)" "$(CURDIR)/src/bin/luarocks" --project-tree="$(CURDIR)/lua_modules" "$$@"' >> luarocks
+	echo 'LUAROCKS_SYSCONFDIR="$(luarocksconfdir)" LUA_PATH="$(CURDIR)/src/?.lua;$(CURDIR)/vendor/?.lua;;" exec "$(LUA)" "$(CURDIR)/src/bin/luarocks" --project-tree="$(CURDIR)/lua_modules" "$$@"' >> luarocks
 	chmod +rx ./luarocks
 	./luarocks init
 
@@ -129,13 +129,13 @@ install: all install-config
 	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
 	done
 ifdef vendored_compat53
-	find src/compat53/ -type d | while read f; \
+	find vendor/compat53/ -type d | while read f; \
 	do \
-	   mkdir -p '$(DESTDIR)$(luadir)/luarocks/vendor'/`echo $$f | sed 's,^src/,,'`; \
+	   mkdir -p '$(DESTDIR)$(luadir)/luarocks'/`echo $$f`; \
 	done
-	find src/compat53/ -type f -name '*.lua' | while read f; \
+	find vendor/compat53/ -type f -name '*.lua' | while read f; \
 	do \
-	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)/luarocks/vendor'/`echo $$f | sed 's,^src/,,'`; \
+	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)/luarocks'/`echo $$f`; \
 	done
 endif
 
