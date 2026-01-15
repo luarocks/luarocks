@@ -593,7 +593,7 @@ local function create_env(testing_paths)
    table.insert(lua_path, dir_path(deps_tree, "share", "lua", lua_v, "?.lua"))
    table.insert(lua_path, dir_path(deps_tree, "share", "lua", lua_v, "?", "init.lua"))
    table.insert(lua_path, dir_path(testing_paths.src_dir, "?.lua"))
-   table.insert(lua_path, dir_path(testing_paths.src_dir, "..", "vendor". "?.lua"))
+   table.insert(lua_path, dir_path(testing_paths.src_dir, "..", "vendor", "?.lua"))
    env_variables.LUA_PATH = table.concat(lua_path, ";") .. ";"
 
    local lua_cpath = {}
