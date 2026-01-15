@@ -21,7 +21,7 @@ LUA_ENV_VARS = LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4 LUA_PATH_5_5 LUA_
 luarockspackagepath := $(luadir)/?.lua
 
 ifndef WITH_SYSTEM_COMPAT53
-ifeq (,$(findstring $(LUA_VERSION),"5.3" "5.4" "5.5"))
+ifneq ($(filter $(LUA_VERSION),5.1 5.2),)
 vendored_compat53 = 1
 luarockspackagepath := $(luarockspackagepath);$(luadir)/luarocks/vendor/?.lua
 endif
