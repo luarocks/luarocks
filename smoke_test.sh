@@ -1,6 +1,7 @@
 #!/bin/sh -e
 
 tarball="$1"
+shift
 
 rm -rf smoketestdir
 mkdir smoketestdir
@@ -10,9 +11,10 @@ cd smoketestdir
 tar zxvpf "$(basename "$tarball")"
 cd "$(basename "$tarball" .tar.gz)"
 
-if [ "$2" = "binary" ]
+if [ "$1" = "binary" ]
 then
-   ./configure --prefix=foobar
+   shift
+   ./configure --prefix=foobar "$@"
    make binary
    make install-binary
    cd foobar
@@ -32,7 +34,7 @@ fi
 # test installation with make install
 ################################################################################
 
-./configure --prefix=foobar
+./configure --prefix=foobar "$@"
 make
 make install
 cd foobar
@@ -51,7 +53,7 @@ rm -rf foobar
 # test installation with make bootstrap
 ################################################################################
 
-./configure --prefix=fooboot
+./configure --prefix=fooboot "$@"
 make bootstrap
 ./luarocks --verbose
 ./luarocks --verbose install inspect
@@ -74,7 +76,7 @@ rm -rf fooboot
 # test installation with luarocks install
 ################################################################################
 
-./configure --prefix=foorock
+./configure --prefix=foorock "$@"
 make bootstrap
 ./luarocks make --pack-binary-rock
 cd foorock
