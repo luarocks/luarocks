@@ -72,7 +72,7 @@ luarocks-admin: config.unix
 	rm -f src/luarocks/core/hardcoded.lua
 	echo "#!/bin/sh" > luarocks-admin
 	echo "unset $(LUA_ENV_VARS)" >> luarocks-admin
-	echo 'LUAROCKS_SYSCONFDIR="$(luarocksconfdir)" LUA_PATH="$(CURDIR)/src/?.lua;;" exec "$(LUA)" "$(CURDIR)/src/bin/luarocks-admin" --project-tree="$(CURDIR)/lua_modules" "$$@"' >> luarocks-admin
+	echo 'LUAROCKS_SYSCONFDIR="$(luarocksconfdir)" LUA_PATH="$(CURDIR)/src/?.lua;$(CURDIR)/vendor/?.lua;;" exec "$(LUA)" "$(CURDIR)/src/bin/luarocks-admin" --project-tree="$(CURDIR)/lua_modules" "$$@"' >> luarocks-admin
 	chmod +rx ./luarocks-admin
 
 $(builddir)/luarocks: src/bin/luarocks config.unix
