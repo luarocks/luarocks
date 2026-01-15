@@ -1,0 +1,41 @@
+.Dd $Mdocdate: January 11 2023 $
+.Dt LUAROCKS-HELP 1
+.Os
+.Sh NAME
+.Nm luarocks-help
+.Nd get help on luarocks commands
+
+.Sh SYNOPSIS
+.Nm luarocks help
+.Bk -words
+.Op Fl h
+.Op command
+.Ek
+
+.Sh DESCRIPTION
+.Nm luarocks help
+outputs help on the
+.Sy luarocks
+command named
+.Ar command .
+.Pp
+The options are as follows:
+.Bl -tag -width keyword
+.It Fl h
+Show a help message and exit.
+.El
+
+.Sh EXAMPLES
+.Pp
+Get general
+.Sy luarocks
+help:
+.Pp
+.Dl $ luarocks help
+.Pp
+Get help about the
+.Sq doc
+command:
+.Pp
+.Dl $ luarocks help doc
+.Pp
