@@ -20,10 +20,11 @@ LUA_ENV_VARS = LUA_PATH LUA_PATH_5_2 LUA_PATH_5_3 LUA_PATH_5_4 LUA_PATH_5_5 LUA_
 
 luarockspackagepath := $(luadir)/?.lua
 
-ifndef WITH_SYSTEM_COMPAT53
+ifndef WITH_SYSTEM_ROCKS
+luarockspackagepath := $(luarockspackagepath);$(luadir)/luarocks/vendor/?.lua
+vendored_rocks = 1
 ifneq ($(filter $(LUA_VERSION),5.1 5.2),)
 vendored_compat53 = 1
-luarockspackagepath := $(luarockspackagepath);$(luadir)/luarocks/vendor/?.lua
 endif
 endif
 
@@ -128,6 +129,15 @@ install: all install-config
 	do \
 	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)'/`echo $$f | sed 's,^src/,,'`; \
 	done
+ifdef vendored_rocks
+	find vendor/ -type d | while read f; \
+	do \
+	   mkdir -p '$(DESTDIR)$(luadir)/luarocks'/`echo $$f`; \
+	done
+	find vendor/ -maxdepth 1 -type f -name '*.lua' | while read f; \
+	do \
+	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)/luarocks'/`echo $$f`; \
+	done
 ifdef vendored_compat53
 	find vendor/compat53/ -type d | while read f; \
 	do \
@@ -137,6 +147,7 @@ ifdef vendored_compat53
 	do \
 	   $(INSTALL_DATA) "$$f" '$(DESTDIR)$(luadir)/luarocks'/`echo $$f`; \
 	done
+endif
 endif
 
 install-config:

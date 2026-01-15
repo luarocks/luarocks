@@ -22,6 +22,8 @@ description = {
 }
 dependencies = {
    "compat53",
+   "argparse",
+   "dkjson",
 }
 test_dependencies = {
    "luacov",
