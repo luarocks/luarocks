@@ -826,7 +826,20 @@ if lua_version < "5.3" then
          end
       end -- not luajit
 
-      if is_luajit then
+      local is_full_compat = package.loaded["compat53"] or package.loaded["compat53.init"]
+
+      -- When using the full `compat53.init` module, we override the global state, so
+      -- we can patch the FILE metatable. When using `compat53.module` on its own, however,
+      -- we have to choose between being compatible with the Lua 5.3 API of the file metamethods,
+      -- or with the pointer identity of the original LuaJIT metatable in the C API (see issue #70).
+      -- We default to be Lua 5.3 API compatible, but we offer the user a choice to override this
+      -- by setting a special global `LUA_COMPAT53_NO_FILE_META_OVERRIDE` to `true`, prior to
+      -- requiring `compat53.module`.
+      local use_modular_compat_file_meta = is_luajit
+         and (not is_full_compat)
+         and (not _G.LUA_COMPAT53_NO_FILE_META_OVERRIDE)
+
+      if use_modular_compat_file_meta then
          local compat_file_meta = {}
          local compat_file_meta_loaded = 0
 
