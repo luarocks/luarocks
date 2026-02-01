@@ -1,5 +1,10 @@
 #!/usr/bin/env lua
 
+-- Ensure we get the full compat53 loaded,
+-- including the adjustments in the original FILE metamethod.
+LUA_COMPAT53_NO_FILE_META_OVERRIDE=true
+require("compat53.init")
+
 -- Load cfg first so that the loader knows it is running inside LuaRocks
 local cfg = require("luarocks.core.cfg")
 
