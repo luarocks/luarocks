@@ -385,17 +385,17 @@ end
 
 local function nonnull(x) return x ~= nil end
 
-local function generate(main_program, dir, skip)
+local function generate(main_program, src_dir, vendor_dir, skip)
    local program_name = main_program:gsub(".*/", "")
 
-   local hardcoded = write_hardcoded_module(dir)
+   local hardcoded = write_hardcoded_module(src_dir)
 
    local out = {}
    table.insert(out, ([[static const char* progname = %q;]]):format(program_name))
    table.insert(out, c_preamble)
    load_main(out, main_program, program_name)
    local lua_modules = LUA_MODULES .. "/share/lua/" .. cfg.lua_version
-   declare_modules(out, { dir, lua_modules }, skip)
+   declare_modules(out, { src_dir, vendor_dir, lua_modules }, skip)
    local a_files = declare_libraries(out, LUA_MODULES .. "/lib/lua/" .. cfg.lua_version)
    table.insert(out, c_main)
 
@@ -497,7 +497,7 @@ local function main()
       end
    end
 
-   generate(MAIN_PROGRAM, "src", { EXCLUDE, "^bin/?" })
+   generate(MAIN_PROGRAM, "src", "vendor", { EXCLUDE, "^bin/?" })
 end
 
 main()
