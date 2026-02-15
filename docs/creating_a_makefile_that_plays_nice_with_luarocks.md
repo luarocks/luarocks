@@ -163,16 +163,17 @@ install:
 You probably don't just want to echo stuff, so here's how to use the variables
 when actually building or installing something:
 
-```
-...
+```make
+#...
+
+CPPFLAGS = -I$(LUA_INCDIR)
+LDFLAGS = $(LIBFLAG) -L$(LUA_LIBDIR)
 
 all: lrtest.so
 
 lrtest.so: lrtest.o
-	$(CC) $(LIBFLAG) -o $@ -L$(LUA_LIBDIR) $<
 
 lrtest.o: lrtest.c
-	$(CC) -c $(CFLAGS) -I$(LUA_INCDIR) $< -o $@
 
 install: lrtest.so lrtest.lua
 	cp lrtest.so $(INST_LIBDIR)
