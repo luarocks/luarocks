@@ -77,7 +77,7 @@ build = {
 
 The corresponding Makefile looks like this:
 
-```
+```make
 all:
 	@echo --- build
 	@echo CFLAGS: $(CFLAGS)
@@ -99,7 +99,7 @@ install:
 Now, if you call `luarocks make`, the output will look something
 like this:
 
-```
+```make
 -- build
 CFLAGS: -O2 -fPIC
 LIBFLAG: -shared
@@ -137,7 +137,7 @@ the Makefile.
 With this, a Makefile that is usable both from LuaRocks and standalone
 might look like this:
 
-```
+```make
 CFLAGS = -fPIC -O2
 LIBFLAG = -shared
 LUA_LIBDIR = /usr/local/lib/lua/5.2
