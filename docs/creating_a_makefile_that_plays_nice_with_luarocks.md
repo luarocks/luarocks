@@ -41,7 +41,7 @@ These variables are not readily available in the Makefile, you need to tell
 LuaRocks to pass them to make. A simple rockspec that will do this looks
 like this:
 
-```
+```lua
 package = "lrtest"
 version = "1.0-1"
 source = {
@@ -52,7 +52,6 @@ build = {
    build_variables = {
       CFLAGS="$(CFLAGS)",
       LIBFLAG="$(LIBFLAG)",
-      LUA_LIBDIR="$(LUA_LIBDIR)",
       LUA_BINDIR="$(LUA_BINDIR)",
       LUA_INCDIR="$(LUA_INCDIR)",
       LUA="$(LUA)",
@@ -64,6 +63,15 @@ build = {
       INST_LUADIR="$(LUADIR)",
       INST_CONFDIR="$(CONFDIR)",
    },
+   platforms = {
+       windows = {
+          build_variables = {
+            -- windows requires linking lua library explicitly
+            LUA_LIBDIR="$(LUA_LIBDIR)",
+            LUALIB="$(LUALIB)",
+         }
+      }
+   }
 }
 ```
 
@@ -167,7 +175,12 @@ when actually building or installing something:
 #...
 
 CPPFLAGS = -I$(LUA_INCDIR)
-LDFLAGS = $(LIBFLAG) -L$(LUA_LIBDIR)
+LDFLAGS = $(LIBFLAG)
+
+# handle platforms with explicit linking of lua
+ifdef LUA_LIBDIR
+LDFLAGS += -L$(LUA_LIBDIR)
+endif
 
 all: lrtest.so
 
