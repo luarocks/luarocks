@@ -179,7 +179,7 @@ LDFLAGS = $(LIBFLAG)
 
 # handle platforms with explicit linking of lua
 ifdef LUA_LIBDIR
-LDFLAGS += -L$(LUA_LIBDIR)
+LDLIBS += $(LUA_LIBDIR)/$(LUALIB)
 endif
 
 all: lrtest.so
