@@ -48,30 +48,30 @@ source = {
    url = "http://..."
 }
 build = {
-   type = "make",
-   build_variables = {
-      CFLAGS="$(CFLAGS)",
-      LIBFLAG="$(LIBFLAG)",
-      LUA_BINDIR="$(LUA_BINDIR)",
-      LUA_INCDIR="$(LUA_INCDIR)",
-      LUA="$(LUA)",
-   },
-   install_variables = {
-      INST_PREFIX="$(PREFIX)",
-      INST_BINDIR="$(BINDIR)",
-      INST_LIBDIR="$(LIBDIR)",
-      INST_LUADIR="$(LUADIR)",
-      INST_CONFDIR="$(CONFDIR)",
-   },
-   platforms = {
-       windows = {
-          build_variables = {
-            -- windows requires linking lua library explicitly
-            LUA_LIBDIR="$(LUA_LIBDIR)",
-            LUALIB="$(LUALIB)",
-         }
-      }
-   }
+    type = "make",
+    build_variables = {
+        CFLAGS="$(CFLAGS)",
+        LIBFLAG="$(LIBFLAG)",
+        LUA_BINDIR="$(LUA_BINDIR)",
+        LUA_INCDIR="$(LUA_INCDIR)",
+        LUA="$(LUA)",
+    },
+    install_variables = {
+        INST_PREFIX="$(PREFIX)",
+        INST_BINDIR="$(BINDIR)",
+        INST_LIBDIR="$(LIBDIR)",
+        INST_LUADIR="$(LUADIR)",
+        INST_CONFDIR="$(CONFDIR)",
+    },
+    platforms = {
+        windows = {
+            build_variables = {
+                -- windows requires linking lua library explicitly
+                LUA_LIBDIR="$(LUA_LIBDIR)",
+                LUALIB="$(LUALIB)",
+            }
+        }
+    }
 }
 ```
 
@@ -79,20 +79,20 @@ The corresponding Makefile looks like this:
 
 ```make
 all:
-	@echo --- build
-	@echo CFLAGS: $(CFLAGS)
-	@echo LIBFLAG: $(LIBFLAG)
-	@echo LUA_LIBDIR: $(LUA_LIBDIR)
-	@echo LUA_BINDIR: $(LUA_BINDIR)
-	@echo LUA_INCDIR: $(LUA_INCDIR)
-	@echo LUA: $(LUA) 
+    @echo --- build
+    @echo CFLAGS: $(CFLAGS)
+    @echo LIBFLAG: $(LIBFLAG)
+    @echo LUA_LIBDIR: $(LUA_LIBDIR)
+    @echo LUA_BINDIR: $(LUA_BINDIR)
+    @echo LUA_INCDIR: $(LUA_INCDIR)
+    @echo LUA: $(LUA)
 
 install:
-	@echo --- install
-	@echo INST_PREFIX: $(INST_PREFIX)
-	@echo INST_BINDIR: $(INST_BINDIR)
-	@echo INST_LIBDIR: $(INST_LIBDIR)
-	@echo INST_LUADIR: $(INST_LUADIR)
+    @echo --- install
+    @echo INST_PREFIX: $(INST_PREFIX)
+    @echo INST_BINDIR: $(INST_BINDIR)
+    @echo INST_LIBDIR: $(INST_LIBDIR)
+    @echo INST_LUADIR: $(INST_LUADIR)
 @echo INST_CONFDIR: $(INST_CONFDIR)
 ```
 
@@ -144,28 +144,28 @@ LUA_LIBDIR = /usr/local/lib/lua/5.2
 LUA_BINDIR = /usr/local/bin
 LUA_INCDIR = /usr/local/include
 LUA = lua
-   
+
 INST_PREFIX = /usr/local
 INST_BINDIR = $(INST_PREFIX)/bin
 INST_LIBDIR = $(INST_PREFIX)/lib/lua/5.2
 INST_LUADIR = $(INST_PREFIX)/share/lua/5.2
 INST_CONFDIR = $(INST_PREFIX)/etc
-   
+
 all:
-	@echo --- build
-	@echo CFLAGS: $(CFLAGS)
-	@echo LIBFLAG: $(LIBFLAG)
-	@echo LUA_LIBDIR: $(LUA_LIBDIR)
-	@echo LUA_BINDIR: $(LUA_BINDIR)
-	@echo LUA_INCDIR: $(LUA_INCDIR)
+    @echo --- build
+    @echo CFLAGS: $(CFLAGS)
+    @echo LIBFLAG: $(LIBFLAG)
+    @echo LUA_LIBDIR: $(LUA_LIBDIR)
+    @echo LUA_BINDIR: $(LUA_BINDIR)
+    @echo LUA_INCDIR: $(LUA_INCDIR)
 
 install:
-	@echo --- install
-	@echo INST_PREFIX: $(INST_PREFIX)
-	@echo INST_BINDIR: $(INST_BINDIR)
-	@echo INST_LIBDIR: $(INST_LIBDIR)
-	@echo INST_LUADIR: $(INST_LUADIR)
-	@echo INST_CONFDIR: $(INST_CONFDIR)
+    @echo --- install
+    @echo INST_PREFIX: $(INST_PREFIX)
+    @echo INST_BINDIR: $(INST_BINDIR)
+    @echo INST_LIBDIR: $(INST_LIBDIR)
+    @echo INST_LUADIR: $(INST_LUADIR)
+    @echo INST_CONFDIR: $(INST_CONFDIR)
 ```
 
 You probably don't just want to echo stuff, so here's how to use the variables
@@ -189,8 +189,8 @@ lrtest.so: lrtest.o
 lrtest.o: lrtest.c
 
 install: lrtest.so lrtest.lua
-	cp lrtest.so $(INST_LIBDIR)
-	cp lrtest.lua $(INST_LUADIR)
+    cp lrtest.so $(INST_LIBDIR)
+    cp lrtest.lua $(INST_LUADIR)
 ```
 
 There is of course a lot more to a proper Makefile and rockspec, this is only
@@ -200,5 +200,3 @@ variables are created by LuaRocks, which have to be passed to the Makefile in
 the same way. Check the other documentation, especially [Rockspec
 format](rockspec_format.md) and [Recommended practices for
 Makefiles](recommended_practices_for_makefiles.md), for details.
-
-
