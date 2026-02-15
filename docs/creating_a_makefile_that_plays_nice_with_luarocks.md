@@ -41,57 +41,65 @@ These variables are not readily available in the Makefile, you need to tell
 LuaRocks to pass them to make. A simple rockspec that will do this looks
 like this:
 
-```
+```lua
 package = "lrtest"
 version = "1.0-1"
 source = {
    url = "http://..."
 }
 build = {
-   type = "make",
-   build_variables = {
-      CFLAGS="$(CFLAGS)",
-      LIBFLAG="$(LIBFLAG)",
-      LUA_LIBDIR="$(LUA_LIBDIR)",
-      LUA_BINDIR="$(LUA_BINDIR)",
-      LUA_INCDIR="$(LUA_INCDIR)",
-      LUA="$(LUA)",
-   },
-   install_variables = {
-      INST_PREFIX="$(PREFIX)",
-      INST_BINDIR="$(BINDIR)",
-      INST_LIBDIR="$(LIBDIR)",
-      INST_LUADIR="$(LUADIR)",
-      INST_CONFDIR="$(CONFDIR)",
-   },
+    type = "make",
+    build_variables = {
+        CFLAGS="$(CFLAGS)",
+        LIBFLAG="$(LIBFLAG)",
+        LUA_BINDIR="$(LUA_BINDIR)",
+        LUA_INCDIR="$(LUA_INCDIR)",
+        LUA="$(LUA)",
+    },
+    install_variables = {
+        INST_PREFIX="$(PREFIX)",
+        INST_BINDIR="$(BINDIR)",
+        INST_LIBDIR="$(LIBDIR)",
+        INST_LUADIR="$(LUADIR)",
+        INST_CONFDIR="$(CONFDIR)",
+    },
+    platforms = {
+        windows = {
+            build_variables = {
+                -- windows requires linking lua library explicitly
+                LUA_LIBDIR="$(LUA_LIBDIR)",
+                LUALIB="$(LUALIB)",
+            }
+        }
+    }
 }
 ```
 
 The corresponding Makefile looks like this:
 
-```
+```make
 all:
-	@echo --- build
-	@echo CFLAGS: $(CFLAGS)
-	@echo LIBFLAG: $(LIBFLAG)
-	@echo LUA_LIBDIR: $(LUA_LIBDIR)
-	@echo LUA_BINDIR: $(LUA_BINDIR)
-	@echo LUA_INCDIR: $(LUA_INCDIR)
-	@echo LUA: $(LUA) 
+    @echo --- build
+    @echo CFLAGS: $(CFLAGS)
+    @echo LIBFLAG: $(LIBFLAG)
+    @echo LUA_LIBDIR: $(LUA_LIBDIR)
+    @echo LUA_BINDIR: $(LUA_BINDIR)
+    @echo LUA_INCDIR: $(LUA_INCDIR)
+    @echo LUA: $(LUA)
 
 install:
-	@echo --- install
-	@echo INST_PREFIX: $(INST_PREFIX)
-	@echo INST_BINDIR: $(INST_BINDIR)
-	@echo INST_LIBDIR: $(INST_LIBDIR)
-	@echo INST_LUADIR: $(INST_LUADIR)
+    @echo --- install
+    @echo INST_PREFIX: $(INST_PREFIX)
+    @echo INST_BINDIR: $(INST_BINDIR)
+    @echo INST_LIBDIR: $(INST_LIBDIR)
+    @echo INST_LUADIR: $(INST_LUADIR)
 @echo INST_CONFDIR: $(INST_CONFDIR)
 ```
 
 Now, if you call `luarocks make`, the output will look something
 like this:
 
-```
+```make
 -- build
 CFLAGS: -O2 -fPIC
 LIBFLAG: -shared
@@ -116,8 +124,8 @@ The `CONFDIR` and `PREFIX` variables point to locations
 where you can store configuration or other data for your module. Your code
 must be made aware of these paths in order to use them. If you use the
 `copy_directories` entry in the build section of your rockspec,
-then what is mentioned there is copied to $(PREFIX) (i.e. a directory doc
-will be available under $(PREFIX)/doc). If you copy directories in your
+then what is mentioned there is copied to `$(PREFIX)` (i.e. a directory doc
+will be available under `$(PREFIX)/doc`). If you copy directories in your
 `install` Makefile rule, you should do the same.
 
 Now, if your Makefile is meant to be used standalone as well, which it
@@ -129,54 +137,60 @@ the Makefile.
 With this, a Makefile that is usable both from LuaRocks and standalone
 might look like this:
 
-```
+```make
 CFLAGS = -fPIC -O2
 LIBFLAG = -shared
 LUA_LIBDIR = /usr/local/lib/lua/5.2
 LUA_BINDIR = /usr/local/bin
 LUA_INCDIR = /usr/local/include
 LUA = lua
-   
+
 INST_PREFIX = /usr/local
 INST_BINDIR = $(INST_PREFIX)/bin
 INST_LIBDIR = $(INST_PREFIX)/lib/lua/5.2
 INST_LUADIR = $(INST_PREFIX)/share/lua/5.2
 INST_CONFDIR = $(INST_PREFIX)/etc
-   
+
 all:
-	@echo --- build
-	@echo CFLAGS: $(CFLAGS)
-	@echo LIBFLAG: $(LIBFLAG)
-	@echo LUA_LIBDIR: $(LUA_LIBDIR)
-	@echo LUA_BINDIR: $(LUA_BINDIR)
-	@echo LUA_INCDIR: $(LUA_INCDIR)
+    @echo --- build
+    @echo CFLAGS: $(CFLAGS)
+    @echo LIBFLAG: $(LIBFLAG)
+    @echo LUA_LIBDIR: $(LUA_LIBDIR)
+    @echo LUA_BINDIR: $(LUA_BINDIR)
+    @echo LUA_INCDIR: $(LUA_INCDIR)
 
 install:
-	@echo --- install
-	@echo INST_PREFIX: $(INST_PREFIX)
-	@echo INST_BINDIR: $(INST_BINDIR)
-	@echo INST_LIBDIR: $(INST_LIBDIR)
-	@echo INST_LUADIR: $(INST_LUADIR)
-	@echo INST_CONFDIR: $(INST_CONFDIR)
+    @echo --- install
+    @echo INST_PREFIX: $(INST_PREFIX)
+    @echo INST_BINDIR: $(INST_BINDIR)
+    @echo INST_LIBDIR: $(INST_LIBDIR)
+    @echo INST_LUADIR: $(INST_LUADIR)
+    @echo INST_CONFDIR: $(INST_CONFDIR)
 ```
 
 You probably don't just want to echo stuff, so here's how to use the variables
 when actually building or installing something:
 
-```
-...
+```make
+#...
+
+CPPFLAGS = -I$(LUA_INCDIR)
+LDFLAGS = $(LIBFLAG)
+
+# handle platforms with explicit linking of lua
+ifdef LUA_LIBDIR
+LDLIBS += $(LUA_LIBDIR)/$(LUALIB)
+endif
 
 all: lrtest.so
 
 lrtest.so: lrtest.o
-	$(CC) $(LIBFLAG) -o $@ -L$(LUA_LIBDIR) $<
 
 lrtest.o: lrtest.c
-	$(CC) -c $(CFLAGS) -I$(LUA_INCDIR) $< -o $@
 
 install: lrtest.so lrtest.lua
-	cp lrtest.so $(INST_LIBDIR)
-	cp lrtest.lua $(INST_LUADIR)
+    cp lrtest.so $(INST_LIBDIR)
+    cp lrtest.lua $(INST_LUADIR)
 ```
 
 There is of course a lot more to a proper Makefile and rockspec, this is only
@@ -186,5 +200,3 @@ variables are created by LuaRocks, which have to be passed to the Makefile in
 the same way. Check the other documentation, especially [Rockspec
 format](rockspec_format.md) and [Recommended practices for
 Makefiles](recommended_practices_for_makefiles.md), for details.
-
-
