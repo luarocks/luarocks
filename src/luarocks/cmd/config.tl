@@ -54,7 +54,7 @@ Query information about the LuaRocks configuration.
   resulting from reading the config files from all scopes.
 
   Example: luarocks config]], util.see_also([[
-   https://github.com/luarocks/luarocks/wiki/Config-file-format
+   https://github.com/luarocks/luarocks/blob/main/docs/config_file_format.md
    for detailed information on the LuaRocks config file format.
 ]]))
       :summary("Query information about the LuaRocks configuration.")
