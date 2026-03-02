@@ -410,6 +410,18 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       local xdg_cache_home = os.getenv("XDG_CACHE_HOME") or home.."/.cache"
       defaults.local_cache = xdg_cache_home.."/luarocks"
       defaults.web_browser = "xdg-open"
+      if platforms.linux then
+         -- inline code from fs/linux.lua since
+         -- luarocks.fs can't be required here
+         -- (circular dependencies)
+         local fd, _, code = io.open("/usr/lib64", "r")
+         if code ~= 2 then
+            defaults.lib_modules_path = "/lib64/lua/"..lua_version
+         end
+         if fd then
+            fd:close()
+         end
+      end
    end
 
    if platforms.cygwin then
