@@ -509,6 +509,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       elseif version >= vers.parse_version("10.5") then
          version = vers.parse_version("10.5")
       else
+         version = "10.3"
          defaults.gcc_rpath = false
       end
       defaults.variables.CC = "env MACOSX_DEPLOYMENT_TARGET="..tostring(version).." gcc"
