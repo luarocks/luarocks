@@ -470,6 +470,13 @@ function repos.deploy_local_files(name, version, wrap_bin_scripts, deps_mode)
          local paths = get_deploy_paths(name, version, "bin", file_path, repo)
          local mode, cur_name, cur_version = check_spot_if_available(name, version, "bin", file_path)
 
+         if cur_name and cur_name ~= name then
+            if mode == "nv" then
+               util.warning(string.format("Collision: '%s' from %s %s will take priority over '%s' provided by %s %s", file_path, name, version, file_path, cur_name, cur_version))
+            else
+               util.warning(string.format("Collision: '%s' from %s %s will not take priority over '%s' provided by %s %s", file_path, name, version, file_path, cur_name, cur_version))
+            end
+         end
          if mode == "nv" and cur_name then
             local cur_paths = get_deploy_paths(cur_name, cur_version, "bin", file_path, repo)
             table.insert(renames, { src = cur_paths.nv, dst = cur_paths.v, suffix = cfg.wrapper_suffix })
@@ -491,6 +498,14 @@ function repos.deploy_local_files(name, version, wrap_bin_scripts, deps_mode)
          local paths = get_deploy_paths(name, version, "lua", file_path, repo)
          local mode, cur_name, cur_version = check_spot_if_available(name, version, "lua", file_path)
 
+         if cur_name and cur_name ~= name then
+            local _, item_name = manif.get_provided_item("lua", file_path)
+            if mode == "nv" then
+               util.warning(string.format("Collision: module '%s' from %s %s will take priority over the same module provided by %s %s", item_name, name, version, cur_name, cur_version))
+            else
+               util.warning(string.format("Collision: module '%s' from %s %s will not take priority over the same module provided by %s %s", item_name, name, version, cur_name, cur_version))
+            end
+         end
          if mode == "nv" and cur_name then
             local cur_paths = get_deploy_paths(cur_name, cur_version, "lua", file_path, repo)
             table.insert(renames, { src = cur_paths.nv, dst = cur_paths.v })
@@ -511,6 +526,14 @@ function repos.deploy_local_files(name, version, wrap_bin_scripts, deps_mode)
          local paths = get_deploy_paths(name, version, "lib", file_path, repo)
          local mode, cur_name, cur_version = check_spot_if_available(name, version, "lib", file_path)
 
+         if cur_name and cur_name ~= name then
+            local _, item_name = manif.get_provided_item("lib", file_path)
+            if mode == "nv" then
+               util.warning(string.format("Collision: module '%s' from %s %s will take priority over the same module provided by %s %s", item_name, name, version, cur_name, cur_version))
+            else
+               util.warning(string.format("Collision: module '%s' from %s %s will not take priority over the same module provided by %s %s", item_name, name, version, cur_name, cur_version))
+            end
+         end
          if mode == "nv" and cur_name then
             local cur_paths = get_deploy_paths(cur_name, cur_version, "lua", file_path:gsub("%.[^.]+$", ".lua"), repo)
             table.insert(renames, { src = cur_paths.nv, dst = cur_paths.v })
