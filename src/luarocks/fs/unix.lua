@@ -146,13 +146,14 @@ function unix.is_actual_binary(filename)
    if not file then
       return true
    end
-   local first = file:read(2)
+   local first = file:read()
    file:close()
    if not first then
       util.warning("could not read "..filename)
       return true
    end
-   return first ~= "#!"
+   -- only create wrapper for lua scripts with `#!/usr/bin/env lua` or `#!/usr/bin/lua`
+   return first:match('^#!.*[ /]lua.*') == first
 end
 
 function unix.copy_binary(filename, dest)
@@ -198,7 +199,7 @@ end
 --- Moderate the given permissions based on the local umask
 -- @param perms string: permissions to moderate
 -- @return string: the moderated permissions
-function unix._unix_moderate_permissions(perms)
+local function apply_umask(perms)
    local umask = fs._unix_umask()
 
    local moderated_perms = ""
@@ -218,6 +219,22 @@ function unix._unix_moderate_permissions(perms)
       moderated_perms = moderated_perms .. rwx_to_octal[new_perm]
    end
    return moderated_perms
+end
+
+function unix._unix_mode_scope_to_perms(mode, scope)
+   local perms
+   if mode == "read" and scope == "user" then
+      perms = apply_umask("600")
+   elseif mode == "exec" and scope == "user" then
+      perms = apply_umask("700")
+   elseif mode == "read" and scope == "all" then
+      perms = apply_umask("666")
+   elseif mode == "exec" and scope == "all" then
+      perms = apply_umask("777")
+   else
+      return false, "Invalid permission " .. mode .. " for " .. scope
+   end
+   return perms
 end
 
 function unix.system_cache_dir()

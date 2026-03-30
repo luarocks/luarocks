@@ -59,7 +59,12 @@ do
       ["current_dir"] = true,
    }
 
-   local function load_fns(fs_table, inits)
+   local function load_fns(module_name, inits)
+      local ok, fs_table = pcall(require, module_name)
+      if not ok or not type(fs_table) == "table" then
+         return
+      end
+
       for name, fn in pairs(fs_table) do
          if name ~= "init" and not fs[name] then
             if skip_verbose_wrap[name] then
@@ -101,10 +106,7 @@ do
       end
 
       for platform in each_platform("most-specific-first") do
-         local ok, fs_plat = pcall(require, patt:format(platform))
-         if ok and fs_plat then
-            load_fns(fs_plat, inits)
-         end
+         load_fns(patt:format(platform), inits)
       end
    end
 
@@ -130,13 +132,13 @@ do
       load_platform_fns("luarocks.fs.%s", inits)
 
       -- Load platform-independent pure-Lua functionality
-      load_fns(require("luarocks.fs.lua"), inits)
+      load_fns("luarocks.fs.lua", inits)
 
       -- Load platform-specific fallbacks for missing Lua modules
       load_platform_fns("luarocks.fs.%s.tools", inits)
 
       -- Load platform-independent external tool functionality
-      load_fns(require("luarocks.fs.tools"), inits)
+      load_fns("luarocks.fs.tools", inits)
 
       -- Run platform-specific initializations after everything is loaded
       for _, init in ipairs(inits) do

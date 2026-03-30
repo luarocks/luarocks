@@ -21,7 +21,7 @@ local vers = require("luarocks.core.vers")
 
 --------------------------------------------------------------------------------
 
-local program_version = "3.11.0"
+local program_version = "3.12.2"
 
 local is_windows = package.config:sub(1,1) == "\\"
 
@@ -413,13 +413,24 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
    end
 
    if platforms.cygwin then
-      defaults.lib_extension = "so" -- can be overridden in the config file for mingw builds
+      defaults.lib_extension = "dll"
       defaults.arch = "cygwin-"..target_cpu
       defaults.cmake_generator = "Unix Makefiles"
       defaults.variables.CC = "echo -llua | xargs " .. (os.getenv("CC") or "gcc")
       defaults.variables.LD = "echo -llua | xargs " .. (os.getenv("CC") or "gcc")
       defaults.variables.LIBFLAG = "-shared"
       defaults.link_lua_explicitly = true
+      defaults.external_deps_patterns = {
+         bin = { "?.exe", "?.bat", "?" },
+         lib = { "cyg?.dll", "lib?.so", "lib?.so.*", "lib?.dll.a", "?.dll.a",
+                 "lib?.a", "lib?.dll", "?.dll" },
+         include = { "?.h" }
+      }
+      defaults.runtime_external_deps_patterns = {
+         bin = { "?.exe", "?.bat" },
+         lib = { "cyg?.dll", "lib?.so", "?.dll", "lib?.dll" },
+         include = { "?.h" }
+      }
    end
 
    if platforms.msys then
@@ -466,6 +477,12 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
 
          defaults.variables.LIBFLAG = "-shared"
       end
+   end
+
+   if platforms.msys2_mingw_w64 then
+      defaults.variables.PWD = "cd"
+      defaults.variables.CC = os.getenv("CC") or "cc"
+      defaults.variables.LD = os.getenv("CC") or "cc"
    end
 
    if platforms.bsd then
@@ -807,11 +824,13 @@ function cfg.init(detected, warning)
 
    local defaults = make_defaults(cfg.lua_version, processor, platforms, cfg.home)
 
-   if platforms.windows and hardcoded.WIN_TOOLS then
+   if platforms.windows and not platforms.msys2_mingw_w64 and hardcoded.WIN_TOOLS then
       local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "WGET", }
       for _, tool in ipairs(tools) do
          defaults.variables[tool] = '"' .. dir.path(hardcoded.WIN_TOOLS, defaults.variables[tool] .. '.exe') .. '"'
       end
+   elseif platforms.msys2_mingw_w64 then
+      defaults.fs_use_modules = false
    else
       defaults.fs_use_modules = true
    end

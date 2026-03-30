@@ -5,7 +5,7 @@
    echo "example...: $0 3.1.1"
    echo
    echo "Before running this, make sure the packages were built:"
-   echo "   makedist 3.1.1 /opt/lua54/ binary sign"
+   echo "   makedist 3.1.1 /opt/lua54/ branch binary sign"
    echo "And the tag was merged:"
    echo "   mergerelease 3.1.1"
    echo
@@ -42,6 +42,10 @@ do
       exit 1
    }
 done
+
+source_digest="$(
+   sha256sum "luarocks-${v}.tar.gz" | cut -d' ' -f1
+)"
 
 #######################################
 # utility
@@ -121,6 +125,7 @@ gawk '
       print "\"date\": \"'$(date +'%Y-%m-%d')'\","
       print "\"files\": [\"luarocks-'$v'.tar.gz\", \"luarocks-'$v'.tar.gz.asc\", \"luarocks-'$v'-win32.zip\", \"luarocks-'$v'-win32.zip.asc\", \"luarocks-'$v'-windows-32.zip\", \"luarocks-'$v'-windows-32.zip.asc\", \"luarocks-'$v'-windows-64.zip\", \"luarocks-'$v'-windows-64.zip.asc\", \"luarocks-'$v'-linux-x86_64.zip\", \"luarocks-'$v'-linux-x86_64.zip.asc\"],"
       print "\"about\": []"
+      print "\"source_digest\": \"'$source_digest'\""
       print "}},"
    }
 }
@@ -165,49 +170,3 @@ confirm master
 git commit static/md/home.md -m "update front page for LuaRocks $v"
 git push
 
-#######################################
-# luarocks.wiki
-#######################################
-
-[ -e ../luarocks.wiki ] || {
-   cd ..
-   git clone ssh://git@github.com/luarocks/luarocks.wiki.git
-}
-
-if [ -e ../luarocks.wiki ]
-then
-   cd ../luarocks.wiki
-   git pull
-else
-   cd ..
-   git clone ssh://git@github.com/luarocks/luarocks.wiki.git
-   cd luarocks.wiki
-fi
-
-sed -i "s,Latest release: .*,Latest release: '''LuaRocks $v''' - '$(date +'%d/%b/%Y')'," Download.mediawiki
-
-sed -i "s,/luarocks-[0-9.]*[0-9],/luarocks-$v,g" Download.mediawiki
-
-gawk '
-BEGIN {
-   print "'\'\'\''Version '$v\'\'\'' - '$(date +'%d/%b/%Y')' - [http://luarocks.org/releases/luarocks-'$v'.tar.gz Source tarball for Unix] -"
-   print "[http://luarocks.org/releases/luarocks-'$v'-windows-32.zip Windows binary (32-bit)] -"
-   print "[http://luarocks.org/releases/luarocks-'$v'-windows-64.zip Windows binary (64-bit)] -"
-   print "[http://luarocks.org/releases/luarocks-'$v'-linux-x86_64.zip Linux binary (x86_64)] -"
-   print "[http://luarocks.github.io/luarocks/releases other files]"
-   print ""
-}
-// {
-   print
-}
-' "Release-history.mediawiki" > "Release-history.mediawiki.1"
-mv "Release-history.mediawiki.1" "Release-history.mediawiki"
-
-git add "Download.mediawiki"
-git add "Release-history.mediawiki"
-git add "Installation-instructions-for-Unix.md"
-
-confirm master
-
-git commit -av -m "Release $v"
-git push

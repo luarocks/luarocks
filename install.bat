@@ -6,7 +6,7 @@ local vars = {}
 
 
 vars.PREFIX = nil
-vars.VERSION = "3.11"
+vars.VERSION = "3.12"
 vars.SYSCONFDIR = nil
 vars.CONFBACKUPDIR = nil
 vars.SYSCONFFILENAME = nil
@@ -343,6 +343,8 @@ local function look_for_link_libraries(directory)
 	local directories
 	if vars.LUA_LIBDIR then
 		directories = {vars.LUA_LIBDIR}
+	elseif USE_MINGW then
+		directories = {directory, directory .. "\\bin", directory .. "\\lib"}
 	else
 		directories = {directory, directory .. "\\lib", directory .. "\\bin"}
 	end
@@ -634,6 +636,14 @@ local function get_possible_lua_directories()
 	return directories
 end
 
+local function strip_bin(bindir)
+	bindir = bindir:gsub("[/\\]*$", "")
+	if bindir:upper():match("[/\\]BIN") then
+		bindir = bindir:sub(1, -5):gsub("[/\\]*$", "")
+	end
+	return bindir
+end
+
 local function look_for_lua_install ()
 	print("Looking for Lua interpreter")
 	if vars.LUA_BINDIR and vars.LUA_LIBDIR and vars.LUA_INCDIR then
@@ -643,6 +653,7 @@ local function look_for_lua_install ()
 		then
 			if get_runtime() then
 				print("Runtime check completed.")
+				vars.LUA_DIR = vars.LUA_PREFIX or strip_bin(vars.LUA_BINDIR)
 				return true
 			end
 		end
@@ -739,7 +750,7 @@ local find_gcc_suite = function()
     for i, name in ipairs({"make", "ar", "windres", "ranlib"}) do
         result[name] = find_file(name..".exe", path)
         if not result[name] then
-            result[name] = find_file("*"..name.."*.exe", path)
+            result[name] = find_file("*-"..name.."*.exe", path)
         end
     end
 
@@ -1012,6 +1023,17 @@ if not exists(S[[$LUADIR\luarocks]]) then
 end
 if not exec(S[[XCOPY /S src\luarocks\*.* "$LUADIR\luarocks" >NUL]]) then
 	die()
+end
+if vars.LUA_VERSION ~= "5.3" or vars.LUA_VERSION ~= "5.4" then
+	-- Copy the vendored lua-copmat53 source files
+	if not exists(S[[$LUADIR\compat53]]) then
+		if not mkdir(S[[$LUADIR\compat53]]) then
+			die()
+		end
+	end
+	if not exec(S[[XCOPY /S src\compat53\*.* "$LUADIR\compat53" >NUL]]) then
+		die()
+	end
 end
 -- Create start scripts
 if not exec(S[[COPY src\bin\*.* "$BINDIR" >NUL]]) then

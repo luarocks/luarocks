@@ -92,12 +92,16 @@ function tools.copy_contents(src, dest)
 end
 --- Delete a file or a directory and all its contents.
 -- For safety, this only accepts absolute paths.
--- @param arg string: Pathname of source
--- @return nil
-function tools.delete(arg)
-   assert(arg)
-   assert(arg:sub(1,1) == "/")
-   fs.execute_quiet(vars.RM, "-rf", arg)
+-- @param pathname string: Pathname of source
+-- @return true on success, nil and an error on failure
+function tools.delete(pathname)
+   assert(pathname)
+   assert(pathname:sub(1,1) == "/")
+   if fs.execute_quiet(vars.RM, "-rf", pathname) then
+      return true
+   else
+      return nil, "failed deleting " .. pathname
+   end
 end
 
 --- Recursively scan the contents of a directory.
@@ -221,18 +225,11 @@ end
 function tools.set_permissions(filename, mode, scope)
    assert(filename and mode and scope)
 
-   local perms
-   if mode == "read" and scope == "user" then
-      perms = fs._unix_moderate_permissions("600")
-   elseif mode == "exec" and scope == "user" then
-      perms = fs._unix_moderate_permissions("700")
-   elseif mode == "read" and scope == "all" then
-      perms = fs._unix_moderate_permissions("644")
-   elseif mode == "exec" and scope == "all" then
-      perms = fs._unix_moderate_permissions("755")
-   else
-      return false, "Invalid permission " .. mode .. " for " .. scope
+   local perms, err = fs._unix_mode_scope_to_perms(mode, scope)
+   if err then
+      return false, err
    end
+
    return fs.execute(vars.CHMOD, perms, filename)
 end
 
@@ -318,6 +315,12 @@ function tools.is_superuser()
    return fs.current_user() == "root"
 end
 
+local lock_mt = {
+   __gc = function(lock)
+      fs.unlock_access(lock)
+   end
+}
+
 function tools.lock_access(dirname, force)
    local ok, err = fs.make_dir(dirname)
    if not ok then
@@ -343,10 +346,12 @@ function tools.lock_access(dirname, force)
    local force_flag = force and " -f" or ""
 
    if fs.execute(vars.LN .. force_flag, tempfile, lockfile) then
-      return {
+      local lock = {
          tempfile = tempfile,
          lockfile = lockfile,
       }
+      setmetatable(lock, lock_mt)
+      return lock
    else
       return nil, "File exists" -- same message as luafilesystem
    end

@@ -55,7 +55,7 @@ describe("luarocks fetch #unit", function()
          fdr:close()
          fdw:close()
 
-         return true, destfile
+         return destfile
       end
 
       runner = require("luacov.runner")

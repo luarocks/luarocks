@@ -8,7 +8,7 @@ local extra_rocks = {
    "/busted-2.2.0-1.src.rock",
    "/lua_cliargs-3.0-1.src.rock",
    "/luafilesystem-${LUAFILESYSTEM}.src.rock",
-   "/luasystem-0.2.1-0.src.rock",
+   "/luasystem-0.4.5-1.src.rock",
    "/dkjson-${DKJSON}.src.rock",
    "/say-1.4.1-3.src.rock",
    "/luassert-1.9.0-1.src.rock",
