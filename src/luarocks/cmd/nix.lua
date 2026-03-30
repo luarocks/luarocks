@@ -163,10 +163,12 @@ local function gen_src_from_basic_url(url)
    local final_url = url
 
    for _, repo in ipairs(cfg.rocks_servers) do
+      debug("REPO", repo)
+      local repo_l = repo
       if type(repo) == "string" then
-         repo = { repo }
+         repo_l = { repo }
       end
-      for _, mirror in ipairs(repo) do
+      for _, mirror in ipairs(repo_l) do
          local res, url2 = check_url_against_mirror(final_url, mirror)
          if res then
             final_url = url2
@@ -200,7 +202,7 @@ local function gen_src_from_git_url(src)
    debug(cmd)
    local status, generatedSrc = popen_read(cmd, "*a")
 
-   if status ~= true or (generatedSrc and generatedSrc == "") then
+   if status ~= 0 or (generatedSrc and generatedSrc == "") then
       util.printerr("Call to "..cmd.." failed with status: "..tostring(status))
    end
 
@@ -253,9 +255,12 @@ local function load_dependencies(deps_array)
    local dependencies = {}
    local cons = {}
    local constraintInputs = {}
+   debug("loading dependencies from")
+   debug(util.show_table(deps_array))
 
    for _, dep in ipairs(deps_array)
    do
+      debug(dep)
       local entry = nix.convert_pkg_name_to_nix(dep.name)
       if entry == "lua" and dep.constraints then
 
@@ -298,7 +303,8 @@ end
 -- @param manual_overrides a table of custom nix settings like "maintainers"
 local function convert_spec2nix(spec, rockspec_relpath, rockspec_url, manual_overrides)
    assert ( spec )
-   -- assert ( type(rock_url) == "string" or not rock_url )
+   -- print("SPEC TABLE")
+   -- print(util.show_table(spec))
 
    local lua_constraints_str = ""
    local maintainers_str = ""
@@ -309,12 +315,12 @@ local function convert_spec2nix(spec, rockspec_relpath, rockspec_url, manual_ove
       maintainers_str = "    maintainers = with lib.maintainers; [ "..manual_overrides["maintainers"].." ];\n"
    end
 
-   if spec.detailed then
-      long_desc_str = "    longDescription = ''"..spec.detailed.."'';"
+   if spec.description.detailed then
+      long_desc_str = "    longDescription = ''"..spec.description.detailed.."'';\n"
    end
 
-   local dependencies, lua_constraints, constraintInputs = load_dependencies(spec.dependencies)
-   local native_deps, _, _ = load_dependencies(spec.build_dependencies)
+   local dependencies, lua_constraints, constraintInputs = load_dependencies(spec.dependencies.queries)
+   local native_deps, _, _ = load_dependencies(spec.build_dependencies.queries)
    util.deep_merge(call_package_inputs, constraintInputs)
 
    -- TODO to map lua dependencies to nix ones,
@@ -386,7 +392,7 @@ local function convert_spec2nix(spec, rockspec_relpath, rockspec_url, manual_ove
 
    -- introduced in rockspec format 3
    local checkInputsStr = ""
-   local checkInputs, _ = load_dependencies(spec.test_dependencies)
+   local checkInputs, _ = load_dependencies(spec.test_dependencies.queries)
    if #checkInputs > 0 then
       checkInputsStr = "  checkInputs = [ "..table.concat(checkInputs, " ").." ];\n"
       util.deep_merge(call_package_inputs, checkInputs)
@@ -425,10 +431,10 @@ buildLuarocksPackage {
 
   meta = {
     homepage = ]]..util.LQ(spec.description.homepage or spec.source.url)..[[;
-    description = ]]..util.LQ(spec.description.summary or "No summary")..[[;
-]]..long_desc_str..[[
 ]]..maintainers_str..[[
 ]]..license_str..[[
+    description = ]]..util.LQ(spec.description.summary or "No summary")..[[;
+]]..long_desc_str..[[
   };
 }]]
 
