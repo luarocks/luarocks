@@ -18,3 +18,7 @@
 /luarocks-admin
 /.luarocks
 /.luacheckcache
+
+
+# luarocks-nix specifics
+/https___luarocks.org/*
