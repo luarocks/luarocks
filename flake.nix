@@ -30,13 +30,18 @@
           });
 
         mkDevShell = luaInterpreter:
-          luaInterpreter.pkgs.luarocks.overrideAttrs (oa: {
+          pkgs.mkShell {
             name = "luarocks-dev";
-            buildInputs = oa.buildInputs ++ [
-              # TODO restore
+            inputsFrom = [
+              luaInterpreter.pkgs.luarocks
+            ];
+
+
+
+            propagatedBuildInputs = [
+              pkgs.nurl
               pkgs.lua-language-server
               pkgs.luajitPackages.luacheck
-              pkgs.nurl
               pkgs.luarocks-packages-updater
             ];
 
@@ -45,7 +50,7 @@
               export LUA_PATH="src/?.lua;''${LUA_PATH:-}"
             '';
 
-          });
+          };
 
         # generates a shortname for a lua interpreter
         interpreterShortname = luaInterpreter:
