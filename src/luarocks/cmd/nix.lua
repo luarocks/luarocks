@@ -26,12 +26,13 @@ local _
 
 -- Copy of util.popen_read in src/luarocks/core/util.lua
 -- but one that returns status too
+-- os.execute return result
 local function popen_read(cmd, spec)
    local dir_sep = package.config:sub(1, 1)
    local tmpfile = (dir_sep == "\\")
                    and (os.getenv("TMP") .. "/luarocks-" .. tostring(math.floor(math.random() * 10000)))
                    or os.tmpname()
-   local status = os.execute(cmd .. " > " .. tmpfile)
+   local res = { os.execute(cmd .. " > " .. tmpfile) }
    local fd = io.open(tmpfile, "rb")
    if not fd then
       os.remove(tmpfile)
@@ -40,7 +41,13 @@ local function popen_read(cmd, spec)
    local out = fd:read(spec or "*l")
    fd:close()
    os.remove(tmpfile)
-   return status, out or ""
+   if #res == 1 then
+      -- lua5.1 's os.execute just returns status
+      return res, out or ""
+   else
+      -- assume lua >= 5.2 => returns (success, exit_type, exit_code)
+      return res[3], out or ""
+   end
 end
 
 

@@ -65,7 +65,7 @@
       {
 
         packages = {
-          default = self.packages.${system}."luarocks-51";
+          default = self.packages.${system}."luarocks-52";
         } // (nixpkgs.lib.listToAttrs (builtins.map
           (luaInterpreter:
             let

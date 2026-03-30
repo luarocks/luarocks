@@ -3,6 +3,8 @@
 This is a fork that adds a "nix" command to generate nix packages from
 rockspecs.
 You can test the fork with `luarocks nix <PACKAGE>`, e.g., `luarocks nix date`.
+Due to changes in lua5.2 to the returned value of `os.execute`, please run
+`luarocks nix` with lua >= 5.2.
 
 A package manager for Lua modules.
 
