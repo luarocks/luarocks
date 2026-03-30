@@ -34,11 +34,17 @@
             name = "luarocks-dev";
             buildInputs = oa.buildInputs ++ [
               # TODO restore
-              pkgs.sumneko-lua-language-server
+              pkgs.lua-language-server
               pkgs.luajitPackages.luacheck
               pkgs.nurl
               pkgs.luarocks-packages-updater
             ];
+
+            shellHook = ''
+              export PATH="src/bin:''${PATH:-}"
+              export LUA_PATH="src/?.lua;''${LUA_PATH:-}"
+            '';
+
           });
 
         # generates a shortname for a lua interpreter
