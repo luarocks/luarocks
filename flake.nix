@@ -21,6 +21,7 @@
           lua5_2
           lua5_3
           lua5_4
+          lua5_5
         ];
 
         mkPackage = luaInterpreter:
@@ -48,6 +49,9 @@
             shellHook = ''
               export PATH="src/bin:''${PATH:-}"
               export LUA_PATH="src/?.lua;''${LUA_PATH:-}"
+
+              echo "Test with:"
+              echo "luarocks nix --maintainers=zorro plenary.nvim"
             '';
 
           };
