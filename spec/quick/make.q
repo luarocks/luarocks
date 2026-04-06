@@ -11,7 +11,8 @@ source = {
    url = "file://%{path(tmpdir)}/test.lua"
 }
 dependencies = {
-   "a_rock >= 0.8"
+   "a_rock >= 0.8",
+   "lua = %{lua_version}",
 }
 build = {
    type = "builtin",
@@ -44,8 +45,7 @@ FILE_CONTENTS: ./lua_modules/lib/luarocks/rocks-%{lua_version}/test/2.0-1/luaroc
 --------------------------------------------------------------------------------
 return {
    dependencies = {
-      a_rock = "2.0-1",
-      lua = "%{lua_version}-1"
+      a_rock = "2.0-1"
    }
 }
 --------------------------------------------------------------------------------
