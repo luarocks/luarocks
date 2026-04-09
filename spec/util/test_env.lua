@@ -1129,7 +1129,7 @@ function test_env.main()
       table.insert(urls, "/luasocket-${LUASOCKET}.src.rock")
       table.insert(urls, "/luasec-${LUASEC}.src.rock")
       table.insert(urls, "/md5-1.2-1.src.rock")
-      table.insert(urls, "/manifests/hisham/lua-zlib-1.2-0.src.rock")
+      table.insert(urls, "/manifests/hisham/lua-zlib-1.4-0.src.rock")
       table.insert(urls, "/manifests/hisham/lua-bz2-0.2.1.1-1.src.rock")
       rocks = {"luafilesystem", "luasocket", "luasec", "md5", "lua-zlib", "lua-bz2"}
       if test_env.TEST_TARGET_OS ~= "windows" then
