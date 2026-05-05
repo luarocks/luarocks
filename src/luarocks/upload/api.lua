@@ -1,4 +1,8 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local io = _tl_compat and _tl_compat.io or io; local os = _tl_compat and _tl_compat.os or os; local package = _tl_compat and _tl_compat.package or package; local pairs = _tl_compat and _tl_compat.pairs or pairs; local pcall = _tl_compat and _tl_compat.pcall or pcall; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local type = type; local api = { Configuration = {}, Api = {} }
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local os = _tl_compat and _tl_compat.os or os; local package = _tl_compat and _tl_compat.package or package; local pairs = _tl_compat and _tl_compat.pairs or pairs; local pcall = _tl_compat and _tl_compat.pcall or pcall; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local type = type; local api = { Configuration = {}, Api = {} }
+
+
+
+
 
 
 
@@ -55,9 +59,9 @@ function api.Api:save_config()
    if not res then
       return nil, errraw
    end
-   local reserrors = res.errors
-   if type(reserrors) == "table" then
-      return nil, ("Server error: " .. tostring(reserrors[1]))
+   local res_errors = res.errors
+   if type(res_errors) == "table" then
+      return nil, ("Server error: " .. tostring(res_errors[1]))
    end
    local upload_conf = upload_config_file()
    if not upload_conf then return nil end
@@ -94,25 +98,39 @@ function api.Api:check_version()
 end
 
 function api.Api:method(path, ...)
-   local res, err = self:raw_method(path, ...)
-   if not res then
-      return nil, err
-   end
-   local reserrors = res.errors
-   if type(reserrors) == "table" then
-      if reserrors[1] == "Invalid key" then
-         return nil, reserrors[1] .. " (use the --api-key flag to change)"
+   local res = self:raw_method(path, ...)
+   if res.two_factor_required then
+      assert(self.on_tfa_required, "Server requires two-factor verification but no handler is configured")
+      local ok, err = self:on_tfa_required()
+      if not ok then
+         return nil, err
       end
-      local msg = table.concat(reserrors, ", ")
+      res, err = self:raw_method(path, ...)
+      if err then
+         return nil, err
+      end
+   end
+   local res_errors = res.errors
+   if type(res_errors) == "table" then
+      if res_errors[1] == "Invalid key" then
+         res_errors[1] = res_errors[1] .. " (use the --api-key flag to change)"
+      end
+      local msg = table.concat(res_errors, ", ")
       return nil, "API Failed: " .. msg
    end
    return res
 end
 
-function api.Api:raw_method(path, ...)
+function api.Api:raw_method(path, params, post_params)
    self:check_version()
-   local url = tostring(self.config.server) .. "/api/" .. tostring(cfg.upload.api_version) .. "/" .. tostring(self.config.key) .. "/" .. path
-   return self:request(url, ...)
+   local extra_headers = nil
+   if self.tfa_token then
+      extra_headers = {
+         ["X-TFA-Token"] = self.tfa_token,
+      }
+   end
+   local url = tostring(self.config.server) .. "/api/" .. tostring(cfg.upload.api_version) .. "/" .. tostring(self.config.key) .. "/" .. tostring(path)
+   return self:request(url, params, post_params, extra_headers)
 end
 
 local function encode_query_string(t, sep)
@@ -144,10 +162,25 @@ local function redact_api_url(url)
    return (urls:gsub(".*/api/[^/]+/[^/]+", "")) or ""
 end
 
+local function request_result(url, response, status)
+   local pok, ret = pcall(json.decode, response)
+   if pok and ret then
+      if ret.two_factor_required then
+         return nil, "API Failed: two-factor verification required"
+      end
+      return ret
+   end
+   if status then
+      return nil, "API returned " .. tostring(status) .. " - " .. redact_api_url(url)
+   else
+      return nil, "API failed - " .. redact_api_url(url)
+   end
+end
+
 local ltn12_ok, ltn12 = pcall(require, "ltn12")
 if not ltn12_ok then
 
-   api.Api.request = function(self, url, params, post_params)
+   api.Api.request = function(self, url, params, post_params, extra_headers)
       local vars = cfg.variables
 
       if fs.which_tool("downloader") == "wget" then
@@ -166,17 +199,26 @@ if not ltn12_ok then
       local method = "GET"
       local out
       local tmpfile = fs.tmpname()
-      if post_params then
+      if post_params or extra_headers then
          method = "POST"
          local curl_cmd = vars.CURL .. " " .. vars.CURLNOCERTFLAG .. " -f -L --silent --user-agent \"" .. cfg.user_agent .. " via curl\" "
-         for k, v in pairs(post_params) do
-            local var
-            if type(v) == "table" then
-               var = "@" .. v.fname
-            else
-               var = v
+         if post_params then
+            for k, v in pairs(post_params) do
+               local var
+               if type(v) == "table" then
+                  var = "@" .. v.fname
+               else
+                  var = v
+               end
+               curl_cmd = curl_cmd .. "--form \"" .. k .. "=" .. var .. "\" "
             end
-            curl_cmd = curl_cmd .. "--form \"" .. k .. "=" .. var .. "\" "
+         end
+         if extra_headers then
+            for k, v in pairs(extra_headers) do
+               if type(v) == "string" then
+                  curl_cmd = curl_cmd .. "--header \"" .. k .. ": " .. v .. "\" "
+               end
+            end
          end
          if cfg.connection_timeout and cfg.connection_timeout > 0 then
             curl_cmd = curl_cmd .. "--connect-timeout " .. tonumber(cfg.connection_timeout) .. " "
@@ -205,14 +247,14 @@ if not ltn12_ok then
          util.printout("[" .. tostring(method) .. " via curl] " .. redact_api_url(url) .. " ... ")
       end
 
-      return json.decode(out)
+      return request_result(url, out)
    end
 
 else
 
    local warned_luasec = false
 
-   api.Api.request = function(self, url, params, post_params)
+   api.Api.request = function(self, url, params, post_params, extra_headers)
       local server = tostring(self.config.server)
 
       local http_ok, http
@@ -251,6 +293,13 @@ else
          headers["Content-length"] = tostring(#body)
          headers["Content-type"] = "multipart/form-data; boundary=" .. tostring(boundary)
       end
+      if extra_headers then
+         for k, v in pairs(extra_headers) do
+            if type(v) == "string" then
+               headers[k] = v
+            end
+         end
+      end
       local method = post_params and "POST" or "GET"
       if self.debug then
          util.printout("[" .. tostring(method) .. " via " .. via .. "] " .. redact_api_url(url) .. " ... ")
@@ -266,13 +315,9 @@ else
       if self.debug then
          util.printout(tostring(status))
       end
-      local pok, ret = pcall(json.decode, table.concat(out))
-      if pok and ret then
-         return ret
-      end
-      return nil, "API returned " .. tostring(status) .. " - " .. redact_api_url(url)
-   end
 
+      return request_result(url, table.concat(out), status)
+   end
 end
 
 function api.new(args)
