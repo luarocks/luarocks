@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local math = _tl_compat and _tl_compat.math or math; local string = _tl_compat and _tl_compat.string or string
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local io = _tl_compat and _tl_compat.io or io; local math = _tl_compat and _tl_compat.math or math; local os = _tl_compat and _tl_compat.os or os; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table
 local upload = { Response = { version = {} } }
 
 
@@ -40,6 +40,8 @@ function upload.add_to_parser(parser)
    cmd:option("--temp-key", "Use the given a temporary API key in this " ..
    "invocation only. It will not be stored."):
    argname("<key>")
+   cmd:option("--code", "Two-factor code (or set $LUAROCKS_TFA_CODE."):
+   argname("<code>")
    cmd:flag("--force", "Replace existing rockspec if the same revision of a " ..
    "module already exists. This should be used only in case of upload " ..
    "mistakes: when updating a rockspec, increment the revision number " ..
@@ -52,11 +54,44 @@ local function is_dev_version(version)
    return version:match("^dev") or version:match("^scm")
 end
 
+local function prompt_tfa(api)
+   util.printout("Two-factor authentication required for this account.")
+   local initial = os.getenv("LUAROCKS_TFA_CODE") or api.code
+   local attempts = 0
+   while true do
+      local code = initial
+      initial = nil
+      if not code then
+         util.printout("Enter 2FA code: ")
+         code = io.stdin:read("*l")
+         if not (code and code ~= "") then
+            return nil, "no code provided"
+         end
+      end
+      local res = api:raw_method("verify_tfa", nil, {
+         code = code,
+      })
+      if res.success and res.tfa_token then
+         api.tfa_token = res.tfa_token
+         util.printout("Verified.")
+         return true
+      end
+      attempts = attempts + 1
+      local err = res.errors and table.concat(res.errors, ", ") or "verification failed"
+      util.printout(tostring(err))
+      if attempts >= 3 then
+         return nil, "two-factor verification failed after " .. tostring(attempts) .. " attempt(s)"
+      end
+   end
+end
+
 function upload.command(args)
    local api, err = Api.new(args)
    if not api then
       return nil, err
    end
+   api.code = args.code
+   api.on_tfa_required = prompt_tfa
    if cfg.verbose then
       api.debug = true
    end

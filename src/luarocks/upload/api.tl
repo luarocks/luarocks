@@ -6,12 +6,16 @@ local record api
    end
 
    record Api
+      code: string
+      tfa_token: string
+      on_tfa_required: function(Api): (boolean, string)
+
       load_config: function(Api): Configuration
       save_config: function(Api): boolean, string
       check_version: function(Api): boolean, string
       method: function(Api, string, ...:Parameters): {string : any}, string
-      raw_method: function(Api, string, ...:Parameters): {string : any}, string
-      request: function(Api, string, ?Parameters, ?Parameters): {string : any}, string
+      raw_method: function(Api, string, ?Parameters, ?Parameters): {string : any}, string
+      request: function(Api, string, ?Parameters, ?Parameters, ?Parameters): {string : any}, string
       config: Configuration
       debug: boolean
       _server_tool_version: string
@@ -55,9 +59,9 @@ function api.Api:save_config(): boolean, string
    if not res then
       return nil, errraw
    end
-   local reserrors = res.errors
-   if reserrors is {string} then
-      return nil, ("Server error: " .. tostring(reserrors[1]))
+   local res_errors = res.errors
+   if res_errors is {string} then
+      return nil, ("Server error: " .. tostring(res_errors[1]))
    end
    local upload_conf = upload_config_file()
    if not upload_conf then return nil end
@@ -94,25 +98,39 @@ function api.Api:check_version(): boolean, string
 end
 
 function api.Api:method(path: string, ...: Parameters): {string : any}, string
-   local res, err = self:raw_method(path, ...)
-   if not res then
-      return nil, err
-   end
-   local reserrors = res.errors
-   if reserrors is {string} then --! not checking the contents
-      if reserrors[1] == "Invalid key" then
-         return nil, reserrors[1] .. " (use the --api-key flag to change)"
+   local res = self:raw_method(path, ...)
+   if res.two_factor_required then
+      assert(self.on_tfa_required, "Server requires two-factor verification but no handler is configured")
+      local ok, err = self:on_tfa_required()
+      if not ok then
+         return nil, err
       end
-      local msg = table.concat(reserrors, ", ")
+      res, err = self:raw_method(path, ...)
+      if err then
+         return nil, err
+      end
+   end
+   local res_errors = res.errors
+   if res_errors is {string} then
+      if res_errors[1] == "Invalid key" then
+         res_errors[1] = res_errors[1] .. " (use the --api-key flag to change)"
+      end
+      local msg = table.concat(res_errors, ", ")
       return nil, "API Failed: " .. msg
    end
    return res
 end
 
-function api.Api:raw_method(path: string, ...: Parameters): {string : any}, string
+function api.Api:raw_method(path: string, params?: Parameters, post_params?: Parameters): {string : any}, string
    self:check_version()
-   local url = tostring(self.config.server) .. "/api/" .. tostring(cfg.upload.api_version) .. "/" .. tostring(self.config.key) .. "/" .. path
-   return self:request(url, ...)
+   local extra_headers: Parameters = nil
+   if self.tfa_token then
+      extra_headers = {
+         ["X-TFA-Token"] = self.tfa_token
+      }
+   end
+   local url = tostring(self.config.server) .. "/api/" .. tostring(cfg.upload.api_version) .. "/" .. tostring(self.config.key) .. "/" .. tostring(path)
+   return self:request(url, params, post_params, extra_headers)
 end
 
 local function encode_query_string(t: Parameters, sep?: string): string
@@ -144,10 +162,25 @@ local function redact_api_url(url: any): string
    return (urls:gsub(".*/api/[^/]+/[^/]+", "")) or ""
 end
 
+local function request_result(url: string, response: string, status?: integer|string): {string : any}, string
+   local pok, ret = pcall(json.decode, response)
+   if pok and ret then
+      if ret.two_factor_required then
+         return nil, "API Failed: two-factor verification required"
+      end
+      return ret
+   end
+   if status then
+      return nil, "API returned " .. tostring(status) .. " - " .. redact_api_url(url)
+   else
+      return nil, "API failed - " .. redact_api_url(url)
+   end
+end
+
 local ltn12_ok, ltn12 = pcall(require, "ltn12")
 if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
 
-   api.Api.request = function(self: Api, url: string, params?: Parameters, post_params?: Parameters): {string : any}, string
+   api.Api.request = function(self: Api, url: string, params?: Parameters, post_params?: Parameters, extra_headers?: Parameters): {string : any}, string
       local vars = cfg.variables
 
       if fs.which_tool("downloader") == "wget" then
@@ -166,17 +199,26 @@ if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
       local method = "GET"
       local out: string
       local tmpfile = fs.tmpname()
-      if post_params then
+      if post_params or extra_headers then
          method = "POST"
          local curl_cmd = vars.CURL.." "..vars.CURLNOCERTFLAG.." -f -L --silent --user-agent \""..cfg.user_agent.." via curl\" "
-         for k,v in pairs(post_params) do
-            local var: string
-            if v is File then
-               var = "@"..v.fname
-            else
-               var = v
+         if post_params then
+            for k,v in pairs(post_params) do
+               local var: string
+               if v is File then
+                  var = "@"..v.fname
+               else
+                  var = v
+               end
+               curl_cmd = curl_cmd .. "--form \""..k.."="..var.."\" "
             end
-            curl_cmd = curl_cmd .. "--form \""..k.."="..var.."\" "
+         end
+         if extra_headers then
+            for k,v in pairs(extra_headers) do
+               if v is string then
+                  curl_cmd = curl_cmd .. "--header \""..k..": "..v.."\" "
+               end
+            end
          end
          if cfg.connection_timeout and cfg.connection_timeout > 0 then
          curl_cmd = curl_cmd .. "--connect-timeout "..tonumber(cfg.connection_timeout).." "
@@ -205,14 +247,14 @@ if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
          util.printout("[" .. tostring(method) .. " via curl] " .. redact_api_url(url) .. " ... ")
       end
 
-      return json.decode(out)
+      return request_result(url, out)
    end
 
 else -- use LuaSocket and LuaSec
 
    local warned_luasec = false
 
-   api.Api.request = function(self: Api, url: string, params?: Parameters, post_params?: Parameters): {string : any}, string
+   api.Api.request = function(self: Api, url: string, params?: Parameters, post_params?: Parameters, extra_headers?: Parameters): {string : any}, string
       local server = tostring(self.config.server)
       local type Http = require("socket.http")
       local http_ok, http: boolean, Http
@@ -251,6 +293,13 @@ else -- use LuaSocket and LuaSec
          headers["Content-length"] = tostring(#body)
          headers["Content-type"] = "multipart/form-data; boundary=" .. tostring(boundary)
       end
+      if extra_headers then
+         for k, v in pairs(extra_headers) do
+            if v is string then
+               headers[k] = v
+            end
+         end
+      end
       local method = post_params and "POST" or "GET"
       if self.debug then
          util.printout("[" .. tostring(method) .. " via "..via.."] " .. redact_api_url(url) .. " ... ")
@@ -266,13 +315,9 @@ else -- use LuaSocket and LuaSec
       if self.debug then
          util.printout(tostring(status))
       end
-      local pok, ret = pcall(json.decode, table.concat(out))
-      if pok and ret then
-         return ret
-      end
-      return nil, "API returned " .. tostring(status) .. " - " .. redact_api_url(url)
-   end
 
+      return request_result(url, table.concat(out), status)
+   end
 end
 
 function api.new(args: Args): Api, string
