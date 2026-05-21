@@ -168,7 +168,7 @@ jobs:
     - name: Configure LuaRocks to build the cross compiled binaries
       run: ./configure "--with-lua=${{ github.workspace }}/.lua"
 
-    - name: Cross compile `luarocks.exe` and `luarocks-admin.exe` 
+    - name: Cross compile `luarocks.exe` and `luarocks-admin.exe`
       run: make "MINGW_SYSROOT=${{ matrix.mingw-sysroot }}" ${{ matrix.make-target }}
 
   ##############################################################################
@@ -349,7 +349,7 @@ jobs:
       # The following env variables
       # only applies to Visual Studio
       LUAROCKS_DEPS_DIR: c:\external
-      LUAROCKS_DEPS_OPENSSL_VER: "3.6.1"
+      LUAROCKS_DEPS_OPENSSL_VER: "3.6.2"
       LUAROCKS_DEPS_ZLIB_VER: "1.3.1"
       # The following env variable
       # applies to both Visual Studio and MinGW-w64
