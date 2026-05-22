@@ -26,6 +26,7 @@ local record sysdetect
       "alpha"
       "aarch64"
       "riscv64"
+      "loongarch"
       "alpha"
    end
    
@@ -180,6 +181,7 @@ local e_machines: {integer:Processor} = {
    [0xB6] = "alpha",
    [0xB7] = "aarch64",
    [0xF3] = "riscv64",
+   [0x102] = "loongarch",
    [0x9026] = "alpha",
 }
 
@@ -308,6 +310,14 @@ local function read_elf_header(fd: FILE): ElfHeader, Processor
    local processor = e_machines[machine] or "unknown"
    if endian == "little" and processor == "ppc64" then
       processor = "ppc64le"
+   end
+   if processor == "loongarch" then
+     if hdr.bits == 1 then
+       processor = "loongarch32"
+     end
+     if hdr.bits == 2 then
+       processor = "loongarch64"
+     end
    end
 
    local elfversion = read(fd, 4, endian)
