@@ -59,7 +59,8 @@ then
    fi
    sed -i 's/"Configuring LuaRocks version .*"/"Configuring LuaRocks version '$version'..."/' configure
    sed -i 's/version = "[^"]*"/version = "'$version'-1"/' $ROCKSPEC
-   sed -i 's/\(   url = "[^"]*",\)/\1\n   tag = "v'$version'"/' $ROCKSPEC
+   sed -i '/^   tag = "[^"]*",\{0,1\}$/d' $ROCKSPEC
+   sed -i 's/\(   url = "[^"]*",\)/\1\n   tag = "v'$version'",/' $ROCKSPEC
    sed -i 's/program_version = "[^"]*"/program_version = "'$version'"/' src/luarocks/core/cfg.lua
    sed -i 's/vars.VERSION = "[0-9.]*"/vars.VERSION = "'$xyversion'"/' install.bat
    echo "==============================================================================="
@@ -89,6 +90,12 @@ grep -q "LuaRocks version $version" "configure" || {
 grep -q "\"$version-1\"" "$ROCKSPEC" || {
    echo
    echo "version in rockspec is incorrect. Please fix it."
+   exit 1
+}
+
+"$lua54dir/bin/lua" -e 'assert(loadfile("'$ROCKSPEC'"))' || {
+   echo
+   echo "$ROCKSPEC is not valid Lua. Please fix it."
    exit 1
 }
 
