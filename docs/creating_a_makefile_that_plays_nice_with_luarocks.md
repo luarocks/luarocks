@@ -117,7 +117,7 @@ where you can store configuration or other data for your module. Your code
 must be made aware of these paths in order to use them. If you use the
 `copy_directories` entry in the build section of your rockspec,
 then what is mentioned there is copied to $(PREFIX) (i.e. a directory doc
-will be available unter $(PREFIX)/doc). If you copy directories in your
+will be available under $(PREFIX)/doc). If you copy directories in your
 `install` Makefile rule, you should do the same.
 
 Now, if your Makefile is meant to be used standalone as well, which it

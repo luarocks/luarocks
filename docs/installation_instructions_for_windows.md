@@ -37,7 +37,7 @@ MSVC compiler, `cl`, are set.
 
 The default settings are suitable for installing LuaRocks globally
 in your system while allowing both system-wide and per-user sets of rocks.
-Non-priviledged accounts will be able to install their own rocks in their
+Non-privileged accounts will be able to install their own rocks in their
 %APPDATA% directory, and administrator accounts can install rocks that
 will be available for everyone.
 
@@ -87,7 +87,7 @@ Other options:
 | /FORCECONFIG   | Use a single config location. Do not use the LUAROCKS_CONFIG variable or the user's home directory. Useful to avoid conflicts when LuaRocks is embedded |
 | /F             | Force. Remove installation directory if it already exists. |
 | /NOREG         | Do not load registry info to register '.rockspec' extension with LuaRocks commands (right-click). |
-| /NOADMIN       | The installer requires admin priviledges. If not available it will elevate a new process. Use this switch to prevent elevation, but make sure the destination paths are all accessible for the current user. |
+| /NOADMIN       | The installer requires admin privileges. If not available it will elevate a new process. Use this switch to prevent elevation, but make sure the destination paths are all accessible for the current user. |
 | /Q             | Do not prompt for confirmation of settings |
 
 After installation, a default config file called config.lua will be installed at the directory defined by /CONFIG. For further configuration of LuaRocks paths, see the [Config file format](config_file_format.md). For more information on the structure of rocks trees see [rocks repositories](rocks_repositories.md).

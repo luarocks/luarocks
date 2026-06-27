@@ -176,7 +176,7 @@ end
 
 --- Get the URL for the latest in a set of versions.
 -- @param name string: The package name to be used in the URL.
--- @param versions table: An array of version informations, as stored
+-- @param versions table: An array of version information, as stored
 -- in search result trees.
 -- @return string or nil: the URL for the latest version if one could
 -- be picked, or nil.

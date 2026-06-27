@@ -435,7 +435,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
    end
 
    if platforms.msys then
-      -- msys is basically cygwin made out of mingw, meaning the subsytem is unixish
+      -- msys is basically cygwin made out of mingw, meaning the subsystem is unixish
       -- enough, yet we can freely mix with native win32
       defaults.external_deps_patterns = {
          bin = { "?.exe", "?.bat", "?" },

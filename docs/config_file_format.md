@@ -52,7 +52,7 @@ order) for a user config file:
 * `external_deps_subdirs` (table with string keys and string values) -
   Subdirectories to be used in conjunction with external_deps_dirs. Specifies
   where to look for specific types external dependencies. This can be
-  overriden, for example, on Linux distributions which feature multiarch
+  overridden, for example, on Linux distributions which feature multiarch
   libraries and libraries are no longer in the "lib" subdir. Default is { bin
   = "bin", lib = "lib", include = "include" }.
 
@@ -216,7 +216,7 @@ To test this, add a line `dump_env()` to your config file and execute
   variables to ensure Lua modules are found. If set to false, scripts
   installed at bin/ are copied directly, and no wrappers are generated.
 
-* `use_extensions` (boolean) - If specified, rockspec format verison 1.1 is
+* `use_extensions` (boolean) - If specified, rockspec format version 1.1 is
   enabled, adding the deploy.wrap_bin_scripts option to the rockspec format,
   which acts like the wrap_bin_scripts option above, in a rock by rock basis.
 

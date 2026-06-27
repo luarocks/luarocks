@@ -76,7 +76,7 @@ end
 
 -- Try to download source file using URL from a rockspec.
 -- If it specified MD5, update it.
--- @return true if no errors ocurred
+-- @return true if no errors occurred
 -- @return an error message in case of errors
 -- @return if no errors, a true boolean if the MD5 changed.
 local function check_url_and_update_md5(out_rs: Rockspec, invalid_is_error?: boolean): boolean, string, boolean

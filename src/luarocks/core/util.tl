@@ -40,7 +40,7 @@ end
 -- (in the case in which indent is composed by spaces or "--").
 -- Userdata and function keys and values are shown as strings,
 -- which logically are exactly not equivalent to the original code.
--- This routine can serve for pretty formating tables with
+-- This routine can serve for pretty formatting tables with
 -- proper indentations, apart from printing them:
 -- io.write(table.show(t, "t"))   -- a typical use
 -- Written by Julio Manuel Fernandez-Diaz,

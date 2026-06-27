@@ -35,9 +35,9 @@ itself is considered a special external dependency.
 
 These path variables are set in the global `variables` table defined in the
 [config file](config_file_format.md). Their values are populated automatically
-by LuaRocks, but can be overriden by the user (either by setting them directly
+by LuaRocks, but can be overridden by the user (either by setting them directly
 in the config file, or by passing them through the "luarocks" command line). 
 
 The `variables` table always contains entries for `LUA_BINDIR`, `LUA_INCDIR`
 and `LUA_LIBDIR`. Like the other external dependency variables, these can be
-overriden in the LuaRocks config file or in the command line.
+overridden in the LuaRocks config file or in the command line.

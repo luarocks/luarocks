@@ -34,7 +34,7 @@ describe("luarocks.rockspecs #unit", function()
       })
    end)
 
-   it("does not add a build dependency for non-vendored build type if it's already ther", function()
+   it("does not add a build dependency for non-vendored build type if it's already there", function()
       local filename = "test-1.0-1.rockspec"
       local rockspec = {
          package = "test",
