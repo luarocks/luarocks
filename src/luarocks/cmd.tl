@@ -681,7 +681,7 @@ function cmd.run_command(description: string, commands: {string: string}, extern
       -- Fallback producing _some_ Lua configuration based on the running interpreter.
       -- Most likely won't produce correct results when running from the standalone binary,
       -- so eventually we need to drop this and outright fail if Lua is not found
-      -- or explictly configured
+      -- or explicitly configured
       if not cfg.variables.LUA then
          local first_arg = get_first_arg()
          local bin_dir = dir.dir_name(fs.absolute_name(first_arg))

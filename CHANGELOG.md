@@ -506,7 +506,7 @@ package.cpath as well
 
 > Released 06/Jun/2019
 
-This is another bugfix release, that incldes a couple of fixes,
+This is another bugfix release, that includes a couple of fixes,
 including better Lua detection, and fixes specific to MacOS and
 FreeBSD.
 
@@ -829,7 +829,7 @@ overhauled, making use of LuaRocks 3 features to greatly simplify them:
   in preparation for a stable public API.
 * Likewise, modules representing `luarocks-admin` commands were moved into the
   `luarocks.admin.cmd` namespace.
-* New internal objects for representing interaction with the repostories:
+* New internal objects for representing interaction with the repositories:
   `luarocks.queries` and `luarocks.results`
 * Type checking rules of file formats were moved into the `luarocks.type` namespace.
 

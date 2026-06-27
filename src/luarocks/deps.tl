@@ -173,7 +173,7 @@ local function rock_status(dep: Query, get_versions: function(Query): {string}, 
    return installed and installed.." "..installation_type..": success" or "not installed"
 end
 
---- Check depenendencies of a package and report any missing ones.
+--- Check dependencies of a package and report any missing ones.
 -- @param name string: package name.
 -- @param version string: package version.
 -- @param dependencies table: array of dependencies.
