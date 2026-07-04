@@ -36,8 +36,9 @@ jobs:
   ##############################################################################
   TestMatrix:
     strategy:
+      fail-fast: false
       matrix:
-        lua-version: ["5.4", "luajit-2.1"]
+        lua-version: ["5.4", "5.5", "luajit-2.1"]
         os: ["ubuntu-latest", "macos-latest"]
     runs-on: ${{ matrix.os }}
 
@@ -60,7 +61,9 @@ jobs:
 
     - name: 'Setup Ubuntu deps'
       if: runner.os == 'Linux'
-      run: sudo apt-get install libbz2-dev
+      run: |
+        sudo apt-get update -q -q --yes
+        sudo apt-get install libbz2-dev
 
     - name: Prep
       run: |
