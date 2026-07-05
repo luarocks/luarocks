@@ -46,7 +46,7 @@ $(WINDOWS_DEPS_DIR)/lib/libssl.a: $(BUILD_WINDOWS_DEPS_DIR)/openssl-$(OPENSSL_VE
 
 $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION).tar.gz:
 	mkdir -p $(@D)
-	cd $(BUILD_WINDOWS_DEPS_DIR) && curl -OL https://www.zlib.net/fossils/zlib-$(ZLIB_VERSION).tar.gz
+	cd $(BUILD_WINDOWS_DEPS_DIR) && curl -vOL --fail-with-body --retry 5 https://www.zlib.net/fossils/zlib-$(ZLIB_VERSION).tar.gz
 $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION): $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION).tar.gz
 	cd $(BUILD_WINDOWS_DEPS_DIR) && tar zxvpf zlib-$(ZLIB_VERSION).tar.gz
 $(WINDOWS_DEPS_DIR)/lib/libz.a: $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION)
