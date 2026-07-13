@@ -3,7 +3,7 @@ local git_repo = require("spec.util.git_repo")
 local lfs = require("lfs")
 local run = test_env.run
 
-describe("luarocks write_rockspec tests #integration", function()
+describe("luarocks ##write_rockspec tests #integration", function()
 
    lazy_setup(function()
       test_env.setup_specs()
@@ -39,12 +39,13 @@ describe("luarocks write_rockspec tests #integration", function()
          lfs.chdir("testrock")
          assert.is_true(run.luarocks_bool("write_rockspec"))
          assert.is.truthy(lfs.attributes("testrock-dev-1.rockspec"))
+         assert.truthy(run.luarocks_bool("lint " .. d ..  "/testrock-dev-1.rockspec"))
       end)
 
       it("runs", function()
          finally(function() os.remove("testrock-dev-1.rockspec") end)
          assert.is_true(run.luarocks_bool("write_rockspec git://localhost/testrock"))
-         assert.is.truthy(lfs.attributes("testrock-dev-1.rockspec"))
+         assert.truthy(run.luarocks_bool("lint " .. "testrock-dev-1.rockspec"))
       end)
 
       it("runs with --tag", function()
@@ -58,6 +59,7 @@ describe("luarocks write_rockspec tests #integration", function()
          finally(function() os.remove("testrock-dev-1.rockspec") end)
          assert.is_true(run.luarocks_bool("write_rockspec git://localhost/testrock --rockspec-format=1.1 --lua-versions=5.1,5.2"))
          assert.is.truthy(lfs.attributes("testrock-dev-1.rockspec"))
+         assert.truthy(run.luarocks_bool("lint " .. "testrock-dev-1.rockspec"))
          -- TODO check contents
       end)
 
@@ -66,6 +68,7 @@ describe("luarocks write_rockspec tests #integration", function()
          assert.is_true(run.luarocks_bool("write_rockspec git://localhost/testrock --lua-versions=5.1,5.2 --license=\"MIT/X11\" "
                                              .. " --homepage=\"http://www.luarocks.org\" --summary=\"A package manager for Lua modules\" "))
          assert.is.truthy(lfs.attributes("testrock-dev-1.rockspec"))
+         assert.truthy(run.luarocks_bool("lint " .. "testrock-dev-1.rockspec"))
          -- TODO check contents
       end)
 
@@ -73,6 +76,7 @@ describe("luarocks write_rockspec tests #integration", function()
          finally(function() os.remove("testrock-dev-1.rockspec") end)
          assert.is_true(run.luarocks_bool("write_rockspec git://localhost/testrock --lib=fcgi --license=\"3-clause BSD\" " .. "--lua-versions=5.1,5.2"))
          assert.is.truthy(lfs.attributes("testrock-dev-1.rockspec"))
+         assert.truthy(run.luarocks_bool("lint " .. "testrock-dev-1.rockspec"))
          -- TODO check contents
       end)
    end)
@@ -91,6 +95,7 @@ describe("luarocks write_rockspec tests #integration", function()
          finally(function() os.remove("an_upstream_tarball-0.1-1.rockspec") end)
          assert.is_true(run.luarocks_bool("write_rockspec http://localhost:8080/file/an_upstream_tarball-0.1.tar.gz --lua-versions=5.1"))
          assert.is.truthy(lfs.attributes("an_upstream_tarball-0.1-1.rockspec"))
+         assert.truthy(run.luarocks_bool("lint " .. "an_upstream_tarball-0.1-1.rockspec"))
          -- TODO check contents
       end)
 
@@ -98,6 +103,7 @@ describe("luarocks write_rockspec tests #integration", function()
          finally(function() os.remove("renamed_upstream_tarball-0.1-1.rockspec") end)
          assert.is_true(run.luarocks_bool("write_rockspec http://localhost:8080/file/renamed_upstream_tarball-0.1.tar.gz --lua-versions=5.1"))
          assert.is.truthy(lfs.attributes("renamed_upstream_tarball-0.1-1.rockspec"))
+         assert.truthy(run.luarocks_bool("lint " .. "renamed_upstream_tarball-0.1-1.rockspec"))
          -- TODO check contents
       end)
    end)
