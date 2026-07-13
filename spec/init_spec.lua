@@ -18,7 +18,7 @@ describe("luarocks #init #integration", function()
          lfs.mkdir(myproject)
          lfs.chdir(myproject)
 
-         assert(run.luarocks("init"))
+         assert(run.luarocks_bool("init"))
          if is_win then
             assert.truthy(lfs.attributes(myproject .. "/lua.bat"))
             assert.truthy(lfs.attributes(myproject .. "/luarocks.bat"))
@@ -41,7 +41,7 @@ describe("luarocks #init #integration", function()
          lfs.mkdir(myproject)
          lfs.chdir(myproject)
 
-         assert(run.luarocks("init --no-gitignore"))
+         assert(run.luarocks_bool("init --no-gitignore"))
          if is_win then
             assert.truthy(lfs.attributes(myproject .. "/lua.bat"))
             assert.truthy(lfs.attributes(myproject .. "/luarocks.bat"))
@@ -64,7 +64,7 @@ describe("luarocks #init #integration", function()
          lfs.mkdir(myproject)
          lfs.chdir(myproject)
 
-         assert(run.luarocks("init --no-wrapper-scripts"))
+         assert(run.luarocks_bool("init --no-wrapper-scripts"))
          assert.falsy(lfs.attributes(myproject .. "/lua.bat"))
          assert.falsy(lfs.attributes(myproject .. "/luarocks.bat"))
          assert.falsy(lfs.attributes(myproject .. "/lua"))
@@ -84,7 +84,7 @@ describe("luarocks #init #integration", function()
          lfs.mkdir(myproject)
          lfs.chdir(myproject)
 
-         assert(run.luarocks("init --wrapper-dir=./bin"))
+         assert(run.luarocks_bool("init --wrapper-dir=./bin"))
          if is_win then
             assert.truthy(lfs.attributes(myproject .. "/bin/lua.bat"))
             assert.truthy(lfs.attributes(myproject .. "/bin/luarocks.bat"))
@@ -107,7 +107,7 @@ describe("luarocks #init #integration", function()
          lfs.mkdir(myproject)
          lfs.chdir(myproject)
 
-         assert(run.luarocks("init"))
+         assert(run.luarocks_bool("init"))
          if is_win then
             assert.truthy(lfs.attributes(myproject .. "/lua.bat"))
             assert.truthy(lfs.attributes(myproject .. "/luarocks.bat"))
@@ -146,7 +146,7 @@ describe("luarocks #init #integration", function()
          lfs.mkdir(myproject)
          lfs.chdir(myproject)
 
-         assert(run.luarocks("init customname 1.0"))
+         assert(run.luarocks_bool("init customname 1.0"))
          assert.truthy(lfs.attributes(myproject .. "/customname-1.0-1.rockspec"))
          assert.truthy(run.luarocks_bool("lint " .. myproject ..  "/customname-1.0-1.rockspec"))
       end, finally)
@@ -158,7 +158,7 @@ describe("luarocks #init #integration", function()
          lfs.mkdir(myproject)
          lfs.chdir(myproject)
 
-         assert(run.luarocks("init --lua-versions=5.1,5.2,5.3,5.4,5.5"))
+         assert(run.luarocks_bool("init --lua-versions=5.1,5.2,5.3,5.4,5.5"))
          local rockspec_name = myproject .. "/myproject-dev-1.rockspec"
          assert.truthy(lfs.attributes(rockspec_name))
          local fd = assert(io.open(rockspec_name, "rb"))
@@ -175,7 +175,7 @@ describe("luarocks #init #integration", function()
          copy_dir(testing_paths.fixtures_dir .. "/git_repo", myproject)
          lfs.chdir(myproject)
 
-         assert(run.luarocks("init"))
+         assert(run.luarocks_bool("init"))
          local fd = assert(io.open(myproject .. "/myproject-dev-1.rockspec", "r"))
          local content = assert(fd:read("*a"))
          assert.truthy(content:find("summary = \"Test repo\""))
@@ -197,7 +197,7 @@ describe("luarocks #init #integration", function()
          lfs.mkdir(myproject)
          lfs.chdir(myproject)
 
-         assert(run.luarocks("init"))
+         assert(run.luarocks_bool("init"))
          assert.truthy(lfs.attributes(myproject .. "/.luarocks/config-" .. test_env.lua_version .. ".lua"))
          local rockspec_filename = myproject .. "/myproject-dev-1.rockspec"
          assert.truthy(lfs.attributes(rockspec_filename))
@@ -218,14 +218,14 @@ describe("luarocks #init #integration", function()
          ]], finally)
          write_file(tmpdir .. "/my_dependency.lua", "return {}", finally)
 
-         assert.truthy(run.luarocks("build my_dependency-1.0-1.rockspec"))
+         assert.truthy(run.luarocks_bool("build my_dependency-1.0-1.rockspec"))
          assert.truthy(lfs.attributes(myproject .. "/lua_modules/share/lua/" .. test_env.lua_version .."/my_dependency.lua"))
 
          os.remove(rockspec_filename)
          os.remove("my_dependency-1.0-1.rockspec")
 
          -- re-run init
-         assert(run.luarocks("init"))
+         assert(run.luarocks_bool("init"))
 
          -- file is recreated
          assert.truthy(lfs.attributes(rockspec_filename))
