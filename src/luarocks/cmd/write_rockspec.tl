@@ -264,23 +264,32 @@ local function rockspec_cleanup(rockspec: Rockspec)
    rockspec.source.pathname = nil
    rockspec.variables = nil
    rockspec.name = nil
-   rockspec.format_is_at_least = nil
    rockspec.local_abs_filename = nil
    rockspec.rocks_provided = nil
 
    local dep_lists: {string: Dependencies} = {
       dependencies = rockspec.dependencies,
-      build_dependencies = rockspec.build_dependencies,
-      test_dependencies = rockspec.test_dependencies,
    }
+   if rockspec:format_is_at_least("3.0") then
+      dep_lists.build_dependencies = rockspec.build_dependencies
+      dep_lists.test_dependencies = rockspec.test_dependencies
+   else
+      rockspec.build_dependencies = nil
+      rockspec.test_dependencies = nil
+   end
+   rockspec.format_is_at_least = nil
 
    for name, data in pairs(dep_lists) do
       if not next(data) then
          (rockspec as {string: Dependencies})[name] = nil
       else
+         local new_data: {string} = {}
          for i, item in ipairs(data) do
-            data[i] = tostring(item)
+            if type(item) == "string" then
+               new_data[i] = tostring(item)
+            end
          end
+         (rockspec as {string: Dependencies})[name] = new_data
       end
    end
 end
@@ -350,6 +359,7 @@ function write_rockspec.command(args: Args): boolean, string
       },
       build = {},
    })
+
    assert(not err, err)
    rockspec.source.protocol = protocol
 
