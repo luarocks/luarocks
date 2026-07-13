@@ -55,13 +55,21 @@ describe("luarocks ##write_rockspec tests #integration", function()
          -- TODO check contents
       end)
 
-      it("runs with format flag", function()
-         finally(function() os.remove("testrock-dev-1.rockspec") end)
-         assert.is_true(run.luarocks_bool("write_rockspec git://localhost/testrock --rockspec-format=1.1 --lua-versions=5.1,5.2"))
-         assert.is.truthy(lfs.attributes("testrock-dev-1.rockspec"))
-         assert.truthy(run.luarocks_bool("lint " .. "testrock-dev-1.rockspec"))
-         -- TODO check contents
-      end)
+      local formats = {
+         "1.0",
+         "1.1",
+         "3.0",
+         "3.1",
+      }
+      for i, format in ipairs(formats) do
+         it("runs with format flag " .. format, function()
+            finally(function() os.remove("testrock-dev-1.rockspec") end)
+            assert.is_true(run.luarocks_bool("write_rockspec git://localhost/testrock --rockspec-format=" .. format .. " --lua-versions=5.1,5.2"))
+            assert.is.truthy(lfs.attributes("testrock-dev-1.rockspec"))
+            assert.truthy(run.luarocks_bool("lint " .. "testrock-dev-1.rockspec"))
+            -- TODO check contents
+         end)
+      end
 
       it("runs with full flags", function()
          finally(function() os.remove("testrock-dev-1.rockspec") end)
