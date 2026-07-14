@@ -35,6 +35,7 @@ Variables from the "variables" table of the [configuration file](config_file_for
 - **[doc](luarocks_doc.md)**: Shows documentation for an installed rock.
 - **[download](luarocks_download.md)**: Download a specific rock or rockspec file from a rocks server.
 - **[help](luarocks_help.md)**: Help on commands.
+- **[init](luarocks_init.md)**: Initialize a directory for a Lua project using LuaRocks.
 - **[install](luarocks_install.md)**: Install a rock.
 - **[lint](luarocks_lint.md)**: Check syntax of a rockspec.
 - **[list](luarocks_list.md)**: Lists currently installed rocks.
