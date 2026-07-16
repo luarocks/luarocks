@@ -4,7 +4,7 @@ Upload a rockspec to the public rocks repository.
 
 ## Usage
 
-`luarocks upload [--skip-pack] [--api-key=<key>] [--force] <rockspec> [<src.rock>]`
+`luarocks upload [--skip-pack] [--api-key=<key>] [--force] [--dry-run] <rockspec> [<src.rock>]`
 
 Packs a source rock file (`.src.rock`) using a rockspec and
 
@@ -21,6 +21,10 @@ is uploaded.
 
 If `--force` is passed, existing files will be overwritten if the same version
 of the package already exists.
+
+If `--dry-run` is passed, the rockspec is validated, the source rock is packed
+(unless `--skip-pack`), and the server is checked for conflicts, but no files
+are uploaded.
 
 ## Example
 
