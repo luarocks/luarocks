@@ -18,6 +18,7 @@ local record args
       detailed: string
       dev: boolean
       dir: string
+      dry_run: boolean
       filter: string
       force: boolean
       force_fast: boolean

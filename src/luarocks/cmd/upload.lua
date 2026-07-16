@@ -47,6 +47,7 @@ function upload.add_to_parser(parser)
    "mistakes: when updating a rockspec, increment the revision number " ..
    "instead.")
    cmd:flag("--sign", "Upload a signature file alongside each file as well.")
+   cmd:flag("--dry-run", "Perform a dry run without uploading files.")
    cmd:flag("--debug"):hidden(true)
 end
 
@@ -150,10 +151,26 @@ function upload.command(args)
 
    local multipart = require("luarocks.upload.multipart")
 
-   res, err = api:method("upload", nil, {
-      rockspec_file = multipart.new_file(args.rockspec),
-      rockspec_sig = sigfname and multipart.new_file(sigfname),
-   })
+   local rockspec_file = multipart.new_file(args.rockspec)
+   local rockspec_sig = sigfname and multipart.new_file(sigfname)
+
+   if args.dry_run then
+      util.printout("Dry run: would upload " .. tostring(args.rockspec))
+      if sigfname then
+         util.printout("Dry run: would upload " .. tostring(sigfname))
+      end
+      res = {
+         is_new = false,
+         manifests = {},
+         module_url = "dry run",
+         version = { id = "0" },
+      }
+   else
+      res, err = api:method("upload", nil, {
+         rockspec_file = rockspec_file,
+         rockspec_sig = rockspec_sig,
+      })
+   end
    if not res then return nil, err end
 
    if res.is_new and #res.manifests == 0 then
@@ -168,10 +185,21 @@ function upload.command(args)
       end
       util.printout(("Sending " .. tostring(rock_fname) .. " ..."))
       local id = math.tointeger(res.version.id)
-      res, err = api:method("upload_rock/" .. ("%d"):format(id), nil, {
-         rock_file = multipart.new_file(rock_fname),
-         rock_sig = rock_sigfname and multipart.new_file(rock_sigfname),
-      })
+      local rock_file = multipart.new_file(rock_fname)
+      local rock_sig = rock_sigfname and multipart.new_file(rock_sigfname)
+
+      if args.dry_run then
+         util.printout("Dry run: would upload " .. tostring(rock_fname))
+         if rock_sigfname then
+            util.printout("Dry run: would upload " .. tostring(rock_sigfname))
+         end
+         res = {}
+      else
+         res, err = api:method("upload_rock/" .. ("%d"):format(id), nil, {
+            rock_file = rock_file,
+            rock_sig = rock_sig,
+         })
+      end
       if not res then return nil, err end
    end
 
