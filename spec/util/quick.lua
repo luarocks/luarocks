@@ -131,6 +131,7 @@ local function parse(filename)
    end
 
    for line in input:gmatch("([^\r\n]*)\r?\n?") do
+      local line = line
       cur_line = cur_line + 1
 
       local state = stack[#stack]
