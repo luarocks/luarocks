@@ -25,6 +25,12 @@ local function get_file(filename)
    end
 end
 
+--- Driver function for the "download" command.
+-- @param name string: a rock name.
+-- @param version string or nil: if the name of a package is given, a
+-- version may also be passed.
+-- @return boolean or (nil, string): true if successful or nil followed
+-- by an error message.
 function download.download_all(arch, name, namespace, version)
    local substring = (name == "")
    local query = queries.new(name, namespace, version, substring, arch)

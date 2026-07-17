@@ -67,9 +67,6 @@ function util.schedule_function(f, x)
 end
 
 
-
-
-
 function util.remove_scheduled_function(item)
    for k, v in ipairs(scheduled_functions) do
       if v == item then

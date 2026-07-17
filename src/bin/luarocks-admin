@@ -1,4 +1,5 @@
-#!/usr/bin/env lua
+#!/home/teto/.nix-profile/bin/lua
+package.path = [[/nix/store/psnvxw1gi977zp1i6admn7y7sdhzg7z4-shell/share/lua/5.3/?.lua;]]..package.path
 
 -- Load cfg first so that luarocks.loader knows it is running inside LuaRocks
 local cfg = require("luarocks.core.cfg")
