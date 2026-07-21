@@ -48,7 +48,7 @@ jobs:
 
     - uses: luarocks/gh-actions-luarocks@95d2308a0aff36ad31ebadca493ed14853399842 # v7
       with:
-        luaRocksVersion: "3.12.2"
+        luaRocksVersion: "3.13.0"
 
     - name: 'Setup macOS deps'
       if: ${{ contains(matrix.os, 'macos') }}
@@ -544,7 +544,7 @@ jobs:
           hererocks ^
             "%CURRENT_LUA_DIRNAME%" ^
             "--${{ matrix.LUAT }}" "${{ matrix.LUAV }}" ^
-            --luarocks "3.12.2" ^
+            --luarocks "3.13.0" ^
             "--target=${{ matrix.COMPILER }}"
 
           IF %ERRORLEVEL% NEQ 0 (
