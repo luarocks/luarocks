@@ -21,7 +21,7 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - name: Prep
       run: |
@@ -40,7 +40,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - uses: hishamhm/gh-actions-lua@master
       with:
@@ -95,7 +95,7 @@ jobs:
   SmokeTest:
     runs-on: "ubuntu-latest"
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - uses: hishamhm/gh-actions-lua@master
       with:
@@ -111,7 +111,7 @@ jobs:
   BinaryBuild:
     runs-on: "ubuntu-latest"
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - uses: hishamhm/gh-actions-lua@master
       with:
@@ -142,7 +142,7 @@ jobs:
             mingw-sysroot: /usr/x86_64-w64-mingw32
 
     steps:
-    - uses: actions/checkout@main
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     # [!NOTE]:
     #
@@ -256,7 +256,7 @@ jobs:
       LUAROCKS_WINDOWS_GH_CI: "ci-windows"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup MSVC dev prompt
         if: ${{ matrix.COMPILER == 'vs' }}
