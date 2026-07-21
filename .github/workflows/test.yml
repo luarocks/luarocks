@@ -21,7 +21,7 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - name: Prep
       run: |
@@ -40,15 +40,15 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - uses: hishamhm/gh-actions-lua@master
+    - uses: luarocks/gh-actions-lua@fc6f8de246f8c01f6e1a56a1b851143e23370ff3 # v12
       with:
         luaVersion: ${{ matrix.lua-version }}
 
-    - uses: luarocks/gh-actions-luarocks@master
+    - uses: luarocks/gh-actions-luarocks@95d2308a0aff36ad31ebadca493ed14853399842 # v7
       with:
-        luaRocksVersion: "3.12.2"
+        luaRocksVersion: "3.13.0"
 
     - name: 'Setup macOS deps'
       if: ${{ contains(matrix.os, 'macos') }}
@@ -79,9 +79,9 @@ jobs:
       run: luacov -c "testrun/luacov.config"
 
     - name: Setup Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
       with:
-        python-version: '3.11'
+        python-version: '3.14'
 
     - name: Install Codecov
       run: pip install codecov
@@ -95,9 +95,9 @@ jobs:
   SmokeTest:
     runs-on: "ubuntu-latest"
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - uses: hishamhm/gh-actions-lua@master
+    - uses: luarocks/gh-actions-lua@fc6f8de246f8c01f6e1a56a1b851143e23370ff3 # v12
       with:
         luaVersion: "5.4"
 
@@ -111,9 +111,9 @@ jobs:
   BinaryBuild:
     runs-on: "ubuntu-latest"
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - uses: hishamhm/gh-actions-lua@master
+    - uses: luarocks/gh-actions-lua@fc6f8de246f8c01f6e1a56a1b851143e23370ff3 # v12
       with:
         luaVersion: "5.4"
 
@@ -142,7 +142,7 @@ jobs:
             mingw-sysroot: /usr/x86_64-w64-mingw32
 
     steps:
-    - uses: actions/checkout@main
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     # [!NOTE]:
     #
@@ -155,10 +155,10 @@ jobs:
     #
     # On the other hand, installing Lua 5.4
     # from source, as happens applying
-    # the `luarocks/gh-actions-lua@master`
+    # the `luarocks/gh-actions-lua@fc6f8de246f8c01f6e1a56a1b851143e23370ff3 # v12`
     # action below, everything runs as
     # it should.
-    - uses: luarocks/gh-actions-lua@master
+    - uses: luarocks/gh-actions-lua@fc6f8de246f8c01f6e1a56a1b851143e23370ff3 # v12
       with:
         luaVersion: 5.4
 
@@ -256,11 +256,11 @@ jobs:
       LUAROCKS_WINDOWS_GH_CI: "ci-windows"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup MSVC dev prompt
         if: ${{ matrix.COMPILER == 'vs' }}
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: step-security/msvc-dev-cmd@22c98154b708dbd743e6f27a933cf6ceba3305c4 # v1.13.1
         with:
           arch: ${{ matrix.ARCH }}
 
@@ -271,7 +271,7 @@ jobs:
       - name: Restore zlib tarball
         if: ${{ matrix.COMPILER == 'vs' }}
         id: restore-zlib-tarball
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}.tar.gz
           key: zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}
@@ -284,7 +284,7 @@ jobs:
 
       - name: Save zlib tarball
         if: ${{ matrix.COMPILER == 'vs' && steps.restore-zlib-tarball.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}.tar.gz
           key: zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}
@@ -322,7 +322,7 @@ jobs:
       - name: Restore bzip2 tarball
         if: ${{ matrix.COMPILER == 'vs' }}
         id: restore-bzip2-tarball
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: bzip2.tar.gz
           key: bzip2
@@ -336,7 +336,7 @@ jobs:
 
       - name: Save bzip2 tarball
         if: ${{ matrix.COMPILER == 'vs' && steps.restore-bzip2-tarball.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: bzip2.tar.gz
           key: bzip2
@@ -374,7 +374,7 @@ jobs:
       - name: Restore OpenSSL installer
         if: ${{ matrix.COMPILER == 'vs' }}
         id: restore-openssl-installer
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build\openssl-installer-${{ env.LUAROCKS_DEPS_OPENSSL_VER }}-${{ matrix.ARCH }}.exe
           key: openssl-${{ env.LUAROCKS_DEPS_OPENSSL_VER }}-${{ matrix.ARCH }}
@@ -451,7 +451,7 @@ jobs:
 
       - name: Save OpenSSL installer
         if: ${{ matrix.COMPILER == 'vs' && steps.restore-openssl-installer.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build\openssl-installer-${{ env.LUAROCKS_DEPS_OPENSSL_VER }}-${{ matrix.ARCH }}.exe
           key: openssl-${{ env.LUAROCKS_DEPS_OPENSSL_VER }}-${{ matrix.ARCH }}
@@ -522,11 +522,9 @@ jobs:
           )
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          # employ the latest Python version
-          # described at https://pypi.org/project/hererocks/
-          python-version: '3.11'
+          python-version: '3.14'
 
       - name: Install SSL certificate
         run: |
@@ -546,7 +544,7 @@ jobs:
           hererocks ^
             "%CURRENT_LUA_DIRNAME%" ^
             "--${{ matrix.LUAT }}" "${{ matrix.LUAV }}" ^
-            --luarocks "3.12.2" ^
+            --luarocks "3.13.0" ^
             "--target=${{ matrix.COMPILER }}"
 
           IF %ERRORLEVEL% NEQ 0 (
