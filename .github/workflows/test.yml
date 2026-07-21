@@ -260,7 +260,7 @@ jobs:
 
       - name: Setup MSVC dev prompt
         if: ${{ matrix.COMPILER == 'vs' }}
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: step-security/msvc-dev-cmd@22c98154b708dbd743e6f27a933cf6ceba3305c4 # v1.13.1
         with:
           arch: ${{ matrix.ARCH }}
 
