@@ -42,11 +42,11 @@ jobs:
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - uses: hishamhm/gh-actions-lua@master
+    - uses: luarocks/gh-actions-lua@fc6f8de246f8c01f6e1a56a1b851143e23370ff3 # v12
       with:
         luaVersion: ${{ matrix.lua-version }}
 
-    - uses: luarocks/gh-actions-luarocks@master
+    - uses: luarocks/gh-actions-luarocks@95d2308a0aff36ad31ebadca493ed14853399842 # v7
       with:
         luaRocksVersion: "3.12.2"
 
@@ -97,7 +97,7 @@ jobs:
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - uses: hishamhm/gh-actions-lua@master
+    - uses: luarocks/gh-actions-lua@fc6f8de246f8c01f6e1a56a1b851143e23370ff3 # v12
       with:
         luaVersion: "5.4"
 
@@ -113,7 +113,7 @@ jobs:
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - uses: hishamhm/gh-actions-lua@master
+    - uses: luarocks/gh-actions-lua@fc6f8de246f8c01f6e1a56a1b851143e23370ff3 # v12
       with:
         luaVersion: "5.4"
 
@@ -155,10 +155,10 @@ jobs:
     #
     # On the other hand, installing Lua 5.4
     # from source, as happens applying
-    # the `luarocks/gh-actions-lua@master`
+    # the `luarocks/gh-actions-lua@fc6f8de246f8c01f6e1a56a1b851143e23370ff3 # v12`
     # action below, everything runs as
     # it should.
-    - uses: luarocks/gh-actions-lua@master
+    - uses: luarocks/gh-actions-lua@fc6f8de246f8c01f6e1a56a1b851143e23370ff3 # v12
       with:
         luaVersion: 5.4
 
