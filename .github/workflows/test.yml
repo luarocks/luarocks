@@ -271,7 +271,7 @@ jobs:
       - name: Restore zlib tarball
         if: ${{ matrix.COMPILER == 'vs' }}
         id: restore-zlib-tarball
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}.tar.gz
           key: zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}
@@ -284,7 +284,7 @@ jobs:
 
       - name: Save zlib tarball
         if: ${{ matrix.COMPILER == 'vs' && steps.restore-zlib-tarball.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}.tar.gz
           key: zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}
@@ -322,7 +322,7 @@ jobs:
       - name: Restore bzip2 tarball
         if: ${{ matrix.COMPILER == 'vs' }}
         id: restore-bzip2-tarball
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: bzip2.tar.gz
           key: bzip2
@@ -336,7 +336,7 @@ jobs:
 
       - name: Save bzip2 tarball
         if: ${{ matrix.COMPILER == 'vs' && steps.restore-bzip2-tarball.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: bzip2.tar.gz
           key: bzip2
@@ -374,7 +374,7 @@ jobs:
       - name: Restore OpenSSL installer
         if: ${{ matrix.COMPILER == 'vs' }}
         id: restore-openssl-installer
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build\openssl-installer-${{ env.LUAROCKS_DEPS_OPENSSL_VER }}-${{ matrix.ARCH }}.exe
           key: openssl-${{ env.LUAROCKS_DEPS_OPENSSL_VER }}-${{ matrix.ARCH }}
@@ -451,7 +451,7 @@ jobs:
 
       - name: Save OpenSSL installer
         if: ${{ matrix.COMPILER == 'vs' && steps.restore-openssl-installer.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build\openssl-installer-${{ env.LUAROCKS_DEPS_OPENSSL_VER }}-${{ matrix.ARCH }}.exe
           key: openssl-${{ env.LUAROCKS_DEPS_OPENSSL_VER }}-${{ matrix.ARCH }}
