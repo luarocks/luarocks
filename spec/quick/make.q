@@ -11,7 +11,8 @@ source = {
    url = "file://%{path(tmpdir)}/test.lua"
 }
 dependencies = {
-   "a_rock >= 0.8"
+   "a_rock >= 0.8",
+   "lua = %{lua_version}",
 }
 build = {
    type = "builtin",
