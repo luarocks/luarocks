@@ -1,0 +1,48 @@
+# Can a package be installed on Lua 5.4 and 5.5 on macOS, Ubuntu, and Windows?
+# Unlike most other workflows, this one is NOT run on pushes and pull requests.
+#
+# This workflow is only run ON DEMAND by MAINTAINERS of this repo when they
+# want to know if a Lua package can be installed on both Lua 5.4 and 5.5.
+#
+# https://github.com/luarocks/luarocks/actions/workflows/luarocks_install.yml
+# * Click the "Run workflow" button at the upper right of the page.
+#     * You must be a MAINTAINER of this repo for that button to appear.
+# * Enter the name of the package on https://luarocks.org to be tested.
+#
+# That package is installed on both Lua 5.4 and 5.5 on macOS, Ubuntu, and Windows.
+
+name: luarocks install
+run-name: luarocks install ${{ inputs.package }}
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to test (e.g., moonscript)'
+        required: true
+
+jobs:
+  luarocks_install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        lua-version: [5.4, 5.5]  # [5.1, 5.2, 5.3, 5.4, 5.5]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: echo "Installing ${{ github.event.inputs.package }} on ${{ matrix.os }} on ${{ runner.arch }}..."
+      - if: runner.os == 'Windows'  # Windows requires the MSVC cl tool.
+        uses: step-security/msvc-dev-cmd@v1
+      - run: cl || clang --version
+      - uses: luarocks/gh-actions-lua@master
+        with:
+          luaVersion: ${{ matrix.lua-version }}
+      - uses: luarocks/gh-actions-luarocks@master
+        with:
+          luaRocksVersion: "3.13.0"
+      - run: lua -v
+      - run: luarocks --version
+      - run: luarocks --lua-version=${{ matrix.lua-version }} install --check-lua-versions ${{ github.event.inputs.package }} --local
+      - run: luarocks --lua-version=${{ matrix.lua-version }} list  # other dependencies that are installed
+      - run: luarocks --lua-version=${{ matrix.lua-version }} show ${{ github.event.inputs.package }}
+      - run: luarocks --lua-version=${{ matrix.lua-version }} doc ${{ github.event.inputs.package }}
+      - run: luarocks --lua-version=${{ matrix.lua-version }} test ${{ github.event.inputs.package }} || true
