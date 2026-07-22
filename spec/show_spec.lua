@@ -46,12 +46,12 @@ describe("luarocks show #integration", function()
 
       it("rockspec of luacov", function()
          local output = run.luarocks("show --rockspec luacov")
-         assert.is.truthy(output:match("luacov--0.15.0--1.rockspec"))
+         assert.is.truthy(output:match("luacov--0.17.0--1.rockspec"))
       end)
 
       it("mversion of luacov", function()
          local output = run.luarocks("show --mversion luacov")
-         assert.is.truthy(output:match("0.15.0--1"))
+         assert.is.truthy(output:match("0.17.0--1"))
       end)
 
       it("rock tree of luacov", function()
