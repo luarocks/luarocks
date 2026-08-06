@@ -183,7 +183,7 @@ if not ltn12_ok then -- If not using LuaSocket and/or LuaSec...
    api.Api.request = function(self: Api, url: string, params?: Parameters, post_params?: Parameters, extra_headers?: Parameters): {string : any}, string
       local vars = cfg.variables
 
-      if fs.which_tool("downloader") == "wget" then
+      do
          local curl_ok, err = fs.is_tool_available(vars.CURL, "curl")
          if not curl_ok then
             return nil, err
