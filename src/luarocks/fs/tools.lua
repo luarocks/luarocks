@@ -13,10 +13,15 @@ local dir_stack = {}
 do
    local tool_cache = {}
 
+   local function wget_is_compatible()
+      -- busybox wget is incompatible and does not support -V
+      return fs.execute_quiet(vars.WGET .. " -V")
+   end
+
    local tool_options = {
       downloader = {
          desc = "downloader",
-         { var = "WGET", name = "wget" },
+         { var = "WGET", name = "wget", check_compat = wget_is_compatible },
          { var = "CURL", name = "curl" },
       },
       md5checker = {
@@ -27,13 +32,23 @@ do
       },
    }
 
+   local function is_available(opt)
+      if not fs.is_tool_available(vars[opt.var], opt.name) then
+         return false
+      end
+      if opt.check_compat then
+         return opt.check_compat()
+      end
+      return true
+   end
+
    function tools.which_tool(tooltype)
       local tool = tool_cache[tooltype]
       local names = {}
       if not tool then
          for _, opt in ipairs(tool_options[tooltype]) do
             table.insert(names, opt.name)
-            if fs.is_tool_available(vars[opt.var], opt.name) then
+            if is_available(opt) then
                tool = opt
                tool_cache[tooltype] = opt
                break
