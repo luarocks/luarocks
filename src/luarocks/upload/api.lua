@@ -183,7 +183,7 @@ if not ltn12_ok then
    api.Api.request = function(self, url, params, post_params, extra_headers)
       local vars = cfg.variables
 
-      if fs.which_tool("downloader") == "wget" then
+      do
          local curl_ok, err = fs.is_tool_available(vars.CURL, "curl")
          if not curl_ok then
             return nil, err
