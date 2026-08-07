@@ -279,7 +279,7 @@ jobs:
       - name: Download zlib
         if: ${{ matrix.COMPILER == 'vs' && steps.restore-zlib-tarball.outputs.cache-hit != 'true' }}
         run: |
-          curl -o "${{ github.workspace }}\zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}.tar.gz" ^
+          curl -Lo "${{ github.workspace }}\zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}.tar.gz" ^
               "https://github.com/madler/zlib/releases/download/v${{ env.LUAROCKS_DEPS_ZLIB_VER }}/zlib-${{ env.LUAROCKS_DEPS_ZLIB_VER }}.tar.gz"
 
       - name: Save zlib tarball
@@ -436,7 +436,7 @@ jobs:
           }
 
           # Download the installer
-          curl "--create-dirs" "-o" "${installerName}" "${installerUrl}";
+          curl "--create-dirs" "-Lo" "${installerName}" "${installerUrl}";
 
           # Validate sha512 checksum
           $downloadedHash = Get-FileHash -Path "${installerName}" -Algorithm "SHA512" |
