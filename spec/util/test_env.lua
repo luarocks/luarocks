@@ -1151,8 +1151,10 @@ function test_env.main()
    end
 
    -- luacov is needed for both minimal or full environment
+   table.insert(urls, "/datafile-${DATAFILE}.src.rock")
    table.insert(urls, "/luacov-${LUACOV}.src.rock")
    table.insert(urls, "/cluacov-${CLUACOV}.src.rock")
+   table.insert(rocks, "datafile")
    table.insert(rocks, "luacov")
    table.insert(rocks, "cluacov")
 
