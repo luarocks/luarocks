@@ -51,11 +51,11 @@ jobs:
         luaRocksVersion: "3.13.0"
 
     - name: 'Setup macOS deps'
-      if: ${{ contains(matrix.os, 'macos') }}
+      if: runner.os == 'macOS'
       run: brew install openssl bzip2
 
     - name: 'Setup Ubuntu deps'
-      if: ${{ contains(matrix.os, 'ubuntu') }}
+      if: runner.os == 'Linux'
       run: sudo apt-get install libbz2-dev
 
     - name: Prep
