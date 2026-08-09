@@ -56,7 +56,7 @@ jobs:
           repository: ${{ env.TARGET_REPOSITORY }}
           token: ${{ secrets.GH_ACTIONS_LUAROCKS_TOKEN }}
           path: gh-actions-luarocks
-          persist-credentials: false
+          persist-credentials: true  # Needed for git push.
 
       - name: Create a new branch
         working-directory: gh-actions-luarocks
