@@ -1,8 +1,8 @@
 package = "lua-zlib"
-version = "1.2-0"
+version = "1.4-0"
 source = {
    url = "git+https://github.com/brimworks/lua-zlib.git",
-   tag = "v1.2",
+   tag = "v1.4",
 }
 description = {
    summary = "Simple streaming interface to zlib for Lua.",
@@ -16,12 +16,11 @@ description = {
    license = "MIT"
 }
 dependencies = {
-   "lua >= 5.1, <= 5.4"
+   "lua >= 5.1, <= 5.5"
 }
 external_dependencies = {
     ZLIB = {
-       header = "zlib.h",
-       library = "z",
+       header = "zlib.h"
     }
 }
 
@@ -33,7 +32,24 @@ build = {
          libraries = { "z" },
          defines = { "LZLIB_COMPAT" },
          incdirs = { "$(ZLIB_INCDIR)" },
-         libdirs = { "$(ZLIB_LIBDIR)" },
+         libdirs = { "$(ZLIB_LIBDIR)" }
       }
    },
+   platforms = {
+      windows = {
+         modules = {
+            zlib = {
+               libraries = { "zlib" }
+            }
+         }
+      },
+      mingw = {
+         modules = {
+            zlib = {
+               libraries = { "zlib1" },
+               libdirs = { "$(ZLIB_INCDIR)/../bin" }
+            }
+         }
+      }
+   }
 }

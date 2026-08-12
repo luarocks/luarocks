@@ -314,11 +314,6 @@ jobs:
           cmake --build _build-zlib --config Release && ^
           cmake --install _build-zlib --config Release
 
-          IF "${{ matrix.COMPILER }}"=="vs" (
-            copy "${{ env.LUAROCKS_DEPS_DIR }}\lib\zlib.lib" ^
-              "${{ env.LUAROCKS_DEPS_DIR }}\lib\z.lib"
-          )
-
       - name: Restore bzip2 tarball
         if: ${{ matrix.COMPILER == 'vs' }}
         id: restore-bzip2-tarball

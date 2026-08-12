@@ -57,7 +57,7 @@ $(WINDOWS_DEPS_DIR)/lib/libz.a: $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION)
 	cd $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION) && cp zlib.h zconf.h ../../$(WINDOWS_DEPS_DIR)/include
 	cd $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION) && $(MINGW_PREFIX)-strip -g libz.a
 	mkdir -p $(@D)
-	cd $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION) && cp libz.a ../../$(WINDOWS_DEPS_DIR)/lib
+	cd $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION) && cp libz.a ../../$(WINDOWS_DEPS_DIR)/lib/libzlib.a
 
 $(BUILD_WINDOWS_DEPS_DIR)/bzip2-$(BZIP2_VERSION).tar.gz:
 	mkdir -p $(@D)
