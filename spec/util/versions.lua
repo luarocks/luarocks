@@ -9,7 +9,7 @@ return {
    dkjson = "2.6-1",
    lpeg = "1.0.0-1",
    luacov = "0.17.0-1",
-   luafilesystem = "1.8.0-1",
+   luafilesystem = "1.9.0-1",
    luafilesystem_old = "1.6.3-2",
    luaposix = "35.1-1",
    luasocket = "3.1.0-1",
