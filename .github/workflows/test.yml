@@ -155,7 +155,7 @@ jobs:
     #
     # On the other hand, installing Lua 5.4
     # from source, as happens applying
-    # the `luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v12`
+    # the `luarocks/gh-actions-lua`
     # action below, everything runs as
     # it should.
     - uses: luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v13
