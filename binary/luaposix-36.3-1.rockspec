@@ -1,4 +1,4 @@
-local _MODREV, _SPECREV = '35.1', '-1'
+local _MODREV, _SPECREV = '36.3', '-1'
 
 package = 'luaposix'
 version = _MODREV .. _SPECREV
