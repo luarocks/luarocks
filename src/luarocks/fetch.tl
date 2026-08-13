@@ -141,7 +141,7 @@ local function download_with_mirrors(url: string, filename: string, cache: boole
       if name then
          return name, nil, nil, from_cache
       else
-         err = err .. name .. "\n"
+         err = err .. tostring(name) .. "\n"
       end
    end
 
