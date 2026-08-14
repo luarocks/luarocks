@@ -445,6 +445,15 @@ local function main()
 
    fs.make_dir(CONFIG_DIR)
 
+   local LUA_LIBDIR = LUA_DIR .. "/lib"
+print("==============================================")
+print("LUA_LIBDIR:")
+os.execute("ls ".. LUA_LIBDIR)
+print("==============================================")
+   if not fs.exists(LUA_LIBDIR .. "/liblua.a") then
+      LUA_LIBDIR = nil
+   end
+
    persist.save_from_table(CONFIG_FILE, {
       lib_extension = "a",
       external_lib_extension = "a",
@@ -453,6 +462,7 @@ local function main()
          LD = fs.current_dir() .. "/binary/static-gcc",
          LIB_EXTENSION = "a",
          LUA_DIR = LUA_DIR,
+         LUA_LIBDIR = LUA_LIBDIR,
          LIBFLAG = "-static",
          PWD = "pwd",
          MKDIR = "mkdir",
@@ -480,6 +490,17 @@ local function main()
       "luafilesystem",
    }
 
+   print("CONFIG_FILE: " .. CONFIG_FILE)
+   print("----------------------------------------------------------------")
+   os.execute("cat " .. CONFIG_FILE)
+   print("----------------------------------------------------------------")
+
+   do
+      local command = "LUAROCKS_CONFIG='" .. CONFIG_FILE .. "' ./luarocks --no-project"
+      print(command)
+      local ok = os.execute(command)
+   end
+
    fs.make_dir(LUA_MODULES)
    for _, name in ipairs(dependency_order) do
       local use = dependencies[name]
@@ -489,7 +510,9 @@ local function main()
          print("----------------------------------------------------------------")
          local vers = manif.get_versions(queries.from_dep_string(name), "one")
          if not next(vers) then
-            local ok = os.execute("LUAROCKS_CONFIG='" .. CONFIG_FILE .. "' ./luarocks install --no-project '--tree=" .. LUA_MODULES .. "' " .. use)
+            local command = "LUAROCKS_CONFIG='" .. CONFIG_FILE .. "' ./luarocks install --no-project '--tree=" .. LUA_MODULES .. "' " ..  use
+            print(command)
+            local ok = os.execute(command)
             if ok ~= 0 and ok ~= true then
                error("Failed building dependency: " .. name)
             end

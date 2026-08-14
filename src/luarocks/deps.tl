@@ -837,7 +837,12 @@ function deps.check_lua_libdir(vars: {string: string}): boolean, string, string,
       vars.LUA_LIBDIR_OK = "ok"
       return true
    else
-      err = err or "Failed finding the Lua library. You can use `luarocks config variables.LUA_LIBDIR <path>` to set the correct location."
+      err = err or "Failed finding the Lua library. You can use `luarocks config variables.LUA_LIBDIR <path>` to set the correct location. "
+      for k, files in pairs(errfiles) do
+         for _, f in ipairs(files) do
+            err = err .. "\nTried: " .. k .. " => " .. f
+         end
+      end
       return nil, err, "dependency", errfiles
    end
 end
