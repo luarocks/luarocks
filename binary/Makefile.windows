@@ -15,7 +15,7 @@ WINDOWS_DEPS_DIR=windows-deps-$(MINGW_PREFIX)
 BUILD_WINDOWS_DEPS_DIR=build-windows-deps-$(MINGW_PREFIX)
 BUILD_WINDOWS_BINARY_DIR=build-windows-binary-$(MINGW_PREFIX)
 
-windows-binary: $(WINDOWS_DEPS_DIR)/lib/liblua.a $(WINDOWS_DEPS_DIR)/lib/libssl.a $(WINDOWS_DEPS_DIR)/lib/libz.a $(WINDOWS_DEPS_DIR)/lib/libbz2.a
+windows-binary: $(WINDOWS_DEPS_DIR)/lib/liblua.a $(WINDOWS_DEPS_DIR)/lib/libssl.a $(WINDOWS_DEPS_DIR)/lib/libzlib.a $(WINDOWS_DEPS_DIR)/lib/libbz2.a
 	STATIC_GCC_AR=$(MINGW_PREFIX)-ar \
 	STATIC_GCC_RANLIB=$(MINGW_PREFIX)-ranlib \
 	STATIC_GCC_CC=$(MINGW_PREFIX)-gcc \
@@ -49,7 +49,7 @@ $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION).tar.gz:
 	cd $(BUILD_WINDOWS_DEPS_DIR) && curl -vOL --fail-with-body --retry 5 https://github.com/madler/zlib/releases/download/v$(ZLIB_VERSION)/zlib-$(ZLIB_VERSION).tar.gz
 $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION): $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION).tar.gz
 	cd $(BUILD_WINDOWS_DEPS_DIR) && tar zxvpf zlib-$(ZLIB_VERSION).tar.gz
-$(WINDOWS_DEPS_DIR)/lib/libz.a: $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION)
+$(WINDOWS_DEPS_DIR)/lib/libzlib.a: $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION)
 	cd $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION) && sed -ie "s,dllwrap,$(MINGW_PREFIX)-dllwrap," win32/Makefile.gcc
 	cd $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION) && ./configure --prefix=$(CURDIR)/$(WINDOWS_DEPS_DIR) --static
 	cd $(BUILD_WINDOWS_DEPS_DIR)/zlib-$(ZLIB_VERSION) && $(MAKE) -f win32/Makefile.gcc CC=$(MINGW_PREFIX)-gcc AR=$(MINGW_PREFIX)-ar RC=$(MINGW_PREFIX)-windres STRIP=$(MINGW_PREFIX)-strip IMPLIB=libz.dll.a
