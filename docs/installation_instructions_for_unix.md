@@ -131,6 +131,23 @@ After installation, a default config file called config.lua will be installed
 at the directory defined by `--sysconfdir`. For further configuration of
 LuaRocks paths, see the [Config file format](config_file_format.md).
 
+## Configure LuaRocks for multiple Lua versions
+
+Luarocks supports multiple Lua versions via the `--lua-version <ver>` flag. For it to work, LuaRocks needs a config file for each Lua version, which are named as `config-<ver>.lua`. As an example, for Lua 5.1 the config file is named `config-5.1.lua`. Unfortunately, running `./configure` and then `make` it generates only one config file from the detected Lua version. The additional ones need to be creaded manually in the `build` directory using `make`. In addition, to install these additional config files `sudo make LUA_VERSION=<ver> install-config` needs to be run. Running `sudo make install` won't install them. Note that the latest Lua 5.4 isn't listed in the `for in` loop. This is because the latest Lua is automatically being detected by running `./configure`.
+
+To configure, build and install LuaRocks for multiple Lua versions, run the following commands.
+```
+-$ ./configure --with-lua-include=/usr/local/include
+-$ make
+-$ for v in 5.3 5.2 5.1; do
+-$ 	make LUA_VERSION=$v LUA=/usr/local/bin/lua$v LUA_INCDIR=/usr/local/include/lua$v ./build/config-$v.lua
+-$ done
+-$ sudo make install
+-$ for v in 5.3 5.2 5.1; do
+-$ 	sudo make LUA_VERSION=$v install-config
+-$ done
+```
+
 ## Next steps
 
 Once LuaRocks is installed, learn more about [using LuaRocks](using_luarocks.md).
