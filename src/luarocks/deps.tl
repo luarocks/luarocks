@@ -241,7 +241,7 @@ function deps.fulfill_dependency(dep: Query, deps_mode: string, rocks_provided: 
 
    found, where = match_dep(dep, get_versions)
    if not found then
-       return nil, "Repository inconsistency detected (previously unfinished/corrupted installation?)"
+       return nil, "Repository inconsistency detected for dependency"..dep.name.." (previously unfinished/corrupted installation?)"
    end
    return true, found, where
 end
