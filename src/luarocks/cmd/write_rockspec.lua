@@ -54,7 +54,7 @@ function write_rockspec.cmd_options(parser)
    argname("<txt>")
    parser:option("--homepage", "Project homepage."):
    argname("<txt>")
-   parser:option("--lua-versions", 'Supported Lua versions. Accepted values are: "' ..
+   parser:option("--lua-versions", 'Lua versions supported by the rockspec. Accepted values are: "' ..
    table.concat(lua_versions, '", "') .. '".'):
    argname("<ver>"):
    choices(lua_versions)
