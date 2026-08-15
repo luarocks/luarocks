@@ -102,13 +102,14 @@ local function unpack_rock(rock_file, dir_name, kind)
    return rockspec
 end
 
-
-
-
-
-
-
+--- Create a directory and perform the necessary actions so that
+-- the sources for the rock and its rockspec are unpacked inside it,
+-- laid out properly so that the 'make' command is able to build the module.
+-- @param file string: A rockspec or .rock URL.
+-- @return boolean or (nil, string): true if successful or nil followed
+-- by an error message.
 local function run_unpacker(file, force)
+   assert(type(file) == "string")
 
    local base_name = dir.base_name(file)
    local dir_name, kind, extension = base_name:match("(.*)%.([^.]+)%.(rock)$")
@@ -153,7 +154,8 @@ local function run_unpacker(file, force)
       util.printout("and type 'luarocks make' to build.")
    end
    util.remove_scheduled_function(rollback)
-   return true
+   return rockspec
+   -- dir.path(dir_name, rockspec.source.dir, dir.base_name(rockspec.local_filename))
 end
 
 

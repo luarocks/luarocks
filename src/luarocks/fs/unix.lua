@@ -20,7 +20,8 @@ end
 -- @param cmd string: A command-line string.
 -- @return string: The command-line, with stderr silencing annotation.
 function unix.quiet_stderr(cmd)
-   return cmd.." 2> /dev/null"
+   return cmd
+   -- return cmd.." 2> /dev/null"
 end
 
 --- Quote argument for shell processing.
