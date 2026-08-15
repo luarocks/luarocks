@@ -22,6 +22,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
 
     - name: Prep
       run: |
@@ -41,6 +43,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
 
     - uses: luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v13
       with:
@@ -96,6 +100,8 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
 
     - uses: luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v13
       with:
@@ -112,6 +118,8 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
 
     - uses: luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v13
       with:
@@ -143,6 +151,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
 
     # [!NOTE]:
     #
@@ -257,6 +267,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup MSVC dev prompt
         if: ${{ matrix.COMPILER == 'vs' }}
