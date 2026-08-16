@@ -692,8 +692,10 @@ local function build_environment(rocks, env_variables)
       local only_server = "--only-server=" .. testing_paths.testing_cache
       local tree = "--tree=" .. testing_paths.testing_deps_tree
       if not test_env.run.luarocks_nocov(test_env.quiet(C("install", only_server, tree, Q(rock)), env_variables)) then
-         assert(test_env.run.luarocks_nocov(C("build", tree, Q(rock)), env_variables))
-         assert(test_env.run.luarocks_nocov(C("pack", tree, Q(rock)), env_variables))
+         assert(test_env.run.luarocks_nocov(C("build", tree, Q(rock)), env_variables),
+            "failed building test dependency: " .. rock)
+         assert(test_env.run.luarocks_nocov(C("pack", tree, Q(rock)), env_variables),
+            "failed packing test dependency: " .. rock)
          move_file(rock .. "-*.rock", testing_paths.testing_cache)
       end
    end
