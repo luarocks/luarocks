@@ -354,18 +354,28 @@ jobs:
           cd "${{ runner.temp }}" && ^
           tar -xf "${{ github.workspace }}\bzip2.tar.gz"
 
+          IF %ERRORLEVEL% NEQ 0 (
+            ECHO Failed to extract libbz2
+            EXIT /B 1
+          )
+
           IF "${{ matrix.COMPILER }}"=="vs" (
             SET CMAKE_GENERATOR=NMake Makefiles
             SET CC=cl
+            SET LIBEXT=lib
+            SET LIBNAME=bz2
           ) ELSE (
             SET CMAKE_GENERATOR=MinGW Makefiles
             SET CC=gcc
+            SET LIBEXT=a
+            SET LIBNAME=libbz2
           )
 
           cmake -G "%CMAKE_GENERATOR%" ^
             -DCMAKE_C_COMPILER=%CC% ^
             -DCMAKE_BUILD_TYPE=Release ^
-            -DENABLE_SHARED_LIB=ON ^
+            -DENABLE_SHARED_LIB=OFF ^
+            -DENABLE_STATIC_LIB=ON ^
             -DENABLE_LIB_ONLY=ON ^
             --install-prefix "${{ env.LUAROCKS_DEPS_DIR }}" ^
             -S bzip2 ^
@@ -373,9 +383,17 @@ jobs:
           cmake --build _build-bz2 --config Release && ^
           cmake --install _build-bz2 --config Release
 
-          IF EXIST "${{ env.LUAROCKS_DEPS_DIR }}\lib\bz2.dll" (
-            copy /Y "${{ env.LUAROCKS_DEPS_DIR }}\lib\bz2.dll" ^
-              "${{ env.LUAROCKS_DEPS_DIR }}\bin"
+          IF %ERRORLEVEL% NEQ 0 (
+            ECHO Failed to configure, build or install libbz2
+            EXIT /B 1
+          )
+
+          IF EXIST "${{ env.LUAROCKS_DEPS_DIR }}\lib\%LIBNAME%.%LIBEXT%" DEL "${{ env.LUAROCKS_DEPS_DIR }}\lib\%LIBNAME%.%LIBEXT%"
+          IF EXIST "${{ env.LUAROCKS_DEPS_DIR }}\lib\%LIBNAME%_static.%LIBEXT%" (
+            COPY "${{ env.LUAROCKS_DEPS_DIR }}\lib\%LIBNAME%_static.%LIBEXT%" "${{ env.LUAROCKS_DEPS_DIR }}\lib\%LIBNAME%.%LIBEXT%"
+          ) ELSE (
+            ECHO %LIBNAME%_static.%LIBEXT% is required to build lua-bz2
+            EXIT /B 1
           )
 
       - name: Restore OpenSSL installer
