@@ -8,6 +8,7 @@ return {
    datafile = "0.11-1",
    dkjson = "2.6-1",
    lpeg = "1.0.0-1",
+   ["lua-bz2"] = "0.2.3-1",
    luacov = "0.17.0-1",
    luafilesystem = "1.9.0-1",
    luafilesystem_old = "1.6.3-2",
