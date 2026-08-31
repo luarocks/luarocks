@@ -264,6 +264,7 @@ jobs:
       # The following env variable
       # applies to both Visual Studio and MinGW-w64
       LUAROCKS_WINDOWS_GH_CI: "ci-windows"
+      BZ2_REF: 66c46b8c9436613fd81bc5d03f63a61933a4dcc3
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -339,7 +340,8 @@ jobs:
         run: |
           cd "${{ runner.temp }}" && ^
           git clone https://gitlab.com/bzip2/bzip2 && ^
-          tar -czvf "${{ github.workspace }}\bzip2.tar.gz" bzip2
+          cd bzip2 && ^
+          git archive "--format=tar.gz" -o "${{ github.workspace }}\bzip2.tar.gz" "--prefix=bzip2/" ${{ env.BZ2_REF }}
 
       - name: Save bzip2 tarball
         if: ${{ matrix.COMPILER == 'vs' && steps.restore-bzip2-tarball.outputs.cache-hit != 'true' }}
