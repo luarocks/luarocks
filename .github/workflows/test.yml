@@ -85,7 +85,8 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
       with:
-        python-version: '3.14'
+        python-version: '3.15t'
+        allow-prereleases: true
 
     - name: Install Codecov
       run: pip install codecov
@@ -105,7 +106,7 @@ jobs:
 
     - uses: luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v13
       with:
-        luaVersion: "5.4"
+        luaVersion: "5.5"
 
     - name: Smoke Test
       run: |
@@ -170,7 +171,7 @@ jobs:
     # it should.
     - uses: luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v13
       with:
-        luaVersion: 5.4
+        luaVersion: 5.5
 
     - name: Install cross compiler
       run: sudo apt install ${{ matrix.package }}
@@ -531,7 +532,8 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: '3.14'
+          python-version: '3.15t'
+          allow-prereleases: true
 
       - name: Install SSL certificate
         run: |
