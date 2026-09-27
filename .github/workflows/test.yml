@@ -38,7 +38,7 @@ jobs:
   TestMatrix:
     strategy:
       matrix:
-        lua-version: ["5.5", "luajit-2.1"]
+        lua-version: ["5.4", "luajit-2.1"]
         os: ["ubuntu-latest", "macos-latest"]
     runs-on: ${{ matrix.os }}
 
@@ -109,7 +109,7 @@ jobs:
 
     - uses: luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v13
       with:
-        luaVersion: "5.5"
+        luaVersion: "5.4"
 
     - name: Smoke Test
       run: |
@@ -127,7 +127,7 @@ jobs:
 
     - uses: luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v13
       with:
-        luaVersion: "5.5"
+        luaVersion: "5.4"
 
     - name: 'Setup Ubuntu deps'
       run: |
@@ -165,18 +165,18 @@ jobs:
     # During tests, the exact same
     # job (WindowsBinaryBuild)
     # fails to build the cross compiler
-    # whenever we use Lua 5.5 provided
-    # by the packages `lua5.5 liblua5.5-dev`
+    # whenever we use Lua 5.4 provided
+    # by the packages `lua5.4 liblua5.4-dev`
     # on Debian-based distros.
     #
-    # On the other hand, installing Lua 5.5
+    # On the other hand, installing Lua 5.4
     # from source, as happens applying
     # the `luarocks/gh-actions-lua`
     # action below, everything runs as
     # it should.
     - uses: luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v13
       with:
-        luaVersion: 5.5
+        luaVersion: 5.4
 
     - name: Install cross compiler
       run: sudo apt install ${{ matrix.package }}
@@ -225,8 +225,8 @@ jobs:
             EXCLUDE: "unit,quick"
             TESTTYPE: ""
             ARCH: x64
-          # build tests + Lua 5.5 + msvc
-          - LUAV: "5.5"
+          # build tests + Lua 5.4 + msvc
+          - LUAV: "5.4"
             LUAT: "lua"
             COMPILER: "vs"
             FILES: "spec//build_spec.lua"
@@ -247,8 +247,8 @@ jobs:
           # provided by MSYS2
           #
 
-          # build tests + Lua 5.5 + mingw
-          - LUAV: "5.5"
+          # build tests + Lua 5.4 + mingw
+          - LUAV: "5.4"
             LUAT: "lua"
             COMPILER: "mingw"
             FILES: "spec//build_spec.lua"
