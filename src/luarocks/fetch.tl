@@ -137,11 +137,11 @@ local function download_with_mirrors(url: string, filename: string, cache: boole
       if i > idx then
          util.warning("Failed downloading. Attempting mirror at " .. try_url)
       end
-      local name, _, _, from_cache = fs.download(try_url, filename, cache)
+      local name, dl_err, _, from_cache = fs.download(try_url, filename, cache)
       if name then
          return name, nil, nil, from_cache
       else
-         err = err .. tostring(name) .. "\n"
+         err = err .. (dl_err or "download failed") .. "\n"
       end
    end
 
