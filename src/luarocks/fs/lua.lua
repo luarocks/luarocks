@@ -1327,4 +1327,23 @@ function fs_lua.unpack_archive(archive)
    return true
 end
 
+--- Check whether a path stays within a given directory.
+-- Both paths must be absolute and normalized (see dir.normalize).
+-- Useful to validate archive entry names before extraction, so that
+-- entries such as "../x" cannot escape the destination directory.
+-- @param base string: absolute path of the base directory.
+-- @param path string: absolute path to check.
+-- @return boolean: true if `path` is `base` itself or a location under it.
+function fs_lua.is_within(base, path)
+   base = fs.absolute_name(base)
+   path = fs.absolute_name(path)
+   if path == base then
+      return true
+   end
+   if base:sub(-1) ~= dir_sep then
+      base = base .. dir_sep
+   end
+   return path:sub(1, #base) == base
+end
+
 return fs_lua
