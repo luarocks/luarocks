@@ -122,6 +122,8 @@ function tar.untar(filename, destdir)
    local tar_handle = io.open(filename, "rb")
    if not tar_handle then return nil, "Error opening file " .. filename end
 
+   local base_dir = fs.absolute_name(destdir)
+
    local long_name, long_link_name
    local ok, err
    local make_dir = fun.memoize(fs.make_dir)
@@ -165,8 +167,11 @@ function tar.untar(filename, destdir)
             long_link_name = nil
          end
       end
-      local pathname = dir.path(destdir, header.name)
-      pathname = fs.absolute_name(pathname)
+      local pathname = fs.absolute_name(dir.path(destdir, header.name))
+      if not fs.is_within(base_dir, pathname) then
+         tar_handle:close()
+         return nil, "archive entry escapes the destination directory: " .. header.name
+      end
       if header.typeflag == "directory" then
          ok, err = make_dir(pathname)
          if not ok then

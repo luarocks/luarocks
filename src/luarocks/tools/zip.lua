@@ -503,22 +503,26 @@ function zip.unzip(zipfile)
       return nil, errproc
    end
 
+   local base_dir = fs.absolute_name(fs.current_dir())
+
    for _, cdr in ipairs(files) do
       local file = cdr.file_name
+      local pathname = dir.path(fs.current_dir(), file)
+      if not fs.is_within(base_dir, pathname) then
+         zh:close()
+         return nil, "archive entry escapes the extraction directory: " .. file
+      end
       if file:sub(#file) == "/" then
-         local okmake, errmake = fs.make_dir(dir.path(fs.current_dir(), file))
+         local okmake, errmake = fs.make_dir(pathname)
          if not okmake then
             return nil, errmake
          end
       else
-         local base = dir.dir_name(file)
-         if base ~= "" then
-            base = dir.path(fs.current_dir(), base)
-            if not fs.is_dir(base) then
-               local okmake, errmake = fs.make_dir(base)
-               if not okmake then
-                  return nil, errmake
-               end
+         local dirname = dir.dir_name(pathname)
+         if dirname ~= "" and not fs.is_dir(dirname) then
+            local okmake, errmake = fs.make_dir(dirname)
+            if not okmake then
+               return nil, errmake
             end
          end
 
@@ -531,7 +535,6 @@ function zip.unzip(zipfile)
          if not contents then
             return nil, err
          end
-         local pathname = dir.path(fs.current_dir(), file)
          local wf, erropen2 = io.open(pathname, "wb")
          if not wf then
             zh:close()

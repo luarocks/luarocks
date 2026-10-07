@@ -10,6 +10,7 @@ local record fs
    end
    -- util
    is_dir: function(dir: string): boolean
+   is_within: function(base: string, path: string): boolean
    dir: function(dir?: string): function(): string
    make_dir: function(string): boolean, string
    is_file: function(file: string): boolean
