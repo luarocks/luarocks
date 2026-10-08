@@ -143,6 +143,23 @@ end
 
 
 
+
+
+local function module_install_path(luadir, name, source, ext)
+   local moddir = path.module_to_path(name)
+   local filename = dir.base_name(source)
+   if filename == "init" .. ext and not name:match("%.init$") then
+      moddir = path.module_to_path(name .. ".init")
+   else
+      filename = name:match("([^.]+)$") .. ext
+   end
+   return dir.path(luadir, moddir, filename)
+end
+
+
+
+
+
 function builtin.run(rockspec, no_install)
    local compile_object
    local compile_library
@@ -305,15 +322,7 @@ function builtin.run(rockspec, no_install)
       if type(info) == "string" then
          local ext = info:match("%.([^.]+)$")
          if ext == "lua" then
-            local filename = dir.base_name(info)
-            if filename == "init.lua" and not name:match("%.init$") then
-               moddir = path.module_to_path(name .. ".init")
-            else
-               local basename = name:match("([^.]+)$")
-               filename = basename .. ".lua"
-            end
-            local dest = dir.path(luadir, moddir, filename)
-            lua_modules[info] = dest
+            lua_modules[info] = module_install_path(luadir, name, info, ".lua")
          else
             info = { info }
          end
