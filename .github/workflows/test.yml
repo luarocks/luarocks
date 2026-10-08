@@ -46,7 +46,7 @@ jobs:
       with:
         persist-credentials: false
 
-    - uses: luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v13
+    - uses: luarocks/gh-actions-lua@56eba09993704b908cc3c7c2753e630d18cb9696 # v14
       with:
         luaVersion: ${{ matrix.lua-version }}
 
@@ -103,7 +103,7 @@ jobs:
       with:
         persist-credentials: false
 
-    - uses: luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v13
+    - uses: luarocks/gh-actions-lua@56eba09993704b908cc3c7c2753e630d18cb9696 # v14
       with:
         luaVersion: "5.4"
 
@@ -121,7 +121,7 @@ jobs:
       with:
         persist-credentials: false
 
-    - uses: luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v13
+    - uses: luarocks/gh-actions-lua@56eba09993704b908cc3c7c2753e630d18cb9696 # v14
       with:
         luaVersion: "5.4"
 
@@ -168,7 +168,7 @@ jobs:
     # the `luarocks/gh-actions-lua`
     # action below, everything runs as
     # it should.
-    - uses: luarocks/gh-actions-lua@85e2287697275df96334743ac654241a8fd34ab3 # v13
+    - uses: luarocks/gh-actions-lua@56eba09993704b908cc3c7c2753e630d18cb9696 # v14
       with:
         luaVersion: 5.4
 
