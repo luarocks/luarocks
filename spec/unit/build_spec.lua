@@ -299,6 +299,50 @@ describe("LuaRocks build #unit", function()
             assert.truthy(lfs.attributes("lib/luarocks/rocks-" .. test_env.lua_version .. "/test/1.0-1/lua/test.lua"))
          end)
 
+         it("auto-detects and installs teal modules", function()
+            local rockspec = {
+               rockspec_format = "3.2",
+               package = "test",
+               version = "1.0-1",
+               source = {
+                  url = "http://example.com/teal_module"
+               },
+               build = {
+                  type = "builtin"
+               }
+            }
+            write_file("luamod.lua", "return {}", finally)
+            write_file("tealmod.tl", "local x: number = 1\nreturn x", finally)
+
+            rockspecs.from_persisted_table("test-1.0-1.rockspec", rockspec)
+            assert.truthy(build_builtin.run(rockspec))
+            local basedir = "lib/luarocks/rocks-" .. test_env.lua_version .. "/test/1.0-1/lua/"
+            assert.truthy(lfs.attributes(basedir .. "luamod.lua"))
+            assert.truthy(lfs.attributes(basedir .. "tealmod.tl"))
+         end)
+
+         it("does not install teal modules before rockspec format 3.2", function()
+            local rockspec = {
+               rockspec_format = "3.1",
+               package = "test",
+               version = "1.0-1",
+               source = {
+                  url = "http://example.com/teal_module"
+               },
+               build = {
+                  type = "builtin"
+               }
+            }
+            write_file("luamod.lua", "return {}", finally)
+            write_file("tealmod.tl", "local x: number = 1\nreturn x", finally)
+
+            rockspecs.from_persisted_table("test-1.0-1.rockspec", rockspec)
+            assert.truthy(build_builtin.run(rockspec))
+            local basedir = "lib/luarocks/rocks-" .. test_env.lua_version .. "/test/1.0-1/lua/"
+            assert.truthy(lfs.attributes(basedir .. "luamod.lua"))
+            assert.falsy(lfs.attributes(basedir .. "tealmod.tl"))
+         end)
+
          it("automatically extracts the modules and libraries if they are not given and builds against any external dependencies", function()
             local fdir = testing_paths.fixtures_dir
             if test_env.TEST_TARGET_OS == "windows" then

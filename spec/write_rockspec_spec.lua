@@ -60,6 +60,7 @@ describe("luarocks ##write_rockspec tests #integration", function()
          "1.1",
          "3.0",
          "3.1",
+         "3.2",
       }
       for i, format in ipairs(formats) do
          it("runs with format flag " .. format, function()
