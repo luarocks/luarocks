@@ -42,8 +42,8 @@ local function autoextract_libs(external_dependencies, variables)
 end
 
 do
-   local function get_cmod_name(file)
-      local fd = io.open(dir.path(fs.current_dir(), file), "r")
+   local function get_cmod_name(pathname)
+      local fd = io.open(pathname, "r")
       if not fd then return nil end
       local data = fd:read("*a")
       fd:close()
@@ -58,43 +58,55 @@ do
       ["tests.lua"] = true,
    }
 
+
+   local function source_root()
+      for _, parent in ipairs({ "src", "lua", "lib" }) do
+         if fs.is_dir(parent) then
+            return parent
+         end
+      end
+      return ""
+   end
+
+
+
+
+   local function list_source_files(root)
+      local files = {}
+      for _, file in ipairs(fs.find(root ~= "" and root or nil)) do
+         local base = file:match("^([^\\/]*)")
+         if not skiplist[base] then
+            table.insert(files, file)
+         end
+      end
+      return files
+   end
+
    function builtin.autodetect_modules(libs, incdirs, libdirs)
       local modules = {}
       local install
       local copy_directories
 
-      local prefix = ""
-      for _, parent in ipairs({ "src", "lua", "lib" }) do
-         if fs.is_dir(parent) then
-            fs.change_dir(parent)
-            prefix = parent .. dir_sep
-            break
-         end
-      end
+      local root = source_root()
+      local prefix = root ~= "" and root .. dir_sep or ""
+      local files = list_source_files(root)
 
-      for _, file in ipairs(fs.find()) do
-         local base = file:match("^([^\\/]*)")
-         if not skiplist[base] then
-            local luamod = file:match("(.*)%.lua$")
-            if luamod then
-               modules[path.path_to_module(file)] = prefix .. file
-            else
-               local cmod = file:match("(.*)%.c$")
-               if cmod then
-                  local modname = get_cmod_name(file) or path.path_to_module((file:gsub("%.c$", ".lua")))
-                  modules[modname] = {
-                     sources = prefix .. file,
-                     libraries = libs,
-                     incdirs = incdirs,
-                     libdirs = libdirs,
-                  }
-               end
+      for _, file in ipairs(files) do
+         local luamod = file:match("(.*)%.lua$")
+         if luamod then
+            modules[path.path_to_module(file)] = prefix .. file
+         else
+            local cmod = file:match("(.*)%.c$")
+            if cmod then
+               local modname = get_cmod_name(dir.path(prefix, file)) or path.path_to_module((file:gsub("%.c$", ".lua")))
+               modules[modname] = {
+                  sources = prefix .. file,
+                  libraries = libs,
+                  incdirs = incdirs,
+                  libdirs = libdirs,
+               }
             end
          end
-      end
-
-      if prefix ~= "" then
-         fs.pop_dir()
       end
 
       local bindir = (fs.is_dir(dir.path("src", "bin")) and dir.path("src", "bin")) or
