@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local os = _tl_compat and _tl_compat.os or os; local package = _tl_compat and _tl_compat.package or package; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local _tl_table_unpack = unpack or table.unpack; local type = type
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local os = _tl_compat and _tl_compat.os or os; local package = _tl_compat and _tl_compat.package or package; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local _tl_table_unpack = unpack or table.unpack; local type = type
 
 local builtin = {}
 
@@ -71,6 +71,96 @@ local function list_source_files(root)
       end
    end
    return files
+end
+
+
+
+local function has_teal_build_dependency(rockspec)
+   for _, dep in ipairs(rockspec.build_dependencies.queries) do
+      if dep.name == "tl" then
+         return true
+      end
+   end
+   return false
+end
+
+
+
+
+
+
+local function compile_teal_module(source, root)
+   local tl = require("tl")
+   local gen_target = tl.target_from_lua_version("Lua " .. cfg.lua_version) or "5.1"
+   local env = assert(tl.new_env({
+      defaults = {
+         gen_target = gen_target,
+         gen_compat = gen_target == "5.4" and "off" or "optional",
+      },
+   }))
+   local fd = io.open(source, "r")
+   if not fd then
+      return nil, "cannot open Teal source " .. source
+   end
+   local input = fd:read("*a")
+   fd:close()
+   local prefix = root ~= "" and root .. dir_sep or ""
+   local saved_path = tl.path
+   tl.path = prefix .. "?.lua;" .. prefix .. "?/init.lua;" .. package.path
+   local code = tl.gen(input, env, nil)
+   tl.path = saved_path
+   if not code then
+      return nil, "failed to compile Teal module " .. source
+   end
+   return code
+end
+
+
+
+
+
+
+
+
+
+
+local function install_teal_modules(build)
+   local prefix = build.root ~= "" and build.root .. dir_sep or ""
+   for _, file in ipairs(build.teal_files) do
+      build.lua_modules[prefix .. file] = dir.path(build.luadir, file)
+   end
+end
+
+
+
+
+
+local function compile_teal_modules(build, modules)
+   local prefix = build.root ~= "" and build.root .. dir_sep or ""
+   local temp_dir
+   for _, file in ipairs(build.teal_files) do
+      if not file:match("%.d%.tl$") then
+         modules[path.path_to_module((file:gsub("%.tl$", ".lua")))] = nil
+         local code, compile_err = compile_teal_module(prefix .. file, build.root)
+         if not code then
+            return nil, compile_err
+         end
+         if not temp_dir then
+            temp_dir = fs.make_temp_dir("teal-modules")
+            util.schedule_function(fs.delete, temp_dir)
+         end
+         local generated = dir.path(temp_dir, (file:gsub("%.tl$", ".lua")))
+         fs.make_dir(dir.dir_name(generated))
+         local fd = io.open(generated, "w")
+         if not fd then
+            return nil, "failed to write generated Teal module " .. file
+         end
+         fd:write(code)
+         fd:close()
+         build.lua_modules[generated] = dir.path(build.luadir, (file:gsub("%.tl$", ".lua")))
+      end
+   end
+   return true
 end
 
 do
@@ -151,8 +241,9 @@ end
 local function module_install_path(luadir, name, source, ext)
    local moddir = path.module_to_path(name)
    local filename = dir.base_name(source)
-   if filename == "init" .. ext and not name:match("%.init$") then
+   if filename:match("^init%.") and not name:match("%.init$") then
       moddir = path.module_to_path(name .. ".init")
+      filename = "init" .. ext
    else
       filename = name:match("([^.]+)$") .. ext
    end
@@ -311,12 +402,7 @@ function builtin.run(rockspec, no_install)
    end
 
    local root = source_root()
-   local prefix = root ~= "" and root .. dir_sep or ""
-   if rockspec:format_is_at_least("3.2") then
-      for _, file in ipairs(teal_files) do
-         lua_modules[prefix .. file] = dir.path(luadir, file)
-      end
-   end
+   local teal_build = { root = root, luadir = luadir, lua_modules = lua_modules, teal_files = teal_files }
 
    local compile_temp_dir
 
@@ -327,6 +413,16 @@ function builtin.run(rockspec, no_install)
       end
       mkdir_cache[name] = true
       return fs.make_dir(name)
+   end
+
+   if rockspec:format_is_at_least("3.2") then
+      install_teal_modules(teal_build)
+      if has_teal_build_dependency(rockspec) then
+         ok, err = compile_teal_modules(teal_build, build.modules)
+         if not ok then
+            return nil, err
+         end
+      end
    end
 
    for name, info in pairs(build.modules) do
