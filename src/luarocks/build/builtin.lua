@@ -41,6 +41,38 @@ local function autoextract_libs(external_dependencies, variables)
    return libs, incdirs, libdirs
 end
 
+
+local function source_root()
+   for _, parent in ipairs({ "src", "lua", "lib" }) do
+      if fs.is_dir(parent) then
+         return parent
+      end
+   end
+   return ""
+end
+
+local source_exclusions = {
+   ["spec"] = true,
+   [".luarocks"] = true,
+   ["lua_modules"] = true,
+   ["test.lua"] = true,
+   ["tests.lua"] = true,
+}
+
+
+
+
+local function list_source_files(root)
+   local files = {}
+   for _, file in ipairs(fs.find(root ~= "" and root or nil)) do
+      local base = file:match("^([^\\/]*)")
+      if not source_exclusions[base] then
+         table.insert(files, file)
+      end
+   end
+   return files
+end
+
 do
    local function get_cmod_name(pathname)
       local fd = io.open(pathname, "r")
@@ -48,38 +80,6 @@ do
       local data = fd:read("*a")
       fd:close()
       return (data:match("int%s+luaopen_([a-zA-Z0-9_]+)"))
-   end
-
-   local skiplist = {
-      ["spec"] = true,
-      [".luarocks"] = true,
-      ["lua_modules"] = true,
-      ["test.lua"] = true,
-      ["tests.lua"] = true,
-   }
-
-
-   local function source_root()
-      for _, parent in ipairs({ "src", "lua", "lib" }) do
-         if fs.is_dir(parent) then
-            return parent
-         end
-      end
-      return ""
-   end
-
-
-
-
-   local function list_source_files(root)
-      local files = {}
-      for _, file in ipairs(fs.find(root ~= "" and root or nil)) do
-         local base = file:match("^([^\\/]*)")
-         if not skiplist[base] then
-            table.insert(files, file)
-         end
-      end
-      return files
    end
 
    function builtin.autodetect_modules(libs, incdirs, libdirs)
@@ -90,11 +90,14 @@ do
       local root = source_root()
       local prefix = root ~= "" and root .. dir_sep or ""
       local files = list_source_files(root)
+      local teal_files = {}
 
       for _, file in ipairs(files) do
          local luamod = file:match("(.*)%.lua$")
          if luamod then
             modules[path.path_to_module(file)] = prefix .. file
+         elseif file:match("%.tl$") then
+            table.insert(teal_files, file)
          else
             local cmod = file:match("(.*)%.c$")
             if cmod then
@@ -127,7 +130,7 @@ do
          end
       end
 
-      return modules, install, copy_directories
+      return modules, install, copy_directories, teal_files
    end
 end
 
@@ -295,14 +298,23 @@ function builtin.run(rockspec, no_install)
 
    local autolibs, autoincdirs, autolibdirs = autoextract_libs(rockspec.external_dependencies, rockspec.variables)
 
+   local teal_files = {}
    if not build.modules then
       if rockspec:format_is_at_least("3.0") then
          local install, copy_directories
-         build.modules, install, copy_directories = builtin.autodetect_modules(autolibs, autoincdirs, autolibdirs)
+         build.modules, install, copy_directories, teal_files = builtin.autodetect_modules(autolibs, autoincdirs, autolibdirs)
          build.install = build.install or install
          build.copy_directories = build.copy_directories or copy_directories
       else
          return nil, "Missing build.modules table"
+      end
+   end
+
+   local root = source_root()
+   local prefix = root ~= "" and root .. dir_sep or ""
+   if rockspec:format_is_at_least("3.2") then
+      for _, file in ipairs(teal_files) do
+         lua_modules[prefix .. file] = dir.path(luadir, file)
       end
    end
 
@@ -323,6 +335,8 @@ function builtin.run(rockspec, no_install)
          local ext = info:match("%.([^.]+)$")
          if ext == "lua" then
             lua_modules[info] = module_install_path(luadir, name, info, ".lua")
+         elseif ext == "tl" then
+            lua_modules[info] = module_install_path(luadir, name, info, ".tl")
          else
             info = { info }
          end
