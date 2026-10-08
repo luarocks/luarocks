@@ -68,6 +68,7 @@ jobs:
         luarocks install busted
         luarocks install cluacov
         luarocks install busted-htest
+        luarocks install tl
 
     - name: Unit Test
       run: |

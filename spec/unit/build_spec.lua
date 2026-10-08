@@ -6,6 +6,8 @@ local testing_paths = test_env.testing_paths
 local write_file = test_env.write_file
 local P = test_env.P
 
+local host_package_path = package.path
+
 test_env.setup_specs()
 local cfg = require("luarocks.core.cfg")
 local deps = require("luarocks.deps")
@@ -343,6 +345,33 @@ describe("LuaRocks build #unit", function()
             assert.falsy(lfs.attributes(basedir .. "tealmod.tl"))
          end)
 
+         it("compiles teal modules when tl is a build dependency #unix", function()
+            local rockspec = {
+               rockspec_format = "3.2",
+               package = "test",
+               version = "1.0-1",
+               source = {
+                  url = "http://example.com/teal_module"
+               },
+               build = {
+                  type = "builtin"
+               },
+               build_dependencies = { "tl" },
+               dependencies = {}
+            }
+            write_file("tealmod.tl", "local x: number = 1\nreturn x", finally)
+
+            package.path = package.path .. ";" .. host_package_path
+            if not pcall(require, "tl") then
+               return pending("tl is not available", function() end)
+            end
+
+            rockspecs.from_persisted_table("test-1.0-1.rockspec", rockspec)
+            assert.truthy(build_builtin.run(rockspec))
+            local basedir = "lib/luarocks/rocks-" .. test_env.lua_version .. "/test/1.0-1/lua/"
+            assert.truthy(lfs.attributes(basedir .. "tealmod.tl"))
+            assert.truthy(lfs.attributes(basedir .. "tealmod.lua"))
+         end)
          it("automatically extracts the modules and libraries if they are not given and builds against any external dependencies", function()
             local fdir = testing_paths.fixtures_dir
             if test_env.TEST_TARGET_OS == "windows" then
