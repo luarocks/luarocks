@@ -177,88 +177,118 @@ local function request_result(url, response, status)
    end
 end
 
+local function curl_redirect_policy(url)
+   if cfg.check_certificates and url:match("^https:") then
+
+      return " --proto-redir =https"
+   end
+   return ""
+end
+
+local function curl_request(self, url, params, post_params, extra_headers)
+   local vars = cfg.variables
+
+   do
+      local curl_ok, err = fs.is_tool_available(vars.CURL, "curl")
+      if not curl_ok then
+         return nil, err
+      end
+   end
+
+   if not self.config.key then
+      return nil, "Must have API key before performing any actions."
+   end
+   if params and next(params) then
+      url = url .. ("?" .. encode_query_string(params))
+   end
+   local method = "GET"
+   local out
+   local tmpfile = fs.tmpname()
+   if post_params or extra_headers then
+      method = "POST"
+      local curl_cmd = vars.CURL .. " " .. vars.CURLNOCERTFLAG .. curl_redirect_policy(url) .. " -f -L --silent --user-agent \"" .. cfg.user_agent .. " via curl\" "
+      if post_params then
+         for k, v in pairs(post_params) do
+            local var
+            if type(v) == "table" then
+               var = "@" .. v.fname
+            else
+               var = v
+            end
+            curl_cmd = curl_cmd .. "--form \"" .. k .. "=" .. var .. "\" "
+         end
+      end
+      if extra_headers then
+         for k, v in pairs(extra_headers) do
+            if type(v) == "string" then
+               curl_cmd = curl_cmd .. "--header \"" .. k .. ": " .. v .. "\" "
+            end
+         end
+      end
+      if cfg.connection_timeout and cfg.connection_timeout > 0 then
+         curl_cmd = curl_cmd .. "--connect-timeout " .. tonumber(cfg.connection_timeout) .. " "
+      end
+      local ok = fs.execute_string(curl_cmd .. fs.Q(url) .. " -o " .. fs.Q(tmpfile))
+      if not ok then
+         return nil, "API failure: " .. redact_api_url(url)
+      end
+   else
+      local name, err = fs.download(url, tmpfile)
+      if not name then
+         return nil, "API failure: " .. tostring(err) .. " - " .. redact_api_url(url)
+      end
+   end
+
+   local tmpfd = io.open(tmpfile)
+   if not tmpfd then
+      os.remove(tmpfile)
+      return nil, "API failure reading temporary file - " .. redact_api_url(url)
+   end
+   out = tmpfd:read("*a")
+   tmpfd:close()
+   os.remove(tmpfile)
+
+   if self.debug then
+      util.printout("[" .. tostring(method) .. " via curl] " .. redact_api_url(url) .. " ... ")
+   end
+
+   return request_result(url, out)
+end
+
 local ltn12_ok, ltn12 = pcall(require, "ltn12")
 if not ltn12_ok then
 
-   api.Api.request = function(self, url, params, post_params, extra_headers)
-      local vars = cfg.variables
-
-      do
-         local curl_ok, err = fs.is_tool_available(vars.CURL, "curl")
-         if not curl_ok then
-            return nil, err
-         end
-      end
-
-      if not self.config.key then
-         return nil, "Must have API key before performing any actions."
-      end
-      if params and next(params) then
-         url = url .. ("?" .. encode_query_string(params))
-      end
-      local method = "GET"
-      local out
-      local tmpfile = fs.tmpname()
-      if post_params or extra_headers then
-         method = "POST"
-         local curl_cmd = vars.CURL .. " " .. vars.CURLNOCERTFLAG .. " -f -L --silent --user-agent \"" .. cfg.user_agent .. " via curl\" "
-         if post_params then
-            for k, v in pairs(post_params) do
-               local var
-               if type(v) == "table" then
-                  var = "@" .. v.fname
-               else
-                  var = v
-               end
-               curl_cmd = curl_cmd .. "--form \"" .. k .. "=" .. var .. "\" "
-            end
-         end
-         if extra_headers then
-            for k, v in pairs(extra_headers) do
-               if type(v) == "string" then
-                  curl_cmd = curl_cmd .. "--header \"" .. k .. ": " .. v .. "\" "
-               end
-            end
-         end
-         if cfg.connection_timeout and cfg.connection_timeout > 0 then
-            curl_cmd = curl_cmd .. "--connect-timeout " .. tonumber(cfg.connection_timeout) .. " "
-         end
-         local ok = fs.execute_string(curl_cmd .. fs.Q(url) .. " -o " .. fs.Q(tmpfile))
-         if not ok then
-            return nil, "API failure: " .. redact_api_url(url)
-         end
-      else
-         local name, err = fs.download(url, tmpfile)
-         if not name then
-            return nil, "API failure: " .. tostring(err) .. " - " .. redact_api_url(url)
-         end
-      end
-
-      local tmpfd = io.open(tmpfile)
-      if not tmpfd then
-         os.remove(tmpfile)
-         return nil, "API failure reading temporary file - " .. redact_api_url(url)
-      end
-      out = tmpfd:read("*a")
-      tmpfd:close()
-      os.remove(tmpfile)
-
-      if self.debug then
-         util.printout("[" .. tostring(method) .. " via curl] " .. redact_api_url(url) .. " ... ")
-      end
-
-      return request_result(url, out)
-   end
+   api.Api.request = curl_request
 
 else
 
    local warned_luasec = false
+
+   local ssl_ok, ssl = pcall(require, "ssl")
+   local luasec_can_verify = ssl_ok and type(ssl.get_system_ca) == "function"
+   local system_ca
+   if luasec_can_verify then
+      system_ca = ssl.get_system_ca()
+   end
+
+   local function should_use_curl(server)
+      if not (server:match("^https://") and cfg.check_certificates) then
+         return false
+      end
+      if cfg.is_platform("windows") or cfg.is_platform("macosx") then
+         return true
+      end
+      return not (luasec_can_verify and system_ca ~= nil)
+   end
 
    api.Api.request = function(self, url, params, post_params, extra_headers)
       local server = tostring(self.config.server)
 
       local http_ok, http
       local via = "luasocket"
+      if should_use_curl(server) then
+         return curl_request(self, url, params, post_params, extra_headers)
+      end
       if server:match("^https://") then
          http_ok, http = pcall(require, "ssl.https")
          if http_ok then
@@ -305,13 +335,18 @@ else
          util.printout("[" .. tostring(method) .. " via " .. via .. "] " .. redact_api_url(url) .. " ... ")
       end
       local out = {}
-      local _, status = http.request({
+      local host = (url:match("^https?://([^/]+)") or ""):gsub("^[^@]*@", ""):gsub(":%d+$", "")
+      local request_params = {
          url = url,
          headers = headers,
          method = method,
          sink = ltn12.sink.table(out),
          source = body and ltn12.source.string(body),
-      })
+         verify = via == "luasec" and cfg.check_certificates and "peer" or nil,
+         cafile = via == "luasec" and cfg.check_certificates and system_ca or nil,
+         host = via == "luasec" and cfg.check_certificates and host or nil,
+      }
+      local _, status = http.request(request_params)
       if self.debug then
          util.printout(tostring(status))
       end
