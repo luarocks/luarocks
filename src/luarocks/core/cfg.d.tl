@@ -48,6 +48,7 @@ local record cfg
    end
    -- type_check
    accept_unknown_fields: boolean
+   check_certificates: boolean
    -- api
    user_agent: string
    connection_timeout: number

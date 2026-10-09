@@ -16,6 +16,9 @@ local record http
       proxy: string
       redirect: boolean
       create: function
+      verify: string|nil
+      cafile: string|nil
+      host: string|nil
    end
    request: function(HTTPRequest): string, integer|string, string, string
 
