@@ -21,7 +21,7 @@ order) for a user config file:
 * `$HOME/.config/luarocks/`.
 * `$HOME/.luarocks/`.
 
-# Locations 
+# Locations
 
 * `rocks_trees` (array of strings or tables) - The path to the local rocks
   trees, where rocks are installed. When installing rocks, LuaRocks tries to
@@ -65,7 +65,7 @@ order) for a user config file:
   `lib_modules_path="/lib64/lua/"..lua_version`. See [issue
   416](https://github.com/keplerproject/luarocks/issues/416).
 
-# File upload 
+# File upload
 
 * `upload_server` (string) - An FTP URL for a rock server (optionally
   including username and password), or an alias specified in the
@@ -83,7 +83,7 @@ order) for a user config file:
   Protocols "http", "ftp" and "sftp" are supported. Example: `{ rocks = { http
   = "www.example.com/rocks", sftp = "example.com/var/rocks" } }`
 
-# Platform-specific settings 
+# Platform-specific settings
 
 * `lua_extension` (string) - Filename extension of Lua files (without the
   dot/separator). Default is "lua".
@@ -116,7 +116,7 @@ order) for a user config file:
 * `link_lua_explicitly` (boolean) - Link the Lua library to the built modules
   when using the builtin mode (this is set to true for Cygwin).
 
-# Variables 
+# Variables
 
 * `variables` (table) - A table containing string-to-string key-value pairs
   containing variables to be substituted by build rules in rockspecs. LuaRocks
@@ -184,7 +184,7 @@ avoided. Currently recognized entries in the _variables_ table are:
 * `MD5SUM, OPENSSL` or `MD5` according to the operating system, when the Lua
   md5 module is not installed.
 
-# External input 
+# External input
 
 As the config file itself is a Lua code file, there is some possibility to
 execute Lua code. Because it is run in a sandbox this is very limited, but
@@ -206,7 +206,7 @@ What LuaRocks makes available:
 To test this, add a line `dump_env()` to your config file and execute
 `luarocks` on the commandline to see the results.
 
-# Other 
+# Other
 
 * `cmake_generator` (string) - If specified it overrides the default cmake
   generator. Currently only Makefile-based generators are supported.
@@ -223,4 +223,11 @@ To test this, add a line `dump_env()` to your config file and execute
 * `local_by_default` (boolean) - If `true`, the tree in the user's home
   directory is used as if the command line option `--local` had been given
 
+* `check_certificates` (boolean) - If `true` (the default), LuaRocks verifies
+  the TLS certificate and hostname of HTTPS rock servers and refuses
+  connections that fail validation.
+  Setting it to `false` disables all verification and makes downloads
+  vulnerable to man-in-the-middle attacks, including remote code execution
+  through malicious rocks.
+  **Warning:** Only disable it for servers and networks you trust.
 
