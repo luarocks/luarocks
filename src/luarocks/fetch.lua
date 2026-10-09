@@ -49,15 +49,12 @@ function fetch.fetch_caching(url, mirroring)
    local repo_url, filename = url:match("^(.*)/([^/]+)$")
    local name = repo_url:gsub("[/:]", "_")
    local cache_dir = dir.path(cfg.local_cache, name)
-   local ok = fs.exists(cfg.local_cache)
-   if ok then
-      ok = fs.make_dir(cache_dir)
-   end
+   local ok = fs.make_dir(cache_dir)
 
    local cachefile = dir.path(cache_dir, filename)
    local checkfile = cachefile .. ".check"
 
-   if (fs.exists(checkfile) and fs.file_age(checkfile) < 10 or
+   if (fs.file_age(checkfile) < 10 or
       cfg.aggressive_cache and (not name:match("^manifest"))) and fs.exists(cachefile) then
 
       return cachefile, nil, nil, true
@@ -78,8 +75,6 @@ function fetch.fetch_caching(url, mirroring)
       if not ok then
          return nil, "Failed creating temporary cache directory " .. cache_dir
       end
-      cachefile = dir.path(cache_dir, filename)
-      checkfile = cachefile .. ".check"
       lock = fs.lock_access(cache_dir)
    end
 
@@ -409,8 +404,8 @@ function fetch.load_local_rockspec(rel_filename, quick)
    local basename = dir.base_name(abs_filename)
    if basename ~= "rockspec" then
       if not basename:match("(.*)%-[^-]*%-[0-9]*") then
-         return nil, "Expected filename in format 'name-version-revision.rockspec'."
-      end
+      return nil, "Expected filename in format 'name-version-revision.rockspec'."
+   end
    end
 
    local tbl, err = persist.load_into_table(abs_filename)
