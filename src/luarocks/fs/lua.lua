@@ -784,6 +784,14 @@ if luasec_ok and not vers.compare_versions(https._VERSION, "1.0.3") then
    https = nil
 end
 
+local socket_url = require("socket.url")
+local ssl_ok, ssl = pcall(require, "ssl")
+local luasec_can_verify = luasec_ok and ssl_ok and type(ssl.get_system_ca) == "function"
+local system_ca
+if luasec_can_verify then
+   system_ca = ssl.get_system_ca()
+end
+
 local redirect_protocols = {
    http = http,
    https = luasec_ok and https,
@@ -810,7 +818,7 @@ local function request(url, method, http, loop_control)  -- luacheck: ignore 431
    if cfg.connection_timeout and cfg.connection_timeout > 0 then
       http.TIMEOUT = cfg.connection_timeout
    end
-   local res, status, headers, err = http.request {
+   local params = {
       url = url,
       proxy = proxy,
       method = method,
@@ -830,6 +838,12 @@ local function request(url, method, http, loop_control)  -- luacheck: ignore 431
          ["user-agent"] = cfg.user_agent.." via LuaSocket"
       },
    }
+   if http == redirect_protocols.https and cfg.check_certificates then
+      params.verify = "peer"
+      params.cafile = system_ca
+      params.host = (socket_url.parse(url) or {}).host
+   end
+   local res, status, headers, err = http.request(params)
    if cfg.show_downloads then
       io.write("\n")
    end
@@ -950,6 +964,16 @@ local function ftp_request(url, filename)
 end
 
 local downloader_warning = false
+local warned_insecure = false
+
+local function force_downloader()
+   return cfg.check_certificates and (cfg.is_platform("windows") or cfg.is_platform("macosx"))
+end
+
+local function native_https_available()
+   return luasec_ok and not os.getenv("https_proxy") and not force_downloader() and
+      (not cfg.check_certificates or (luasec_can_verify and system_ca ~= nil))
+end
 
 --- Download a remote file.
 -- @param url string: URL to be fetched.
@@ -973,6 +997,11 @@ function fs_lua.download(url, filename, cache)
 
    filename = fs.absolute_name(filename or dir.base_name(url))
 
+   if util.starts_with(url, "https:") and not cfg.check_certificates and not warned_insecure then
+      util.warning("certificate validation is disabled (check_certificates=false); HTTPS downloads are vulnerable to man-in-the-middle attacks")
+      warned_insecure = true
+   end
+
    -- delegate to the configured downloader so we don't have to deal with whitelists
    if os.getenv("no_proxy") then
       return fs.use_downloader(url, filename, cache)
@@ -984,8 +1013,7 @@ function fs_lua.download(url, filename, cache)
    elseif util.starts_with(url, "ftp:") then
       ok, err = ftp_request(url, filename)
    elseif util.starts_with(url, "https:") then
-      -- skip LuaSec when proxy is enabled since it is not supported
-      if luasec_ok and not os.getenv("https_proxy") then
+      if native_https_available() then
          local _
          ok, err, _, from_cache = http_request(url, filename, https, cache)
       else
@@ -999,8 +1027,8 @@ function fs_lua.download(url, filename, cache)
       if not downloader then
          return nil, err
       end
-      if not downloader_warning then
-         util.warning("falling back to "..downloader.." - install luasec >= 1.1 to get native HTTPS support")
+      if not downloader_warning and not force_downloader() then
+         util.warning("falling back to "..downloader.." for HTTPS")
          downloader_warning = true
       end
       return fs.use_downloader(url, filename, cache)
