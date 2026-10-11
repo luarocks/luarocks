@@ -11,7 +11,7 @@ return {
    luacov = "0.17.0-1",
    luafilesystem = "1.9.0-1",
    luafilesystem_old = "1.6.3-2",
-   luaposix = "35.1-1",
+   luaposix = "37.0-1",
    luasocket = "3.1.0-1",
    luasec = "1.3.2-1",
    lxsh = "0.8.6-2",
