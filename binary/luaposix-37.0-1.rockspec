@@ -1,4 +1,4 @@
-local _MODREV, _SPECREV = '35.1', '-1'
+local _MODREV, _SPECREV = '37.0', '-1'
 
 package = 'luaposix'
 version = _MODREV .. _SPECREV
@@ -27,7 +27,7 @@ end
 
 source = {
    url = 'http://github.com/luaposix/luaposix/archive/v' .. _MODREV .. '.zip',
-   dir = 'luaposix-' .. _MODREV,
+   dir = 'luaposix-' .. _MODREV,  
 }
 
 build = {
@@ -38,6 +38,8 @@ build = {
       .. ' PREFIX="$(PREFIX)"'
       .. ' LUA="$(LUA)"'
       .. ' LUA_INCDIR="$(LUA_INCDIR)"'
+      .. ' CC="$(CC)"'
+      .. ' LD="$(LD)"'
       .. ' CFLAGS="$(CFLAGS)"'
       .. ' LIBFLAG="$(LIBFLAG)"'
       .. ' LIB_EXTENSION="$(LIB_EXTENSION)"'
