@@ -27,6 +27,7 @@ jobs:
 
     - name: Prep
       run: |
+        sudo apt-get update -qq
         sudo apt-get install -y shellcheck
 
     - name: Shellcheck
@@ -60,7 +61,9 @@ jobs:
 
     - name: 'Setup Ubuntu deps'
       if: runner.os == 'Linux'
-      run: sudo apt-get install libbz2-dev
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install libbz2-dev
 
     - name: Prep
       run: |
@@ -126,7 +129,9 @@ jobs:
         luaVersion: "5.4"
 
     - name: 'Setup Ubuntu deps'
-      run: sudo apt-get install libbz2-dev
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install libbz2-dev
 
     - name: Binary Build Smoke Test
       run: |
