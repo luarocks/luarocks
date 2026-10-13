@@ -5,19 +5,19 @@ local global_module_name = 'json'
 
 --[==[
 
-David Kolf's JSON module for Lua 5.1 - 5.4
+David Kolf's JSON module for Lua 5.1 - 5.5
 
-Version 2.7
+Version 2.11
 
 
 For the documentation see the corresponding readme.txt or visit
-<http://dkolf.de/src/dkjson-lua.fsl/>.
+<http://dkolf.de/dkjson-lua/>.
 
 You can contact the author by sending an e-mail to 'david' at the
 domain 'dkolf.de'.
 
 
-Copyright (C) 2010-2024 David Heiko Kolf
+Copyright (C) 2010-2026 David Heiko Kolf
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -42,8 +42,8 @@ SOFTWARE.
 --]==]
 
 -- global dependencies:
-local pairs, type, tostring, tonumber, getmetatable, setmetatable, rawset =
-      pairs, type, tostring, tonumber, getmetatable, setmetatable, rawset
+local pairs, type, tostring, tonumber, getmetatable, setmetatable =
+      pairs, type, tostring, tonumber, getmetatable, setmetatable
 local error, require, pcall, select = error, require, pcall, select
 local floor, huge = math.floor, math.huge
 local strrep, gsub, strsub, strbyte, strchar, strfind, strlen, strformat =
@@ -52,7 +52,7 @@ local strrep, gsub, strsub, strbyte, strchar, strfind, strlen, strformat =
 local strmatch = string.match
 local concat = table.concat
 
-local json = { version = "dkjson 2.7" }
+local json = { version = "dkjson 2.11" }
 
 local jsonlpeg = {}
 
@@ -225,6 +225,10 @@ local function addpair (key, value, prev, indent, level, buffer, buflen, tables,
   if indent then
     buflen = addnewline2 (level, buffer, buflen)
   end
+  -- When Lua is compiled with LUA_NOCVTN2S this will fail when
+  -- numbers are mixed into the keys of the table. JSON keys are always
+  -- strings, so this would be an implicit conversion too and the failure
+  -- is intentional.
   buffer[buflen+1] = quotestring (key)
   buffer[buflen+2] = ":"
   return encode2 (value, indent, level, buffer, buflen + 2, tables, globalorder, state)
@@ -392,7 +396,7 @@ local function loc (str, where)
       break
     end
   end
-  return "line " .. line .. ", column " .. (where - linepos)
+  return strformat ("line %d, column %d", line, where - linepos)
 end
 
 local function unterminated (str, what, where)
@@ -401,21 +405,26 @@ end
 
 local function scanwhite (str, pos)
   while true do
-    pos = strfind (str, "%S", pos)
-    if not pos then return nil end
-    local sub2 = strsub (str, pos, pos + 1)
-    if sub2 == "\239\187" and strsub (str, pos + 2, pos + 2) == "\191" then
+    pos = strmatch (str, "%s*()", pos)
+    local n1, n2, n3 = strbyte (str, pos, pos + 2)
+    if n1 == 239 and n2 == 187 and n3 == 191 then
       -- UTF-8 Byte Order Mark
       pos = pos + 3
-    elseif sub2 == "//" then
-      pos = strfind (str, "[\n\r]", pos + 2)
-      if not pos then return nil end
-    elseif sub2 == "/*" then
-      pos = strfind (str, "*/", pos + 2)
-      if not pos then return nil end
-      pos = pos + 2
+    elseif n1 == 47 then
+      if n2 == 47 then -- "//"
+        pos = strfind (str, "[\n\r]", pos + 2)
+        if not pos then return nil end
+      elseif n2 == 42 then -- "/*"
+        pos = strfind (str, "*/", pos + 2)
+        if not pos then return nil end
+        pos = pos + 2
+      else
+        return pos, n1
+      end
+    elseif n1 == nil then
+      return nil
     else
-      return pos
+      return pos, n1
     end
   end
 end
@@ -459,7 +468,7 @@ local function scanstring (str, pos)
       n = n + 1
       buffer[n] = strsub (str, lastpos, nextpos - 1)
     end
-    if strsub (str, nextpos, nextpos) == "\"" then
+    if strbyte (str, nextpos) == 34 then -- '"'
       lastpos = nextpos + 1
       break
     else
@@ -510,84 +519,139 @@ end
 
 local scanvalue -- forward declaration
 
-local function scantable (what, closechar, str, startpos, nullval, objectmeta, arraymeta)
-  local len = strlen (str)
-  local tbl, n = {}, 0
+local function scanobject (str, startpos, nullval, objectmeta, arraymeta)
+  local tbl = setmetatable ({}, objectmeta)
   local pos = startpos + 1
-  if what == 'object' then
-    setmetatable (tbl, objectmeta)
-  else
-    setmetatable (tbl, arraymeta)
-  end
+
   while true do
-    pos = scanwhite (str, pos)
-    if not pos then return unterminated (str, what, startpos) end
-    local char = strsub (str, pos, pos)
-    if char == closechar then
+    local char
+    pos, char = scanwhite (str, pos)
+    local key, err
+    if char == 34 then -- '"'
+      key, pos, err = scanstring (str, pos)
+    elseif char == 125 then -- "}"
       return tbl, pos + 1
-    end
-    local val1, err
-    val1, pos, err = scanvalue (str, pos, nullval, objectmeta, arraymeta)
-    if err then return nil, pos, err end
-    pos = scanwhite (str, pos)
-    if not pos then return unterminated (str, what, startpos) end
-    char = strsub (str, pos, pos)
-    if char == ":" then
-      if val1 == nil then
-        return nil, pos, "cannot use nil as table index (at " .. loc (str, pos) .. ")"
-      end
-      pos = scanwhite (str, pos + 1)
-      if not pos then return unterminated (str, what, startpos) end
-      local val2
-      val2, pos, err = scanvalue (str, pos, nullval, objectmeta, arraymeta)
-      if err then return nil, pos, err end
-      tbl[val1] = val2
-      pos = scanwhite (str, pos)
-      if not pos then return unterminated (str, what, startpos) end
-      char = strsub (str, pos, pos)
+    elseif not pos then
+      return unterminated (str, "object", startpos)
     else
-      n = n + 1
-      tbl[n] = val1
+      return nil, pos, "invalid key at " .. loc (str, pos)
     end
-    if char == "," then
+    if err then return nil, pos, err end
+
+    char = strbyte (str, pos)
+    if char ~= 58 then -- ":"
+      pos, char = scanwhite (str, pos)
+      if not pos then
+        return unterminated (str, "object", startpos)
+      elseif char ~= 58 then
+        return nil, pos, "missing colon at " .. loc (str, pos)
+      end
+    end
+
+    pos = scanwhite (str, pos + 1)
+    if not pos then return unterminated (str, "object", startpos) end
+    local val
+    val, pos, err = scanvalue (str, pos, nullval, objectmeta, arraymeta)
+    if err then return nil, pos, err end
+    tbl[key] = val
+
+    char = strbyte (str, pos)
+    if char == 44 then -- ","
       pos = pos + 1
+    else
+      pos, char = scanwhite (str, pos)
+
+      if char == 44 then
+        pos = pos + 1
+      elseif not pos then
+        return unterminated (str, "object", startpos)
+      end
     end
+  end
+end
+
+local function scanarray (str, startpos, nullval, objectmeta, arraymeta)
+  local tbl, n = setmetatable ({}, arraymeta), 0
+  local pos = startpos + 1
+
+  while true do
+    local char
+    pos, char = scanwhite (str, pos)
+
+    if char == 93 then -- "]"
+      return tbl, pos + 1
+    elseif not pos then
+      return unterminated (str, "array", startpos)
+    end
+
+    local val, err
+    val, pos, err = scanvalue (str, pos, nullval, objectmeta, arraymeta)
+    if err then return nil, pos, err end
+    n = n + 1
+    tbl[n] = val
+
+    char = strbyte (str, pos)
+    if char == 44 then -- ","
+      pos = pos + 1
+    else
+      pos, char = scanwhite (str, pos)
+
+      if char == 44 then
+        pos = pos + 1
+      elseif not pos then
+        return unterminated (str, "array", startpos)
+      end
+    end
+  end
+end
+
+local function scaninvalid (str, pos)
+  return nil, pos, "no valid JSON value at " .. loc (str, pos)
+end
+
+local function scanliteral (str, pos, expected, value)
+  local pstart, pend = strfind (str, "^%a%w*", pos)
+  local name = strsub (str, pstart, pend)
+  if name == expected then
+    return value, pend + 1
+  else
+    return scaninvalid (str, pos)
+  end
+end
+
+local function scannumber (str, pos)
+  local pstart, pend = strfind (str, "^%-?[%d%.]*[eE]?[%+%-]?%d*", pos)
+  local number = str2num (strsub (str, pstart, pend))
+  if number then
+    return number, pend + 1
+  else
+    return scaninvalid (str, pos)
   end
 end
 
 scanvalue = function (str, pos, nullval, objectmeta, arraymeta)
   pos = pos or 1
-  pos = scanwhite (str, pos)
+  local c
+  pos, c = scanwhite (str, pos)
+
   if not pos then
     return nil, strlen (str) + 1, "no valid JSON value (reached the end)"
-  end
-  local char = strsub (str, pos, pos)
-  if char == "{" then
-    return scantable ('object', "}", str, pos, nullval, objectmeta, arraymeta)
-  elseif char == "[" then
-    return scantable ('array', "]", str, pos, nullval, objectmeta, arraymeta)
-  elseif char == "\"" then
+  elseif c == 34 then -- '"'
     return scanstring (str, pos)
+  elseif c == 123 then -- "{"
+    return scanobject (str, pos, nullval, objectmeta, arraymeta)
+  elseif c == 91 then -- "["
+    return scanarray (str, pos, nullval, objectmeta, arraymeta)
+  elseif c == 45 or (c >= 48 and c <= 57) then -- "-", "0"..."9"
+    return scannumber (str, pos)
+  elseif c == 116 then -- "t"
+    return scanliteral (str, pos, "true", true)
+  elseif c == 102 then -- "f"
+    return scanliteral (str, pos, "false", false)
+  elseif c == 110 then -- "n"
+    return scanliteral (str, pos, "null", nullval)
   else
-    local pstart, pend = strfind (str, "^%-?[%d%.]+[eE]?[%+%-]?%d*", pos)
-    if pstart then
-      local number = str2num (strsub (str, pstart, pend))
-      if number then
-        return number, pend + 1
-      end
-    end
-    pstart, pend = strfind (str, "^%a%w*", pos)
-    if pstart then
-      local name = strsub (str, pstart, pend)
-      if name == "true" then
-        return true, pend + 1
-      elseif name == "false" then
-        return false, pend + 1
-      elseif name == "null" then
-        return nullval, pend + 1
-      end
-    end
-    return nil, pos, "no valid JSON value at " .. loc (str, pos)
+    return scaninvalid (str, pos)
   end
 end
 
@@ -746,4 +810,3 @@ if always_use_lpeg then
 end
 
 return json
-
