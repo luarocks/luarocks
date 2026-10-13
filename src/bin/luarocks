@@ -18,6 +18,7 @@ local commands = {
    list = "luarocks.cmd.list",
    remove = "luarocks.cmd.remove",
    make = "luarocks.cmd.make",
+   nix = "luarocks.cmd.nix",
    download = "luarocks.cmd.download",
    path = "luarocks.cmd.path",
    show = "luarocks.cmd.show",
