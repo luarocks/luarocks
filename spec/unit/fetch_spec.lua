@@ -107,6 +107,48 @@ describe("luarocks fetch #unit", function()
          assert.falsy(fetch.fetch_url("http://localhost:8080/file/nonexistent"))
       end)
 
+      it("reports the real download error when all mirrors fail", function()
+         test_env.run_in_tmp(function()
+            -- download_with_mirrors only walks its mirror fallback loop when
+            -- the URL is relative to a rocks_servers entry that is a table
+            -- (a mirror group). The default test config uses a flat list of
+            -- strings, which never matches, so the loop would never run in
+            -- this suite. Temporarily swap in a mirror group, and restore it
+            -- via finally: busted runs all specs in a single process, and a
+            -- leaked override would send unrelated tests to bogus mirrors.
+            local saved_servers = cfg.rocks_servers
+            finally(function()
+               cfg.rocks_servers = saved_servers
+            end)
+            cfg.rocks_servers = { { "http://localhost:8080/m1", "http://localhost:8080/m2" } }
+
+            local ok, err = fetch.fetch_url("http://localhost:8080/m1/nonexistent")
+            assert.falsy(ok)
+            -- the mocked fs.download returns this message for missing files;
+            -- the fallback loop must propagate it instead of "nil"
+            assert.match("mock failed opening for reading", err, 1, true)
+         end, finally)
+      end)
+
+      it("falls back to the next mirror when the first one fails", function()
+         test_env.run_in_tmp(function()
+            -- same rocks_servers override as above: a mirror group is needed
+            -- to enter the fallback loop, and it must be restored afterwards
+            -- because specs share the same process-wide cfg.
+            local saved_servers = cfg.rocks_servers
+            finally(function()
+               cfg.rocks_servers = saved_servers
+            end)
+            -- the first mirror has no fixture behind it and fails; the
+            -- second one maps to the fixtures dir via the fs.download mock
+            cfg.rocks_servers = { { "http://localhost:8080/fail", "http://localhost:8080/file" } }
+
+            local fetchedfile, err = fetch.fetch_url("http://localhost:8080/fail/a_rock.lua")
+            assert(fetchedfile, err)
+            assert.truthy(are_same_files(fetchedfile, lfs.currentdir() .. "/a_rock.lua"))
+         end, finally)
+      end)
+
       it("returns false and does nothing if the url argument is invalid", function()
          assert.falsy(fetch.fetch_url("invalid://url", "file"))
       end)
