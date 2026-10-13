@@ -152,7 +152,7 @@ function unix.is_actual_binary(filename)
       return true
    end
    -- only create wrapper for lua scripts with `#!/usr/bin/env lua` or `#!/usr/bin/lua`
-   return first:match('^#!.*[ /]lua.*') == first
+   return first:sub(1, 2) ~= '#!' or first:match('^#!.*[ /]lua.*') == first
 end
 
 function unix.copy_binary(filename, dest)
