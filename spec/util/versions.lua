@@ -6,7 +6,7 @@ return {
    copas = "4.12.0-1",
    cprint = "0.2-1",
    datafile = "0.11-1",
-   dkjson = "2.6-1",
+   dkjson = "2.11-1",
    lpeg = "1.0.0-1",
    luacov = "0.17.0-1",
    luafilesystem = "1.9.0-1",
