@@ -1,3 +1,13 @@
+## Unreleased
+
+* **Breaking change:** Verify HTTPS certificates and hostnames by default
+  (`check_certificates = true`). The bundled LuaSec is pinned to a commit
+  that supports hostname verification, and curl/wget no longer skip
+  certificate checks unless explicitly opted out.
+  On Windows and macOS, HTTPS downloads use curl or wget (which validate
+  against the OS certificate store) whenever `check_certificates` is enabled,
+  and fail if neither is available.
+
 ## LuaRocks 3.13.0
 
 > Released 28/Dec/2025
