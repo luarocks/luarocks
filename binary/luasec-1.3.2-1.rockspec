@@ -80,7 +80,7 @@ build = {
                   "$(OPENSSL_BINDIR)",
                },
                libraries = {
-                  "ssl", "crypto", "ws2_32"
+                  "ssl", "crypto", "ws2_32", "crypt32"
                },
                incdirs = {
                   "$(OPENSSL_INCDIR)", "src/", "src/luasocket"
