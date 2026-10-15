@@ -40,7 +40,7 @@ $(BUILD_WINDOWS_DEPS_DIR)/openssl-$(OPENSSL_VERSION).tar.gz:
 $(BUILD_WINDOWS_DEPS_DIR)/openssl-$(OPENSSL_VERSION): $(BUILD_WINDOWS_DEPS_DIR)/openssl-$(OPENSSL_VERSION).tar.gz
 	cd $(BUILD_WINDOWS_DEPS_DIR) && tar zxvpf openssl-$(OPENSSL_VERSION).tar.gz
 $(WINDOWS_DEPS_DIR)/lib/libssl.a $(WINDOWS_DEPS_DIR)/lib/libcrypto.a: $(BUILD_WINDOWS_DEPS_DIR)/openssl-$(OPENSSL_VERSION)
-	cd $(BUILD_WINDOWS_DEPS_DIR)/openssl-$(OPENSSL_VERSION) && ./Configure $(OPENSSL_PLATFORM) --prefix=$(CURDIR)/$(WINDOWS_DEPS_DIR) --cross-compile-prefix=$(MINGW_PREFIX)- no-apps no-tests no-winstore
+	cd $(BUILD_WINDOWS_DEPS_DIR)/openssl-$(OPENSSL_VERSION) && ./Configure $(OPENSSL_PLATFORM) --prefix=$(CURDIR)/$(WINDOWS_DEPS_DIR) --cross-compile-prefix=$(MINGW_PREFIX)- no-apps no-tests
 	$(MAKE) -C "$(BUILD_WINDOWS_DEPS_DIR)/openssl-$(OPENSSL_VERSION)"
 	$(MAKE) -C "$(BUILD_WINDOWS_DEPS_DIR)/openssl-$(OPENSSL_VERSION)" install_sw
 	mkdir -p $(WINDOWS_DEPS_DIR)/lib
