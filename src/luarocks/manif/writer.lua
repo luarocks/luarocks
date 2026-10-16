@@ -303,11 +303,11 @@ function writer.make_namespace_file(name, version, namespace)
    if not fd then
       return nil, err
    end
-   fd, err = fd:write(namespace)
-   if not fd then
-      return nil, err
-   end
+   local ok, werr = fd:write(namespace)
    fd:close()
+   if not ok then
+      return nil, werr
+   end
    return true
 end
 
