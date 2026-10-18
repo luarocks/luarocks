@@ -520,6 +520,45 @@ describe("LuaRocks build #integration", function()
          assert(run.luarocks_bool("show has_build_dep 1.0"))
          assert(run.luarocks_bool("show a_build_dep 1.0"))
       end)
+
+      it("uses a build back-end from a build dependency installed with --tree", function()
+         test_env.run_in_tmp(function(tmpdir)
+            local tree = tmpdir .. "/tree"
+            local url = "file://" .. tmpdir:gsub("\\", "/")
+            write_file("luarocks-build-mytype-1.0-1.rockspec", [[
+               package = "luarocks-build-mytype"
+               version = "1.0-1"
+               source = {
+                  url = "]] .. url .. [[/mytype.lua"
+               }
+               build = {
+                  type = "builtin",
+                  modules = {
+                     ["luarocks.build.mytype"] = "mytype.lua"
+                  }
+               }
+            ]])
+            write_file("mytype.lua", "return { run = function() return true end }")
+            write_file("uses_mytype-1.0-1.rockspec", [[
+               rockspec_format = "3.0"
+               package = "uses_mytype"
+               version = "1.0-1"
+               source = {
+                  url = "]] .. url .. [[/mytype.lua"
+               }
+               build_dependencies = {
+                  "luarocks-build-mytype"
+               }
+               build = {
+                  type = "mytype"
+               }
+            ]])
+
+            assert.is_true(run.luarocks_bool("build --tree=" .. tree .. " luarocks-build-mytype-1.0-1.rockspec"))
+            assert.is_true(run.luarocks_bool("build --tree=" .. tree .. " uses_mytype-1.0-1.rockspec"))
+            assert.is_true(run.luarocks_bool("show --tree=" .. tree .. " uses_mytype"))
+         end, finally)
+      end)
    end)
 
    describe("#unix build from #git", function()
