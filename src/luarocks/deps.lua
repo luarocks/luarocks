@@ -331,7 +331,7 @@ function deps.fulfill_dependencies(rockspec, depskey, deps_mode, verify, deplock
 
       local okfulfill, version_or_err, tree = deps.fulfill_dependency(depq, deps_mode, rocks_provided, verify, depskey)
       if okfulfill then
-         deplocks.add(depskey, depq.name, version_or_err)
+         deplocks.add(depskey, depq.namespace and (depq.namespace .. "/" .. depq.name) or depq.name, version_or_err)
          if tree and rockspec:format_is_at_least("3.1") then
             rockspec.variables[depq.name:upper() .. "_ROCKDIR"] = path.install_dir(depq.name, version_or_err, tree)
          end
