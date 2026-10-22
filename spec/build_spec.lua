@@ -196,6 +196,18 @@ describe("LuaRocks build #integration", function()
          print(output)
          assert(run.luarocks_bool("show a_rock 3.0"))
       end)
+
+      it("pins a namespaced dependency keeping its namespace #pinning", function()
+         test_env.run_in_tmp(function()
+            assert(run.luarocks_bool("build " .. testing_paths.fixtures_dir .. "/a_repo/has_namespaced_dep-1.0-1.rockspec --only-deps --pin --server=" .. testing_paths.fixtures_dir .. "/a_repo"))
+            local lockdata = loadfile("luarocks.lock")()
+            assert.same({
+               dependencies = {
+                  ["a_user/a_rock"] = "2.0-1",
+               }
+            }, lockdata)
+         end, finally)
+      end)
    end)
 
    describe("more complex tests", function()
