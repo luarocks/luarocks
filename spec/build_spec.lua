@@ -208,6 +208,36 @@ describe("LuaRocks build #integration", function()
             }, lockdata)
          end, finally)
       end)
+
+      it("pins a transitive namespaced dependency keeping its namespace #pinning", function()
+         assert(run.luarocks_bool("build has_namespaced_dep --server=" .. testing_paths.fixtures_dir .. "/a_repo"))
+         assert(lfs.attributes(testing_paths.testing_sys_rocks .. "/a_rock/2.0-1/rock_namespace"))
+         test_env.run_in_tmp(function()
+            write_file("uses_namespaced_dep-1.0-1.rockspec", [[
+               rockspec_format = "3.0"
+               package = "uses_namespaced_dep"
+               version = "1.0-1"
+               source = {
+                  url = "http://localhost:8080/file/a_rock.lua"
+               }
+               dependencies = {
+                  "has_namespaced_dep",
+               }
+               build = {
+                  type = "builtin",
+                  modules = {},
+               }
+            ]])
+            assert(run.luarocks_bool("build uses_namespaced_dep-1.0-1.rockspec --only-deps --pin --server=" .. testing_paths.fixtures_dir .. "/a_repo"))
+            local lockdata = loadfile("luarocks.lock")()
+            assert.same({
+               dependencies = {
+                  ["has_namespaced_dep"] = "1.0-1",
+                  ["a_user/a_rock"] = "2.0-1",
+               }
+            }, lockdata)
+         end, finally)
+      end)
    end)
 
    describe("more complex tests", function()

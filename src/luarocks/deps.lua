@@ -54,6 +54,8 @@ local deplocks = require("luarocks.deplocks")
 
 
 
+
+
 local function prepare_get_versions(deps_mode, rocks_provided, depskey, skip_set)
 
    return function(dep)
@@ -206,6 +208,32 @@ function deps.report_missing_dependencies(name, version, dependencies, deps_mode
    end
 end
 
+
+local function installed_namespace(name, version, tree_manifests)
+   for _, tm in ipairs(tree_manifests) do
+      local entries = tm.manifest.repository[name]
+      if entries and entries[version] then
+         return path.read_namespace(name, version, tm.tree)
+      end
+   end
+end
+
+
+
+
+local function pin_installed_dependencies(name, version, tree_manifests, depskey)
+   local scanned = setmetatable({}, {
+      __index = function(_, k)
+         return deplocks.get(depskey, k)
+      end,
+   })
+   manif.scan_dependencies(name, version, tree_manifests, scanned)
+   for rock, ver in pairs(scanned) do
+      local namespace = installed_namespace(rock, ver, tree_manifests)
+      deplocks.add(depskey, namespace and (namespace .. "/" .. rock) or rock, ver)
+   end
+end
+
 function deps.fulfill_dependency(dep, deps_mode, rocks_provided, verify, depskey)
 
    deps_mode = deps_mode or "all"
@@ -217,7 +245,7 @@ function deps.fulfill_dependency(dep, deps_mode, rocks_provided, verify, depskey
    found, where, dep = match_dep(dep, get_versions)
    if found then
       local tree_manifests = manif.load_rocks_tree_manifests(deps_mode)
-      manif.scan_dependencies(dep.name, found, tree_manifests, deplocks.proxy(depskey))
+      pin_installed_dependencies(dep.name, found, tree_manifests, depskey)
       return true, found, where
    end
 
