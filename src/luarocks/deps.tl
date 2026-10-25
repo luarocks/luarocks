@@ -24,6 +24,8 @@ local type Build = require("luarocks.core.types.build").Build
 
 local type Tree = require("luarocks.core.types.tree").Tree
 
+local type Tree_manifest = require("luarocks.core.types.manifest").Tree_manifest
+
 local type Query = require("luarocks.core.types.query").Query
 
 local type Version = require("luarocks.core.types.version").Version
@@ -206,6 +208,32 @@ function deps.report_missing_dependencies(name: string, version: string, depende
    end
 end
 
+-- Find the namespace of an installed rock from its rock_namespace file.
+local function installed_namespace(name: string, version: string, tree_manifests: {Tree_manifest}): string
+   for _, tm in ipairs(tree_manifests) do
+      local entries = tm.manifest.repository[name]
+      if entries and entries[version] then
+         return path.read_namespace(name, version, tm.tree)
+      end
+   end
+end
+
+-- Pin an installed rock and its transitive dependencies. The installed
+-- manifests record dependencies without namespaces, so each rock's namespace
+-- is read back from its rock_namespace file.
+local function pin_installed_dependencies(name: string, version: string, tree_manifests: {Tree_manifest}, depskey: DepsKey)
+   local scanned: {string: string} = setmetatable({}, {
+      __index = function(_: {string: string}, k: string): string
+         return deplocks.get(depskey, k)
+      end,
+   })
+   manif.scan_dependencies(name, version, tree_manifests, scanned)
+   for rock, ver in pairs(scanned) do
+      local namespace = installed_namespace(rock, ver, tree_manifests)
+      deplocks.add(depskey, namespace and (namespace .. "/" .. rock) or rock, ver)
+   end
+end
+
 function deps.fulfill_dependency(dep: Query, deps_mode: string, rocks_provided: {string: string}, verify: boolean, depskey?: DepsKey): boolean, string, string | Tree
 
    deps_mode = deps_mode or "all"
@@ -217,7 +245,7 @@ function deps.fulfill_dependency(dep: Query, deps_mode: string, rocks_provided: 
    found, where, dep = match_dep(dep, get_versions)
    if found then
       local tree_manifests = manif.load_rocks_tree_manifests(deps_mode)
-      manif.scan_dependencies(dep.name, found, tree_manifests, deplocks.proxy(depskey))
+      pin_installed_dependencies(dep.name, found, tree_manifests, depskey)
       return true, found, where
    end
 
@@ -331,7 +359,7 @@ function deps.fulfill_dependencies(rockspec: Rockspec, depskey: DepsKey, deps_mo
 
       local okfulfill, version_or_err, tree = deps.fulfill_dependency(depq, deps_mode, rocks_provided, verify, depskey)
       if okfulfill then
-         deplocks.add(depskey, depq.name, version_or_err)
+         deplocks.add(depskey, depq.namespace and (depq.namespace .. "/" .. depq.name) or depq.name, version_or_err)
          if tree and rockspec:format_is_at_least("3.1") then
             rockspec.variables[depq.name:upper() .. "_ROCKDIR"] = path.install_dir(depq.name, version_or_err, tree)
          end
