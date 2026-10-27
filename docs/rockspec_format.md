@@ -90,6 +90,10 @@ This is a mode for packages distributing pure Lua or simple C modules. All pathn
       * **build.incdirs** (array of strings) - directories to be added to the compiler's headers lookup directory list.
       * **build.libdirs** (array of strings) - directories to be added to the linker's library lookup directory list.
 
+**Teal modules** (requires `rockspec_format = "3.2"` or newer): `.tl` and `.d.tl` files are auto-detected and installed alongside `.lua` modules.
+If `tl` is listed in `build_dependencies`, the `.tl` sources are compiled to Lua for the build's target Lua version.
+In this case, a compiled module replaces a shipped `.lua` module of the same name.
+
 #### make
 
 Indicates the package uses a Makefile.
