@@ -155,6 +155,22 @@ function tools.dir_iterator(at)
    pipe:close()
 end
 
+local function curl_redirect_policy(url)
+   if cfg.check_certificates and url:match("^https:") then
+      -- prevent redirects to non-https protocols
+      return " --proto-redir =https"
+   end
+   return ""
+end
+
+local function download_failure_message(url)
+   local message = "failed downloading " .. url
+   if cfg.check_certificates then
+      message = message .. " (if this is a certificate error, run with --verbose, or see 'check_certificates' in the config docs)"
+   end
+   return message
+end
+
 --- Download a remote file.
 -- @param url string: URL to be fetched.
 -- @param filename string or nil: this function attempts to detect the
@@ -195,7 +211,7 @@ function tools.use_downloader(url, filename, cache)
          ok = fs.execute_quiet(wget_cmd, url)
       end
    elseif downloader == "curl" then
-      local curl_cmd = vars.CURL.." "..vars.CURLNOCERTFLAG.." -f -L --user-agent \""..cfg.user_agent.." via curl\" "
+      local curl_cmd = vars.CURL.." "..vars.CURLNOCERTFLAG..curl_redirect_policy(url).." -f -L --user-agent \""..cfg.user_agent.." via curl\" "
       if cfg.connection_timeout and cfg.connection_timeout > 0 then
         curl_cmd = curl_cmd .. "--connect-timeout "..tostring(cfg.connection_timeout).." "
       end
@@ -208,7 +224,7 @@ function tools.use_downloader(url, filename, cache)
       return filename
    else
       os.remove(filename)
-      return nil, "failed downloading " .. url, "network"
+      return nil, download_failure_message(url), "network"
    end
 end
 

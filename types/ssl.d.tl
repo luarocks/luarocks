@@ -105,6 +105,7 @@ local record ssl
    newcontext: function(SSLContext): SSLContext
    wrap: function(TCP, SSLContext): SSLConnection
    loadcertificate: function(string): X509Certificate
+   get_system_ca: function(): string, string
 
    _COPYRIGHT: string
    _VERSION: string
